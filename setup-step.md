@@ -40,7 +40,7 @@ In PowerShell, go to the folder where you want the project stored, then clone it
 
 ```powershell
 cd $HOME\Documents
-git clone https://github.com/xKurty06/cliniq.git
+git clone https://github.com/zekuuu/cliniq.git
 cd cliniq
 ```
 
@@ -89,7 +89,7 @@ The frontend runs using its mock data. You do not need to start the backend, PHP
 
 ## 7. Run it again on a later day
 
-After the first-time setup, open PowerShell in the `frontend` folder and run:
+After the first-time setup, open VSCode and make sure the cliniq project is opened, then run the following command:
 
 ```powershell
 npm run dev

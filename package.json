@@ -1,0 +1,12 @@
+{
+    "name": "cliniq",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "dev": "git pull origin main && cd frontend && npm run dev"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC"
+}
