@@ -83,7 +83,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 ### 3. Clinic Visit Monitoring — *Access: Staff only*
 
 **Daily Visit Logging**
-- Add new visit entry. A visit opened without an identified student finds one by Student Number or name (2+ characters, at most 8 active students, each shown with Student Number, full name, and grade). A `?student=` link or QR scan still identifies the student directly
+- Add new visit entry. A visit opened without an identified student finds one by Student Number or student name (results appear from the first character typed, at most 8 active students, each shown with Student Number, full name, and grade). Incident Stage 1, PE/Sports Referral, Dispense, and the QR manual fallback use the same search. A `?student=` link or QR scan still identifies the student directly
 - Edit visit entry
 - View visit detail (full name shown — a deliberately opened single record)
 - View list of visits (filterable by date) — shows **Student Number**, not full name, per the display-privacy rule, since this rolling multi-student list is the kind of screen a bystander could glance at
@@ -180,13 +180,13 @@ Two distinct paths: the **computer system** (Staff's existing desktop flow) and 
 - Regenerate a QR code (invalidates the old one) if lost or damaged
 
 **Mobile Scan/Lookup (Staff)**
-- Scan QR Code, or enter Student Number manually as a fallback
+- Scan QR Code, or search by Student Number or student name as a fallback (pick from the list)
 - Form auto-fills the student's basic information
 - Staff completes only what's missing (visit reason, etc.) and saves
 - **Emergency button**, separate from the normal flow: opens a prefilled Stage-1 emergency form (see Module 4) for the fastest possible path when speed matters most
 
 **Mobile Scan/Lookup (PE/Sports Instructor)**
-- Scan QR Code, or enter Student Number manually
+- Scan QR Code, or search by Student Number or student name (pick from the list)
 - View the student's full profile read-only, full name shown (this is a deliberate single-student lookup, not a glanceable list — see the display-privacy rule): allergies, conditions, emergency contact, and visit/incident history (so recent injuries are visible)
 - No action buttons — no recording, no editing, nothing operational
 - Every profile view logged in the audit trail

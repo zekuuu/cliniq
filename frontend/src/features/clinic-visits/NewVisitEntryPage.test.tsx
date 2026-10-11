@@ -118,13 +118,16 @@ describe('New Visit', () => {
 describe('New Visit student lookup', () => {
   beforeEach(() => resetMockDb())
 
-  it('lists nothing before 2 characters, then finds by name and shows number, name, and grade', async () => {
+  it('lists nothing on focus, finds from the first character, and shows number, name, and grade', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
 
     const field = await screen.findByRole('combobox', { name: /student/i })
-    await user.type(field, 'q')
+    expect(field).toHaveAttribute('placeholder', 'YYYY-NNNNN or student name')
+    await user.click(field)
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+    await user.type(field, 'q')
+    expect(await screen.findByRole('listbox')).toBeInTheDocument()
     await user.type(field, 'uizon')
     const option = await screen.findByRole('option', { name: /2026-00001.*Gian Quizon/ })
     expect(option).toHaveTextContent("Kinder")

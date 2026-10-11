@@ -10,7 +10,7 @@ import {
   Input,
   SegmentedControl,
   Skeleton,
-  StudentNumberField,
+  StudentPicker,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
@@ -21,6 +21,7 @@ import type { Disposition } from '../../types/entities'
 import {
   fetchPeReferralContext,
   findReferralStudent,
+  searchReferralStudents,
   submitPeReferral,
   type PeReferralValues,
 } from './api/peReferralApi'
@@ -238,11 +239,14 @@ export function PeSportsReferralPage({
             }
           />
           <CardBody className="flex flex-col gap-4">
-            {identified.needsStudentNumber && (
-              <StudentNumberField
-                value={identified.input}
+            {!data.student && (
+              <StudentPicker
+                search={searchReferralStudents}
+                selected={identified.student}
+                onClear={identified.reset}
+                onSelect={(picked) => void identified.select(picked.studentNumber)}
                 error={identified.error}
-                onChange={identified.setInput}
+                addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
               />
             )}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

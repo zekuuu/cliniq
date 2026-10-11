@@ -27,11 +27,11 @@ Use this with `cliniq-dropdown-patterns` (the panel and option look), `cliniq-in
 
 ## Student lookup (`StudentPicker`)
 
-- `frontend/src/components/forms/StudentPicker.tsx`: a Combobox without free text. It matches a Student Number prefix or a name substring, case-insensitively, for active students only. Nothing is listed under 2 characters or on empty focus, and at most 8 results show, so it never reads as a roster.
+- `frontend/src/components/forms/StudentPicker.tsx`: a Combobox without free text. It matches a Student Number prefix or a name substring, case-insensitively, for active students only. Results appear from the first character typed; nothing is listed on an empty field or on focus, and at most 8 results show, so it never reads as a roster. The placeholder is "YYYY-NNNNN or student name".
 - Each result shows the Student Number, full name, and grade, so similar names can be told apart. It's a deliberate single lookup, so full names are correct (`cliniq-display-privacy`).
 - The query is never reformatted. A query of digits (and dashes) matches Student Numbers with the dashes ignored on both sides, so "202600001" and "2026-00001" both find 2026-00001. Anything with a letter is a name search.
 - A complete Student Number, with or without its dash, highlights its match, so typing it and pressing Enter still works.
 - No match: say so under the field. Pass `addStudentHref` only to roles that can add a student (Staff).
 - Search goes through the feature's `api/` function (ADR-013), so the real backend can replace it. Results carry no medical fields (`StudentSearchResult`).
-- After a pick, the form shows the chosen student (name, number, grade) with a Change action. A `?student=` deep link skips the picker entirely.
-- Used on New Visit. It would also fit Dispense, PE/Sports Referral, and Incident Stage 1, which still use `StudentNumberField`.
+- After a pick, the form shows the chosen student (name, number, grade) with a Change action that brings the search back, focused. Pass `selected` and `onClear` to get this from `StudentPicker` itself; don't rebuild it on the page. A `?student=` deep link skips the picker entirely.
+- Every field that identifies a student uses it: New Visit, Incident Stage 1, PE/Sports Referral, Dispense, and the QR hubs' manual fallback (mobile and desktop). On QR, picking a student runs the lookup at once, and the field is optional (`required={false}`, label ends "(optional)"). There is no separate typed Student Number field any more.

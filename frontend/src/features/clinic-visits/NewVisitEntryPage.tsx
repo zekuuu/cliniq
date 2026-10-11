@@ -215,7 +215,6 @@ export function NewVisitEntryPage({
   /** Complaint suggestions refreshed after a save, so a newly typed complaint is offered next time. */
   const [freshSuggestions, setFreshSuggestions] = useState<string[] | null>(null)
   /** After "Change", the student search takes focus again. */
-  const [focusStudentSearch, setFocusStudentSearch] = useState(false)
   const [errors, setErrors] = useState<Errors>({})
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
@@ -321,7 +320,6 @@ export function NewVisitEntryPage({
       setFollowUpNotes('')
       setErrors({})
       identified.reset()
-      setFocusStudentSearch(false)
       saveAndNewRef.current = false
     } catch (caught) {
       // The data layer rejected a line (an item expired since the form loaded, say); nothing was saved.
@@ -413,45 +411,19 @@ export function NewVisitEntryPage({
             }
           />
           <CardBody className="flex flex-col gap-4">
-            {!data.student &&
-              (identified.student ? (
-                <div className="flex flex-col gap-1">
-                  <p className="text-xs font-semibold text-text-primary">Student</p>
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-surface px-3 py-2">
-                    <p className="text-sm text-text-primary">
-                      <span className="font-semibold">{identified.student.fullName}</span>
-                      <span className="text-text-secondary">
-                        {' · '}
-                        <span className="tabular-nums">{identified.student.studentNumber}</span>
-                        {' · '}
-                        {identified.student.gradeLevel}
-                      </span>
-                    </p>
-                    <Button
-                      type="button"
-                      size="sm"
-                      aria-label={`Change student (${identified.student.fullName})`}
-                      onClick={() => {
-                        identified.reset()
-                        setFocusStudentSearch(true)
-                      }}
-                    >
-                      Change
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <StudentPicker
-                  search={searchVisitStudents}
-                  onSelect={(student) => {
-                    setSaved(null)
-                    void identified.select(student.studentNumber)
-                  }}
-                  error={identified.error}
-                  addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
-                  autoFocus={focusStudentSearch}
-                />
-              ))}
+            {!data.student && (
+              <StudentPicker
+                search={searchVisitStudents}
+                selected={identified.student}
+                onClear={identified.reset}
+                onSelect={(student) => {
+                  setSaved(null)
+                  void identified.select(student.studentNumber)
+                }}
+                error={identified.error}
+                addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
+              />
+            )}
             <ComplaintField
               value={complaint}
               onChange={updateComplaint}

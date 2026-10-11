@@ -16,7 +16,7 @@ import { getMockSessionUser, logoutMockSession, type SessionUser } from '../../.
 import { formatDateTime } from '../../../lib/dates'
 import { incidentCareSummary, visitCareSummary } from '../../../lib/itemsGiven'
 import type { StudentNumber } from '../../../types/entities'
-import { lookupStudentByNumber, type QrLookupResult } from '../api/qrLookupApi'
+import { lookupStudentByNumber, searchQrStudents, type QrLookupResult } from '../api/qrLookupApi'
 import { paths } from '../../../routes/paths'
 import { QrScannerView } from '../shared/QrScannerView'
 
@@ -272,8 +272,9 @@ export function QrMobileHubPage({
 
         <QrScannerView
           title="Identify student"
-          description="Use the camera scanner, demo scan, or manual Student Number fallback."
+          description="Use the camera scanner, demo scan, or search by Student Number or student name."
           onDetected={lookup}
+          search={searchQrStudents}
           onScanStart={() => setStatus((current) => (current === 'not_found' || current === 'error' ? 'idle' : current))}
         />
 

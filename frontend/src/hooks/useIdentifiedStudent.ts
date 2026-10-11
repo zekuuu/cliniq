@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { isStudentNumber, normalizeStudentNumber } from '../lib/studentNumber'
 import type { Student } from '../types/entities'
 
 /**
  * Which student an entry form is about. The student is either identified before the form opens (a
- * QR scan or a quick-action passes `?student=`), or typed into the form's Student Number field and
- * looked up on save. A form never falls back to a default student.
+ * QR scan or a quick-action passes `?student=`), or searched and picked on the form (`StudentPicker`).
+ * A form never falls back to a default student.
  *
  * `find` is the feature's own lookup (its `api/` module), so this hook stays free of data access.
  */
@@ -16,22 +15,16 @@ export function useIdentifiedStudent(
 ) {
   const [picked, setPicked] = useState<Student | null>(null)
   const student = preselected ?? picked
-  const [input, setInput] = useState('')
   const [error, setError] = useState<string | undefined>()
 
   return {
     student,
-    input,
     error,
-    /** True when the form opened without a student, so the Student Number field is shown. */
-    needsStudentNumber: !student,
-    setInput(value: string) {
-      setInput(normalizeStudentNumber(value))
-      setError(undefined)
-    },
-    /** Inline format check, run with the rest of the form's validation. */
-    validate(message = 'Enter the Student Number (YYYY-NNNNN).'): boolean {
-      if (student || isStudentNumber(input)) return true
+    /** Inline check, run with the rest of the form's validation. */
+    validate(
+      message = 'Choose the student: type a Student Number or name, then pick from the list.',
+    ): boolean {
+      if (student) return true
       setError(message)
       return false
     },
@@ -44,22 +37,13 @@ export function useIdentifiedStudent(
         setError("This student couldn't be loaded. Search again.")
       }
     },
-    /** The identified student, looked up from the typed number when needed; `null` if not found. */
+    /** The identified student; `null` when none was picked. */
     async resolve(): Promise<Student | null> {
-      if (student) return student
-      try {
-        const found = await find(input)
-        setPicked(found)
-        return found
-      } catch {
-        setError('No student has this Student Number. Check it and try again.')
-        return null
-      }
+      return student
     },
-    /** After a save on a form that identified its own student: ready for the next student. */
+    /** Clears the pick: after a save, or when Change brings the search back. */
     reset() {
       setPicked(null)
-      setInput('')
       setError(undefined)
     },
   }

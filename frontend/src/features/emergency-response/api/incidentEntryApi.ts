@@ -6,6 +6,7 @@ import {
   getStudentById,
   listInventory,
   saveIncidentStageOne,
+  searchStudents,
   type InventoryItemView,
   type ItemLineInput,
   type SessionUser,
@@ -16,6 +17,7 @@ import type {
   Incident,
   ParentNotificationAttempt,
   Student,
+  StudentSearchResult,
 } from '../../../types/entities'
 
 export interface IncidentEntryContext {
@@ -118,4 +120,9 @@ export function completeStageTwoIncident(
     },
     user,
   )
+}
+
+/** Incident Stage 1 student search: Student Number prefix or name, active students, at most 8. */
+export function searchIncidentStudents(query: string): Promise<StudentSearchResult[]> {
+  return searchStudents(query)
 }

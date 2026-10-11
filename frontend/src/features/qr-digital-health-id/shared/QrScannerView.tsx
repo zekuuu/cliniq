@@ -1,6 +1,5 @@
-import { useState, type FormEvent } from 'react'
-import { Button, Card, CardBody, CardHeader, Icon, Input } from '../../../components'
-import type { StudentNumber } from '../../../types/entities'
+import { Button, Card, CardBody, CardHeader, Icon, StudentPicker } from '../../../components'
+import type { StudentNumber, StudentSearchResult } from '../../../types/entities'
 import { normalizeStudentNumber } from '../../../lib/studentNumber'
 import { demoStudentNumber } from '../api/qrLookupApi'
 import { useQrScanner } from './useQrScanner'
@@ -9,6 +8,8 @@ export interface QrScannerViewProps {
   title: string
   description: string
   onDetected: (studentNumber: StudentNumber) => void
+  /** The manual fallback's student search (Student Number or name), from the feature's `api/`. */
+  search: (query: string) => Promise<StudentSearchResult[]>
   /** Called when the camera starts, so the host can clear a previous lookup's error message. */
   onScanStart?: () => void
 }
@@ -17,14 +18,8 @@ export interface QrScannerViewProps {
  * Shared QR scanner/manual fallback component. Mobile Staff, mobile Instructor, and later desktop
  * scanner flows all use this same wrapper; only their post-scan behavior differs.
  */
-export function QrScannerView({ title, description, onDetected, onScanStart }: QrScannerViewProps) {
-  const [manual, setManual] = useState('')
+export function QrScannerView({ title, description, onDetected, search, onScanStart }: QrScannerViewProps) {
   const { videoRef, status, error, start, stop } = useQrScanner((value) => onDetected(normalizeStudentNumber(value)))
-
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (manual.trim()) onDetected(normalizeStudentNumber(manual))
-  }
 
   return (
     <Card aria-labelledby="qr-scanner-title">
@@ -64,18 +59,13 @@ export function QrScannerView({ title, description, onDetected, onScanStart }: Q
             Use Demo Scan
           </Button>
         </div>
-        <form className="flex flex-col gap-2" onSubmit={onSubmit}>
-          <Input
-            label="Enter Student Number manually (optional)"
-            value={manual}
-            hint="Numbers are formatted as YYYY-NNNNN."
-            placeholder="2026-00001"
-            onChange={(event) => setManual(normalizeStudentNumber(event.target.value))}
-          />
-          <Button type="submit" variant="secondary">
-            Look Up Student
-          </Button>
-        </form>
+        <StudentPicker
+          search={search}
+          onSelect={(student) => onDetected(student.studentNumber)}
+          label="Enter Student Number or student name (optional)"
+          required={false}
+          hint="Type a Student Number or the student name, then pick the student."
+        />
       </CardBody>
     </Card>
   )

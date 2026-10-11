@@ -1,10 +1,11 @@
 import {
   getStudent,
+  searchStudents,
   listUsers,
   submitPeReferral as submitToLayer,
   type SessionUser,
 } from '../../../lib/mock-db'
-import type { Disposition, Student } from '../../../types/entities'
+import type { Disposition, Student, StudentSearchResult } from '../../../types/entities'
 
 export interface PeReferralContext {
   /** `null` when the form was opened without an identified student; it then asks for the Student Number. */
@@ -81,4 +82,9 @@ export async function submitPeReferral(
     },
     actor,
   )
+}
+
+/** the PE/Sports Referral student search: Student Number prefix or name, active students, at most 8. */
+export function searchReferralStudents(query: string): Promise<StudentSearchResult[]> {
+  return searchStudents(query)
 }

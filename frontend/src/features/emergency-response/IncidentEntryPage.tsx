@@ -16,7 +16,7 @@ import {
   Select,
   Skeleton,
   StatusBadge,
-  StudentNumberField,
+  StudentPicker,
   type ItemLineDraft,
   type StatusMap,
 } from '../../components'
@@ -32,6 +32,7 @@ import {
   completeStageTwoIncident,
   fetchIncidentEntryContext,
   findIncidentStudent,
+  searchIncidentStudents,
   saveStageOneIncident,
   type IncidentEntryContext,
 } from './api/incidentEntryApi'
@@ -396,12 +397,15 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
               description="Capture only the essentials now. Stage 2 can be completed after the immediate situation is handled."
             />
             <CardBody className="flex flex-col gap-4">
-              {identified.needsStudentNumber && (
-                <StudentNumberField
-                  value={identified.input}
+              {!data.student && (
+                <StudentPicker
+                  search={searchIncidentStudents}
+                  selected={identified.student}
+                  onClear={identified.reset}
+                  onSelect={(picked) => void identified.select(picked.studentNumber)}
                   error={identified.error}
-                  onChange={identified.setInput}
-                  hint="No student was identified before this emergency. Type the Student Number."
+                  hint="No student was identified before this emergency. Type a Student Number or the student name, then pick the student."
+                  addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
                 />
               )}
               <Select

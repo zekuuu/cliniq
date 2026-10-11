@@ -8,12 +8,13 @@ import {
   listVisits,
   restockInventoryItem as restockInLayer,
   saveInventoryItem as saveInLayer,
+  searchStudents,
   type DispenseResult,
   type InventoryItemView,
   type SessionUser,
   type StockAdjustmentInput,
 } from '../../../lib/mock-db'
-import type { InventoryCategory, InventoryItem, Student, Visit } from '../../../types/entities'
+import type { InventoryCategory, InventoryItem, Student, StudentSearchResult, Visit } from '../../../types/entities'
 
 /**
  * Inventory (#28–#30). Low-stock, nearing-expiration, expired, and below-zero states are computed
@@ -91,4 +92,9 @@ export async function findDispenseStudent(studentNumber: string): Promise<{ stud
   const today = getMockToday()
   const visits = await listVisits({ from: today, to: today })
   return { student, todaysVisit: visits.find((visit) => visit.studentId === student.id) ?? null }
+}
+
+/** the Dispense student search: Student Number prefix or name, active students, at most 8. */
+export function searchDispenseStudents(query: string): Promise<StudentSearchResult[]> {
+  return searchStudents(query)
 }

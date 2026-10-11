@@ -15,7 +15,7 @@
 
 ## Open work at a glance
 
-Open: FIX 1 · AUDIT 6 · DOC 1 · DECIDE 35 · LATER 6 | Notes: NOTE 13 · VERIFY 2 | Done: 106
+Open: FIX 1 · AUDIT 6 · DOC 1 · DECIDE 36 · LATER 5 | Notes: NOTE 14 · VERIFY 2 | Done: 107
 
 **Open `FIX` items:**
 
@@ -23,8 +23,8 @@ Open: FIX 1 · AUDIT 6 · DOC 1 · DECIDE 35 · LATER 6 | Notes: NOTE 13 · VERI
 
 - **AUDIT** (6): Free-text complaints and student lookup; Pending excuse letters on the Dashboard and profile; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep
 - **DOC** (1): Issues-and-TODOs fix sweep
-- **DECIDE** (35): Open decisions, waiting on someone outside the dev team; Login redesign follow-ups; Open design questions; Known gaps; QR scan/lookup; Visit and incident entry; Interaction-based UI/UX review; Open after the Group B fixes; Open after the dropdown consistency pass; Open product decisions from the mock-data layer; Free-text complaints and student lookup; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep
-- **LATER** (6): Open decisions, waiting on someone outside the dev team; Known gaps; Open after the Group B fixes; Free-text complaints and student lookup; Medicines & supplies given (ADR-018)
+- **DECIDE** (36): Open decisions, waiting on someone outside the dev team; Login redesign follow-ups; Open design questions; Known gaps; QR scan/lookup; Visit and incident entry; Interaction-based UI/UX review; Open after the Group B fixes; Open after the dropdown consistency pass; Open product decisions from the mock-data layer; Free-text complaints and student lookup; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep; Student search on every student field
+- **LATER** (5): Open decisions, waiting on someone outside the dev team; Known gaps; Open after the Group B fixes; Medicines & supplies given (ADR-018)
 
 ---
 
@@ -273,7 +273,7 @@ Left open by the session that made every dropdown match the Dashboard's date-ran
 - **[NOTE]** **"Grade/section":** students have only `gradeLevel`; no section field exists, so the picker shows the grade only.
 - [ ] **[DECIDE]** **Typing a full Student Number and clicking Save without picking** no longer identifies the student (the old field did). Enter, or a click on the result, picks it; Save without a pick asks for one.
 - [ ] **[DECIDE]** **Student search isn't audit-logged**, the same as the Student List search. It returns no medical fields.
-- [ ] **[LATER]** **StudentPicker rollout:** it would also fit Dispense, PE/Sports Referral, and Incident Stage 1, which still use `StudentNumberField`.
+- [x] **[DONE]** **StudentPicker rollout:** it would also fit Dispense, PE/Sports Referral, and Incident Stage 1, which still use `StudentNumberField`. Resolved Monday, October 12, 2026 — 01:34 PHT: Zean asked for it. Incident Stage 1, PE/Sports Referral, Dispense, and both QR hubs' manual fallback now use `StudentPicker`; `StudentNumberField` was removed. Evidence: updated tests in `IncidentEntryPage.test.tsx`, `PeSportsReferralPage.test.tsx`, `StockActions.test.tsx`, `QrMobileHubPage.test.tsx`, `ui-review-regressions.test.tsx`. Session: [2026-10-12-student-picker-everywhere](Agent-Sessions/2026-10-12-student-picker-everywhere.md)
 - [ ] **[AUDIT]** **Re-audit needed (Frontend-Loop-Engineering Phase 2):** New Visit Entry changed after its audit. Its boxes were left as they were.
 - [x] **[DONE]** **Canonical document drift:** the Modules & Features canonical doc (Module 3) needs the free-text complaint and student-lookup wording now in `Module-Overview.md` (`09-References/Canonical-Documents.md`). Resolved Sunday, October 11, 2026 — 20:31 PHT: Module 3's "Add new visit entry" and "Record complaint/symptom" lines copied verbatim from `Module-Overview.md`. Session: [2026-10-11-issues-todos-fix-sweep](Agent-Sessions/2026-10-11-issues-todos-fix-sweep.md)
 
@@ -318,6 +318,11 @@ Left open by the session that made every dropdown match the Dashboard's date-ran
 - [ ] **[DECIDE]** **Cancel with unsaved changes leaves without asking.** No form had an unsaved-changes confirmation, so the new shared Cancel (`useCancelNavigation`) doesn't add one. Decide whether entry forms should confirm before discarding typed input.
 - [ ] **[DECIDE]** **Incident General notes can't be edited after Stage 1.** Stage 2 and the report show them read-only. Decide whether Stage 2 (or an incident edit) should allow correcting them.
 - [ ] **[DOC]** **Canonical document drift:** the Modules & Features canonical doc (Module 4, Stage 1) needs the optional General notes sentence now in `Module-Overview.md`. Module 9 also still lacks the ADR-019/ADR-020 calendar wording (school events, national holidays) and its header still says "both view-only" (`09-References/Canonical-Documents.md`).
+
+## Student search on every student field — Monday, October 12, 2026 — 01:34 PHT
+
+- [ ] **[DECIDE]** **PE/Sports Instructors can now find a student by name on the QR lookup** (logged Monday, October 12, 2026 — 01:34 PHT). Before, the Instructor's manual fallback took a Student Number only; the shared `StudentPicker` also matches names (at most 8 active students, Student Number, name, and grade; no medical fields). Opening a profile is still an audited `scan`, but the search itself isn't logged (see "Student search isn't audit-logged"). Confirm Instructors should search by name, or pass a number-only mode on the Instructor hub. Session: [2026-10-12-student-picker-everywhere](Agent-Sessions/2026-10-12-student-picker-everywhere.md)
+- **[NOTE]** **Dispense now shows the picked student's full name** in the picked-student box (with Change), the same as New Visit, because it is a deliberate single lookup (`cliniq-display-privacy`). The "already has a visit today" notice still names no student. ADR-018's Student-Number-only rule covers dispense/transaction history lists, not this form. Session: [2026-10-12-student-picker-everywhere](Agent-Sessions/2026-10-12-student-picker-everywhere.md)
 
 ## Format for new entries
 When you find or resolve something, add it here with a date and enough context that someone with zero memory of the conversation that created it can still act on it.

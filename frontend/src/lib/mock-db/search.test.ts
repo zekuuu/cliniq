@@ -6,9 +6,12 @@ import { resetMockDb } from './store'
 describe('student search', () => {
   beforeEach(() => resetMockDb())
 
-  it('answers nothing under 2 characters, so it never lists a roster', async () => {
+  it('answers nothing for an empty query, and from the first character on at most 8', async () => {
     expect(await searchStudents('')).toEqual([])
-    expect(await searchStudents('a')).toEqual([])
+    expect(await searchStudents('   ')).toEqual([])
+    const one = await searchStudents('a')
+    expect(one.length).toBeGreaterThan(0)
+    expect(one.length).toBeLessThanOrEqual(8)
   })
 
   it('matches a Student Number prefix or a name substring, case-insensitively, at most 8', async () => {

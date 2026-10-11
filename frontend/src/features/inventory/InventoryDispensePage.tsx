@@ -1,13 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Input, InventoryItemPicker, Select, Skeleton, StudentNumberField } from '../../components'
+import { Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Input, InventoryItemPicker, Select, Skeleton, StudentPicker } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { formatDateTime } from '../../lib/dates'
 import { StockRuleError } from '../../lib/mock-db'
-import { isStudentNumber, normalizeStudentNumber } from '../../lib/studentNumber'
+import { isStudentNumber } from '../../lib/studentNumber'
 import { paths } from '../../routes/paths'
-import { dispenseInventoryItem, fetchInventory, findDispenseStudent } from './api/inventoryApi'
+import type { StudentSearchResult } from '../../types/entities'
+import { dispenseInventoryItem, fetchInventory, findDispenseStudent, searchDispenseStudents } from './api/inventoryApi'
 
 type Recipient = '' | 'student' | 'general'
 
@@ -32,6 +33,7 @@ export function InventoryDispensePage() {
   const { data: items, status, reload } = useAsyncData('dispense-items', () => fetchInventory({ search: '', category: '' }))
   const [recipient, setRecipient] = useState<Recipient>(preselected ? 'student' : '')
   const [studentNumber, setStudentNumber] = useState(preselected)
+  const [picked, setPicked] = useState<StudentSearchResult | null>(null)
   const [itemId, setItemId] = useState('')
   const [quantity, setQuantity] = useState('1')
   const [errors, setErrors] = useState<{ recipient?: string; student?: string; item?: string; quantity?: string; save?: string }>({})
@@ -55,7 +57,7 @@ export function InventoryDispensePage() {
     event.preventDefault()
     const next: typeof errors = {}
     if (!recipient) next.recipient = 'Choose who this is for.'
-    if (recipient === 'student' && !isStudentNumber(studentNumber)) next.student = 'Enter the Student Number (YYYY-NNNNN).'
+    if (recipient === 'student' && !isStudentNumber(studentNumber)) next.student = 'Choose the student: type a Student Number or name, then pick from the list.'
     else if (recipient === 'student' && lookup === null) next.student = 'No student has this Student Number. Check it and try again.'
     if (!item) next.item = 'Choose an item.'
     if (!Number.isInteger(amount) || amount < 1) next.quantity = 'Enter a whole-number quantity of at least 1.'
@@ -89,7 +91,15 @@ export function InventoryDispensePage() {
         <form noValidate className="flex flex-col gap-4" onSubmit={submit}>
           <Select label="For" required value={recipient} placeholder="Choose who this is for" options={recipientOptions} error={errors.recipient} onChange={(value) => { setRecipient(value as Recipient); clear('recipient') }} />
           {recipient === 'student' && (
-            <StudentNumberField value={studentNumber} error={errors.student} hint="The student who received it." onChange={(value) => { setStudentNumber(normalizeStudentNumber(value)); clear('student') }} />
+            <StudentPicker
+              search={searchDispenseStudents}
+              selected={picked ?? lookup?.student ?? null}
+              onSelect={(student) => { setPicked(student); setStudentNumber(student.studentNumber); clear('student') }}
+              onClear={() => { setPicked(null); setStudentNumber(''); clear('student') }}
+              error={errors.student}
+              hint="Type a Student Number or the student name, then pick the student who received it."
+              addStudentHref={paths.studentNew}
+            />
           )}
           {recipient === 'student' && lookup?.todaysVisit && (
             <div role="status" className="rounded-md border border-info bg-info/10 px-4 py-3 text-sm text-text-primary">

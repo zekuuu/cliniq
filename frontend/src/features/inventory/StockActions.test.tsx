@@ -96,12 +96,23 @@ describe('Standalone Dispense', () => {
     expect(await stock('item-0014')).toBe(89)
   })
 
-  it("links to the student's visit today instead of recording twice, showing only the Student Number", async () => {
+  it("links to the student's visit today instead of recording twice; the notice names no student", async () => {
     const student = await getStudent('2026-00005')
     renderWithRouter(<InventoryDispensePage />, { route: `/inventory/dispense?student=${student.studentNumber}` })
-    expect(await screen.findByText(/This student already has a visit today/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Open today’s visit/ })).toHaveAttribute('href', '/visits/visit-0159')
-    expect(screen.queryByText(new RegExp(student.fullName))).not.toBeInTheDocument()
+    const notice = (await screen.findByText(/This student already has a visit today/)).closest('[role="status"]') as HTMLElement
+    expect(within(notice).getByRole('link', { name: /Open today’s visit/ })).toHaveAttribute('href', '/visits/visit-0159')
+    expect(within(notice).queryByText(new RegExp(student.fullName))).not.toBeInTheDocument()
+    // The picked student shows like New Visit's: a deliberate single lookup (cliniq-display-privacy).
+    expect(screen.getByRole('button', { name: `Change student (${student.fullName})` })).toBeInTheDocument()
+  })
+
+  it('finds the student by name from the first letters and picks from the list', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<InventoryDispensePage />, { route: '/inventory/dispense' })
+    await selectOption(user, await screen.findByLabelText(/^For/), 'A student')
+    await user.type(screen.getByRole('combobox', { name: /student/i }), 'Gian')
+    await user.click(await screen.findByRole('option', { name: /2026-00001.*Gian Quizon/ }))
+    expect(screen.getByRole('button', { name: 'Change student (Gian Quizon)' })).toBeInTheDocument()
   })
 
   it('shows expired items as unavailable', async () => {

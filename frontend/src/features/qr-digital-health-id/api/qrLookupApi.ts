@@ -2,9 +2,10 @@ import {
   getDemoStudent,
   listStudents,
   lookupStudentByScan,
+  searchStudents,
   type SessionUser,
 } from '../../../lib/mock-db'
-import type { Incident, Student, StudentNumber, Visit } from '../../../types/entities'
+import type { Incident, Student, StudentNumber, StudentSearchResult, Visit } from '../../../types/entities'
 
 export interface QrLookupResult {
   student: Student
@@ -25,4 +26,9 @@ export function lookupStudentByNumber(studentNumber: StudentNumber, user: Sessio
 /** Students a QR sticker can be printed for (active records only). */
 export function fetchPrintableStudents(): Promise<Student[]> {
   return listStudents()
+}
+
+/** the QR manual student search: Student Number prefix or name, active students, at most 8. */
+export function searchQrStudents(query: string): Promise<StudentSearchResult[]> {
+  return searchStudents(query)
 }

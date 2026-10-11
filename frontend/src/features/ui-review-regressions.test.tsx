@@ -21,6 +21,7 @@ vi.mock('react-chartjs-2', () => {
   return { Bar: Stub, Line: Stub }
 })
 import { renderWithRouter } from '../test/renderWithRouter'
+import { db } from '../lib/mock-db/store'
 import { getGradeLevels, getRecordedAuditEntries, getStudent, listIncidents, listVisits, resetMockDb } from '../lib/mock-db'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
 import { IncidentReportPage } from './emergency-response/IncidentReportPage'
@@ -194,8 +195,11 @@ describe('UI/UX review follow-up fixes', () => {
     const user = userEvent.setup()
     renderWithRouter(<QrMobileHubPage />)
 
-    await user.type(screen.getByLabelText(/enter student number manually/i), '209999999')
-    await user.click(screen.getByRole('button', { name: 'Look Up Student' }))
+    // The student leaves the records between the search and the pick, so the lookup can't find them.
+    await user.type(screen.getByRole('combobox', { name: /student number or student name/i }), '202600001')
+    await screen.findByRole('option', { name: /2026-00001/ })
+    db().students = db().students.filter((student) => student.studentNumber !== '2026-00001')
+    await user.keyboard('{Enter}')
     expect(await screen.findByText('Student not found.')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Scan QR Code' }))
