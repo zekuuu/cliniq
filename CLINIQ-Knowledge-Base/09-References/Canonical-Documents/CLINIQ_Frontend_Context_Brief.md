@@ -115,7 +115,7 @@ Give the agent this even without a finalized API spec, so component props and fo
 - **InventoryItem** — id, name, category (medicine/supply), current stock, unit, expiration date, low-stock threshold
 - **Report** — type (monthly/incident/health-summary), date range, generated file/data
 - **BackupLog** — last run timestamp, file size, status (ok/failed), verified-by
-- **AuditLogEntry** — user, action type (login/scan/submit/approve/create/update/delete/archive), target record, timestamp — written for every action across every module, not just QR
+- **AuditLogEntry** — user, action type (login/scan/submit/approve/create/update/delete/archive), target record, timestamp, and an optional summary that names fields or states only, never their values (e.g. "Updated allergies"; omitted when the action and target already say everything — ADR-017) — written for every action across every module, not just QR
 
 **Note on the calendar:** there is deliberately no separate "SchoolEvent" entity this phase — `eventTag` is a free-text field on Visit/Incident, not a managed list. A fuller, independently-manageable school-events calendar is a documented future decision (see Section 9), not something to build now.
 

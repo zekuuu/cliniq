@@ -52,7 +52,7 @@ export function CardHeader({
           {description && <p className="mt-0.5 text-xs text-text-secondary">{description}</p>}
         </div>
       </div>
-      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2 print:hidden">{actions}</div>}
+      {actions && <div className="flex max-w-full shrink-0 flex-wrap items-center gap-2 print:hidden">{actions}</div>}
     </div>
   )
 }

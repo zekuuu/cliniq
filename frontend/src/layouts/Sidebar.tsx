@@ -26,7 +26,7 @@ export function BrandLogo({
       />
       <span className={cn('flex flex-col leading-tight', compact && 'max-sm:hidden')}>
         <span className="text-xl font-bold tracking-tight text-brand-green-dark">CLINIQ</span>
-        <span className="text-[11px] font-medium tracking-tight whitespace-nowrap text-text-secondary">
+        <span className="text-xs leading-tight font-medium tracking-tight whitespace-nowrap text-text-secondary">
           Mendez Christian Academy
         </span>
         {showAttribution && (

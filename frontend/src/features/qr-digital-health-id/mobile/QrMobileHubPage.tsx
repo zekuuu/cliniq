@@ -101,35 +101,35 @@ function StaffActions({ studentNumber }: { studentNumber: StudentNumber }) {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Link
             to={paths.visitNew(studentNumber)}
-            className="flex min-h-16 cursor-pointer items-center gap-3 rounded-md border border-brand-green bg-background px-4 text-sm font-semibold text-brand-green-dark shadow-card transition-colors hover:bg-surface"
+            className="flex min-h-16 cursor-pointer items-center justify-center gap-3 rounded-md border border-brand-green bg-background px-4 text-sm font-semibold text-brand-green-dark shadow-card transition-colors hover:bg-surface"
           >
             <Icon name="stethoscope" />
             Record Visit
           </Link>
           <Link
             to={paths.incidentNew(studentNumber)}
-            className="flex min-h-16 cursor-pointer items-center gap-3 rounded-md border border-warning bg-warning px-4 text-sm font-semibold text-white shadow-card transition-[filter] hover:brightness-90"
+            className="flex min-h-16 cursor-pointer items-center justify-center gap-3 rounded-md border border-warning bg-warning px-4 text-sm font-semibold text-white shadow-card transition-[filter] hover:brightness-90"
           >
             <Icon name="alertTriangle" />
             Log Emergency
           </Link>
           <Link
             to={paths.studentProfile(studentNumber)}
-            className="flex min-h-16 cursor-pointer items-center gap-3 rounded-md border border-brand-green bg-background px-4 text-sm font-semibold text-brand-green-dark shadow-card transition-colors hover:bg-surface"
+            className="flex min-h-16 cursor-pointer items-center justify-center gap-3 rounded-md border border-brand-green bg-background px-4 text-sm font-semibold text-brand-green-dark shadow-card transition-colors hover:bg-surface"
           >
             <Icon name="users" />
             View Full Profile
           </Link>
           <Link
             to={paths.inventoryDispense(studentNumber)}
-            className="flex min-h-16 cursor-pointer items-center gap-3 rounded-md border border-brand-green bg-background px-4 text-sm font-semibold text-brand-green-dark shadow-card transition-colors hover:bg-surface"
+            className="flex min-h-16 cursor-pointer items-center justify-center gap-3 rounded-md border border-brand-green bg-background px-4 text-sm font-semibold text-brand-green-dark shadow-card transition-colors hover:bg-surface"
           >
             <Icon name="package" />
             Dispense Medicine
           </Link>
           <Link
             to={paths.peReferral(studentNumber)}
-            className="flex min-h-16 cursor-pointer items-center gap-3 rounded-md border border-brand-green bg-background px-4 text-sm font-semibold text-brand-green-dark shadow-card transition-colors hover:bg-surface"
+            className="flex min-h-16 cursor-pointer items-center justify-center gap-3 rounded-md border border-brand-green bg-background px-4 text-sm font-semibold text-brand-green-dark shadow-card transition-colors hover:bg-surface"
           >
             <Icon name="activity" />
             PE/Sports Referral

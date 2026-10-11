@@ -135,6 +135,11 @@ export interface Incident {
    * is backed by a dispense transaction that references the incident. PROVISIONAL, pending the ERD.
    */
   itemsGiven: ItemGivenLine[]
+  /**
+   * Optional free-text notes entered at Stage 1. Never required, so fast capture stays fast. Absent on
+   * records saved before the field existed. PROVISIONAL, pending the ERD.
+   */
+  generalNotes?: string | null
 }
 
 export type FollowUpStatus = 'pending' | 'completed' | 'missed' | 'cancelled'

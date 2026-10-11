@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { NewVisitEntryPage } from './NewVisitEntryPage'
+import { renderWithRouter } from '../../test/renderWithRouter'
 
 vi.mock('./api/newVisitApi', () => ({
   fetchNewVisitContext: () => new Promise(() => {}),
@@ -10,7 +11,7 @@ vi.mock('./api/newVisitApi', () => ({
 
 describe('New Visit Entry: first-load skeleton', () => {
   it('announces loading and shows shaped placeholders', () => {
-    const { container } = render(<NewVisitEntryPage studentNumber="2026-00001" />)
+    const { container } = renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading visit form…')
     expect(container.querySelectorAll('[aria-hidden="true"] .animate-pulse').length).toBeGreaterThan(5)

@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { getInventoryItem, getStudent, resetMockDb } from '../../lib/mock-db'
@@ -21,7 +21,7 @@ async function pick(user: UserEvent, search: string, name: RegExp) {
 }
 
 async function openNewVisit(user: UserEvent) {
-  render(<NewVisitEntryPage studentNumber="2026-00001" />)
+  renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
   await screen.findByRole('heading', { name: 'New Visit' })
   await selectOption(user, screen.getByLabelText(/complaint/i), 'Headache')
 }
@@ -83,7 +83,7 @@ describe('New Visit: medicines and supplies given', () => {
 
   it("shows the student's recorded allergies beside the picker", async () => {
     const student = await getStudent('2020-00001')
-    render(<NewVisitEntryPage studentNumber={student.studentNumber} />)
+    renderWithRouter(<NewVisitEntryPage studentNumber={student.studentNumber} />)
     await screen.findByRole('heading', { name: 'New Visit' })
     expect(screen.getByRole('note', { name: 'Recorded allergies' })).toHaveTextContent('Allergies: Peanuts')
   })
@@ -121,14 +121,14 @@ describe('Incident: medicines and supplies given', () => {
   beforeEach(() => resetMockDb())
 
   it('keeps Stage 1 fast with no medicine entry', async () => {
-    render(<IncidentEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<IncidentEntryPage studentNumber="2026-00001" />)
     await screen.findByRole('heading', { name: 'Report Incident' })
     expect(screen.queryByRole('combobox', { name: 'Add medicine or supply' })).not.toBeInTheDocument()
   })
 
   it('records lines at Stage 2 and takes them from stock', async () => {
     const user = userEvent.setup()
-    render(<IncidentEntryPage incidentId="incident-0022" />)
+    renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
     await screen.findByRole('heading', { name: 'Complete Incident Record' })
     await user.type(screen.getByLabelText(/blood pressure/i), '110/70')
     await user.type(screen.getByLabelText(/oxygen saturation/i), '98')

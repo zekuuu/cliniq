@@ -66,9 +66,9 @@ export function QrScannerView({ title, description, onDetected, onScanStart }: Q
         </div>
         <form className="flex flex-col gap-2" onSubmit={onSubmit}>
           <Input
-            label="Enter Student Number manually"
+            label="Enter Student Number manually (optional)"
             value={manual}
-            hint="Optional. Numbers are formatted as YYYY-NNNNN."
+            hint="Numbers are formatted as YYYY-NNNNN."
             placeholder="2026-00001"
             onChange={(event) => setManual(normalizeStudentNumber(event.target.value))}
           />

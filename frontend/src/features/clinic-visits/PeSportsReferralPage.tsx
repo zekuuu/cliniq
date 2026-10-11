@@ -13,6 +13,8 @@ import {
   StudentNumberField,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useCancelNavigation } from '../../hooks/useCancelNavigation'
+import { paths } from '../../routes/paths'
 import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import type { Disposition } from '../../types/entities'
@@ -111,6 +113,7 @@ export function PeSportsReferralPage({
   viewer?: SessionUser
   studentNumber?: string
 }) {
+  const cancel = useCancelNavigation(paths.visits)
   const { data, status, reload } = useAsyncData(`pe-referral|${studentNumber ?? 'unidentified'}`, () =>
     fetchPeReferralContext(studentNumber),
   )
@@ -301,7 +304,10 @@ export function PeSportsReferralPage({
               />
             )}
 
-            <div className="flex justify-end border-t border-border pt-4">
+            <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
+              <Button type="button" variant="neutral" onClick={cancel}>
+                Cancel
+              </Button>
               <Button type="submit" variant="primary" icon="checkCircle" loading={saving}>
                 Save Referral
               </Button>

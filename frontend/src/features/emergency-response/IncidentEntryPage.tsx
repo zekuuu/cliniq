@@ -21,6 +21,8 @@ import {
   type StatusMap,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useCancelNavigation } from '../../hooks/useCancelNavigation'
+import { paths } from '../../routes/paths'
 import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { addDays, todayISO } from '../../lib/dates'
 import { draftsFrom, formatItemGiven } from '../../lib/itemsGiven'
@@ -190,6 +192,7 @@ function vital(incident: Incident | null, key: string): string {
 
 function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: IncidentEntryContext }) {
   const today = todayISO()
+  const cancel = useCancelNavigation(paths.incidents)
   const existing = data.incident
   const identified = useIdentifiedStudent(data.student, findIncidentStudent)
   const student = identified.student
@@ -199,6 +202,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const [complaint, setComplaint] = useState(existing?.complaint ?? '')
   const [temperatureC, setTemperatureC] = useState(vital(existing, 'temperatureC'))
   const [pulseBpm, setPulseBpm] = useState(vital(existing, 'pulseBpm'))
+  const [generalNotes, setGeneralNotes] = useState(existing?.generalNotes ?? '')
   const [bloodPressure, setBloodPressure] = useState(vital(existing, 'bloodPressure'))
   const [oxygenSaturation, setOxygenSaturation] = useState(vital(existing, 'oxygenSaturation'))
   const [treatmentNotes, setTreatmentNotes] = useState(vital(existing, 'treatmentNotes'))
@@ -237,7 +241,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       const target = await identified.resolve()
       if (!target) return
       const saved = await saveStageOneIncident(
-        { studentId: target.id, complaint, temperatureC, pulseBpm },
+        { studentId: target.id, complaint, temperatureC, pulseBpm, generalNotes },
         viewer,
       )
       setIncident(saved)
@@ -437,8 +441,9 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                   error={errors.pulseBpm}
                 />
               </div>
+              <TextareaField label="General notes (optional)" value={generalNotes} onChange={setGeneralNotes} rows={3} />
               <div className="flex flex-wrap justify-end gap-2 pt-2">
-                <Button type="button" variant="neutral" onClick={() => window.history.back()}>Cancel</Button>
+                <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
                 <Button
                   type="submit"
                   variant="primary"
@@ -477,6 +482,12 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     <p className="text-xs text-text-secondary">
                       {temperatureC}°C · {pulseBpm} bpm
                     </p>
+                    {incident.generalNotes && (
+                      <p className="mt-2 text-sm whitespace-pre-line text-text-primary">
+                        <span className="text-xs font-semibold text-text-secondary">General notes: </span>
+                        {incident.generalNotes}
+                      </p>
+                    )}
                   </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <Input
@@ -679,7 +690,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     {!treatmentNotes.trim() && !lines.length && !completed && (
                       <p className="mr-auto text-xs text-text-secondary">No treatment recorded. You can still save.</p>
                     )}
-                    <Button type="button" variant="neutral" onClick={() => window.history.back()}>Cancel</Button>
+                    <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
                     <Button type="submit" variant="primary" loading={savingStageTwo}>
                       Complete Incident
                     </Button>

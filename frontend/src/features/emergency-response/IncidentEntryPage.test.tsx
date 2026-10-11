@@ -1,9 +1,11 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { getRecordedAuditEntries, getStudent, listIncidents, resetMockDb } from '../../lib/mock-db'
+import { getIncident, getRecordedAuditEntries, getStudent, listIncidents, resetMockDb } from '../../lib/mock-db'
 import { selectOption } from '../../test/selectOption'
 import { IncidentEntryPage } from './IncidentEntryPage'
+import { IncidentReportPage } from './IncidentReportPage'
+import { renderWithRouter } from '../../test/renderWithRouter'
 
 const STUDENT = '2026-00001'
 
@@ -11,7 +13,7 @@ describe('Report Incident', () => {
   beforeEach(() => resetMockDb())
 
   it('starts as Stage 1 fast capture with visible status', async () => {
-    render(<IncidentEntryPage studentNumber={STUDENT} />)
+    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
 
     expect(await screen.findByRole('heading', { name: 'Report Incident' })).toBeInTheDocument()
     expect(screen.getByText('Needs completion')).toBeInTheDocument()
@@ -21,7 +23,7 @@ describe('Report Incident', () => {
 
   it('validates Stage 1 essentials inline', async () => {
     const user = userEvent.setup()
-    render(<IncidentEntryPage />)
+    renderWithRouter(<IncidentEntryPage />)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
@@ -32,7 +34,7 @@ describe('Report Incident', () => {
 
   it('saves Stage 1, then completes Stage 2 with audit entries', async () => {
     const user = userEvent.setup()
-    render(<IncidentEntryPage studentNumber={STUDENT} />)
+    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
     await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
@@ -65,7 +67,7 @@ describe('Report Incident', () => {
   }, 15_000)
 
   it('uses the themed complaint dropdown instead of a native select', async () => {
-    render(<IncidentEntryPage />)
+    renderWithRouter(<IncidentEntryPage />)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
     const field = screen.getByLabelText(/complaint/i)
@@ -76,7 +78,7 @@ describe('Report Incident', () => {
 
   it('asks for the Student Number when the Emergency button opened it without a student', async () => {
     const user = userEvent.setup()
-    render(<IncidentEntryPage />)
+    renderWithRouter(<IncidentEntryPage />)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
     expect(screen.getByText(/student not identified yet/i)).toBeInTheDocument()
@@ -105,7 +107,7 @@ describe('Report Incident', () => {
   it('reopens a saved Stage 1 incident directly at Stage 2', async () => {
     const stageOne = (await listIncidents()).find((incident) => incident.stage === 1)
     expect(stageOne).toBeTruthy()
-    render(<IncidentEntryPage incidentId={stageOne!.id} />)
+    renderWithRouter(<IncidentEntryPage incidentId={stageOne!.id} />)
 
     expect(await screen.findByRole('heading', { name: 'Stage 2 completion' })).toBeInTheDocument()
     expect(screen.getAllByText(stageOne!.complaint).length).toBeGreaterThan(0)
@@ -114,7 +116,7 @@ describe('Report Incident', () => {
 
   it('completes Stage 2 without treatment notes or medicines', async () => {
     const user = userEvent.setup()
-    render(<IncidentEntryPage incidentId="incident-0022" />)
+    renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
 
     await screen.findByRole('heading', { name: 'Complete Incident Record' })
     await user.type(screen.getByLabelText(/blood pressure/i), '110/70')
@@ -123,5 +125,43 @@ describe('Report Incident', () => {
 
     expect(await screen.findByText(/incident completed/i)).toBeInTheDocument()
     expect(screen.getByText('No treatment recorded')).toBeInTheDocument()
+  })
+})
+
+describe('Report Incident: optional general notes', () => {
+  beforeEach(() => resetMockDb())
+
+  async function saveStageOne(notes?: string) {
+    const user = userEvent.setup()
+    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+    await screen.findByRole('heading', { name: 'Report Incident' })
+    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await user.type(screen.getByLabelText(/temperature/i), '37.2')
+    await user.type(screen.getByLabelText(/pulse/i), '92')
+    expect(screen.getByLabelText('General notes (optional)')).not.toBeRequired()
+    if (notes) await user.type(screen.getByLabelText('General notes (optional)'), notes)
+    await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
+    await screen.findByRole('heading', { name: 'Stage 2 completion' })
+    const [entry] = getRecordedAuditEntries()
+    return { entry, incident: await getIncident(entry.targetRecord!.id) }
+  }
+
+  it('saves Stage 1 without notes', async () => {
+    const { entry, incident } = await saveStageOne()
+    expect(incident.generalNotes).toBeNull()
+    expect(entry.summary).toBeUndefined()
+    expect(screen.queryByText(/general notes:/i)).not.toBeInTheDocument()
+  })
+
+  it('saves Stage 1 with notes, shows them at Stage 2 and on the report, and audits the field name only', async () => {
+    const { entry, incident } = await saveStageOne('Fell during recess; conscious.')
+    expect(incident.generalNotes).toBe('Fell during recess; conscious.')
+    expect(entry.summary).toBe('Included general notes')
+    expect(JSON.stringify(getRecordedAuditEntries())).not.toContain('recess')
+    expect(screen.getByText('Fell during recess; conscious.')).toBeInTheDocument()
+
+    renderWithRouter(<IncidentReportPage incidentId={incident.id} />)
+    expect(await screen.findByText('General notes')).toBeInTheDocument()
+    expect(screen.getAllByText('Fell during recess; conscious.')).toHaveLength(2)
   })
 })

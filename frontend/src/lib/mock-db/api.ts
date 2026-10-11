@@ -875,6 +875,8 @@ export interface StageOneInput {
   studentId: string
   complaint: string
   vitals: Incident['vitals']
+  /** Optional; blank is saved as null. PROVISIONAL (Incident.generalNotes). */
+  generalNotes?: string
 }
 
 /** Stage 1 fast capture: saves with only complaint + immediate vitals (Activity Diagram 2). */
@@ -893,9 +895,11 @@ export function saveIncidentStageOne(input: StageOneInput, actor?: SessionUser):
       stage: 1,
       eventTag: null,
       itemsGiven: [],
+      generalNotes: input.generalNotes?.trim() || null,
     }
     s.incidents.push(incident)
-    audit(s, by, 'submit', { type: 'incident-stage-1', id: incident.id })
+    // The summary names the optional field, never its value (ADR-017).
+    audit(s, by, 'submit', { type: 'incident-stage-1', id: incident.id }, incident.generalNotes ? 'Included general notes' : undefined)
     return incident
   })
 }

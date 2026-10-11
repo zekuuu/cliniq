@@ -1,10 +1,11 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { getRecordedAuditEntries, resetMockDb } from '../../lib/mock-db'
 import { selectOption } from '../../test/selectOption'
 import { StudentFormPage } from './StudentFormPage'
 import { fetchStudentList } from './api/studentListApi'
+import { renderWithRouter } from '../../test/renderWithRouter'
 
 async function fillRequiredStudentFields() {
   const user = userEvent.setup()
@@ -25,7 +26,7 @@ describe('Student Form', () => {
   })
 
   it('renders add mode with a system-assigned Student Number preview', async () => {
-    render(<StudentFormPage />)
+    renderWithRouter(<StudentFormPage />)
 
     expect(await screen.findByRole('heading', { name: 'Add Student' })).toBeInTheDocument()
     expect(screen.getByText(/\d{4}-\d{5}/)).toBeInTheDocument()
@@ -34,7 +35,7 @@ describe('Student Form', () => {
 
   it('validates required fields inline', async () => {
     const user = userEvent.setup()
-    render(<StudentFormPage />)
+    renderWithRouter(<StudentFormPage />)
 
     await screen.findByRole('heading', { name: 'Add Student' })
     await user.click(screen.getByRole('button', { name: 'Save Student' }))
@@ -52,7 +53,7 @@ describe('Student Form', () => {
       gradeLevel: '',
       includeArchived: false,
     })
-    render(<StudentFormPage />)
+    renderWithRouter(<StudentFormPage />)
 
     await screen.findByRole('heading', { name: 'Add Student' })
     await user.type(screen.getByLabelText(/full name/i), existing.fullName)
@@ -75,7 +76,7 @@ describe('Student Form', () => {
   })
 
   it('saves a non-duplicate new student', async () => {
-    render(<StudentFormPage />)
+    renderWithRouter(<StudentFormPage />)
     await screen.findByRole('heading', { name: 'Add Student' })
     const user = await fillRequiredStudentFields()
 
@@ -88,7 +89,7 @@ describe('Student Form', () => {
   it('supports edit mode and records an update audit entry', async () => {
     const user = userEvent.setup()
     const [existing] = await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false })
-    render(<StudentFormPage studentNumber={existing.studentNumber} />)
+    renderWithRouter(<StudentFormPage studentNumber={existing.studentNumber} />)
 
     expect(await screen.findByRole('heading', { name: 'Edit Student' })).toBeInTheDocument()
     await user.clear(screen.getByLabelText(/student contact information/i))

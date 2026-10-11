@@ -169,6 +169,11 @@ export function DatePicker({
     (minDay !== undefined && year < yearOf(minDay)) ||
     (maxDay !== undefined && year > yearOf(maxDay))
 
+  // Keeps the cursor on an enabled value, so it can always take focus (a disabled cell can't, and the
+  // grid then never receives arrow keys).
+  const clamp = (day: ISODate): ISODate =>
+    minDay !== undefined && day < minDay ? minDay : maxDay !== undefined && day > maxDay ? maxDay : day
+
   useEffect(() => {
     function onPointerDown(event: PointerEvent) {
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
@@ -200,7 +205,7 @@ export function DatePicker({
   })
 
   function openPanel() {
-    setCursor(selected || today)
+    setCursor(clamp(selected || today))
     setView(minView)
     setOpen(true)
     focusPending.current = true
@@ -218,7 +223,7 @@ export function DatePicker({
   }
 
   function moveCursor(next: ISODate) {
-    setCursor(next)
+    setCursor(clamp(next))
     focusPending.current = true
   }
 

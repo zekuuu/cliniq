@@ -13,6 +13,8 @@ import {
   Skeleton,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useCancelNavigation } from '../../hooks/useCancelNavigation'
+import { paths } from '../../routes/paths'
 import type { SessionUser } from '../../lib/mock-db'
 import { getMockSessionUser } from '../../lib/mock-db'
 import type { Student } from '../../types/entities'
@@ -162,6 +164,9 @@ function StudentFormEditor({
 
   const mode: StudentFormMode = data.mode
   const studentNumber = data.student?.studentNumber ?? data.nextStudentNumber
+  const cancel = useCancelNavigation(
+    data.student ? paths.studentProfile(data.student.studentNumber) : paths.students,
+  )
   const title = mode === 'edit' ? 'Edit Student' : 'Add Student'
   const description =
     mode === 'edit'
@@ -337,7 +342,9 @@ function StudentFormEditor({
             </section>
 
             <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
-              <Button variant="neutral">Cancel</Button>
+              <Button variant="neutral" onClick={cancel}>
+                Cancel
+              </Button>
               <Button type="submit" variant="primary" icon="checkCircle" loading={isSaving}>
                 {mode === 'edit' ? 'Save Changes' : 'Save Student'}
               </Button>

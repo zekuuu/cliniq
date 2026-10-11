@@ -253,7 +253,13 @@ function MonthView({
   onSelectDay: (date: ISODate) => void
 }) {
   return (
-    <div className="relative overflow-x-auto">
+    // Scrolls sideways on phones; focusable so keyboard users can scroll it even when no day is a button (Admin).
+    <div
+      role="region"
+      aria-label={`Calendar grid, ${label}`}
+      tabIndex={0}
+      className="relative overflow-x-auto rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green"
+    >
       <table className="w-full min-w-[36rem] table-fixed border-separate border-spacing-1.5">
         <caption className="sr-only">Visits and incidents per day, {label}</caption>
         <thead>

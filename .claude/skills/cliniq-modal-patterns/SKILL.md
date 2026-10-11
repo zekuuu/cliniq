@@ -22,6 +22,7 @@ Use this with `cliniq-interactive-states` whenever an action might need a confir
 ## Shared implementation
 
 - Reuse `frontend/src/components/ui/Modal.tsx`; do not hand-build a dialog. It moves focus into the dialog, keeps Tab inside it, closes on Escape or a backdrop click, and returns focus to the control that opened it.
+- The overlay scrolls. A dialog taller than the viewport starts at its top, so its title and ✕ stay reachable on a phone. Do not add a local `max-h` or `overflow-y-auto` to a dialog to get this.
 - The dialog surface uses `rounded-md` (`--radius-md`, 8px), matching every panel surface and standard interactive control; see `Design-System.md` for the shared mapping.
 - Put `data-autofocus` on the safe choice so the dialog opens with focus there. Do not use React's `autoFocus`: it fires before the Modal can record the opener, and focus would not return to it.
 - Write the audit entry only after the user confirms, never when the dialog opens (`cliniq-audit-trail`).

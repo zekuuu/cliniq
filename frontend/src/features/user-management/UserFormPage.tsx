@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router'
 import { Button, Card, CardBody, CardHeader, ErrorState, Icon, Input, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { getMockSessionUser } from '../../lib/mock-db'
+import { paths } from '../../routes/paths'
 import type { UserRole } from '../../types/entities'
 import { DuplicateUsernameError, fetchUser, submitUser } from './api/userApi'
 
@@ -45,7 +46,7 @@ function UserForm({
   userId?: string
   initial: { name: string; username: string; role: UserRole } | null
 }) {
-  const navigate = useNavigate()
+  const cancel = useCancelNavigation(paths.users)
   const [name, setName] = useState(initial?.name ?? '')
   const [username, setUsername] = useState(initial?.username ?? '')
   const [role, setRole] = useState<UserRole>(initial?.role ?? 'staff')
@@ -112,7 +113,7 @@ function UserForm({
               displayed here.
             </p>
             <div className="flex flex-wrap justify-end gap-2">
-              <Button variant="neutral" onClick={() => navigate(-1)}>
+              <Button variant="neutral" onClick={cancel}>
                 Cancel
               </Button>
               <Button type="submit" variant="primary">

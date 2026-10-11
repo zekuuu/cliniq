@@ -19,6 +19,7 @@ import {
   type ItemLineDraft,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { cn } from '../../lib/cn'
 import { cleanComplaint, normalizeComplaint } from '../../lib/complaints'
@@ -194,6 +195,7 @@ export function NewVisitEntryPage({
   studentNumber?: string
 }) {
   const today = todayISO()
+  const cancel = useCancelNavigation(paths.visits)
   const { data, status, reload } = useAsyncData(`new-visit|${studentNumber ?? 'unidentified'}`, () =>
     fetchNewVisitContext(studentNumber),
   )
@@ -572,7 +574,7 @@ export function NewVisitEntryPage({
               {!treatment.trim() && !lines.length && (
                 <p className="mr-auto text-xs text-text-secondary">No treatment recorded. You can still save.</p>
               )}
-              <Button type="button" variant="neutral" onClick={() => window.history.back()}>Cancel</Button>
+              <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
               <Button type="submit" variant="primary" loading={saving}>
                 Save Visit
               </Button>

@@ -1,20 +1,33 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { addDays, formatDate, todayISO } from '../../lib/dates'
-import { getExcuseLetterApproval, getLatestVisit, getRecordedAuditEntries, resetMockDb } from '../../lib/mock-db'
+import { getExcuseLetterApproval, getRecordedAuditEntries, getVisit, resetMockDb } from '../../lib/mock-db'
 import { pickDate } from '../../test/pickDate'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { NewVisitEntryPage } from './NewVisitEntryPage'
 
 const complaintField = () => screen.getByRole('combobox', { name: /complaint/i })
 
+/**
+ * The visit this test just saved, found by identity (its submit audit entry), not by sorting on time:
+ * the newest-by-time visit is a seed record whenever the clock is earlier in the day than the seed's
+ * same-day visits (for example just after midnight).
+ */
+function getSavedVisit() {
+  const entry = getRecordedAuditEntries().findLast(
+    (e) => e.actionType === 'submit' && e.targetRecord?.type === 'visit',
+  )
+  if (!entry?.targetRecord) throw new Error('No visit was saved')
+  return getVisit(entry.targetRecord.id)
+}
+
 describe('New Visit', () => {
   beforeEach(() => resetMockDb())
 
   it('shows the identified student and reveals Smart Triage for a case-insensitive complaint match', async () => {
     const user = userEvent.setup()
-    render(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
 
     expect(await screen.findByRole('heading', { name: 'New Visit' })).toBeInTheDocument()
     expect(screen.getByText(/\d{4}-\d{5}/)).toBeInTheDocument()
@@ -26,7 +39,7 @@ describe('New Visit', () => {
 
   it('validates required fields inline, and whitespace is not a complaint', async () => {
     const user = userEvent.setup()
-    render(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await user.type(complaintField(), '   ')
@@ -39,19 +52,19 @@ describe('New Visit', () => {
 
   it('saves a visit with neither treatment notes nor a medicine', async () => {
     const user = userEvent.setup()
-    render(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await user.type(complaintField(), 'Headache')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
     expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
-    expect(await getLatestVisit()).toMatchObject({ complaint: 'Headache', treatment: '', itemsGiven: [] })
+    expect(await getSavedVisit()).toMatchObject({ complaint: 'Headache', treatment: '', itemsGiven: [] })
   })
 
   it('creates audit entries for visit submission and follow-up creation', async () => {
     const user = userEvent.setup()
-    render(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await user.click(complaintField())
@@ -69,7 +82,7 @@ describe('New Visit', () => {
 
   it('suggests complaints as you type, at most 8, and saves free text with no checklist', async () => {
     const user = userEvent.setup()
-    render(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await user.click(complaintField())
@@ -85,12 +98,12 @@ describe('New Visit', () => {
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
     expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
-    expect((await getLatestVisit()).complaint).toBe('Nose bleed')
+    expect((await getSavedVisit()).complaint).toBe('Nose bleed')
   })
 
   it('stores a typed complaint in its suggestion spelling', async () => {
     const user = userEvent.setup()
-    render(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await user.type(complaintField(), 'headache{Escape}')
@@ -98,7 +111,7 @@ describe('New Visit', () => {
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
     expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
-    expect((await getLatestVisit()).complaint).toBe('Headache')
+    expect((await getSavedVisit()).complaint).toBe('Headache')
   })
 })
 
@@ -208,7 +221,7 @@ describe('New Visit: disposition-specific fields', () => {
     await user.click(screen.getByRole('radio', { name: 'Returned to class' }))
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
     expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
-    expect(await getLatestVisit()).toMatchObject({ excuseLetterDraft: null, referredTo: null })
+    expect(await getSavedVisit()).toMatchObject({ excuseLetterDraft: null, referredTo: null })
   })
 
   it('saves the letter as a draft, not an approved letter, and offers to review it', async () => {
@@ -221,7 +234,7 @@ describe('New Visit: disposition-specific fields', () => {
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
     expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
-    const visit = await getLatestVisit()
+    const visit = await getSavedVisit()
     expect(visit).toMatchObject({
       disposition: 'referred_to_hospital',
       referredTo: 'Provincial Hospital',
@@ -239,7 +252,7 @@ describe('New Visit: disposition-specific fields', () => {
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
     expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
-    expect((await getLatestVisit()).excuseLetterDraft).toBeNull()
+    expect((await getSavedVisit()).excuseLetterDraft).toBeNull()
     expect(screen.queryByRole('link', { name: 'Review excuse letter' })).not.toBeInTheDocument()
   })
 })

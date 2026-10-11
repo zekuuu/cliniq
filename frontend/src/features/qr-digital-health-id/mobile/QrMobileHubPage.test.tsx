@@ -41,6 +41,18 @@ describe('QR Mobile Hub', () => {
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['scan'])
   })
 
+  it('marks the manual Student Number field optional, and it alone is enough to look up', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<QrMobileHubPage />)
+
+    const field = screen.getByLabelText('Enter Student Number manually (optional)')
+    expect(field).not.toBeRequired()
+    await user.type(field, '202600001')
+    await user.click(screen.getByRole('button', { name: 'Look Up Student' }))
+
+    expect(await screen.findByRole('heading', { name: /quick actions/i })).toBeInTheDocument()
+  })
+
   it('shows Instructor read-only lookup with no action buttons', async () => {
     const user = userEvent.setup()
     renderWithRouter(<QrMobileHubPage viewer={{ id: 'usr-pe', name: 'PE Instructor', role: 'instructor' }} />)

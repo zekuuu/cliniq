@@ -32,6 +32,7 @@ The backend is a blank slate. A [proposed ERD and data dictionary](../02-Archite
 - [ ] **ERD and data dictionary review/approval.** A proposed draft now exists; do not tick this item or build migrations until the team reviews and approves it. Before approval, settle every provisional field in one pass:
   - excuse-letter draft and approval fields (excused period, teacher note)
   - `Visit.referredTo`
+  - `Incident.generalNotes` (optional Stage 1 notes)
   - `itemsGiven` lines (own table with the name and unit snapshot, not a JSON blob)
   - inventory adjustment type, its reason, and its note
   - calendar events

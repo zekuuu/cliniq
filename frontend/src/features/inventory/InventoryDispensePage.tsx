@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Input, InventoryItemPicker, Select, Skeleton, StudentNumberField } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { formatDateTime } from '../../lib/dates'
 import { StockRuleError } from '../../lib/mock-db'
 import { isStudentNumber, normalizeStudentNumber } from '../../lib/studentNumber'
@@ -36,6 +37,7 @@ export function InventoryDispensePage() {
   const [errors, setErrors] = useState<{ recipient?: string; student?: string; item?: string; quantity?: string; save?: string }>({})
   const [success, setSuccess] = useState('')
   const [saving, setSaving] = useState(false)
+  const cancel = useCancelNavigation(paths.inventory)
   const lookupNumber = recipient === 'student' && isStudentNumber(studentNumber) ? studentNumber : ''
   const { data: lookup } = useAsyncData(`dispense-student|${lookupNumber}`, () =>
     lookupNumber ? findDispenseStudent(lookupNumber).catch(() => null) : Promise.resolve(undefined),
@@ -114,7 +116,7 @@ export function InventoryDispensePage() {
           {overStock && <p className="flex items-start gap-1 text-xs font-semibold text-warning"><Icon name="alertTriangle" size={14} className="mt-px shrink-0" />Only {item.currentStock} {item.unit} in stock. Recording this takes stock below zero; recount and restock.</p>}
           {errors.save && <p role="alert" className="text-sm font-semibold text-error">{errors.save}</p>}
           {success && <p role="status" className="text-sm font-semibold text-success">{success}</p>}
-          <div className="flex flex-wrap justify-end gap-2"><Link className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md border border-border px-4 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface" to={paths.inventory}>Cancel</Link><Button type="submit" variant="primary" icon="checkCircle" loading={saving}>Record Dispensation</Button></div>
+          <div className="flex flex-wrap justify-end gap-2"><Button variant="neutral" onClick={cancel}>Cancel</Button><Button type="submit" variant="primary" icon="checkCircle" loading={saving}>Record Dispensation</Button></div>
         </form>
       </CardBody></Card>
     </div>

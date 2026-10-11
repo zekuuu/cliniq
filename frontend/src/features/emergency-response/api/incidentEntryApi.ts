@@ -37,6 +37,7 @@ export interface StageOneIncidentInput {
   complaint: string
   temperatureC: string
   pulseBpm: string
+  generalNotes?: string
 }
 
 export interface StageTwoIncidentInput {
@@ -89,6 +90,7 @@ export function saveStageOneIncident(input: StageOneIncidentInput, user: Session
       studentId: input.studentId,
       complaint: input.complaint,
       vitals: { temperatureC: Number(input.temperatureC), pulseBpm: Number(input.pulseBpm) },
+      generalNotes: input.generalNotes,
     },
     user,
   )

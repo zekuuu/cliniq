@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { PeSportsReferralPage } from './PeSportsReferralPage'
+import { renderWithRouter } from '../../test/renderWithRouter'
 
 vi.mock('./api/peReferralApi', () => ({
   fetchPeReferralContext: () => new Promise(() => {}),
@@ -10,7 +11,7 @@ vi.mock('./api/peReferralApi', () => ({
 
 describe('PE/Sports Injury Referral Form: first-load skeleton', () => {
   it('announces loading and shows shaped placeholders', () => {
-    const { container } = render(<PeSportsReferralPage studentNumber="2026-00001" />)
+    const { container } = renderWithRouter(<PeSportsReferralPage studentNumber="2026-00001" />)
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading PE/Sports referral...')
     expect(container.querySelectorAll('[aria-hidden="true"] .animate-pulse').length).toBeGreaterThan(6)

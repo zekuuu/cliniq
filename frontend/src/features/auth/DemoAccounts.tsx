@@ -29,7 +29,7 @@ export function DemoAccounts() {
       </button>
       {/* Capped and scrollable: on a phone the four accounts are taller than the screen, and the
           shared Modal's overlay doesn't scroll, so its Close controls would otherwise be unreachable. */}
-      <Modal open={open} title="Demo accounts" onClose={() => setOpen(false)} className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
+      <Modal open={open} title="Demo accounts" onClose={() => setOpen(false)}>
         <p className="text-sm text-text-secondary">Frontend demo only: authentication is simulated until the Laravel Sanctum API is connected.</p>
         <p className="mt-1 text-xs text-text-secondary">Synthetic credentials only. These are not real clinic accounts or production passwords.</p>
         <div className="mt-4 grid gap-2">

@@ -55,4 +55,26 @@ describe('ReportIssueModal', () => {
 
     open.mockRestore()
   })
+
+  it('opens clean after it was closed with a draft', async () => {
+    const user = userEvent.setup()
+    const props = { user: STAFF, onClose: vi.fn(), onSubmitted: vi.fn() }
+    const { rerender } = render(
+      <MemoryRouter>
+        <ReportIssueModal open {...props} />
+      </MemoryRouter>,
+    )
+    await user.type(screen.getByRole('textbox'), 'Draft')
+    rerender(
+      <MemoryRouter>
+        <ReportIssueModal open={false} {...props} />
+      </MemoryRouter>,
+    )
+    rerender(
+      <MemoryRouter>
+        <ReportIssueModal open {...props} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByRole('textbox')).toHaveValue('')
+  })
 })

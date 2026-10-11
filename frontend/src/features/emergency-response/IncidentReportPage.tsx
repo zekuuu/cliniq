@@ -26,9 +26,9 @@ function ReportSkeleton() {
   return <div aria-hidden="true" className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8"><Card className="p-5"><Skeleton className="h-7 w-52" /><Skeleton className="mt-2 h-4 w-80 max-w-full" /></Card><Card className="p-5"><Skeleton className="h-10 w-72 max-w-full" /><div className="mt-5 grid gap-4 sm:grid-cols-2">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-10" />)}</div><div className="mt-5 grid gap-3 sm:grid-cols-3">{Array.from({ length: 3 }, (_, index) => <Skeleton key={index} className="h-16" />)}</div></Card></div>
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
   return (
-    <div>
+    <div className={className}>
       <dt className="text-xs font-semibold text-text-secondary">{label}</dt>
       <dd className="text-sm text-text-primary">{children}</dd>
     </div>
@@ -114,6 +114,11 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
             <Field label="Recorded">{formatDateTime(incident.time)}</Field>
             <Field label="Complaint">{incident.complaint}</Field>
             <Field label="Sign-off">{approved ? 'Approved' : 'Pending sign-off'}</Field>
+            {incident.generalNotes && (
+              <Field label="General notes" className="sm:col-span-2">
+                <span className="whitespace-pre-line">{incident.generalNotes}</span>
+              </Field>
+            )}
           </dl>
 
           <section className="border-t border-border pt-4">

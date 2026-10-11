@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useLocation } from 'react-router'
 import { Button, Modal, Textarea } from '../../components'
 import { ROLE_LABELS, type SessionUser } from '../../lib/mock-db'
@@ -42,18 +42,28 @@ export function ReportIssueModal({
   onClose: () => void
   onSubmitted: (mailtoOpened: boolean) => void
 }) {
+  // The form mounts only while the Modal is open, so each open starts with empty state.
+  return (
+    <Modal open={open} title="Report an Issue" onClose={onClose}>
+      <ReportIssueForm user={user} onClose={onClose} onSubmitted={onSubmitted} />
+    </Modal>
+  )
+}
+
+function ReportIssueForm({
+  user,
+  onClose,
+  onSubmitted,
+}: {
+  user: SessionUser
+  onClose: () => void
+  onSubmitted: (mailtoOpened: boolean) => void
+}) {
   const location = useLocation()
   const [description, setDescription] = useState('')
   const [error, setError] = useState<string>()
   const [saving, setSaving] = useState(false)
   const pageName = pageNameFromTitle(location.pathname)
-
-  useEffect(() => {
-    if (!open) return
-    setDescription('')
-    setError(undefined)
-    setSaving(false)
-  }, [open])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -87,53 +97,51 @@ export function ReportIssueModal({
   }
 
   return (
-    <Modal open={open} title="Report an Issue" onClose={onClose}>
-      <form onSubmit={(event) => void submit(event)}>
-        <p className="text-sm leading-6 text-text-secondary">
-          We&apos;ll save this report with the page and role context captured automatically. An
-          email draft will also open as a fallback.
-        </p>
+    <form onSubmit={(event) => void submit(event)}>
+      <p className="text-sm leading-6 text-text-secondary">
+        We&apos;ll save this report with the page and role context captured automatically. An email
+        draft will also open as a fallback.
+      </p>
 
-        <dl className="mt-4 grid gap-2 rounded-md bg-surface px-3 py-3 text-xs leading-5">
-          <div className="flex gap-2">
-            <dt className="font-semibold text-text-secondary">Page</dt>
-            <dd className="text-text-primary">{pageName}</dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="font-semibold text-text-secondary">Route</dt>
-            <dd className="text-text-primary">{location.pathname}</dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="font-semibold text-text-secondary">Role</dt>
-            <dd className="text-text-primary">{ROLE_LABELS[user.role]}</dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="font-semibold text-text-secondary">Timestamp</dt>
-            <dd className="text-text-primary">Captured when submitted</dd>
-          </div>
-        </dl>
-
-        <Textarea
-          label="What went wrong?"
-          value={description}
-          onChange={setDescription}
-          error={error}
-          required
-          rows={5}
-          data-autofocus
-          className="mt-5"
-          placeholder="Describe what you expected and what happened."
-        />
-
-        <div className="mt-5 flex flex-wrap justify-end gap-2">
-          <Button variant="neutral" onClick={onClose} disabled={saving}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" loading={saving}>
-            Submit report
-          </Button>
+      <dl className="mt-4 grid gap-2 rounded-md bg-surface px-3 py-3 text-xs leading-5">
+        <div className="flex gap-2">
+          <dt className="font-semibold text-text-secondary">Page</dt>
+          <dd className="text-text-primary">{pageName}</dd>
         </div>
-      </form>
-    </Modal>
+        <div className="flex gap-2">
+          <dt className="font-semibold text-text-secondary">Route</dt>
+          <dd className="text-text-primary">{location.pathname}</dd>
+        </div>
+        <div className="flex gap-2">
+          <dt className="font-semibold text-text-secondary">Role</dt>
+          <dd className="text-text-primary">{ROLE_LABELS[user.role]}</dd>
+        </div>
+        <div className="flex gap-2">
+          <dt className="font-semibold text-text-secondary">Timestamp</dt>
+          <dd className="text-text-primary">Captured when submitted</dd>
+        </div>
+      </dl>
+
+      <Textarea
+        label="What went wrong?"
+        value={description}
+        onChange={setDescription}
+        error={error}
+        required
+        rows={5}
+        data-autofocus
+        className="mt-5"
+        placeholder="Describe what you expected and what happened."
+      />
+
+      <div className="mt-5 flex flex-wrap justify-end gap-2">
+        <Button variant="neutral" onClick={onClose} disabled={saving}>
+          Cancel
+        </Button>
+        <Button type="submit" variant="primary" loading={saving}>
+          Submit report
+        </Button>
+      </div>
+    </form>
   )
 }
