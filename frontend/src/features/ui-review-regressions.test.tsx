@@ -33,7 +33,6 @@ import { BackupStatusPage } from './backup/BackupStatusPage'
 import { DashboardPage } from './dashboard/DashboardPage'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { QrMobileHubPage } from './qr-digital-health-id/mobile/QrMobileHubPage'
-import { QrDesktopHubPage } from './qr-digital-health-id/desktop/QrDesktopHubPage'
 import { Button, Modal } from '../components'
 import { AppShell } from '../layouts/AppShell'
 
@@ -204,13 +203,6 @@ describe('UI/UX review follow-up fixes', () => {
 
     await user.click(screen.getByRole('button', { name: 'Scan QR Code' }))
     expect(screen.queryByText('Student not found.')).not.toBeInTheDocument()
-  })
-
-  it('shows a ready state, not a loading skeleton, before a desktop QR lookup begins', () => {
-    renderWithRouter(<QrDesktopHubPage viewer={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} />)
-
-    expect(screen.getByText('Ready to identify a student')).toBeInTheDocument()
-    expect(screen.queryByText('Loading student...')).not.toBeInTheDocument()
   })
 
   it('does not expose sidebar nav groups as landmark regions', () => {

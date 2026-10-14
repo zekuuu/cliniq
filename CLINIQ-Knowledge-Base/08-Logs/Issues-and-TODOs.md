@@ -15,7 +15,7 @@
 
 ## Open work at a glance
 
-Open: FIX 2 · AUDIT 7 · DOC 3 · DECIDE 39 · LATER 9 | Notes: NOTE 18 · VERIFY 4 | Done: 134
+Open: FIX 2 · AUDIT 7 · DOC 4 · DECIDE 39 · LATER 9 | Notes: NOTE 18 · VERIFY 4 | Done: 134
 
 **Open `FIX` items:**
 
@@ -23,7 +23,7 @@ Open: FIX 2 · AUDIT 7 · DOC 3 · DECIDE 39 · LATER 9 | Notes: NOTE 18 · VERI
 - [ ] **axe `scrollable-region-focusable` on an open `Select` whose option list scrolls** (Open FIX and styling DECIDE sweep)
 
 - **AUDIT** (7): Free-text complaints and student lookup; Pending excuse letters on the Dashboard and profile; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep; Open FIX and styling DECIDE sweep
-- **DOC** (3): Issues-and-TODOs fix sweep; Groupmate system review; Open FIX and styling DECIDE sweep
+- **DOC** (4): Issues-and-TODOs fix sweep; Groupmate system review; Open FIX and styling DECIDE sweep; QR lookup mobile-only
 - **DECIDE** (39): Open decisions, waiting on someone outside the dev team; Open design questions; Known gaps; QR scan/lookup; Visit and incident entry; Open after the Group B fixes; Open product decisions from the mock-data layer; Free-text complaints and student lookup; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep; Student search on every student field; Groupmate system review
 - **LATER** (9): Open decisions, waiting on someone outside the dev team; Known gaps; Open after the Group B fixes; Medicines & supplies given (ADR-018); Open FIX and styling DECIDE sweep
 
@@ -389,6 +389,10 @@ Left by the session that fixed the 14 open `FIX` items and decided the 12 stylin
 - [ ] **[FIX]** **axe `scrollable-region-focusable` on an open `Select` whose option list scrolls** (found Wednesday, October 14, 2026 — 18:00 PHT, pre-existing; the baseline shows the same). With the Student List "Grade level" filter open at 1280, axe flags the listbox (`#…-listbox`) as a scrollable region that isn't keyboard-focusable. Options are focusable buttons, so arrow keys still scroll it; check whether the listbox itself needs `tabIndex`, or whether the rule is satisfied another way, in `frontend/src/components/ui/Select.tsx`.
 - [ ] **[AUDIT]** **Re-audit needed (Frontend-Loop-Engineering Phase 2):** screens and shared pieces changed by this session and not already named in an open AUDIT entry: Force Password Change (#2, Login backdrop), Audit Log, Follow-Up List, and Student List (filter dropdowns), the App Shell's phone menu, the Adjust Stock and Restock dialogs (failed-submit focus), and the shared `Select` (placeholder row, `clearable`), `InventoryItemPicker` (expired quantity), `useCancelNavigation` (discard confirmation), and `useFocusFirstInvalid` (new). Also changed, and already covered by open AUDIT entries: Clinic Overview Dashboard (#31), Student Profile (#7), New Visit, Visit Details, Incident Entry Stage 1 and 2, Student Form, PE/Sports Referral, User form, Inventory List, Add/Edit Inventory Item, Dispense, and the Sidebar/`BrandLogo`. No Audit box was checked.
 - [ ] **[DOC]** **Canonical document drift:** the Frontend Context Brief (Section 7: Forms, Navigation, Modals & Confirmation) and the Frontend Design Reference need the three rules now in `03-Design/Design-System.md`: failed submit focuses the first invalid field; Cancel confirms only with unsaved input (ADR-021); phones get the navigation menu (ADR-022). ADR-021 and ADR-022 are agent-decided and pending team review, so update the canonical documents once the team accepts them (`09-References/Canonical-Documents.md`).
+
+## QR lookup mobile-only — Wednesday, October 14, 2026 — 22:25 PHT
+
+- [ ] **[DOC]** **Sync canonical Modules & Features, Module 6, with ADR-023.** The canonical document still describes a computer scan/lookup path; QR scanning is now phone-only and the desktop hub was removed. Session: [2026-10-14-qr-lookup-mobile-only](Agent-Sessions/2026-10-14-qr-lookup-mobile-only.md)
 
 ## Format for new entries
 When you find or resolve something, add it here with a date and enough context that someone with zero memory of the conversation that created it can still act on it.

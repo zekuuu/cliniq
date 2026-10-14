@@ -30,6 +30,8 @@ export interface NavItem {
   icon: IconName
   available: boolean
   to?: string
+  /** Shown only in the phone navigation menu, never the desktop sidebar (needs a phone camera). */
+  mobileOnly?: boolean
 }
 
 const ALL: Record<NavKey, NavItem> = {
@@ -38,7 +40,7 @@ const ALL: Record<NavKey, NavItem> = {
   visits: { key: 'visits', label: 'Visits', icon: 'stethoscope', available: true, to: paths.visits },
   incidents: { key: 'incidents', label: 'Incidents', icon: 'alertTriangle', available: true, to: paths.incidents },
   followUps: { key: 'followUps', label: 'Follow-Ups', icon: 'calendarClock', available: true, to: paths.followUps },
-  qrLookup: { key: 'qrLookup', label: 'QR Lookup', icon: 'qrCode', available: true, to: paths.qrScan },
+  qrLookup: { key: 'qrLookup', label: 'QR Lookup', icon: 'qrCode', available: true, to: paths.qrScan, mobileOnly: true },
   inventory: { key: 'inventory', label: 'Inventory', icon: 'package', available: true, to: paths.inventory },
   reports: { key: 'reports', label: 'Reports', icon: 'fileText', available: true, to: paths.reports },
   auditLog: { key: 'auditLog', label: 'Audit Log', icon: 'clipboardList', available: true, to: paths.auditLog },

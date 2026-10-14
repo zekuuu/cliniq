@@ -1,5 +1,5 @@
 # Desktop — QR Digital Health ID
 
-Staff's computer-based quick-action hub. Scan (via a webcam, using the same `shared/` scanner wrapper mobile uses) or type a Student Number manually, then route into Record Visit, Log Emergency, View Profile, or Dispense Medicine — all pre-filled with the identified student.
+QR sticker printing (`QrPrintPage`). The desktop scan/lookup hub was removed (ADR-023): the workstation has no QR scanner hardware, so scanning happens only in `mobile/` with the phone camera.
 
 Full behavior spec: Frontend Context Brief, screens #22–24.

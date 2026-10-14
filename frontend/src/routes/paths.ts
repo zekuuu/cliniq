@@ -41,7 +41,6 @@ export const paths = {
   inventoryDispense: (studentNumber?: string) => withStudent('/inventory/dispense', studentNumber),
   followUps: '/follow-ups',
   qrPrint: '/qr/print',
-  qrDesktop: '/qr/desktop',
   emergencyMobile: '/emergency/mobile',
   reports: '/reports',
   auditLog: '/audit-log',

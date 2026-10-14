@@ -4,7 +4,7 @@ This feature has a real split inside it, matching how the module itself is desig
 
 ```
 qr-digital-health-id/
-├── desktop/    → Staff's computer quick-action hub (scan/type → Record Visit / Log Emergency / View Profile / Dispense Medicine)
+├── desktop/    → QR printing only; the desktop scan hub was removed (ADR-023: no scanner hardware on the workstation)
 ├── mobile/     → the mobile-first experience — Staff's mobile version of the same hub, plus the separate Emergency button, plus PE/Sports Instructor's read-only lookup
 ├── shared/     → the actual camera-scanning logic, used by BOTH desktop and mobile (yes, desktop can scan too, e.g. a webcam) — this is where the `qr-scanner` (nimiq) wrapper lives (ADR-007), as one hook/component, not duplicated per context
 └── api/        → API calls specific to this feature (lookup by Student Number, log a scan for the audit trail)

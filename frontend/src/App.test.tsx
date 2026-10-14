@@ -36,7 +36,6 @@ describe('login gate', () => {
     '/qr/scan?role=staff',
     '/emergency/mobile',
     '/incidents/new',
-    '/qr/desktop',
     '/qr/print',
     '/students/2026-00001?role=instructor',
     '/reports',

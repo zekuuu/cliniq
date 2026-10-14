@@ -177,7 +177,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 ## Team-Proposed Enhancements
 
 ### 6. QR Digital Health ID — *Access: Staff (full, computer + mobile); PE/Sports Instructor (mobile, read-only)*
-Two distinct paths: the **computer system** (Staff's existing desktop flow) and a **mobile flow** used for fast scanning in the field. Both identify a student the same way, then branch by role.
+Scanning is a **mobile flow** only: the clinic workstation has no QR scanner hardware, so the computer system prints QR codes but does not scan them (ADR-023). On the workstation, Staff identify a student through Students search or each form's student picker.
 
 **QR Code Generation & Printing** *(Staff only)*
 - Generate a QR code per student, encoding their Student Number

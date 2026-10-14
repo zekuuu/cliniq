@@ -8,7 +8,6 @@ const SHORTCUTS = [
   ['Alt + N', 'Open New Visit'],
   ['Alt + K', 'Open Student Search'],
   ['Alt + D', 'Open Dashboard'],
-  ['Alt + Q', 'Open QR Lookup'],
   ['Shift + Alt + N', 'Save current visit and prepare another'],
 ] as const
 
@@ -40,7 +39,7 @@ export function KeyboardShortcuts() {
       }
       if (event.altKey && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
         const key = event.key.toLowerCase()
-        const destination = { n: '/visits/new', k: '/students?focus=search', d: '/', q: '/qr/scan' }[key]
+        const destination = { n: '/visits/new', k: '/students?focus=search', d: '/' }[key]
         if (destination) {
           event.preventDefault()
           navigate(destination)

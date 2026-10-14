@@ -52,7 +52,10 @@ export function Sidebar({
   onReportIssue,
   user,
 }: SidebarProps) {
+  // The workstation has no QR scanner, so camera-only items stay in the phone menu.
   const groups = navGroupsFor(user.role)
+    .map((group) => ({ ...group, items: group.items.filter((item) => !item.mobileOnly) }))
+    .filter((group) => group.items.length > 0)
   const labelVisibility = collapsed ? 'sr-only' : ''
   const location = useLocation()
   const privacyPolicyActive = location.pathname === paths.privacyPolicy

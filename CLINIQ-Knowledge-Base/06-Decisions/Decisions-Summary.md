@@ -89,3 +89,7 @@ The calendar now shows nationwide Philippine holidays as gray "Holiday" chips, s
 ## 022 Phones get a navigation menu
 
 *Agent-decided, pending team review.* On a phone or small tablet, the sidebar is replaced by an "Open navigation" button in the top bar. It lists the same pages the sidebar shows for that role, plus Privacy Policy and Report an Issue. A PE/Sports Instructor, who has no sidebar pages, sees no menu button instead of an empty menu.
+
+## 023 QR lookup is for phones only
+
+The clinic workstation has no QR scanner, so QR Lookup is gone from the desktop sidebar and the Alt + Q shortcut, and the desktop scan hub was removed. Staff and PE/Sports Instructors scan with a phone camera from the phone menu. Printing QR stickers stays on the workstation.

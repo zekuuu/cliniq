@@ -93,10 +93,6 @@ const FollowUpListPage = page(
   () => import('../features/emergency-response/FollowUpListPage'),
   'FollowUpListPage',
 )
-const QrDesktopHubPage = page(
-  () => import('../features/qr-digital-health-id/desktop/QrDesktopHubPage'),
-  'QrDesktopHubPage',
-)
 const QrPrintPage = page(
   () => import('../features/qr-digital-health-id/desktop/QrPrintPage'),
   'QrPrintPage',
@@ -397,14 +393,6 @@ const APP_ROUTES: AppRoute[] = [
     nav: 'qrLookup',
     shell: false,
     render: (viewer, onLogout) => <QrMobileHubPage viewer={viewer} onLogout={onLogout} />,
-  },
-  {
-    path: paths.qrDesktop,
-    title: 'QR Health IDs',
-    roles: ['staff'],
-    nav: 'qrLookup',
-    shell: true,
-    render: (viewer) => <QrDesktopHubPage viewer={viewer} />,
   },
   {
     path: paths.qrPrint,
