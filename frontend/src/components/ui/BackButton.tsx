@@ -15,7 +15,8 @@ type BackTarget =
 /**
  * The one Back control (`cliniq-back-navigation-patterns`). It sits top-left of the page content,
  * before the `h1`, and never prints.
- * - `quiet` (default) is a text control that doesn't compete with the page's primary action.
+ * - `quiet` (default) is a text control that doesn't compete with the page's primary action. From `sm`
+ *   up it is 28px tall and pulled into the page's top padding; phones keep the 44px touch target.
  * - `prominent` is for shell-free phone screens, where Back is the main way out.
  * - `drillThroughOnly` renders it only when a drill-through link opened the screen (top-level lists).
  *
@@ -38,8 +39,9 @@ export function BackButton({
   const classes = cn(
     variant === 'prominent'
       ? buttonClassName({ variant: 'neutral', className: 'h-11 pl-3' })
-      : 'inline-flex min-h-11 items-center gap-1 rounded-md pr-2 text-sm font-semibold text-text-secondary underline-offset-4 cursor-pointer transition-colors hover:text-brand-green-dark hover:underline sm:min-h-9 motion-reduce:transition-none',
-    'self-start print:hidden',
+      : 'inline-flex min-h-11 items-center gap-1 rounded-md pr-2 text-sm font-semibold text-text-secondary underline-offset-4 cursor-pointer transition-colors hover:text-brand-green-dark hover:underline motion-reduce:transition-none sm:-mt-3 sm:min-h-7',
+    // Sits 8px above the header card in a `gap-4` page column, so it reads as part of the header.
+    '-mb-2 self-start print:hidden',
     className,
   )
   const content = (

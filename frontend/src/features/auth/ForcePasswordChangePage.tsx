@@ -51,7 +51,7 @@ function ForcePasswordChangeForm({ userId, onComplete }: { userId: string; onCom
     <main className="relative isolate flex min-h-screen items-center justify-center px-4 py-8">
       <LoginBackdrop />
       <Card className="w-full max-w-md p-6 shadow-overlay!">
-        <BackButton to={paths.login} label="Back to Sign In" className="mb-4" />
+        <BackButton to={paths.login} label="Back to Sign In" className="mb-2!" />
         <header>
           <BrandLogo />
           <p className="mt-6 border-t border-border pt-5 text-xs font-semibold uppercase tracking-[0.16em] text-brand-green-dark">Account setup</p>
