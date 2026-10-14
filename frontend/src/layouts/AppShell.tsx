@@ -56,7 +56,7 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
         'min-h-screen bg-surface transition-[grid-template-columns] duration-200 motion-reduce:transition-none lg:grid print:block print:bg-background',
         isSidebarCollapsed
           ? 'lg:grid-cols-[4.75rem_minmax(0,1fr)]'
-          : 'lg:grid-cols-[16rem_minmax(0,1fr)]',
+          : 'lg:grid-cols-[17rem_minmax(0,1fr)]',
       )}
     >
       <a

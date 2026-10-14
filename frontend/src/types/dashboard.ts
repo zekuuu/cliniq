@@ -90,6 +90,8 @@ export interface DashboardSummary {
   today: ISODate
   generatedAt: ISODateTime
   range: { from: ISODate; to: ISODate }
+  /** Date of the oldest visit or incident on record, or `null` when there are none. */
+  oldestRecordDate: ISODate | null
   counts: DashboardCounts
   /** Same counts for the equal-length period just before `range`, for the trend indicator. */
   /**

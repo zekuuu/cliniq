@@ -69,6 +69,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           onRangeChange={setRange}
           isRefetching={isRefetching}
           onPrint={() => window.print()}
+          oldestRecordDate={data?.oldestRecordDate}
         />
       </Card>
 

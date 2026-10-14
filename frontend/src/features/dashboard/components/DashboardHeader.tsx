@@ -16,6 +16,8 @@ export interface DashboardHeaderProps {
   onRangeChange: (range: DateRange) => void
   isRefetching: boolean
   onPrint: () => void
+  /** Where the All range really starts; unknown until the summary loads. */
+  oldestRecordDate?: ISODate | null
 }
 
 /**
@@ -31,6 +33,7 @@ export function DashboardHeader({
   onRangeChange,
   isRefetching,
   onPrint,
+  oldestRecordDate,
 }: DashboardHeaderProps) {
   const isStaff = viewer.role === 'staff'
   return (
@@ -45,7 +48,7 @@ export function DashboardHeader({
         <p className="mt-0.5 text-xs text-text-secondary" aria-live="polite">
           <time dateTime={today}>{formatLongDate(today)}</time>
           <span aria-hidden="true"> · </span>
-          {isRefetching ? 'Updating…' : `Showing ${describeRangeDates(range)}`}
+          {isRefetching ? 'Updating…' : `Showing ${describeRangeDates(range, oldestRecordDate)}`}
           <span aria-hidden="true"> · </span>
           View only
         </p>

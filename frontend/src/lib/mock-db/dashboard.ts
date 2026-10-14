@@ -50,6 +50,7 @@ export function buildDashboardSummary(
   return {
     today,
     generatedAt,
+    oldestRecordDate: firstRecord ?? null,
     range: { from, to },
     counts: {
       visits: visitsInRange.length,

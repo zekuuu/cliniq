@@ -4,7 +4,10 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getMockSessionUser, listStudents } from '../../lib/mock-db'
+import { formatDateRange, todayISO } from '../../lib/dates'
+import { rangeForPreset } from '../../lib/dateRange'
 import { DashboardPage } from './DashboardPage'
+import { fetchDashboardSummary } from './api/dashboardApi'
 
 // jsdom has no canvas. Replace the chart with a stub that keeps its accessible label.
 vi.mock('react-chartjs-2', () => {
@@ -449,9 +452,13 @@ describe('Clinic Overview Dashboard', () => {
 describe('Clinic Overview Dashboard: the All range and the stat-card notes', () => {
   beforeEach(() => window.history.replaceState(null, '', '/'))
 
-  it('describes All as "All records" and shows no trend against a placeholder period', async () => {
+  it('starts the All range at the oldest record and shows no trend against a placeholder period', async () => {
+    const { oldestRecordDate, range } = await fetchDashboardSummary({ range: rangeForPreset('all', todayISO()) })
+    expect(oldestRecordDate).not.toBeNull()
     await renderLoaded({ allTime: true })
-    await waitFor(() => expect(screen.getByText(/Showing All records/)).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText(new RegExp(`Showing ${formatDateRange(oldestRecordDate!, range.to)}`))).toBeInTheDocument(),
+    )
     expect(document.body.textContent).not.toMatch(/1900/)
     expect(screen.queryByText(/prior \d+ days/)).not.toBeInTheDocument()
     expect(screen.queryByText(/Up from 0/)).not.toBeInTheDocument()
@@ -504,5 +511,20 @@ describe('Clinic Overview Dashboard: expired stock in the Alerts list', () => {
     const list = screen.getByRole('region', { name: /low-stock & expiring items \(scrollable list\)/i })
     const expiredRow = within(list).getByText(/\(expired\)/)
     expect(expiredRow.textContent).toMatch(/^\d+ \S+ \(expired\) · threshold \d+$/)
+  })
+})
+
+describe('Clinic Overview Dashboard: today in the calendar', () => {
+  beforeEach(() => window.history.replaceState(null, '', '/'))
+
+  it('labels today with a "Today" pill and a dashed green outline, never the black outline alone', async () => {
+    const user = await renderLoaded()
+    const pill = screen.getByText((_, el) => el?.tagName === 'SPAN' && /^Today \(\w{3} \d{1,2}\)$/.test(el.textContent ?? ''))
+    expect(pill).toHaveClass('bg-brand-green-dark', 'text-white')
+    expect(pill.closest('td')).toHaveClass('outline-dashed', 'outline-offset-2', 'outline-brand-green-dark')
+    expect(document.querySelector('.outline-text-primary')).toBeNull()
+
+    await user.click(screen.getByRole('radio', { name: 'Weekly' }))
+    expect(await screen.findByText(/^Today · \w{3} \d{1,2}$/)).toHaveClass('bg-brand-green-dark')
   })
 })

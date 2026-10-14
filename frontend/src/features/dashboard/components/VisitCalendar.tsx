@@ -45,6 +45,13 @@ const WEEKDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', '
 
 const NO_HOLIDAYS: Holiday[] = []
 
+// Today: a dashed brand-green outline 2px outside the cell, plus a "Today" label, never the outline
+// alone. Dashed sets it apart from every solid edge in the grid and from the black "has an event"
+// outline (dotted was too faint on narrow cells). An outline takes no space, so the cell's content and
+// padding are unchanged; the grid's 6px spacing leaves room for it.
+const TODAY_BORDER = 'outline-2 outline-dashed outline-offset-2 outline-brand-green-dark'
+const TODAY_PILL = 'w-fit rounded-sm bg-brand-green-dark px-1.5 text-xs font-bold text-white'
+
 /** A day's visits plus incidents. "Visits" alone would undercount what the number holds. */
 function casesLabel(total: number): string {
   return `${total} ${total === 1 ? 'case' : 'cases'}`
@@ -144,8 +151,8 @@ function DayLabels({
 
 /**
  * A day's contents. For Staff it's one button that opens the day panel (the single entry point,
- * ADR-019); for Admin it's static. The hover/focus ring sits inside the cell so it never collides
- * with today's outline.
+ * ADR-019); for Admin it's static. The hover/focus ring sits inside the cell, so it never collides
+ * with today's dashed outline outside it.
  */
 function DayTarget({
   day,
@@ -208,8 +215,7 @@ function WeekView({
               'flex rounded-md',
               future ? heatClasses[0] : heatClasses[heatLevel(total, scale)],
               noClassEmpty(holidays, total) && noClassDayClass,
-              'border-border',
-              day.date === today && 'outline-2 outline-offset-1 outline-text-primary',
+              day.date === today ? TODAY_BORDER : 'border-border',
             )}
           >
             <DayTarget
@@ -220,9 +226,9 @@ function WeekView({
               onSelectDay={onSelectDay}
               className="flex min-h-28 flex-col gap-1 rounded-md p-2.5"
             >
-              <span className="text-xs font-semibold">
+              <span className={day.date === today ? TODAY_PILL : 'text-xs font-semibold'}>
+                {day.date === today && 'Today · '}
                 {formatDate(day.date, { month: 'short', day: 'numeric' })}
-                {day.date === today && ' (today)'}
               </span>
               {future ? (
                 <span className="text-xs">Not yet</span>
@@ -300,8 +306,7 @@ function MonthView({
                       'h-16 rounded-md p-0 align-top',
                       future || !day ? heatClasses[0] : heatClasses[heatLevel(total, scale)],
                       noClassEmpty(holidays, total) && noClassDayClass,
-                      'border-border',
-                      date === today && 'outline-2 outline-offset-1 outline-text-primary',
+                      date === today ? TODAY_BORDER : 'border-border',
                     )}
                   >
                     <DayTarget
@@ -313,9 +318,19 @@ function MonthView({
                       className="flex h-full min-h-16 flex-col rounded-md p-2"
                     >
                       <span className="flex items-start justify-between gap-1">
-                        <span className="text-xs">
-                          {formatDate(date, { month: 'short', day: 'numeric' })}
-                        </span>
+                        {date === today ? (
+                          <span className={TODAY_PILL}>
+                            Today
+                            <span className="sr-only">
+                              {' '}
+                              ({formatDate(date, { month: 'short', day: 'numeric' })})
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-xs">
+                            {formatDate(date, { month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
                         {!future && day && (
                           <span className="text-sm font-semibold">
                             {casesLabel(total)}
@@ -325,7 +340,6 @@ function MonthView({
                           </span>
                         )}
                       </span>
-                      {date === today && <span className="sr-only"> (today)</span>}
                       {day && <DayLabels day={day} holidays={holidays} className="mt-1" />}
                     </DayTarget>
                   </td>
@@ -406,7 +420,11 @@ function YearView({
                           'size-3 rounded-[2px] border',
                           future ? heatClasses[0] : heatClasses[heatLevel(total, scale)],
                           noClassEmpty(holidays, total) && noClassDayClass,
-                          day && dayLabels(day).length ? 'border-text-primary' : 'border-border',
+                          date === today
+                            ? 'border-2 border-brand-green'
+                            : day && dayLabels(day).length
+                              ? 'border-text-primary'
+                              : 'border-border',
                         )}
                       />
                     )
@@ -421,7 +439,7 @@ function YearView({
           Activity, event, and holiday days in {year}
         </p>
         <p className="text-xs text-text-secondary">
-          Outlined squares above mark days with an event. Striped squares mark no-class holidays
+          Outlined squares above mark days with an event; today has a green ring. Striped squares mark no-class holidays
           with no visits.
         </p>
         {activeDays.length === 0 ? (

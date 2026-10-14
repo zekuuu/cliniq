@@ -48,11 +48,13 @@ export function describeRange(range: DateRange): string {
 }
 
 /**
- * The dates a range covers, for a header or a printout: "Oct 1 – Oct 14, 2026", or "All records" for
- * the All preset, whose 1900 start date is a placeholder and never a date to show.
+ * The dates a range covers, for a header or a printout: "Oct 1 – Oct 14, 2026". The All preset's 1900
+ * start is a placeholder, never a date to show, so All starts at the oldest record instead, or reads
+ * "All records" when that isn't known (still loading, or no records yet).
  */
-export function describeRangeDates(range: DateRange): string {
-  return range.preset === 'all' ? 'All records' : formatDateRange(range.from, range.to)
+export function describeRangeDates(range: DateRange, oldestRecord?: ISODate | null): string {
+  if (range.preset !== 'all') return formatDateRange(range.from, range.to)
+  return oldestRecord ? formatDateRange(oldestRecord, range.to) : 'All records'
 }
 
 /** The equal-length period immediately before `range`, used for "vs previous period" trends. */
