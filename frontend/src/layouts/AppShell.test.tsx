@@ -188,3 +188,31 @@ describe('App Shell / Navigation', () => {
     expect(navGroupsFor('instructor')).toEqual([])
   })
 })
+
+describe('App Shell / Mobile navigation', () => {
+  it('reaches Privacy Policy and Report an Issue from the mobile menu', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(
+      <AppShell user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} active="dashboard" onLogout={() => {}}>
+        <div>Screen</div>
+      </AppShell>,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Open navigation' }))
+    const menu = screen.getByRole('navigation', { name: 'Mobile navigation' })
+    expect(within(menu).getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute('href', '/privacy-policy')
+    await user.click(within(menu).getByRole('button', { name: 'Report an Issue' }))
+    expect(screen.queryByRole('navigation', { name: 'Mobile navigation' })).not.toBeInTheDocument()
+    expect(await screen.findByRole('dialog', { name: /report an issue/i })).toBeInTheDocument()
+  })
+
+  it('shows no menu button to a role with no menu entries', () => {
+    renderWithRouter(
+      <AppShell user={{ id: 'user-instructor-01', name: 'PE Instructor', role: 'instructor' }} active={null} onLogout={() => {}}>
+        <div>Screen</div>
+      </AppShell>,
+    )
+    expect(navGroupsFor('instructor')).toEqual([])
+    expect(screen.queryByRole('button', { name: 'Open navigation' })).not.toBeInTheDocument()
+  })
+})

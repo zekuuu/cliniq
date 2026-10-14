@@ -4,12 +4,14 @@ import {
   getIncidentComplaintTypes,
   getStudent,
   getStudentById,
+  getVitalsWarningRanges,
   listInventory,
   saveIncidentStageOne,
   searchStudents,
   type InventoryItemView,
   type ItemLineInput,
   type SessionUser,
+  type VitalsWarningRanges,
 } from '../../../lib/mock-db'
 import type {
   FollowUp,
@@ -32,6 +34,8 @@ export interface IncidentEntryContext {
   incident: Incident | null
   /** Inventory with computed flags, for Stage 2's Medicines & supplies picker. */
   items: InventoryItemView[]
+  /** Placeholder sanity bounds for the non-blocking vitals warning (config; nurse to confirm). */
+  vitalsRanges: VitalsWarningRanges
 }
 
 export interface StageOneIncidentInput {
@@ -68,16 +72,17 @@ export async function fetchIncidentEntryContext(
 ): Promise<IncidentEntryContext> {
   const complaintTypes = getIncidentComplaintTypes()
   const items = listInventory()
+  const vitalsRanges = await getVitalsWarningRanges()
   if (options.incidentId) {
     const incident = await getIncident(options.incidentId)
     const [student, types] = await Promise.all([getStudentById(incident.studentId), complaintTypes])
-    return { student, complaintTypes: types, incident, items: await items }
+    return { student, complaintTypes: types, incident, items: await items, vitalsRanges }
   }
   const [student, types] = await Promise.all([
     options.studentNumber ? getStudent(options.studentNumber) : Promise.resolve(null),
     complaintTypes,
   ])
-  return { student, complaintTypes: types, incident: null, items: await items }
+  return { student, complaintTypes: types, incident: null, items: await items, vitalsRanges }
 }
 
 /** Resolves the Student Number typed on Stage 1 when the student wasn't identified beforehand. */

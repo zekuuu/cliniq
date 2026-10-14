@@ -30,7 +30,7 @@ export function BrandLogo({
           Mendez Christian Academy
         </span>
         {showAttribution && (
-          <span className="text-[9px] leading-3 text-text-muted">Powered by HealWare™</span>
+          <span className="text-xs text-text-secondary">Powered by HealWare™</span>
         )}
       </span>
     </span>

@@ -189,7 +189,7 @@ export function AuditLogPage({ viewer }: { viewer: SessionUser }) {
           <div className="flex flex-wrap items-end gap-3 print:hidden">
             <Input label="Search" type="search" value={search} placeholder="User, role, action, or target record" onChange={(event) => updateFilters({ search: event.target.value })} className="w-full sm:min-w-56 sm:flex-1" />
             <DateRangePicker value={range} onChange={(value) => updateFilters({ range: value })} today={defaultRange.to} presets={['all', 'today', 'last7', 'thisMonth', 'custom']} presetLabels={{ last7: 'This week' }} customPopover popoverAlign="start" />
-            <Select label="User" value={userId} options={data.users.map((user) => ({ value: user.id, label: user.name }))} placeholder="All users" onChange={(value) => updateFilters({ userId: value })} className="w-full sm:w-48" />
+            <Select label="User" value={userId} options={data.users.map((user) => ({ value: user.id, label: user.name }))} placeholder="All users" clearable onChange={(value) => updateFilters({ userId: value })} className="w-full sm:w-48" />
             <MultiSelect label="Action type" values={actionTypes} options={actionOptions} allLabel="All actions" onChange={(values) => updateFilters({ actionTypes: values as AuditActionType[] })} className="w-full sm:w-48" />
             <MultiSelect label="Target / module" values={targetTypes} options={auditTargetTypes.map((type) => ({ value: type, label: targetLabels[type] }))} allLabel="All targets" onChange={(values) => updateFilters({ targetTypes: values as AuditTargetType[] })} className="w-full sm:w-48" />
           </div>

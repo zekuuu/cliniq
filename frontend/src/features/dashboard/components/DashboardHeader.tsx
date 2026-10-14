@@ -1,6 +1,6 @@
 import { Button, DateRangePicker } from '../../../components'
-import { formatDateRange, formatLongDate } from '../../../lib/dates'
-import type { DateRange } from '../../../lib/dateRange'
+import { formatLongDate } from '../../../lib/dates'
+import { describeRangeDates, type DateRange } from '../../../lib/dateRange'
 import type { SessionUser } from '../../../lib/mock-db'
 import type { ISODate } from '../../../types/entities'
 
@@ -45,7 +45,7 @@ export function DashboardHeader({
         <p className="mt-0.5 text-xs text-text-secondary" aria-live="polite">
           <time dateTime={today}>{formatLongDate(today)}</time>
           <span aria-hidden="true"> · </span>
-          {isRefetching ? 'Updating…' : `Showing ${formatDateRange(range.from, range.to)}`}
+          {isRefetching ? 'Updating…' : `Showing ${describeRangeDates(range)}`}
           <span aria-hidden="true"> · </span>
           View only
         </p>

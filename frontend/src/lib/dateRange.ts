@@ -47,6 +47,14 @@ export function describeRange(range: DateRange): string {
     : PRESET_LABELS[range.preset]
 }
 
+/**
+ * The dates a range covers, for a header or a printout: "Oct 1 – Oct 14, 2026", or "All records" for
+ * the All preset, whose 1900 start date is a placeholder and never a date to show.
+ */
+export function describeRangeDates(range: DateRange): string {
+  return range.preset === 'all' ? 'All records' : formatDateRange(range.from, range.to)
+}
+
 /** The equal-length period immediately before `range`, used for "vs previous period" trends. */
 export function previousPeriod(range: DateRange): { from: ISODate; to: ISODate } {
   const length = diffDays(range.from, range.to) + 1

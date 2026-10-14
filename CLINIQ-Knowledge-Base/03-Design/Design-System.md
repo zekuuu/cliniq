@@ -84,8 +84,12 @@ Don't introduce a third width for one screen. The only exception is the mobile-f
 ### Forms
 Should be especially intuitive for non-technical users. Use real labels, not placeholder-text-only. Group related fields, clearly mark required fields, explain a confusing field when necessary, and give understandable validation messages rather than exposing raw technical errors. Preserve entered data when validation fails, where possible. A user should always be able to answer: *What do I enter? → Why am I entering it? → What happens next?*
 
+**Failed submit (Wednesday, October 14, 2026 — 17:59):** when a save fails validation, focus moves to the first invalid field, scrolled into view clear of the sticky top bar, and screen readers hear how many fields need attention. One shared hook does this on every entry and edit form. Rules: `.claude/skills/cliniq-input-patterns/`.
+
 ### Navigation
 Predictable and simple. Familiar terminology over technical jargon. Make the current location obvious, keep important functionality easy to discover, keep recurring controls in a consistent place, and organize navigation around what the user is trying to do — not around the app's internal module structure.
+
+**Below `lg` (agent-decided Wednesday, October 14, 2026 — 17:59, ADR-022, pending team review):** the sidebar becomes an "Open navigation" menu in the top bar listing the same role's entries plus Privacy Policy and Report an Issue; a role with no entries gets no menu button. Rules: `.claude/skills/cliniq-sidebar-patterns/`.
 
 ### Accessibility
 Treat as part of the normal design process, not an optional pass at the end. Ensure readable text, adequate contrast, clear labels, obviously-interactive elements, understandable error messages, visible focus/interaction states, meaningful feedback, and no dependence on color alone.
@@ -103,6 +107,8 @@ Apply this to every list, table, card grid, and detail view — not just the Das
 Use only when they add real value — don't interrupt users with confirmations for harmless, reversible actions. For destructive or irreversible actions: clearly explain what will happen, visually distinguish the destructive action from the cancel option, and never make a destructive and a safe action look visually identical.
 
 **Which actions confirm.** An action that can't be undone from the screen it's on asks first: archiving a student, approving an incident report or excuse letter, marking a backup verified, and closing a follow-up as Missed or Cancelled. The expected, routine outcome doesn't: marking a follow-up Completed applies at once, because adding friction to the normal path costs the nurse time on every record. Every confirmation uses the shared `Modal`, names the record it affects, and opens with focus on the safe choice.
+
+**Unsaved input (agent-decided Wednesday, October 14, 2026 — 17:59, ADR-021, pending team review):** Cancel on an entry or edit form asks "Discard unsaved changes?" only when something typed or chosen hasn't been saved; an untouched or just-saved form leaves at once. Rules: `.claude/skills/cliniq-modal-patterns/`.
 
 ### Animation & Microinteractions
 Subtle, and only when it improves usability — communicating state changes, feedback, transitions, loading, or interaction responses. No bouncing effects, unnecessary transitions, or decorative motion. The system should feel smooth and responsive, not flashy. (This also serves the 4GB RAM performance constraint below — lightweight motion is both a UX and a hardware requirement here.)

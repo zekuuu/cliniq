@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from 'react'
+import { useId, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import {
   Badge,
@@ -16,6 +16,7 @@ import {
   type ItemLineDraft,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { cn } from '../../lib/cn'
 import { cleanComplaint } from '../../lib/complaints'
 import { formatDateRange, formatDateTime } from '../../lib/dates'
@@ -134,6 +135,8 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
   const [saveError, setSaveError] = useState('')
   /** Set after a successful save; lists any items the edit took below zero. */
   const [saved, setSaved] = useState<null | { belowZero: string[] }>(null)
+  const invalidRef = useRef<HTMLFormElement>(null)
+  const invalid = useFocusFirstInvalid(invalidRef)
 
   function setField<K extends keyof VisitDetailValues>(field: K, value: VisitDetailValues[K]) {
     setValues((current) => ({ ...current, [field]: value }))
@@ -159,6 +162,7 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
     event.preventDefault()
     const nextErrors = validate()
     setErrors(nextErrors)
+    invalid.report(Object.keys(nextErrors).length)
     if (Object.keys(nextErrors).length) return
     setSaving(true)
     setSaveError('')
@@ -282,7 +286,10 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
           />
           <CardBody>
             {editing ? (
-              <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
+              <form ref={invalidRef} noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
+                <p role="status" className="sr-only">
+                  {invalid.announcement}
+                </p>
                 <ComplaintField
                   value={values.complaint}
                   onChange={(value) => setField('complaint', value)}

@@ -29,6 +29,12 @@ Use this with `cliniq-interactive-states` whenever a text input is created or ch
 - A date-and-time value is a `DatePicker` plus a typed `Input type="time"`; the global stylesheet hides the browser's clock popup.
 - Tests pick dates through `pickDate` / `pickMonth` in `frontend/src/test/pickDate.ts`.
 
+## Failed submit
+
+- Every entry and edit form uses the shared `useFocusFirstInvalid(formRef)` (`frontend/src/hooks/useFocusFirstInvalid.ts`): call `report(errorCount)` on each submit, after setting the errors, and render its `announcement` in a `role="status"` `sr-only` paragraph inside the form.
+- On a failed submit, focus moves to the first field marked `aria-invalid` (or the form's one `role="alert"` message when the form has no per-field errors), scrolled to the middle of the screen so the sticky top bar never covers it, and screen readers hear "N fields need attention."
+- Shared controls (`Input`, `Select`, `DatePicker`, `Combobox`, `Textarea`, `StudentPicker`) already set `aria-invalid` from their `error`; a page-local field must do the same.
+
 ## Scope
 
 This rule covers text, search, number, date, month, time, and password fields. It does not replace `Select`, `DateRangePicker`, or `MultiSelect`; use the relevant shared control for those choices (the date-range custom From/To fields are themselves `DatePicker`s).

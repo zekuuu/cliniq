@@ -170,3 +170,61 @@ describe('Report Incident: optional general notes', () => {
     expect(screen.getAllByText('Fell during recess; conscious.')).toHaveLength(2)
   })
 })
+
+describe('Report Incident: failed submit and unusual vitals', () => {
+  beforeEach(() => resetMockDb())
+
+  it('moves focus to the first invalid field when Stage 1 is incomplete', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+
+    await screen.findByRole('heading', { name: 'Report Incident' })
+    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
+
+    expect(screen.getByLabelText(/temperature/i)).toHaveFocus()
+    expect(screen.getByText('2 fields need attention.')).toBeInTheDocument()
+  })
+
+  it('moves focus to the first invalid Stage 2 field', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+
+    await screen.findByRole('heading', { name: 'Report Incident' })
+    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await user.type(screen.getByLabelText(/temperature/i), '37.2')
+    await user.type(screen.getByLabelText(/pulse/i), '92')
+    await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
+    await screen.findByRole('heading', { name: 'Stage 2 completion' })
+    await user.type(screen.getByLabelText(/blood pressure/i), '120/80')
+    await user.click(screen.getByRole('button', { name: 'Complete Incident' }))
+
+    expect(screen.getByLabelText(/oxygen saturation/i)).toHaveFocus()
+  })
+
+  it('warns about an implausible reading but still saves Stage 1', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+
+    await screen.findByRole('heading', { name: 'Report Incident' })
+    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await user.type(screen.getByLabelText(/temperature/i), '370')
+    await user.type(screen.getByLabelText(/pulse/i), '92')
+
+    expect(screen.getByText(/Temperature 370 °C looks unusual\. Please check the reading\. You can still save\./)).toBeInTheDocument()
+    expect(screen.queryByText(/Pulse .* looks unusual/)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
+    expect(await screen.findByText(/stage 1 saved/i)).toBeInTheDocument()
+  })
+
+  it('shows no warning for an ordinary reading', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+
+    await screen.findByRole('heading', { name: 'Report Incident' })
+    await user.type(screen.getByLabelText(/temperature/i), '37.2')
+    await user.type(screen.getByLabelText(/pulse/i), '92')
+    expect(screen.queryByText(/looks unusual/)).not.toBeInTheDocument()
+  })
+})

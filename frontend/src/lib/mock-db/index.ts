@@ -24,6 +24,8 @@ export type {
   MockDbConfig,
   PeReferral,
   RecordReview,
+  VitalRange,
+  VitalsWarningRanges,
 } from './types'
 export type { AuditLogList, AuditLogQuery, AuditLogRow, AuditTargetType, BackupStatus, FrequentVisitor, IncompleteRecordRow, InventoryStatus } from './selectors'
 export { auditTargetTypes } from './selectors'

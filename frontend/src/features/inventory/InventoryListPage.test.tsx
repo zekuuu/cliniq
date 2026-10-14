@@ -22,3 +22,17 @@ describe('Inventory List', () => {
     expect(screen.getAllByRole('rowheader').map((cell) => cell.textContent)).toEqual(expectedNames)
   })
 })
+
+describe('Inventory List: expired stock', () => {
+  it('marks an expired item’s quantity as expired in the Stock column', async () => {
+    const items = await fetchInventory({ search: '', category: '' })
+    const expired = items.find((item) => item.flags.includes('expired'))!
+    const usable = items.find((item) => !item.flags.includes('expired'))!
+    renderWithRouter(<InventoryListPage />)
+
+    expect(
+      await screen.findByText(`${expired.currentStock} ${expired.unit} (expired)`),
+    ).toBeInTheDocument()
+    expect(screen.getByText(`${usable.currentStock} ${usable.unit}`)).toBeInTheDocument()
+  })
+})

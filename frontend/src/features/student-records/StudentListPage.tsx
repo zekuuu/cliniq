@@ -54,6 +54,7 @@ function GradeSelect({
       label="Grade level"
       value={value}
       placeholder="All grade levels"
+      clearable
       options={gradeLevels.map((level) => ({ value: level, label: level }))}
       onChange={onChange}
     />

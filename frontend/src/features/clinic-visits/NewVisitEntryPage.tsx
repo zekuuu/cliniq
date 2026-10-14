@@ -20,6 +20,7 @@ import {
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
+import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { cn } from '../../lib/cn'
 import { cleanComplaint, normalizeComplaint } from '../../lib/complaints'
@@ -195,7 +196,6 @@ export function NewVisitEntryPage({
   studentNumber?: string
 }) {
   const today = todayISO()
-  const cancel = useCancelNavigation(paths.visits)
   const { data, status, reload } = useAsyncData(`new-visit|${studentNumber ?? 'unidentified'}`, () =>
     fetchNewVisitContext(studentNumber),
   )
@@ -230,7 +230,18 @@ export function NewVisitEntryPage({
   const allergies = identified.student?.allergies ?? null
   const suggestions = freshSuggestions ?? data?.complaintSuggestions ?? []
   const formRef = useRef<HTMLFormElement>(null)
+  const invalid = useFocusFirstInvalid(formRef)
   const saveAndNewRef = useRef(false)
+  // Anything typed or chosen beyond the defaults; a save clears the form back to them.
+  const { cancel, discardDialog } = useCancelNavigation(
+    paths.visits,
+    complaint.trim() !== '' ||
+      treatment.trim() !== '' ||
+      lines.length > 0 ||
+      triageSteps.length > 0 ||
+      disposition !== 'returned_to_class' ||
+      needsFollowUp,
+  )
 
   useEffect(() => {
     function saveAndNew() {
@@ -272,6 +283,7 @@ export function NewVisitEntryPage({
     const nextErrors = validate()
     const studentOk = identified.validate('Choose the student: type a Student Number or name, then pick from the list.')
     setErrors(nextErrors)
+    invalid.report(Object.keys(nextErrors).length + (studentOk ? 0 : 1))
     if (Object.keys(nextErrors).length || !studentOk) return
     setSaving(true)
     setSaveError('')
@@ -352,6 +364,7 @@ export function NewVisitEntryPage({
 
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {discardDialog}
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -399,6 +412,9 @@ export function NewVisitEntryPage({
       )}
 
       <form ref={formRef} onSubmit={onSubmit} noValidate>
+        <p role="status" className="sr-only">
+          {invalid.announcement}
+        </p>
         <Card aria-labelledby="visit-form-title">
           <CardHeader
             titleId="visit-form-title"

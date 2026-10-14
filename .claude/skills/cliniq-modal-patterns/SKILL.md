@@ -12,6 +12,7 @@ Use this with `cliniq-interactive-states` whenever an action might need a confir
 - Confirm an action that **can't be undone from the screen it's on**: archiving a student, approving an incident report or excuse letter, marking a backup verified, closing a follow-up as Missed or Cancelled.
 - Do **not** confirm the expected, routine outcome. Marking a follow-up Completed applies at once; friction on the normal path costs the nurse time on every record.
 - Do not confirm harmless or reversible actions (`Design-System.md`, Modals & Confirmation).
+- Cancel on an entry or edit form asks "Discard unsaved changes?" **only when the form has unsaved input**; an untouched or just-saved form leaves at once. This lives in the shared `useCancelNavigation(fallback, isDirty)` (`frontend/src/hooks/useCancelNavigation.tsx`): pass the form's dirty state and render the returned `discardDialog`. The safe choice is "Keep Editing" (`data-autofocus`), the confirming one "Discard Changes" (`primary`, not red).
 
 ## What the dialog says and does
 

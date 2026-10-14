@@ -1,7 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { cn } from '../../lib/cn'
 import type { InventoryItem } from '../../types/entities'
-import type { InventoryFlag } from '../status/inventory'
+import { stockQuantityText, type InventoryFlag } from '../status/inventory'
 import { Badge } from '../ui/Badge'
 import { Input } from '../ui/Input'
 import { DROPDOWN_PANEL, dropdownOptionClassName, placeDropdownPanel } from '../ui/dropdownClassName'
@@ -192,7 +192,7 @@ export function InventoryItemPicker({
                       )}
                     </span>
                     <span className={cn('text-xs tabular-nums', item.currentStock <= 0 ? 'font-semibold text-error' : 'text-text-secondary')}>
-                      {item.currentStock} {item.unit}
+                      {stockQuantityText(item.currentStock, item.unit, item.flags)}
                     </span>
                   </div>
                 )

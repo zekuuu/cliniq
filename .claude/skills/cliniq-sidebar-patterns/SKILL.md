@@ -8,7 +8,7 @@ description: Apply when building or changing CLINIQ's shared application sidebar
 ## Brand lockup
 
 - Use `/Healware_Logo.png` as the system mark in both the expanded `BrandLogo` and collapsed sidebar state. It must match the browser favicon asset declared in `frontend/index.html`.
-- In the expanded sidebar, show `CLINIQ`, `Mendez Christian Academy` at 11px, then `Powered by HealWare™` as a compact third line. Keep the collapse control vertically centered alongside that brand stack, not on a separate row. The attribution is decorative and may use the muted token at 9px.
+- In the expanded sidebar, show `CLINIQ`, `Mendez Christian Academy` at 12px (`text-xs`), then `Powered by HealWare™` as a compact third line. Keep the collapse control vertically centered alongside that brand stack, not on a separate row. The attribution is readable text: `text-xs` (12px, the Design-System floor) in `text-text-secondary` (about 6.2:1 on white), never the muted token.
 - In the collapsed state, show only the Healware mark: no colored tile, outer outline, box, or shadow around it.
 
 ## Implementation boundary
@@ -25,3 +25,9 @@ description: Apply when building or changing CLINIQ's shared application sidebar
 - In the collapsed sidebar, retain an accessible label and tooltip/title while using the existing icon treatment so the link does not become an unlabeled control.
 - Put the version in a compact, non-interactive muted block within the horizontal expanded footer row after the actual footer links. In the collapsed sidebar, keep it beneath the icon actions. The version reads from the build-injected app-version constant.
 - `Sidebar.tsx` owns shared footer entry points, `routes/paths.ts` owns route destinations, and the feature component owns modal content and submission behavior.
+
+## Navigation below `lg` (phones and small tablets)
+
+- Below `lg` the sidebar is hidden; the top bar's "Open navigation" button opens the same role's entries in the shared `Modal` (focus trap, Escape, focus returns to the button). Entries are `min-h-11` (44px) touch targets.
+- The drawer ends with the sidebar footer's Privacy Policy link and Report an Issue button, so phones reach them too.
+- A role with no entries (the PE/Sports Instructor on the shared privacy page) gets no menu button, never an empty dialog.

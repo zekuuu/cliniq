@@ -18,7 +18,7 @@ import type { DashboardSummary } from '../../../types/dashboard'
 const CARDS = {
   visits: { icon: 'activity', label: 'Clinic visits', tone: 'brand' },
   incidents: { icon: 'alertTriangle', label: 'Incidents', tone: 'error' },
-  pending: { icon: 'clipboardList', label: 'Incomplete', tone: 'warning' },
+  pending: { icon: 'clipboardList', label: 'Incomplete records', tone: 'warning' },
   lowStock: { icon: 'package', label: 'Low-stock items', tone: 'warning' },
   students: { icon: 'users', label: 'Active students', tone: 'neutral' },
 } satisfies Record<string, { icon: IconName; label: string; tone: StatTone }>
@@ -69,6 +69,10 @@ export function StatCardRow({
   canNavigate: boolean
 }) {
   const { counts, previousCounts } = summary
+  // No trend without a fair previous period (the All range, or one reaching back before any record).
+  const noComparison = range.preset === 'all' ? 'All records' : 'No earlier records to compare'
+  // The Alerts list also holds items that are only expiring or expired; say so, so the counts match up.
+  const expiringOnly = summary.inventoryAlerts.filter((row) => !row.flags.includes('low_stock')).length
   const cards = [
     {
       to: paths.visits,
@@ -78,7 +82,8 @@ export function StatCardRow({
           label={CARDS.visits.label}
           tone={CARDS.visits.tone}
           value={counts.visits}
-          trend={trendFor(counts.visits, previousCounts.visits, range)}
+          trend={previousCounts ? trendFor(counts.visits, previousCounts.visits, range) : undefined}
+          scope={previousCounts ? undefined : noComparison}
           labelAction={
             canNavigate ? <TitleLink to={paths.visits}>{CARDS.visits.label}</TitleLink> : undefined
           }
@@ -93,7 +98,8 @@ export function StatCardRow({
           label={CARDS.incidents.label}
           tone={CARDS.incidents.tone}
           value={counts.incidents}
-          trend={trendFor(counts.incidents, previousCounts.incidents, range)}
+          trend={previousCounts ? trendFor(counts.incidents, previousCounts.incidents, range) : undefined}
+          scope={previousCounts ? undefined : noComparison}
           footnote={
             counts.incidentsAtStage1 > 0
               ? `${counts.incidentsAtStage1} still at Stage 1`
@@ -129,6 +135,11 @@ export function StatCardRow({
           tone={CARDS.lowStock.tone}
           value={counts.lowStockItems}
           scope="Current · below threshold"
+          footnote={
+            expiringOnly > 0
+              ? `${expiringOnly} more expiring or expired in the Alerts list`
+              : undefined
+          }
           labelAction={
             canNavigate ? <TitleLink to={paths.inventory}>{CARDS.lowStock.label}</TitleLink> : undefined
           }

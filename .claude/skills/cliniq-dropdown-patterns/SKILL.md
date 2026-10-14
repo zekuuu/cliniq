@@ -20,6 +20,11 @@ Use this alongside `cliniq-interactive-states` whenever a dropdown's trigger or 
 - Use `bg-surface`, `font-semibold`, and `text-brand-green-dark` for the selected row. The background and weight make the state clear without relying only on green text.
 - Keep non-selected options `text-text-primary` and give them the established `hover:bg-surface` response.
 
+## Placeholder
+
+- A prompt placeholder ("Select complaint", "Choose a reason", "Update status") shows on the trigger only. It is not an option row, because choosing it does nothing.
+- A placeholder that is a real choice (a filter's "All grade levels", "All statuses") is listed as the first option, so choosing it clears the filter. Pass `clearable` to `Select` for these.
+
 ## Menu sizing
 
 - First match the option panel to its trigger with `min-w-full`; then let it expand for its longest label with `w-max`.

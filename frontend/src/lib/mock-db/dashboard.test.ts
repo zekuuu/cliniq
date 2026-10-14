@@ -24,6 +24,7 @@ const CONFIG: MockDbConfig = {
   clusterMinCount: 8,
   clusterRatio: 2,
   topComplaints: 5,
+  vitalsWarningRanges: { temperatureC: { min: 30, max: 43 }, pulseBpm: { min: 30, max: 250 } },
 }
 
 // Hand-built records typed against the §5 entity shapes. If the entity contract changes, this

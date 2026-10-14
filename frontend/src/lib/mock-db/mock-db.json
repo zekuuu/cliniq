@@ -14,7 +14,12 @@
     "expiryWarningDays": 30,
     "clusterMinCount": 8,
     "clusterRatio": 2,
-    "topComplaints": 5
+    "topComplaints": 5,
+    "vitalsWarningRanges": {
+      "_note": "PLACEHOLDER SANITY BOUNDS, NOT CLINICAL THRESHOLDS. Nurse to confirm (Issues-and-TODOs: 'Unusual-vitals thresholds'). A reading outside a range is very unlikely to be real, usually a typing slip such as 370 for 37.0. The Incident form shows a warning and never blocks saving.",
+      "temperatureC": { "min": 30, "max": 43 },
+      "pulseBpm": { "min": 30, "max": 250 }
+    }
   },
   "users": [
     {

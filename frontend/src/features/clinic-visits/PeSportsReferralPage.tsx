@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import {
   Button,
   Card,
@@ -15,6 +15,7 @@ import {
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { paths } from '../../routes/paths'
+import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import type { Disposition } from '../../types/entities'
@@ -114,7 +115,6 @@ export function PeSportsReferralPage({
   viewer?: SessionUser
   studentNumber?: string
 }) {
-  const cancel = useCancelNavigation(paths.visits)
   const { data, status, reload } = useAsyncData(`pe-referral|${studentNumber ?? 'unidentified'}`, () =>
     fetchPeReferralContext(studentNumber),
   )
@@ -130,6 +130,16 @@ export function PeSportsReferralPage({
   const [errors, setErrors] = useState<Errors>({})
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const invalidRef = useRef<HTMLFormElement>(null)
+  const invalid = useFocusFirstInvalid(invalidRef)
+  // Unsaved typed input, or a disposition other than the default; a save clears the form.
+  const { cancel, discardDialog } = useCancelNavigation(
+    paths.visits,
+    !saved &&
+      Object.entries(values).some(([key, value]) =>
+        key === 'disposition' ? value !== 'returned_to_class' : String(value).trim() !== '',
+      ),
+  )
 
   function setField<K extends keyof PeReferralValues>(field: K, value: PeReferralValues[K]) {
     setValues((current) => ({ ...current, [field]: value }))
@@ -157,6 +167,7 @@ export function PeSportsReferralPage({
     const nextErrors = validate(values)
     const studentOk = identified.validate()
     setErrors(nextErrors)
+    invalid.report(Object.keys(nextErrors).length + (studentOk ? 0 : 1))
     if (Object.keys(nextErrors).length || !studentOk) return
     setSaving(true)
     try {
@@ -200,6 +211,7 @@ export function PeSportsReferralPage({
 
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {discardDialog}
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -225,7 +237,10 @@ export function PeSportsReferralPage({
         </div>
       )}
 
-      <form noValidate onSubmit={onSubmit}>
+      <form ref={invalidRef} noValidate onSubmit={onSubmit}>
+        <p role="status" className="sr-only">
+          {invalid.announcement}
+        </p>
         <Card aria-labelledby="pe-referral-title">
           <CardHeader
             titleId="pe-referral-title"

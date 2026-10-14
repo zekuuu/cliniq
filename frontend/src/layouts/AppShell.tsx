@@ -8,6 +8,7 @@ import { showKeyboardShortcuts } from '../lib/shortcuts'
 import { BrandLogo, Sidebar } from './Sidebar'
 import { navGroupsFor, type NavKey } from './navigation'
 import { ReportIssueModal } from '../features/issue-reports/ReportIssueModal'
+import { paths } from '../routes/paths'
 
 /**
  * App shell: left sidebar (logo + role-aware nav) and a top bar (user chip), following the reference
@@ -32,6 +33,12 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const [isReportIssueOpen, setIsReportIssueOpen] = useState(false)
   const [reportIssueNotice, setReportIssueNotice] = useState<string | null>(null)
+  const navGroups = navGroupsFor(user.role)
+
+  function openReportIssue() {
+    setReportIssueNotice(null)
+    setIsReportIssueOpen(true)
+  }
 
   async function handleLogout() {
     setIsLoggingOut(true)
@@ -63,25 +70,25 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
         active={active}
         collapsed={isSidebarCollapsed}
         onCollapsedChange={setIsSidebarCollapsed}
-        onReportIssue={() => {
-          setReportIssueNotice(null)
-          setIsReportIssueOpen(true)
-        }}
+        onReportIssue={openReportIssue}
         user={user}
       />
 
       <div className="flex min-w-0 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border bg-background px-4 sm:px-8 print:hidden">
           <div className="flex min-w-0 items-center gap-2 lg:hidden">
-            <button
-              type="button"
-              aria-label="Open navigation"
-              aria-expanded={isMobileNavOpen}
-              onClick={() => setIsMobileNavOpen(true)}
-              className="inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-surface hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none"
-            >
-              <Icon name="menu" size={22} />
-            </button>
+            {/* A role with no menu entries (the Instructor on the shared privacy page) gets no empty menu. */}
+            {navGroups.length > 0 && (
+              <button
+                type="button"
+                aria-label="Open navigation"
+                aria-expanded={isMobileNavOpen}
+                onClick={() => setIsMobileNavOpen(true)}
+                className="inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-surface hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none"
+              >
+                <Icon name="menu" size={22} />
+              </button>
+            )}
             <BrandLogo compact />
           </div>
           <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-2.5">
@@ -122,7 +129,7 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
       </div>
       <Modal open={isMobileNavOpen} title="Navigation" onClose={() => setIsMobileNavOpen(false)}>
         <nav aria-label="Mobile navigation" className="flex max-h-[70dvh] flex-col gap-4 overflow-y-auto">
-          {navGroupsFor(user.role).map((group) => (
+          {navGroups.map((group) => (
             <div key={group.label} role="group" aria-label={group.label}>
               <p className="px-1 text-xs font-medium uppercase text-text-secondary">{group.label}</p>
               <ul className="mt-1 flex flex-col gap-1">
@@ -152,6 +159,27 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
               </ul>
             </div>
           ))}
+          {/* The sidebar footer's links, which phones would otherwise never reach. */}
+          <div className="flex flex-wrap items-center gap-x-4 border-t border-border pt-2">
+            <Link
+              to={paths.privacyPolicy}
+              onClick={() => setIsMobileNavOpen(false)}
+              className="inline-flex min-h-11 cursor-pointer items-center rounded-sm px-1 text-sm text-text-secondary transition-colors hover:text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none"
+            >
+              Privacy Policy
+            </Link>
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              onClick={() => {
+                setIsMobileNavOpen(false)
+                openReportIssue()
+              }}
+              className="inline-flex min-h-11 cursor-pointer items-center rounded-sm px-1 text-sm text-text-secondary transition-colors hover:text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none"
+            >
+              Report an Issue
+            </button>
+          </div>
         </nav>
       </Modal>
       <ReportIssueModal

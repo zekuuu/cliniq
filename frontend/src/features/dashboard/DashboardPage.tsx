@@ -58,7 +58,9 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   )
 
   return (
-    <div className="mx-auto flex max-w-page-wide flex-col gap-6 px-4 pt-10 pb-8 sm:px-8">
+    // Block flow in print: in a flex column, a card pushed to the next page by break-inside-avoid
+    // doesn't move the following section down, so the Calendar printed over Common complaints.
+    <div className="mx-auto flex max-w-page-wide flex-col gap-6 px-4 pt-10 pb-8 sm:px-8 print:block print:space-y-6">
       <Card className="p-5">
         <DashboardHeader
           viewer={viewer}
@@ -85,7 +87,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
         <div
           aria-busy={isRefetching}
           className={cn(
-            'flex flex-col gap-6 transition-opacity motion-reduce:transition-none',
+            'flex flex-col gap-6 transition-opacity motion-reduce:transition-none print:block print:space-y-6',
             isRefetching && 'opacity-60',
           )}
         >

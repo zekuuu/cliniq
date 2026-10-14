@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Input, InventoryItemPicker, Select, Skeleton, StudentPicker } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
+import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { formatDateTime } from '../../lib/dates'
 import { StockRuleError } from '../../lib/mock-db'
 import { isStudentNumber } from '../../lib/studentNumber'
@@ -39,7 +40,12 @@ export function InventoryDispensePage() {
   const [errors, setErrors] = useState<{ recipient?: string; student?: string; item?: string; quantity?: string; save?: string }>({})
   const [success, setSuccess] = useState('')
   const [saving, setSaving] = useState(false)
-  const cancel = useCancelNavigation(paths.inventory)
+  const { cancel, discardDialog } = useCancelNavigation(
+    paths.inventory,
+    !success && (itemId !== '' || quantity !== '1' || (!preselected && (recipient !== '' || studentNumber !== ''))),
+  )
+  const invalidRef = useRef<HTMLFormElement>(null)
+  const invalid = useFocusFirstInvalid(invalidRef)
   const lookupNumber = recipient === 'student' && isStudentNumber(studentNumber) ? studentNumber : ''
   const { data: lookup } = useAsyncData(`dispense-student|${lookupNumber}`, () =>
     lookupNumber ? findDispenseStudent(lookupNumber).catch(() => null) : Promise.resolve(undefined),
@@ -62,6 +68,7 @@ export function InventoryDispensePage() {
     if (!item) next.item = 'Choose an item.'
     if (!Number.isInteger(amount) || amount < 1) next.quantity = 'Enter a whole-number quantity of at least 1.'
     setErrors(next)
+    invalid.report(Object.keys(next).length)
     if (Object.keys(next).length || !item) return
     setSaving(true)
     try {
@@ -86,9 +93,13 @@ export function InventoryDispensePage() {
 
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {discardDialog}
       <Card className="p-5"><div className="flex items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">Dispense Medicine or Supply</h1><p className="mt-1 text-sm text-text-secondary">For use outside a clinic visit. Medicine given during a visit belongs on that visit.</p></div><Badge tone="warning" variant="soft" icon="package">Stock action</Badge></div></Card>
       <Card aria-labelledby="dispense-title"><CardHeader titleId="dispense-title" title="Dispensation details" icon={<Icon name="package" />} /><CardBody>
-        <form noValidate className="flex flex-col gap-4" onSubmit={submit}>
+        <form ref={invalidRef} noValidate className="flex flex-col gap-4" onSubmit={submit}>
+          <p role="status" className="sr-only">
+            {invalid.announcement}
+          </p>
           <Select label="For" required value={recipient} placeholder="Choose who this is for" options={recipientOptions} error={errors.recipient} onChange={(value) => { setRecipient(value as Recipient); clear('recipient') }} />
           {recipient === 'student' && (
             <StudentPicker

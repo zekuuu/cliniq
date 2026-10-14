@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { Button, DatePicker, Input, Modal, SegmentedControl, Select } from '../../components'
 import { ADJUSTMENT_REASON_LABELS, StockRuleError, STAFF_ADJUSTMENT_REASONS, type StaffAdjustmentReason } from '../../lib/mock-db'
+import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { adjustStock, restockItem, type InventoryItemView } from './api/inventoryApi'
 
 type AdjustMode = 'change' | 'count'
@@ -27,6 +28,8 @@ export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryIt
   const [note, setNote] = useState('')
   const [errors, setErrors] = useState<{ amount?: string; reason?: string; note?: string; save?: string }>({})
   const [saving, setSaving] = useState(false)
+  const invalidRef = useRef<HTMLFormElement>(null)
+  const invalid = useFocusFirstInvalid(invalidRef)
 
   const parsed = amount.trim() === '' ? NaN : Number(amount)
   const after = Number.isInteger(parsed) ? (mode === 'count' ? parsed : item.currentStock + parsed) : null
@@ -41,6 +44,7 @@ export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryIt
     if (!reason) next.reason = 'Choose a reason.'
     if (reason === 'other' && !note.trim()) next.note = 'Add a note explaining the adjustment.'
     setErrors(next)
+    invalid.report(Object.keys(next).length)
     if (Object.keys(next).length || !reason) return
     setSaving(true)
     try {
@@ -56,7 +60,10 @@ export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryIt
 
   return (
     <Modal open title={`Adjust Stock: ${item.name}`} onClose={onClose}>
-      <form noValidate onSubmit={submit} className="flex flex-col gap-4">
+      <form ref={invalidRef} noValidate onSubmit={submit} className="flex flex-col gap-4">
+        <p role="status" className="sr-only">
+          {invalid.announcement}
+        </p>
         <p className="text-sm text-text-secondary">
           Current stock: <span className="font-semibold text-text-primary">{item.currentStock} {item.unit}</span>
         </p>
@@ -127,11 +134,17 @@ export function RestockModal({ item, onClose, onSaved }: { item: InventoryItemVi
   const [expirationDate, setExpirationDate] = useState(item.expirationDate ?? '')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const invalidRef = useRef<HTMLFormElement>(null)
+  const invalid = useFocusFirstInvalid(invalidRef)
 
   async function submit(event: FormEvent) {
     event.preventDefault()
     const amount = Number(quantity)
-    if (!quantity.trim() || !Number.isInteger(amount) || amount < 1) return setError('Enter the quantity received as a whole number of at least 1.')
+    if (!quantity.trim() || !Number.isInteger(amount) || amount < 1) {
+      setError('Enter the quantity received as a whole number of at least 1.')
+      invalid.report(1)
+      return
+    }
     setSaving(true)
     try {
       const updated = await restockItem(item.id, amount, expirationDate)
@@ -146,7 +159,10 @@ export function RestockModal({ item, onClose, onSaved }: { item: InventoryItemVi
 
   return (
     <Modal open title={`Restock: ${item.name}`} onClose={onClose}>
-      <form noValidate onSubmit={submit} className="flex flex-col gap-4">
+      <form ref={invalidRef} noValidate onSubmit={submit} className="flex flex-col gap-4">
+        <p role="status" className="sr-only">
+          {invalid.announcement}
+        </p>
         <p className="text-sm text-text-secondary">
           Current stock: <span className="font-semibold text-text-primary">{item.currentStock} {item.unit}</span>
         </p>

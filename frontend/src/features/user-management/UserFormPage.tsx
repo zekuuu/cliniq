@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { Button, Card, CardBody, CardHeader, ErrorState, Icon, Input, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
+import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { getMockSessionUser } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
 import type { UserRole } from '../../types/entities'
@@ -46,12 +47,19 @@ function UserForm({
   userId?: string
   initial: { name: string; username: string; role: UserRole } | null
 }) {
-  const cancel = useCancelNavigation(paths.users)
   const [name, setName] = useState(initial?.name ?? '')
   const [username, setUsername] = useState(initial?.username ?? '')
   const [role, setRole] = useState<UserRole>(initial?.role ?? 'staff')
   const [saved, setSaved] = useState(false)
+  // What the form last matched in storage: the loaded account, then each saved version.
+  const [baseline, setBaseline] = useState({ name: initial?.name ?? '', username: initial?.username ?? '', role: initial?.role ?? 'staff' })
+  const { cancel, discardDialog } = useCancelNavigation(
+    paths.users,
+    name !== baseline.name || username !== baseline.username || role !== baseline.role,
+  )
   const [errors, setErrors] = useState<{ name?: string; username?: string }>({})
+  const invalidRef = useRef<HTMLFormElement>(null)
+  const invalid = useFocusFirstInvalid(invalidRef)
   async function submit(event: FormEvent) {
     event.preventDefault()
     const nextErrors = {
@@ -59,6 +67,7 @@ function UserForm({
       username: username.trim() ? undefined : 'Enter a username for this account.',
     }
     setErrors(nextErrors)
+    invalid.report([nextErrors.name, nextErrors.username].filter(Boolean).length)
     setSaved(false)
     if (nextErrors.name || nextErrors.username) return
     try {
@@ -69,9 +78,11 @@ function UserForm({
       return
     }
     setSaved(true)
+    setBaseline({ name, username, role })
   }
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {discardDialog}
       <Card className="p-5">
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">
           {userId ? 'Edit User' : 'Add User'}
@@ -83,7 +94,10 @@ function UserForm({
       <Card>
         <CardHeader title="Account details" icon={<Icon name="userCog" />} />
         <CardBody>
-          <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
+          <form ref={invalidRef} className="flex flex-col gap-4" onSubmit={submit} noValidate>
+            <p role="status" className="sr-only">
+              {invalid.announcement}
+            </p>
             <Input
               label="Full name"
               value={name}

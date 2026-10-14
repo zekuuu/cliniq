@@ -63,6 +63,7 @@ import type {
   IssueReport,
   PeReferral,
   SeedStudent,
+  VitalsWarningRanges,
 } from './types'
 
 /**
@@ -349,6 +350,11 @@ export function getVisitComplaintSuggestions(): Promise<string[]> {
 
 export function getIncidentComplaintTypes(): Promise<string[]> {
   return read('incident complaint types', (s) => s.frontendOnly.incidentComplaintTypes)
+}
+
+/** Placeholder sanity bounds for the incident vitals warning (config; nurse to confirm). */
+export function getVitalsWarningRanges(): Promise<VitalsWarningRanges> {
+  return read('vitals warning ranges', (s) => s.config.vitalsWarningRanges)
 }
 
 export function getGradeLevels(): Promise<string[]> {

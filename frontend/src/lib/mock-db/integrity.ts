@@ -17,7 +17,7 @@ export const CALENDAR_EVENT_TITLE_MAX = 60
 
 const FIELDS = {
   top: ['meta', 'config', 'users', 'students', 'visits', 'incidents', 'followUps', 'inventoryItems', 'reports', 'backupLogs', 'auditLog', 'frontendOnly'],
-  config: ['_note', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints'],
+  config: ['_note', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'vitalsWarningRanges'],
   users: ['id', 'name', 'username', 'role', 'lastLogin'],
   students: ['id', 'studentNumber', 'fullName', 'gradeLevel', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContact', 'archived'],
   emergencyContact: ['name', 'relationship', 'phone', 'verified'],
@@ -109,8 +109,17 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
 
   checkFields('top level', s, FIELDS.top)
   checkFields('config', s.config, FIELDS.config)
-  for (const [key, value] of Object.entries((s.config ?? {}) as Rec))
-    if (!key.startsWith('_') && !(typeof value === 'number' && value > 0)) fail(`config.${key}: must be a positive number`)
+  for (const [key, value] of Object.entries((s.config ?? {}) as Rec)) {
+    if (key === 'vitalsWarningRanges') {
+      checkFields('config.vitalsWarningRanges', value, ['_note', 'temperatureC', 'pulseBpm'])
+      for (const vital of ['temperatureC', 'pulseBpm']) {
+        const range = ((value ?? {}) as Rec)[vital] as Rec | undefined
+        const { min, max } = range ?? {}
+        if (!(typeof min === 'number' && typeof max === 'number' && min > 0 && min < max))
+          fail(`config.vitalsWarningRanges.${vital}: needs positive numbers with min < max`)
+      }
+    } else if (!key.startsWith('_') && !(typeof value === 'number' && value > 0)) fail(`config.${key}: must be a positive number`)
+  }
   if (!/synthetic/i.test(String((s.meta as Rec | undefined)?.notice ?? '')))
     fail('meta.notice: must state that the data is synthetic (RA 10173; public repository)')
 

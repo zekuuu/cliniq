@@ -45,6 +45,15 @@ const WEEKDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', '
 
 const NO_HOLIDAYS: Holiday[] = []
 
+/** A day's visits plus incidents. "Visits" alone would undercount what the number holds. */
+function casesLabel(total: number): string {
+  return `${total} ${total === 1 ? 'case' : 'cases'}`
+}
+
+function casesBreakdown(day: CalendarDay): string {
+  return `${day.visits} ${day.visits === 1 ? 'visit' : 'visits'}, ${day.incidents} ${day.incidents === 1 ? 'incident' : 'incidents'}`
+}
+
 function describeDay(day: CalendarDay, today: ISODate, holidays: Holiday[] = NO_HOLIDAYS): string {
   const parts =
     day.date <= today
@@ -68,7 +77,7 @@ function noClassEmpty(holidays: Holiday[], total: number): boolean {
 function Legend({ scale }: { scale: HeatScale }) {
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
-      <span>Visits + incidents per day:</span>
+      <span>Cases per day (visits + incidents):</span>
       <ul className="flex flex-wrap items-center gap-2">
         {legendSteps(scale).map((step) => (
           <li key={step.level} className="flex items-center gap-1">
@@ -220,7 +229,8 @@ function WeekView({
               ) : (
                 <>
                   <span className="text-xl font-semibold">
-                    {total} {total === 1 ? 'Visit' : 'Visits'}
+                    {casesLabel(total)}
+                    <span className="sr-only">: {casesBreakdown(day)}</span>
                   </span>
                 </>
               )}
@@ -308,10 +318,9 @@ function MonthView({
                         </span>
                         {!future && day && (
                           <span className="text-sm font-semibold">
-                            {total} {total === 1 ? 'Visit' : 'Visits'}
+                            {casesLabel(total)}
                             <span className="sr-only">
-                              {' '}
-                              total: {day.visits} visits, {day.incidents} incidents
+                              : {casesBreakdown(day)}
                             </span>
                           </span>
                         )}
@@ -352,6 +361,10 @@ function YearView({
     (_, m) => `${year}-${String(m + 1).padStart(2, '0')}-01`,
   )
   const holidaysFor = (date: ISODate) => holidaysOn.get(date) ?? NO_HOLIDAYS
+  // The day list is long, so it opens on request; it is the grid's accessible equivalent, so it
+  // stays one keyboard step away and always prints in full.
+  const [showDays, setShowDays] = useState(false)
+  const dayListId = useId()
   const activeDays = [...byDate.values()].filter(
     (d) => d.visits + d.incidents > 0 || dayLabels(d).length > 0 || holidaysFor(d.date).length > 0,
   )
@@ -370,7 +383,8 @@ function YearView({
                 {formatDate(monthStart, { month: 'long' })}
                 <span className="font-normal text-text-secondary">
                   {' '}
-                  · {visits} visits · {incidents} incidents
+                  · {visits} {visits === 1 ? 'visit' : 'visits'} · {incidents}{' '}
+                  {incidents === 1 ? 'incident' : 'incidents'}
                 </span>
               </p>
               {/* The mini grid is a visual summary only. The line above, the tagged-day list, and
@@ -413,30 +427,45 @@ function YearView({
         {activeDays.length === 0 ? (
           <p className="text-xs text-text-secondary">No clinic activity, events, or holidays this year.</p>
         ) : (
-          <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-primary">
-            {activeDays.map((d) => (
-              <li key={d.date}>
-                {canEdit ? (
-                  <button
-                    type="button"
-                    aria-label={`${describeDay(d, today, holidaysFor(d.date))}. Open day`}
-                    onClick={() => onSelectDay(d.date)}
-                    className="inline-flex items-center gap-1 font-semibold text-brand-green-dark underline decoration-brand-green-dark/40 underline-offset-2 cursor-pointer transition-colors hover:text-brand-green hover:decoration-brand-green focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
-                  >
-                    {formatDate(d.date, { month: 'short', day: 'numeric' })}
-                    <Icon name="chevronRight" size={12} />
-                  </button>
-                ) : (
-                  <time dateTime={d.date} className="font-semibold">
-                    {formatDate(d.date, { month: 'short', day: 'numeric' })}
-                  </time>
-                )}{' '}
-                {d.date <= today ? `${d.visits + d.incidents} total` : 'Upcoming'}
-                {holidaysFor(d.date).map((h) => ` · Holiday: ${holidayName(h)}`).join('')}
-                {dayLabels(d).length ? ` · ${dayLabels(d).join(', ')}` : ''}
-              </li>
-            ))}
-          </ul>
+          <>
+            <button
+              type="button"
+              aria-expanded={showDays}
+              aria-controls={dayListId}
+              onClick={() => setShowDays((open) => !open)}
+              className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-sm text-xs font-semibold text-brand-green-dark transition-colors hover:text-brand-green hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none print:hidden"
+            >
+              <Icon name="chevronDown" size={14} className={cn('transition-transform motion-reduce:transition-none', showDays && 'rotate-180')} />
+              {showDays ? 'Hide day list' : 'Show day list'} ({activeDays.length} {activeDays.length === 1 ? 'day' : 'days'})
+            </button>
+            <ul
+              id={dayListId}
+              className={cn('mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-primary', !showDays && 'hidden print:flex')}
+            >
+              {activeDays.map((d) => (
+                <li key={d.date}>
+                  {canEdit ? (
+                    <button
+                      type="button"
+                      aria-label={`${describeDay(d, today, holidaysFor(d.date))}. Open day`}
+                      onClick={() => onSelectDay(d.date)}
+                      className="inline-flex items-center gap-1 font-semibold text-brand-green-dark underline decoration-brand-green-dark/40 underline-offset-2 cursor-pointer transition-colors hover:text-brand-green hover:decoration-brand-green focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
+                    >
+                      {formatDate(d.date, { month: 'short', day: 'numeric' })}
+                      <Icon name="chevronRight" size={12} />
+                    </button>
+                  ) : (
+                    <time dateTime={d.date} className="font-semibold">
+                      {formatDate(d.date, { month: 'short', day: 'numeric' })}
+                    </time>
+                  )}{' '}
+                  {d.date <= today ? casesLabel(d.visits + d.incidents) : 'Upcoming'}
+                  {holidaysFor(d.date).map((h) => ` · Holiday: ${holidayName(h)}`).join('')}
+                  {dayLabels(d).length ? ` · ${dayLabels(d).join(', ')}` : ''}
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </div>
     </div>
@@ -789,6 +818,9 @@ export function VisitCalendar({ today, initialAnchor, canNavigate }: VisitCalend
         }
       />
       <CardBody className="flex flex-col gap-3">
+        <p className="text-xs text-text-secondary">
+          The calendar has its own period; the Date range at the top of the page doesn't change it.
+        </p>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-text-primary" aria-live="polite">
             {period.label}

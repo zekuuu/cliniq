@@ -1,5 +1,6 @@
 import {
   inventoryFlagMap,
+  stockQuantityText,
   followUpDueMap,
   frequentVisitorMap,
   ListCard,
@@ -164,7 +165,7 @@ export function InventoryAlert({
         <ListRow
           key={row.item.id}
           primary={canNavigate ? <ListItemLink to={paths.inventory}>{row.item.name}</ListItemLink> : row.item.name}
-          secondary={`${row.item.currentStock} ${row.item.unit} in stock · threshold ${row.item.lowStockThreshold}`}
+          secondary={`${stockQuantityText(row.item.currentStock, row.item.unit, row.flags)}${row.flags.includes('expired') ? '' : ' in stock'} · threshold ${row.item.lowStockThreshold}`}
           trailing={
             <div className="flex flex-wrap justify-end gap-1 @max-[28rem]:flex-col @max-[28rem]:flex-nowrap @max-[28rem]:items-end">
               {row.flags.map((flag) => (

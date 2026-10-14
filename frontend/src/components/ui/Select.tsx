@@ -20,8 +20,13 @@ export interface SelectProps {
   value: string
   options: ReadonlyArray<SelectOption>
   onChange: (value: string) => void
-  /** Adds an empty first option, e.g. "Select item". */
+  /** Shown on the trigger while nothing is chosen, e.g. "Select grade level". */
   placeholder?: string
+  /**
+   * The placeholder is also a real choice, listed as the first option: a filter's "All ..." that
+   * clears the value. Without it, a prompt such as "Select complaint" stays on the trigger only.
+   */
+  clearable?: boolean
   hint?: string
   error?: string
   id?: string
@@ -50,6 +55,7 @@ export function Select({
   options,
   onChange,
   placeholder,
+  clearable = false,
   hint,
   error,
   id,
@@ -73,7 +79,8 @@ export function Select({
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([])
   const typeahead = useRef({ query: '', timer: 0 })
   const [open, setOpen] = useState(false)
-  const items = placeholder === undefined ? options : [{ value: '', label: placeholder }, ...options]
+  const items =
+    placeholder !== undefined && clearable ? [{ value: '', label: placeholder }, ...options] : options
   const selectedIndex = items.findIndex((item) => item.value === value)
   const focusIndex = Math.max(0, selectedIndex)
 
@@ -205,9 +212,9 @@ export function Select({
               doesn't resize when the selection changes. */}
           <span className="grid min-w-0 flex-1 text-left">
             <span id={valueId} className="col-start-1 row-start-1 truncate">
-              {items[selectedIndex]?.label}
+              {items[selectedIndex]?.label ?? placeholder}
             </span>
-            {items.map((item) => (
+            {[...items, ...(placeholder !== undefined && !clearable ? [{ value: '', label: placeholder }] : [])].map((item) => (
               <span
                 key={item.value}
                 aria-hidden="true"

@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import { Button, Card, Input } from '../../components'
+import { BrandLogo } from '../../layouts/Sidebar'
+import { LoginBackdrop } from './LoginBackdrop'
 import { changeMockPassword, getPendingPasswordChangeUser, getUser, type SessionUser } from '../../lib/mock-db'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
@@ -43,12 +45,15 @@ function ForcePasswordChangeForm({ userId, onComplete }: { userId: string; onCom
     }
   }
 
-  if (!account && status === 'loading') return <main className="flex min-h-screen items-center justify-center bg-surface px-4"><Card className="w-full max-w-md p-6"><p role="status">Loading account…</p></Card></main>
+  // Same backdrop and card as Login, so the first sign-in reads as one flow.
+  if (!account && status === 'loading') return <main className="relative isolate flex min-h-screen items-center justify-center px-4"><LoginBackdrop /><Card className="w-full max-w-md p-6 shadow-overlay!"><p role="status">Loading account…</p></Card></main>
   return (
-    <main className="flex min-h-screen items-center justify-center bg-surface px-4 py-8">
-      <Card className="w-full max-w-md p-6">
+    <main className="relative isolate flex min-h-screen items-center justify-center px-4 py-8">
+      <LoginBackdrop />
+      <Card className="w-full max-w-md p-6 shadow-overlay!">
         <header>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-green-dark">Account setup</p>
+          <BrandLogo />
+          <p className="mt-6 border-t border-border pt-5 text-xs font-semibold uppercase tracking-[0.16em] text-brand-green-dark">Account setup</p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-text-primary">Change Your Password</h1>
           <p className="mt-1 text-sm text-text-secondary">Set a new password before opening CLINIQ for the first time.</p>
         </header>

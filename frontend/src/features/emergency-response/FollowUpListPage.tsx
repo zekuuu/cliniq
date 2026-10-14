@@ -168,6 +168,7 @@ export function FollowUpListPage() {
                 { value: 'cancelled', label: 'Cancelled' },
               ]}
               placeholder="All statuses"
+              clearable
               onChange={(value) => setStatusFilter(value as '' | FollowUpStatus)}
             />
           }

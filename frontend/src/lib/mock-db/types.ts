@@ -92,6 +92,21 @@ export interface MockDbConfig {
   clusterRatio: number
   /** How many top complaints the trend chart draws (the rest go in its table). */
   topComplaints: number
+  /**
+   * Incident vitals outside these ranges get a "please check" warning that never blocks saving.
+   * PLACEHOLDER sanity bounds, not clinical thresholds: the nurse sets the real ones.
+   */
+  vitalsWarningRanges: VitalsWarningRanges
+}
+
+export interface VitalRange {
+  min: number
+  max: number
+}
+
+export interface VitalsWarningRanges {
+  temperatureC: VitalRange
+  pulseBpm: VitalRange
 }
 
 // ---- frontendOnly: MOCK-ONLY data that §5 doesn't define. Not a schema. ----------------------

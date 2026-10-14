@@ -16,7 +16,7 @@ import {
   type StatusMap,
 } from '../../components'
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { cn } from '../../lib/cn'
 import { formatDateRange, formatDateTime } from '../../lib/dates'
@@ -370,6 +370,8 @@ export function StudentProfilePage({
   const { data, status, reload } = useAsyncData(`student-profile|${studentNumber ?? 'default'}`, () =>
     fetchStudentProfile(studentNumber, viewer),
   )
+  // Set by Edit Student after a successful save, which returns here.
+  const savedMessage = (useLocation().state as { savedMessage?: string } | null)?.savedMessage
 
   if (status === 'error') {
     return (
@@ -398,6 +400,14 @@ export function StudentProfilePage({
       )}
     >
       <ProfileHeader student={data.student} viewer={viewer} onArchived={reload} />
+      {savedMessage && (
+        <div
+          role="status"
+          className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary"
+        >
+          {savedMessage}
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-4">
         <div className="flex flex-col gap-4">
           <OverviewCard student={data.student} />

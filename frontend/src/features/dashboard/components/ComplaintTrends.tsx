@@ -243,7 +243,10 @@ function TrendLineChart({ trends, clusters }: { trends: Trends; clusters: Cluste
     .join('; ')}.`
 
   return (
-    <div className="relative h-72">
+    // Printing runs no script, so Chart.js can't re-measure for the narrower page: the canvas would keep
+    // its screen width and spill past the card under the cluster note. In print it scales to the
+    // card's width (height from its own aspect ratio), and the box shrinks to fit it.
+    <div className="relative h-72 print:h-auto print:[&_canvas]:h-auto! print:[&_canvas]:w-full!">
       <Line
         data={data}
         options={options}

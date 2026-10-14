@@ -1,4 +1,4 @@
-import { useId, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useId, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import {
   Button,
   Card,
@@ -22,11 +22,17 @@ import {
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
+import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { paths } from '../../routes/paths'
 import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { addDays, todayISO } from '../../lib/dates'
 import { draftsFrom, formatItemGiven } from '../../lib/itemsGiven'
-import { getMockSessionUser, StockRuleError, type SessionUser } from '../../lib/mock-db'
+import {
+  getMockSessionUser,
+  StockRuleError,
+  type SessionUser,
+  type VitalsWarningRanges,
+} from '../../lib/mock-db'
 import type { HospitalReferral, Incident, ParentNotificationOutcome } from '../../types/entities'
 import {
   completeStageTwoIncident,
@@ -141,6 +147,23 @@ function validateStageOne(complaint: string, temperatureC: string, pulseBpm: str
 }
 
 /**
+ * Readings outside the configured ranges. A warning only, never a reason to block the save: Stage 1
+ * is fast capture, and the ranges are placeholder sanity bounds until the nurse sets real ones.
+ */
+function unusualVitals(
+  temperatureC: string,
+  pulseBpm: string,
+  ranges: VitalsWarningRanges,
+): string[] {
+  const outside = (value: string, { min, max }: { min: number; max: number }) =>
+    value.trim() !== '' && Number.isFinite(Number(value)) && (Number(value) < min || Number(value) > max)
+  const notes: string[] = []
+  if (outside(temperatureC, ranges.temperatureC)) notes.push(`Temperature ${temperatureC} °C looks unusual.`)
+  if (outside(pulseBpm, ranges.pulseBpm)) notes.push(`Pulse ${pulseBpm} bpm looks unusual.`)
+  return notes
+}
+
+/**
  * Incident Entry (Screen #16 / #16b, Reference 5). Stage 1 intentionally accepts only the fast
  * essentials; Stage 2 completes the same incident with full vitals, referral, notifications, and
  * optional follow-up.
@@ -193,7 +216,6 @@ function vital(incident: Incident | null, key: string): string {
 
 function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: IncidentEntryContext }) {
   const today = todayISO()
-  const cancel = useCancelNavigation(paths.incidents)
   const existing = data.incident
   const identified = useIdentifiedStudent(data.student, findIncidentStudent)
   const student = identified.student
@@ -226,6 +248,24 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const [errors, setErrors] = useState<Errors>({})
   const [savingStageOne, setSavingStageOne] = useState(false)
   const [savingStageTwo, setSavingStageTwo] = useState(false)
+  const invalidRef = useRef<HTMLFormElement>(null)
+  const invalid = useFocusFirstInvalid(invalidRef)
+  const vitalsWarnings = unusualVitals(temperatureC, pulseBpm, data.vitalsRanges)
+  // Stage 1 typed but not saved, or Stage 2 changed from the saved incident but not completed.
+  const stageOneDirty =
+    !incident && (complaint !== '' || temperatureC !== '' || pulseBpm !== '' || generalNotes.trim() !== '')
+  const stageTwoDirty =
+    incident !== null &&
+    !completed &&
+    (bloodPressure !== vital(incident, 'bloodPressure') ||
+      oxygenSaturation !== vital(incident, 'oxygenSaturation') ||
+      treatmentNotes !== vital(incident, 'treatmentNotes') ||
+      referToHospital ||
+      notifications.length > 0 ||
+      notificationDetail.trim() !== '' ||
+      needsFollowUp ||
+      lines.length !== incident.itemsGiven.length)
+  const { cancel, discardDialog } = useCancelNavigation(paths.incidents, stageOneDirty || stageTwoDirty)
 
   const statusValue: IncidentStatus = completed ? 'complete' : incident ? 'in_progress' : 'needs_completion'
 
@@ -236,6 +276,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
     const nextErrors = validateStageOne(complaint, temperatureC, pulseBpm)
     const studentOk = identified.validate()
     setErrors(nextErrors)
+    invalid.report(Object.keys(nextErrors).length + (studentOk ? 0 : 1))
     if (Object.keys(nextErrors).length || !studentOk) return
     setSavingStageOne(true)
     try {
@@ -289,6 +330,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
     if (!incident || !student) return
     const nextErrors = validateStageTwo()
     setErrors(nextErrors)
+    invalid.report(Object.keys(nextErrors).length)
     if (Object.keys(nextErrors).length) return
     setSavingStageTwo(true)
     setStockMessage('')
@@ -343,6 +385,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
 
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {discardDialog}
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -388,7 +431,10 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       />
 
       {stage === 'stage1' ? (
-        <form onSubmit={onStageOneSubmit} noValidate>
+        <form ref={invalidRef} onSubmit={onStageOneSubmit} noValidate>
+          <p role="status" className="sr-only">
+            {invalid.announcement}
+          </p>
           <Card aria-labelledby="stage-one-title">
             <CardHeader
               titleId="stage-one-title"
@@ -445,6 +491,17 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                   error={errors.pulseBpm}
                 />
               </div>
+              {vitalsWarnings.length > 0 && (
+                <div
+                  role="status"
+                  className="flex items-start gap-2 rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm text-text-primary"
+                >
+                  <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning" />
+                  <p>
+                    {vitalsWarnings.join(' ')} Please check the reading. You can still save.
+                  </p>
+                </div>
+              )}
               <TextareaField label="General notes (optional)" value={generalNotes} onChange={setGeneralNotes} rows={3} />
               <div className="flex flex-wrap justify-end gap-2 pt-2">
                 <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
@@ -462,7 +519,10 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
           </Card>
         </form>
       ) : (
-        <form onSubmit={onStageTwoSubmit} noValidate>
+        <form ref={invalidRef} onSubmit={onStageTwoSubmit} noValidate>
+          <p role="status" className="sr-only">
+            {invalid.announcement}
+          </p>
           <Card aria-labelledby="stage-two-title">
             <CardHeader
               titleId="stage-two-title"

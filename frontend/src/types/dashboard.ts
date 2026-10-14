@@ -92,7 +92,11 @@ export interface DashboardSummary {
   range: { from: ISODate; to: ISODate }
   counts: DashboardCounts
   /** Same counts for the equal-length period just before `range`, for the trend indicator. */
-  previousCounts: Pick<DashboardCounts, 'visits' | 'incidents'>
+  /**
+   * The same counts for the equal period before the range, or `null` when no fair comparison exists:
+   * the range is All, or the previous period starts before the first recorded visit or incident.
+   */
+  previousCounts: Pick<DashboardCounts, 'visits' | 'incidents'> | null
   dueFollowUps: DueFollowUpRow[]
   /** How many days ahead counts as "upcoming". Returned by the API so the UI never hardcodes it. */
   upcomingWindowDays: number

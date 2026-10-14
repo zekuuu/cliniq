@@ -1,4 +1,5 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useRef, useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router'
 import {
   Badge,
   Button,
@@ -14,6 +15,8 @@ import {
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
+import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
+import { isPhilippinePhone, PHONE_ERROR } from '../../lib/phone'
 import { paths } from '../../routes/paths'
 import type { SessionUser } from '../../lib/mock-db'
 import { getMockSessionUser } from '../../lib/mock-db'
@@ -141,6 +144,8 @@ function validate(values: StudentFormValues): StudentFormErrors {
   }
   if (!values.emergencyContactPhone.trim()) {
     errors.emergencyContactPhone = 'Enter the emergency contact phone.'
+  } else if (!isPhilippinePhone(values.emergencyContactPhone)) {
+    errors.emergencyContactPhone = PHONE_ERROR
   }
   if (!values.allergies.trim()) errors.allergies = 'Enter allergies, or write None.'
   if (!values.medicalConditions.trim()) {
@@ -161,11 +166,17 @@ function StudentFormEditor({
   const [duplicateMatches, setDuplicateMatches] = useState<DuplicateMatch[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const navigate = useNavigate()
+  const invalidRef = useRef<HTMLFormElement>(null)
+  const invalid = useFocusFirstInvalid(invalidRef)
 
   const mode: StudentFormMode = data.mode
   const studentNumber = data.student?.studentNumber ?? data.nextStudentNumber
-  const cancel = useCancelNavigation(
+  // What the form last matched in storage: the loaded record, then a newly created one.
+  const [baseline, setBaseline] = useState<StudentFormValues>(() => valuesFromStudent(data.student))
+  const { cancel, discardDialog } = useCancelNavigation(
     data.student ? paths.studentProfile(data.student.studentNumber) : paths.students,
+    (Object.keys(values) as Array<keyof StudentFormValues>).some((field) => values[field] !== baseline[field]),
   )
   const title = mode === 'edit' ? 'Edit Student' : 'Add Student'
   const description =
@@ -187,6 +198,7 @@ function StudentFormEditor({
   async function save(confirmDuplicate = false) {
     const nextErrors = validate(values)
     setErrors(nextErrors)
+    invalid.report(Object.keys(nextErrors).length)
     if (Object.keys(nextErrors).length > 0) return
 
     setIsSaving(true)
@@ -201,6 +213,15 @@ function StudentFormEditor({
         return
       }
       setDuplicateMatches([])
+      if (result.action === 'update') {
+        // An edit ends on the record it changed, like Visit Details; the profile shows the confirmation.
+        void navigate(paths.studentProfile(result.student.studentNumber), {
+          replace: true,
+          state: { savedMessage: `Student record updated for ${result.student.fullName}.` },
+        })
+        return
+      }
+      setBaseline(values)
       setSuccessMessage(
         result.action === 'create'
           ? `Student record created for ${result.student.fullName}.`
@@ -218,6 +239,7 @@ function StudentFormEditor({
 
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {discardDialog}
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -236,7 +258,10 @@ function StudentFormEditor({
         </div>
       </Card>
 
-      <form noValidate onSubmit={onSubmit}>
+      <form ref={invalidRef} noValidate onSubmit={onSubmit}>
+        <p role="status" className="sr-only">
+          {invalid.announcement}
+        </p>
         <Card aria-labelledby="student-form-title">
           <CardHeader
             titleId="student-form-title"

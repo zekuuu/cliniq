@@ -42,6 +42,10 @@ export function buildDashboardSummary(
   const visitsInRange = state.visits.filter((v) => isWithin(dateOf(v.dateTime), from, to))
   const incidentsInRange = state.incidents.filter((i) => isWithin(dateOf(i.time), from, to))
   const prev = previousPeriod(query.range)
+  // A previous period reaching back before the first record would compare against nothing.
+  const firstRecord = [...state.visits.map((v) => dateOf(v.dateTime)), ...state.incidents.map((i) => dateOf(i.time))]
+    .sort()[0]
+  const comparable = query.range.preset !== 'all' && firstRecord !== undefined && prev.from >= firstRecord
 
   return {
     today,
@@ -55,10 +59,12 @@ export function buildDashboardSummary(
       lowStockItems: lowStockCount(state),
       activeStudents: state.students.filter((s) => !s.archived).length,
     },
-    previousCounts: {
-      visits: state.visits.filter((v) => isWithin(dateOf(v.dateTime), prev.from, prev.to)).length,
-      incidents: state.incidents.filter((i) => isWithin(dateOf(i.time), prev.from, prev.to)).length,
-    },
+    previousCounts: comparable
+      ? {
+          visits: state.visits.filter((v) => isWithin(dateOf(v.dateTime), prev.from, prev.to)).length,
+          incidents: state.incidents.filter((i) => isWithin(dateOf(i.time), prev.from, prev.to)).length,
+        }
+      : null,
     dueFollowUps: buildDueFollowUps(state),
     upcomingWindowDays: config.upcomingFollowUpDays,
     frequentVisitors: frequentVisitors(state, { from, to }),

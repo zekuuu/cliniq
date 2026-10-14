@@ -17,3 +17,16 @@ export const inventoryFlagMap: StatusMap<InventoryFlag> = {
   },
   expired: { label: 'Expired', tone: 'error', icon: 'alertOctagon', variant: 'soft' },
 }
+
+/**
+ * An item's quantity as text. An expired item's stock is still on the shelf until someone disposes of
+ * it through Adjust Stock, but it can't be given out (ADR-018), so it never reads as available stock.
+ * The stored count is unchanged.
+ */
+export function stockQuantityText(
+  quantity: number,
+  unit: string,
+  flags: ReadonlyArray<InventoryFlag>,
+): string {
+  return flags.includes('expired') ? `${quantity} ${unit} (expired)` : `${quantity} ${unit}`
+}

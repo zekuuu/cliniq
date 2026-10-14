@@ -50,7 +50,7 @@ describe('Clinic Overview Dashboard', () => {
     for (const label of [
       'Clinic visits',
       'Incidents',
-      'Incomplete',
+      'Incomplete records',
       'Low-stock items',
       'Active students',
     ]) {
@@ -75,10 +75,15 @@ describe('Clinic Overview Dashboard', () => {
     expect(screen.getByRole('button', { name: /print \/ save as pdf/i })).toBeInTheDocument()
   })
 
-  it('uses compact dates and labelled visit totals in calendar cards', async () => {
+  it('uses compact dates and labels day totals as cases, matching the legend', async () => {
     await renderLoaded()
     expect(screen.getAllByText(/^[A-Z][a-z]{2} \d{1,2}$/).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/^\d+ Visits?$/).length).toBeGreaterThan(0)
+    // The day total counts visits plus incidents, so it never says "Visits"; screen readers get both numbers.
+    const cells = screen.getAllByText(/^\d+ cases?$/)
+    expect(cells.length).toBeGreaterThan(0)
+    expect(cells[0].textContent).toMatch(/^\d+ cases?: \d+ visits?, \d+ incidents?$/)
+    expect(screen.queryAllByText(/^\d+ Visits?/)).toEqual([])
+    expect(screen.getByText('Cases per day (visits + incidents):')).toBeInTheDocument()
   })
 
   it('never shows a student name anywhere on the page (display-privacy rule)', async () => {
@@ -101,7 +106,7 @@ describe('Clinic Overview Dashboard', () => {
     for (const [label, href] of [
       ['Clinic visits', '/visits'],
       ['Incidents', '/incidents'],
-      ['Incomplete', '/students/incomplete'],
+      ['Incomplete records', '/students/incomplete'],
       ['Low-stock items', '/inventory'],
       ['Active students', '/students'],
     ]) {
@@ -438,5 +443,66 @@ describe('Clinic Overview Dashboard', () => {
     renderWithRouter(<DashboardPage viewer={{ id: 'user-admin-01', name: 'Admin', role: 'admin' }} />)
     await screen.findByRole('heading', { name: /due & upcoming follow-ups/i })
     expect(screen.queryByRole('heading', { name: /excuse letters awaiting approval/i })).not.toBeInTheDocument()
+  })
+})
+
+describe('Clinic Overview Dashboard: the All range and the stat-card notes', () => {
+  beforeEach(() => window.history.replaceState(null, '', '/'))
+
+  it('describes All as "All records" and shows no trend against a placeholder period', async () => {
+    await renderLoaded({ allTime: true })
+    await waitFor(() => expect(screen.getByText(/Showing All records/)).toBeInTheDocument())
+    expect(document.body.textContent).not.toMatch(/1900/)
+    expect(screen.queryByText(/prior \d+ days/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Up from 0/)).not.toBeInTheDocument()
+    expect(screen.getAllByText('All records').length).toBe(2)
+  })
+
+  it('keeps the trend note for an ordinary range with earlier records', async () => {
+    await renderLoaded()
+    expect(screen.getAllByText(/prior \d+ days/).length).toBeGreaterThan(0)
+  })
+
+  it('explains why the low-stock card and the Alerts list differ, without changing the count', async () => {
+    await renderLoaded()
+    expect(screen.getByText(/^\d+ more expiring or expired in the Alerts list$/)).toBeInTheDocument()
+  })
+})
+
+describe('Clinic Overview Dashboard: calendar period note and yearly day list', () => {
+  beforeEach(() => window.history.replaceState(null, '', '/'))
+
+  it('says the calendar has its own period', async () => {
+    await renderLoaded()
+    expect(
+      screen.getByText(/The calendar has its own period; the Date range at the top of the page doesn't change it\./),
+    ).toBeInTheDocument()
+  })
+
+  it('collapses the yearly day list behind a keyboard-reachable disclosure that still prints', async () => {
+    const user = await renderLoaded()
+    await user.click(screen.getByRole('radio', { name: 'Yearly' }))
+    const toggle = await screen.findByRole('button', { name: /^Show day list \(\d+ days?\)$/ })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    const list = document.getElementById(toggle.getAttribute('aria-controls')!)!
+    expect(list).toHaveClass('hidden', 'print:flex')
+
+    toggle.focus()
+    await user.keyboard('{Enter}')
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(toggle).toHaveAccessibleName(/^Hide day list/)
+    expect(list).not.toHaveClass('hidden')
+    expect(within(list).getAllByRole('listitem').length).toBeGreaterThan(0)
+  })
+})
+
+describe('Clinic Overview Dashboard: expired stock in the Alerts list', () => {
+  beforeEach(() => window.history.replaceState(null, '', '/'))
+
+  it('never describes an expired item’s quantity as in stock', async () => {
+    await renderLoaded()
+    const list = screen.getByRole('region', { name: /low-stock & expiring items \(scrollable list\)/i })
+    const expiredRow = within(list).getByText(/\(expired\)/)
+    expect(expiredRow.textContent).toMatch(/^\d+ \S+ \(expired\) · threshold \d+$/)
   })
 })

@@ -13,6 +13,7 @@ function GradeFilter({ onChange = () => {} }: { onChange?: (value: string) => vo
       label="Grade level"
       value={value}
       placeholder="All grade levels"
+      clearable
       options={grades}
       onChange={(next) => {
         setValue(next)
@@ -23,6 +24,17 @@ function GradeFilter({ onChange = () => {} }: { onChange?: (value: string) => vo
 }
 
 describe('Select', () => {
+  it('keeps a prompt placeholder on the trigger only, out of the option list', async () => {
+    const user = userEvent.setup()
+    render(<Select label="Complaint" value="" placeholder="Select complaint" options={grades} onChange={() => {}} />)
+    const trigger = screen.getByRole('button', { name: 'Complaint Select complaint' })
+
+    await user.click(trigger)
+    expect(screen.queryByRole('option', { name: 'Select complaint' })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(grades.map((g) => g.label))
+    expect(screen.getByRole('option', { name: 'Kinder' })).toHaveFocus()
+  })
+
   it('shows the current choice on a themed trigger and keeps the options closed until asked', () => {
     render(<GradeFilter />)
     const trigger = screen.getByRole('button', { name: 'Grade level All grade levels' })
