@@ -135,7 +135,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 ### 4. Emergency Response — *Access: Staff only for recording; PE/Sports Instructor can view past incidents read-only as part of a student's history*
 
 **Incident Recording — two-stage flow**
-- **Stage 1 (fast capture):** open a prefilled emergency form (student already identified via QR scan or manual entry), complete only the essential fields (complaint, immediate vitals), and save immediately — speed matters more than completeness in the first moment. An optional General notes field is offered but never required; when filled, the notes show in Stage 2's Stage 1 summary and on the Incident Report
+- **Stage 1 (fast capture):** open a prefilled emergency form (student already identified via QR scan or manual entry), complete only the essential fields (complaint, immediate vitals), and save immediately — speed matters more than completeness in the first moment. An optional Additional notes field is offered but never required; when filled, the notes show in Stage 2's Stage 1 summary and on the Incident Report
 - **Stage 2 (complete later):** return to the same incident record to fill in remaining details (full vitals and referral specifics) once the immediate situation is handled. Treatment notes and medicines/supplies given are both optional; when neither is recorded, views show “No treatment recorded,” and the Incident Report gives Staff a non-blocking check-before-approving notice
 - Edit incident entry
 - View incident detail (full name shown — a deliberately opened single record)

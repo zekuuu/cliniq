@@ -46,7 +46,8 @@ export function ListRow({
     </>
   )
   const rowClass = cn(
-    'flex items-start justify-between gap-3 px-5 py-3',
+    // Centered so the text lines up with a taller trailing button or meta column.
+    'flex items-center justify-between gap-3 px-5 py-3',
     interactive &&
       'cursor-pointer transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-green motion-reduce:transition-none',
   )

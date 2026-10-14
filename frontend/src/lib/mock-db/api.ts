@@ -905,7 +905,7 @@ export function saveIncidentStageOne(input: StageOneInput, actor?: SessionUser):
     }
     s.incidents.push(incident)
     // The summary names the optional field, never its value (ADR-017).
-    audit(s, by, 'submit', { type: 'incident-stage-1', id: incident.id }, incident.generalNotes ? 'Included general notes' : undefined)
+    audit(s, by, 'submit', { type: 'incident-stage-1', id: incident.id }, incident.generalNotes ? 'Included additional notes' : undefined)
     return incident
   })
 }

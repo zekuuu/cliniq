@@ -502,9 +502,9 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                   </p>
                 </div>
               )}
-              <TextareaField label="General notes (optional)" value={generalNotes} onChange={setGeneralNotes} rows={3} />
+              <TextareaField label="Additional notes (optional)" value={generalNotes} onChange={setGeneralNotes} rows={3} />
               <div className="flex flex-wrap justify-end gap-2 pt-2">
-                <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
+                <Button type="button" variant="neutral" className="h-11" onClick={cancel}>Cancel</Button>
                 <Button
                   type="submit"
                   variant="primary"
@@ -548,7 +548,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     </p>
                     {incident.generalNotes && (
                       <p className="mt-2 text-sm whitespace-pre-line text-text-primary">
-                        <span className="text-xs font-semibold text-text-secondary">General notes: </span>
+                        <span className="text-xs font-semibold text-text-secondary">Additional notes: </span>
                         {incident.generalNotes}
                       </p>
                     )}

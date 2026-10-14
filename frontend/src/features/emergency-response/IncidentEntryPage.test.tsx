@@ -133,7 +133,7 @@ describe('Report Incident', () => {
   })
 })
 
-describe('Report Incident: optional general notes', () => {
+describe('Report Incident: optional additional notes', () => {
   beforeEach(() => resetMockDb())
 
   async function saveStageOne(notes?: string) {
@@ -143,8 +143,8 @@ describe('Report Incident: optional general notes', () => {
     await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
     await user.type(screen.getByLabelText(/temperature/i), '37.2')
     await user.type(screen.getByLabelText(/pulse/i), '92')
-    expect(screen.getByLabelText('General notes (optional)')).not.toBeRequired()
-    if (notes) await user.type(screen.getByLabelText('General notes (optional)'), notes)
+    expect(screen.getByLabelText('Additional notes (optional)')).not.toBeRequired()
+    if (notes) await user.type(screen.getByLabelText('Additional notes (optional)'), notes)
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
     await screen.findByRole('heading', { name: 'Stage 2 completion' })
     const [entry] = getRecordedAuditEntries()
@@ -155,18 +155,18 @@ describe('Report Incident: optional general notes', () => {
     const { entry, incident } = await saveStageOne()
     expect(incident.generalNotes).toBeNull()
     expect(entry.summary).toBeUndefined()
-    expect(screen.queryByText(/general notes:/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/additional notes:/i)).not.toBeInTheDocument()
   })
 
   it('saves Stage 1 with notes, shows them at Stage 2 and on the report, and audits the field name only', async () => {
     const { entry, incident } = await saveStageOne('Fell during recess; conscious.')
     expect(incident.generalNotes).toBe('Fell during recess; conscious.')
-    expect(entry.summary).toBe('Included general notes')
+    expect(entry.summary).toBe('Included additional notes')
     expect(JSON.stringify(getRecordedAuditEntries())).not.toContain('recess')
     expect(screen.getByText('Fell during recess; conscious.')).toBeInTheDocument()
 
     renderWithRouter(<IncidentReportPage incidentId={incident.id} />)
-    expect(await screen.findByText('General notes')).toBeInTheDocument()
+    expect(await screen.findByText('Additional notes')).toBeInTheDocument()
     expect(screen.getAllByText('Fell during recess; conscious.')).toHaveLength(2)
   })
 })

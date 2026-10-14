@@ -196,10 +196,15 @@ function OverviewCard({ student }: { student: Student }) {
         <div className="sm:col-span-2">
           <p className="text-xs font-semibold text-text-secondary">Emergency contact</p>
           {contact ? (
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-text-primary">
-              <span className="font-semibold">{contact.name}</span>
-              <span>{contact.relationship}</span>
-              <span>{contact.phone}</span>
+            <div className="mt-1 flex flex-wrap items-start justify-between gap-x-4 gap-y-2 rounded-md border border-border bg-surface p-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-text-primary">{contact.name}</p>
+                <p className="text-xs text-text-secondary">{contact.relationship}</p>
+                <p className="mt-2 text-sm font-semibold tabular-nums text-text-primary">
+                  <span className="sr-only">Phone: </span>
+                  {contact.phone}
+                </p>
+              </div>
               <Badge tone={contact.verified ? 'success' : 'warning'} variant="soft">
                 {contact.verified ? 'Verified' : 'Needs verification'}
               </Badge>

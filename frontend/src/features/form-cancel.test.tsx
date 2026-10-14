@@ -92,7 +92,7 @@ describe('Cancel with unsaved changes asks first', () => {
       'Incident Stage 1',
       <IncidentEntryPage studentNumber={STUDENT} />,
       '/incidents',
-      /general notes/i,
+      /additional notes/i,
     ],
     ['Add Student', <StudentFormPage />, '/students', /full name/i],
     [

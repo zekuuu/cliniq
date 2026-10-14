@@ -77,18 +77,16 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">Incident Report</h1>
             <p className="mt-1 text-sm text-text-secondary">Review, approve, and print one incident report.</p>
           </div>
-          <div className="flex flex-col items-end gap-2">
-            {!approved && !hasTreatment && (
-              <p role="status" className="rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm font-semibold text-text-primary">
-                No treatment recorded. Check this is correct before approving.
-              </p>
-            )}
-            <div className="flex flex-wrap justify-end gap-2">
-              <Button variant="secondary" icon="printer" onClick={() => window.print()}>Print / Save as PDF</Button>
-              <Button variant="primary" onClick={() => setConfirming(true)} disabled={approved}>{approved ? 'Approved' : 'Approve Report'}</Button>
-            </div>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button variant="secondary" icon="printer" onClick={() => window.print()}>Print / Save as PDF</Button>
+            <Button variant="primary" onClick={() => setConfirming(true)} disabled={approved}>{approved ? 'Approved' : 'Approve Report'}</Button>
           </div>
         </div>
+        {!approved && !hasTreatment && (
+          <p role="status" className="mt-4 rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm font-semibold text-text-primary">
+            No treatment recorded. Check this is correct before approving.
+          </p>
+        )}
       </Card>
 
       <Card>
@@ -115,7 +113,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
             <Field label="Complaint">{incident.complaint}</Field>
             <Field label="Sign-off">{approved ? 'Approved' : 'Pending sign-off'}</Field>
             {incident.generalNotes && (
-              <Field label="General notes" className="sm:col-span-2">
+              <Field label="Additional notes" className="sm:col-span-2">
                 <span className="whitespace-pre-line">{incident.generalNotes}</span>
               </Field>
             )}
