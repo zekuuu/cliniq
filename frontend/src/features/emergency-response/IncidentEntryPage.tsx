@@ -27,6 +27,7 @@ import { paths } from '../../routes/paths'
 import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { addDays, todayISO } from '../../lib/dates'
 import { draftsFrom, formatItemGiven } from '../../lib/itemsGiven'
+import { formatDecimal } from '../../lib/numbers'
 import {
   getMockSessionUser,
   StockRuleError,
@@ -158,8 +159,8 @@ function unusualVitals(
   const outside = (value: string, { min, max }: { min: number; max: number }) =>
     value.trim() !== '' && Number.isFinite(Number(value)) && (Number(value) < min || Number(value) > max)
   const notes: string[] = []
-  if (outside(temperatureC, ranges.temperatureC)) notes.push(`Temperature ${temperatureC} °C looks unusual.`)
-  if (outside(pulseBpm, ranges.pulseBpm)) notes.push(`Pulse ${pulseBpm} bpm looks unusual.`)
+  if (outside(temperatureC, ranges.temperatureC)) notes.push(`Temperature ${formatDecimal(temperatureC)} °C looks unusual.`)
+  if (outside(pulseBpm, ranges.pulseBpm)) notes.push(`Pulse ${formatDecimal(pulseBpm)} bpm looks unusual.`)
   return notes
 }
 
@@ -544,7 +545,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     <p className="text-xs font-semibold text-text-secondary">Stage 1 summary</p>
                     <p className="mt-1 text-sm font-semibold text-text-primary">{complaint}</p>
                     <p className="text-xs text-text-secondary">
-                      {temperatureC}°C · {pulseBpm} bpm
+                      {formatDecimal(temperatureC)}°C · {formatDecimal(pulseBpm)} bpm
                     </p>
                     {incident.generalNotes && (
                       <p className="mt-2 text-sm whitespace-pre-line text-text-primary">

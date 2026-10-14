@@ -3,6 +3,7 @@ import { Badge, Button, Card, CardBody, CardHeader, ErrorState, Icon, Modal, Sel
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDateTime } from '../../lib/dates'
 import { incidentCareSummary } from '../../lib/itemsGiven'
+import { formatDecimal } from '../../lib/numbers'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import type { ParentNotificationOutcome } from '../../types/entities'
 import { approveReport, fetchIncidentRecord } from './api/incidentRecordApi'
@@ -126,7 +127,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
                 <div key={key} className="rounded-md border border-border bg-surface p-3">
                   <p className="text-xs text-text-secondary">{VITAL_LABELS[key]?.label ?? key}</p>
                   <p className="mt-1 text-sm font-semibold text-text-primary">
-                    {String(value)}
+                    {formatDecimal(value)}
                     {VITAL_LABELS[key]?.unit && !String(value).endsWith(VITAL_LABELS[key].unit!) ? ` ${VITAL_LABELS[key].unit}` : ''}
                   </p>
                 </div>
