@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { formatDate } from '../../lib/dates'
 import {
+  BackButton,
   Badge,
   Button,
   Card,
@@ -16,22 +17,21 @@ import {
   type DataTableColumn,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { paths } from '../../routes/paths'
 import { getMockSessionUser } from '../../lib/mock-db'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { FollowUpStatus } from '../../types/entities'
 import { fetchFollowUps, updateFollowUpStatus, type FollowUpRow } from './api/followUpApi'
 
-function FollowUpSkeleton() {
+function FollowUpSkeleton({ back }: { back: ReactNode }) {
   return (
-    <div
-      aria-hidden="true"
-      className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8"
-    >
-      <Card className="p-5">
+    <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {back}
+      <Card aria-hidden="true" className="p-5">
         <Skeleton className="h-7 w-52" />
         <Skeleton className="mt-2 h-4 w-96 max-w-full" />
       </Card>
-      <Card className="p-5">
+      <Card aria-hidden="true" className="p-5">
         <Skeleton className="h-10 w-44" />
         <Skeleton className="mt-5 h-56 w-full" />
       </Card>
@@ -71,9 +71,12 @@ export function FollowUpListPage() {
   const [confirming, setConfirming] = useState<null | { item: FollowUpRow; status: 'missed' | 'cancelled' }>(null)
   const [sort, setSort] = useState<TableSortState<FollowUpSortKey>>({ key: 'due', direction: 'descending' })
   const { data, status, reload } = useAsyncData(statusFilter, () => fetchFollowUps(statusFilter))
+  // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
+  const back = <BackButton fallback={paths.dashboard} drillThroughOnly />
   if (status === 'error')
     return (
-      <div className="mx-auto max-w-page-wide px-4 pt-10 pb-8 sm:px-8">
+      <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+        {back}
         <ErrorState title="Unable to load follow-ups." onRetry={reload} />
       </div>
     )
@@ -83,7 +86,7 @@ export function FollowUpListPage() {
         <p className="sr-only" role="status">
           Loading follow-ups...
         </p>
-        <FollowUpSkeleton />
+        <FollowUpSkeleton back={back} />
       </>
     )
   const rows = data.map((item) => ({ ...item, status: statusOverrides[item.id] ?? item.status }))
@@ -143,6 +146,7 @@ export function FollowUpListPage() {
   ]
   return (
     <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {back}
       <Card className="p-5">
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">Follow-Ups</h1>
         <p className="mt-1 text-sm text-text-secondary">

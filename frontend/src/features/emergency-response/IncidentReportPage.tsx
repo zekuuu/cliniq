@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
-import { Badge, Button, Card, CardBody, CardHeader, ErrorState, Icon, Modal, Select, Skeleton } from '../../components'
+import { BackButton, Badge, Button, Card, CardBody, CardHeader, ErrorState, Icon, Modal, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { paths } from '../../routes/paths'
 import { formatDateTime } from '../../lib/dates'
 import { incidentCareSummary } from '../../lib/itemsGiven'
 import { formatDecimal } from '../../lib/numbers'
@@ -23,8 +24,8 @@ const OUTCOME_LABELS: Record<ParentNotificationOutcome, string> = {
   left_message: 'Left message',
 }
 
-function ReportSkeleton() {
-  return <div aria-hidden="true" className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8"><Card className="p-5"><Skeleton className="h-7 w-52" /><Skeleton className="mt-2 h-4 w-80 max-w-full" /></Card><Card className="p-5"><Skeleton className="h-10 w-72 max-w-full" /><div className="mt-5 grid gap-4 sm:grid-cols-2">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-10" />)}</div><div className="mt-5 grid gap-3 sm:grid-cols-3">{Array.from({ length: 3 }, (_, index) => <Skeleton key={index} className="h-16" />)}</div></Card></div>
+function ReportSkeleton({ back }: { back: ReactNode }) {
+  return <div className="mx-auto flex flex max-w-page-narrow flex-col gap-4 flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<div aria-hidden="true"><Card className="p-5"><Skeleton className="h-7 w-52" /><Skeleton className="mt-2 h-4 w-80 max-w-full" /></Card><Card className="p-5"><Skeleton className="h-10 w-72 max-w-full" /><div className="mt-5 grid gap-4 sm:grid-cols-2">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-10" />)}</div><div className="mt-5 grid gap-3 sm:grid-cols-3">{Array.from({ length: 3 }, (_, index) => <Skeleton key={index} className="h-16" />)}</div></Card></div></div>
 }
 
 function Field({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
@@ -43,9 +44,10 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
   const [confirming, setConfirming] = useState(false)
   const [approving, setApproving] = useState(false)
 
-  if (status === 'error') return <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8"><ErrorState title="Unable to load the incident report." onRetry={reload} /></div>
-  if (data === undefined) return <><p className="sr-only" role="status">Loading incident report...</p><ReportSkeleton /></>
-  if (data === null) return <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8"><Card><CardBody>No incident report is pending sign-off.</CardBody></Card></div>
+  const back = <BackButton fallback={paths.incidents} />
+  if (status === 'error') return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState title="Unable to load the incident report." onRetry={reload} /></div>
+  if (data === undefined) return <><p className="sr-only" role="status">Loading incident report...</p><ReportSkeleton back={back} /></>
+  if (data === null) return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<Card><CardBody>No incident report is pending sign-off.</CardBody></Card></div>
 
   const { incident, student, options, approved } = data
   const referral = incident.hospitalReferral
@@ -72,6 +74,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
 
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {back}
       <Card className="p-5 print:hidden">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>

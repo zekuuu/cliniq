@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router'
-import { Button, Card, Input } from '../../components'
+import { BackButton, Button, Card, Input } from '../../components'
 import { BrandLogo } from '../../layouts/Sidebar'
 import { LoginBackdrop } from './LoginBackdrop'
 import { changeMockPassword, getPendingPasswordChangeUser, getUser, type SessionUser } from '../../lib/mock-db'
@@ -51,6 +51,7 @@ function ForcePasswordChangeForm({ userId, onComplete }: { userId: string; onCom
     <main className="relative isolate flex min-h-screen items-center justify-center px-4 py-8">
       <LoginBackdrop />
       <Card className="w-full max-w-md p-6 shadow-overlay!">
+        <BackButton to={paths.login} label="Back to Sign In" className="mb-4" />
         <header>
           <BrandLogo />
           <p className="mt-6 border-t border-border pt-5 text-xs font-semibold uppercase tracking-[0.16em] text-brand-green-dark">Account setup</p>
@@ -62,7 +63,6 @@ function ForcePasswordChangeForm({ userId, onComplete }: { userId: string; onCom
           <Input label="Confirm new password" type="password" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} required />
           {error && <p role="alert" className="text-sm font-semibold text-error">{error}</p>}
           <div className="mt-2 flex flex-wrap justify-end gap-2">
-            <Button type="button" variant="neutral" onClick={() => navigate(paths.login)}>Back to Sign In</Button>
             <Button type="submit" variant="primary" loading={saving}>Save Password</Button>
           </div>
         </form>

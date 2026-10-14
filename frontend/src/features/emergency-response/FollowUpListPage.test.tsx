@@ -1,4 +1,5 @@
-import { render, screen, within } from '@testing-library/react'
+import { renderWithRouter } from '../../test/renderWithRouter'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { getRecordedAuditEntries, listFollowUps, resetMockDb } from '../../lib/mock-db'
@@ -15,7 +16,7 @@ describe('FollowUpListPage', () => {
 
   async function renderList() {
     const user = userEvent.setup()
-    render(<FollowUpListPage />)
+    renderWithRouter(<FollowUpListPage />)
     const [firstFollowUp] = await listFollowUps()
     expect((await screen.findAllByText(firstFollowUp.studentNumber)).length).toBeGreaterThan(0)
     return user

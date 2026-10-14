@@ -1,10 +1,14 @@
 import { Link } from 'react-router'
-import { buttonClassName, Card, EmptyState } from '../components'
+import { BackButton, buttonClassName, Card, EmptyState } from '../components'
 
-/** Shown for any URL that isn't a screen. Offers one way back, to the viewer's home screen. */
+/**
+ * Shown for any URL that isn't a screen. Back returns to where the viewer came from (their home
+ * screen when the address was opened directly); the button always goes home.
+ */
 export function NotFoundPage({ home }: { home: string }) {
   return (
-    <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8">
+    <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      <BackButton fallback={home} />
       <h1 className="sr-only">Page Not Found</h1>
       <Card>
         <EmptyState

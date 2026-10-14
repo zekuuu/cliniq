@@ -6,6 +6,8 @@
  * Kept free of page imports so any feature can import it without pulling in other screens'
  * lazily-loaded code.
  */
+import type { UserRole } from '../types/entities'
+
 const seg = encodeURIComponent
 
 function withStudent(path: string, studentNumber?: string): string {
@@ -56,3 +58,8 @@ export const paths = {
   userEdit: (userId: string) => `/users/${encodeURIComponent(userId)}/edit`,
   backup: '/backup',
 } as const
+
+/** Where a role lands on `/`, when it opens a screen it can't use, and where Back falls back to. */
+export function homePathFor(role: UserRole): string {
+  return role === 'instructor' ? paths.qrScan : paths.dashboard
+}

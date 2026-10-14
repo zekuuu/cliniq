@@ -1,4 +1,5 @@
-import { render, screen, within } from '@testing-library/react'
+import { renderWithRouter } from '../../test/renderWithRouter'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { getMockSessionUser, getRecordedAuditEntries, resetMockDb } from '../../lib/mock-db'
@@ -9,7 +10,7 @@ describe('Incomplete Records', () => {
   beforeEach(() => resetMockDb())
 
   it('renders incomplete student records without inline medical values', async () => {
-    render(<IncompleteRecordsQueuePage />)
+    renderWithRouter(<IncompleteRecordsQueuePage />)
 
     expect(
       await screen.findByRole('heading', { name: 'Incomplete Records' }),
@@ -25,7 +26,7 @@ describe('Incomplete Records', () => {
   it('searches by Student Number', async () => {
     const user = userEvent.setup()
     const [record] = await fetchIncompleteRecords()
-    render(<IncompleteRecordsQueuePage />)
+    renderWithRouter(<IncompleteRecordsQueuePage />)
 
     await screen.findByRole('heading', { name: 'Incomplete Records' })
     await user.type(screen.getByLabelText('Search'), record.studentNumber)
@@ -38,7 +39,7 @@ describe('Incomplete Records', () => {
   it('marks a record reviewed and tracks who resolved it', async () => {
     const user = userEvent.setup()
     const [record] = await fetchIncompleteRecords()
-    render(<IncompleteRecordsQueuePage />)
+    renderWithRouter(<IncompleteRecordsQueuePage />)
 
     await screen.findByRole('heading', { name: 'Incomplete Records' })
     await user.type(screen.getByLabelText('Search'), record.studentNumber)
@@ -55,7 +56,7 @@ describe('Incomplete Records', () => {
   it('can show the resolved queue view', async () => {
     const user = userEvent.setup()
     const [record] = await fetchIncompleteRecords()
-    render(<IncompleteRecordsQueuePage />)
+    renderWithRouter(<IncompleteRecordsQueuePage />)
 
     await screen.findByRole('heading', { name: 'Incomplete Records' })
     await user.type(screen.getByLabelText('Search'), record.studentNumber)

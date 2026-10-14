@@ -1,4 +1,5 @@
 import { Link, type To } from 'react-router'
+import { DRILL_THROUGH_STATE } from '../../hooks/useGoBack'
 import { cn } from '../../lib/cn'
 import { Icon } from '../icons/Icon'
 
@@ -24,6 +25,7 @@ export function TitleLink({
   return (
     <Link
       to={to}
+      state={DRILL_THROUGH_STATE}
       className={cn(
         'text-current underline-offset-2 cursor-pointer transition-[color,filter] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none',
         hover === 'darken' ? 'hover:brightness-75' : 'hover:text-brand-green-dark',

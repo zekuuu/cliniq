@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
-import { useLocation, useNavigate } from 'react-router'
 import { Button } from '../components/ui/Button'
 import { Modal } from '../components/ui/Modal'
+import { useGoBack } from './useGoBack'
 
 /**
  * Cancel for an entry or edit form. It never saves or submits: it returns to the screen the user came
@@ -15,15 +15,8 @@ export function useCancelNavigation(
   fallback: string,
   isDirty = false,
 ): { cancel: () => void; discardDialog: ReactNode } {
-  const navigate = useNavigate()
-  // React Router gives the first entry of a fresh history the key "default".
-  const { key } = useLocation()
+  const leave = useGoBack(fallback)
   const [asking, setAsking] = useState(false)
-
-  function leave() {
-    if (key === 'default') void navigate(fallback)
-    else void navigate(-1)
-  }
 
   return {
     cancel: () => (isDirty ? setAsking(true) : leave()),

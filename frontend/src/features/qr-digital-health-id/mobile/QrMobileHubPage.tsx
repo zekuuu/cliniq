@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import {
+  BackButton,
   Badge,
   Card,
   CardBody,
@@ -229,6 +230,9 @@ export function QrMobileHubPage({
   return (
     <main className="min-h-screen bg-surface px-4 pt-10 pb-8">
       <div className="mx-auto flex max-w-md flex-col gap-4">
+        {/* No shell here, so Back is Staff's way out. QR Lookup is the Instructor's home: no Back,
+            and the Log out control below stays their exit. */}
+        {!instructor && <BackButton fallback={paths.dashboard} variant="prominent" />}
         <header className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase text-brand-green-dark">CLINIQ mobile</p>

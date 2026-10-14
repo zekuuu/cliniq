@@ -91,6 +91,8 @@ Predictable and simple. Familiar terminology over technical jargon. Make the cur
 
 **Below `lg` (agent-decided Wednesday, October 14, 2026 — 17:59, ADR-022, pending team review):** the sidebar becomes an "Open navigation" menu in the top bar listing the same role's entries plus Privacy Policy and Report an Issue; a role with no entries gets no menu button. Rules: `.claude/skills/cliniq-sidebar-patterns/`.
 
+**Back navigation (Wednesday, October 14, 2026 — 23:11, ADR-024):** every child, detail, form, flow-step, shell-free (non-home), and dead-end screen has one Back control, the shared `BackButton`, first in the page content above the header card. It goes back in history, or to a fallback screen the viewer's role can open when the screen was opened directly; its text is plain "Back" unless the target is fixed ("Back to Sign In"). Quiet text style on shell screens, the neutral outlined button on shell-free phone screens; 44px tall on phones; never printed; also shown while the page loads. Top-level sidebar screens have none, except after a drill-through link (a Dashboard stat card or list title). On a form, Back is the same action as Cancel. Rules: `.claude/skills/cliniq-back-navigation-patterns/`.
+
 ### Accessibility
 Treat as part of the normal design process, not an optional pass at the end. Ensure readable text, adequate contrast, clear labels, obviously-interactive elements, understandable error messages, visible focus/interaction states, meaningful feedback, and no dependence on color alone.
 

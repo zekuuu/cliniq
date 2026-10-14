@@ -1,5 +1,6 @@
-import { useId, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import {
+  BackButton,
   Button,
   Card,
   CardBody,
@@ -77,20 +78,23 @@ interface Errors {
   followUpReason?: string
 }
 
-function IncidentSkeleton() {
+function IncidentSkeleton({ back }: { back: ReactNode }) {
   return (
-    <div aria-hidden="true" className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
-      <Card className="p-5">
-        <Skeleton className="h-7 w-64 max-w-full" />
-        <Skeleton className="mt-2 h-4 w-80 max-w-full" />
-      </Card>
-      <Card className="p-5">
-        <div className="flex flex-col gap-4">
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-10 w-56 max-w-full" />
-        </div>
-      </Card>
+    <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {back}
+      <div aria-hidden="true" className="flex flex-col gap-4">
+        <Card className="p-5">
+          <Skeleton className="h-7 w-64 max-w-full" />
+          <Skeleton className="mt-2 h-4 w-80 max-w-full" />
+        </Card>
+        <Card className="p-5">
+          <div className="flex flex-col gap-4">
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-10 w-56 max-w-full" />
+          </div>
+        </Card>
+      </div>
     </div>
   )
 }
@@ -184,9 +188,12 @@ export function IncidentEntryPage({
     () => fetchIncidentEntryContext({ studentNumber, incidentId }),
   )
 
+  const back = <BackButton fallback={paths.incidents} />
+
   if (status === 'error') {
     return (
-      <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8">
+      <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+        {back}
         <ErrorState title="Unable to load the incident form." onRetry={reload} />
       </div>
     )
@@ -197,7 +204,7 @@ export function IncidentEntryPage({
         <p className="sr-only" role="status">
           Loading incident form…
         </p>
-        <IncidentSkeleton />
+        <IncidentSkeleton back={back} />
       </>
     )
   }
@@ -387,6 +394,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {discardDialog}
+      <BackButton onBack={cancel} />
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>

@@ -14,6 +14,10 @@ describe('New Visit Entry: first-load skeleton', () => {
     const { container } = renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading visit form…')
+
+    // Back is there while loading, so a slow screen can be left and nothing jumps when it loads.
+
+    expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
     expect(container.querySelectorAll('[aria-hidden="true"] .animate-pulse').length).toBeGreaterThan(5)
     expect(container.querySelector('.animate-spin')).toBeNull()
   })

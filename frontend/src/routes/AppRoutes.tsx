@@ -5,7 +5,7 @@ import type { NavKey } from '../layouts/navigation'
 import type { SessionUser } from '../lib/mock-db'
 import type { UserRole } from '../types/entities'
 import { NotFoundPage } from './NotFoundPage'
-import { paths } from './paths'
+import { homePathFor, paths } from './paths'
 import { Card, Skeleton } from '../components'
 import { LoginPage } from '../features/auth/LoginPage'
 import { ForcePasswordChangePage } from '../features/auth/ForcePasswordChangePage'
@@ -433,7 +433,7 @@ const APP_ROUTES: AppRoute[] = [
     nav: null,
     shell: true,
     instructorShell: true,
-    render: () => <PrivacyPolicyPage />,
+    render: (viewer) => <PrivacyPolicyPage viewer={viewer} />,
   },
   {
     path: paths.users,
@@ -468,11 +468,6 @@ const APP_ROUTES: AppRoute[] = [
     render: () => <BackupStatusPage />,
   },
 ]
-
-/** Where a role lands on `/` or when it opens a screen it can't use. */
-function homePathFor(role: UserRole): string {
-  return role === 'instructor' ? paths.qrScan : paths.dashboard
-}
 
 function RouteLoading() {
   return (

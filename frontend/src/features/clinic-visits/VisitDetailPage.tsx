@@ -1,6 +1,7 @@
-import { useId, useRef, useState, type FormEvent } from 'react'
+import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import {
+  BackButton,
   Badge,
   Button,
   buttonClassName,
@@ -52,24 +53,27 @@ interface Errors extends DispositionErrors {
   itemsGiven?: string
 }
 
-function VisitDetailSkeleton() {
+function VisitDetailSkeleton({ back }: { back: ReactNode }) {
   return (
-    <div aria-hidden="true" className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
-      <Card className="p-5">
-        <Skeleton className="h-7 w-64 max-w-full" />
-        <Skeleton className="mt-2 h-4 w-96 max-w-full" />
-      </Card>
-      <div className="grid grid-cols-1 gap-4">
-        {Array.from({ length: 3 }, (_, index) => (
-          <Card key={index} className="p-5">
-            <Skeleton className="h-5 w-40" />
-            <div className="mt-4 flex flex-col gap-3">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-5/6" />
-              <Skeleton className="h-4 w-2/3" />
-            </div>
-          </Card>
-        ))}
+    <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {back}
+      <div aria-hidden="true" className="flex flex-col gap-4">
+        <Card className="p-5">
+          <Skeleton className="h-7 w-64 max-w-full" />
+          <Skeleton className="mt-2 h-4 w-96 max-w-full" />
+        </Card>
+        <div className="grid grid-cols-1 gap-4">
+          {Array.from({ length: 3 }, (_, index) => (
+            <Card key={index} className="p-5">
+              <Skeleton className="h-5 w-40" />
+              <div className="mt-4 flex flex-col gap-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -196,6 +200,8 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
 
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {/* While editing, Back is the in-page Cancel: it returns to the read view, never saves. */}
+      <BackButton {...(editing ? { onBack: cancelEdit } : { fallback: paths.visits })} />
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -473,9 +479,12 @@ export function VisitDetailPage({
     )
   }
 
+  const back = <BackButton fallback={paths.visits} />
+
   if (status === 'error') {
     return (
-      <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8">
+      <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+        {back}
         <ErrorState title="Unable to load visit detail." onRetry={reload} />
       </div>
     )
@@ -487,7 +496,7 @@ export function VisitDetailPage({
         <p className="sr-only" role="status">
           Loading visit detail...
         </p>
-        <VisitDetailSkeleton />
+        <VisitDetailSkeleton back={back} />
       </>
     )
   }

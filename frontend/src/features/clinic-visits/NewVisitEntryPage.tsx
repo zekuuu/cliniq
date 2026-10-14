@@ -1,6 +1,7 @@
-import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import {
+  BackButton,
   Badge,
   Button,
   buttonClassName,
@@ -65,21 +66,24 @@ interface Errors extends DispositionErrors {
   followUpReason?: string
 }
 
-function VisitSkeleton() {
+function VisitSkeleton({ back }: { back: ReactNode }) {
   return (
-    <div aria-hidden="true" className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
-      <Card className="p-5">
-        <Skeleton className="h-7 w-56 max-w-full" />
-        <Skeleton className="mt-2 h-4 w-80 max-w-full" />
-      </Card>
-      <Card className="p-5">
-        <div className="flex flex-col gap-4">
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-28 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-10 w-72 max-w-full" />
-        </div>
-      </Card>
+    <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {back}
+      <div aria-hidden="true" className="flex flex-col gap-4">
+        <Card className="p-5">
+          <Skeleton className="h-7 w-56 max-w-full" />
+          <Skeleton className="mt-2 h-4 w-80 max-w-full" />
+        </Card>
+        <Card className="p-5">
+          <div className="flex flex-col gap-4">
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-10 w-72 max-w-full" />
+          </div>
+        </Card>
+      </div>
     </div>
   )
 }
@@ -343,9 +347,12 @@ export function NewVisitEntryPage({
     }
   }
 
+  const back = <BackButton fallback={paths.visits} />
+
   if (status === 'error') {
     return (
-      <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8">
+      <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+        {back}
         <ErrorState title="Unable to load the visit form." onRetry={reload} />
       </div>
     )
@@ -357,7 +364,7 @@ export function NewVisitEntryPage({
         <p className="sr-only" role="status">
           Loading visit form…
         </p>
-        <VisitSkeleton />
+        <VisitSkeleton back={back} />
       </>
     )
   }
@@ -365,6 +372,7 @@ export function NewVisitEntryPage({
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {discardDialog}
+      <BackButton onBack={cancel} />
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -397,7 +405,12 @@ export function NewVisitEntryPage({
           {saved.letterPrepared && (
             <span className="mt-2 flex flex-wrap items-center gap-2 font-normal">
               An excuse letter draft was saved with the visit. It isn't approved yet.
-              <Link to={paths.excuseLetter(saved.visitId)} className={buttonClassName({ size: 'sm' })}>
+              {/* Replaces the submitted form in history, so Back from the letter can't reopen it. */}
+              <Link
+                to={paths.excuseLetter(saved.visitId)}
+                replace
+                className={buttonClassName({ size: 'sm' })}
+              >
                 Review excuse letter
               </Link>
             </span>

@@ -1,10 +1,11 @@
-import { render, screen } from '@testing-library/react'
+import { renderWithRouter } from '../../test/renderWithRouter'
+import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { PrivacyPolicyPage } from './PrivacyPolicyPage'
 
 describe('PrivacyPolicyPage', () => {
   it('renders the complete static draft, including the role table and unresolved contact placeholder', () => {
-    render(<PrivacyPolicyPage />)
+    renderWithRouter(<PrivacyPolicyPage />)
 
     expect(
       screen.getByRole('heading', { name: 'CLINIQ Privacy Policy — Draft', level: 1 }),

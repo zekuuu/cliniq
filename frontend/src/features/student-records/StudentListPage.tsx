@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
+  BackButton,
   Badge,
   Card,
   CardBody,
@@ -14,29 +15,33 @@ import {
   type DataTableColumn,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { paths } from '../../routes/paths'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { Student } from '../../types/entities'
 import { fetchGradeLevels, fetchStudentList } from './api/studentListApi'
 
-function StudentListSkeleton() {
+function StudentListSkeleton({ back }: { back: ReactNode }) {
   return (
-    <div aria-hidden="true" className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
-      <Card className="p-5">
-        <Skeleton className="h-7 w-48 max-w-full" />
-        <Skeleton className="mt-2 h-4 w-96 max-w-full" />
-      </Card>
-      <Card className="p-5">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-40" />
-        </div>
-        <div className="mt-5 flex flex-col gap-3">
-          {Array.from({ length: 8 }, (_, index) => (
-            <Skeleton key={index} className="h-8 w-full" />
-          ))}
-        </div>
-      </Card>
+    <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {back}
+      <div aria-hidden="true" className="flex flex-col gap-4">
+        <Card className="p-5">
+          <Skeleton className="h-7 w-48 max-w-full" />
+          <Skeleton className="mt-2 h-4 w-96 max-w-full" />
+        </Card>
+        <Card className="p-5">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-40" />
+          </div>
+          <div className="mt-5 flex flex-col gap-3">
+            {Array.from({ length: 8 }, (_, index) => (
+              <Skeleton key={index} className="h-8 w-full" />
+            ))}
+          </div>
+        </Card>
+      </div>
     </div>
   )
 }
@@ -137,9 +142,12 @@ export function StudentListPage() {
     }
   }, [])
 
+  // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
+  const back = <BackButton fallback={paths.dashboard} drillThroughOnly />
   if (status === 'error') {
     return (
-      <div className="mx-auto max-w-page-wide px-4 pt-10 pb-8 sm:px-8">
+      <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+        {back}
         <ErrorState title="Unable to load student records." onRetry={reload} />
       </div>
     )
@@ -151,7 +159,7 @@ export function StudentListPage() {
         <p className="sr-only" role="status">
           Loading student list...
         </p>
-        <StudentListSkeleton />
+        <StudentListSkeleton back={back} />
       </>
     )
   }
@@ -177,6 +185,7 @@ export function StudentListPage() {
 
   return (
     <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {back}
       <Card className="p-5">
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">Student List</h1>
         <p className="mt-1 text-sm text-text-secondary">

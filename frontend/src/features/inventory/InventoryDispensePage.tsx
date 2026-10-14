@@ -1,6 +1,6 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Input, InventoryItemPicker, Select, Skeleton, StudentPicker } from '../../components'
+import { BackButton, Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Input, InventoryItemPicker, Select, Skeleton, StudentPicker } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
@@ -18,8 +18,8 @@ const recipientOptions = [
   { value: 'general', label: 'Not for a student (general use)' },
 ]
 
-function DispenseSkeleton() {
-  return <div aria-hidden="true" className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8"><Card className="p-5"><Skeleton className="h-7 w-64" /><Skeleton className="mt-2 h-4 w-80 max-w-full" /></Card><Card className="p-5"><Skeleton className="h-12" /><Skeleton className="mt-4 h-12" /><div className="mt-4 flex justify-end gap-2"><Skeleton className="h-10 w-24" /><Skeleton className="h-10 w-44" /></div></Card></div>
+function DispenseSkeleton({ back }: { back: ReactNode }) {
+  return <div className="mx-auto flex flex max-w-page-narrow flex-col gap-4 flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<div aria-hidden="true"><Card className="p-5"><Skeleton className="h-7 w-64" /><Skeleton className="mt-2 h-4 w-80 max-w-full" /></Card><Card className="p-5"><Skeleton className="h-12" /><Skeleton className="mt-4 h-12" /><div className="mt-4 flex justify-end gap-2"><Skeleton className="h-10 w-24" /><Skeleton className="h-10 w-44" /></div></Card></div></div>
 }
 
 /**
@@ -51,9 +51,10 @@ export function InventoryDispensePage() {
     lookupNumber ? findDispenseStudent(lookupNumber).catch(() => null) : Promise.resolve(undefined),
   )
 
-  if (status === 'error') return <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8"><ErrorState title="Unable to load inventory items." onRetry={reload} /></div>
-  if (!items) return <><p className="sr-only" role="status">Loading inventory items...</p><DispenseSkeleton /></>
-  if (!items.length) return <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8"><EmptyState icon="package" title="No inventory items available" description="Add an item on the Inventory page before recording a dispensation." /></div>
+  const back = <BackButton fallback={paths.inventory} />
+  if (status === 'error') return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState title="Unable to load inventory items." onRetry={reload} /></div>
+  if (!items) return <><p className="sr-only" role="status">Loading inventory items...</p><DispenseSkeleton back={back} /></>
+  if (!items.length) return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<EmptyState icon="package" title="No inventory items available" description="Add an item on the Inventory page before recording a dispensation." /></div>
 
   const item = items.find((candidate) => candidate.id === itemId)
   const amount = Number(quantity)
@@ -94,6 +95,7 @@ export function InventoryDispensePage() {
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {discardDialog}
+      <BackButton onBack={cancel} />
       <Card className="p-5"><div className="flex items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">Dispense Medicine or Supply</h1><p className="mt-1 text-sm text-text-secondary">For use outside a clinic visit. Medicine given during a visit belongs on that visit.</p></div><Badge tone="warning" variant="soft" icon="package">Stock action</Badge></div></Card>
       <Card aria-labelledby="dispense-title"><CardHeader titleId="dispense-title" title="Dispensation details" icon={<Icon name="package" />} /><CardBody>
         <form ref={invalidRef} noValidate className="flex flex-col gap-4" onSubmit={submit}>

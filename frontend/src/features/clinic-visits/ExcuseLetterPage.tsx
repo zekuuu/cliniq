@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
+  BackButton,
   Badge,
   Button,
   Card,
@@ -12,6 +13,7 @@ import {
   Skeleton,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { paths } from '../../routes/paths'
 import { formatDate, formatDateRange, formatDateTime } from '../../lib/dates'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import {
@@ -22,23 +24,26 @@ import {
   type ExcusedPeriod,
 } from './api/excuseLetterApi'
 
-function LetterSkeleton() {
+function LetterSkeleton({ back }: { back: ReactNode }) {
   return (
-    <div aria-hidden="true" className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
-      <Card className="p-5">
-        <Skeleton className="h-7 w-72 max-w-full" />
-        <Skeleton className="mt-2 h-4 w-96 max-w-full" />
-      </Card>
-      <div className="grid grid-cols-1 gap-4">
+    <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {back}
+      <div aria-hidden="true" className="flex flex-col gap-4">
         <Card className="p-5">
-          <Skeleton className="h-5 w-44" />
-          <Skeleton className="mt-4 h-10 w-full" />
-          <Skeleton className="mt-3 h-32 w-full" />
+          <Skeleton className="h-7 w-72 max-w-full" />
+          <Skeleton className="mt-2 h-4 w-96 max-w-full" />
         </Card>
-        <Card className="p-5">
-          <Skeleton className="h-5 w-56" />
-          <Skeleton className="mt-5 h-60 w-full" />
-        </Card>
+        <div className="grid grid-cols-1 gap-4">
+          <Card className="p-5">
+            <Skeleton className="h-5 w-44" />
+            <Skeleton className="mt-4 h-10 w-full" />
+            <Skeleton className="mt-3 h-32 w-full" />
+          </Card>
+          <Card className="p-5">
+            <Skeleton className="h-5 w-56" />
+            <Skeleton className="mt-5 h-60 w-full" />
+          </Card>
+        </div>
       </div>
     </div>
   )
@@ -97,7 +102,7 @@ function PrintableLetter({
   )
 }
 
-function ExcuseLetterEditor({ context }: { context: ExcuseLetterContext }) {
+function ExcuseLetterEditor({ context, back }: { context: ExcuseLetterContext; back: ReactNode }) {
   const [recipient, setRecipient] = useState(context.recipient)
   const [body, setBody] = useState(context.body)
   const [period, setPeriod] = useState(context.period)
@@ -119,6 +124,7 @@ function ExcuseLetterEditor({ context }: { context: ExcuseLetterContext }) {
 
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8 print:max-w-none print:px-0 print:py-0">
+      {back}
       <Card className="p-5 print:hidden">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -272,9 +278,12 @@ export function ExcuseLetterPage({
     )
   }
 
+  const back = <BackButton fallback={visitId ? paths.visitDetail(visitId) : paths.visits} />
+
   if (status === 'error') {
     return (
-      <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8">
+      <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+        {back}
         <ErrorState title="Unable to load excuse letter." onRetry={reload} />
       </div>
     )
@@ -286,10 +295,10 @@ export function ExcuseLetterPage({
         <p className="sr-only" role="status">
           Loading excuse letter...
         </p>
-        <LetterSkeleton />
+        <LetterSkeleton back={back} />
       </>
     )
   }
 
-  return <ExcuseLetterEditor context={data} />
+  return <ExcuseLetterEditor context={data} back={back} />
 }

@@ -1,5 +1,5 @@
-import { useRef, useState, type FormEvent } from 'react'
-import { Button, Card, CardBody, CardHeader, ErrorState, Icon, Input, Select, Skeleton } from '../../components'
+import { useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { BackButton, Button, Card, CardBody, CardHeader, ErrorState, Icon, Input, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
@@ -12,24 +12,27 @@ export function UserFormPage({ userId }: { userId?: string }) {
   const { data: existing, status, reload } = useAsyncData(`user|${userId ?? 'new'}`, () =>
     userId ? fetchUser(userId) : Promise.resolve(null),
   )
+  const back = <BackButton fallback={paths.users} />
   if (status === 'error')
     return (
-      <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8">
+      <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+        {back}
         <ErrorState title="Unable to load this account." onRetry={reload} />
       </div>
     )
-  if (existing === undefined) return <FormSkeleton />
+  if (existing === undefined) return <FormSkeleton back={back} />
   return <UserForm key={existing?.id ?? 'new'} userId={userId} initial={existing} />
 }
 
-function FormSkeleton() {
+function FormSkeleton({ back }: { back: ReactNode }) {
   return (
     <>
       <p className="sr-only" role="status">
         Loading account...
       </p>
-      <div aria-hidden="true" className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8">
-        <Card className="p-5">
+      <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+        {back}
+        <Card aria-hidden="true" className="p-5">
           <Skeleton className="h-7 w-40" />
           {Array.from({ length: 3 }, (_, index) => (
             <Skeleton key={index} className="mt-4 h-12" />
@@ -83,6 +86,7 @@ function UserForm({
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {discardDialog}
+      <BackButton onBack={cancel} />
       <Card className="p-5">
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">
           {userId ? 'Edit User' : 'Add User'}

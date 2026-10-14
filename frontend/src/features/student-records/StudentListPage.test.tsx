@@ -1,4 +1,5 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { renderWithRouter } from '../../test/renderWithRouter'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { StudentListPage } from './StudentListPage'
@@ -6,7 +7,7 @@ import { fetchStudentList } from './api/studentListApi'
 
 describe('Student List', () => {
   it('renders the masterlist without inline medical details', async () => {
-    render(<StudentListPage />)
+    renderWithRouter(<StudentListPage />)
 
     expect(await screen.findByRole('heading', { name: 'Student List' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Full name' })).toBeInTheDocument()
@@ -38,7 +39,7 @@ describe('Student List', () => {
       includeArchived: false,
     })
 
-    render(<StudentListPage />)
+    renderWithRouter(<StudentListPage />)
     await screen.findByRole('heading', { name: 'Student List' })
     await user.type(screen.getByLabelText('Search'), student.studentNumber)
 
@@ -58,7 +59,7 @@ describe('Student List', () => {
     ).find((student) => student.archived)
 
     expect(archivedStudent).toBeDefined()
-    render(<StudentListPage />)
+    renderWithRouter(<StudentListPage />)
     await screen.findByRole('heading', { name: 'Student List' })
 
     await user.type(screen.getByLabelText('Search'), archivedStudent!.studentNumber)
@@ -71,7 +72,7 @@ describe('Student List', () => {
 
   it('filters by grade level', async () => {
     const user = userEvent.setup()
-    render(<StudentListPage />)
+    renderWithRouter(<StudentListPage />)
 
     await screen.findByRole('heading', { name: 'Student List' })
     await user.click(screen.getByLabelText('Grade level'))

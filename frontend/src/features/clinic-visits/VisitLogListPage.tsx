@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
+  BackButton,
   Badge,
   buttonClassName,
   Card,
@@ -49,26 +50,29 @@ const dispositionMeta: Record<Disposition, { label: string; tone: BadgeTone }> =
   referred_to_hospital: { label: 'Referred to hospital', tone: 'error' },
 }
 
-function VisitLogSkeleton() {
+function VisitLogSkeleton({ back }: { back: ReactNode }) {
   return (
-    <div aria-hidden="true" className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
-      <Card className="p-5">
-        <Skeleton className="h-7 w-48 max-w-full" />
-        <Skeleton className="mt-2 h-4 w-96 max-w-full" />
-      </Card>
-      <Card className="p-5">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-64 max-w-full" />
-        </div>
-        <div className="mt-5 flex flex-col gap-3">
-          {Array.from({ length: 8 }, (_, index) => (
-            <Skeleton key={index} className="h-9 w-full" />
-          ))}
-        </div>
-      </Card>
+    <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {back}
+      <div aria-hidden="true" className="flex flex-col gap-4">
+        <Card className="p-5">
+          <Skeleton className="h-7 w-48 max-w-full" />
+          <Skeleton className="mt-2 h-4 w-96 max-w-full" />
+        </Card>
+        <Card className="p-5">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-64 max-w-full" />
+          </div>
+          <div className="mt-5 flex flex-col gap-3">
+            {Array.from({ length: 8 }, (_, index) => (
+              <Skeleton key={index} className="h-9 w-full" />
+            ))}
+          </div>
+        </Card>
+      </div>
     </div>
   )
 }
@@ -109,9 +113,12 @@ export function VisitLogListPage() {
     setSort((current) => toggleTableSort(current, key))
   }
 
+  // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
+  const back = <BackButton fallback={paths.dashboard} drillThroughOnly />
   if (status === 'error') {
     return (
-      <div className="mx-auto max-w-page-wide px-4 pt-10 pb-8 sm:px-8">
+      <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+        {back}
         <ErrorState title="Unable to load visit log." onRetry={reload} />
       </div>
     )
@@ -123,7 +130,7 @@ export function VisitLogListPage() {
         <p className="sr-only" role="status">
           Loading visit log...
         </p>
-        <VisitLogSkeleton />
+        <VisitLogSkeleton back={back} />
       </>
     )
   }
@@ -205,6 +212,7 @@ export function VisitLogListPage() {
 
   return (
     <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {back}
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>

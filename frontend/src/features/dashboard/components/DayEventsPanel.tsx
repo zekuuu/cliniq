@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { Button, DatePicker, Icon, Input, Modal } from '../../../components'
+import { DRILL_THROUGH_STATE } from '../../../hooks/useGoBack'
 import { cn } from '../../../lib/cn'
 import { formatDate, formatDateRange } from '../../../lib/dates'
 import { paths } from '../../../routes/paths'
@@ -311,6 +312,7 @@ export function DayEventsPanel({
               {past ? (
                 <Link
                   to={paths.visitsOnDate(date)}
+                  state={DRILL_THROUGH_STATE}
                   className="inline-flex items-center gap-1 text-sm font-semibold text-brand-green-dark underline decoration-brand-green-dark/40 underline-offset-2 transition-colors hover:text-brand-green hover:decoration-brand-green focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
                 >
                   View visits <Icon name="chevronRight" size={12} />

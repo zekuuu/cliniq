@@ -1,4 +1,5 @@
 import {
+  BackButton,
   Badge,
   Button,
   buttonClassName,
@@ -15,7 +16,7 @@ import {
   StatusBadge,
   type StatusMap,
 } from '../../components'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { cn } from '../../lib/cn'
@@ -52,10 +53,11 @@ function tagList(items: string[], empty: string) {
   )
 }
 
-function StudentProfileSkeleton() {
+function StudentProfileSkeleton({ back }: { back: ReactNode }) {
   return (
-    <div aria-hidden="true" className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
-      <Card className="p-5">
+    <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {back}
+      <Card aria-hidden="true" className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 flex-col gap-2">
             <Skeleton className="h-8 w-64 max-w-full" />
@@ -68,7 +70,7 @@ function StudentProfileSkeleton() {
           </div>
         </div>
       </Card>
-      <div className="grid grid-cols-1 gap-4">
+      <div aria-hidden="true" className="grid grid-cols-1 gap-4">
         {Array.from({ length: 4 }, (_, index) => (
           <Card key={index} className="p-5">
             <Skeleton className="h-5 w-40" />
@@ -377,10 +379,19 @@ export function StudentProfilePage({
   )
   // Set by Edit Student after a successful save, which returns here.
   const savedMessage = (useLocation().state as { savedMessage?: string } | null)?.savedMessage
+  // Instructors reach the profile only from QR Lookup and can never open the Student List.
+  // On the Instructor's shell-free screen Back is the main way out, so it is the prominent style.
+  const back = (
+    <BackButton
+      fallback={viewer.role === 'instructor' ? paths.qrScan : paths.students}
+      variant={viewer.role === 'instructor' ? 'prominent' : 'quiet'}
+    />
+  )
 
   if (status === 'error') {
     return (
-      <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8">
+      <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+        {back}
         <ErrorState title="Unable to load the student profile." onRetry={reload} />
       </div>
     )
@@ -392,7 +403,7 @@ export function StudentProfilePage({
         <p className="sr-only" role="status">
           Loading student profile…
         </p>
-        <StudentProfileSkeleton />
+        <StudentProfileSkeleton back={back} />
       </>
     )
   }
@@ -404,6 +415,7 @@ export function StudentProfilePage({
         viewer.role === 'instructor' && 'min-h-screen bg-surface',
       )}
     >
+      {back}
       <ProfileHeader student={data.student} viewer={viewer} onArchived={reload} />
       {savedMessage && (
         <div

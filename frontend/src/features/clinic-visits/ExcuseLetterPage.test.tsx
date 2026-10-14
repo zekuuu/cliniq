@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react'
+import { renderWithRouter } from '../../test/renderWithRouter'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { addDays, formatDate, formatDateRange } from '../../lib/dates'
@@ -15,7 +16,7 @@ describe('Excuse Letter', () => {
 
   it('renders a clinic excuse letter, not a medical certificate workflow', async () => {
     const context = await fetchExcuseLetterContext()
-    render(<ExcuseLetterPage />)
+    renderWithRouter(<ExcuseLetterPage />)
 
     expect(
       await screen.findByRole('heading', { name: 'Excuse Letter' }),
@@ -29,7 +30,7 @@ describe('Excuse Letter', () => {
   it('prints the letter preview', async () => {
     const user = userEvent.setup()
     const print = vi.spyOn(window, 'print').mockImplementation(() => {})
-    render(<ExcuseLetterPage />)
+    renderWithRouter(<ExcuseLetterPage />)
 
     await screen.findByRole('heading', { name: 'Excuse Letter' })
     await user.click(screen.getByRole('button', { name: 'Print' }))
@@ -39,7 +40,7 @@ describe('Excuse Letter', () => {
 
   it('requires nurse check before approval and writes an audit entry', async () => {
     const user = userEvent.setup()
-    render(<ExcuseLetterPage />)
+    renderWithRouter(<ExcuseLetterPage />)
 
     await screen.findByRole('heading', { name: 'Excuse Letter' })
     expect(screen.getByRole('button', { name: 'Approve and Store' })).toBeDisabled()
@@ -58,7 +59,7 @@ describe('Excuse Letter', () => {
   it('defaults the excused period to the visit date and shows it on the letter', async () => {
     const context = await fetchExcuseLetterContext('visit-0001')
     const visitDate = context.visit.dateTime.slice(0, 10)
-    render(<ExcuseLetterPage visitId="visit-0001" />)
+    renderWithRouter(<ExcuseLetterPage visitId="visit-0001" />)
 
     await screen.findByRole('heading', { name: 'Excuse Letter' })
     expect(screen.getByRole('button', { name: /^Excused from/ })).toHaveTextContent(formatDate(visitDate))
@@ -70,7 +71,7 @@ describe('Excuse Letter', () => {
     const user = userEvent.setup()
     const context = await fetchExcuseLetterContext('visit-0001')
     const from = context.visit.dateTime.slice(0, 10)
-    render(<ExcuseLetterPage visitId="visit-0001" />)
+    renderWithRouter(<ExcuseLetterPage visitId="visit-0001" />)
 
     await screen.findByRole('heading', { name: 'Excuse Letter' })
     await user.click(screen.getByLabelText(/I checked the letter/i))
@@ -94,7 +95,7 @@ describe('Excuse Letter', () => {
   it('prefills the period and teacher note from the visit draft, and snapshots both on approval', async () => {
     const user = userEvent.setup()
     const context = await fetchExcuseLetterContext('visit-0151')
-    render(<ExcuseLetterPage visitId="visit-0151" />)
+    renderWithRouter(<ExcuseLetterPage visitId="visit-0151" />)
 
     await screen.findByRole('heading', { name: 'Excuse Letter' })
     const range = formatDateRange(context.period.excusedFrom, context.period.excusedUntil)

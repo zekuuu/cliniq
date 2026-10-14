@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import {
+  BackButton,
   Badge,
   Button,
   Card,
@@ -15,6 +16,7 @@ import {
   type DataTableColumn,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { paths } from '../../routes/paths'
 import { formatDate } from '../../lib/dates'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
@@ -32,25 +34,28 @@ interface ResolvedRecord {
   resolvedAt: string
 }
 
-function QueueSkeleton() {
+function QueueSkeleton({ back }: { back: ReactNode }) {
   return (
-    <div aria-hidden="true" className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
-      <Card className="p-5">
-        <Skeleton className="h-7 w-80 max-w-full" />
-        <Skeleton className="mt-2 h-4 w-96 max-w-full" />
-      </Card>
-      <Card className="p-5">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-72 max-w-full" />
-          <Skeleton className="h-10 w-40" />
-        </div>
-        <div className="mt-5 flex flex-col gap-3">
-          {Array.from({ length: 8 }, (_, index) => (
-            <Skeleton key={index} className="h-9 w-full" />
-          ))}
-        </div>
-      </Card>
+    <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {back}
+      <div aria-hidden="true" className="flex flex-col gap-4">
+        <Card className="p-5">
+          <Skeleton className="h-7 w-80 max-w-full" />
+          <Skeleton className="mt-2 h-4 w-96 max-w-full" />
+        </Card>
+        <Card className="p-5">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-72 max-w-full" />
+            <Skeleton className="h-10 w-40" />
+          </div>
+          <div className="mt-5 flex flex-col gap-3">
+            {Array.from({ length: 8 }, (_, index) => (
+              <Skeleton key={index} className="h-9 w-full" />
+            ))}
+          </div>
+        </Card>
+      </div>
     </div>
   )
 }
@@ -221,9 +226,12 @@ export function IncompleteRecordsQueuePage({
     )
   }
 
+  const back = <BackButton fallback={paths.students} />
+
   if (status === 'error') {
     return (
-      <div className="mx-auto max-w-page-wide px-4 pt-10 pb-8 sm:px-8">
+      <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+        {back}
         <ErrorState title="Unable to load incomplete records." onRetry={reload} />
       </div>
     )
@@ -235,7 +243,7 @@ export function IncompleteRecordsQueuePage({
         <p className="sr-only" role="status">
           Loading incomplete records...
         </p>
-        <QueueSkeleton />
+        <QueueSkeleton back={back} />
       </>
     )
   }
@@ -245,6 +253,7 @@ export function IncompleteRecordsQueuePage({
 
   return (
     <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {back}
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
