@@ -202,6 +202,30 @@ describe('Report Incident: failed submit and unusual vitals', () => {
     expect(screen.getByLabelText(/oxygen saturation/i)).toHaveFocus()
   })
 
+  it('blocks completion when the departure time is only partly typed', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+
+    await screen.findByRole('heading', { name: 'Report Incident' })
+    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await user.type(screen.getByLabelText(/temperature/i), '37.2')
+    await user.type(screen.getByLabelText(/pulse/i), '92')
+    await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
+    await screen.findByRole('heading', { name: 'Stage 2 completion' })
+    await user.type(screen.getByLabelText(/blood pressure/i), '120/80')
+    await user.type(screen.getByLabelText(/oxygen saturation/i), '98%')
+    await user.click(screen.getByLabelText(/referred to hospital/i))
+    await user.type(screen.getByLabelText(/destination/i), 'City Hospital')
+    // Browsers keep the value empty for "02:30 --" and flag it only through validity.
+    const departure = screen.getByLabelText(/departure time/i)
+    Object.defineProperty(departure, 'validity', { value: { badInput: true } })
+    await user.click(screen.getByRole('button', { name: 'Complete Incident' }))
+
+    expect(screen.getByText('Enter the full departure time, including AM or PM.')).toBeInTheDocument()
+    expect(departure).toHaveFocus()
+    expect(screen.queryByText(/incident completed/i)).not.toBeInTheDocument()
+  }, 15_000)
+
   it('warns about an implausible reading but still saves Stage 1', async () => {
     const user = userEvent.setup()
     renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)

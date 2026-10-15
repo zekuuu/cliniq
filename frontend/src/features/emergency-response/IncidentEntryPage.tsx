@@ -74,6 +74,7 @@ interface Errors {
   oxygenSaturation?: string
   itemsGiven?: string
   referralDestination?: string
+  departureClock?: string
   notificationDetail?: string
   followUpReason?: string
 }
@@ -257,6 +258,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const [savingStageOne, setSavingStageOne] = useState(false)
   const [savingStageTwo, setSavingStageTwo] = useState(false)
   const invalidRef = useRef<HTMLFormElement>(null)
+  const departureClockRef = useRef<HTMLInputElement>(null)
   const invalid = useFocusFirstInvalid(invalidRef)
   const vitalsWarnings = unusualVitals(temperatureC, pulseBpm, data.vitalsRanges)
   // Stage 1 typed but not saved, or Stage 2 changed from the saved incident but not completed.
@@ -327,6 +329,10 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
     if (!oxygenSaturation.trim()) next.oxygenSaturation = 'Enter oxygen saturation.'
     if (referToHospital && !referralDestination.trim()) {
       next.referralDestination = 'Enter the hospital or clinic destination.'
+    }
+    // A half-typed time (e.g. 02:30 with no AM/PM) keeps the value empty, so only validity can tell.
+    if (referToHospital && departureClockRef.current?.validity.badInput) {
+      next.departureClock = 'Enter the full departure time, including AM or PM.'
     }
     if (needsFollowUp && !followUpReason.trim()) next.followUpReason = 'Enter the follow-up reason.'
     if (lines.some((line) => line.quantity < 1)) next.itemsGiven = 'Each quantity must be at least 1.'
@@ -660,10 +666,15 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                           onChange={setDepartureDate}
                         />
                         <Input
+                          ref={departureClockRef}
                           type="time"
                           label="Departure time"
                           value={departureClock}
-                          onChange={(event) => setDepartureClock(event.target.value)}
+                          onChange={(event) => {
+                            setDepartureClock(event.target.value)
+                            setErrors((current) => ({ ...current, departureClock: undefined }))
+                          }}
+                          error={errors.departureClock}
                         />
                       </div>
                     )}

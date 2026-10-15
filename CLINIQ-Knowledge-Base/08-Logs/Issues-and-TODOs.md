@@ -15,7 +15,7 @@
 
 ## Open work at a glance
 
-Open: FIX 8 · AUDIT 10 · DOC 11 · DECIDE 39 · LATER 16 | Notes: NOTE 23 · VERIFY 5 | Done: 143
+Open: FIX 9 · AUDIT 10 · DOC 11 · DECIDE 39 · LATER 16 | Notes: NOTE 23 · VERIFY 5 | Done: 144
 
 **Open `FIX` items:**
 
@@ -27,6 +27,7 @@ Open: FIX 8 · AUDIT 10 · DOC 11 · DECIDE 39 · LATER 16 | Notes: NOTE 23 · V
 - [ ] **After Edit Student saves, Back stays on the profile once** (Back navigation (ADR-024))
 - [ ] **The QR sticker draws a placeholder pattern, not a real QR code** (Purpose-built A4 printouts (ADR-026))
 - [ ] **Ctrl+P while a screen is still loading prints its skeleton** (Purpose-built A4 printouts (ADR-026))
+- [ ] **Reopening a completed incident hides its hospital referral** (Incident departure time)
 
 - **AUDIT** (10): Free-text complaints and student lookup; Pending excuse letters on the Dashboard and profile; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep; Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026)
 - **DOC** (11): Issues-and-TODOs fix sweep; Groupmate system review; Open FIX and styling DECIDE sweep; QR lookup mobile-only; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); README sync
@@ -454,6 +455,11 @@ Left by the session that rebuilt every Print / Save as PDF as an A4 document at 
 - [ ] **[DOC]** **Screen Inventory and Frontend Context Brief Section 4 out of step with ADR-023** (logged Thursday, October 15, 2026 — 23:42 PHT): `03-Design/Screen-Inventory.md` still lists #23 as "Scan/Lookup Hub (Staff, computer or mobile)" and its total line says "~37 screens/views" while it numbers 39 entries. The inventory says "if you edit one, edit both", so fix it with the canonical Brief Section 4, then correct the "approximately 37 screens" in `README.md`. Session: [2026-10-15-readme-and-original-sync](Agent-Sessions/2026-10-15-readme-and-original-sync.md)
 - [ ] **[LATER]** **Remove `printAll` from the Dashboard's `Tabs`** (logged Thursday, October 15, 2026 — 23:42 PHT): since ADR-026 the Dashboard prints the Clinic Overview Report and `index.css` hides the app while it prints, so `printAll` there has no effect. Drop it (and its test, if any) when the Dashboard is next touched; keep the prop on `Tabs`. Session: [2026-10-15-readme-and-original-sync](Agent-Sessions/2026-10-15-readme-and-original-sync.md)
 - **[NOTE]** **Two `dev` scripts pull from Git** (Thursday, October 15, 2026 — 23:42 PHT): the root `package.json` `dev` runs `git pull origin main` before starting the frontend, and `setup-step.md` step 6 tells the reader to replace `frontend/package.json`'s `dev` with a `cmd`-only `if exist … git pull …` command. The READMEs document the plain `npm run dev` from `frontend/`. Session: [2026-10-15-readme-and-original-sync](Agent-Sessions/2026-10-15-readme-and-original-sync.md)
+
+## Incident departure time — Friday, October 16, 2026 — 06:00 PHT
+
+- [x] **[DONE]** **Stage 2 Departure time "cannot be set"** (found Friday, October 16, 2026 — 06:00 PHT): typing a time without AM/PM leaves the field showing "02:30 --" with an empty value, and Complete Incident saved the departure as the current time. Resolved Friday, October 16, 2026 — 06:00 PHT: a partly typed time now shows "Enter the full departure time, including AM or PM." and blocks completion. Evidence: Playwright in Chromium and Firefox; `IncidentEntryPage.test.tsx` 14/14. Session: [2026-10-16-incident-departure-time](Agent-Sessions/2026-10-16-incident-departure-time.md)
+- [ ] **[FIX]** **Reopening a completed incident hides its hospital referral** (found Friday, October 16, 2026 — 06:00 PHT): `IncidentEntryForm` starts the referral checkbox, destination, transport, and departure fields empty, so `/incidents/:id/complete` for a completed incident with a referral (seed `incident-0021`) shows none of it. Prefill them from `existing.hospitalReferral`. Session: [2026-10-16-incident-departure-time](Agent-Sessions/2026-10-16-incident-departure-time.md)
 
 ## Format for new entries
 When you find or resolve something, add it here with a date and enough context that someone with zero memory of the conversation that created it can still act on it.
