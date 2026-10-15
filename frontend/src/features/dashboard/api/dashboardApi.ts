@@ -3,12 +3,20 @@ import {
   getCalendarDays,
   getDashboardSummary,
   getHolidays,
+  listCalendarEvents,
   listPendingExcuseLetters,
   type BackupStatusView,
   type PendingExcuseLetter,
 } from '../../../lib/mock-db'
 import type { ISODate } from '../../../types/entities'
-import type { CalendarDay, DashboardQuery, DashboardSummary, HolidayFeed } from '../../../types/dashboard'
+import type {
+  CalendarDay,
+  CalendarDayEvent,
+  DashboardQuery,
+  DashboardSummary,
+  Holiday,
+  HolidayFeed,
+} from '../../../types/dashboard'
 
 /**
  * Dashboard data access. Everything here is read-only except calendar events (bottom of the file),
@@ -32,6 +40,15 @@ export function fetchCalendarDays(from: ISODate, to: ISODate): Promise<CalendarD
 /** Nationwide holidays in a range, plus the source's last-updated date and name (ADR-020). */
 export function fetchHolidays(from: ISODate, to: ISODate): Promise<HolidayFeed> {
   return getHolidays(from, to)
+}
+
+/** School events and holidays inside the Date range, for the printout's Visit activity section. */
+export async function fetchPeriodEvents(
+  from: ISODate,
+  to: ISODate,
+): Promise<{ events: CalendarDayEvent[]; holidays: Holiday[] }> {
+  const [events, feed] = await Promise.all([listCalendarEvents(from, to), getHolidays(from, to)])
+  return { events, holidays: feed.holidays }
 }
 
 /** What the Staff Dashboard's backup indicator needs: the latest run and whether it still needs checking. */

@@ -136,6 +136,7 @@ Where a requirement doesn't specify behavior, use established usability judgment
 - Must render fast on a 4GB RAM machine — keep bundle size and animation weight modest; avoid heavy chart libraries if a lighter one covers the Clinic Overview Dashboard's needs.
 - Tailwind CSS for styling; keep the palette simple and consistent across all ~35 screens.
 - Print layouts (excuse letters, incident reports, monthly reports, QR stickers) are first-class, not an afterthought.
+- **Printouts are purpose-built A4 documents (Thursday, October 15, 2026 — 23:04, ADR-026, requested by Zean):** every Print / Save as PDF is an A4 document, not the screen with its buttons hidden: a letterhead (school logo, "Mendez Christian Academy — School Clinic", the title), a plain-words scope line, content in reading order (summary, then detail, then notes), and on every page a footer with who printed it and when (Philippine time), a confidentiality line, and "Page X of Y". No app chrome. Body about 10pt, tables at least 9pt, letters and incident reports 11–12pt; header rows repeat, rows never split; correct in black and white. Multi-student printouts show Student Numbers only. Built on `frontend/src/components/print/`; see `.claude/skills/cliniq-print-patterns/`.
 - Mobile-responsive is required for the QR mobile flows (Staff and PE/Sports Instructor) — the rest is primarily used on the one desktop workstation, but reasonable responsiveness doesn't hurt.
 
 

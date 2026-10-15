@@ -16,6 +16,7 @@ import {
 } from '../../../components'
 import { cn } from '../../../lib/cn'
 import { formatDate, formatShortDate } from '../../../lib/dates'
+import { bucketName, bucketTotals, findClusters, type ClusterNote } from '../lib/trends'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../../lib/tableSort'
 import { colorToken } from '../../../lib/tokens'
 import { usePrefersReducedMotion } from '../../../hooks/usePrefersReducedMotion'
@@ -46,14 +47,6 @@ const MAX_VISIBLE_TABLE_PERIODS = 12
 const HOVER_MS = 320
 const PERIOD_COLUMN_WIDTH = '5rem'
 const TOTAL_COLUMN_WIDTH = '5rem'
-
-function bucketName(bucket: TrendBucket, granularity: TrendGranularity): string {
-  if (granularity === 'hour') return bucket.label
-  if (granularity === 'day') return formatDate(bucket.from)
-  if (granularity === 'week') return `Week of ${formatDate(bucket.from)}`
-  if (granularity === 'year') return formatDate(bucket.from, { year: 'numeric' })
-  return formatDate(bucket.from, { month: 'long', year: 'numeric' })
-}
 
 /**
  * Period header without the visible year (the card title shows it once), so period columns stay
@@ -87,18 +80,6 @@ function trendYears(trends: Trends): string | undefined {
   if (trends.granularity === 'hour') return formatDate(first.from)
   const [from, to] = [first.from.slice(0, 4), last.to.slice(0, 4)]
   return from === to ? from : `${from}–${to}`
-}
-
-interface ClusterNote {
-  complaint: string
-  bucketIndex: number
-  count: number
-}
-
-function findClusters(trends: Trends): ClusterNote[] {
-  return [...trends.series, ...trends.otherComplaints].flatMap((s) =>
-    s.clusterBuckets.map((i) => ({ complaint: s.complaint, bucketIndex: i, count: s.counts[i] })),
-  )
 }
 
 /** Adds an alpha channel to a token hex, for the 10% area wash under the line (dataviz spec). */
@@ -138,11 +119,6 @@ const clusterMarker: Plugin<'line'> = {
     }
     ctx.restore()
   },
-}
-
-function bucketTotals(trends: Trends): number[] {
-  const all = [...trends.series, ...trends.otherComplaints]
-  return trends.buckets.map((_, i) => all.reduce((sum, s) => sum + s.counts[i], 0))
 }
 
 function TrendLineChart({ trends, clusters }: { trends: Trends; clusters: ClusterNote[] }) {

@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import { Badge, Button, Card, CardBody, CardHeader, DataTable, ErrorState, Icon, MonthPicker, Skeleton, type DataTableColumn } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { formatDateTime, todayISO } from '../../lib/dates'
+import { addMonths, formatDateTime, todayISO } from '../../lib/dates'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { SessionUser } from '../../lib/mock-db'
 import { fetchMonthlyReport, type MonthlyReportData } from './api/reportsApi'
 import { HealthSummary } from './components/HealthSummary'
+import { ReportsPrint, type ReportView } from './components/ReportsPrint'
 
-type ReportView = 'monthly' | 'incidents' | 'health'
 type ArchiveRow = MonthlyReportData['incidents'][number]
+
+/** "YYYY-MM" of the month before. */
+function previousMonthOf(value: string) { return addMonths(`${value}-01`, -1).slice(0, 7) }
 
 function monthLabel(value: string) { return new Date(`${value}-01T00:00:00`).toLocaleDateString('en-PH', { month: 'long', year: 'numeric' }) }
 
@@ -25,8 +28,25 @@ function ReportBodySkeleton() {
   return <div aria-hidden="true" className="grid gap-4 sm:grid-cols-3">{Array.from({ length: 3 }, (_, index) => <Skeleton key={index} className="h-24" />)}</div>
 }
 
-function IncidentArchiveTable({ rows }: { rows: ArchiveRow[] }) {
-  const [sort, setSort] = useState<TableSortState<ArchiveSortKey>>({ key: 'date', direction: 'descending' })
+const ARCHIVE_SORT_LABELS: Record<ArchiveSortKey, string> = { student: 'Student Number', date: 'date', complaint: 'complaint', status: 'status' }
+
+function sortArchive(rows: ArchiveRow[], sort: TableSortState<ArchiveSortKey>) {
+  return sortTableRows(rows, sort, (row, key) => {
+    if (key === 'student') return row.studentNumber
+    if (key === 'date') return row.time
+    if (key === 'complaint') return row.complaint
+    return row.stage === 1 ? 'Needs completion' : 'Complete'
+  })
+}
+
+/** The archive's order in words for the printout, e.g. "date, newest first". */
+function archiveOrder(sort: TableSortState<ArchiveSortKey>) {
+  const up = sort.direction === 'ascending'
+  const words = sort.key === 'date' ? (up ? 'oldest first' : 'newest first') : up ? 'A to Z' : 'Z to A'
+  return `${ARCHIVE_SORT_LABELS[sort.key]}, ${words}`
+}
+
+function IncidentArchiveTable({ rows, sort, setSort }: { rows: ArchiveRow[]; sort: TableSortState<ArchiveSortKey>; setSort: (update: (current: TableSortState<ArchiveSortKey>) => TableSortState<ArchiveSortKey>) => void }) {
   const sortColumn = (key: ArchiveSortKey, label: string) => ({
     label,
     direction: sort.key === key ? sort.direction : undefined,
@@ -39,25 +59,21 @@ function IncidentArchiveTable({ rows }: { rows: ArchiveRow[] }) {
     if (column.key === 'status') return { ...column, sort: sortColumn('status', 'Status') }
     return column
   })
-  const sortedRows = sortTableRows(rows, sort, (row, key) => {
-    if (key === 'student') return row.studentNumber
-    if (key === 'date') return row.time
-    if (key === 'complaint') return row.complaint
-    return row.stage === 1 ? 'Needs completion' : 'Complete'
-  })
-  return <DataTable caption="Incident report archive" columns={columns} rows={sortedRows} rowKey={(incident) => incident.id} fixedLayout />
+  return <DataTable caption="Incident report archive" columns={columns} rows={sortArchive(rows, sort)} rowKey={(incident) => incident.id} fixedLayout />
 }
 
 export function ReportsPage({ viewer }: { viewer: SessionUser }) {
   const [view, setView] = useState<ReportView>('monthly')
   const [month, setMonth] = useState(todayISO().slice(0, 7))
+  // Kept here so the archive printout lists incidents in the order the screen shows.
+  const [archiveSort, setArchiveSort] = useState<TableSortState<ArchiveSortKey>>({ key: 'date', direction: 'descending' })
   const { data, status, isRefetching, reload } = useAsyncData(`report|${month}`, () => fetchMonthlyReport(month))
   const title = view === 'monthly' ? 'Monthly Report' : view === 'incidents' ? 'Incident Report Archive' : 'Health Summaries'
   let body
   if (status === 'error') body = <ErrorState title="Unable to generate this report." onRetry={reload} />
   else if (!data) body = <><p className="sr-only" role="status">Generating report...</p><ReportBodySkeleton /></>
-  else body = <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>{view === 'monthly' && <div className="grid gap-4 sm:grid-cols-3"><Summary label="Clinic visits" value={data.counts.visits} /><Summary label="Incidents" value={data.counts.incidents} /><Summary label="Follow-ups" value={data.counts.followUps} /></div>}{view === 'incidents' && <IncidentArchiveTable rows={data.incidents} />}{view === 'health' && <HealthSummary rows={data.complaintCounts} />}</div>
-  return <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8"><Card className="p-5 print:hidden"><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">Reports</h1><p className="mt-1 text-sm text-text-secondary">Generate, review, and print clinic reports for {viewer.role === 'admin' ? 'administrative review' : 'clinic operations'}.</p></div><Button variant="secondary" icon="printer" onClick={() => window.print()}>Print / Save as PDF</Button></div><div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Report type"><Button variant={view === 'monthly' ? 'primary' : 'secondary'} role="tab" aria-selected={view === 'monthly'} onClick={() => setView('monthly')}>Monthly Report</Button><Button variant={view === 'incidents' ? 'primary' : 'secondary'} role="tab" aria-selected={view === 'incidents'} onClick={() => setView('incidents')}>Incident Archive</Button><Button variant={view === 'health' ? 'primary' : 'secondary'} role="tab" aria-selected={view === 'health'} onClick={() => setView('health')}>Health Summaries</Button></div></Card><Card aria-labelledby="report-title"><CardHeader titleId="report-title" title={title} description={`Reporting period: ${monthLabel(month)}`} icon={<Icon name="fileText" />} /><CardBody><div className="mb-5 max-w-xs print:hidden"><MonthPicker id="report-month" label="Report month" value={month} onChange={setMonth} clearable={false} /></div>{body}</CardBody></Card></div>
+  else body = <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>{view === 'monthly' && <div className="grid gap-4 sm:grid-cols-3"><Summary label="Clinic visits" value={data.counts.visits} /><Summary label="Incidents" value={data.counts.incidents} /><Summary label="Follow-ups" value={data.counts.followUps} /></div>}{view === 'incidents' && <IncidentArchiveTable rows={data.incidents} sort={archiveSort} setSort={setArchiveSort} />}{view === 'health' && <HealthSummary rows={data.complaintCounts} />}</div>
+  return <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8"><Card className="p-5 print:hidden"><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">Reports</h1><p className="mt-1 text-sm text-text-secondary">Generate, review, and print clinic reports for {viewer.role === 'admin' ? 'administrative review' : 'clinic operations'}.</p></div><Button variant="secondary" icon="printer" onClick={() => window.print()}>Print / Save as PDF</Button></div><div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Report type"><Button variant={view === 'monthly' ? 'primary' : 'secondary'} role="tab" aria-selected={view === 'monthly'} onClick={() => setView('monthly')}>Monthly Report</Button><Button variant={view === 'incidents' ? 'primary' : 'secondary'} role="tab" aria-selected={view === 'incidents'} onClick={() => setView('incidents')}>Incident Archive</Button><Button variant={view === 'health' ? 'primary' : 'secondary'} role="tab" aria-selected={view === 'health'} onClick={() => setView('health')}>Health Summaries</Button></div></Card><Card aria-labelledby="report-title"><CardHeader titleId="report-title" title={title} description={`Reporting period: ${monthLabel(month)}`} icon={<Icon name="fileText" />} /><CardBody><div className="mb-5 max-w-xs print:hidden"><MonthPicker id="report-month" label="Report month" value={month} onChange={setMonth} clearable={false} /></div>{body}</CardBody></Card>{data && <ReportsPrint view={view} data={data} month={monthLabel(month)} previousMonth={monthLabel(previousMonthOf(month))} archiveRows={sortArchive(data.incidents, archiveSort)} archiveOrder={archiveOrder(archiveSort)} viewer={viewer} />}</div>
 }
 
 function Summary({ label, value }: { label: string; value: number }) { return <div className="rounded-md border border-border bg-surface p-4"><p className="text-xs font-semibold text-text-secondary">{label}</p><p className="mt-2 text-3xl font-bold tabular-nums text-text-primary">{value}</p></div> }

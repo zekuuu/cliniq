@@ -13,6 +13,8 @@ import {
   ListItemLink,
   MultiSelect,
   Pagination,
+  PrintDocument,
+  PrintTable,
   Select,
   Skeleton,
   StatusBadge,
@@ -21,7 +23,7 @@ import {
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { describeRange, rangeForPreset, type DateRange } from '../../lib/dateRange'
-import { formatDateTime, todayISO } from '../../lib/dates'
+import { formatDateRange, formatDateTime, todayISO } from '../../lib/dates'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import { ROLE_LABELS, auditTargetTypes, type AuditLogRow, type AuditTargetType, type SessionUser } from '../../lib/mock-db'
 import type { AuditActionType } from '../../types/entities'
@@ -117,6 +119,46 @@ function recordCell(row: AuditLogRow, viewer: SessionUser) {
   return path ? <ListItemLink to={path}>{row.target.label}</ListItemLink> : row.target.label
 }
 
+/** The applied filters in words, for the printout's scope line. */
+function filtersInWords(filters: AuditLogFilters, users: Array<{ id: string; name: string }>): string {
+  const { range, userId, actionTypes, targetTypes, search } = filters
+  const parts = [
+    range.preset === 'all' ? 'all dates' : range.preset === 'custom' ? formatDateRange(range.from, range.to) : `${describeRange(range).toLowerCase()} (${formatDateRange(range.from, range.to)})`,
+    userId ? `user ${users.find((user) => user.id === userId)?.name ?? 'Unknown user'}` : 'all users',
+    actionTypes.length ? `actions ${actionTypes.map((type) => actionStatusMap[type].label).join(', ')}` : 'all actions',
+    targetTypes.length ? `targets ${targetTypes.map((type) => targetLabels[type]).join(', ')}` : 'all targets',
+  ]
+  if (search.trim()) parts.push(`search "${search.trim()}"`)
+  return parts.join('; ')
+}
+
+/**
+ * The compliance printout (ADR-026, Module 11 "export/print a filtered view"): the filters in words, the
+ * entry count, and every matching entry (not just the page on screen), in the screen's order.
+ */
+function AuditLogPrint({ rows, filters, users, viewer }: { rows: AuditLogRow[]; filters: AuditLogFilters; users: Array<{ id: string; name: string }>; viewer: SessionUser }) {
+  return (
+    <PrintDocument
+      title="Audit Log"
+      viewer={viewer}
+      scope={`${rows.length.toLocaleString('en-PH')} ${rows.length === 1 ? 'entry' : 'entries'}. Filters: ${filtersInWords(filters, users)}. Entries are permanent and cannot be edited or deleted.`}
+    >
+      <PrintTable
+        caption="Filtered audit log"
+        rows={rows}
+        rowKey={(row) => row.id}
+        empty="No audit entries match these filters."
+        columns={[
+          { header: 'Date and time', width: '22%', cell: (row) => formatDateTime(row.dateTime) },
+          { header: 'Who', width: '24%', cell: (row) => <>{row.userName}{row.userRole && <span className="block text-[8.5pt] text-text-secondary">{ROLE_LABELS[row.userRole]}</span>}</> },
+          { header: 'Action', width: '26%', cell: (row) => <>{actionStatusMap[row.actionType].label}{row.summary && <span className="block text-[8.5pt] text-text-secondary">{row.summary}</span>}</> },
+          { header: 'Record', cell: (row) => (row.target ? [row.target.kind, row.target.label].filter(Boolean).join(' · ') : 'No record') },
+        ]}
+      />
+    </PrintDocument>
+  )
+}
+
 export function AuditLogPage({ viewer }: { viewer: SessionUser }) {
   const defaultRange = rangeForPreset('all', todayISO())
   const [filters, setFilters] = useState<AuditLogFilters>({ search: '', range: defaultRange, userId: '', actionTypes: [], targetTypes: [] })
@@ -194,10 +236,11 @@ export function AuditLogPage({ viewer }: { viewer: SessionUser }) {
             <MultiSelect label="Target / module" values={targetTypes} options={auditTargetTypes.map((type) => ({ value: type, label: targetLabels[type] }))} allLabel="All targets" onChange={(values) => updateFilters({ targetTypes: values as AuditTargetType[] })} className="w-full sm:w-48" />
           </div>
           <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>
-            {sortedRows.length ? <><DataTable caption="Filtered audit log" columns={columns} rows={pageRows} rowKey={(row) => row.id} className="print:hidden" fixedLayout /><div aria-hidden="true" className="hidden print:block"><DataTable caption="Filtered audit log" columns={columns} rows={sortedRows} rowKey={(row) => row.id} fixedLayout /></div><Pagination page={currentPage} pageCount={pageCount} total={sortedRows.length} pageSize={PAGE_SIZE} itemLabel="entries" onPageChange={setPage} /></> : <EmptyState icon="clipboardList" title="No audit entries found" description="Try another search, date range, user, action type, or target/module filter." />}
+            {sortedRows.length ? <><DataTable caption="Filtered audit log" columns={columns} rows={pageRows} rowKey={(row) => row.id} fixedLayout /><Pagination page={currentPage} pageCount={pageCount} total={sortedRows.length} pageSize={PAGE_SIZE} itemLabel="entries" onPageChange={setPage} /></> : <EmptyState icon="clipboardList" title="No audit entries found" description="Try another search, date range, user, action type, or target/module filter." />}
           </div>
         </CardBody>
       </Card>
+      <AuditLogPrint rows={sortedRows} filters={filters} users={data.users} viewer={viewer} />
     </div>
   )
 }

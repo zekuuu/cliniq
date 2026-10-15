@@ -14,6 +14,8 @@ import type { Incident, Student, Visit } from '../../../types/entities'
  * write is needed for Staff; Instructor profile views are logged through the QR lookup flow.
  *
  * Preview an empty history with `?mockEmpty=visits,incidents` (`lib/mock-db/devToggles.ts`).
+ * The whole history loads, newest first: the screen lists the most recent, the printed Student Health
+ * Record lists all of it (printing never fetches).
  */
 
 export interface StudentProfileData {
@@ -31,7 +33,7 @@ export async function fetchStudentProfile(
 ): Promise<StudentProfileData> {
   const student = studentNumber ? await getStudent(studentNumber) : await getDemoStudent({ withHistory: true })
   const [history, excuseLetters] = await Promise.all([
-    getStudentHistory(student.id),
+    getStudentHistory(student.id, Infinity),
     viewer?.role === 'staff' ? getStudentExcuseLetters(student.id) : [],
   ])
   return { student, ...history, excuseLetters }

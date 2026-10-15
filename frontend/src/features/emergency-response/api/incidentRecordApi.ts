@@ -3,9 +3,11 @@ import {
   addParentNotification,
   approveIncidentReport,
   getIncident,
+  getIncidentTrail,
   getStudentById,
   listApprovedIncidentReportIds,
   listIncidents,
+  type IncidentTrail,
   type SessionUser,
 } from '../../../lib/mock-db'
 import type { Incident, ParentNotificationOutcome, Student } from '../../../types/entities'
@@ -19,6 +21,8 @@ export interface IncidentRecord {
   student: Student
   /** True once this incident's report has been signed off. */
   approved: boolean
+  /** Who recorded, completed, and signed it off, for the printed report. */
+  trail: IncidentTrail
   /**
    * Selector options: only reports still pending sign-off, so a nurse can't pick and approve a
    * record that is already signed. The open record is included even when it is already approved.
@@ -33,12 +37,13 @@ export async function fetchIncidentRecord(incidentId?: string): Promise<Incident
   const pending = incidents.filter((item) => !approved.has(item.id))
   const incident = incidentId ? await getIncident(incidentId) : pending[0]
   if (!incident) return null
-  const student = await getStudentById(incident.studentId)
+  const [student, trail] = await Promise.all([getStudentById(incident.studentId), getIncidentTrail(incident.id)])
   const listed = approved.has(incident.id) ? [incident, ...pending] : pending
   return {
     incident,
     student,
     approved: approved.has(incident.id),
+    trail,
     options: listed.map((item) => ({
       value: item.id,
       label: `${formatDateTime(item.time)} · ${item.complaint}${approved.has(item.id) ? ' (approved)' : ''}`,

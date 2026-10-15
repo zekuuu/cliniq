@@ -61,3 +61,5 @@ This supersedes the October 14 decision to disclose only the yearly day list. Th
 - The canonical Frontend Design Reference (Reference 1 layout) needs the view structure.
 
 **Amendment, Thursday, October 15, 2026 — 20:38 (Zean):** the shared `Tabs` gained an optional `actions` slot on the tab row (right of the tabs from `md` up, above them on narrower screens). The Dashboard uses it for Staff's New Visit; Staff's backup indicator moved into the header above Date range and Print. The view structure, `?view=`, and print behavior are unchanged.
+
+**Superseded in part, Thursday, October 15, 2026 — 23:04 (ADR-026, Zean):** "Print prints everything" no longer holds. Print produces the Clinic Overview Report, a purpose-built A4 summary of the chosen period, whichever view is open.

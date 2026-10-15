@@ -77,7 +77,7 @@ export function DashboardHeader({
             </p>
           )}
           <Button variant="secondary" icon="printer" onClick={onPrint}>
-            Print / Save as PDF
+            Print overview
           </Button>
         </div>
       </div>

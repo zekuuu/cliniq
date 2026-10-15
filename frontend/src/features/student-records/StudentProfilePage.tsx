@@ -11,6 +11,10 @@ import {
   Icon,
   ListRow,
   Modal,
+  PrintDocument,
+  PrintFields,
+  PrintSection,
+  PrintTable,
   RowList,
   Skeleton,
   StatusBadge,
@@ -25,12 +29,15 @@ import { incidentCareSummary, visitCareSummary } from '../../lib/itemsGiven'
 import { getMockSessionUser, type SessionUser, type StudentExcuseLetter } from '../../lib/mock-db'
 import type { Disposition, Incident, Student, Visit } from '../../types/entities'
 import { paths } from '../../routes/paths'
-import { archiveStudentRecord, fetchStudentProfile } from './api/studentProfileApi'
+import { archiveStudentRecord, fetchStudentProfile, type StudentProfileData } from './api/studentProfileApi'
 
 const incidentStageMap = {
   1: { label: 'Needs completion', tone: 'warning', icon: 'alertTriangle', variant: 'soft' },
   2: { label: 'Complete', tone: 'success', icon: 'checkCircle', variant: 'soft' },
 } satisfies StatusMap<'1' | '2'>
+
+/** The screen lists the most recent records; the printout lists them all. */
+const HISTORY_ON_SCREEN = 8
 
 const dispositionLabel: Record<Disposition, string> = {
   returned_to_class: 'Returned to class',
@@ -261,7 +268,7 @@ function VisitHistoryCard({ visits }: { visits: Visit[] }) {
       />
       {visits.length ? (
         <RowList labelledBy="visit-history">
-          {visits.map((visit) => (
+          {visits.slice(0, HISTORY_ON_SCREEN).map((visit) => (
             <ListRow
               key={visit.id}
               primary={visit.complaint}
@@ -334,7 +341,7 @@ function IncidentHistoryCard({ incidents }: { incidents: Incident[] }) {
       />
       {incidents.length ? (
         <RowList labelledBy="incident-history">
-          {incidents.map((incident) => (
+          {incidents.slice(0, HISTORY_ON_SCREEN).map((incident) => (
             <ListRow
               key={incident.id}
               primary={incident.complaint}
@@ -360,6 +367,97 @@ function IncidentHistoryCard({ incidents }: { incidents: Incident[] }) {
         />
       )}
     </Card>
+  )
+}
+
+/**
+ * "Student Health Record": the profile on A4 (ADR-026), a record sheet rather than the cards. One
+ * student, deliberately opened, so the full name is correct (ADR-004). It follows the screen's role
+ * rules: excuse letters are Staff-only, and no record actions print.
+ */
+function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer: SessionUser }) {
+  const { student, visits, incidents, excuseLetters } = data
+  const contact = student.emergencyContact
+  return (
+    <PrintDocument
+      title="Student Health Record"
+      viewer={viewer}
+      scope={`${student.fullName}, Student Number ${student.studentNumber}, ${student.gradeLevel}.${student.archived ? ' Archived record.' : ''} Every recorded clinic visit and incident, newest first.`}
+    >
+      <PrintSection title="Student">
+        <PrintFields
+          fields={[
+            { label: 'Full name', value: student.fullName },
+            { label: 'Student Number', value: student.studentNumber },
+            { label: 'Grade level', value: student.gradeLevel },
+            { label: 'Contact info', value: student.contactInfo || 'Not recorded' },
+            {
+              label: 'Emergency contact',
+              value: contact
+                ? `${contact.name} (${contact.relationship}) · ${contact.phone} · ${contact.verified ? 'verified' : 'needs verification'}`
+                : 'No emergency contact recorded.',
+              wide: true,
+            },
+            { label: 'Record status', value: `${student.recordComplete ? 'Complete' : 'Incomplete'}${student.archived ? ', archived' : ''}` },
+          ]}
+        />
+      </PrintSection>
+      <PrintSection title="Medical history">
+        <PrintFields
+          fields={[
+            { label: 'Allergies and restrictions', value: student.allergies.join(', ') || 'None recorded' },
+            { label: 'Conditions', value: student.medicalConditions.join(', ') || 'None recorded' },
+          ]}
+        />
+      </PrintSection>
+      <PrintSection title={`Visit history (${visits.length})`}>
+        <PrintTable
+          caption="Clinic visits"
+          rows={visits}
+          rowKey={(visit) => visit.id}
+          empty="No clinic visits are recorded for this student."
+          columns={[
+            { header: 'Date and time', width: '24%', cell: (visit) => formatDateTime(visit.dateTime) },
+            { header: 'Complaint', width: '20%', cell: (visit) => visit.complaint },
+            { header: 'Care given', cell: visitCareSummary },
+            { header: 'Disposition', width: '18%', cell: (visit) => dispositionLabel[visit.disposition] },
+          ]}
+        />
+      </PrintSection>
+      <PrintSection title={`Incident history (${incidents.length})`}>
+        <PrintTable
+          caption="Incidents"
+          rows={incidents}
+          rowKey={(incident) => incident.id}
+          empty="No emergency incidents are recorded for this student."
+          columns={[
+            { header: 'Date and time', width: '24%', cell: (incident) => formatDateTime(incident.time) },
+            { header: 'Complaint', width: '20%', cell: (incident) => incident.complaint },
+            {
+              header: 'Care and referral',
+              cell: (incident) =>
+                `${incidentCareSummary(incident)}. ${incident.hospitalReferral ? `Hospital referral: ${incident.hospitalReferral.destination}` : 'No hospital referral'}.`,
+            },
+            { header: 'Status', width: '18%', cell: (incident) => incidentStageMap[incident.stage].label },
+          ]}
+        />
+      </PrintSection>
+      {viewer.role === 'staff' && (
+        <PrintSection title="Excuse letters issued">
+          <PrintTable
+            caption="Excuse letters"
+            rows={excuseLetters}
+            rowKey={(letter) => letter.id}
+            empty="No excuse letters are stored or awaiting approval for this student."
+            columns={[
+              { header: 'Excused period', cell: (letter) => formatDateRange(letter.excusedFrom, letter.excusedUntil) },
+              { header: 'Disposition', width: '30%', cell: (letter) => dispositionLabel[letter.disposition] },
+              { header: 'Status', width: '24%', cell: (letter) => (letter.status === 'pending' ? 'Pending approval' : 'Approved') },
+            ]}
+          />
+        </PrintSection>
+      )}
+    </PrintDocument>
   )
 }
 
@@ -436,6 +534,7 @@ export function StudentProfilePage({
           <IncidentHistoryCard incidents={data.incidents} />
         </div>
       </div>
+      <StudentRecordPrint data={data} viewer={viewer} />
     </div>
   )
 }

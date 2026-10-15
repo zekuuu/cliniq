@@ -38,3 +38,16 @@ export {
 export { StudentPicker } from './forms/StudentPicker'
 export { InventoryItemPicker, type PickableItem } from './forms/InventoryItemPicker'
 export { ItemsGivenField, INSTRUCTIONS_MAX, type ItemLineDraft } from './forms/ItemsGivenField'
+export {
+  CONFIDENTIALITY_LINE,
+  PrintBars,
+  PrintDocument,
+  PrintFields,
+  PrintFigures,
+  PrintNote,
+  PrintSection,
+  PrintSignatures,
+  PrintTable,
+  type PrintColumn,
+  type PrintFigure,
+} from './print/Print'

@@ -25,7 +25,7 @@ import type {
 } from '../../types/entities'
 import { normalizeComplaint } from '../complaints'
 import { parseISODate, toISODate } from '../dates'
-import type { CalendarDay, DashboardQuery, DashboardSummary, Holiday, HolidayFeed } from '../../types/dashboard'
+import type { CalendarDay, CalendarDayEvent, DashboardQuery, DashboardSummary, Holiday, HolidayFeed } from '../../types/dashboard'
 import holidayData from './holidays-ph.json'
 import type { FollowUpDueState } from '../../components/status/followUp'
 import { buildCalendarDays, buildDashboardSummary } from './dashboard'
@@ -995,6 +995,32 @@ export function listApprovedIncidentReportIds(): Promise<string[]> {
   )
 }
 
+export interface IncidentTrail {
+  recorded: { by: string; at: ISODateTime } | null
+  completed: { by: string; at: ISODateTime } | null
+  approved: { by: string; at: ISODateTime } | null
+}
+
+/**
+ * Who recorded, completed, and signed off an incident, read from the audit log (the only place these
+ * are kept). `null` when the log has no such entry, e.g. a record from before the log existed.
+ */
+export function getIncidentTrail(incidentId: string): Promise<IncidentTrail> {
+  return read('incident trail', (s) => {
+    const find = (action: AuditActionType, types: string[]) => {
+      const entry = s.auditLog.find(
+        (e) => e.actionType === action && e.targetRecord?.id === incidentId && types.includes(e.targetRecord.type),
+      )
+      return entry ? { by: userName(s, entry.userId) ?? 'Unknown user', at: entry.timestamp } : null
+    }
+    return {
+      recorded: find('submit', ['incident', 'incident-stage-1']),
+      completed: find('update', ['incident-stage-2']),
+      approved: find('approve', ['incident-report']),
+    }
+  })
+}
+
 export function approveIncidentReport(incidentId: string, actor?: SessionUser): Promise<void> {
   return write('approve incident report', (s) => {
     must(s.incidents.find((i) => i.id === incidentId), 'Incident')
@@ -1295,6 +1321,17 @@ export interface ComplaintCount {
 export interface MonthlyReportData {
   month: string
   counts: { visits: number; incidents: number; followUps: number }
+  /** The same counts for the month before, so the printout can show the change. */
+  previousCounts: { visits: number; incidents: number; followUps: number }
+  /** What happened after the month's visits, every disposition listed (0 included). */
+  dispositions: Array<{ disposition: Disposition; count: number }>
+  /** Follow-ups dated in the month, by status (0 included). */
+  followUpsByStatus: Array<{ status: FollowUpStatus; count: number }>
+  /**
+   * Medicines and supplies given in the month, per item: dispensed quantity minus what visit edits
+   * returned (`visit_edited` adjustments), from the recorded stock movements. Totals only, no students.
+   */
+  itemsGiven: Array<{ itemName: string; unit: string; quantity: number }>
   /** Incident archive rows carry the Student Number only (multi-student list, ADR-004). */
   incidents: Array<Incident & { studentNumber: StudentNumber }>
   /** Visits per complaint, most frequent first (ties alphabetical, so the order is stable). */
@@ -1309,6 +1346,23 @@ function complaintCounts(visits: Visit[]): ComplaintCount[] {
     .sort((a, b) => b.count - a.count || a.complaint.localeCompare(b.complaint))
 }
 
+function itemsGivenInMonth(s: DbState, month: string): MonthlyReportData['itemsGiven'] {
+  const given = new Map<string, number>()
+  for (const t of s.frontendOnly.inventoryTransactions) {
+    if (!t.timestamp.startsWith(month)) continue
+    // An adjustment's quantity is the change to stock, so a visit edit that returns 2 gives 2 fewer.
+    const change = t.type === 'dispense' ? t.quantity : t.type === 'adjustment' && t.reason === 'visit_edited' ? -t.quantity : 0
+    if (change) given.set(t.itemId, (given.get(t.itemId) ?? 0) + change)
+  }
+  return [...given]
+    .filter(([, quantity]) => quantity > 0)
+    .map(([itemId, quantity]) => {
+      const item = s.inventoryItems.find((i) => i.id === itemId)
+      return { itemName: item?.name ?? 'Unknown item', unit: item?.unit ?? '', quantity }
+    })
+    .sort((a, b) => a.itemName.localeCompare(b.itemName))
+}
+
 /** `month` is "YYYY-MM". Everything is generated from raw records on each call. */
 export function getMonthlyReport(month: string): Promise<MonthlyReportData> {
   return read('monthly report', (s) => {
@@ -1316,6 +1370,16 @@ export function getMonthlyReport(month: string): Promise<MonthlyReportData> {
     return {
       month,
       counts: monthlyCounts(s, month),
+      previousCounts: monthlyCounts(s, toISODate(new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 2, 1)).slice(0, 7)),
+      dispositions: (['returned_to_class', 'sent_home', 'referred_to_hospital'] as const).map((disposition) => ({
+        disposition,
+        count: s.visits.filter((v) => v.dateTime.startsWith(month) && v.disposition === disposition).length,
+      })),
+      followUpsByStatus: (['pending', 'completed', 'missed', 'cancelled'] as const).map((status) => ({
+        status,
+        count: s.followUps.filter((f) => f.followUpDate.startsWith(month) && f.status === status).length,
+      })),
+      itemsGiven: itemsGivenInMonth(s, month),
       incidents: s.incidents
         .filter((i) => i.time.startsWith(month))
         .sort((a, b) => b.time.localeCompare(a.time))
@@ -1393,6 +1457,17 @@ export function getHolidays(from: ISODate, to: ISODate): Promise<HolidayFeed> {
 }
 
 // ---- calendar events (Module 9, ADR-019; PROVISIONAL pending the ERD) ----------------------
+
+/** Calendar events overlapping a period, earliest first: what the Dashboard printout lists. */
+export function listCalendarEvents(from: ISODate, to: ISODate): Promise<CalendarDayEvent[]> {
+  return read('calendar events', (s) =>
+    s.frontendOnly.calendarEvents
+      .filter((e) => e.startDate <= to && (e.endDate ?? e.startDate) >= from)
+      .sort((a, b) => a.startDate.localeCompare(b.startDate) || a.title.localeCompare(b.title))
+      .map(({ id, title, startDate, endDate }) => ({ id, title, startDate, endDate })),
+  )
+}
+
 
 export { CALENDAR_EVENT_TITLE_MAX }
 

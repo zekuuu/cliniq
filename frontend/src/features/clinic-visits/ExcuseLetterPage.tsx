@@ -10,12 +10,14 @@ import {
   ErrorState,
   Icon,
   Input,
+  PrintDocument,
+  PrintFields,
   Skeleton,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
 import { formatDate, formatDateRange, formatDateTime } from '../../lib/dates'
-import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
+import { getMockSessionUser, ROLE_LABELS, type SessionUser } from '../../lib/mock-db'
 import {
   approveExcuseLetter,
   excusedPeriodError,
@@ -99,6 +101,79 @@ function PrintableLetter({
         </div>
       </div>
     </article>
+  )
+}
+
+/**
+ * The letter on A4 (ADR-026): letterhead, date, recipient, excused period, body, teacher note, and a
+ * signature block, then a reference block without internal ids. A draft prints with a DRAFT mark so
+ * it can't pass for an approved letter. Single student, so the full name is correct (ADR-004).
+ */
+function ExcuseLetterPrint({
+  context,
+  recipient,
+  body,
+  period,
+  note,
+  approved,
+}: {
+  context: ExcuseLetterContext
+  recipient: string
+  body: string
+  period: ExcusedPeriod
+  note: string
+  approved: boolean
+}) {
+  const { student, visit } = context
+  const periodText = excusedPeriodError(period) ? 'Not set' : formatDateRange(period.excusedFrom, period.excusedUntil)
+  return (
+    <PrintDocument
+      title="Clinic Excuse Letter"
+      scope={`For ${student.fullName} (${student.studentNumber}), ${student.gradeLevel}, after a clinic visit on ${formatDateTime(visit.dateTime)}.`}
+    >
+      {!approved && (
+        <>
+          <div aria-hidden="true" className="pointer-events-none fixed inset-0 flex items-center justify-center">
+            <span className="-rotate-30 text-[110pt] font-bold tracking-widest text-border">DRAFT</span>
+          </div>
+          <p className="relative mb-[5mm] border-2 border-text-primary px-[3mm] py-[2mm] text-[11pt] font-bold">
+            DRAFT, NOT APPROVED. This letter is not valid until the school clinic approves it.
+          </p>
+        </>
+      )}
+      <div className="relative flex flex-col gap-[4mm] text-[11.5pt] leading-relaxed">
+        <p>{formatDate(context.issuedAt.slice(0, 10))}</p>
+        <p>To: {recipient}</p>
+        <p className="font-semibold">Excused period: {periodText}</p>
+        <div className="whitespace-pre-line">{body}</div>
+        {note.trim() && <p>Note for the teacher: {note.trim()}</p>}
+        <div className="mt-[14mm] w-[70mm] break-inside-avoid border-t border-text-primary pt-[1.5mm]">
+          <p className="font-semibold">{context.checkedBy}</p>
+          <p className="text-[10pt]">{ROLE_LABELS.staff}, School Clinic</p>
+        </div>
+        <p className="text-[9.5pt]">
+          Not a medical certificate. Hospital-issued certificates are outside CLINIQ scope.
+        </p>
+      </div>
+      <div className="relative mt-[10mm] break-inside-avoid border-t border-text-secondary pt-[3mm] text-[9pt]">
+        <p className="mb-[2mm] font-semibold">Reference</p>
+        <PrintFields
+          fields={[
+            { label: 'Student', value: `${student.fullName} · ${student.studentNumber}` },
+            { label: 'Grade level', value: student.gradeLevel },
+            { label: 'Clinic visit', value: formatDateTime(visit.dateTime) },
+            {
+              label: 'Status',
+              value: context.approval
+                ? `Approved ${formatDateTime(context.approval.approvedAt)}; stored in the student record`
+                : approved
+                  ? 'Approved; stored in the student record'
+                  : 'Draft, not approved, not stored',
+            },
+          ]}
+        />
+      </div>
+    </PrintDocument>
   )
 }
 
@@ -255,6 +330,14 @@ function ExcuseLetterEditor({ context, back }: { context: ExcuseLetterContext; b
           </CardBody>
         </Card>
       </div>
+      <ExcuseLetterPrint
+        context={context}
+        recipient={recipient}
+        body={body}
+        period={period}
+        note={note}
+        approved={approved}
+      />
     </div>
   )
 }

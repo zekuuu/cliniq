@@ -100,4 +100,8 @@ Every detail page, form, step, error or "not found" page, and phone screen witho
 
 ## 025 The Dashboard shows one view at a time
 
-The Dashboard has three tabs under its header: Overview (counts, alerts, and Staff's excuse letters), Trends, and Calendar. It opens on Overview, so the alerts are seen first, and the Overview tab shows how many alerts there are from every view. The chosen view is kept in the address (`?view=calendar`) without adding Back steps, each view keeps its state when you switch, and Print still prints the whole Dashboard. The Date range doesn't apply to the Calendar, which has its own period.
+The Dashboard has three tabs under its header: Overview (counts, alerts, and Staff's excuse letters), Trends, and Calendar. It opens on Overview, so the alerts are seen first, and the Overview tab shows how many alerts there are from every view. The chosen view is kept in the address (`?view=calendar`) without adding Back steps, each view keeps its state when you switch, and Print still prints the whole Dashboard (since 026, Print produces a one-to-two-page Clinic Overview Report instead). The Date range doesn't apply to the Calendar, which has its own period.
+
+## 026 Every Print / Save as PDF is a proper A4 document
+
+Printing no longer copies the screen. Every printout is an A4 document with the school letterhead, a line saying what it covers, its content in a sensible reading order, and a footer on every page with who printed it and when, a confidentiality line, and page numbers. The Dashboard prints a "Clinic Overview Report" (a summary of the chosen period); Reports prints the formal documents. Lists of several students show Student Numbers only. The school still needs to confirm that A4 is its paper.

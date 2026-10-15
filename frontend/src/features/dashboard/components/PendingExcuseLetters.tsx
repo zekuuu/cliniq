@@ -1,18 +1,17 @@
 import { Link } from 'react-router'
 import { buttonClassName, ListCard, ListItemLink, ListRow } from '../../../components'
-import { useAsyncData } from '../../../hooks/useAsyncData'
 import { formatDateRange, formatDateTime } from '../../../lib/dates'
+import type { PendingExcuseLetter } from '../../../lib/mock-db'
 import { paths } from '../../../routes/paths'
-import { fetchPendingExcuseLetters } from '../api/dashboardApi'
 
 /**
  * Staff-only list of excuse-letter drafts saved with visits and not yet approved, so a draft can't
  * be forgotten after leaving New Visit. Navigation only (ADR-011: the Dashboard stays view-only).
  * Admin/Principal can't open the letter page, so this isn't rendered for that role.
  * A multi-student list: Student Number, never the name (ADR-004). Shown only while drafts exist.
+ * The Dashboard loads the letters, so its printout lists the same ones.
  */
-export function PendingExcuseLetters() {
-  const { data } = useAsyncData('dashboard-pending-excuse-letters', fetchPendingExcuseLetters)
+export function PendingExcuseLetters({ data }: { data: PendingExcuseLetter[] | undefined }) {
   if (!data?.length) return null
   return (
     <ListCard

@@ -1,13 +1,13 @@
 import { useState, type ReactNode } from 'react'
-import { BackButton, Badge, Button, Card, CardBody, CardHeader, ErrorState, Icon, Modal, Select, Skeleton } from '../../components'
+import { BackButton, Badge, Button, Card, CardBody, CardHeader, ErrorState, Icon, Modal, PrintDocument, PrintFields, PrintNote, PrintSection, PrintSignatures, PrintTable, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
 import { formatDateTime } from '../../lib/dates'
-import { incidentCareSummary } from '../../lib/itemsGiven'
+import { formatItemGiven, incidentCareSummary } from '../../lib/itemsGiven'
 import { formatDecimal } from '../../lib/numbers'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import type { ParentNotificationOutcome } from '../../types/entities'
-import { approveReport, fetchIncidentRecord } from './api/incidentRecordApi'
+import { approveReport, fetchIncidentRecord, type IncidentRecord } from './api/incidentRecordApi'
 
 /** Readable labels for the provisional `vitals` keys; unknown keys fall back to the key itself. */
 const VITAL_LABELS: Record<string, { label: string; unit?: string }> = {
@@ -22,6 +22,119 @@ const OUTCOME_LABELS: Record<ParentNotificationOutcome, string> = {
   not_reached: 'Not reached',
   voicemail: 'Voicemail',
   left_message: 'Left message',
+}
+
+/** A vital as the screen shows it: the same rounding, with the unit unless the value already has it. */
+function vitalText(key: string, value: string | number): string {
+  const unit = VITAL_LABELS[key]?.unit
+  return `${formatDecimal(value)}${unit && !String(value).endsWith(unit) ? ` ${unit}` : ''}`
+}
+
+const vitalEntries = (vitals: Record<string, string | number>) => Object.entries(vitals).filter(([key]) => key !== 'treatmentNotes')
+
+/**
+ * The incident report on A4 (ADR-026): one student, deliberately opened, so the full name is correct
+ * (ADR-004). Ends with signature lines; a Stage 1 record prints a "Not yet completed" notice.
+ */
+function IncidentReportPrint({ record }: { record: IncidentRecord }) {
+  const { incident, student, approved, trail } = record
+  const referral = incident.hospitalReferral
+  const notes = String(incident.vitals.treatmentNotes ?? '').trim()
+  const vitals = vitalEntries(incident.vitals)
+  const signed = (step: { by: string; at: string } | null) => (step ? `${step.by}, ${formatDateTime(step.at)}` : 'Not recorded')
+  return (
+    <PrintDocument
+      title="Incident Report"
+      scope={`${student.fullName} (${student.studentNumber}), ${student.gradeLevel}. Incident recorded ${formatDateTime(incident.time)}.`}
+    >
+      {incident.stage === 1 && (
+        <p className="mb-[4mm] border-2 border-text-primary px-[3mm] py-[2mm] text-[11pt] font-bold">
+          Not yet completed. Only the Stage 1 fast-capture details are recorded; Stage 2 is still due.
+        </p>
+      )}
+      <div className="text-[11pt]">
+        <PrintSection title="Incident">
+          <PrintFields
+            columns={3}
+            fields={[
+              { label: 'Student', value: `${student.fullName} · ${student.studentNumber}` },
+              { label: 'Grade level', value: student.gradeLevel },
+              { label: 'Date and time', value: formatDateTime(incident.time) },
+              { label: 'Complaint', value: incident.complaint },
+              { label: 'Record status', value: incident.stage === 1 ? 'Stage 1, needs completion' : 'Stage 2, complete' },
+              { label: 'Sign-off', value: approved ? 'Approved' : 'Pending sign-off' },
+              ...(incident.generalNotes ? [{ label: 'Additional notes', value: incident.generalNotes, wide: true }] : []),
+            ]}
+          />
+        </PrintSection>
+        <PrintSection title="Vitals">
+          {vitals.length ? (
+            <PrintFields columns={4} fields={vitals.map(([key, value]) => ({ label: VITAL_LABELS[key]?.label ?? key, value: vitalText(key, value) }))} />
+          ) : (
+            <PrintNote className="text-text-primary">No vitals recorded.</PrintNote>
+          )}
+        </PrintSection>
+        <PrintSection title="Treatment">
+          {!notes && !incident.itemsGiven.length ? (
+            <p>No treatment recorded.</p>
+          ) : (
+            <>
+              {notes && <p className="whitespace-pre-line">{notes}</p>}
+              {incident.itemsGiven.length > 0 && (
+                <>
+                  <p className="mt-[2mm] font-semibold">Medicines and supplies given</p>
+                  <ul className="list-disc pl-[5mm]">
+                    {incident.itemsGiven.map((line) => (
+                      <li key={line.itemId}>{formatItemGiven(line)}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </>
+          )}
+        </PrintSection>
+        <PrintSection title="Hospital referral">
+          {referral ? (
+            <PrintFields
+              columns={3}
+              fields={[
+                { label: 'Destination', value: referral.destination },
+                { label: 'Transport', value: referral.transportMode },
+                { label: 'Departure', value: formatDateTime(referral.departureTime) },
+              ]}
+            />
+          ) : (
+            <p>No hospital referral was recorded for this incident.</p>
+          )}
+        </PrintSection>
+        <PrintSection title="Parent or guardian notification">
+          <PrintTable
+            caption="Parent notification attempts"
+            rows={incident.parentNotifications}
+            rowKey={(attempt, index) => `${attempt.timestamp}|${index}`}
+            empty="No parent notification attempts were logged for this incident."
+            columns={[
+              { header: 'Date and time', width: '45%', cell: (attempt) => formatDateTime(attempt.timestamp) },
+              { header: 'Outcome', cell: (attempt) => OUTCOME_LABELS[attempt.outcome] },
+            ]}
+          />
+        </PrintSection>
+        <PrintSection title="Record">
+          <PrintFields
+            columns={3}
+            fields={[
+              { label: 'Recorded by', value: signed(trail.recorded) },
+              { label: 'Completed by', value: incident.stage === 1 ? 'Not yet completed' : signed(trail.completed) },
+              { label: 'Approved by', value: approved ? signed(trail.approved) : 'Not yet approved' },
+            ]}
+          />
+        </PrintSection>
+      </div>
+      <PrintSignatures
+        lines={[{ label: 'School nurse' }, { label: 'Parent or guardian informed' }, { label: 'Principal (if applicable)' }]}
+      />
+    </PrintDocument>
+  )
 }
 
 function ReportSkeleton({ back }: { back: ReactNode }) {
@@ -126,13 +239,10 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
           <section className="border-t border-border pt-4">
             <h2 className="text-sm font-semibold text-text-primary">Vitals and response</h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              {Object.entries(incident.vitals).filter(([key]) => key !== 'treatmentNotes').map(([key, value]) => (
+              {vitalEntries(incident.vitals).map(([key, value]) => (
                 <div key={key} className="rounded-md border border-border bg-surface p-3">
                   <p className="text-xs text-text-secondary">{VITAL_LABELS[key]?.label ?? key}</p>
-                  <p className="mt-1 text-sm font-semibold text-text-primary">
-                    {formatDecimal(value)}
-                    {VITAL_LABELS[key]?.unit && !String(value).endsWith(VITAL_LABELS[key].unit!) ? ` ${VITAL_LABELS[key].unit}` : ''}
-                  </p>
+                  <p className="mt-1 text-sm font-semibold text-text-primary">{vitalText(key, value)}</p>
                 </div>
               ))}
             </div>
@@ -189,6 +299,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
           <Button variant="primary" loading={approving} onClick={approve}>Approve Report</Button>
         </div>
       </Modal>
+      <IncidentReportPrint record={data} />
     </div>
   )
 }

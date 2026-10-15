@@ -1,3 +1,5 @@
 Clinic Overview Dashboard — counts, pending records, trends, frequent-visitor flags (Student Number only, per the display-privacy rule), due follow-ups, calendar view with event tags and Staff-maintained school events (ADR-019).
 
 Shows one view at a time (ADR-025): **Overview** (stat cards, the three alert groups, Staff's pending excuse letters; the default), **Trends** (complaint trends), and **Calendar**, switched by the shared `Tabs` under the header card and kept in `?view=` (replace, no history entry). All three stay mounted, so the calendar keeps its state and Print prints every view. The Overview tab shows the alert count; on the Calendar view the header replaces the Date range with "Date range not used in Calendar". Staff shortcuts are split: the backup indicator (status badge and short date, full date in its accessible name) sits in the header above Date range and Print; New Visit sits on the tab row via `Tabs` `actions` (right of the tabs from `md`, above them on phones).
+
+Print produces the "Clinic Overview Report" (`components/DashboardPrint.tsx`, ADR-026): a one-to-two-page A4 summary of the Date range from the data the page already loaded.

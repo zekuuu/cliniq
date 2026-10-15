@@ -4,6 +4,7 @@ import {
   completeIncidentStageTwo,
   saveIncidentStageOne,
   getInventoryItem,
+  getMonthlyReport,
   getRecordedAuditEntries,
   getStudent,
   getVisit,
@@ -260,5 +261,20 @@ describe('incident Stage 2', () => {
       completeIncidentStageTwo({ incidentId: stageOne.id, complaint: 'Fall injury', vitals: {}, hospitalReferral: null, newParentNotifications: [], followUp: null, itemsGiven: [{ itemId: ORS, quantity: 1 }] }),
     ).rejects.toThrow(/expired/)
     expect(db().incidents.find((i) => i.id === stageOne.id)?.stage).toBe(1)
+  })
+})
+
+describe('the monthly report’s medicines and supplies given', () => {
+  beforeEach(() => resetMockDb())
+
+  it('totals each item’s dispenses minus what visit edits returned, from the stock movements', async () => {
+    const month = new Date().toISOString().slice(0, 7)
+    const given = async () =>
+      (await getMonthlyReport(month)).itemsGiven.find((row) => row.itemName === 'Gauze Pads')?.quantity ?? 0
+    const before = await given()
+    const { visit } = await newVisit([{ itemId: GAUZE, quantity: 5 }])
+    expect(await given()).toBe(before + 5)
+    await updateVisit(visit.id, { complaint: 'Headache', treatment: '', disposition: 'returned_to_class', eventTag: null, itemsGiven: [{ itemId: GAUZE, quantity: 2, instructions: '' }] })
+    expect(await given()).toBe(before + 2)
   })
 })

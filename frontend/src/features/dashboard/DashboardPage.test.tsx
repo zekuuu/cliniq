@@ -87,7 +87,7 @@ describe('Clinic Overview Dashboard', () => {
     await openView(user, 'Calendar')
     expect(screen.getByRole('heading', { name: /^calendar$/i })).toBeInTheDocument()
     expect(screen.getByRole('radiogroup', { name: 'Calendar period' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /print \/ save as pdf/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /print overview/i })).toBeInTheDocument()
   })
 
   it('uses compact dates and labels day totals as cases, matching the legend', async () => {
@@ -180,7 +180,7 @@ describe('Clinic Overview Dashboard', () => {
       .map((b) => b.getAttribute('aria-label') ?? b.textContent?.trim())
     for (const label of labels) {
       expect(label).toMatch(
-        /^(Date range|All|Today|Last 7 days|Last 30 days|This month|This year|Custom range|Print \/ Save as PDF|Previous.*|Next.*|.*\. Open day)$/,
+        /^(Date range|All|Today|Last 7 days|Last 30 days|This month|This year|Custom range|Print overview|Previous.*|Next.*|.*\. Open day)$/,
       )
     }
     // The per-cell "View ›" links are gone: each day is one entry point.
@@ -258,7 +258,7 @@ describe('Clinic Overview Dashboard', () => {
   it('prints through the browser print dialog', async () => {
     const print = vi.spyOn(window, 'print').mockImplementation(() => {})
     const user = await renderLoaded()
-    await user.click(screen.getByRole('button', { name: /print \/ save as pdf/i }))
+    await user.click(screen.getByRole('button', { name: /print overview/i }))
     expect(print).toHaveBeenCalledOnce()
   })
 
@@ -280,7 +280,7 @@ describe('Clinic Overview Dashboard', () => {
       'text-brand-green-dark',
     )
 
-    expect(screen.getByRole('button', { name: /print \/ save as pdf/i })).toHaveClass(
+    expect(screen.getByRole('button', { name: /print overview/i })).toHaveClass(
       'cursor-pointer',
     )
 

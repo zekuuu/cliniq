@@ -7,7 +7,11 @@ import { todayISO } from '../../lib/dates'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { rangeForPreset, type DateRange } from '../../lib/dateRange'
 import type { DashboardSummary } from '../../types/dashboard'
-import { fetchDashboardSummary } from './api/dashboardApi'
+import {
+  fetchDashboardSummary,
+  fetchPendingExcuseLetters,
+  fetchPeriodEvents,
+} from './api/dashboardApi'
 import {
   ALERT_GRID,
   AlertListsSkeleton,
@@ -16,6 +20,7 @@ import {
   InventoryAlert,
 } from './components/AlertLists'
 import { ComplaintTrends, ComplaintTrendsSkeleton } from './components/ComplaintTrends'
+import { DashboardPrint } from './components/DashboardPrint'
 import { DashboardHeader } from './components/DashboardHeader'
 import { PendingExcuseLetters } from './components/PendingExcuseLetters'
 import { BackupStatusLink, NewVisitLink } from './components/StaffShortcuts'
@@ -41,7 +46,8 @@ function parseDashboardView(value: string | null): DashboardView {
  * Header (Staff: backup status above Print) → view tabs, with Staff's New Visit on the tab row
  * (ADR-025): Overview (stat cards, three alert groups, Staff's pending excuse letters), Trends (complaint trends), Calendar. One view shows at a time; the choice
  * lives in `?view=` (replace, so Back is unaffected). Every panel stays mounted, so switching keeps
- * the calendar's state and refetches nothing, and Print prints every view. Each view shows its own
+ * the calendar's state and refetches nothing. Print produces the "Clinic Overview Report" instead of
+ * the screen (`DashboardPrint`, ADR-026), from data loaded here. Each view shows its own
  * shaped skeleton on first load and its own error; later refetches keep the previous render dimmed.
  */
 export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser }) {
@@ -63,6 +69,14 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
     // The preset is part of the key: the trend's bucket size depends on it, not only the dates.
     `${range.preset}|${range.from}|${range.to}`,
     () => fetchDashboardSummary({ range }),
+  )
+  // For the Overview list and the printout; Admin/Principal can't open excuse letters.
+  const letters = useAsyncData(`dashboard-pending-excuse-letters|${viewer.role}`, () =>
+    viewer.role === 'staff' ? fetchPendingExcuseLetters() : Promise.resolve([]),
+  )
+  // Only the printout lists the period's school events and holidays.
+  const periodEvents = useAsyncData(`dashboard-period-events|${range.from}|${range.to}`, () =>
+    fetchPeriodEvents(range.from, range.to),
   )
 
   function changeView(next: DashboardView) {
@@ -175,7 +189,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                       <FrequentVisitorsAlert summary={d} range={range} canNavigate={canNavigate} />
                       <InventoryAlert summary={d} canNavigate={canNavigate} />
                     </section>
-                    {viewer.role === 'staff' && <PendingExcuseLetters />}
+                    {viewer.role === 'staff' && <PendingExcuseLetters data={letters.data} />}
                   </>
                 ),
               ),
@@ -205,6 +219,15 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           ]}
         />
       </div>
+      {data && (
+        <DashboardPrint
+          summary={data}
+          range={range}
+          viewer={viewer}
+          letters={viewer.role === 'staff' ? (letters.data ?? []) : undefined}
+          periodEvents={periodEvents.data}
+        />
+      )}
     </div>
   )
 }
