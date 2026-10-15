@@ -36,6 +36,8 @@ Surrounding metadata remains static. Touch users must be able to discover naviga
 `TitleLink` and `ListItemLink` also pass drill-through router state, so a top-level list they open
 shows Back (`cliniq-back-navigation-patterns`).
 
+**Toggles and view tabs share one look, in two sizes.** A toggle inside a card is the shared `SegmentedControl`; switching a whole page between views is the shared `Tabs` (`frontend/src/components/ui/Tabs.tsx`). Both mark the selected option with the raised white chip, green ring, and heavier weight (never color alone), and both give unselected options `cursor: pointer` plus a `background` tint and darker text on hover. Don't hand-roll either.
+
 **Dropdowns and selects must match the design system — never left as native OS/browser chrome.** A plain `<select>` renders with whatever the operating system defaults to, and that default has nothing to do with `brand-green`, this system's border-radius, or its focus-ring treatment. Minimum fix, no new dependency required: `appearance: none`, a custom chevron icon, and the same border/background/border-radius/focus-ring styling already used on text inputs. Only reach for a headless UI library (Radix UI, Headless UI) if genuinely richer interaction is needed later — not as the default fix for basic styling. In practice, don't style a native `<select>` at all: use the shared `Select`, `DateRangePicker`, or `MultiSelect`, which already share one look (see `cliniq-dropdown-patterns`).
 
 ## When to apply this

@@ -50,17 +50,21 @@ describe('Clinic Overview Dashboard: first-load skeletons', () => {
     expect(q('complaints-list')).toHaveLength(1)
     expect(q('complaint-row')).toHaveLength(5)
 
-    // Calendar: renders independently with a month-grid placeholder (default view).
-    expect(screen.getByRole('heading', { name: 'Calendar' })).toBeInTheDocument()
+    // Calendar: renders independently with a month-grid placeholder (default view), in its hidden tab.
+    expect(screen.getByRole('heading', { name: 'Calendar', hidden: true })).toBeInTheDocument()
     const month = q('calendar-month')
     expect(month).toHaveLength(1)
     expect(within(month[0] as HTMLElement).getAllByText(/^\d{1,2}$/).length).toBeGreaterThanOrEqual(
       28,
     )
 
-    // Loading is announced, and no spinner is used anywhere.
-    expect(screen.getAllByRole('status')).toHaveLength(2)
+    // Each view announces its own loading (one per tab panel), and no spinner is used anywhere.
+    // The view switcher is there from the first paint, not behind the skeleton.
+    expect(screen.getAllByRole('tab')).toHaveLength(3)
+    expect(screen.getAllByRole('status')).toHaveLength(1)
+    expect(screen.getAllByRole('status', { hidden: true })).toHaveLength(3)
     expect(screen.getByText('Loading clinic overview…')).toBeInTheDocument()
+    expect(screen.getByText('Loading trends…')).toBeInTheDocument()
     expect(screen.getByText('Loading calendar…')).toBeInTheDocument()
     expect(container.querySelector('.animate-spin')).toBeNull()
   })

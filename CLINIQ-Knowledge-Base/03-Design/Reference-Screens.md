@@ -26,6 +26,8 @@ Design these five in full detail first. Everything else in the system should be 
 5. **Calendar view** — toggle control for weekly / monthly / yearly, a calendar grid showing visit+incident count intensity per day (heatmap-style shading), and any free-text event tag Staff attached to a visit/incident shown as small text on the relevant day
 6. **Export/print button**
 
+**Views (Thursday, October 15, 2026 — 19:08, ADR-025, requested by the project manager):** sections 2–5 no longer show all at once. A tab strip under the header and the Staff shortcuts switches between **Overview** (stat cards, the alerts, and Staff's excuse letters; the default), **Trends** (section 4), and **Calendar** (section 5). The Overview tab carries the alert count, so alerts stay noticeable from every view. The view is kept in `?view=`; Print still prints every section in the order above.
+
 **Components this exercises:** stat card, list row with status badge, warning badge (with icon, not color alone), bar/line chart, segmented toggle control, calendar grid, date-range picker, icon+text button.
 
 **States:** loading (skeleton cards — this is the universal pattern, see Design-System.md's Feedback & System States, not a Dashboard-specific choice), empty (no data in the selected range — a clear empty-state message, not a blank chart), error (failed to load, with a retry action).

@@ -837,7 +837,7 @@ export function VisitCalendar({ today, initialAnchor, canNavigate }: VisitCalend
       />
       <CardBody className="flex flex-col gap-3">
         <p className="text-xs text-text-secondary">
-          The calendar has its own period; the Date range at the top of the page doesn't change it.
+          The calendar has its own period; the Date range used by Overview and Trends doesn't change it.
         </p>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-text-primary" aria-live="polite">

@@ -1,1 +1,3 @@
 Shared, generic UI components only — Button, Card, Badge, etc. at the design-system level (CLINIQ-Knowledge-Base/03-Design/Design-System.md). If it's specific to one feature, it belongs in that feature's folder instead, not here.
+
+Toggles vs. views: `SegmentedControl` (an ARIA radiogroup) switches a setting inside a card, such as the calendar period or chart/table. `Tabs` (ARIA tabs, one size up) switches a whole page between views and keeps every panel mounted; with `printAll`, hidden panels still print (first use: the Dashboard, ADR-025).

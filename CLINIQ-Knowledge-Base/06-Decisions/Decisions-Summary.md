@@ -97,3 +97,7 @@ The clinic workstation has no QR scanner, so QR Lookup is gone from the desktop 
 ## 024 Every screen you can get stuck on has a Back button
 
 Every detail page, form, step, error or "not found" page, and phone screen without the sidebar now has one Back button at the top left. It returns to the screen you came from; if you opened the page directly, it goes to a screen your role is allowed to use (a PE/Sports Instructor is never sent to the Student List). It says just "Back" unless it always goes to one named screen, such as "Back to Sign In". On a form it works exactly like Cancel. Main sidebar pages don't get one, except when you opened a list from a Dashboard link.
+
+## 025 The Dashboard shows one view at a time
+
+The Dashboard has three tabs under its header: Overview (counts, alerts, and Staff's excuse letters), Trends, and Calendar. It opens on Overview, so the alerts are seen first, and the Overview tab shows how many alerts there are from every view. The chosen view is kept in the address (`?view=calendar`) without adding Back steps, each view keeps its state when you switch, and Print still prints the whole Dashboard. The Date range doesn't apply to the Calendar, which has its own period.

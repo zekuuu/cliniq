@@ -1,10 +1,12 @@
-import { useState } from 'react'
-import { Card, ErrorState } from '../../components'
+import { useState, type ReactNode } from 'react'
+import { useSearchParams } from 'react-router'
+import { Card, ErrorState, Icon, Tabs } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { cn } from '../../lib/cn'
 import { todayISO } from '../../lib/dates'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { rangeForPreset, type DateRange } from '../../lib/dateRange'
+import type { DashboardSummary } from '../../types/dashboard'
 import { fetchDashboardSummary } from './api/dashboardApi'
 import {
   ALERT_GRID,
@@ -20,19 +22,11 @@ import { StaffShortcuts } from './components/StaffShortcuts'
 import { StatCardRow, StatCardRowSkeleton } from './components/StatCardRow'
 import { VisitCalendar } from './components/VisitCalendar'
 
-/**
- * First-load skeleton: each section's own shaped placeholder in the same grid positions as the
- * loaded page, so nothing shifts when data arrives (Design-System.md, Feedback & System States).
- * The calendar isn't here because it loads independently and shows its own view-shaped skeleton.
- */
-function DashboardSkeleton() {
-  return (
-    <div className="flex flex-col gap-6">
-      <StatCardRowSkeleton />
-      <AlertListsSkeleton />
-      <ComplaintTrendsSkeleton />
-    </div>
-  )
+type DashboardView = 'overview' | 'trends' | 'calendar'
+
+/** `?view=` value → view. No parameter or an unknown value opens Overview (ADR-025). */
+function parseDashboardView(value: string | null): DashboardView {
+  return value === 'trends' || value === 'calendar' ? value : 'overview'
 }
 
 /**
@@ -41,14 +35,18 @@ function DashboardSkeleton() {
  * with the "New Visit" shortcut and backup-status indicator (Screen #4; ADR-011 amendment). It's
  * view-only for both: no create, update, or delete happens here, so there are no audit-log writes.
  *
- * Top to bottom: header → date-range filter → Staff shortcuts → stat cards → three alert groups → complaint trends →
- * calendar. The export/print button sits in the header. Every data section shows a skeleton shaped
- * like itself on first load; later refetches keep the previous render dimmed instead.
+ * Header → Staff shortcuts → view tabs (ADR-025): Overview (stat cards, three alert groups, Staff's
+ * pending excuse letters), Trends (complaint trends), Calendar. One view shows at a time; the choice
+ * lives in `?view=` (replace, so Back is unaffected). Every panel stays mounted, so switching keeps
+ * the calendar's state and refetches nothing, and Print prints every view. Each view shows its own
+ * shaped skeleton on first load and its own error; later refetches keep the previous render dimmed.
  */
 export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser }) {
   const today = todayISO()
   // A summary view opens on the current month; operational logs keep the All default.
   const [range, setRange] = useState<DateRange>(() => rangeForPreset('thisMonth', today))
+  const [searchParams, setSearchParams] = useSearchParams()
+  const view = parseDashboardView(searchParams.get('view'))
   const canNavigate = viewer.role === 'staff'
 
   const { data, status, isRefetching, reload } = useAsyncData(
@@ -56,6 +54,54 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
     `${range.preset}|${range.from}|${range.to}`,
     () => fetchDashboardSummary({ range }),
   )
+
+  function changeView(next: DashboardView) {
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        if (next === 'overview') params.delete('view')
+        else params.set('view', next)
+        return params
+      },
+      { replace: true },
+    )
+  }
+
+  /** The summary request's states, shared by Overview and Trends (one request feeds both). */
+  function summaryPanel(
+    loadingLabel: string,
+    skeleton: ReactNode,
+    content: (d: DashboardSummary) => ReactNode,
+  ) {
+    if (status === 'error')
+      return <ErrorState title="Unable to load the clinic overview." onRetry={reload} />
+    if (status === 'loading' && !data)
+      return (
+        <>
+          <p className="sr-only" role="status">
+            {loadingLabel}
+          </p>
+          {skeleton}
+        </>
+      )
+    if (!data) return null
+    return (
+      <div
+        aria-busy={isRefetching}
+        className={cn(
+          'flex flex-col gap-6 transition-opacity motion-reduce:transition-none print:block print:space-y-6',
+          isRefetching && 'opacity-60',
+        )}
+      >
+        {content(data)}
+      </div>
+    )
+  }
+
+  // Follow-ups, frequent visitors, and inventory alerts, counted from the summary already loaded.
+  const alertCount = data
+    ? data.dueFollowUps.length + data.frequentVisitors.length + data.inventoryAlerts.length
+    : 0
 
   return (
     // Block flow in print: in a flex column, a card pushed to the next page by break-inside-avoid
@@ -70,44 +116,74 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           isRefetching={isRefetching}
           onPrint={() => window.print()}
           oldestRecordDate={data?.oldestRecordDate}
+          showRange={view !== 'calendar'}
         />
       </Card>
 
       {viewer.role === 'staff' && <StaffShortcuts />}
 
-      {status === 'error' ? (
-        <ErrorState title="Unable to load the clinic overview." onRetry={reload} />
-      ) : status === 'loading' && !data ? (
-        <>
-          <p className="sr-only" role="status">
-            Loading clinic overview…
-          </p>
-          <DashboardSkeleton />
-        </>
-      ) : data ? (
-        <div
-          aria-busy={isRefetching}
-          className={cn(
-            'flex flex-col gap-6 transition-opacity motion-reduce:transition-none print:block print:space-y-6',
-            isRefetching && 'opacity-60',
-          )}
-        >
-          <StatCardRow summary={data} range={range} canNavigate={canNavigate} />
-
-          <section aria-label="Alerts" className={ALERT_GRID}>
-            <FollowUpsAlert summary={data} canNavigate={canNavigate} />
-            <FrequentVisitorsAlert summary={data} range={range} canNavigate={canNavigate} />
-            <InventoryAlert summary={data} canNavigate={canNavigate} />
-          </section>
-
-          {viewer.role === 'staff' && <PendingExcuseLetters />}
-
-          <ComplaintTrends trends={data.complaintTrends} />
-        </div>
-      ) : null}
-
-      {/* Separate data source: loads in parallel with its own skeleton, and fails/retries on its own. */}
-      <VisitCalendar today={today} initialAnchor={range.to} canNavigate={canNavigate} />
+      <Tabs
+        label="Dashboard view"
+        value={view}
+        onChange={changeView}
+        printAll
+        tabs={[
+          {
+            value: 'overview',
+            label: 'Overview',
+            icon: 'layoutGrid',
+            // Visible from every view, so alerts aren't missed while on Trends or Calendar.
+            badge:
+              alertCount > 0 ? (
+                <>
+                  <span
+                    aria-hidden="true"
+                    className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-warning px-1.5 text-xs leading-5 font-semibold text-white"
+                  >
+                    <Icon name="alertTriangle" size={12} />
+                    {alertCount}
+                  </span>
+                  <span className="sr-only">{`, ${alertCount} ${alertCount === 1 ? 'alert' : 'alerts'}`}</span>
+                </>
+              ) : undefined,
+            panel: summaryPanel(
+              'Loading clinic overview…',
+              <>
+                <StatCardRowSkeleton />
+                <AlertListsSkeleton />
+              </>,
+              (d) => (
+                <>
+                  <StatCardRow summary={d} range={range} canNavigate={canNavigate} />
+                  <section aria-label="Alerts" className={ALERT_GRID}>
+                    <FollowUpsAlert summary={d} canNavigate={canNavigate} />
+                    <FrequentVisitorsAlert summary={d} range={range} canNavigate={canNavigate} />
+                    <InventoryAlert summary={d} canNavigate={canNavigate} />
+                  </section>
+                  {viewer.role === 'staff' && <PendingExcuseLetters />}
+                </>
+              ),
+            ),
+          },
+          {
+            value: 'trends',
+            label: 'Trends',
+            icon: 'activity',
+            panel: summaryPanel('Loading trends…', <ComplaintTrendsSkeleton />, (d) => (
+              <ComplaintTrends trends={d.complaintTrends} />
+            )),
+          },
+          {
+            value: 'calendar',
+            label: 'Calendar',
+            icon: 'calendar',
+            // Separate data source: loads with its own skeleton, and fails/retries on its own.
+            panel: (
+              <VisitCalendar today={today} initialAnchor={range.to} canNavigate={canNavigate} />
+            ),
+          },
+        ]}
+      />
     </div>
   )
 }

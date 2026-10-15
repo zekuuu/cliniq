@@ -17,12 +17,21 @@ vi.mock('react-chartjs-2', () => {
   return { Bar: Stub, Line: Stub }
 })
 
-async function renderLoaded({ allTime = false }: { allTime?: boolean } = {}) {
+async function renderLoaded({
+  allTime = false,
+  view,
+}: { allTime?: boolean; view?: 'trends' | 'calendar' } = {}) {
   const user = userEvent.setup()
-  renderWithRouter(<DashboardPage />)
-  await screen.findByRole('heading', { name: /due & upcoming follow-ups/i })
+  renderWithRouter(<DashboardPage />, { route: view ? `/?view=${view}` : '/' })
+  // Hidden views stay mounted, so wait for the summary whichever view is open.
+  await screen.findByRole('heading', { name: /due & upcoming follow-ups/i, hidden: true })
   if (allTime) await showAllTime(user)
   return user
+}
+
+/** Switches the Dashboard view (Overview / Trends / Calendar) with its tab. */
+async function openView(user: ReturnType<typeof userEvent.setup>, name: 'Overview' | 'Trends' | 'Calendar') {
+  await user.click(screen.getByRole('tab', { name: new RegExp(`^${name}`) }))
 }
 
 /** The Dashboard opens on This month; tests that need the full mock history widen it to All. */
@@ -38,8 +47,8 @@ describe('Clinic Overview Dashboard', () => {
   beforeEach(() => window.history.replaceState(null, '', '/'))
   afterEach(() => vi.restoreAllMocks())
 
-  it('renders every section Reference 1 requires', async () => {
-    await renderLoaded()
+  it('renders every section Reference 1 requires, each in its view', async () => {
+    const user = await renderLoaded()
     expect(screen.getByRole('heading', { level: 1, name: 'Clinic Overview' })).toBeInTheDocument()
     expect(
       screen.getByText(
@@ -68,18 +77,21 @@ describe('Clinic Overview Dashboard', () => {
       /due & upcoming follow-ups/i,
       /frequent-visitor warnings/i,
       /low-stock & expiring items/i,
-      /visits trend/i,
-      /common complaints/i,
-      /^calendar$/i,
     ]) {
       expect(screen.getByRole('heading', { name })).toBeInTheDocument()
     }
+    await openView(user, 'Trends')
+    for (const name of [/visits trend/i, /common complaints/i]) {
+      expect(screen.getByRole('heading', { name })).toBeInTheDocument()
+    }
+    await openView(user, 'Calendar')
+    expect(screen.getByRole('heading', { name: /^calendar$/i })).toBeInTheDocument()
     expect(screen.getByRole('radiogroup', { name: 'Calendar period' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /print \/ save as pdf/i })).toBeInTheDocument()
   })
 
   it('uses compact dates and labels day totals as cases, matching the legend', async () => {
-    await renderLoaded()
+    await renderLoaded({ view: 'calendar' })
     expect(screen.getAllByText(/^[A-Z][a-z]{2} \d{1,2}$/).length).toBeGreaterThan(0)
     // The day total counts visits plus incidents, so it never says "Visits"; screen readers get both numbers.
     const cells = screen.getAllByText(/^\d+ cases?$/)
@@ -176,7 +188,7 @@ describe('Clinic Overview Dashboard', () => {
   })
 
   it('lets Staff open a day and see its counts, events, and a link to its visits', async () => {
-    const user = await renderLoaded()
+    const user = await renderLoaded({ view: 'calendar' })
     const todayCell = await screen.findByRole('button', { name: /Fire drill.*\. Open day$/ })
     // Two chips, then "+1 more" for the visit tag MCA Dance Program.
     expect(within(todayCell).getByText('Fire drill')).toHaveClass('bg-brand-yellow')
@@ -204,7 +216,7 @@ describe('Clinic Overview Dashboard', () => {
   })
 
   it('lets Staff add, edit, and delete an event with validation and confirmation', async () => {
-    const user = await renderLoaded()
+    const user = await renderLoaded({ view: 'calendar' })
     // Next stays available to Staff so future dates can get events.
     const next = await screen.findByRole('button', { name: /^Next ?Month$/ })
     expect(next).toBeEnabled()
@@ -271,16 +283,19 @@ describe('Clinic Overview Dashboard', () => {
     expect(screen.getByRole('button', { name: /print \/ save as pdf/i })).toHaveClass(
       'cursor-pointer',
     )
-    expect(
-      within(screen.getByRole('radiogroup', { name: 'Calendar period' })).getByRole('radio', {
-        name: 'Monthly',
-      }),
-    ).toHaveClass('cursor-pointer')
 
     const followUpList = screen.getByRole('region', {
       name: /due & upcoming follow-ups \(scrollable list\)/i,
     })
     expect(within(followUpList).getAllByRole('link')[0]).toHaveClass('cursor-pointer', 'underline', 'text-brand-green-dark')
+
+    await userEvent.keyboard('{Escape}')
+    await openView(userEvent.setup(), 'Calendar')
+    expect(
+      within(screen.getByRole('radiogroup', { name: 'Calendar period' })).getByRole('radio', {
+        name: 'Monthly',
+      }),
+    ).toHaveClass('cursor-pointer')
     expect(screen.getByText('Fire drill')).toHaveClass('bg-brand-yellow')
   })
 
@@ -319,7 +334,7 @@ describe('Clinic Overview Dashboard', () => {
   })
 
   it('switches calendar views with the keyboard (radiogroup arrow keys)', async () => {
-    const user = await renderLoaded()
+    const user = await renderLoaded({ view: 'calendar' })
     const group = screen.getByRole('radiogroup', { name: 'Calendar period' })
     const monthly = within(group).getByRole('radio', { name: 'Monthly' })
     expect(monthly).toHaveAttribute('aria-checked', 'true')
@@ -334,7 +349,7 @@ describe('Clinic Overview Dashboard', () => {
   })
 
   it('offers a table fallback for the complaint chart', async () => {
-    const user = await renderLoaded({ allTime: true })
+    const user = await renderLoaded({ allTime: true, view: 'trends' })
     await user.click(
       within(screen.getByRole('radiogroup', { name: 'Show trend as' })).getByRole('radio', {
         name: /table/i,
@@ -393,9 +408,9 @@ describe('Clinic Overview Dashboard', () => {
   it('shows the plain "Clinic Overview" title for Admin/Principal, with the same sections', async () => {
     renderWithRouter(<DashboardPage viewer={{ id: 'a', name: 'Principal', role: 'admin' }} />)
     await screen.findByRole('heading', { name: /due & upcoming follow-ups/i })
-    await showAllTime(userEvent.setup())
+    const user = userEvent.setup()
+    await showAllTime(user)
     expect(screen.getByRole('heading', { level: 1, name: 'Clinic Overview' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /visits trend/i })).toBeInTheDocument()
     expect(
       within(screen.getByRole('region', { name: 'Summary counts' })).queryAllByRole('link'),
     ).toHaveLength(0)
@@ -409,7 +424,10 @@ describe('Clinic Overview Dashboard', () => {
       expect(within(list).queryAllByRole('link')).toHaveLength(0)
       expect(within(list).getAllByRole('listitem')[0]).not.toHaveClass('cursor-pointer')
     }
+    await openView(user, 'Trends')
+    expect(screen.getByRole('heading', { name: /visits trend/i })).toBeInTheDocument()
     // Admin sees the same event chips, but no day opens and the calendar stops at today.
+    await openView(user, 'Calendar')
     expect(screen.queryByRole('button', { name: /open day/i })).not.toBeInTheDocument()
     expect(await screen.findByText('Fire drill')).toHaveClass('bg-brand-yellow')
     expect(await screen.findByRole('button', { name: /^Next ?Month$/ })).toBeDisabled()
@@ -418,10 +436,15 @@ describe('Clinic Overview Dashboard', () => {
   it('shows an error state with a retry action when loading fails', async () => {
     window.history.replaceState(null, '', '/?mock=error')
     renderWithRouter(<DashboardPage />)
-    expect(await screen.findByText('Unable to load the clinic overview.')).toBeInTheDocument()
+    // Overview and Trends share one request, so both views show it; only the open view is visible.
+    await waitFor(() =>
+      expect(within(screen.getByRole('tabpanel')).getByText('Unable to load the clinic overview.')).toBeInTheDocument(),
+    )
+    expect(screen.getAllByRole('button', { name: /try again/i })).toHaveLength(1)
     // The calendar is an independent data source, so it reports and retries its own failure.
+    await openView(userEvent.setup(), 'Calendar')
     expect(await screen.findByText('Unable to load the calendar.')).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: /try again/i })).toHaveLength(2)
+    expect(screen.getAllByRole('button', { name: /try again/i })).toHaveLength(1)
   })
 
   it('shows calm empty states when there is no data', async () => {
@@ -480,14 +503,14 @@ describe('Clinic Overview Dashboard: calendar period note and yearly day list', 
   beforeEach(() => window.history.replaceState(null, '', '/'))
 
   it('says the calendar has its own period', async () => {
-    await renderLoaded()
+    await renderLoaded({ view: 'calendar' })
     expect(
-      screen.getByText(/The calendar has its own period; the Date range at the top of the page doesn't change it\./),
+      screen.getByText(/The calendar has its own period; the Date range used by Overview and Trends doesn't change it\./),
     ).toBeInTheDocument()
   })
 
   it('collapses the yearly day list behind a keyboard-reachable disclosure that still prints', async () => {
-    const user = await renderLoaded()
+    const user = await renderLoaded({ view: 'calendar' })
     await user.click(screen.getByRole('radio', { name: 'Yearly' }))
     const toggle = await screen.findByRole('button', { name: /^Show day list \(\d+ days?\)$/ })
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
@@ -518,7 +541,7 @@ describe('Clinic Overview Dashboard: today in the calendar', () => {
   beforeEach(() => window.history.replaceState(null, '', '/'))
 
   it('labels today with a "Today" pill and a dashed green outline, never the black outline alone', async () => {
-    const user = await renderLoaded()
+    const user = await renderLoaded({ view: 'calendar' })
     const pill = screen.getByText((_, el) => el?.tagName === 'SPAN' && /^Today \(\w{3} \d{1,2}\)$/.test(el.textContent ?? ''))
     expect(pill).toHaveClass('bg-brand-green-dark', 'text-white')
     expect(pill.closest('td')).toHaveClass('outline-dashed', 'outline-offset-2', 'outline-brand-green-dark')

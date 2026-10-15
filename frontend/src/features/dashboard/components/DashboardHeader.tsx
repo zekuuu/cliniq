@@ -18,6 +18,11 @@ export interface DashboardHeaderProps {
   onPrint: () => void
   /** Where the All range really starts; unknown until the summary loads. */
   oldestRecordDate?: ISODate | null
+  /**
+   * False on the Calendar view, which has its own period: the Date range and its "Showing …" line
+   * hide on screen so nobody reads them as filtering the calendar. Print always shows the line.
+   */
+  showRange?: boolean
 }
 
 /**
@@ -34,6 +39,7 @@ export function DashboardHeader({
   isRefetching,
   onPrint,
   oldestRecordDate,
+  showRange = true,
 }: DashboardHeaderProps) {
   const isStaff = viewer.role === 'staff'
   return (
@@ -47,14 +53,23 @@ export function DashboardHeader({
         </p>
         <p className="mt-0.5 text-xs text-text-secondary" aria-live="polite">
           <time dateTime={today}>{formatLongDate(today)}</time>
-          <span aria-hidden="true"> · </span>
-          {isRefetching ? 'Updating…' : `Showing ${describeRangeDates(range, oldestRecordDate)}`}
+          <span className={showRange ? undefined : 'hidden print:inline'}>
+            <span aria-hidden="true"> · </span>
+            {isRefetching ? 'Updating…' : `Showing ${describeRangeDates(range, oldestRecordDate)}`}
+          </span>
           <span aria-hidden="true"> · </span>
           View only
         </p>
       </div>
       <div className="flex flex-wrap items-center justify-end gap-2 print:hidden">
-        <DateRangePicker value={range} onChange={onRangeChange} today={today} compact />
+        {showRange ? (
+          <DateRangePicker value={range} onChange={onRangeChange} today={today} compact />
+        ) : (
+          // Holds the picker's slot (and height) so the tabs below don't jump when switching views.
+          <p className="flex min-h-10 items-center text-sm text-text-secondary">
+            Date range not used in Calendar
+          </p>
+        )}
         <Button variant="secondary" icon="printer" onClick={onPrint}>
           Print / Save as PDF
         </Button>

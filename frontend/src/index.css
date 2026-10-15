@@ -93,6 +93,7 @@
     -webkit-font-smoothing: antialiased;
     color: var(--color-text-primary);
     background-color: var(--color-background);
+    scrollbar-gutter: stable;
   }
   body {
     font-size: var(--text-sm);
@@ -108,6 +109,28 @@
   :focus-visible {
     outline: 2px solid var(--color-brand-green-dark);
     outline-offset: 2px;
+  }
+  /* A hidden tab panel (Tabs.tsx) stays laid out at its full width, clipped to no height and
+     invisible (so out of the tab order and accessibility tree), instead of display: none: a chart
+     created inside display: none gets no size and prints blank. Same layer and !important as
+     preflight's [hidden] rule, so the higher specificity wins. With `printAll`, every panel prints. */
+  [role='tabpanel'][hidden] {
+    display: flex !important;
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+  }
+  @media print {
+    [role='tabpanel'][data-print-all][hidden] {
+      display: block !important;
+      position: static;
+      height: auto;
+      overflow: visible;
+      visibility: visible;
+    }
   }
 }
 
