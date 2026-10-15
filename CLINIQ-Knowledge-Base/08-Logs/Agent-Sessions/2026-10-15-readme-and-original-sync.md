@@ -1,0 +1,61 @@
+Date/Day/Time: Thursday, October 15, 2026 — 23:42 PHT (started 23:35 PHT; system clock via PowerShell `Get-Date`, +08:00)
+Agent: Claude Code (Opus 5.5)
+Task: Bring `README.md`, `README_ORIGINAL.md` and the folder READMEs up to date with the changes since October 9 (documentation only)
+Status: Completed (Part D not run, as instructed)
+Prompt/Request: A written prompt from the person, titled "Bring `README.md`, `README_ORIGINAL.md` and the folder READMEs up to date with the recent updates and refactors", written against `origin/main` at `d6fbdfe`. Faithful summary of its instructions:
+- Documentation-only. No application code, tests, database design, ADR or `Decisions-Summary.md` changes. Do not touch `AGENTS.md`/`CLAUDE.md`. Do not commit or push. No Microsoft Edge.
+- Verify every fact against the files: QR scanning phone-only (ADR-023); shared Back (ADR-024); Dashboard one view at a time with `?view=` (ADR-025) and its header redesign; hourly one-day trends, trend-table sorting, Report Incident shortcut; purpose-built A4 printouts (ADR-026; the sticker QR is still a placeholder); ADR-021/022; 26 ADRs and 16 skills; frontend built on mock data, backend not scaffolded, database design a proposed draft.
+- Part A (`README.md`): keep it short and in its voice; fix the decision-summary count and topics, the screen count if changed, link useful existing `03-Design/` documents, add one status sentence, keep "MySQL" and the October 9 database bullets.
+- Part B (`README_ORIGINAL.md`): keep voice, layout, emoji and badges; minimal factual edits to Key Features, the status badge and "Nothing is scaffolded yet" block, Getting Started (real commands, run them), the project tree (QR folders, skills as a pointer plus count, root files), Tech Stack (only false rows; MySQL stays), Roadmap (honest status only if recorded), Team/Documentation/License (add Privacy Policy and database files if missing).
+- Part C: fix only false or missing-but-important facts in every folder README (QR feature and subfolders, Dashboard, components, layouts, hooks, routes, lib, mock-db, types, one-line feature READMEs, `frontend/README.md` with the zip warning kept, `backend/README.md`, `CLINIQ-Knowledge-Base/README.md`).
+- Part D (canonical documents): "RUN PART D: no" — only report the open canonical-drift `DOC` entries and their ADRs.
+- Do not put unconfirmed client-meeting findings in any README. Verify links, stale phrases, numbers, commands, `git diff --stat`, `AGENTS.md` = `CLAUDE.md`, and `format:check` where it applies. Record a session log, a Changelog row, and an Issues-and-TODOs DONE entry plus LATER/DOC entries for what was left; recompute "Open work at a glance" by script.
+
+Files Modified:
+- README.md
+- README_ORIGINAL.md
+- frontend/README.md
+- frontend/src/components/README.md
+- frontend/src/features/dashboard/README.md
+- frontend/src/features/qr-digital-health-id/README.md
+- frontend/src/features/qr-digital-health-id/api/README.md
+- frontend/src/features/qr-digital-health-id/desktop/README.md
+- frontend/src/features/qr-digital-health-id/mobile/README.md
+- frontend/src/features/qr-digital-health-id/shared/README.md
+- frontend/src/hooks/README.md
+- frontend/src/layouts/README.md
+- frontend/src/lib/README.md
+- CLINIQ-Knowledge-Base/README.md
+- CLINIQ-Knowledge-Base/08-Logs/Changelog.md, Issues-and-TODOs.md, this file
+
+Changes Made (old → new):
+- `README.md`: (1) added one status sentence to the intro: frontend built on sample (mock) data, backend not built, database design a proposed draft awaiting approval. (2) Key Decisions: "16 short explanations of the distinct accepted decisions, including the current session-lifetime rule from ADR-015 rather than the obsolete duplicate record" → "26 short explanations of the accepted decisions (ADR-001 to ADR-026)", naming session lifetime (ADR-015), Back, QR phone-only, Dashboard views, A4 printouts, unsaved-changes confirmation, phone navigation. The duplicate clause was dropped because the duplicate record (`ADR-010-Session-Lifetime-No-Idle-Timeout.md`) no longer exists in `06-Decisions/`. Intro sentence "…and the audit-log screen" → "…the audit-log screen, and the newer interface rules". (3) Screens: added links to `Design-System.md` and `Reference-Screens.md`. Screen count left at "approximately 37" because `Screen-Inventory.md` still says "~37" itself (see Known Issues).
+- `README_ORIGINAL.md`: status badge "planning & architecture complete" → "frontend on mock data · backend not started"; "Excuse letter generation, review, and print" → "… (every printout is a proper A4 document)"; "Clinic Overview Dashboard — trends, alerts, and a visit-activity calendar" → "… — Overview, Trends, and Calendar views: alerts, complaint trends, and a visit-activity calendar"; "One-tap QR lookup (desktop **and** mobile) tied into every workflow" → "QR lookup by phone camera (the clinic computer prints the QR stickers) tied into every workflow"; tree: `README.md` "you are here" → "short SRS-support entry point", added `README_ORIGINAL.md` (you are here), `setup-step.md`, `URL-Parameters.md`; `desktop/` "Staff's computer quick-action hub" → "QR sticker printing only (no scanning on the computer, ADR-023)"; `mobile/` "Staff mobile flow + PE/Sports Instructor lookup" → "Staff phone scan/lookup + PE/Sports Instructor lookup"; `shared/` "…used by both" → "…used by mobile/"; `backend/` "Laravel API" → "Laravel API (not scaffolded yet)", `app/Modules/` → "planned: …"; `.claude/skills/` two listed skills → "16 bespoke … (full list: 04-Development/Skills-Setup.md)"; `05-Testing/` "test strategy" → "test strategy and test cases"; Getting Started "Nothing is scaffolded yet" warning and scaffold commands → "Only the frontend exists so far" warning, real commands (`git clone https://github.com/zekuuu/cliniq.git`, `npm ci`, `npm run dev`, `npm test`, `npm run build`), Node.js 22.22.2+ prerequisite from `setup-step.md`, links to `setup-step.md` and the mock-db dev accounts, and the backend described as not set up yet with a link to `Environment-Setup.md`; Roadmap Frontend row gained "(screens built on mock data; the F3 demo-ready exit check is still open)" (from `Frontend-Loop-Engineering.md`: 60 boxes checked, only the F3 exit check open); "the two decisions still blocking Phase F0" → "the two Phase F0 decisions (now resolved in ADR-012 and ADR-013)"; Documentation list gained Privacy Policy and Database design (ERD, Data Dictionary, Reference Schema; proposed draft). Tech Stack, Team, License and Acknowledgments unchanged (nothing false found; "11 modules" matches `Module-Overview.md`).
+- QR feature README: "one QR code, two very different experiences depending on who scanned it and from where" → "printed on the computer and scanned only on a phone, …"; `mobile/` comment → "the only scan/lookup flow…"; `shared/` "used by BOTH desktop and mobile (yes, desktop can scan too, e.g. a webcam)" → "used by `mobile/`…"; `api/` comment now matches `qrLookupApi.ts` (audited lookup, search, printable student list); the "Why desktop/ and mobile/ are separate folders" paragraph (desktop quick-action hub) → "Why scanning is phone-only, and what desktop/ still holds" (ADR-023).
+- `qr…/api/README.md`: "log a scan event" → lookup writes the audit entry, plus student search and sticker list. `desktop/README.md`: "screens #22–24" → "screen #22". `mobile/README.md`: added "only place QR scanning happens (ADR-023)"; "same four actions as desktop" → "four quick actions (Record Visit, Log Emergency, View Full Profile, Dispense Medicine)". `shared/README.md`: "desktop webcam scan … One implementation, not three" → both mobile contexts, not used by `desktop/`; "Expect a `useQrScanner` hook … consumed by `../desktop/` and `../mobile/`" → they live here, consumed by `../mobile/`.
+- Dashboard README: "the calendar keeps its state and Print prints every view" → "the calendar keeps its state"; added one line on hourly one-day trends and Complaint/Total-only trend-table sorting. (The Report Incident shortcut is the app-wide `Alt + I` in `components/KeyboardShortcuts.tsx`, not a Dashboard element, so it went into the components README.)
+- Components README: added that the Dashboard still passes `printAll` but prints the Clinic Overview Report instead; one line listing the other folders and key shared components (`BackButton`, `Select`, `Combobox`, `MultiSelect`, `DatePicker`, `DateRangePicker`, `DataTable`, `Pagination`, `Modal`, form pickers) and `KeyboardShortcuts` (`Alt + N`, `Alt + I`, `?`).
+- Layouts README: "the desktop app shell … and the mobile layout used by the QR mobile flows" (no such layout exists) → `AppShell` + `Sidebar`/`navigation.ts`, phone menu below `lg` (ADR-022), QR mobile flows render without the shell, Back placed per screen (ADR-024).
+- Hooks README: added `useAsyncData`, `useIdentifiedStudent`, `useDateRangeEntryParams`, `usePrinting`.
+- Lib README: "Utilities, API client setup (Sanctum-aware), constants" (no API client exists) → the real utilities, tokens, and `mock-db/`; no API client or Sanctum yet.
+- `frontend/README.md`: added a "Current state" paragraph (built, mock data, no backend, real commands, setup and accounts pointers); zip-export warning kept unchanged; "its desktop/mobile/shared split" → "its printing/scanning/shared split".
+- `CLINIQ-Knowledge-Base/README.md`: "Lives" row `/mnt/user-data/outputs/` (chat-delivered) → `09-References/Canonical-Documents/` in this repo.
+- Left unchanged after checking: `backend/README.md`, `routes/README.md`, `types/README.md`, `lib/mock-db/README.md` (does not describe report data), and the feature READMEs for audit-log, backup, clinic-visits, emergency-response, inventory, reports, student-records, user-management.
+
+Reason: The READMEs were last synced October 9 and contradicted ADR-023 to ADR-026 and the current code.
+
+Testing Performed:
+- `npm test` (frontend): 77 files, 514 tests passed. `npm run build` (`tsc -b && vite build`): succeeded. `npm ci` and `npm run dev` were not run (dependencies already installed; dev server not needed for a docs change). `git clone` not run.
+- Relative-link check (script over every changed `.md`): 14 files, 43 relative links, 0 broken.
+- Stale-phrase search over every README and `README_ORIGINAL.md` for "desktop and mobile", "desktop **and** mobile", "quick-action hub", "Nothing is scaffolded", "planning & architecture complete" (and its badge URL form), "BOTH desktop", "16 short explanations", "prints every view", "desktop can scan", "not yet scaffolded" outside `backend/`: no matches.
+- Numbers: `ls 06-Decisions` → ADR-001 to ADR-026 (26); `grep -c '^## ' Decisions-Summary.md` → 26; `ls .claude/skills` → 16; ERD "34 tables" (`grep -c '^CREATE TABLE' Reference-Schema.sql` → 34) and 18 open decisions (D-01 to D-18 in ERD section 11), unchanged; `Module-Overview.md` → 11 modules.
+- `npx prettier --check` on the changed frontend READMEs: all pass except `qr-digital-health-id/mobile/README.md`, which also fails on `HEAD` (pre-existing `*after*` vs `_after_`); not changed. The repo-wide `format:check` already reports 261 files, so it is not enforced.
+- `diff AGENTS.md CLAUDE.md`: the only difference is the title line (`# AGENTS.md — Start Here` vs `# CLAUDE.md — Start Here`), as on `HEAD`; neither file was touched.
+
+Known Issues:
+- `03-Design/Screen-Inventory.md` still says "Total: ~37 screens/views" while it lists 39 numbered entries, and screen #23 still reads "Scan/Lookup Hub (Staff, computer or mobile)" against ADR-023. It must stay in sync with Frontend Context Brief Section 4 (a canonical document), so it was left for the canonical sync. Logged as `DOC`.
+- The Dashboard still passes `printAll` to `Tabs`, which no longer has any effect because the ADR-026 printout hides the app. Code change, out of scope. Logged as `LATER`.
+- `setup-step.md` step 6 tells the reader to replace the frontend `dev` script with a `cmd`-only `if exist … git pull …` command, and the root `package.json` `dev` script also runs `git pull origin main`. The READMEs document the plain `npm run dev`. Logged as `NOTE`.
+- Part D not run. Open canonical-drift `DOC` entries: listed in the final report and in Issues-and-TODOs.
+
+Next Steps: Person decides on Part D (canonical sync), including Screen-Inventory/Brief Section 4.

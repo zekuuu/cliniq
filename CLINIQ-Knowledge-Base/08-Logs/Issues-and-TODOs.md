@@ -15,7 +15,7 @@
 
 ## Open work at a glance
 
-Open: FIX 8 · AUDIT 10 · DOC 10 · DECIDE 39 · LATER 15 | Notes: NOTE 22 · VERIFY 5 | Done: 142
+Open: FIX 8 · AUDIT 10 · DOC 11 · DECIDE 39 · LATER 16 | Notes: NOTE 23 · VERIFY 5 | Done: 143
 
 **Open `FIX` items:**
 
@@ -29,9 +29,9 @@ Open: FIX 8 · AUDIT 10 · DOC 10 · DECIDE 39 · LATER 15 | Notes: NOTE 22 · V
 - [ ] **Ctrl+P while a screen is still loading prints its skeleton** (Purpose-built A4 printouts (ADR-026))
 
 - **AUDIT** (10): Free-text complaints and student lookup; Pending excuse letters on the Dashboard and profile; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep; Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026)
-- **DOC** (10): Issues-and-TODOs fix sweep; Groupmate system review; Open FIX and styling DECIDE sweep; QR lookup mobile-only; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026)
+- **DOC** (11): Issues-and-TODOs fix sweep; Groupmate system review; Open FIX and styling DECIDE sweep; QR lookup mobile-only; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); README sync
 - **DECIDE** (39): Open decisions, waiting on someone outside the dev team; Open design questions; Known gaps; QR scan/lookup; Visit and incident entry; Open after the Group B fixes; Open product decisions from the mock-data layer; Free-text complaints and student lookup; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep; Student search on every student field; Groupmate system review; Back navigation (ADR-024); Purpose-built A4 printouts (ADR-026)
-- **LATER** (15): Open decisions, waiting on someone outside the dev team; Known gaps; Open after the Group B fixes; Medicines & supplies given (ADR-018); Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026)
+- **LATER** (16): Open decisions, waiting on someone outside the dev team; Known gaps; Open after the Group B fixes; Medicines & supplies given (ADR-018); Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); README sync
 
 ---
 
@@ -447,6 +447,13 @@ Left by the session that rebuilt every Print / Save as PDF as an A4 document at 
 - [ ] **[LATER]** **Print on other lists, such as the Inventory low-stock and expiry list** (idea only, logged Thursday, October 15, 2026 — 23:04 PHT): not built. Use `cliniq-print-patterns` if the nurse asks for it.
 - **[NOTE]** **Fonts in the PDFs are Type 3** (Thursday, October 15, 2026 — 23:04 PHT): Chromium writes the Inter variable font as embedded Type 3 glyphs (`pdffonts` would show `Type 3`, `emb yes`), so nothing depends on fonts installed on the reading machine; "ñ" renders (checked with a "Gng. Peña" recipient).
 - **[NOTE]** **A Dashboard printout reaches 4 pages only with extreme data** (Thursday, October 15, 2026 — 23:04 PHT): a normal month (Oct 1–15) is 2 pages and All is 2; with 90 added visits, 30 incidents, and 25 extra follow-ups it is 4, because every due follow-up is listed. One page is not reachable for a normal month without dropping required sections.
+
+## README sync — Thursday, October 15, 2026 — 23:42 PHT
+
+- [x] **[DONE]** **READMEs out of date with ADR-021 to ADR-026** (found Thursday, October 15, 2026 — 23:42 PHT): `README.md`, `README_ORIGINAL.md`, and the QR, Dashboard, components, layouts, hooks, lib, `frontend/` and knowledge-base READMEs still described a desktop QR scan hub, "Nothing is scaffolded yet", 16 decision summaries, two skills, "Print prints every view", a mobile layout and a Sanctum API client that do not exist. Resolved Thursday, October 15, 2026 — 23:42 PHT. Evidence: 14 changed files, 43 relative links, 0 broken; stale-phrase search clean; `npm test` 514/514 and `npm run build` passed; `AGENTS.md` and `CLAUDE.md` untouched (they differ only in their title line, as on `HEAD`). Session: [2026-10-15-readme-and-original-sync](Agent-Sessions/2026-10-15-readme-and-original-sync.md)
+- [ ] **[DOC]** **Screen Inventory and Frontend Context Brief Section 4 out of step with ADR-023** (logged Thursday, October 15, 2026 — 23:42 PHT): `03-Design/Screen-Inventory.md` still lists #23 as "Scan/Lookup Hub (Staff, computer or mobile)" and its total line says "~37 screens/views" while it numbers 39 entries. The inventory says "if you edit one, edit both", so fix it with the canonical Brief Section 4, then correct the "approximately 37 screens" in `README.md`. Session: [2026-10-15-readme-and-original-sync](Agent-Sessions/2026-10-15-readme-and-original-sync.md)
+- [ ] **[LATER]** **Remove `printAll` from the Dashboard's `Tabs`** (logged Thursday, October 15, 2026 — 23:42 PHT): since ADR-026 the Dashboard prints the Clinic Overview Report and `index.css` hides the app while it prints, so `printAll` there has no effect. Drop it (and its test, if any) when the Dashboard is next touched; keep the prop on `Tabs`. Session: [2026-10-15-readme-and-original-sync](Agent-Sessions/2026-10-15-readme-and-original-sync.md)
+- **[NOTE]** **Two `dev` scripts pull from Git** (Thursday, October 15, 2026 — 23:42 PHT): the root `package.json` `dev` runs `git pull origin main` before starting the frontend, and `setup-step.md` step 6 tells the reader to replace `frontend/package.json`'s `dev` with a `cmd`-only `if exist … git pull …` command. The READMEs document the plain `npm run dev` from `frontend/`. Session: [2026-10-15-readme-and-original-sync](Agent-Sessions/2026-10-15-readme-and-original-sync.md)
 
 ## Format for new entries
 When you find or resolve something, add it here with a date and enough context that someone with zero memory of the conversation that created it can still act on it.

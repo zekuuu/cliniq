@@ -1,6 +1,6 @@
 # CLINIQ
 
-CLINIQ is an intelligent clinic tracking and monitoring system for Mendez Christian Academy. The Project Plan and related documents in this repository were prepared as working reference material during planning, not as the team's official deliverable. The formal Software Requirements Specification is being written separately; this repository supports that work.
+CLINIQ is an intelligent clinic tracking and monitoring system for Mendez Christian Academy. The Project Plan and related documents in this repository were prepared as working reference material during planning, not as the team's official deliverable. The formal Software Requirements Specification is being written separately; this repository supports that work. Current state: the browser app (frontend) is built and runs on sample (mock) data, the server side (backend) is not built yet, and the database design is a proposed draft awaiting team approval.
 
 For the fuller historical README, see [README_ORIGINAL.md](./README_ORIGINAL.md), which retains the former repository overview, feature list, team information, and implementation-oriented reference links.
 
@@ -28,6 +28,8 @@ This area turns the project scope into required system behavior, quality limits,
 The design area contains the full screen list alongside the design system, reference-screen patterns, a visual audit, and source mockup assets. It explains both which screens exist and the presentation rules that keep their behavior and appearance consistent.
 
 - [Screen Inventory](./CLINIQ-Knowledge-Base/03-Design/Screen-Inventory.md) — the approximately 37 screens and views, organized by module, with each screen's purpose, role access, major behavior, privacy treatment, and print-layout needs.
+- [Design System](./CLINIQ-Knowledge-Base/03-Design/Design-System.md) — the shared visual and interaction rules every screen follows, including privacy display, forms, navigation, Back, and printouts.
+- [Reference Screens](./CLINIQ-Knowledge-Base/03-Design/Reference-Screens.md) — the five reference screens whose patterns the remaining screens reuse.
 
 ## Architecture & Tech Stack
 
@@ -43,9 +45,9 @@ The architecture area explains how the browser app, clinic service, and database
 
 ## Key Decisions
 
-The decisions area holds the accepted records for choices that change system behavior or project direction, from privacy and roles to sessions, navigation, data handling, and the audit-log screen. Each full record explains the reason for the decision and any follow-on effects that the SRS may need to reflect.
+The decisions area holds the accepted records for choices that change system behavior or project direction, from privacy and roles to sessions, navigation, data handling, the audit-log screen, and the newer interface rules. Each full record explains the reason for the decision and any follow-on effects that the SRS may need to reflect.
 
-- [Plain-language decisions summary](./CLINIQ-Knowledge-Base/06-Decisions/Decisions-Summary.md) — 16 short explanations of the distinct accepted decisions, including the current session-lifetime rule from ADR-015 rather than the obsolete duplicate record.
+- [Plain-language decisions summary](./CLINIQ-Knowledge-Base/06-Decisions/Decisions-Summary.md) — 26 short explanations of the accepted decisions (ADR-001 to ADR-026), including the session-lifetime rule (ADR-015), Back navigation, QR scanning on phones only, the Dashboard's separate views, A4 printouts, the unsaved-changes confirmation, and the phone navigation menu.
 
 For the full records and their reasoning, see the CLINIQ-Knowledge-Base/06-Decisions/ folder.
 

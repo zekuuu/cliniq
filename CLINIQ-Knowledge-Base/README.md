@@ -10,6 +10,6 @@ This is the operational reference for building CLINIQ, meant to be opened as an 
 |---|---|---|
 | Authoritative for | Requirements, scope, planning-level decisions | Implementation state, conventions, running history |
 | Changes when | A genuine requirement/scope decision is made | Routine development progresses |
-| Lives | `/mnt/user-data/outputs/` (chat-delivered), and wherever the team keeps them | Inside the Git repo, alongside the code |
+| Lives | `09-References/Canonical-Documents/` in this repo, and wherever the team keeps them | Inside the Git repo, alongside the code |
 
 When something here needs to diverge from a canonical document — a real requirement change, not an implementation detail — the canonical document gets updated too, through the same process used throughout this project (see `06-Decisions/`).

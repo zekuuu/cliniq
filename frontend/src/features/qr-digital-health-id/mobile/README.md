@@ -1,8 +1,8 @@
 # Mobile — QR Digital Health ID
 
-The one genuinely mobile-first part of CLINIQ. Three distinct experiences live here:
+The one genuinely mobile-first part of CLINIQ, and the only place QR scanning happens (ADR-023: the workstation has no scanner hardware). Three distinct experiences live here:
 
-- **Staff mobile hub** — same four actions as desktop, touch-sized, reachable from a phone over the school Wi-Fi.
+- **Staff mobile hub** — four quick actions (Record Visit, Log Emergency, View Full Profile, Dispense Medicine), touch-sized, reachable from a phone over the school Wi-Fi.
 - **Emergency button** — a separate, faster entry point than the hub; jumps straight to Stage-1 incident capture. Speed matters more here than anywhere else in the app.
 - **Instructor lookup** — PE/Sports Instructor's read-only view. No action buttons at all; the absence of actions should be visually obvious, not just disabled-looking buttons.
 
