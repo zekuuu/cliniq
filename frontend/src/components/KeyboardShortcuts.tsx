@@ -6,6 +6,7 @@ import { SHOW_SHORTCUTS_EVENT } from '../lib/shortcuts'
 
 const SHORTCUTS = [
   ['Alt + N', 'Open New Visit'],
+  ['Alt + I', 'Open Report Incident'],
   ['Alt + K', 'Open Student Search'],
   ['Alt + D', 'Open Dashboard'],
   ['Shift + Alt + N', 'Save current visit and prepare another'],
@@ -39,7 +40,7 @@ export function KeyboardShortcuts() {
       }
       if (event.altKey && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
         const key = event.key.toLowerCase()
-        const destination = { n: '/visits/new', k: '/students?focus=search', d: '/' }[key]
+        const destination = { n: '/visits/new', i: '/incidents/new', k: '/students?focus=search', d: '/' }[key]
         if (destination) {
           event.preventDefault()
           navigate(destination)

@@ -55,13 +55,6 @@ function bucketName(bucket: TrendBucket, granularity: TrendGranularity): string 
   return formatDate(bucket.from, { month: 'long', year: 'numeric' })
 }
 
-/** Full period name for the table's sort labels (the accessible name of each period column). */
-function tableBucketName(bucket: TrendBucket, granularity: TrendGranularity): string {
-  return granularity === 'week' || granularity === 'day'
-    ? formatDate(bucket.from)
-    : bucketName(bucket, granularity)
-}
-
 /**
  * Period header without the visible year (the card title shows it once), so period columns stay
  * narrow. The year stays in the header's accessible name as screen-reader-only text. Yearly
@@ -323,7 +316,6 @@ export function TrendTable({ trends }: { trends: Trends }) {
         header: tableBucketHeader(b, trends.granularity),
         align: 'right' as const,
         width: PERIOD_COLUMN_WIDTH,
-        sort: sortColumn(b.key, tableBucketName(b, trends.granularity)),
         cell: (r: ComplaintSeries) =>
           r.clusterBuckets.includes(sourceIndex) ? (
             <span className="inline-flex items-center gap-1 font-semibold">
@@ -348,12 +340,10 @@ export function TrendTable({ trends }: { trends: Trends }) {
   // The table is as wide as its columns, so a long period window overflows into the scroller while
   // fixed layout keeps every column at its calibrated width when rows are hidden or shown.
   const tableMinWidth = `calc(${complaintColumnWidth} + ${visibleBuckets.length} * ${PERIOD_COLUMN_WIDTH} + ${TOTAL_COLUMN_WIDTH})`
-  const sortedRows = sortTableRows(rows, sort, (row, key) => {
-    if (key === 'complaint') return row.complaint
-    if (key === 'total') return row.total
-    const bucketIndex = trends.buckets.findIndex((bucket) => bucket.key === key)
-    return bucketIndex >= 0 ? row.counts[bucketIndex] : null
-  })
+  // Only Complaint and Total sort; period columns read in time order and aren't sortable.
+  const sortedRows = sortTableRows(rows, sort, (row, key) =>
+    key === 'complaint' ? row.complaint : row.total,
+  )
   return (
     <div className="flex flex-col gap-2">
       <button
@@ -554,7 +544,8 @@ export function ComplaintTrends({ trends }: ComplaintTrendsProps) {
   )
 }
 
-const TRENDS_GRID = 'grid grid-cols-1 gap-4 lg:grid-cols-3'
+// `items-start`: each card keeps its own height instead of stretching to the taller one.
+const TRENDS_GRID = 'grid grid-cols-1 items-start gap-4 lg:grid-cols-3'
 
 /**
  * Loading placeholder shaped like the trends row: the line-chart card (real title, toggle bars, a

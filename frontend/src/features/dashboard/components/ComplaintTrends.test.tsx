@@ -185,6 +185,9 @@ describe('TrendTable', () => {
     // The year is screen-reader-only: visible header text is compact, accessible names are full.
     expect(screen.getByRole('columnheader', { name: /Sep 14, 2026/ })).toBeInTheDocument()
     expect(within(table).getByText('Sep 14')).toBeInTheDocument()
+    // Only Complaint and Total sort; period columns have no sort button.
+    expect(within(table).queryByRole('button', { name: /Sort by Sep/ })).not.toBeInTheDocument()
+    expect(within(table).getByRole('button', { name: /^Sort by Complaint/ })).toBeInTheDocument()
     const visibleHeaderText = [...table.querySelectorAll('thead th')]
       .map((th) => {
         const copy = th.cloneNode(true) as HTMLElement

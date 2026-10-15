@@ -28,6 +28,9 @@ describe('KeyboardShortcuts', () => {
 
     fireEvent.keyDown(window, { key: 'n', altKey: true })
     expect(screen.getByTestId('location')).toHaveTextContent('/visits/new')
+
+    fireEvent.keyDown(window, { key: 'i', altKey: true })
+    expect(screen.getByTestId('location')).toHaveTextContent('/incidents/new')
   })
 
   it('dispatches save-and-new only from the visit form', () => {
