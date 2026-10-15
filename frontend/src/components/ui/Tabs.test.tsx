@@ -1,12 +1,12 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
 import { Tabs } from './Tabs'
 
 type V = 'a' | 'b' | 'c'
 
-function Harness({ printAll }: { printAll?: boolean }) {
+function Harness({ printAll, actions }: { printAll?: boolean; actions?: ReactNode }) {
   const [value, setValue] = useState<V>('a')
   return (
     <>
@@ -16,6 +16,7 @@ function Harness({ printAll }: { printAll?: boolean }) {
         value={value}
         onChange={setValue}
         printAll={printAll}
+        actions={actions}
         tabs={[
           { value: 'a', label: 'Alpha', panel: <button type="button">Inside alpha</button> },
           { value: 'b', label: 'Beta', panel: <p>Beta content</p> },
@@ -100,5 +101,22 @@ describe('Tabs', () => {
     for (const panel of screen.getAllByRole('tabpanel', { hidden: true })) {
       expect(panel).toHaveAttribute('data-print-all', 'true')
     }
+  })
+
+  it('puts actions on the tab row after the tabs, hidden in print with printAll', async () => {
+    render(<Harness printAll actions={<button type="button">New thing</button>} />)
+    const action = screen.getByRole('button', { name: 'New thing' })
+    const tablist = screen.getByRole('tablist', { name: 'Views' })
+    expect(action.parentElement).toBe(tablist.parentElement)
+    expect(action.parentElement).toHaveClass('print:hidden')
+    // Tab order: the selected tab, then the action, then the panel.
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Before' }))
+    await user.tab()
+    expect(screen.getByRole('tab', { name: 'Alpha' })).toHaveFocus()
+    await user.tab()
+    expect(action).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('button', { name: 'Inside alpha' })).toHaveFocus()
   })
 })

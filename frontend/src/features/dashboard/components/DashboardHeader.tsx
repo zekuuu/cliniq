@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Button, DateRangePicker } from '../../../components'
 import { formatLongDate } from '../../../lib/dates'
 import { describeRangeDates, type DateRange } from '../../../lib/dateRange'
@@ -23,13 +24,15 @@ export interface DashboardHeaderProps {
    * hide on screen so nobody reads them as filtering the calendar. Print always shows the line.
    */
   showRange?: boolean
+  /** Staff's backup-status indicator, shown above the Date range and Print. */
+  status?: ReactNode
 }
 
 /**
  * Page header, following the reference: title/greeting on the left, and the period selector plus
  * the one page action (Print) on the right. Staff get a greeting in the supporting line; Admin gets
- * the same page title without Staff-specific warmth. The "New Visit" shortcut lives in
- * `StaffShortcuts`, directly under this header.
+ * the same page title without Staff-specific warmth. Staff's backup indicator sits above those
+ * controls; the "New Visit" shortcut sits on the view-tab row below this header.
  */
 export function DashboardHeader({
   viewer,
@@ -40,6 +43,7 @@ export function DashboardHeader({
   onPrint,
   oldestRecordDate,
   showRange = true,
+  status,
 }: DashboardHeaderProps) {
   const isStaff = viewer.role === 'staff'
   return (
@@ -61,18 +65,21 @@ export function DashboardHeader({
           View only
         </p>
       </div>
-      <div className="flex flex-wrap items-center justify-end gap-2 print:hidden">
-        {showRange ? (
-          <DateRangePicker value={range} onChange={onRangeChange} today={today} compact />
-        ) : (
-          // Holds the picker's slot (and height) so the tabs below don't jump when switching views.
-          <p className="flex min-h-10 items-center text-sm text-text-secondary">
-            Date range not used in Calendar
-          </p>
-        )}
-        <Button variant="secondary" icon="printer" onClick={onPrint}>
-          Print / Save as PDF
-        </Button>
+      <div className="ml-auto flex flex-col items-end gap-2 print:hidden">
+        {status}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {showRange ? (
+            <DateRangePicker value={range} onChange={onRangeChange} today={today} compact />
+          ) : (
+            // Holds the picker's slot (and height) so the tabs below don't jump when switching views.
+            <p className="flex min-h-10 items-center text-sm text-text-secondary">
+              Date range not used in Calendar
+            </p>
+          )}
+          <Button variant="secondary" icon="printer" onClick={onPrint}>
+            Print / Save as PDF
+          </Button>
+        </div>
       </div>
     </header>
   )

@@ -18,7 +18,7 @@ import {
 import { ComplaintTrends, ComplaintTrendsSkeleton } from './components/ComplaintTrends'
 import { DashboardHeader } from './components/DashboardHeader'
 import { PendingExcuseLetters } from './components/PendingExcuseLetters'
-import { StaffShortcuts } from './components/StaffShortcuts'
+import { BackupStatusLink, NewVisitLink } from './components/StaffShortcuts'
 import { StatCardRow, StatCardRowSkeleton } from './components/StatCardRow'
 import { VisitCalendar } from './components/VisitCalendar'
 
@@ -38,8 +38,8 @@ function parseDashboardView(value: string | null): DashboardView {
  * with the "New Visit" shortcut and backup-status indicator (Screen #4; ADR-011 amendment). It's
  * view-only for both: no create, update, or delete happens here, so there are no audit-log writes.
  *
- * Header → Staff shortcuts → view tabs (ADR-025): Overview (stat cards, three alert groups, Staff's
- * pending excuse letters), Trends (complaint trends), Calendar. One view shows at a time; the choice
+ * Header (Staff: backup status above Print) → view tabs, with Staff's New Visit on the tab row
+ * (ADR-025): Overview (stat cards, three alert groups, Staff's pending excuse letters), Trends (complaint trends), Calendar. One view shows at a time; the choice
  * lives in `?view=` (replace, so Back is unaffected). Every panel stays mounted, so switching keeps
  * the calendar's state and refetches nothing, and Print prints every view. Each view shows its own
  * shaped skeleton on first load and its own error; later refetches keep the previous render dimmed.
@@ -118,7 +118,9 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   return (
     // Block flow in print: in a flex column, a card pushed to the next page by break-inside-avoid
     // doesn't move the following section down, so the Calendar printed over Common complaints.
-    <div className="mx-auto flex max-w-page-wide flex-col gap-6 px-4 pt-10 pb-8 sm:px-8 print:block print:space-y-6">
+    // Spacing groups by meaning: the header card sits 16px above the tab row (gap-4); the tabs sit
+    // 12px above the panel they switch (gap-3).
+    <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8 print:block print:space-y-6">
       <Card className="p-5">
         <DashboardHeader
           viewer={viewer}
@@ -129,78 +131,80 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           onPrint={() => window.print()}
           oldestRecordDate={data?.oldestRecordDate}
           showRange={view !== 'calendar'}
+          status={viewer.role === 'staff' && <BackupStatusLink />}
         />
       </Card>
 
-      {viewer.role === 'staff' && <StaffShortcuts />}
-
-      <Tabs
-        label="Dashboard view"
-        value={view}
-        onChange={changeView}
-        printAll
-        tabs={[
-          {
-            value: 'overview',
-            label: 'Overview',
-            icon: 'layoutGrid',
-            // Visible from every view, so alerts aren't missed while on Trends or Calendar.
-            badge:
-              alertCount > 0 ? (
+      <div className="flex flex-col gap-3 print:block">
+        <Tabs
+          label="Dashboard view"
+          value={view}
+          onChange={changeView}
+          printAll
+          actions={viewer.role === 'staff' && <NewVisitLink className="self-start md:self-auto" />}
+          tabs={[
+            {
+              value: 'overview',
+              label: 'Overview',
+              icon: 'layoutGrid',
+              // Visible from every view, so alerts aren't missed while on Trends or Calendar.
+              badge:
+                alertCount > 0 ? (
+                  <>
+                    <span
+                      aria-hidden="true"
+                      className="inline-flex shrink-0 items-center gap-0.5 rounded-sm bg-warning px-1.5 text-xs leading-5 font-semibold text-white"
+                    >
+                      <Icon name="alertTriangle" size={12} />
+                      {alertCount}
+                    </span>
+                    <span className="sr-only">{`, ${alertCount} ${alertCount === 1 ? 'alert' : 'alerts'}`}</span>
+                  </>
+                ) : undefined,
+              panel: summaryPanel(
+                'Loading clinic overview…',
                 <>
-                  <span
-                    aria-hidden="true"
-                    className="inline-flex shrink-0 items-center gap-0.5 rounded-sm bg-warning px-1.5 text-xs leading-5 font-semibold text-white"
-                  >
-                    <Icon name="alertTriangle" size={12} />
-                    {alertCount}
-                  </span>
-                  <span className="sr-only">{`, ${alertCount} ${alertCount === 1 ? 'alert' : 'alerts'}`}</span>
-                </>
-              ) : undefined,
-            panel: summaryPanel(
-              'Loading clinic overview…',
-              <>
-                <StatCardRowSkeleton />
-                <AlertListsSkeleton />
-              </>,
-              (d) => (
-                <>
-                  <StatCardRow summary={d} range={range} canNavigate={canNavigate} />
-                  <section aria-label="Alerts" className={ALERT_GRID}>
-                    <FollowUpsAlert summary={d} canNavigate={canNavigate} />
-                    <FrequentVisitorsAlert summary={d} range={range} canNavigate={canNavigate} />
-                    <InventoryAlert summary={d} canNavigate={canNavigate} />
-                  </section>
-                  {viewer.role === 'staff' && <PendingExcuseLetters />}
-                </>
+                  <StatCardRowSkeleton />
+                  <AlertListsSkeleton />
+                </>,
+                (d) => (
+                  <>
+                    <StatCardRow summary={d} range={range} canNavigate={canNavigate} />
+                    <section aria-label="Alerts" className={ALERT_GRID}>
+                      <FollowUpsAlert summary={d} canNavigate={canNavigate} />
+                      <FrequentVisitorsAlert summary={d} range={range} canNavigate={canNavigate} />
+                      <InventoryAlert summary={d} canNavigate={canNavigate} />
+                    </section>
+                    {viewer.role === 'staff' && <PendingExcuseLetters />}
+                  </>
+                ),
               ),
-            ),
-          },
-          {
-            value: 'trends',
-            label: 'Trends',
-            icon: 'activity',
-            panel: summaryPanel('Loading trends…', <ComplaintTrendsSkeleton />, (d) => (
-              <ComplaintTrends trends={d.complaintTrends} />
-            )),
-          },
-          {
-            value: 'calendar',
-            label: 'Calendar',
-            icon: 'calendar',
-            // Separate data source: loads with its own skeleton, and fails/retries on its own.
-            panel: (
-              <VisitCalendar
-                today={today}
-                initialAnchor={range.to}
-                canNavigate={canNavigate}
-                showSkeleton={switching}
-              />
-            ),
-          },
-        ]}
-      />
+            },
+            {
+              value: 'trends',
+              label: 'Trends',
+              icon: 'activity',
+              panel: summaryPanel('Loading trends…', <ComplaintTrendsSkeleton />, (d) => (
+                <ComplaintTrends trends={d.complaintTrends} />
+              )),
+            },
+            {
+              value: 'calendar',
+              label: 'Calendar',
+              icon: 'calendar',
+              // Separate data source: loads with its own skeleton, and fails/retries on its own.
+              panel: (
+                <VisitCalendar
+                  today={today}
+                  initialAnchor={range.to}
+                  canNavigate={canNavigate}
+                  showSkeleton={switching}
+                />
+              ),
+            },
+          ]}
+        />
+      </div>
     </div>
   )
 }

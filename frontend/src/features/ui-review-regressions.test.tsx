@@ -223,15 +223,18 @@ describe('UI/UX review Group B decisions', () => {
 
   it('gives Staff a New Visit shortcut and backup indicator on the Dashboard, and Admin neither', async () => {
     const staff = renderWithRouter(<DashboardPage viewer={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} />)
-    const strip = await screen.findByRole('region', { name: 'Staff shortcuts' })
-    expect(within(strip).getByRole('link', { name: 'New Visit' })).toHaveAttribute('href', '/visits/new')
-    expect(await within(strip).findByText(/^Last backup \w{3} \d{1,2}, \d{4} · \d{1,2}:\d{2} [AP]M$/)).toBeInTheDocument()
-    expect(within(strip).getByRole('link', { name: /backup status/i })).toHaveAttribute('href', '/backup')
+    expect(await screen.findByRole('link', { name: 'New Visit' })).toHaveAttribute('href', '/visits/new')
+    // Header shows the short date ("Oct 14"); the full last-backup date and time stay in the link's name.
+    const backup = await screen.findByRole('link', {
+      name: /^Backup status: .+\. Last backup \w{3} \d{1,2}, \d{4} · \d{1,2}:\d{2} [AP]M\. Open Backup\.$/,
+    })
+    expect(backup).toHaveAttribute('href', '/backup')
+    expect(within(backup).getByText(/^\w{3} \d{1,2}$/)).toBeInTheDocument()
     staff.unmount()
 
     renderWithRouter(<DashboardPage viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }} />)
     await screen.findByRole('heading', { name: 'Clinic Overview' })
-    expect(screen.queryByRole('region', { name: 'Staff shortcuts' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /backup status/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'New Visit' })).not.toBeInTheDocument()
   })
 

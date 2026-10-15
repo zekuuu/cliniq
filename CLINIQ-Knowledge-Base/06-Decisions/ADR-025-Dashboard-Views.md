@@ -59,3 +59,5 @@ This supersedes the October 14 decision to disclose only the yearly day list. Th
 - Links can open a view directly (`/?view=calendar`).
 - The Reports screen's own tabs still use their older markup (`LATER` in Issues-and-TODOs).
 - The canonical Frontend Design Reference (Reference 1 layout) needs the view structure.
+
+**Amendment, Thursday, October 15, 2026 — 20:38 (Zean):** the shared `Tabs` gained an optional `actions` slot on the tab row (right of the tabs from `md` up, above them on narrower screens). The Dashboard uses it for Staff's New Visit; Staff's backup indicator moved into the header above Date range and Print. The view structure, `?view=`, and print behavior are unchanged.

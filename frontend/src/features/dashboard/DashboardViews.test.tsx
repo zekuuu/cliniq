@@ -195,7 +195,8 @@ describe('Clinic Overview Dashboard: views (ADR-025)', () => {
     expect(
       screen.queryByRole('heading', { name: /excuse letters awaiting approval/i }),
     ).not.toBeInTheDocument()
-    expect(screen.queryByRole('region', { name: 'Staff shortcuts' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /backup status/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'New Visit' })).not.toBeInTheDocument()
   })
 
   it('keeps the other views working when the calendar fails', async () => {

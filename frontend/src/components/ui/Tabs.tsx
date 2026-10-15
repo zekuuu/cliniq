@@ -23,6 +23,11 @@ export interface TabsProps<V extends string> {
    * still print and the tablist doesn't (`index.css`, `[role='tabpanel'][hidden]`).
    */
   printAll?: boolean
+  /**
+   * Page actions on the tab row (e.g. Dashboard's New Visit): right of the tabs from `md` up, above
+   * them below `md`, so the tabs always sit directly over their panel.
+   */
+  actions?: ReactNode
   className?: string
 }
 
@@ -38,6 +43,7 @@ export function Tabs<V extends string>({
   value,
   onChange,
   printAll = false,
+  actions,
   className,
 }: TabsProps<V>) {
   const id = useId()
@@ -59,49 +65,65 @@ export function Tabs<V extends string>({
     refs.current[next]?.focus()
   }
 
+  const tablist = (
+    <div
+      role="tablist"
+      aria-label={label}
+      className={cn(
+        // Content-sized tabs sharing the row, so a tab with a badge gets room instead of truncating.
+        'flex gap-1 rounded-md border border-border bg-surface p-1 sm:inline-flex sm:self-start',
+        printAll && 'print:hidden',
+        className,
+      )}
+    >
+      {tabs.map((tab, index) => {
+        const selected = tab.value === value
+        return (
+          <button
+            key={tab.value}
+            ref={(el) => {
+              refs.current[index] = el
+            }}
+            type="button"
+            role="tab"
+            id={tabId(tab.value)}
+            aria-selected={selected}
+            aria-controls={panelId(tab.value)}
+            tabIndex={selected ? 0 : -1}
+            onClick={() => onChange(tab.value)}
+            onKeyDown={(e) => onKeyDown(e, index)}
+            className={cn(
+              'inline-flex h-11 min-w-0 flex-auto cursor-pointer items-center justify-center gap-1.5 rounded-sm px-2 text-sm transition-colors duration-150 motion-reduce:transition-none sm:h-10 sm:min-w-36 sm:px-4',
+              selected
+                ? // Same raised chip as SegmentedControl, one size up; ring + weight carry the state.
+                  'bg-background font-semibold text-brand-green-dark shadow-card ring-1 ring-brand-green hover:bg-surface'
+                : 'font-medium text-text-secondary hover:bg-background hover:text-text-primary',
+            )}
+          >
+            {tab.icon && <Icon name={tab.icon} size={16} className="hidden shrink-0 sm:block" />}
+            <span className="truncate">{tab.label}</span>
+            {tab.badge}
+          </button>
+        )
+      })}
+    </div>
+  )
+
   return (
     <>
-      <div
-        role="tablist"
-        aria-label={label}
-        className={cn(
-          // Content-sized tabs sharing the row, so a tab with a badge gets room instead of truncating.
-          'flex gap-1 rounded-md border border-border bg-surface p-1 sm:inline-flex sm:self-start',
-          printAll && 'print:hidden',
-          className,
-        )}
-      >
-        {tabs.map((tab, index) => {
-          const selected = tab.value === value
-          return (
-            <button
-              key={tab.value}
-              ref={(el) => {
-                refs.current[index] = el
-              }}
-              type="button"
-              role="tab"
-              id={tabId(tab.value)}
-              aria-selected={selected}
-              aria-controls={panelId(tab.value)}
-              tabIndex={selected ? 0 : -1}
-              onClick={() => onChange(tab.value)}
-              onKeyDown={(e) => onKeyDown(e, index)}
-              className={cn(
-                'inline-flex h-11 min-w-0 flex-auto cursor-pointer items-center justify-center gap-1.5 rounded-sm px-2 text-sm transition-colors duration-150 motion-reduce:transition-none sm:h-10 sm:min-w-36 sm:px-4',
-                selected
-                  ? // Same raised chip as SegmentedControl, one size up; ring + weight carry the state.
-                    'bg-background font-semibold text-brand-green-dark shadow-card ring-1 ring-brand-green hover:bg-surface'
-                  : 'font-medium text-text-secondary hover:bg-background hover:text-text-primary',
-              )}
-            >
-              {tab.icon && <Icon name={tab.icon} size={16} className="hidden shrink-0 sm:block" />}
-              <span className="truncate">{tab.label}</span>
-              {tab.badge}
-            </button>
-          )
-        })}
-      </div>
+      {actions ? (
+        <div
+          className={cn(
+            'flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-between',
+            printAll && 'print:hidden',
+          )}
+        >
+          {tablist}
+          {actions}
+        </div>
+      ) : (
+        tablist
+      )}
       {/* Containing block for the hidden panels, which stay laid out at this width (index.css). */}
       <div className="relative print:space-y-6">
         {tabs.map((tab) => (
