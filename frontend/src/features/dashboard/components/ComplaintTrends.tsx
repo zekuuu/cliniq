@@ -42,6 +42,8 @@ import type {
 type ViewMode = 'chart' | 'table'
 
 const MAX_VISIBLE_TABLE_PERIODS = 12
+/** Hover point and tooltip glide time on the trend chart. */
+const HOVER_MS = 320
 const PERIOD_COLUMN_WIDTH = '5rem'
 const TOTAL_COLUMN_WIDTH = '5rem'
 
@@ -196,11 +198,14 @@ function TrendLineChart({ trends, clusters }: { trends: Trends; clusters: Cluste
     maintainAspectRatio: false,
     layout: { padding: { top: 28, right: 8 } },
     animation: prefersReducedMotion ? false : { duration: 280, easing: 'easeOutCubic' },
+    // Hover point and tooltip move slower and ease in and out, so moving across the chart glides.
     animations: prefersReducedMotion
       ? undefined
-      : { radius: { duration: 160, easing: 'easeOutCubic' } },
+      : { radius: { duration: HOVER_MS, easing: 'easeInOutCubic' } },
     transitions: {
-      active: { animation: { duration: prefersReducedMotion ? 0 : 160, easing: 'easeOutCubic' } },
+      active: {
+        animation: { duration: prefersReducedMotion ? 0 : HOVER_MS, easing: 'easeInOutCubic' },
+      },
     },
     interaction: { mode: 'index', axis: 'x', intersect: false },
     scales: {
@@ -225,7 +230,7 @@ function TrendLineChart({ trends, clusters }: { trends: Trends; clusters: Cluste
       tooltip: {
         enabled: false,
         displayColors: false,
-        external: smoothTooltip,
+        external: (context) => smoothTooltip(context, HOVER_MS),
         callbacks: {
           title: (items) => bucketName(trends.buckets[items[0].dataIndex], trends.granularity),
           label: (item) => `${item.parsed.y} visits and incidents`,

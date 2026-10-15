@@ -101,17 +101,17 @@ describe('TrendTable', () => {
     expect(screen.getByRole('radiogroup', { name: 'Show trend as' })).toBeInTheDocument()
   })
 
-  it('uses brief, smooth chart and hover transitions', () => {
+  it('uses smooth chart transitions and a slower, eased hover glide', () => {
     render(<ComplaintTrends trends={trends} />)
 
     const lineProps = lineMock.props as LineProps
     expect(lineProps.options?.animation).toMatchObject({ duration: 280, easing: 'easeOutCubic' })
     expect(lineProps.options?.animations).toMatchObject({
-      radius: { duration: 160, easing: 'easeOutCubic' },
+      radius: { duration: 320, easing: 'easeInOutCubic' },
     })
     expect(lineProps.options?.transitions?.active?.animation).toMatchObject({
-      duration: 160,
-      easing: 'easeOutCubic',
+      duration: 320,
+      easing: 'easeInOutCubic',
     })
     expect(lineProps.options?.plugins?.tooltip).toMatchObject({ enabled: false })
     expect(lineProps.options?.plugins?.tooltip?.external).toEqual(expect.any(Function))
@@ -146,6 +146,7 @@ describe('TrendTable', () => {
 
     expect(staleTooltip).toHaveClass('bg-background', 'text-text-primary')
     expect(staleTooltip).not.toHaveClass('bg-brand-green-dark', 'text-white')
+    expect(staleTooltip.style.transitionDuration).toBe('320ms')
   })
 
   it('does not keep the Visits trend header sticky while the page scrolls', () => {
