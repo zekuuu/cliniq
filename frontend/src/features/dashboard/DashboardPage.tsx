@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router'
 import { Card, ErrorState, Icon, Tabs } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
@@ -24,6 +24,9 @@ import { VisitCalendar } from './components/VisitCalendar'
 
 type DashboardView = 'overview' | 'trends' | 'calendar'
 
+/** How long a view shows its skeleton after a switch, so the change reads as a load, not a jump. */
+const VIEW_SWITCH_SKELETON_MS = 300
+
 /** `?view=` value → view. No parameter or an unknown value opens Overview (ADR-025). */
 function parseDashboardView(value: string | null): DashboardView {
   return value === 'trends' || value === 'calendar' ? value : 'overview'
@@ -48,6 +51,13 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   const [searchParams, setSearchParams] = useSearchParams()
   const view = parseDashboardView(searchParams.get('view'))
   const canNavigate = viewer.role === 'staff'
+  const [switching, setSwitching] = useState(false)
+  useEffect(() => {
+    if (!switching) return
+    // `view` restarts the timer when the user switches again before it ends.
+    const timer = setTimeout(() => setSwitching(false), VIEW_SWITCH_SKELETON_MS)
+    return () => clearTimeout(timer)
+  }, [switching, view])
 
   const { data, status, isRefetching, reload } = useAsyncData(
     // The preset is part of the key: the trend's bucket size depends on it, not only the dates.
@@ -56,6 +66,8 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   )
 
   function changeView(next: DashboardView) {
+    if (next === view) return
+    setSwitching(true)
     setSearchParams(
       (prev) => {
         const params = new URLSearchParams(prev)
@@ -75,7 +87,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   ) {
     if (status === 'error')
       return <ErrorState title="Unable to load the clinic overview." onRetry={reload} />
-    if (status === 'loading' && !data)
+    if ((status === 'loading' && !data) || switching)
       return (
         <>
           <p className="sr-only" role="status">
@@ -138,7 +150,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                 <>
                   <span
                     aria-hidden="true"
-                    className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-warning px-1.5 text-xs leading-5 font-semibold text-white"
+                    className="inline-flex shrink-0 items-center gap-0.5 rounded-sm bg-warning px-1.5 text-xs leading-5 font-semibold text-white"
                   >
                     <Icon name="alertTriangle" size={12} />
                     {alertCount}
@@ -179,7 +191,12 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
             icon: 'calendar',
             // Separate data source: loads with its own skeleton, and fails/retries on its own.
             panel: (
-              <VisitCalendar today={today} initialAnchor={range.to} canNavigate={canNavigate} />
+              <VisitCalendar
+                today={today}
+                initialAnchor={range.to}
+                canNavigate={canNavigate}
+                showSkeleton={switching}
+              />
             ),
           },
         ]}

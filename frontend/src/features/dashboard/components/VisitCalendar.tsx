@@ -759,6 +759,8 @@ export interface VisitCalendarProps {
    * periods. Admin sees the same chips as a static summary (ADR-019).
    */
   canNavigate: boolean
+  /** Shows the period's skeleton instead of the grid, e.g. briefly after a dashboard view switch. */
+  showSkeleton?: boolean
 }
 
 /**
@@ -767,7 +769,12 @@ export interface VisitCalendarProps {
  * incidents shown as yellow chips on each day.
  * It pages through time on its own (Previous / Next / Today) and loads only the visible period.
  */
-export function VisitCalendar({ today, initialAnchor, canNavigate }: VisitCalendarProps) {
+export function VisitCalendar({
+  today,
+  initialAnchor,
+  canNavigate,
+  showSkeleton = false,
+}: VisitCalendarProps) {
   const headingId = useId()
   const [view, setView] = useState<CalendarView>('month')
   const [display, setDisplay] = useState<'calendar' | 'table'>('calendar')
@@ -869,7 +876,7 @@ export function VisitCalendar({ today, initialAnchor, canNavigate }: VisitCalend
 
         {status === 'error' ? (
           <ErrorState title="Unable to load the calendar." onRetry={reload} />
-        ) : status === 'loading' && !data ? (
+        ) : (status === 'loading' && !data) || showSkeleton ? (
           <>
             <p className="sr-only" role="status">
               Loading calendar…

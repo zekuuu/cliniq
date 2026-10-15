@@ -66,7 +66,7 @@ export function Tabs<V extends string>({
         aria-label={label}
         className={cn(
           // Content-sized tabs sharing the row, so a tab with a badge gets room instead of truncating.
-          'flex gap-1 rounded-lg border border-border bg-surface p-1 sm:inline-flex sm:self-start',
+          'flex gap-1 rounded-md border border-border bg-surface p-1 sm:inline-flex sm:self-start',
           printAll && 'print:hidden',
           className,
         )}
@@ -88,7 +88,7 @@ export function Tabs<V extends string>({
               onClick={() => onChange(tab.value)}
               onKeyDown={(e) => onKeyDown(e, index)}
               className={cn(
-                'inline-flex h-11 min-w-0 flex-auto cursor-pointer items-center justify-center gap-1.5 rounded-md px-2 text-sm transition-colors duration-150 motion-reduce:transition-none sm:h-10 sm:min-w-36 sm:px-4',
+                'inline-flex h-11 min-w-0 flex-auto cursor-pointer items-center justify-center gap-1.5 rounded-sm px-2 text-sm transition-colors duration-150 motion-reduce:transition-none sm:h-10 sm:min-w-36 sm:px-4',
                 selected
                   ? // Same raised chip as SegmentedControl, one size up; ring + weight carry the state.
                     'bg-background font-semibold text-brand-green-dark shadow-card ring-1 ring-brand-green hover:bg-surface'

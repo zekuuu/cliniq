@@ -86,13 +86,16 @@ describe('Clinic Overview Dashboard: views (ADR-025)', () => {
     await within(visiblePanel()).findByRole('region', { name: 'Summary counts' })
 
     await user.click(tab('Trends'))
+    // A switch shows the view's own skeleton briefly, then its content.
+    expect(visiblePanel().querySelector('[data-skeleton="complaint-trends"]')).not.toBeNull()
     expect(
-      within(visiblePanel()).getByRole('heading', { name: /visits trend/i }),
+      await within(visiblePanel()).findByRole('heading', { name: /visits trend/i }),
     ).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Summary counts' })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /^calendar$/i })).not.toBeInTheDocument()
 
     await user.click(tab('Calendar'))
+    expect(visiblePanel().querySelector('[data-skeleton^="calendar-"]')).not.toBeNull()
     expect(within(visiblePanel()).getByRole('heading', { name: /^calendar$/i })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /visits trend/i })).not.toBeInTheDocument()
     expect(
@@ -207,7 +210,7 @@ describe('Clinic Overview Dashboard: views (ADR-025)', () => {
     ).toBeInTheDocument()
     await user.click(tab('Trends'))
     expect(
-      within(visiblePanel()).getByRole('heading', { name: /visits trend/i }),
+      await within(visiblePanel()).findByRole('heading', { name: /visits trend/i }),
     ).toBeInTheDocument()
   })
 

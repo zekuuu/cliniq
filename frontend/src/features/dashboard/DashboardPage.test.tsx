@@ -82,7 +82,7 @@ describe('Clinic Overview Dashboard', () => {
     }
     await openView(user, 'Trends')
     for (const name of [/visits trend/i, /common complaints/i]) {
-      expect(screen.getByRole('heading', { name })).toBeInTheDocument()
+      expect(await screen.findByRole('heading', { name })).toBeInTheDocument()
     }
     await openView(user, 'Calendar')
     expect(screen.getByRole('heading', { name: /^calendar$/i })).toBeInTheDocument()
@@ -296,7 +296,7 @@ describe('Clinic Overview Dashboard', () => {
         name: 'Monthly',
       }),
     ).toHaveClass('cursor-pointer')
-    expect(screen.getByText('Fire drill')).toHaveClass('bg-brand-yellow')
+    expect(await screen.findByText('Fire drill')).toHaveClass('bg-brand-yellow')
   })
 
   it('stacks inventory badges only when the alert card is narrow', async () => {
@@ -425,7 +425,7 @@ describe('Clinic Overview Dashboard', () => {
       expect(within(list).getAllByRole('listitem')[0]).not.toHaveClass('cursor-pointer')
     }
     await openView(user, 'Trends')
-    expect(screen.getByRole('heading', { name: /visits trend/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /visits trend/i })).toBeInTheDocument()
     // Admin sees the same event chips, but no day opens and the calendar stops at today.
     await openView(user, 'Calendar')
     expect(screen.queryByRole('button', { name: /open day/i })).not.toBeInTheDocument()
