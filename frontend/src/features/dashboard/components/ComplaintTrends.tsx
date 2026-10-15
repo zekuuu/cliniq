@@ -46,6 +46,7 @@ const PERIOD_COLUMN_WIDTH = '5rem'
 const TOTAL_COLUMN_WIDTH = '5rem'
 
 function bucketName(bucket: TrendBucket, granularity: TrendGranularity): string {
+  if (granularity === 'hour') return bucket.label
   if (granularity === 'day') return formatDate(bucket.from)
   if (granularity === 'week') return `Week of ${formatDate(bucket.from)}`
   if (granularity === 'year') return formatDate(bucket.from, { year: 'numeric' })
@@ -65,7 +66,7 @@ function tableBucketName(bucket: TrendBucket, granularity: TrendGranularity): st
  * periods are years, so they show as-is.
  */
 function tableBucketHeader(bucket: TrendBucket, granularity: TrendGranularity): ReactNode {
-  if (granularity === 'year') return bucketName(bucket, granularity)
+  if (granularity === 'year' || granularity === 'hour') return bucketName(bucket, granularity)
   const year = bucket.from.slice(0, 4)
   return granularity === 'month' ? (
     <>
@@ -80,11 +81,15 @@ function tableBucketHeader(bucket: TrendBucket, granularity: TrendGranularity): 
   )
 }
 
-/** The year(s) the trend covers, e.g. "2026" or "2025–2026"; none for Yearly, whose periods are years. */
+/**
+ * The year(s) the trend covers, e.g. "2026" or "2025–2026"; the full date for Hourly, whose periods
+ * are hours of one day; none for Yearly, whose periods are years.
+ */
 function trendYears(trends: Trends): string | undefined {
   const first = trends.buckets[0]
   const last = trends.buckets.at(-1)
   if (trends.granularity === 'year' || !first || !last) return undefined
+  if (trends.granularity === 'hour') return formatDate(first.from)
   const [from, to] = [first.from.slice(0, 4), last.to.slice(0, 4)]
   return from === to ? from : `${from}–${to}`
 }

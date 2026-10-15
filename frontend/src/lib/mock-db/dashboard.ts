@@ -73,8 +73,16 @@ export function buildDashboardSummary(
     inventoryAlerts: buildInventoryAlerts(state),
     complaintTrends: buildComplaintTrends(
       [
-        ...visitsInRange.map((v) => ({ date: dateOf(v.dateTime), complaint: v.complaint })),
-        ...incidentsInRange.map((i) => ({ date: dateOf(i.time), complaint: i.complaint })),
+        ...visitsInRange.map((v) => ({
+          date: dateOf(v.dateTime),
+          hour: hourOf(v.dateTime),
+          complaint: v.complaint,
+        })),
+        ...incidentsInRange.map((i) => ({
+          date: dateOf(i.time),
+          hour: hourOf(i.time),
+          complaint: i.complaint,
+        })),
       ],
       query.range,
       config,
@@ -168,9 +176,31 @@ export function buildBuckets(
   return buckets
 }
 
+/** Hour of day of a stored timestamp. Timestamps carry the clinic's +08:00 offset, like `dateOf`. */
+const hourOf = (timestamp: string): number => Number(timestamp.slice(11, 13)) || 0
+
+/** PLACEHOLDER school day for hourly trends (7 AM–5 PM), widened to any hour that has a record. */
+const SCHOOL_DAY_HOURS = { first: 7, last: 17 }
+
+/** "7 AM", "12 PM", "5 PM". */
+const hourLabel = (hour: number): string => `${hour % 12 || 12} ${hour < 12 ? 'AM' : 'PM'}`
+
+/** One bucket per hour of `date`, covering the school day plus any hour in `hours`. */
+export function buildHourBuckets(date: ISODate, hours: number[]): TrendBucket[] {
+  const first = Math.min(SCHOOL_DAY_HOURS.first, ...hours)
+  const last = Math.max(SCHOOL_DAY_HOURS.last, ...hours)
+  return Array.from({ length: last - first + 1 }, (_, i) => first + i).map((hour) => ({
+    key: `${date}T${String(hour).padStart(2, '0')}`,
+    label: hourLabel(hour),
+    from: date,
+    to: date,
+    hour,
+  }))
+}
+
 /**
  * The trend's bucket size, derived only from the selected range; there is no manual override.
- * Presets map directly: Today (a single bucket, more a total than a trend), Last 7 days, Last 30
+ * Presets map directly: Today is hourly (as is any single-day Custom range), Last 7 days, Last 30
  * days, and This month are daily; This year is monthly. All and Custom are sized by their actual
  * span so the chart stays readable: All is monthly unless its recorded history passes two years
  * (then yearly); Custom is daily up to a month, weekly up to about four months, monthly up to two
@@ -183,6 +213,7 @@ export function trendGranularityFor(
   const days = rangeLengthDays(window)
   switch (preset) {
     case 'today':
+      return 'hour'
     case 'last7':
     case 'last30':
     case 'thisMonth':
@@ -192,12 +223,12 @@ export function trendGranularityFor(
     case 'all':
       return days <= 2 * 366 ? 'month' : 'year'
     case 'custom':
-      return days <= 31 ? 'day' : days <= 120 ? 'week' : days <= 2 * 366 ? 'month' : 'year'
+      return days <= 1 ? 'hour' : days <= 31 ? 'day' : days <= 120 ? 'week' : days <= 2 * 366 ? 'month' : 'year'
   }
 }
 
 export function buildComplaintTrends(
-  events: Array<{ date: ISODate; complaint: string }>,
+  events: Array<{ date: ISODate; hour?: number; complaint: string }>,
   range: Pick<DateRange, 'preset' | 'from' | 'to'>,
   config: Pick<MockDbConfig, 'clusterMinCount' | 'clusterRatio' | 'topComplaints'>,
 ): ComplaintTrends {
@@ -210,10 +241,15 @@ export function buildComplaintTrends(
       ? events.reduce<ISODate>((earliest, event) => (event.date < earliest ? event.date : earliest), to)
       : from
   const granularity = trendGranularityFor(range.preset, { from: trendFrom, to })
-  const buckets = buildBuckets(trendFrom, to, granularity)
+  const buckets =
+    granularity === 'hour'
+      ? buildHourBuckets(to, events.map((e) => e.hour ?? 0))
+      : buildBuckets(trendFrom, to, granularity)
   const byComplaint = new Map<string, number[]>()
   for (const e of events) {
-    const index = buckets.findIndex((b) => isWithin(e.date, b.from, b.to))
+    const index = buckets.findIndex(
+      (b) => isWithin(e.date, b.from, b.to) && (b.hour === undefined || b.hour === (e.hour ?? 0)),
+    )
     if (index < 0) continue
     const counts = byComplaint.get(e.complaint) ?? new Array<number>(buckets.length).fill(0)
     counts[index] += 1

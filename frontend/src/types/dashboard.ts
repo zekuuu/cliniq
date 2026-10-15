@@ -17,7 +17,7 @@ import type {
  * A dashboard component can't render a name because it never receives one (ADR-004).
  */
 
-export type TrendGranularity = 'day' | 'week' | 'month' | 'year'
+export type TrendGranularity = 'hour' | 'day' | 'week' | 'month' | 'year'
 
 export interface DashboardQuery {
   /** The trend's bucket size is derived from this range (preset and span); nothing else picks it. */
@@ -65,6 +65,8 @@ export interface TrendBucket {
   label: string
   from: ISODate
   to: ISODate
+  /** Hour of day (0–23, Philippine time) for hourly buckets; absent otherwise. */
+  hour?: number
 }
 
 export interface ComplaintSeries {

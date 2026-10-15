@@ -211,7 +211,7 @@ describe('complaint trends', () => {
       const range = rangeForPreset(p, TODAY)
       return trendGranularityFor(range.preset, range)
     }
-    expect(preset('today')).toBe('day')
+    expect(preset('today')).toBe('hour')
     expect(preset('last7')).toBe('day')
     expect(preset('last30')).toBe('day')
     expect(preset('thisMonth')).toBe('day')
@@ -221,10 +221,32 @@ describe('complaint trends', () => {
     expect(trendGranularityFor('all', { from: '2018-01-01', to: TODAY })).toBe('year')
     // Custom follows its actual span.
     const custom = (from: string) => trendGranularityFor('custom', { from, to: TODAY })
+    expect(custom(TODAY)).toBe('hour')
     expect(custom('2026-09-20')).toBe('day')
     expect(custom('2026-07-01')).toBe('week')
     expect(custom('2025-10-01')).toBe('month')
     expect(custom('2022-01-01')).toBe('year')
+  })
+
+  it('buckets a single day by hour over the school day, widened to any recorded hour', () => {
+    const trends = buildComplaintTrends(
+      [
+        { date: TODAY, hour: 9, complaint: 'Headache' },
+        { date: TODAY, hour: 9, complaint: 'Headache' },
+        { date: TODAY, hour: 18, complaint: 'Fever' },
+      ],
+      { preset: 'today', from: TODAY, to: TODAY },
+      CONFIG,
+    )
+    expect(trends.granularity).toBe('hour')
+    expect(trends.buckets.map((b) => b.label)).toEqual([
+      '7 AM', '8 AM', '9 AM', '10 AM', '11 AM', '12 PM',
+      '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM',
+    ])
+    const headache = trends.series.find((s) => s.complaint === 'Headache')
+    expect(headache?.counts[2]).toBe(2)
+    expect(headache?.total).toBe(2)
+    expect(trends.series.find((s) => s.complaint === 'Fever')?.counts.at(-1)).toBe(1)
   })
 
   it('buckets This year by month, with empty months as zeros', () => {
