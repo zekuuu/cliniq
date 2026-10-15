@@ -673,16 +673,16 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     <legend className="px-1 text-sm font-semibold text-text-primary">
                       Parent notification log
                     </legend>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[14rem_minmax(0,1fr)_auto]">
-                      <div>
-                        <p className="mb-1 text-xs font-semibold text-text-primary">Outcome</p>
-                        <SegmentedControl
-                          label="Notification outcome"
-                          value={notificationOutcome}
-                          onChange={setNotificationOutcome}
-                          options={notificationOutcomes}
-                        />
-                      </div>
+                    <div className="mb-3">
+                      <p className="mb-1 text-xs font-semibold text-text-primary">Outcome</p>
+                      <SegmentedControl
+                        label="Notification outcome"
+                        value={notificationOutcome}
+                        onChange={setNotificationOutcome}
+                        options={notificationOutcomes}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
                       <Input
                         label="Attempt note"
                         value={notificationDetail}
