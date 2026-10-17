@@ -1,12 +1,14 @@
 import {
   BarController,
   BarElement,
+  ArcElement,
   CategoryScale,
   Chart,
   Filler,
   LinearScale,
   LineController,
   LineElement,
+  Legend,
   PointElement,
   Tooltip,
 } from 'chart.js'
@@ -18,9 +20,11 @@ import {
 Chart.register(
   BarController,
   BarElement,
+  ArcElement,
   LineController,
   LineElement,
   PointElement,
+  Legend,
   Filler,
   CategoryScale,
   LinearScale,

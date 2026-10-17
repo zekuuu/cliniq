@@ -7,6 +7,7 @@ import { todayISO } from '../../lib/dates'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { rangeForPreset, type DateRange } from '../../lib/dateRange'
 import type { DashboardSummary } from '../../types/dashboard'
+import type { StudentSex } from '../../types/entities'
 import {
   fetchDashboardSummary,
   fetchPendingExcuseLetters,
@@ -37,6 +38,10 @@ function parseDashboardView(value: string | null): DashboardView {
   return value === 'trends' || value === 'calendar' ? value : 'overview'
 }
 
+function parseSex(value: string | null): StudentSex | null {
+  return value === 'female' || value === 'male' ? value : null
+}
+
 /**
  * Clinic Overview Dashboard (Screen Inventory #31, Reference 1, Module 9).
  * Staff and Admin/Principal see the same layout, except the header greeting and a Staff-only strip
@@ -56,6 +61,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   const [range, setRange] = useState<DateRange>(() => rangeForPreset('thisMonth', today))
   const [searchParams, setSearchParams] = useSearchParams()
   const view = parseDashboardView(searchParams.get('view'))
+  const demographicFilters = { sex: parseSex(searchParams.get('sex')), gradeLevel: searchParams.get('grade') || null }
   const canNavigate = viewer.role === 'staff'
   const [switching, setSwitching] = useState(false)
   useEffect(() => {
@@ -67,8 +73,8 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
 
   const { data, status, isRefetching, reload } = useAsyncData(
     // The preset is part of the key: the trend's bucket size depends on it, not only the dates.
-    `${range.preset}|${range.from}|${range.to}`,
-    () => fetchDashboardSummary({ range }),
+    `${range.preset}|${range.from}|${range.to}|${demographicFilters.sex ?? ''}|${demographicFilters.gradeLevel ?? ''}`,
+    () => fetchDashboardSummary({ range, ...demographicFilters }),
   )
   // For the Overview list and the printout; Admin/Principal can't open excuse letters.
   const letters = useAsyncData(`dashboard-pending-excuse-letters|${viewer.role}`, () =>
@@ -91,6 +97,17 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
       },
       { replace: true },
     )
+  }
+
+  function changeDemographicFilters(next: typeof demographicFilters) {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev)
+      if (next.sex) params.set('sex', next.sex)
+      else params.delete('sex')
+      if (next.gradeLevel) params.set('grade', next.gradeLevel)
+      else params.delete('grade')
+      return params
+    }, { replace: true })
   }
 
   /** The summary request's states, shared by Overview and Trends (one request feeds both). */
@@ -199,7 +216,10 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
               label: 'Trends',
               icon: 'activity',
               panel: summaryPanel('Loading trends…', <ComplaintTrendsSkeleton />, (d) => (
-                <ComplaintTrends trends={d.complaintTrends} />
+                <>
+                  {(demographicFilters.sex || demographicFilters.gradeLevel) && <p role="status" className="w-fit rounded-full bg-surface px-3 py-1 text-sm font-semibold text-text-primary">Filtered: {[demographicFilters.sex === 'female' ? 'Female' : demographicFilters.sex === 'male' ? 'Male' : null, demographicFilters.gradeLevel].filter(Boolean).join(' × ')} <button type="button" className="ml-1 cursor-pointer underline" onClick={() => changeDemographicFilters({ sex: null, gradeLevel: null })}>Clear</button></p>}
+                  <ComplaintTrends trends={d.complaintTrends} demographics={d.demographics} filters={demographicFilters} onFiltersChange={changeDemographicFilters} />
+                </>
               )),
             },
             {

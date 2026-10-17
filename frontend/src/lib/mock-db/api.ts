@@ -494,7 +494,7 @@ export function getNextStudentNumber(): Promise<StudentNumber> {
 
 export type StudentInput = Pick<
   Student,
-  'fullName' | 'gradeLevel' | 'contactInfo' | 'allergies' | 'medicalConditions' | 'emergencyContact'
+  'fullName' | 'gradeLevel' | 'sex' | 'contactInfo' | 'allergies' | 'medicalConditions' | 'emergencyContact'
 >
 
 export interface DuplicateMatch {
@@ -528,6 +528,7 @@ export function saveStudent(
     const fields = {
       fullName: input.fullName.trim(),
       gradeLevel: input.gradeLevel,
+      sex: input.sex,
       contactInfo: input.contactInfo.trim(),
       allergies: input.allergies,
       medicalConditions: input.medicalConditions,

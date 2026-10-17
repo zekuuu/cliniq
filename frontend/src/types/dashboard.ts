@@ -6,6 +6,7 @@ import type {
   ISODateTime,
   InventoryItem,
   StudentListRef,
+  StudentSex,
 } from './entities'
 
 /**
@@ -22,6 +23,22 @@ export type TrendGranularity = 'hour' | 'day' | 'week' | 'month' | 'year'
 export interface DashboardQuery {
   /** The trend's bucket size is derived from this range (preset and span); nothing else picks it. */
   range: DateRange
+  /** Trends-only demographic filters; Overview counts deliberately ignore them. */
+  sex?: StudentSex | null
+  gradeLevel?: string | null
+}
+
+export interface DemographicCount {
+  key: string
+  label: string
+  count: number
+  share: number
+}
+
+/** Aggregate visit/incident counts for the interactive Trends demographic controls. */
+export interface DemographicAnalysis {
+  sex: DemographicCount[]
+  gradeLevel: DemographicCount[]
 }
 
 export interface DashboardCounts {
@@ -134,6 +151,7 @@ export interface DashboardSummary {
   frequentVisitorMinVisits: number
   inventoryAlerts: InventoryAlertRow[]
   complaintTrends: ComplaintTrends
+  demographics: DemographicAnalysis
 }
 
 /** A Staff-maintained school event, as the calendar shows it (ADR-019). */

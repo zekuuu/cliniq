@@ -12,6 +12,8 @@ describe('Student Profile', () => {
     expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(/\w+ \w+/)
     expect(screen.getAllByText(/\d{4}-\d{5}/).length).toBeGreaterThan(0)
     expect(screen.getByRole('heading', { name: 'Overview' })).toBeInTheDocument()
+    expect(screen.getByText('Sex')).toBeInTheDocument()
+    expect(screen.getByText(/Female|Male/)).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Medical History' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Visit History' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Incident History' })).toBeInTheDocument()

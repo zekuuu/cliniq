@@ -1,7 +1,7 @@
 import '../../../components/charts/chartSetup'
 import type { Chart, ChartOptions, Plugin, ScriptableContext } from 'chart.js'
 import { useId, useMemo, useState, type ReactNode } from 'react'
-import { Bar, Line } from 'react-chartjs-2'
+import { Bar, Doughnut, Line } from 'react-chartjs-2'
 import {
   Card,
   CARD_SURFACE,
@@ -24,6 +24,7 @@ import { smoothTooltip } from '../../../components/charts/smoothTooltip'
 import type {
   ComplaintSeries,
   ComplaintTrends as Trends,
+  DemographicAnalysis,
   TrendBucket,
   TrendGranularity,
   WeekdayComparison,
@@ -620,14 +621,62 @@ function CommonComplaintsCard({ trends, clusters }: { trends: Trends; clusters: 
 
 export interface ComplaintTrendsProps {
   trends: Trends
+  demographics?: DemographicAnalysis
+  filters?: { sex: 'female' | 'male' | null; gradeLevel: string | null }
+  onFiltersChange?: (filters: { sex: 'female' | 'male' | null; gradeLevel: string | null }) => void
 }
 
-export function ComplaintTrends({ trends }: ComplaintTrendsProps) {
+function percent(value: number) {
+  return `${Math.round(value * 100)}%`
+}
+
+function DemographicCharts({
+  demographics,
+  filters,
+  onFiltersChange,
+}: Required<Pick<ComplaintTrendsProps, 'demographics' | 'filters' | 'onFiltersChange'>>) {
+  const sexColors = ['#475569', '#7c3aed']
+  return (
+    <section aria-label="Demographic analysis" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <Card>
+        <CardHeader title="Visits by Sex" description="Visits and incidents in the selected period; aggregated only." icon={<Icon name="barChart" />} />
+        <CardBody className="flex flex-col gap-3">
+          <div className="h-56"><Doughnut data={{ labels: demographics.sex.map((row) => row.label), datasets: [{ data: demographics.sex.map((row) => row.count), backgroundColor: sexColors, borderColor: colorToken('background'), borderWidth: 2 }] }} options={{ plugins: { legend: { display: true, position: 'bottom' } } }} aria-label="Visits and incidents by Sex" role="img" /></div>
+          <div className="grid grid-cols-2 gap-2">
+            {demographics.sex.map((row) => (
+              <button key={row.key} type="button" aria-pressed={filters.sex === row.key} onClick={() => onFiltersChange({ ...filters, sex: filters.sex === row.key ? null : row.key as 'female' | 'male' })} className="cursor-pointer rounded-md border border-border px-3 py-2 text-left text-sm transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green">
+                <span className="block font-semibold text-text-primary">{row.label}</span><span className="text-text-secondary">{row.count} · {percent(row.share)}</span>
+              </button>
+            ))}
+          </div>
+        </CardBody>
+      </Card>
+      <Card>
+        <CardHeader title="Visits by grade level" description="Visits and incidents in the selected period; aggregated only." icon={<Icon name="barChart" />} />
+        <CardBody className="flex flex-col gap-3">
+          <div className="h-56"><Bar data={{ labels: demographics.gradeLevel.map((row) => row.label), datasets: [{ label: 'Visits and incidents', data: demographics.gradeLevel.map((row) => row.count), backgroundColor: '#64748b', borderRadius: 3 }] }} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }} aria-label="Visits and incidents by grade level" role="img" /></div>
+          <div className="flex flex-wrap gap-2">
+            {demographics.gradeLevel.map((row) => (
+              <button key={row.key} type="button" aria-pressed={filters.gradeLevel === row.key} onClick={() => onFiltersChange({ ...filters, gradeLevel: filters.gradeLevel === row.key ? null : row.key })} className="cursor-pointer rounded-md border border-border px-3 py-2 text-left text-sm transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green">
+                <span className="font-semibold text-text-primary">{row.label}</span><span className="ml-1 text-text-secondary">{row.count} · {percent(row.share)}</span>
+              </button>
+            ))}
+          </div>
+        </CardBody>
+      </Card>
+    </section>
+  )
+}
+
+export function ComplaintTrends({ trends, demographics, filters, onFiltersChange }: ComplaintTrendsProps) {
   const clusters = useMemo(() => findClusters(trends), [trends])
   return (
-    <section aria-label="Trends" className={TRENDS_GRID}>
-      <VisitsTrendCard trends={trends} clusters={clusters} />
-      <CommonComplaintsCard trends={trends} clusters={clusters} />
+    <section aria-label="Trends" className="flex flex-col gap-4">
+      {demographics && filters && onFiltersChange && <DemographicCharts demographics={demographics} filters={filters} onFiltersChange={onFiltersChange} />}
+      <div className={TRENDS_GRID}>
+        <VisitsTrendCard trends={trends} clusters={clusters} />
+        <CommonComplaintsCard trends={trends} clusters={clusters} />
+      </div>
     </section>
   )
 }

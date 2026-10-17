@@ -103,18 +103,19 @@ describe('New Visit', () => {
     expect((await getSavedVisit()).complaint).toBe('Nose bleed')
   })
 
-  it('clears and keeps focus in the Complaint input when Other is selected', async () => {
+  it('moves typed Complaint text into a focused Other field when Other is selected', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
 
     await screen.findByRole('heading', { name: 'New Visit' })
     const complaint = complaintField()
-    await user.type(complaint, 'Headache')
+    await user.type(complaint, 'Noise-related discomfort')
     await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
 
     expect(complaint).toHaveValue('')
-    expect(complaint).toHaveFocus()
-    await user.type(complaint, 'Noise-related discomfort')
+    const otherComplaint = screen.getByLabelText(/specify other complaint/i)
+    expect(otherComplaint).toHaveValue('Noise-related discomfort')
+    expect(otherComplaint).toHaveFocus()
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
     expect((await getSavedVisit()).complaint).toBe('Noise-related discomfort')
   })

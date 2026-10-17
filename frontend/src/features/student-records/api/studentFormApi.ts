@@ -7,7 +7,7 @@ import {
   type DuplicateMatch,
   type SessionUser,
 } from '../../../lib/mock-db'
-import type { Student, StudentNumber } from '../../../types/entities'
+import type { Student, StudentNumber, StudentSex } from '../../../types/entities'
 
 export type { DuplicateMatch }
 export type StudentFormMode = 'add' | 'edit'
@@ -15,6 +15,7 @@ export type StudentFormMode = 'add' | 'edit'
 export interface StudentFormValues {
   fullName: string
   gradeLevel: string
+  sex: StudentSex | ''
   contactInfo: string
   emergencyContactName: string
   emergencyContactRelationship: string
@@ -61,6 +62,7 @@ export async function submitStudentForm(
     {
       fullName: values.fullName,
       gradeLevel: values.gradeLevel,
+      sex: values.sex as StudentSex,
       contactInfo: values.contactInfo,
       allergies: parseList(values.allergies),
       medicalConditions: parseList(values.medicalConditions),

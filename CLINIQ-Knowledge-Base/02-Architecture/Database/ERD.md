@@ -163,6 +163,7 @@ erDiagram
         char student_number UK "YYYY-NNNNN, immutable"
         varchar full_name
         bigint grade_level_id FK "nullable until complete"
+        varchar sex "female or male; required when complete (ADR-031)"
         varchar contact_number
         datetime health_reviewed_at "OPEN D-03"
         datetime archived_at "starts 5-year clock"
@@ -779,6 +780,7 @@ Each has a recommended default so the design stands either way. "Cost to change 
 | **D-17** | Do vitals live in readings rows or as columns on `incidents`? | Readings rows (keeps the Stage 1 reading and allows rechecks); the API still presents one merged `vitals` object. | Expensive to flip later. |
 | **D-18** | Does a PE referral create a visit or incident automatically? The Brief says it "links into the same visit/treatment flow". | Keep it standalone with optional links (columns present). | Cheap. |
 | **D-19** | Should inventory use an `inventory_batches` table (item, received date, nullable expiration date, quantity) and record batch allocations for dispense, edit-return and disposal? | **Open:** the frontend mock now proves this flow under ADR-030; add no migration or draft-table change until the team approves the ERD. | Moderate: determines stock ledger and treatment-line foreign keys. |
+| **D-20** | Should `students.sex` be a constrained column and required when a student record is complete? | **Proposed:** yes; `female` or `male` as recorded by the school (ADR-031). The draft has no migration approval yet. | Moderate: changes imports and completed-record validation. |
 
 ---
 

@@ -14,6 +14,7 @@ import type {
   Report,
   Student,
   StudentNumber,
+  StudentSex,
   User,
   UserRole,
   Visit,
@@ -38,7 +39,8 @@ type Replace<T, R> = Omit<T, keyof R> & R
 
 export type SeedUser = Replace<User, { lastLogin: RelativeDateTime | null }>
 
-export type SeedStudent = Omit<Student, 'recordComplete'>
+/** Old mock JSON did not hold Sex; `resolveSeed` assigns a deterministic synthetic value on load. */
+export type SeedStudent = Omit<Student, 'recordComplete' | 'sex'> & { sex?: StudentSex }
 
 export type SeedVisit = Omit<
   Replace<Visit, { dateTime: RelativeDateTime; excuseLetterDraft: ExcuseLetterDraft<RelativeDate> | null }>,

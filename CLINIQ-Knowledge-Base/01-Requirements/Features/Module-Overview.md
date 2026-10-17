@@ -50,6 +50,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 
 **Student Information Encoding**
 - Add new student record — *Staff*
+- Record the required **Sex** recorded by the school (Female or Male). Show it on the deliberate single-student profile and Student Health Record; audit changes by field name only, never the value.
 - Auto-generate the student's Student Number in `YYYY-NNNNN` format (enrollment year + zero-padded 5-digit sequence, e.g. `2026-00001`) — system-assigned, not manually entered; sequence resets each enrollment year, giving up to 99,999 new enrollees of headroom per year against the school's ~900-student population, so the format scales well past 20 years. This same number is embedded in the student's QR code (Module 6) and is the default label on visit/incident list and dashboard views, per the display-privacy rule above
 - Edit student record — *Staff*
 - View student profile/detail — *Staff (full); PE/Sports Instructor (read-only)*
@@ -75,7 +76,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - Confirm or cancel when a duplicate warning appears
 
 **Incomplete Record Handling**
-- Auto-flag records missing required fields (full name, grade level, emergency contact, allergies, conditions)
+- Auto-flag records missing required fields (full name, grade level, sex, emergency contact, allergies, conditions)
 - View the incomplete-records review queue (feeds the expanded Dashboard, Module 9)
 - Resolve/complete a flagged record
 - Log which staff member resolved each flag
@@ -250,6 +251,7 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 - View pending/incomplete records (pulled from the Student Records review queue, Module 2)
 - *Staff only:* excuse letters awaiting approval (Module 3), by Student Number, each linking to its letter; hidden when there are none. Navigation only, so the dashboard stays view-only (ADR-011)
 - View common-complaint aggregation by week/month
+- View aggregate-only Sex and grade-level Trend counts. Selecting either dimension filters only the Trend charts and complaint/weekday statistics; no student name appears and the Overview totals stay unfiltered. A production minimum-group-size rule remains open.
 - View symptom-clustering alerts (possible outbreak early warning)
 - View frequent-visitor flags, shown by **Student Number** per the display-privacy rule, not full name — **a warning only**, never a diagnosis or suggested action; it exists to help the nurse decide what to do next, not to decide for her
 - **Due/upcoming follow-ups** (Module 3/4's Follow-Up Handling) — this is the system's internal reminder mechanism, since there's no external SMS/push service; computed fresh on page load by comparing today's date to each follow-up's date, not a background alert

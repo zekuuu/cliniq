@@ -49,7 +49,13 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
       ...u,
       lastLogin: u.lastLogin ? resolveDateTime(u.lastLogin, today) : null,
     })),
-    students: source.students,
+    // Seed records written before Part 3B have no Sex value. This deterministic alternating value
+    // is explicitly synthetic and keeps every loaded mock record valid until real master-list data
+    // replaces it; new/edit forms always require the explicit field.
+    students: source.students.map((student, index) => ({
+      ...student,
+      sex: student.sex ?? (index % 2 === 0 ? 'female' : 'male'),
+    })),
     visits: source.visits.map(({ studentNumber, ...v }) => ({
       ...v,
       studentId: studentId(studentNumber),

@@ -23,6 +23,7 @@ function summary(overrides: Partial<DashboardSummary> = {}): DashboardSummary {
     frequentVisitorMinVisits: 3,
     inventoryAlerts: [],
     complaintTrends: { granularity: 'day', buckets: [], series: [], otherComplaints: [] },
+    demographics: { sex: [], gradeLevel: [] },
     ...overrides,
   }
 }

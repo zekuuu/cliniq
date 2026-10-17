@@ -34,6 +34,7 @@ const student = (id: string, n: string, extra: Partial<SeedStudent> = {}): SeedS
   studentNumber: n,
   fullName: `SECRET NAME ${id}`,
   gradeLevel: 'Grade 5',
+  sex: 'female',
   contactInfo: '0900-000-0000',
   allergies: [],
   medicalConditions: [],
@@ -340,6 +341,27 @@ describe('dashboard summary', () => {
 
   it('never includes a student name anywhere in the payload', () => {
     expect(JSON.stringify(summary)).not.toContain('SECRET NAME')
+  })
+
+  it('returns aggregate demographic counts and applies those filters only to Trends', () => {
+    expect(summary.demographics).toEqual({
+      sex: [
+        { key: 'female', label: 'Female', count: 4, share: 1 },
+        { key: 'male', label: 'Male', count: 0, share: 0 },
+      ],
+      gradeLevel: [{ key: 'Grade 5', label: 'Grade 5', count: 4, share: 1 }],
+    })
+
+    const filtered = buildDashboardSummary(
+      data,
+      { range: rangeForPreset('last7', TODAY), sex: 'male', gradeLevel: null },
+      'now',
+    )
+    expect(filtered.counts).toMatchObject({ visits: 4, activeStudents: 2 })
+    expect(filtered.complaintTrends.series).toEqual([])
+    expect(filtered.demographics.gradeLevel).toEqual([
+      { key: 'Grade 5', label: 'Grade 5', count: 0, share: 0 },
+    ])
   })
 })
 

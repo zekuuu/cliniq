@@ -246,6 +246,7 @@ The student record. The Student Number is the public identifier (QR, lists, URLs
 | `student_number` | `char(10)` | no |  | `YYYY-NNNNN`, unique, IMMUTABLE (the QR code encodes it). CHECK enforces the shape. Generated from `number_sequences`, never by `max()+1`. |
 | `full_name` | `varchar(150)` | no |  | Required and non-blank. Single field for now; splitting into last/first/middle waits for the registrar file format (D-15). Accent- and case-insensitive matching comes from the collation. |
 | `grade_level_id` | `bigint unsigned` | yes | NULL | Nullable on purpose: an imported record may lack it and is then flagged "incomplete". Never nullable for a completed record (rule in the app). |
+| `sex` | `varchar(6)` | yes | NULL | `female` or `male`, as recorded by the school. Required for a completed record (ADR-031); nullable during an incomplete import. |
 | `contact_number` | `varchar(60)` | yes | NULL | Nullable for the same reason. "Student contact information" in the requirements. |
 | `health_reviewed_at` | `datetime` | yes | NULL | OPEN (D-03). Lets "no allergies recorded" mean "asked and none" instead of "never asked". Unused until the team decides. |
 | `health_reviewed_by_user_id` | `bigint unsigned` | yes | NULL |  |
@@ -268,6 +269,7 @@ The student record. The Student Number is the public identifier (QR, lists, URLs
 - `chk_students_archive_reason`: `archive_reason is null or archive_reason in ('transferred','graduated','other')`
 - `chk_students_name`: `char_length(trim(full_name)) >= 1`
 - `chk_students_number`: `student_number regexp '^[0-9]{4}-[0-9]{5}$'`
+- `chk_students_sex`: `sex is null or sex in ('female','male')`
 
 ## student_health_entries
 

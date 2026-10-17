@@ -71,8 +71,8 @@ function loadSaved(): Saved | null {
   }
 }
 
-/** Migrates persisted pre-batch mock state without losing its quantity or expiry date. */
-function migrateInventoryBatches(saved: Saved): Saved {
+/** Migrates persisted mock state without losing legacy inventory or newly-required Sex data. */
+function migratePersistedState(saved: Saved): Saved {
   for (const item of saved.state.inventoryItems as unknown as Array<Record<string, unknown>>) {
     if (Array.isArray(item.batches)) continue
     const currentStock = typeof item.currentStock === 'number' ? item.currentStock : 0
@@ -80,6 +80,10 @@ function migrateInventoryBatches(saved: Saved): Saved {
     item.batches = [{ id: `${String(item.id)}-batch-0001`, quantity: currentStock, expirationDate, receivedDate: saved.state.today }]
     delete item.currentStock
     delete item.expirationDate
+  }
+  for (const [index, student] of (saved.state.students as unknown as Array<Record<string, unknown>>).entries()) {
+    if (student.sex === 'male' || student.sex === 'female') continue
+    student.sex = index % 2 === 0 ? 'female' : 'male'
   }
   return saved
 }
@@ -129,7 +133,7 @@ export function db(): DbState {
   if (!state) {
     const saved = todayOverride ? null : loadSaved()
     if (saved) {
-      const migrated = migrateInventoryBatches(saved)
+      const migrated = migratePersistedState(saved)
       state = migrated.state
       // A copy saved before calendar events existed has no collection for them.
       state.frontendOnly.calendarEvents ??= []

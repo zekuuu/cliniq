@@ -121,3 +121,7 @@ Because CLINIQ runs locally, the PE instructor gets no account: they ask the cli
 ## 030 Inventory batches and explicit expired-stock disposal
 
 Inventory tracks each received batch rather than replacing one item's expiry date at restock. Usable, expired, and total quantities are derived from batches; expired units stay visible until Staff records a disposal against that batch. Dispensing uses the earliest non-expired batch first, and visit edits return stock to the same batches.
+
+## 031 Student Sex and aggregate demographic Trends
+
+Student Sex is required as recorded by the school (Female or Male). It is available only in the single-student record and aggregate-only Trends; chart filters never change Overview totals or expose student names. The team must still choose a minimum safe group size before production reporting.

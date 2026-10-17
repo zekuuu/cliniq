@@ -14,7 +14,7 @@ vi.mock('react-chartjs-2', () => {
   const Stub = (props: { 'aria-label'?: string }) => (
     <div role="img" aria-label={props['aria-label']} />
   )
-  return { Bar: Stub, Line: Stub }
+  return { Bar: Stub, Doughnut: Stub, Line: Stub }
 })
 
 async function renderLoaded({

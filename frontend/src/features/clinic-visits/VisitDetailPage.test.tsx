@@ -66,7 +66,7 @@ describe('Visit Details', () => {
     expect((await getVisit('visit-0158')).complaint).toBe('Headache')
   })
 
-  it('uses Other to replace a visit complaint with focused free text', async () => {
+  it('uses Other to reveal a focused field holding the existing complaint text', async () => {
     const user = userEvent.setup()
     renderWithRouter(<VisitDetailPage visitId="visit-0158" />)
 
@@ -76,12 +76,13 @@ describe('Visit Details', () => {
     await user.click(complaint)
     await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
     expect(complaint).toHaveValue('')
-    expect(complaint).toHaveFocus()
-    await user.type(complaint, 'Noise-related discomfort')
+    const otherComplaint = screen.getByLabelText(/specify other complaint/i)
+    expect(otherComplaint).toHaveValue('Stomachache')
+    expect(otherComplaint).toHaveFocus()
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
     expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
-    expect((await getVisit('visit-0158')).complaint).toBe('Noise-related discomfort')
+    expect((await getVisit('visit-0158')).complaint).toBe('Stomachache')
   })
 
   it('updates the visit and writes an audit entry', async () => {

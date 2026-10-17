@@ -11,6 +11,8 @@ export type ISODate = string
 export type ISODateTime = string
 /** `YYYY-NNNNN` (enrollment year + zero-padded sequence). System-generated; see ADR-005. */
 export type StudentNumber = string
+/** Sex as recorded by the school; the agreed field is deliberately not a free-text identity question. */
+export type StudentSex = 'male' | 'female'
 
 export interface EmergencyContact {
   name: string
@@ -26,6 +28,7 @@ export interface Student {
   studentNumber: StudentNumber
   fullName: string
   gradeLevel: string
+  sex: StudentSex
   contactInfo: string
   allergies: string[]
   medicalConditions: string[]

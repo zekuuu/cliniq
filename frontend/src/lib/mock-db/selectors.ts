@@ -188,6 +188,7 @@ export function missingRequiredFields(student: SeedStudent): string[] {
   const missing: string[] = []
   if (!student.fullName.trim()) missing.push('Full name')
   if (!student.gradeLevel.trim()) missing.push('Grade level')
+  if (student.sex !== 'male' && student.sex !== 'female') missing.push('Sex')
   if (!student.contactInfo.trim()) missing.push('Student contact information')
   const contact = student.emergencyContact
   if (!contact) missing.push('Emergency contact')
@@ -200,7 +201,7 @@ export function missingRequiredFields(student: SeedStudent): string[] {
 
 /** The §5 `Student` shape, with `recordComplete` derived rather than stored. */
 export function toStudent(student: SeedStudent): Student {
-  return { ...student, recordComplete: missingRequiredFields(student).length === 0 }
+  return { ...student, sex: student.sex ?? 'female', recordComplete: missingRequiredFields(student).length === 0 }
 }
 
 export function toListRef(student: Pick<Student, 'id' | 'studentNumber'>): StudentListRef {

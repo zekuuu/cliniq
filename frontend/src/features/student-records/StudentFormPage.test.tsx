@@ -14,6 +14,7 @@ async function fillRequiredStudentFields() {
   const user = userEvent.setup()
   await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
   await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
+  await selectOption(user, screen.getByLabelText(/^sex/i), 'Female')
   await user.type(screen.getByLabelText(/student contact information/i), '09XX-111-2222')
   await user.type(screen.getByLabelText(/contact name/i), 'Marisol Santos')
   await user.type(screen.getByLabelText(/relationship/i), 'Mother')
@@ -45,6 +46,7 @@ describe('Student Form', () => {
 
     expect(screen.getByText('Enter the student full name.')).toBeInTheDocument()
     expect(screen.getByText('Select the grade level.')).toBeInTheDocument()
+    expect(screen.getByText('Select the sex recorded by the school.')).toBeInTheDocument()
     expect(screen.getByText('Enter allergies, or write None.')).toBeInTheDocument()
     expect(screen.getByText('Enter medical conditions, or write None.')).toBeInTheDocument()
   })
@@ -61,6 +63,7 @@ describe('Student Form', () => {
     await screen.findByRole('heading', { name: 'Add Student' })
     await user.type(screen.getByLabelText(/full name/i), existing.fullName)
     await selectOption(user, screen.getByLabelText(/grade level/i), existing.gradeLevel)
+    await selectOption(user, screen.getByLabelText(/^sex/i), 'Female')
     await user.type(screen.getByLabelText(/student contact information/i), '09XX-111-2222')
     await user.type(screen.getByLabelText(/contact name/i), 'Parent Guardian')
     await user.type(screen.getByLabelText(/relationship/i), 'Parent')
@@ -142,6 +145,22 @@ describe('Student Form', () => {
     await user.click(screen.getByRole('button', { name: 'Save Student' }))
 
     expect(screen.getByLabelText(/grade level/i)).toHaveFocus()
-    expect(screen.getByText('7 fields need attention.')).toBeInTheDocument()
+    expect(screen.getByText('8 fields need attention.')).toBeInTheDocument()
+  })
+
+  it('requires Sex and audits an edit to it without storing a value in the audit summary', async () => {
+    const user = userEvent.setup()
+    const [existing] = await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false })
+    renderWithRouter(<StudentFormPage studentNumber={existing.studentNumber} />)
+
+    await screen.findByRole('heading', { name: 'Edit Student' })
+    const sex = screen.getByLabelText(/^sex/i)
+    await user.click(sex)
+    await user.click(screen.getByRole('option', { name: existing.sex === 'female' ? 'Male' : 'Female' }))
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }))
+
+    const entry = getRecordedAuditEntries().at(-1)
+    expect(entry).toMatchObject({ actionType: 'update', targetRecord: { type: 'student', id: existing.id }, summary: 'Updated sex' })
+    expect(entry?.summary).not.toContain(existing.sex)
   })
 })

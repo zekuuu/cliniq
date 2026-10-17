@@ -19,7 +19,7 @@ const FIELDS = {
   top: ['meta', 'config', 'users', 'students', 'visits', 'incidents', 'followUps', 'inventoryItems', 'reports', 'backupLogs', 'auditLog', 'frontendOnly'],
   config: ['_note', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'vitalsWarningRanges'],
   users: ['id', 'name', 'username', 'role', 'lastLogin'],
-  students: ['id', 'studentNumber', 'fullName', 'gradeLevel', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContact', 'archived'],
+  students: ['id', 'studentNumber', 'fullName', 'gradeLevel', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContact', 'archived', 'sex'],
   emergencyContact: ['name', 'relationship', 'phone', 'verified'],
   visits: ['id', 'studentNumber', 'dateTime', 'complaint', 'treatment', 'disposition', 'loggedByUserId', 'eventTag', 'itemsGiven', 'excuseLetterDraft', 'referredTo'],
   excuseLetterDraft: ['excusedFrom', 'excusedUntil', 'note'],
@@ -58,6 +58,7 @@ const ENUMS = {
   backupStatus: ['ok', 'failed'],
   actionType: ['login', 'logout', 'scan', 'submit', 'approve', 'create', 'update', 'delete', 'archive'],
   outcome: ['reached', 'not_reached', 'voicemail', 'left_message'],
+  sex: ['male', 'female'],
   transactionType: ['dispense', 'restock', 'adjustment'],
   adjustmentReason: ['visit_edited', 'expired_disposed', 'damaged_spilled', 'miscount_correction', 'other'],
 } as const
@@ -86,7 +87,9 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
         fail(`${where}: "${key}" is a derived value. Selectors compute it; don't store it in the JSON.`)
       else if (!allowed.includes(key) && !optional.includes(key)) fail(`${where}: unexpected field "${key}"`)
     }
-    for (const key of allowed) if (!key.startsWith('_') && !keys.includes(key)) fail(`${where}: missing field "${key}"`)
+    for (const key of allowed)
+      if (!key.startsWith('_') && !optional.includes(key) && !keys.includes(key))
+        fail(`${where}: missing field "${key}"`)
   }
   const oneOf = (where: string, value: unknown, allowed: readonly unknown[]) => {
     if (!allowed.includes(value)) fail(`${where}: "${String(value)}" is not one of ${allowed.join(', ')}`)
@@ -156,7 +159,8 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   const numbers = new Set<string>()
   list('students').forEach((st, i) => {
     const w = `students[${i}] (${String(st.id)})`
-    checkFields(w, st, FIELDS.students)
+    // Pre-Part 3B seed exports omit Sex; `resolveSeed` supplies a clearly synthetic migration value.
+    checkFields(w, st, FIELDS.students, ['sex'])
     const number = String(st.studentNumber)
     if (!STUDENT_NUMBER.test(number)) fail(`${w}.studentNumber: "${number}" isn't YYYY-NNNNN (ADR-005)`)
     else if (Number(number.slice(5)) === 0) fail(`${w}.studentNumber: sequence 00000 is invalid`)
@@ -166,6 +170,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
       fail(`${w}: allergies and medicalConditions must be arrays`)
     if (st.emergencyContact !== null) checkFields(`${w}.emergencyContact`, st.emergencyContact, FIELDS.emergencyContact)
     if (typeof st.archived !== 'boolean') fail(`${w}.archived: must be true or false`)
+    if (st.sex !== undefined) oneOf(`${w}.sex`, st.sex, ENUMS.sex)
   })
   const studentRef = (where: string, number: unknown, nullable = false) => {
     if (nullable && number === null) return

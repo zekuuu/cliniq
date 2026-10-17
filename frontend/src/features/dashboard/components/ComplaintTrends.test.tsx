@@ -39,6 +39,7 @@ vi.mock('react-chartjs-2', () => ({
     return <div role="img" aria-label={props['aria-label']} />
   },
   Bar: (props: LineProps) => <div role="img" aria-label={props['aria-label']} />,
+  Doughnut: (props: LineProps) => <div role="img" aria-label={props['aria-label']} />,
 }))
 
 const buckets: TrendBucket[] = Array.from({ length: 14 }, (_, index) => {
@@ -128,6 +129,31 @@ describe('TrendTable', () => {
       expect(screen.queryByRole('radio', { name })).not.toBeInTheDocument()
     }
     expect(screen.getByRole('radiogroup', { name: 'Show trend as' })).toBeInTheDocument()
+  })
+
+  it('offers aggregate Sex and grade-level filters without rendering student identities', async () => {
+    const user = userEvent.setup()
+    const onFiltersChange = vi.fn()
+    render(
+      <ComplaintTrends
+        trends={trends}
+        demographics={{
+          sex: [
+            { key: 'female', label: 'Female', count: 3, share: 0.75 },
+            { key: 'male', label: 'Male', count: 1, share: 0.25 },
+          ],
+          gradeLevel: [{ key: 'Grade 5', label: 'Grade 5', count: 4, share: 1 }],
+        }}
+        filters={{ sex: null, gradeLevel: null }}
+        onFiltersChange={onFiltersChange}
+      />,
+    )
+
+    expect(screen.getByRole('img', { name: /by Sex/i })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /by grade level/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Female.*3.*75%/i })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Male.*1.*25%/i }))
+    expect(onFiltersChange).toHaveBeenCalledWith({ sex: 'male', gradeLevel: null })
   })
 
   it('uses smooth chart transitions and a slower, eased hover glide', () => {

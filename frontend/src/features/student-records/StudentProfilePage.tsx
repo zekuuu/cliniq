@@ -193,6 +193,10 @@ function OverviewCard({ student }: { student: Student }) {
           <p className="text-sm font-semibold text-text-primary">{student.studentNumber}</p>
         </div>
         <div>
+          <p className="text-xs font-semibold text-text-secondary">Sex</p>
+          <p className="text-sm font-semibold text-text-primary">{student.sex === 'female' ? 'Female' : 'Male'}</p>
+        </div>
+        <div>
           <p className="text-xs font-semibold text-text-secondary">Contact info</p>
           <p className="text-sm font-semibold text-text-primary">{student.contactInfo || 'Not recorded'}</p>
         </div>
@@ -390,6 +394,7 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
             { label: 'Full name', value: student.fullName },
             { label: 'Student Number', value: student.studentNumber },
             { label: 'Grade level', value: student.gradeLevel },
+            { label: 'Sex', value: student.sex === 'female' ? 'Female' : 'Male' },
             { label: 'Contact info', value: student.contactInfo || 'Not recorded' },
             {
               label: 'Emergency contact',

@@ -34,6 +34,7 @@ import {
 interface StudentFormErrors {
   fullName?: string
   gradeLevel?: string
+  sex?: string
   contactInfo?: string
   emergencyContactName?: string
   emergencyContactRelationship?: string
@@ -45,6 +46,7 @@ interface StudentFormErrors {
 const EMPTY_VALUES: StudentFormValues = {
   fullName: '',
   gradeLevel: '',
+  sex: '',
   contactInfo: '',
   emergencyContactName: '',
   emergencyContactRelationship: '',
@@ -58,6 +60,7 @@ function valuesFromStudent(student: Student | null): StudentFormValues {
   return {
     fullName: student.fullName,
     gradeLevel: student.gradeLevel,
+    sex: student.sex,
     contactInfo: student.contactInfo,
     emergencyContactName: student.emergencyContact?.name ?? '',
     emergencyContactRelationship: student.emergencyContact?.relationship ?? '',
@@ -139,6 +142,7 @@ function validate(values: StudentFormValues): StudentFormErrors {
   const errors: StudentFormErrors = {}
   if (!values.fullName.trim()) errors.fullName = 'Enter the student full name.'
   if (!values.gradeLevel) errors.gradeLevel = 'Select the grade level.'
+  if (!values.sex) errors.sex = 'Select the sex recorded by the school.'
   if (!values.contactInfo.trim()) errors.contactInfo = 'Enter the student contact information.'
   if (!values.emergencyContactName.trim()) {
     errors.emergencyContactName = 'Enter the emergency contact name.'
@@ -306,6 +310,19 @@ function StudentFormEditor({
                 options={data.gradeLevels.map((grade) => ({ value: grade, label: grade }))}
                 error={errors.gradeLevel}
                 onChange={(value) => setField('gradeLevel', value)}
+              />
+              <Select
+                label="Sex"
+                required
+                size="sm"
+                value={values.sex}
+                placeholder="Select sex"
+                options={[
+                  { value: 'female', label: 'Female' },
+                  { value: 'male', label: 'Male' },
+                ]}
+                error={errors.sex}
+                onChange={(value) => setField('sex', value as StudentFormValues['sex'])}
               />
               <Input
                 label="Student contact information"

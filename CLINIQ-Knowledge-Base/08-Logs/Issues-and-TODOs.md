@@ -15,7 +15,7 @@
 
 ## Open work at a glance
 
-Open: FIX 22 · AUDIT 10 · DOC 25 · DECIDE 73 · LATER 16 | Notes: NOTE 40 · VERIFY 14 | Done: 160
+Open: FIX 21 · AUDIT 10 · DOC 25 · DECIDE 73 · LATER 16 | Notes: NOTE 40 · VERIFY 14 | Done: 162
 
 **Open `FIX` items:**
 
@@ -34,7 +34,6 @@ Open: FIX 22 · AUDIT 10 · DOC 25 · DECIDE 73 · LATER 16 | Notes: NOTE 40 · 
 - [ ] **Dashboard: show only the key summary first, details on click** (Professor consultation and team meeting, October 16)
 - [ ] **Dashboard: move Low stock and expiring items to Inventory, Incomplete records to Students, and the calendar out of the Dashboard** (Professor consultation and team meeting, October 16)
 - [ ] **Dashboard: remove duplicated information** (Professor consultation and team meeting, October 16)
-- [ ] **Add a gender chart and demographic analysis to the trends, with charts that filter each other** (Professor consultation and team meeting, October 16)
 - [ ] **One consistent color language across all screens** (Professor consultation and team meeting, October 16)
 - [ ] **Add a page footer: "All rights reserved", the HealWare logo and the school logo** (Professor consultation and team meeting, October 16)
 - [ ] **Login page: larger logo, logo and name set apart, no wasted width** (Professor consultation and team meeting, October 16)
@@ -545,8 +544,9 @@ Left by the session that rebuilt every Print / Save as PDF as an A4 document at 
 
 **Students and demographics**
 
-- [ ] **[DECIDE]** **Collect gender (sex) in the student record?** (logged Friday, October 16, 2026 — 15:56 PHT). Professor [presentation 00:34:55 to 00:36:22]: the student profile has no gender, so there is no way to build demographics from historical data (her example: dysmenorrhea among girls, probably Grade 5 and 6). Checked: the mock student record has no sex or gender field. Decide whether to collect it, with the Data Privacy Act in mind, whether the school's master list has it, and add it to the ERD draft if yes. Aggregated use only: reports stay free of individual names (ADR-004). Session: [2026-10-16-professor-consultation-feedback](Agent-Sessions/2026-10-16-professor-consultation-feedback.md)
-- [ ] **[FIX]** **Add a gender chart and demographic analysis to the trends, with charts that filter each other** (logged Friday, October 16, 2026 — 15:56 PHT). Professor [presentation 00:36:36 to 00:37:07]: add a pie chart of gender; clicking a segment (for example Female) should adjust the other statistics, and the team should find out whether the charts are connected like that. Also analyse by grade level. Blocked on the gender DECIDE above. Session: [2026-10-16-professor-consultation-feedback](Agent-Sessions/2026-10-16-professor-consultation-feedback.md)
+- [x] **[DONE]** **Collect gender (sex) in the student record?** (logged Friday, October 16, 2026 — 15:56 PHT). Professor [presentation 00:34:55 to 00:36:22]: the student profile has no gender, so there is no way to build demographics from historical data (her example: dysmenorrhea among girls, probably Grade 5 and 6). Checked: the mock student record has no sex or gender field. Decided Saturday, October 17, 2026 — 12:37 PHT: record required Sex (Female/Male) as supplied by the school; profile/print are single-student views and Trends uses aggregates only (ADR-031). Session: [2026-10-17-professor-consultation-part-3b-student-sex-demographics](Agent-Sessions/2026-10-17-professor-consultation-part-3b-student-sex-demographics.md)
+- [x] **[DONE]** **Add a gender chart and demographic analysis to the trends, with charts that filter each other** (logged Friday, October 16, 2026 — 15:56 PHT). Professor [presentation 00:36:36 to 00:37:07]: add a pie chart of gender; clicking a segment (for example Female) should adjust the other statistics, and the team should find out whether the charts are connected like that. Also analyse by grade level. Resolved Saturday, October 17, 2026 — 12:37 PHT: a Sex donut and grade bars expose counts, percentages, textual controls and aggregate-only cross-filters for Trends; Overview totals stay unfiltered and URL state is reloadable. Session: [2026-10-17-professor-consultation-part-3b-student-sex-demographics](Agent-Sessions/2026-10-17-professor-consultation-part-3b-student-sex-demographics.md)
+- [ ] **[DECIDE]** **Set a minimum demographic group size before reporting** (logged Saturday, October 17, 2026 — 12:37 PHT): choose the smallest count that may appear in a Sex/grade Trend group or report, so a small cohort cannot be linked back to a child. The frontend demo uses synthetic migrated values and exposes no names; this decision must be made before backend reporting or production data use. Session: [2026-10-17-professor-consultation-part-3b-student-sex-demographics](Agent-Sessions/2026-10-17-professor-consultation-part-3b-student-sex-demographics.md)
 
 **Look and feel**
 

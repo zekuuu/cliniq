@@ -7,6 +7,7 @@ import type {
   ComplaintTrends,
   DashboardQuery,
   DashboardSummary,
+  DemographicAnalysis,
   DueFollowUpRow,
   InventoryAlertRow,
   TrendBucket,
@@ -43,10 +44,21 @@ export function buildDashboardSummary(
   const { from, to } = query.range
   const visitsInRange = state.visits.filter((v) => isWithin(dateOf(v.dateTime), from, to))
   const incidentsInRange = state.incidents.filter((i) => isWithin(dateOf(i.time), from, to))
+  const students = studentsById(state)
   const trendEvents = [
-    ...state.visits.map((v) => ({ date: dateOf(v.dateTime), hour: hourOf(v.dateTime), complaint: v.complaint, eventTag: v.eventTag })),
-    ...state.incidents.map((i) => ({ date: dateOf(i.time), hour: hourOf(i.time), complaint: i.complaint, eventTag: i.eventTag })),
+    ...state.visits.flatMap((v) => {
+      const student = students.get(v.studentId)
+      return student ? [{ date: dateOf(v.dateTime), hour: hourOf(v.dateTime), complaint: v.complaint, eventTag: v.eventTag, sex: student.sex ?? 'female', gradeLevel: student.gradeLevel }] : []
+    }),
+    ...state.incidents.flatMap((i) => {
+      const student = students.get(i.studentId)
+      return student ? [{ date: dateOf(i.time), hour: hourOf(i.time), complaint: i.complaint, eventTag: i.eventTag, sex: student.sex ?? 'female', gradeLevel: student.gradeLevel }] : []
+    }),
   ]
+  const inRangeEvents = trendEvents.filter((event) => isWithin(event.date, from, to))
+  const filteredTrendEvents = trendEvents.filter((event) =>
+    (!query.sex || event.sex === query.sex) && (!query.gradeLevel || event.gradeLevel === query.gradeLevel),
+  )
   const prev = previousPeriod(query.range)
   // A previous period reaching back before the first record would compare against nothing.
   const firstRecord = [...state.visits.map((v) => dateOf(v.dateTime)), ...state.incidents.map((i) => dateOf(i.time))]
@@ -77,7 +89,8 @@ export function buildDashboardSummary(
     frequentVisitors: frequentVisitors(state, { from, to }),
     frequentVisitorMinVisits: config.frequentVisitorMinVisits,
     inventoryAlerts: buildInventoryAlerts(state),
-    complaintTrends: buildComplaintTrends(trendEvents, query.range, config, state.frontendOnly.calendarEvents),
+    complaintTrends: buildComplaintTrends(filteredTrendEvents, query.range, config, state.frontendOnly.calendarEvents),
+    demographics: buildDemographicAnalysis(inRangeEvents, query),
   }
 }
 
@@ -267,6 +280,36 @@ export function buildComplaintTrends(
     series: all.slice(0, config.topComplaints),
     otherComplaints: all.slice(config.topComplaints),
     weekdayComparison: isMonthRange(range) ? buildWeekdayComparison(events, range, calendarEvents) : undefined,
+  }
+}
+
+function demographicCounts(
+  events: Array<{ sex: 'male' | 'female'; gradeLevel: string }>,
+  key: 'sex' | 'gradeLevel',
+  labels: Array<[string, string]>,
+): DemographicAnalysis['sex'] {
+  const total = events.length
+  const counts = new Map(events.map((event) => [event[key], 0]))
+  for (const event of events) counts.set(event[key], (counts.get(event[key]) ?? 0) + 1)
+  return labels.map(([value, label]) => ({
+    key: value,
+    label,
+    count: counts.get(value) ?? 0,
+    share: total === 0 ? 0 : (counts.get(value) ?? 0) / total,
+  }))
+}
+
+/** Each chart applies the *other* active dimension, so a selection can meaningfully refine it. */
+export function buildDemographicAnalysis(
+  inRangeEvents: Array<{ sex: 'male' | 'female'; gradeLevel: string }>,
+  query: Pick<DashboardQuery, 'sex' | 'gradeLevel'>,
+): DemographicAnalysis {
+  const sexEvents = inRangeEvents.filter((event) => !query.gradeLevel || event.gradeLevel === query.gradeLevel)
+  const gradeEvents = inRangeEvents.filter((event) => !query.sex || event.sex === query.sex)
+  const grades = [...new Set(inRangeEvents.map((event) => event.gradeLevel))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+  return {
+    sex: demographicCounts(sexEvents, 'sex', [['female', 'Female'], ['male', 'Male']]),
+    gradeLevel: demographicCounts(gradeEvents, 'gradeLevel', grades.map((grade) => [grade, grade])),
   }
 }
 
