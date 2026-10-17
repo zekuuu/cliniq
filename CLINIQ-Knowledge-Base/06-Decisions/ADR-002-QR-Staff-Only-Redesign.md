@@ -1,7 +1,7 @@
 # ADR-002: QR Digital Health ID Redesigned as Staff Quick-Action Hub
 
 **Date:** September 17, 2026
-**Status:** Accepted (superseded the original "QR Viewer" external-role design)
+**Status:** Superseded by ADR-027 (decided Friday, October 16, 2026 — 18:54; not built yet, so the app still behaves as described here). Earlier: accepted, superseding the original "QR Viewer" external-role design.
 
 ## Context
 Original design: a separate "QR Viewer" role with its own scoped sign-in (session lasting up to 1 week) for PE instructors to scan and view emergency info independently, outside the Staff login.

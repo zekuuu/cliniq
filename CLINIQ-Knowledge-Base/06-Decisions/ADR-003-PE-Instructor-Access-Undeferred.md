@@ -1,7 +1,7 @@
 # ADR-003: PE/Sports Instructor Read-Only Access — Undeferred
 
 **Date:** September 19, 2026 (team meeting)
-**Status:** Accepted
+**Status:** Superseded by ADR-029 (decided Saturday, October 17, 2026 — 07:52, at the team meeting of Friday, October 16, 2026, 7:00 PM; not built, so the app still has the Instructor role and screen). Earlier: accepted; amended by ADR-027 when QR was dropped.
 
 ## Context
 ADR-002 had moved all external (non-Staff) QR access to a documented future phase. A team meeting on September 19 confirmed instructors should get real access now, not later.

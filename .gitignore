@@ -21,3 +21,4 @@ frontend/*.local
 .idea/
 .tmp-edge-*
 .playwright-mcp
+_read-first

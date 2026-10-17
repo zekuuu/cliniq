@@ -1,7 +1,7 @@
 # ADR-010: Reason/Description Visible in Multi-Student List Rows (Option A)
 
 **Date:** Saturday, September 26, 2026 — 20:43
-**Status:** Accepted
+**Status:** Accepted. **Amended by ADR-027 and ADR-028 (decided Saturday, October 17, 2026 — 07:52, not built):** list rows that show the Student Number today will show the LRN instead; the reason/description rule here is unchanged.
 
 ## Context
 ADR-004's display-privacy rule only covers **names**: multi-student, glanceable lists show the Student Number instead of the full name. The reference-mockup audit (`03-Design/Design-Audit-Reference-Mockup.md`, "Worth deciding now") raised a question the rule never answered: should a visit's complaint, an incident's description, or a follow-up's reason also be hidden or genericized in those same list rows? A Student Number is still identifiable to anyone who can connect it to a person. The question was deliberately left open with three options (A, B, C), and `.claude/skills/cliniq-display-privacy/` told agents to stop and ask rather than pick one.

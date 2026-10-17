@@ -105,3 +105,15 @@ The Dashboard has three tabs under its header: Overview (counts, alerts, and Sta
 ## 026 Every Print / Save as PDF is a proper A4 document
 
 Printing no longer copies the screen. Every printout is an A4 document with the school letterhead, a line saying what it covers, its content in a sensible reading order, and a footer on every page with who printed it and when, a confidentiality line, and page numbers. The Dashboard prints a "Clinic Overview Report" (a summary of the chosen period); Reports prints the formal documents. Lists of several students show Student Numbers only. The school still needs to confirm that A4 is its paper.
+
+## 027 We are dropping the QR feature and the Student Number
+
+The team decided to drop the QR feature (printed QR stickers, the phone scan screen) and the Student Number CLINIQ made up for each student. At first the plan was to identify students mostly by name with the LRN as a helper; the team's meeting the same evening chose the LRN instead (see 028). CLINIQ stays independent and takes nothing from the school's existing ID card system, which belongs to another company. This is only recorded for now: the app still has both until the team asks for them to be removed. The open questions were taken up in 028 and 029. QR may come back as a future idea.
+
+## 028 The LRN is how we identify students
+
+With the QR code and our own Student Number gone, the team chose the LRN (the Learner Reference Number) as the one unique number for each student. Lists with many students show the LRN instead of the name, as the Student Number did before, so a screen left open does not show who visited the clinic. A student can be found by name and section, birthday or LRN. Still to settle: whether the LRN is shown in full or partly hidden (it is a government-issued number, so it reveals more than our old one), what to do when it is missing or mistyped, and the school's confirmation that every student has one. Nothing is built yet.
+
+## 029 No direct access for PE instructors, and the Principal signs in at the clinic computer
+
+Because CLINIQ runs locally, the PE instructor gets no account: they ask the clinician, who prints the health information and recent incidents of the chosen students. The Principal keeps an account but signs in on the clinic computer to see the Dashboard and the printable report; reaching it from his own office is only a future option if the school connects his Wi-Fi network to the clinic's or goes online (his office has Wi-Fi, but it is a different network from the clinic's). In an emergency, help the student first, use paper, and enter the record afterwards. The client has not yet been asked who provides the computer or whether the school will go online, so this may change. Nothing is built yet.
