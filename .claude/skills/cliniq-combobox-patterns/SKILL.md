@@ -19,8 +19,8 @@ Use this with `cliniq-dropdown-patterns` (the panel and option look), `cliniq-in
 
 ## Complaint field (free text)
 
-- The visit Complaint field is the shared `ComplaintField` (`frontend/src/features/clinic-visits/ComplaintField.tsx`), a Combobox with free text allowed. New Visit and the Visit Detail edit form both use it. Suggestions are the predefined visit complaint types plus complaints already saved on visits, ranked by use count, then most recent. The pool comes from a data-layer selector (`complaintSuggestions`, ADR-014), never stored data.
-- Filtering is a case-insensitive "contains" match. At most 8 suggestions show, on focus and while typing.
+- The visit Complaint field is the shared `ComplaintField` (`frontend/src/features/clinic-visits/ComplaintField.tsx`), a Combobox with free text allowed. New Visit and the Visit Detail edit form both use it. "Other (type your own)" is always the first action row: it clears the field, keeps focus there, and is never stored as a complaint. Suggestions are the predefined visit complaint types plus complaints already saved on visits, ranked by use count, then most recent. The pool comes from a data-layer selector (`complaintSuggestions`, ADR-014), never stored data.
+- Filtering is a case-insensitive "contains" match. At most 8 suggestions show, on focus and while typing, in addition to Other.
 - On save the text is normalized (`frontend/src/lib/complaints.ts`): trimmed, repeated spaces collapsed, 60 characters max. Text that matches a suggestion case-insensitively is stored in that suggestion's spelling. Whitespace-only is invalid. The data layer applies the same normalization on create (`recordVisit`) and on edit (`updateVisit`).
 - Helper text says complaint only, no names.
 - Smart Triage triggers on a case-insensitive match to a predefined type. Free text with no match shows no checklist.

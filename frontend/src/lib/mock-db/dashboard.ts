@@ -1,4 +1,4 @@
-import { addDays, diffDays, eachDay, endOfMonth, endOfYear, formatDate, formatShortDate, isWithin, startOfMonth, startOfWeek, startOfYear } from '../dates'
+import { addDays, diffDays, eachDay, endOfMonth, endOfYear, formatDate, formatMonthYear, formatShortDate, isWithin, parseISODate, startOfMonth, startOfWeek, startOfYear } from '../dates'
 import { previousPeriod, rangeLengthDays, type DateRange, type DateRangePreset } from '../dateRange'
 import type { ISODate } from '../../types/entities'
 import type {
@@ -11,7 +11,9 @@ import type {
   InventoryAlertRow,
   TrendBucket,
   TrendGranularity,
+  WeekdayComparison,
 } from '../../types/dashboard'
+import holidayData from './holidays-ph.json'
 import {
   dateOf,
   dueFollowUps,
@@ -41,6 +43,10 @@ export function buildDashboardSummary(
   const { from, to } = query.range
   const visitsInRange = state.visits.filter((v) => isWithin(dateOf(v.dateTime), from, to))
   const incidentsInRange = state.incidents.filter((i) => isWithin(dateOf(i.time), from, to))
+  const trendEvents = [
+    ...state.visits.map((v) => ({ date: dateOf(v.dateTime), hour: hourOf(v.dateTime), complaint: v.complaint, eventTag: v.eventTag })),
+    ...state.incidents.map((i) => ({ date: dateOf(i.time), hour: hourOf(i.time), complaint: i.complaint, eventTag: i.eventTag })),
+  ]
   const prev = previousPeriod(query.range)
   // A previous period reaching back before the first record would compare against nothing.
   const firstRecord = [...state.visits.map((v) => dateOf(v.dateTime)), ...state.incidents.map((i) => dateOf(i.time))]
@@ -71,22 +77,7 @@ export function buildDashboardSummary(
     frequentVisitors: frequentVisitors(state, { from, to }),
     frequentVisitorMinVisits: config.frequentVisitorMinVisits,
     inventoryAlerts: buildInventoryAlerts(state),
-    complaintTrends: buildComplaintTrends(
-      [
-        ...visitsInRange.map((v) => ({
-          date: dateOf(v.dateTime),
-          hour: hourOf(v.dateTime),
-          complaint: v.complaint,
-        })),
-        ...incidentsInRange.map((i) => ({
-          date: dateOf(i.time),
-          hour: hourOf(i.time),
-          complaint: i.complaint,
-        })),
-      ],
-      query.range,
-      config,
-    ),
+    complaintTrends: buildComplaintTrends(trendEvents, query.range, config, state.frontendOnly.calendarEvents),
   }
 }
 
@@ -121,8 +112,12 @@ export function buildDueFollowUps(state: DbState): DueFollowUpRow[] {
 export function buildInventoryAlerts(state: DbState): InventoryAlertRow[] {
   return state.inventoryItems
     .map((item) => {
-      const { flags, daysUntilExpiry } = inventoryStatusFor(state, item)
-      return { item, flags, daysUntilExpiry }
+      const status = inventoryStatusFor(state, item)
+      // Expired-only stock has no usable expiry. The Dashboard still needs the expired batch's
+      // actual date so its alert agrees with Inventory instead of rendering an unexplained null.
+      const expirationDate = status.expirationDate ?? status.oldestExpiredDate
+      const daysUntilExpiry = expirationDate ? diffDays(state.today, expirationDate) : null
+      return { item: { ...item, currentStock: status.currentStock, expirationDate }, flags: status.flags, daysUntilExpiry }
     })
     .filter((row) => row.flags.length > 0)
     .sort((a, b) => severity(b) - severity(a) || a.item.name.localeCompare(b.item.name))
@@ -228,9 +223,10 @@ export function trendGranularityFor(
 }
 
 export function buildComplaintTrends(
-  events: Array<{ date: ISODate; hour?: number; complaint: string }>,
+  events: Array<{ date: ISODate; hour?: number; complaint: string; eventTag?: string | null }>,
   range: Pick<DateRange, 'preset' | 'from' | 'to'>,
   config: Pick<MockDbConfig, 'clusterMinCount' | 'clusterRatio' | 'topComplaints'>,
+  calendarEvents: Array<{ title: string; startDate: ISODate; endDate: ISODate | null }> = [],
 ): ComplaintTrends {
   const { from, to } = range
   // Only All starts at the historical floor (1900), so only All skips its empty pre-history and
@@ -270,6 +266,83 @@ export function buildComplaintTrends(
     buckets,
     series: all.slice(0, config.topComplaints),
     otherComplaints: all.slice(config.topComplaints),
+    weekdayComparison: isMonthRange(range) ? buildWeekdayComparison(events, range, calendarEvents) : undefined,
+  }
+}
+
+const WEEKDAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+function weekdayIndex(date: ISODate): number {
+  // JavaScript Sunday is zero; the chart deliberately starts the school week on Monday.
+  return (parseISODate(date).getDay() + 6) % 7
+}
+
+function isMonthRange(range: Pick<DateRange, 'preset' | 'from' | 'to'>): boolean {
+  return range.from === startOfMonth(range.from) && (range.preset === 'thisMonth' || range.to === endOfMonth(range.to))
+}
+
+function monthComparisonWindow(range: Pick<DateRange, 'from' | 'to'>): { from: ISODate; to: ISODate } {
+  const previousFrom = startOfMonth(addDays(range.from, -1))
+  return {
+    from: previousFrom,
+    // A completed selected month compares with the completed prior month. Month-to-date compares
+    // the same number of elapsed days, avoiding a misleading full-month comparison mid-month.
+    to: range.to === endOfMonth(range.to) ? endOfMonth(previousFrom) : addDays(previousFrom, diffDays(range.from, range.to)),
+  }
+}
+
+function annotationsFor(
+  date: ISODate,
+  eventTags: string[],
+  calendarEvents: Array<{ title: string; startDate: ISODate; endDate: ISODate | null }>,
+): string[] {
+  const labels = new Set(eventTags.filter(Boolean))
+  for (const event of calendarEvents) {
+    if (event.startDate <= date && (event.endDate ?? event.startDate) >= date) labels.add(event.title)
+  }
+  for (const holiday of holidayData.holidays as Array<{ date: ISODate; name: string }>) {
+    if (holiday.date === date) labels.add(holiday.name)
+  }
+  return [...labels]
+}
+
+function buildWeekdayComparison(
+  events: Array<{ date: ISODate; eventTag?: string | null }>,
+  range: Pick<DateRange, 'from' | 'to'>,
+  calendarEvents: Array<{ title: string; startDate: ISODate; endDate: ISODate | null }>,
+): WeekdayComparison {
+  const previous = monthComparisonWindow(range)
+  const summarize = (window: { from: ISODate; to: ISODate }) =>
+    WEEKDAY_LABELS.map((_, weekday) => {
+      const byDate = new Map<ISODate, { count: number; tags: string[] }>()
+      for (const event of events) {
+        if (!isWithin(event.date, window.from, window.to) || weekdayIndex(event.date) !== weekday) continue
+        const day = byDate.get(event.date) ?? { count: 0, tags: [] }
+        day.count += 1
+        if (event.eventTag) day.tags.push(event.eventTag)
+        byDate.set(event.date, day)
+      }
+      const total = [...byDate.values()].reduce((sum, day) => sum + day.count, 0)
+      const peak = [...byDate.entries()].sort((a, b) => b[1].count - a[1].count || a[0].localeCompare(b[0]))[0]
+      return {
+        total,
+        peak: peak
+          ? { date: peak[0], count: peak[1].count, annotations: annotationsFor(peak[0], peak[1].tags, calendarEvents) }
+          : null,
+      }
+    })
+  const current = summarize(range)
+  const prior = summarize(previous)
+  return {
+    currentLabel: formatMonthYear(range.from),
+    previousLabel: formatMonthYear(previous.from),
+    rows: WEEKDAY_LABELS.map((label, index) => ({
+      label,
+      current: current[index].total,
+      previous: prior[index].total,
+      currentPeak: current[index].peak,
+      previousPeak: prior[index].peak,
+    })),
   }
 }
 

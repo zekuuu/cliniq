@@ -1,13 +1,17 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { cn } from '../../lib/cn'
-import type { InventoryItem } from '../../types/entities'
 import { stockQuantityText, type InventoryFlag } from '../status/inventory'
 import { Badge } from '../ui/Badge'
 import { Input } from '../ui/Input'
 import { DROPDOWN_PANEL, dropdownOptionClassName, placeDropdownPanel } from '../ui/dropdownClassName'
 
 /** What the picker needs from an item. The data layer's `InventoryItemView` already fits. */
-export type PickableItem = Pick<InventoryItem, 'id' | 'name' | 'category' | 'currentStock' | 'unit'> & {
+export type PickableItem = {
+  id: string
+  name: string
+  category: 'medicine' | 'supply'
+  currentStock: number
+  unit: string
   flags: ReadonlyArray<InventoryFlag>
   daysUntilExpiry: number | null
 }

@@ -103,6 +103,8 @@ export interface ItemGivenLine {
   quantity: number
   /** Optional, at most 120 characters, e.g. "1 tablet every 6 hours". */
   instructions: string | null
+  /** Stock is taken from one or more non-expired batches. Kept so an edit returns it to the same batch. */
+  batchAllocations?: InventoryBatchAllocation[]
 }
 
 export type ParentNotificationOutcome = 'reached' | 'not_reached' | 'voicemail' | 'left_message'
@@ -157,18 +159,31 @@ export interface FollowUp {
 
 export type InventoryCategory = 'medicine' | 'supply'
 
+export interface InventoryBatch {
+  id: string
+  /** Whole-number quantity remaining in this batch. */
+  quantity: number
+  expirationDate: ISODate | null
+  receivedDate: ISODate
+}
+
+export interface InventoryBatchAllocation {
+  batchId: string
+  quantity: number
+}
+
 export interface InventoryItem {
   id: string
   name: string
   category: InventoryCategory
-  currentStock: number
   unit: string
-  /**
-   * Module 8: one expiration date per item, not per batch. It's nullable because some supplies
-   * may not expire. PROVISIONAL, pending the ERD.
-   */
-  expirationDate: ISODate | null
+  /** Raw stock is held per received batch. Totals are derived by the data layer. */
+  batches: InventoryBatch[]
   lowStockThreshold: number
+  /** @deprecated Derived on `InventoryItemView`; retained only for transition compatibility. */
+  currentStock?: number
+  /** @deprecated Derived on `InventoryItemView`; retained only for transition compatibility. */
+  expirationDate?: ISODate | null
 }
 
 export type ReportType = 'monthly' | 'incident' | 'health_summary'

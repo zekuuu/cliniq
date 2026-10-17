@@ -50,10 +50,10 @@ export interface FrequentVisitorRow {
 }
 
 export interface InventoryAlertRow {
-  item: Pick<
-    InventoryItem,
-    'id' | 'name' | 'category' | 'currentStock' | 'unit' | 'lowStockThreshold' | 'expirationDate'
-  >
+  item: Pick<InventoryItem, 'id' | 'name' | 'category' | 'unit' | 'lowStockThreshold'> & {
+    currentStock: number
+    expirationDate: ISODate | null
+  }
   flags: InventoryFlag[]
   /** Days until the expiration date (negative = already expired); null if the item doesn't expire. */
   daysUntilExpiry: number | null
@@ -78,6 +78,29 @@ export interface ComplaintSeries {
   clusterBuckets: number[]
 }
 
+/** The busiest date behind one weekday total, with any event or holiday already known to CLINIQ. */
+export interface WeekdayPeak {
+  date: ISODate
+  count: number
+  annotations: string[]
+}
+
+/** One Monday-through-Sunday comparison row for a monthly Visits Trend. */
+export interface WeekdayComparisonRow {
+  label: string
+  current: number
+  previous: number
+  currentPeak: WeekdayPeak | null
+  previousPeak: WeekdayPeak | null
+}
+
+/** A selected calendar month (or month-to-date) grouped by weekday beside the equivalent prior month. */
+export interface WeekdayComparison {
+  currentLabel: string
+  previousLabel: string
+  rows: WeekdayComparisonRow[]
+}
+
 export interface ComplaintTrends {
   granularity: TrendGranularity
   buckets: TrendBucket[]
@@ -85,6 +108,8 @@ export interface ComplaintTrends {
   series: ComplaintSeries[]
   /** Everything outside the top series, listed in the table view so no complaint is hidden. */
   otherComplaints: ComplaintSeries[]
+  /** Present only for a calendar-month range; its grouped bars replace the daily trend. */
+  weekdayComparison?: WeekdayComparison
 }
 
 export interface DashboardSummary {

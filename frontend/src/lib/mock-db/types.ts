@@ -7,6 +7,7 @@ import type {
   HospitalReferral,
   Incident,
   InventoryItem,
+  InventoryBatchAllocation,
   ISODate,
   ISODateTime,
   ParentNotificationAttempt,
@@ -62,7 +63,14 @@ export type SeedFollowUp = Omit<Replace<FollowUp, { followUpDate: RelativeDate }
   studentNumber: StudentNumber
 }
 
-export type SeedInventoryItem = Replace<InventoryItem, { expirationDate: RelativeDate | null }>
+/**
+ * The JSON seed predates batch tracking. It is deliberately accepted in its old one-stock/one-date
+ * shape and migrated to one batch by `resolveSeed`; persisted mock state follows the same path.
+ */
+export type SeedInventoryItem = Omit<InventoryItem, 'batches' | 'currentStock' | 'expirationDate'> & {
+  currentStock: number
+  expirationDate: RelativeDate | null
+}
 
 /** `data` is generated on read, so only the request (type + range) is stored. */
 export type SeedReport = Omit<Report, 'data' | 'dateRange'> & {
@@ -156,6 +164,8 @@ export interface InventoryTransaction<D = ISODateTime> {
   reason?: AdjustmentReason
   /** Adjustment only: Staff's note; required when `reason` is `other`. PROVISIONAL (ADR-018). */
   note?: string | null
+  /** Batches moved by this transaction. Old seed history has none and is migrated on load. */
+  batchAllocations?: InventoryBatchAllocation[]
 }
 
 /** Registrar-import review tracking for the Incomplete Records queue (#9). */

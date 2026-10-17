@@ -49,7 +49,7 @@ describe('Adjust Stock', () => {
     await user.type(within(dialog).getByLabelText(/counted quantity/i), '0')
     await selectOption(user, within(dialog).getByLabelText(/^reason/i), 'Expired - disposed')
     await user.click(within(dialog).getByRole('button', { name: 'Save Adjustment' }))
-    expect(await screen.findByText(/Oral Rehydration Salts adjusted \(Expired - disposed\)\. Stock is now 0 sachets/)).toBeInTheDocument()
+    expect(await screen.findByText(/Oral Rehydration Salts adjusted \(Expired - disposed\)\. Usable stock is now 0 sachets/)).toBeInTheDocument()
     expect(await stock('item-0004')).toBe(0)
   })
 })

@@ -95,7 +95,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - Search visits by student
 
 **Complaint Monitoring**
-- Record complaint/symptom for the visit: free text with suggestions (the predefined complaint types plus complaints already recorded, most used first). Text matching a suggestion is stored in that suggestion's spelling, so counts don't split by capitalization. Smart Triage's checklist appears when the complaint matches a predefined type. Editing a visit uses the same field and the same normalization
+- Record complaint/symptom for the visit: free text with suggestions (the predefined complaint types plus complaints already recorded, most used first). "Other (type your own)" is always the first option; it clears and focuses the free-text field and is never stored as a complaint. Text matching a suggestion is stored in that suggestion's spelling, so counts don't split by capitalization. Smart Triage's checklist appears when the complaint matches a predefined type. Editing a visit uses the same field and the same normalization
 - View a student's complaint history (also visible to PE/Sports Instructor as part of visit/incident history)
 
 **Treatment Recording** *(two parts — ADR-018, Wednesday, October 07, 2026 — 10:43 PHT)*
@@ -231,9 +231,10 @@ Scanning is a **mobile flow** only: the clinic workstation has no QR scanner har
 
 **Stock Operations** *(stock-integrity rules: ADR-018, Wednesday, October 07, 2026 — 10:43 PHT)*
 - Dispense/log usage (decrements stock). From a visit or an incident's Stage 2, dispensing happens through that record's "Medicines & supplies given" lines. The standalone Dispense page is for non-visit use: it must name a student or choose "Not for a student (general use)", and if the student already has a visit today it links to that visit so the medicine is added there instead
-- Expired items can't be dispensed (rejected by the data layer, not just the UI); items with no expiration date are always dispensable
-- Restock/add stock (row action: quantity received + the item's expiration date; increments stock; logs the restock). **The expiration date changes only through Restock**; Edit Item no longer edits stock or expiry
-- **Adjust Stock** (Staff, row action): a +/- change or "set to counted quantity", a required reason (Expired - disposed / Damaged or spilled / Miscount correction / Other with a required note), and an optional note. The result can't go below 0. Writes an adjustment transaction and an audit entry. To replace an expired batch, dispose of the old quantity here and Restock with the new expiration date
+- Inventory is held in received batches (quantity, expiration date, received date). The list derives usable non-expired stock, expired stock, and total on hand; low stock uses usable stock only. Expired quantities remain visible until explicitly disposed, and the list filters to items with expired stock.
+- Expired batches can't be dispensed (rejected by the data layer, not just the UI); items with no expiration date are always dispensable. Dispensing uses the earliest-expiry usable batch first and records the allocation so visit edits return stock to its original batch.
+- Restock/add stock (row action: quantity received + the **new batch's** expiration date; adds a batch; logs the restock). It never overwrites earlier batches; the dialog warns when expired stock remains. Edit Item no longer edits stock or expiry.
+- **Adjust Stock** (Staff, row action): choose a batch, then a +/- change or "set to counted quantity", with a required reason (Expired - disposed / Damaged or spilled / Miscount correction / Other with a required note). The selected batch cannot go below 0. Writes an adjustment transaction and audit entry; a disposal remains in batch movement history.
 - View inventory usage history/log — not built yet; when built, it shows the Student Number, never the name
 
 **Alerts & Thresholds**

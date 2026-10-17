@@ -27,8 +27,12 @@ export interface ComboboxProps<T> {
   optionLabel: (option: T) => string
   /** Richer option content; defaults to `optionLabel`. */
   renderOption?: (option: T) => ReactNode
-  /** Called after an option is picked (click, or Enter on the highlighted option). */
-  onPick?: (option: T) => void
+  /**
+   * Called when an option is picked (click, or Enter on the highlighted option).
+   * Return `false` when the option is an action rather than a value, so free-text mode keeps its
+   * current value. This lets callers offer an action such as "Other" without storing its label.
+   */
+  onPick?: (option: T) => boolean | void
   /** True: whatever is typed is the value, suggestions only help. False: only a pick counts. */
   allowFreeText: boolean
   /** Highlights the first option without arrowing to it, so Enter picks it. */
@@ -131,10 +135,10 @@ export function Combobox<T>({
   }, [showPanel, active])
 
   function pick(option: T) {
-    if (allowFreeText) onValueChange(optionLabel(option))
+    const shouldSetValue = onPick?.(option) !== false
+    if (allowFreeText && shouldSetValue) onValueChange(optionLabel(option))
     setMoved(-1)
     setOpen(false)
-    onPick?.(option)
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {

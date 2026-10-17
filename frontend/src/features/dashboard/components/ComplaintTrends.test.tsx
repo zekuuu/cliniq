@@ -38,6 +38,7 @@ vi.mock('react-chartjs-2', () => ({
     lineMock.props = props
     return <div role="img" aria-label={props['aria-label']} />
   },
+  Bar: (props: LineProps) => <div role="img" aria-label={props['aria-label']} />,
 }))
 
 const buckets: TrendBucket[] = Array.from({ length: 14 }, (_, index) => {
@@ -74,6 +75,34 @@ const trends: ComplaintTrendsData = {
 }
 
 describe('TrendTable', () => {
+  it('uses grouped weekday bars with an accessible, keyboard-focusable table for a month comparison', async () => {
+    const user = userEvent.setup()
+    render(
+      <ComplaintTrends
+        trends={{
+          ...trends,
+          weekdayComparison: {
+            currentLabel: 'October 2026',
+            previousLabel: 'September 2026',
+            rows: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((label, index) => ({
+              label,
+              current: index + 1,
+              previous: index,
+              currentPeak: index === 4 ? { date: '2026-10-30', count: 5, annotations: ['Foundation Day'] } : null,
+              previousPeak: null,
+            })),
+          },
+        }}
+      />,
+    )
+
+    expect(screen.getByRole('img', { name: /by weekday.*October 2026 compared with September 2026/i })).toBeInTheDocument()
+    await user.click(screen.getByRole('radio', { name: 'Table' }))
+    const table = screen.getByRole('table', { name: /weekday comparison/i })
+    expect(within(table).getByRole('row', { name: /Friday.*Foundation Day/i })).toHaveAttribute('tabindex', '0')
+    expect(within(table).getByText(/busiest Oct 30, 2026/i)).toBeInTheDocument()
+  })
+
   it('keeps a genuinely empty multi-bucket range as a zero chart', () => {
     render(
       <ComplaintTrends

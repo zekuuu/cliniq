@@ -363,7 +363,14 @@ export function dueFollowUps(state: DbState): FollowUp[] {
 
 export interface InventoryStatus {
   flags: InventoryFlag[]
-  /** Negative = already expired; null if the item doesn't expire. */
+  /** Usable, non-expired stock. Kept as `currentStock` for existing screen consumers. */
+  currentStock: number
+  expiredStock: number
+  totalOnHand: number
+  /** Earliest usable expiry, or null for a non-expiring item/no usable stock. */
+  expirationDate: ISODate | null
+  oldestExpiredDate: ISODate | null
+  /** Negative = already expired; null if no usable batch expires. */
   daysUntilExpiry: number | null
   belowZero: boolean
 }
@@ -373,12 +380,28 @@ export interface InventoryStatus {
  * Low-stock and expiry flags are independent and can both apply (Module 8, stock flow step 5).
  */
 export function inventoryStatus(item: InventoryItem, today: ISODate, expiryWarningDays: number): InventoryStatus {
-  const daysUntilExpiry = item.expirationDate ? diffDays(today, item.expirationDate) : null
+  const expired = item.batches.filter((batch) => batch.quantity > 0 && batch.expirationDate !== null && batch.expirationDate < today)
+  const usable = item.batches.filter((batch) => !(batch.expirationDate !== null && batch.expirationDate < today))
+  const datedUsable = usable.filter((batch) => batch.quantity > 0 && batch.expirationDate !== null)
+  const expirationDate = datedUsable.map((batch) => batch.expirationDate!).sort()[0] ?? null
+  const oldestExpiredDate = expired.map((batch) => batch.expirationDate!).sort()[0] ?? null
+  const daysUntilExpiry = expirationDate ? diffDays(today, expirationDate) : null
+  const currentStock = usable.reduce((sum, batch) => sum + batch.quantity, 0)
+  const expiredStock = expired.reduce((sum, batch) => sum + batch.quantity, 0)
   const flags: InventoryFlag[] = []
-  if (item.currentStock < item.lowStockThreshold) flags.push('low_stock')
-  if (daysUntilExpiry !== null && daysUntilExpiry < 0) flags.push('expired')
+  if (currentStock < item.lowStockThreshold) flags.push('low_stock')
+  if (expiredStock > 0) flags.push('expired')
   else if (daysUntilExpiry !== null && daysUntilExpiry <= expiryWarningDays) flags.push('nearing_expiration')
-  return { flags, daysUntilExpiry, belowZero: item.currentStock < 0 }
+  return {
+    flags,
+    currentStock,
+    expiredStock,
+    totalOnHand: item.batches.reduce((sum, batch) => sum + batch.quantity, 0),
+    expirationDate,
+    oldestExpiredDate,
+    daysUntilExpiry,
+    belowZero: item.batches.some((batch) => batch.quantity < 0),
+  }
 }
 
 export function inventoryStatusFor(state: DbState, item: InventoryItem): InventoryStatus {

@@ -1,7 +1,7 @@
 import '../../../components/charts/chartSetup'
 import type { Chart, ChartOptions, Plugin, ScriptableContext } from 'chart.js'
 import { useId, useMemo, useState, type ReactNode } from 'react'
-import { Line } from 'react-chartjs-2'
+import { Bar, Line } from 'react-chartjs-2'
 import {
   Card,
   CARD_SURFACE,
@@ -26,6 +26,7 @@ import type {
   ComplaintTrends as Trends,
   TrendBucket,
   TrendGranularity,
+  WeekdayComparison,
 } from '../../../types/dashboard'
 
 /*
@@ -237,6 +238,112 @@ function TrendLineChart({ trends, clusters }: { trends: Trends; clusters: Cluste
   )
 }
 
+function weekdayPeakText(label: string, count: number, peak: { date: string; count: number; annotations: string[] } | null) {
+  if (!peak) return `${label}: ${count} visits and incidents; no recorded day.`
+  const context = peak.annotations.length ? `; ${peak.annotations.join(', ')}` : ''
+  return `${label}: ${count} visits and incidents; busiest ${formatDate(peak.date)} (${peak.count})${context}.`
+}
+
+/** Monthly grouped bars make weekday patterns comparable without pretending adjacent dates are alike. */
+function WeekdayComparisonChart({ comparison }: { comparison: WeekdayComparison }) {
+  const prefersReducedMotion = usePrefersReducedMotion()
+  const current = colorToken('brand-green-dark')
+  const previous = colorToken('text-secondary')
+  const surface = colorToken('background')
+  const grid = colorToken('border')
+  const tick = colorToken('text-secondary')
+  const summary = comparison.rows
+    .map((row) => `${row.label}: ${comparison.currentLabel} ${row.current}; ${comparison.previousLabel} ${row.previous}`)
+    .join('; ')
+  return (
+    <div className="relative h-72 print:h-auto print:[&_canvas]:h-auto! print:[&_canvas]:w-full!">
+      <Bar
+        role="img"
+        aria-label={`Visits and incidents by weekday, ${comparison.currentLabel} compared with ${comparison.previousLabel}: ${summary}.`}
+        data={{
+          labels: comparison.rows.map((row) => row.label.slice(0, 3)),
+          datasets: [
+            {
+              label: `${comparison.currentLabel} (solid)`,
+              data: comparison.rows.map((row) => row.current),
+              backgroundColor: current,
+              borderColor: surface,
+              borderWidth: 1,
+              borderRadius: 3,
+            },
+            {
+              label: `${comparison.previousLabel} (outlined)`,
+              data: comparison.rows.map((row) => row.previous),
+              backgroundColor: withAlpha(previous, 0.18),
+              borderColor: previous,
+              borderWidth: 2,
+              borderRadius: 3,
+            },
+          ],
+        }}
+        options={{
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: prefersReducedMotion ? false : { duration: 280, easing: 'easeOutCubic' },
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            x: { grid: { display: false }, border: { color: grid }, ticks: { color: tick, maxRotation: 0 } },
+            y: { beginAtZero: true, grid: { color: grid }, border: { display: false }, ticks: { color: tick, precision: 0 } },
+          },
+          plugins: {
+            legend: { display: true, labels: { color: tick, boxWidth: 14 } },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                title: (items) => comparison.rows[items[0].dataIndex].label,
+                label: (item) => `${item.dataset.label?.replace(/ \(.+\)/, '')}: ${item.parsed.y}`,
+                afterBody: (items) => {
+                  const row = comparison.rows[items[0].dataIndex]
+                  return [
+                    weekdayPeakText(comparison.currentLabel, row.current, row.currentPeak),
+                    weekdayPeakText(comparison.previousLabel, row.previous, row.previousPeak),
+                  ]
+                },
+              },
+            },
+          },
+        }}
+      />
+    </div>
+  )
+}
+
+/** Keyboard-focusable text alternative; it gives the same peak context as the chart tooltip. */
+function WeekdayComparisonTable({ comparison }: { comparison: WeekdayComparison }) {
+  return (
+    <div className="overflow-x-auto scrollbar-thin">
+      <table className="w-full min-w-[34rem] text-sm" aria-label="Visits and incidents by weekday comparison">
+        <thead className="border-b border-border text-left text-xs text-text-secondary">
+          <tr>
+            <th scope="col" className="px-2 py-2 font-semibold">Weekday</th>
+            <th scope="col" className="px-2 py-2 text-right font-semibold">{comparison.currentLabel}</th>
+            <th scope="col" className="px-2 py-2 text-right font-semibold">{comparison.previousLabel}</th>
+            <th scope="col" className="px-2 py-2 font-semibold">Busiest dates / context</th>
+          </tr>
+        </thead>
+        <tbody>
+          {comparison.rows.map((row) => (
+            <tr key={row.label} tabIndex={0} className="border-b border-border last:border-0 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-green">
+              <th scope="row" className="px-2 py-2 text-left font-semibold text-text-primary">{row.label}</th>
+              <td className="px-2 py-2 text-right tabular-nums">{row.current}</td>
+              <td className="px-2 py-2 text-right tabular-nums">{row.previous}</td>
+              <td className="px-2 py-2 text-xs text-text-secondary">
+                <span className="block">{weekdayPeakText(comparison.currentLabel, row.current, row.currentPeak)}</span>
+                <span className="block">{weekdayPeakText(comparison.previousLabel, row.previous, row.previousPeak)}</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 export function TrendTable({ trends }: { trends: Trends }) {
   const [sort, setSort] = useState<TableSortState<string>>({
     key: 'total',
@@ -365,6 +472,7 @@ function VisitsTrendCard({
   const headingId = useId()
   const [view, setView] = useState<ViewMode>('chart')
   const years = trendYears(trends)
+  const comparison = trends.weekdayComparison
   const hasData = trends.buckets.length > 1 || trends.series.length > 0
   const tooFewBuckets = trends.buckets.length < 2
   const showTable = view === 'table'
@@ -383,7 +491,7 @@ function VisitsTrendCard({
             'Visits trend'
           )
         }
-        description={`Visits and incidents per ${trends.granularity}.`}
+        description={comparison ? `Monday to Sunday: ${comparison.currentLabel} compared with ${comparison.previousLabel}.` : `Visits and incidents per ${trends.granularity}.`}
         actions={
           <SegmentedControl
             label="Show trend as"
@@ -411,12 +519,16 @@ function VisitsTrendCard({
                 Choose a longer period to see a trend.
               </p>
             )}
-            {showTable ? (
+            {comparison ? showTable ? (
+              <WeekdayComparisonTable comparison={comparison} />
+            ) : (
+              <WeekdayComparisonChart comparison={comparison} />
+            ) : showTable ? (
               <TrendTable trends={trends} />
             ) : (
               <TrendLineChart trends={trends} clusters={clusters} />
             )}
-            {clusters.length > 0 && (
+            {!comparison && clusters.length > 0 && (
               <div role="note" className="flex items-start gap-2 text-xs text-text-primary">
                 <Icon name="alertTriangle" size={14} className="mt-0.5 shrink-0 text-warning" />
                 <p>

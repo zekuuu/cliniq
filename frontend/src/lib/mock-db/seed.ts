@@ -82,9 +82,14 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
       studentId: studentId(studentNumber),
       followUpDate: resolveDate(f.followUpDate, today),
     })),
-    inventoryItems: source.inventoryItems.map((item) => ({
+    inventoryItems: source.inventoryItems.map(({ currentStock, expirationDate, ...item }) => ({
       ...item,
-      expirationDate: item.expirationDate ? resolveDate(item.expirationDate, today) : null,
+      batches: [{
+        id: `${item.id}-batch-0001`,
+        quantity: currentStock,
+        expirationDate: expirationDate ? resolveDate(expirationDate, today) : null,
+        receivedDate: today,
+      }],
     })),
     reports: source.reports.map((r) => ({
       ...r,

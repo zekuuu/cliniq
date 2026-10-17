@@ -2,6 +2,7 @@ import {
   adjustInventoryStock as adjustInLayer,
   dispenseInventoryItem as dispenseInLayer,
   getInventoryItem,
+  listInventoryHistory,
   getMockToday,
   getStudent,
   listInventory,
@@ -11,6 +12,7 @@ import {
   searchStudents,
   type DispenseResult,
   type InventoryItemView,
+  type InventoryHistoryRow,
   type SessionUser,
   type StockAdjustmentInput,
 } from '../../../lib/mock-db'
@@ -21,11 +23,12 @@ import type { InventoryCategory, InventoryItem, Student, StudentSearchResult, Vi
  * by the data layer on every read (`InventoryItemView`), never stored and never recomputed here, so
  * the list, the dispense form, and the Dashboard's alerts always agree.
  */
-export type { InventoryItemView, StockAdjustmentInput }
+export type { InventoryItemView, InventoryHistoryRow, StockAdjustmentInput }
 
 export interface InventoryFilters {
   search: string
   category: '' | InventoryCategory
+  hasExpiredStock?: boolean
 }
 
 export interface InventoryFormValues {
@@ -38,11 +41,15 @@ export interface InventoryFormValues {
 }
 
 export interface InventoryFormContext {
-  item: InventoryItem | null
+  item: InventoryItemView | null
 }
 
 export function fetchInventory(filters: InventoryFilters): Promise<InventoryItemView[]> {
   return listInventory(filters)
+}
+
+export function fetchInventoryHistory(itemId: string): Promise<InventoryHistoryRow[]> {
+  return listInventoryHistory(itemId)
 }
 
 export async function fetchInventoryForm(itemId?: string): Promise<InventoryFormContext> {

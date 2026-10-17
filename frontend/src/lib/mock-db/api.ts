@@ -8,6 +8,8 @@ import type {
   HospitalReferral,
   Incident,
   InventoryCategory,
+  InventoryBatch,
+  InventoryBatchAllocation,
   InventoryItem,
   ISODate,
   ISODateTime,
@@ -1060,24 +1062,52 @@ export function setFollowUpStatus(id: string, status: FollowUpStatus, actor?: Se
 
 export type InventoryItemView = InventoryItem & InventoryStatus
 
-export function listInventory(query: { search?: string; category?: InventoryCategory | '' } = {}): Promise<InventoryItemView[]> {
+function inventoryView(s: DbState, item: InventoryItem): InventoryItemView {
+  return { ...item, ...inventoryStatusFor(s, item) }
+}
+
+export function listInventory(query: { search?: string; category?: InventoryCategory | ''; hasExpiredStock?: boolean } = {}): Promise<InventoryItemView[]> {
   return read('inventory', (s) => {
     const search = query.search?.trim().toLowerCase() ?? ''
     return s.inventoryItems
       .filter((i) => !search || i.name.toLowerCase().includes(search))
       .filter((i) => !query.category || i.category === query.category)
-      .map((i) => ({ ...i, ...inventoryStatusFor(s, i) }))
+      .map((i) => inventoryView(s, i))
+      .filter((i) => !query.hasExpiredStock || i.expiredStock > 0)
   })
 }
 
 export function getInventoryItem(id: string): Promise<InventoryItemView> {
   return read('inventory item', (s) => {
     const item = must(s.inventoryItems.find((i) => i.id === id), 'Inventory item')
-    return { ...item, ...inventoryStatusFor(s, item) }
+    return inventoryView(s, item)
   })
 }
 
-export type InventoryInput = Omit<InventoryItem, 'id'>
+export interface InventoryHistoryRow {
+  id: string
+  type: InventoryTransaction['type']
+  quantity: number
+  timestamp: ISODateTime
+  reason?: AdjustmentReason
+  note?: string | null
+  batchAllocations: InventoryBatchAllocation[]
+}
+
+/** Immutable inventory movement history, including the batches affected by each movement. */
+export function listInventoryHistory(itemId: string): Promise<InventoryHistoryRow[]> {
+  return read('inventory history', (s) =>
+    s.frontendOnly.inventoryTransactions
+      .filter((transaction) => transaction.itemId === itemId)
+      .sort((left, right) => right.timestamp.localeCompare(left.timestamp))
+      .map((transaction) => ({ ...transaction, batchAllocations: transaction.batchAllocations ?? [] })),
+  )
+}
+
+export type InventoryInput = Omit<InventoryItem, 'id' | 'batches'> & {
+  currentStock: number
+  expirationDate: ISODate | null
+}
 
 /**
  * Adds an item, or edits one's name, category, unit, and threshold. An existing item keeps its stock
@@ -1087,9 +1117,15 @@ export type InventoryInput = Omit<InventoryItem, 'id'>
 export function saveInventoryItem(input: InventoryInput, options: { itemId?: string; actor?: SessionUser } = {}): Promise<InventoryItem> {
   return write('save inventory item', (s) => {
     const existing = options.itemId ? must(s.inventoryItems.find((i) => i.id === options.itemId), 'Inventory item') : null
-    const fields = existing ? { ...input, currentStock: existing.currentStock, expirationDate: existing.expirationDate } : input
+    const { currentStock, expirationDate, ...fields } = input
     const summary = existing ? changedSummary(existing, fields) : undefined
-    const item = existing ? Object.assign(existing, fields) : { id: nextId('item', s.inventoryItems), ...fields }
+    const item = existing
+      ? Object.assign(existing, fields)
+      : {
+          id: nextId('item', s.inventoryItems),
+          ...fields,
+          batches: [{ id: 'batch-0001', quantity: currentStock, expirationDate, receivedDate: s.today }],
+        }
     if (!existing) s.inventoryItems.push(item)
     audit(s, actorOr(options.actor), existing ? 'update' : 'create', { type: 'inventory', id: item.id }, summary)
     return item
@@ -1113,11 +1149,10 @@ export function dispenseInventoryItem(
     const by = actorOr(actor)
     const item = must(s.inventoryItems.find((i) => i.id === itemId), 'Inventory item')
     if (!Number.isInteger(quantity) || quantity < 1) throw new StockRuleError(QUANTITY_RULE)
-    if (isExpired(s, item)) throw new StockRuleError(expiredMessage(item))
     if (link.studentNumber && !s.students.some((st) => st.studentNumber === link.studentNumber))
       throw new StockRuleError('No student has this Student Number.')
     if (link.visitId && !s.visits.some((v) => v.id === link.visitId)) throw new StockRuleError('That visit no longer exists.')
-    item.currentStock -= quantity
+    const batchAllocations = takeUsableBatches(s, item, quantity)
     const txn = {
       id: nextId('txn', s.frontendOnly.inventoryTransactions),
       itemId,
@@ -1127,15 +1162,16 @@ export function dispenseInventoryItem(
       userId: by.id,
       studentNumber: link.studentNumber ?? null,
       visitId: link.visitId ?? null,
+      batchAllocations,
     }
     s.frontendOnly.inventoryTransactions.push(txn)
     audit(s, by, 'submit', { type: 'inventory-dispensation', id: txn.id })
     const status = inventoryStatusFor(s, item)
-    return { item: { ...item, ...status }, remainingStock: item.currentStock, belowZero: status.belowZero }
+    return { item: { ...item, ...status }, remainingStock: status.currentStock, belowZero: status.belowZero }
   })
 }
 
-/** Restock (Module 8, stock flow step 4): increments stock and confirms the expiration date. */
+/** Restock adds a distinct batch; it never overwrites a prior batch's expiry or quantity. */
 export function restockInventoryItem(
   itemId: string,
   quantity: number,
@@ -1146,14 +1182,20 @@ export function restockInventoryItem(
     const by = actorOr(actor)
     const item = must(s.inventoryItems.find((i) => i.id === itemId), 'Inventory item')
     if (!Number.isInteger(quantity) || quantity < 1) throw new StockRuleError(QUANTITY_RULE)
-    item.currentStock += quantity
-    item.expirationDate = expirationDate
+    const batch: InventoryBatch = {
+      id: nextBatchId(item),
+      quantity,
+      expirationDate,
+      receivedDate: s.today,
+    }
+    item.batches.push(batch)
     const id = nextId('txn', s.frontendOnly.inventoryTransactions)
     s.frontendOnly.inventoryTransactions.push({
       id, itemId, type: 'restock', quantity, timestamp: now(s), userId: by.id, studentNumber: null, visitId: null,
+      batchAllocations: [{ batchId: batch.id, quantity }],
     })
     audit(s, by, 'submit', { type: 'inventory-restock', id })
-    return { ...item, ...inventoryStatusFor(s, item) }
+    return inventoryView(s, item)
   })
 }
 
@@ -1170,6 +1212,8 @@ export type StaffAdjustmentReason = Exclude<AdjustmentReason, 'visit_edited'>
 export const STAFF_ADJUSTMENT_REASONS: StaffAdjustmentReason[] = ['expired_disposed', 'damaged_spilled', 'miscount_correction', 'other']
 
 export interface StockAdjustmentInput {
+  /** The batch being counted, corrected, or explicitly disposed. */
+  batchId?: string
   /** Signed change (+/-). Ignored when `countedQuantity` is given. */
   change?: number
   /** "Set to counted quantity": the change becomes counted minus current stock. */
@@ -1192,14 +1236,17 @@ export function adjustInventoryStock(itemId: string, input: StockAdjustmentInput
     if (!STAFF_ADJUSTMENT_REASONS.includes(input.reason)) throw new StockRuleError('Choose a reason for the adjustment.')
     const note = input.note?.trim() || null
     if (input.reason === 'other' && !note) throw new StockRuleError('Add a note explaining the adjustment.')
+    const batch = must(item.batches.find((candidate) => candidate.id === input.batchId) ?? item.batches[0], 'Batch')
     const counted = input.countedQuantity
     if (counted !== undefined && (!Number.isInteger(counted) || counted < 0))
       throw new StockRuleError('The counted quantity must be a whole number of 0 or more.')
-    const change = counted !== undefined ? counted - item.currentStock : (input.change ?? 0)
+    const change = counted !== undefined ? counted - batch.quantity : (input.change ?? 0)
     if (!Number.isInteger(change) || change === 0) throw new StockRuleError('Enter a whole-number change other than 0.')
-    if (item.currentStock + change < 0)
-      throw new StockRuleError(`Stock can't go below 0. ${item.currentStock} ${item.unit} on hand.`)
-    item.currentStock += change
+    if (batch.quantity + change < 0)
+      throw new StockRuleError(`Stock can't go below 0. ${batch.quantity} ${item.unit} in this batch.`)
+    if (input.reason === 'expired_disposed' && !(batch.expirationDate && batch.expirationDate < s.today))
+      throw new StockRuleError('Choose an expired batch to record expired stock disposal.')
+    batch.quantity += change
     const txn: InventoryTransaction = {
       id: nextId('txn', s.frontendOnly.inventoryTransactions),
       itemId,
@@ -1211,10 +1258,11 @@ export function adjustInventoryStock(itemId: string, input: StockAdjustmentInput
       visitId: null,
       reason: input.reason,
       note,
+      batchAllocations: [{ batchId: batch.id, quantity: change }],
     }
     s.frontendOnly.inventoryTransactions.push(txn)
     audit(s, by, 'submit', { type: 'inventory-adjustment', id: txn.id }, ADJUSTMENT_REASON_LABELS[input.reason])
-    return { ...item, ...inventoryStatusFor(s, item) }
+    return inventoryView(s, item)
   })
 }
 
@@ -1233,12 +1281,58 @@ export class StockRuleError extends Error {}
 
 const QUANTITY_RULE = 'Quantities must be whole numbers of at least 1.'
 
-function isExpired(s: DbState, item: InventoryItem): boolean {
-  return inventoryStatusFor(s, item).flags.includes('expired')
+function nextBatchId(item: InventoryItem): string {
+  const maximum = item.batches.reduce((max, batch) => Math.max(max, Number(batch.id.match(/(\d+)$/)?.[1]) || 0), 0)
+  return `batch-${String(maximum + 1).padStart(4, '0')}`
 }
 
-function expiredMessage(item: InventoryItem): string {
-  return `${item.name} is expired and can't be given. Dispose of it with Adjust Stock.`
+function usableBatches(s: DbState, item: InventoryItem): InventoryBatch[] {
+  return item.batches
+    .filter((batch) => batch.expirationDate === null || batch.expirationDate >= s.today)
+    .sort((left, right) => (left.expirationDate ?? '9999-12-31').localeCompare(right.expirationDate ?? '9999-12-31'))
+}
+
+/** Takes earliest-expiring usable stock first. A shortfall stays a visible negative on the last usable batch. */
+function takeUsableBatches(s: DbState, item: InventoryItem, quantity: number): InventoryBatchAllocation[] {
+  const batches = usableBatches(s, item)
+  if (!batches.length) throw new StockRuleError(`${item.name} has no usable batch and can't be given. Dispose of expired stock before restocking.`)
+  let left = quantity
+  const allocations: InventoryBatchAllocation[] = []
+  for (const batch of batches) {
+    if (!left) break
+    const taken = Math.min(Math.max(batch.quantity, 0), left)
+    if (taken) {
+      batch.quantity -= taken
+      allocations.push({ batchId: batch.id, quantity: taken })
+      left -= taken
+    }
+  }
+  if (left) {
+    const last = batches[batches.length - 1]
+    last.quantity -= left
+    allocations.push({ batchId: last.id, quantity: left })
+  }
+  return allocations
+}
+
+function returnToBatches(item: InventoryItem, allocations: ReadonlyArray<InventoryBatchAllocation>) {
+  for (const allocation of allocations) {
+    const batch = must(item.batches.find((candidate) => candidate.id === allocation.batchId), 'Original batch')
+    batch.quantity += allocation.quantity
+  }
+}
+
+function splitAllocations(allocations: ReadonlyArray<InventoryBatchAllocation>, quantity: number) {
+  let left = quantity
+  const returned: InventoryBatchAllocation[] = []
+  const kept: InventoryBatchAllocation[] = []
+  for (const allocation of [...allocations].reverse()) {
+    const amount = Math.min(allocation.quantity, left)
+    if (amount) returned.push({ batchId: allocation.batchId, quantity: amount })
+    if (allocation.quantity > amount) kept.push({ batchId: allocation.batchId, quantity: allocation.quantity - amount })
+    left -= amount
+  }
+  return { returned, kept: kept.reverse() }
 }
 
 /**
@@ -1272,12 +1366,19 @@ function applyItemLines(
     .map((change) => {
       const item = s.inventoryItems.find((i) => i.id === change.itemId)
       if (!item) throw new StockRuleError('One of the items no longer exists in inventory.')
-      if (change.delta > 0 && isExpired(s, item)) throw new StockRuleError(expiredMessage(item))
       return { ...change, item }
     })
 
   for (const { itemId, delta, item } of changes) {
-    item.currentStock -= delta
+    const beforeLine = before.find((line) => line.itemId === itemId)
+    const prior = beforeLine?.batchAllocations ?? (beforeLine ? [{ batchId: item.batches[0]?.id ?? '', quantity: beforeLine.quantity }] : [])
+    let batchAllocations: InventoryBatchAllocation[]
+    if (delta > 0) batchAllocations = takeUsableBatches(s, item, delta)
+    else {
+      const split = splitAllocations(prior, -delta)
+      returnToBatches(item, split.returned)
+      batchAllocations = split.returned.map((allocation) => ({ ...allocation, quantity: -allocation.quantity }))
+    }
     const base = {
       id: nextId('txn', s.frontendOnly.inventoryTransactions),
       itemId,
@@ -1289,8 +1390,8 @@ function applyItemLines(
     }
     const txn: InventoryTransaction =
       mode === 'dispense'
-        ? { ...base, type: 'dispense', quantity: delta }
-        : { ...base, type: 'adjustment', quantity: -delta, reason: 'visit_edited', note: null }
+        ? { ...base, type: 'dispense', quantity: delta, batchAllocations }
+        : { ...base, type: 'adjustment', quantity: -delta, reason: 'visit_edited', note: null, batchAllocations }
     s.frontendOnly.inventoryTransactions.push(txn)
     if (mode === 'dispense') audit(s, by, 'submit', { type: 'inventory-dispensation', id: txn.id })
     else audit(s, by, 'submit', { type: 'inventory-adjustment', id: txn.id }, ADJUSTMENT_REASON_LABELS.visit_edited)
@@ -1299,16 +1400,32 @@ function applyItemLines(
   const kept = new Map(before.map((line) => [line.itemId, line]))
   const lines = next.map((line): ItemGivenLine => {
     const old = kept.get(line.itemId)
-    const item = changes.find((change) => change.itemId === line.itemId)?.item
+    const change = changes.find((candidate) => candidate.itemId === line.itemId)
+    const item = change?.item
+    const oldAllocations = old?.batchAllocations ?? (old ? [{ batchId: item?.batches[0]?.id ?? '', quantity: old.quantity }] : [])
+    const allocations = change && change.delta > 0
+      ? [...oldAllocations, ...takeAllocationsFromLastTransaction(s, change.itemId, link, change.delta)]
+      : change && change.delta < 0
+        ? splitAllocations(oldAllocations, -change.delta).kept
+        : oldAllocations
     return {
       itemId: line.itemId,
       itemName: old?.itemName ?? item!.name,
       unit: old?.unit ?? item!.unit,
       quantity: line.quantity,
       instructions: line.instructions?.trim() || null,
+      batchAllocations: allocations,
     }
   })
-  return { lines, belowZero: changes.filter((change) => change.item.currentStock < 0).map((change) => change.item.name) }
+  return { lines, belowZero: changes.filter((change) => change.item.batches.some((batch) => batch.quantity < 0)).map((change) => change.item.name) }
+}
+
+function takeAllocationsFromLastTransaction(s: DbState, itemId: string, link: { visitId?: string; incidentId?: string }, quantity: number) {
+  const transaction = [...s.frontendOnly.inventoryTransactions].reverse().find((candidate) =>
+    candidate.itemId === itemId && candidate.type === 'dispense' && candidate.quantity === quantity &&
+    candidate.visitId === (link.visitId ?? null) && candidate.incidentId === link.incidentId,
+  )
+  return transaction?.batchAllocations ?? []
 }
 
 // ---- reports ---------------------------------------------------------------------------------

@@ -13,6 +13,12 @@ describe('inventory API', () => {
     expect(supplies.every((item) => item.category === 'supply')).toBe(true)
   })
 
+  it('filters to items with expired stock without hiding their usable quantity', async () => {
+    const expired = await fetchInventory({ search: '', category: '', hasExpiredStock: true })
+    expect(expired).not.toHaveLength(0)
+    expect(expired.every((item) => item.expiredStock > 0)).toBe(true)
+  })
+
   it('records a dispensation and allows stock to cross below zero with a warning result', async () => {
     const [item] = await fetchInventory({ search: 'Paracetamol', category: '' })
     const result = await dispenseInventoryItem(item.id, item.currentStock + 8, '2026-00001')

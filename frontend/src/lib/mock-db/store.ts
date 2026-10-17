@@ -71,6 +71,19 @@ function loadSaved(): Saved | null {
   }
 }
 
+/** Migrates persisted pre-batch mock state without losing its quantity or expiry date. */
+function migrateInventoryBatches(saved: Saved): Saved {
+  for (const item of saved.state.inventoryItems as unknown as Array<Record<string, unknown>>) {
+    if (Array.isArray(item.batches)) continue
+    const currentStock = typeof item.currentStock === 'number' ? item.currentStock : 0
+    const expirationDate = typeof item.expirationDate === 'string' ? item.expirationDate : null
+    item.batches = [{ id: `${String(item.id)}-batch-0001`, quantity: currentStock, expirationDate, receivedDate: saved.state.today }]
+    delete item.currentStock
+    delete item.expirationDate
+  }
+  return saved
+}
+
 export function getMockToday(): ISODate {
   return todayOverride ?? todayISO()
 }
@@ -116,10 +129,11 @@ export function db(): DbState {
   if (!state) {
     const saved = todayOverride ? null : loadSaved()
     if (saved) {
-      state = saved.state
+      const migrated = migrateInventoryBatches(saved)
+      state = migrated.state
       // A copy saved before calendar events existed has no collection for them.
       state.frontendOnly.calendarEvents ??= []
-      seedAuditLength = saved.seedAuditLength
+      seedAuditLength = migrated.seedAuditLength
     } else {
       state = build()
     }

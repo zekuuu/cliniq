@@ -31,8 +31,8 @@ describe('Inventory List: expired stock', () => {
     renderWithRouter(<InventoryListPage />)
 
     expect(
-      await screen.findByText(`${expired.currentStock} ${expired.unit} (expired)`),
+      await screen.findByLabelText(`Expired stock: ${expired.expiredStock} ${expired.unit}`, { exact: false }),
     ).toBeInTheDocument()
-    expect(screen.getByText(`${usable.currentStock} ${usable.unit}`)).toBeInTheDocument()
+    expect(screen.getByText(`${usable.currentStock} ${usable.unit} usable`)).toBeInTheDocument()
   })
 })

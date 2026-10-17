@@ -66,6 +66,24 @@ describe('Visit Details', () => {
     expect((await getVisit('visit-0158')).complaint).toBe('Headache')
   })
 
+  it('uses Other to replace a visit complaint with focused free text', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<VisitDetailPage visitId="visit-0158" />)
+
+    await screen.findByRole('heading', { name: 'Visit Details' })
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    const complaint = screen.getByRole('combobox', { name: /complaint/i })
+    await user.click(complaint)
+    await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
+    expect(complaint).toHaveValue('')
+    expect(complaint).toHaveFocus()
+    await user.type(complaint, 'Noise-related discomfort')
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }))
+
+    expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
+    expect((await getVisit('visit-0158')).complaint).toBe('Noise-related discomfort')
+  })
+
   it('updates the visit and writes an audit entry', async () => {
     const user = userEvent.setup()
     renderWithRouter(<VisitDetailPage visitId="visit-0157" />)

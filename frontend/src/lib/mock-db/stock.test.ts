@@ -55,9 +55,9 @@ describe('recording a visit with medicines and supplies', () => {
       'inventory-dispensation',
       'inventory-dispensation',
     ])
-    expect((await getVisit(visit.id)).itemsGiven).toEqual([
-      { itemId: PARACETAMOL, itemName: 'Paracetamol 500mg', unit: 'tablets', quantity: 2, instructions: '1 tablet every 6 hours' },
-      { itemId: GAUZE, itemName: 'Gauze Pads', unit: 'pieces', quantity: 3, instructions: null },
+    expect((await getVisit(visit.id)).itemsGiven).toMatchObject([
+      { itemId: PARACETAMOL, itemName: 'Paracetamol 500mg', unit: 'tablets', quantity: 2, instructions: '1 tablet every 6 hours', batchAllocations: [{ quantity: 2 }] },
+      { itemId: GAUZE, itemName: 'Gauze Pads', unit: 'pieces', quantity: 3, instructions: null, batchAllocations: [{ quantity: 3 }] },
     ])
   })
 
@@ -98,7 +98,20 @@ describe('recording a visit with medicines and supplies', () => {
 
   it('rejects an expired item on the standalone dispense too', async () => {
     await expect(dispenseInventoryItem(ORS, 1)).rejects.toThrow(/expired/)
-    expect(await stock(ORS)).toBe(25)
+    expect((await getInventoryItem(ORS)).expiredStock).toBe(25)
+  })
+
+  it('keeps expired stock visible after restock and takes from the new usable batch only', async () => {
+    const before = await getInventoryItem(ORS)
+    const restocked = await restockInventoryItem(ORS, 10, '2099-12-31')
+    expect(restocked.batches).toHaveLength(before.batches.length + 1)
+    expect(restocked).toMatchObject({ currentStock: 10, expiredStock: 25, totalOnHand: 35 })
+
+    await dispenseInventoryItem(ORS, 4)
+    const after = await getInventoryItem(ORS)
+    expect(after).toMatchObject({ currentStock: 6, expiredStock: 25, totalOnHand: 31 })
+    expect(after.batches.find((batch) => batch.expirationDate === '2099-12-31')?.quantity).toBe(6)
+    expect(after.batches.find((batch) => batch.expirationDate !== null && batch.expirationDate < '2026-10-17')?.quantity).toBe(25)
   })
 
   it('keeps the name and unit snapshot after the item is renamed', async () => {
@@ -149,16 +162,27 @@ describe('editing a saved visit', () => {
     ])
   })
 
+  it('returns edited visit stock to the batches it was originally taken from', async () => {
+    await restockInventoryItem(PARACETAMOL, 8, '2099-12-31')
+    const { visit } = await newVisit([{ itemId: PARACETAMOL, quantity: 14 }])
+    const saved = (await getVisit(visit.id)).itemsGiven[0]
+    expect(saved.batchAllocations).toMatchObject([{ quantity: 12 }, { quantity: 2 }])
+
+    await updateVisit(visit.id, { ...patchOf(visit), itemsGiven: [{ itemId: PARACETAMOL, quantity: 12 }] })
+    const item = await getInventoryItem(PARACETAMOL)
+    expect(item.batches.find((batch) => batch.expirationDate === '2099-12-31')?.quantity).toBe(8)
+  })
+
   it('applies the expired rule only to added or increased quantity', async () => {
     const { visit } = await savedVisit()
     // Make an item on the visit expire after it was given.
-    db().inventoryItems.find((i) => i.id === GAUZE)!.expirationDate = '2000-01-01'
+    db().inventoryItems.find((i) => i.id === GAUZE)!.batches[0].expirationDate = '2000-01-01'
     const lines = (gauze: number) => ({ ...patchOf(visit), itemsGiven: [{ itemId: PARACETAMOL, quantity: 4 }, { itemId: GAUZE, quantity: gauze }] })
     await expect(updateVisit(visit.id, lines(3))).rejects.toThrow(/expired/)
-    expect(await stock(GAUZE)).toBe(38)
+    expect((await getInventoryItem(GAUZE)).expiredStock).toBe(38)
     await expect(updateVisit(visit.id, lines(2))).resolves.toBeTruthy()
     await expect(updateVisit(visit.id, lines(1))).resolves.toBeTruthy()
-    expect(await stock(GAUZE)).toBe(39)
+    expect((await getInventoryItem(GAUZE)).expiredStock).toBe(39)
   })
 
   it('leaves stock alone when only instructions change', async () => {

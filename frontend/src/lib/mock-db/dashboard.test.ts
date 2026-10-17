@@ -77,9 +77,8 @@ const item = (id: string, extra: Partial<InventoryItem>): InventoryItem => ({
   id,
   name: id,
   category: 'medicine',
-  currentStock: 100,
   unit: 'tablets',
-  expirationDate: null,
+  batches: [{ id: `${id}-batch-0001`, quantity: 100, expirationDate: null, receivedDate: TODAY }],
   lowStockThreshold: 10,
   ...extra,
 })
@@ -146,15 +145,15 @@ describe('inventory alerts', () => {
   it('keeps low-stock and expiry as separate flags that can both apply', () => {
     const data = dataset({
       inventoryItems: [
-        item('both', { currentStock: 2, expirationDate: '2026-10-06' }),
-        item('expired', { expirationDate: '2026-09-20' }),
-        item('at-threshold', { currentStock: 10 }), // "below" the threshold = strictly less
-        item('fine', { expirationDate: '2027-09-26' }),
+        item('both', { batches: [{ id: 'both-batch', quantity: 2, expirationDate: '2026-10-06', receivedDate: TODAY }] }),
+        item('expired', { batches: [{ id: 'expired-batch', quantity: 100, expirationDate: '2026-09-20', receivedDate: TODAY }] }),
+        item('at-threshold', { batches: [{ id: 'threshold-batch', quantity: 10, expirationDate: null, receivedDate: TODAY }] }), // "below" the threshold = strictly less
+        item('fine', { batches: [{ id: 'fine-batch', quantity: 100, expirationDate: '2027-09-26', receivedDate: TODAY }] }),
       ],
     })
     const rows = buildInventoryAlerts(data)
     expect(rows.map((r) => [r.item.id, r.flags, r.daysUntilExpiry])).toEqual([
-      ['expired', ['expired'], -6],
+      ['expired', ['low_stock', 'expired'], -6],
       ['both', ['low_stock', 'nearing_expiration'], 10],
     ])
   })
@@ -258,6 +257,39 @@ describe('complaint trends', () => {
     expect(trends.granularity).toBe('month')
     expect(trends.buckets).toHaveLength(9)
     expect(trends.series[0].counts).toEqual([0, 0, 1, 0, 0, 0, 0, 0, 0])
+  })
+
+  it('compares a completed calendar month by Monday through Sunday with its prior month', () => {
+    const trends = buildComplaintTrends(
+      [
+        { date: '2024-01-05', complaint: 'Headache' }, // Friday, prior month
+        { date: '2024-02-02', complaint: 'Headache' }, // Friday, leap-year month
+        { date: '2024-02-02', complaint: 'Fever', eventTag: 'Foundation practice' },
+        { date: '2024-02-04', complaint: 'Fever' }, // Sunday
+      ],
+      { preset: 'custom', from: '2024-02-01', to: '2024-02-29' },
+      CONFIG,
+      [{ title: 'Foundation practice', startDate: '2024-02-02', endDate: null }],
+    )
+    expect(trends.weekdayComparison).toMatchObject({
+      currentLabel: 'February 2024',
+      previousLabel: 'January 2024',
+    })
+    expect(trends.weekdayComparison?.rows.find((row) => row.label === 'Friday')).toMatchObject({
+      current: 2,
+      previous: 1,
+      currentPeak: { date: '2024-02-02', count: 2, annotations: ['Foundation practice'] },
+    })
+    expect(trends.weekdayComparison?.rows.find((row) => row.label === 'Sunday')).toMatchObject({ current: 1, previous: 0 })
+  })
+
+  it('uses December as the prior month for a January weekday comparison', () => {
+    const trends = buildComplaintTrends(
+      [{ date: '2025-12-01', complaint: 'Headache' }, { date: '2026-01-05', complaint: 'Headache' }],
+      { preset: 'custom', from: '2026-01-01', to: '2026-01-31' },
+      CONFIG,
+    )
+    expect(trends.weekdayComparison).toMatchObject({ previousLabel: 'December 2025', currentLabel: 'January 2026' })
   })
 
   it('keeps an All range with no events to a single bucket instead of a century of months', () => {

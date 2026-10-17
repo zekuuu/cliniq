@@ -1,1 +1,1 @@
-Medicine and Supply Inventory Tracker — item management, dispense/restock stock flow, low-stock/expiry threshold flags. Full stock-flow mechanics: Modules & Features canonical doc.
+Medicine and Supply Inventory Tracker — item management, batch-aware dispense/restock flow, and derived low-stock/expiry flags. Each received batch retains its quantity, received date and nullable expiry; restock adds a batch, usable stock excludes expired batches, and expired stock stays visible until an explicit disposal. Full stock-flow mechanics: Modules & Features canonical doc and ADR-030.

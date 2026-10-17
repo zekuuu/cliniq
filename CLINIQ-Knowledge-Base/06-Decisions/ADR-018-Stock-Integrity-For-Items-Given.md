@@ -1,7 +1,7 @@
 # ADR-018: Medicines and supplies given are real inventory, with stock-integrity rules
 
 **Date:** Wednesday, October 07, 2026 — 10:43 PHT
-**Status:** Accepted
+**Status:** Accepted — amended by ADR-030 (batch-level stock, disposal and usable-stock totals)
 
 ## Context
 A visit's treatment was one free-text string and never touched stock. A nurse could write "paracetamol given" and the Inventory list would still show the same count, so low-stock flags were wrong and nothing linked a dispensation to the visit or student it was for. The data layer already had `dispenseInventoryItem` and `restockInventoryItem` (decrement/increment, a transaction with `studentNumber` and `visitId`, and an audit entry), but no screen used them from a visit, and the Edit Item form could overwrite stock and the expiration date directly.

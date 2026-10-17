@@ -86,7 +86,9 @@ describe('New Visit', () => {
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await user.click(complaintField())
-    expect(screen.getAllByRole('option')).toHaveLength(8)
+    const initialOptions = screen.getAllByRole('option')
+    expect(initialOptions).toHaveLength(9)
+    expect(initialOptions[0]).toHaveTextContent('Other (type your own)')
     await user.type(complaintField(), 'ache')
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(
       expect.arrayContaining(['Headache', 'Stomachache', 'Toothache']),
@@ -99,6 +101,22 @@ describe('New Visit', () => {
 
     expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
     expect((await getSavedVisit()).complaint).toBe('Nose bleed')
+  })
+
+  it('clears and keeps focus in the Complaint input when Other is selected', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+
+    await screen.findByRole('heading', { name: 'New Visit' })
+    const complaint = complaintField()
+    await user.type(complaint, 'Headache')
+    await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
+
+    expect(complaint).toHaveValue('')
+    expect(complaint).toHaveFocus()
+    await user.type(complaint, 'Noise-related discomfort')
+    await user.click(screen.getByRole('button', { name: 'Save Visit' }))
+    expect((await getSavedVisit()).complaint).toBe('Noise-related discomfort')
   })
 
   it('stores a typed complaint in its suggestion spelling', async () => {

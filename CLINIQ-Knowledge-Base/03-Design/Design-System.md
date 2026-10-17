@@ -95,6 +95,8 @@ Predictable and simple. Familiar terminology over technical jargon. Make the cur
 
 **Page-level views (Thursday, October 15, 2026 — 19:08, ADR-025):** when a screen switches between whole views (first use: the Dashboard's Overview / Trends / Calendar), use the shared `Tabs` (`frontend/src/components/ui/Tabs.tsx`): ARIA tabs with roving tabindex, Arrow/Home/End, 44px tall on phones, selected state shown by the raised white chip, green ring, and weight (not color alone). It is one size above `SegmentedControl`, which stays for toggles inside a card (calendar period, chart/table). Keep the chosen view in the query string with `replace`.
 
+**Month-by-weekday chart comparison (Saturday, October 17, 2026 — 12:22 PHT):** when a dashboard range is a calendar month, compare Monday through Sunday to the equivalent previous-month window with grouped bars. Current is solid and previous is outlined as well as labelled, so color is not the only distinction. Keep a keyboard-focusable text table with the same totals and busiest-date/event-or-holiday context; non-month trends keep their date-derived form.
+
 ### Accessibility
 Treat as part of the normal design process, not an optional pass at the end. Ensure readable text, adequate contrast, clear labels, obviously-interactive elements, understandable error messages, visible focus/interaction states, meaningful feedback, and no dependence on color alone.
 

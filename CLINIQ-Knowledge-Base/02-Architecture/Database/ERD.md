@@ -778,6 +778,7 @@ Each has a recommended default so the design stands either way. "Cost to change 
 | **D-16** | Role storage: one `users.role` column or Spatie `laravel-permission` (suggested in Development-Phases)? | One column + policy classes. Roles are fixed (3), one per user, and the matrix is static; Spatie adds 5 tables for a 3-row matrix. | Moderate. |
 | **D-17** | Do vitals live in readings rows or as columns on `incidents`? | Readings rows (keeps the Stage 1 reading and allows rechecks); the API still presents one merged `vitals` object. | Expensive to flip later. |
 | **D-18** | Does a PE referral create a visit or incident automatically? The Brief says it "links into the same visit/treatment flow". | Keep it standalone with optional links (columns present). | Cheap. |
+| **D-19** | Should inventory use an `inventory_batches` table (item, received date, nullable expiration date, quantity) and record batch allocations for dispense, edit-return and disposal? | **Open:** the frontend mock now proves this flow under ADR-030; add no migration or draft-table change until the team approves the ERD. | Moderate: determines stock ledger and treatment-line foreign keys. |
 
 ---
 
