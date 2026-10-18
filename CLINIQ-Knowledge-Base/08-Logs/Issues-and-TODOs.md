@@ -15,7 +15,7 @@
 
 ## Open work at a glance
 
-Open: FIX 17 · AUDIT 10 · DOC 27 · DECIDE 76 · LATER 17 | Notes: NOTE 40 · VERIFY 14 | Done: 166
+Open: FIX 16 · AUDIT 10 · DOC 27 · DECIDE 76 · LATER 17 | Notes: NOTE 40 · VERIFY 14 | Done: 167
 
 **Open `FIX` items:**
 
@@ -553,6 +553,7 @@ Left by the session that rebuilt every Print / Save as PDF as an A4 document at 
 
 **Look and feel**
 
+- [x] **[DONE]** **Login page: larger logo, logo and name set apart, no wasted width.** Resolved Sunday, October 18, 2026 — 15:43 PHT: desktop Login now places a large CLINIQ/academy identity panel beside a narrow sign-in card; phones retain a compact brand header above the form. Removed “Use your assigned clinic account to continue.” The backdrop and Demo Accounts dialog remain. Session: [2026-10-18-professor-consultation-part-8-login-redesign](Agent-Sessions/2026-10-18-professor-consultation-part-8-login-redesign.md)
 - **Update Sunday, October 18, 2026 — 13:45 PHT:** The open professor **Excuse Letter: add a faint school-logo watermark** `FIX` is **HOLD: waiting for the school's answer**. Zean's reading is that the professor referred to the existing DRAFT mark. Until the school decides, the rotated DRAFT mark and boxed "not valid until approved" warning remain because removing both could make an unapproved letter look valid. Session: [2026-10-18-professor-consultation-part-7-excuse-letter-watermark-hold](Agent-Sessions/2026-10-18-professor-consultation-part-7-excuse-letter-watermark-hold.md)
 - [ ] **[DECIDE]** **Ask the school whether the DRAFT mark on excuse letters may be replaced by the school logo.** Logged Sunday, October 18, 2026 — 13:45 PHT: present three options—keep DRAFT; replace it with a faint school logo while retaining the boxed warning; or show both. Confirm whether the logo may be used on an unapproved clinic document. Session: [2026-10-18-professor-consultation-part-7-excuse-letter-watermark-hold](Agent-Sessions/2026-10-18-professor-consultation-part-7-excuse-letter-watermark-hold.md)
 - **Update Sunday, October 18, 2026 — 13:45 PHT:** Add the excuse-letter DRAFT/logo decision to the school questions when the external question files are regenerated. Session: [2026-10-18-professor-consultation-part-7-excuse-letter-watermark-hold](Agent-Sessions/2026-10-18-professor-consultation-part-7-excuse-letter-watermark-hold.md)
