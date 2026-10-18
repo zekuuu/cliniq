@@ -7,7 +7,11 @@ import { pickDate } from '../../test/pickDate'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { NewVisitEntryPage } from './NewVisitEntryPage'
 
-const complaintField = () => screen.getByRole('combobox', { name: /complaint/i })
+const complaintField = () => screen.getByRole('button', { name: /complaint/i })
+async function selectComplaint(user: ReturnType<typeof userEvent.setup>, label: string) {
+  await user.click(complaintField())
+  await user.click(screen.getByRole('option', { name: label }))
+}
 
 /**
  * The visit this test just saved, found by identity (its submit audit entry), not by sorting on time:
@@ -32,7 +36,7 @@ describe('New Visit', () => {
     expect(await screen.findByRole('heading', { name: 'New Visit' })).toBeInTheDocument()
     expect(screen.getByText(/\d{4}-\d{5}/)).toBeInTheDocument()
     expect(screen.queryByRole('combobox', { name: /student/i })).not.toBeInTheDocument()
-    await user.type(complaintField(), 'fever')
+    await selectComplaint(user, 'Fever')
     expect(screen.getByRole('heading', { name: /suggested first-aid steps for: Fever/i })).toBeInTheDocument()
     expect(screen.getByLabelText('Check temperature')).toBeInTheDocument()
   })
@@ -42,7 +46,6 @@ describe('New Visit', () => {
     renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
 
     await screen.findByRole('heading', { name: 'New Visit' })
-    await user.type(complaintField(), '   ')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
     expect(screen.getByText('Enter the complaint for this visit.')).toBeInTheDocument()
     // Treatment notes and items given are optional: a quiet, non-blocking note instead of an error.
@@ -55,7 +58,7 @@ describe('New Visit', () => {
     renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
 
     await screen.findByRole('heading', { name: 'New Visit' })
-    await user.type(complaintField(), 'Headache')
+    await selectComplaint(user, 'Headache')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
     expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
@@ -67,8 +70,7 @@ describe('New Visit', () => {
     renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
 
     await screen.findByRole('heading', { name: 'New Visit' })
-    await user.click(complaintField())
-    await user.click(screen.getByRole('option', { name: 'Headache' }))
+    await selectComplaint(user, 'Headache')
     await user.click(screen.getByLabelText('Check temperature'))
     await user.type(screen.getByLabelText(/treatment/i), 'Rested in clinic and hydrated.')
     await user.click(screen.getByLabelText(/this student needs a follow-up/i))
@@ -80,7 +82,7 @@ describe('New Visit', () => {
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['submit', 'create'])
   })
 
-  it('suggests complaints as you type, at most 8, and saves free text with no checklist', async () => {
+  it('lists a capped set of complaints and saves typed Other text with no checklist', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
 
@@ -89,12 +91,8 @@ describe('New Visit', () => {
     const initialOptions = screen.getAllByRole('option')
     expect(initialOptions).toHaveLength(9)
     expect(initialOptions[0]).toHaveTextContent('Other (type your own)')
-    await user.type(complaintField(), 'ache')
-    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(
-      expect.arrayContaining(['Headache', 'Stomachache', 'Toothache']),
-    )
-    await user.clear(complaintField())
-    await user.type(complaintField(), '  Nose   bleed ')
+    await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
+    await user.type(screen.getByLabelText(/specify other complaint/i), '  Nose   bleed ')
     expect(screen.queryByRole('heading', { name: /suggested first-aid steps/i })).not.toBeInTheDocument()
     await user.type(screen.getByLabelText(/treatment/i), 'Pinched nose, leaned forward.')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
@@ -103,29 +101,30 @@ describe('New Visit', () => {
     expect((await getSavedVisit()).complaint).toBe('Nose bleed')
   })
 
-  it('moves typed Complaint text into a focused Other field when Other is selected', async () => {
+  it('selects Other and focuses an empty Other field', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
 
     await screen.findByRole('heading', { name: 'New Visit' })
     const complaint = complaintField()
-    await user.type(complaint, 'Noise-related discomfort')
+    await user.click(complaint)
     await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
 
-    expect(complaint).toHaveValue('')
+    expect(complaint).toHaveTextContent('Other (type your own)')
     const otherComplaint = screen.getByLabelText(/specify other complaint/i)
-    expect(otherComplaint).toHaveValue('Noise-related discomfort')
+    expect(otherComplaint).toHaveValue('')
     expect(otherComplaint).toHaveFocus()
+    await user.type(otherComplaint, 'Noise-related discomfort')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
     expect((await getSavedVisit()).complaint).toBe('Noise-related discomfort')
   })
 
-  it('stores a typed complaint in its suggestion spelling', async () => {
+  it('stores a selected complaint in its suggestion spelling', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
 
     await screen.findByRole('heading', { name: 'New Visit' })
-    await user.type(complaintField(), 'headache{Escape}')
+    await selectComplaint(user, 'Headache')
     await user.type(screen.getByLabelText(/treatment/i), 'Rested.')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
@@ -207,7 +206,7 @@ describe('New Visit: disposition-specific fields', () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
     await screen.findByRole('heading', { name: 'New Visit' })
-    await user.type(complaintField(), 'Fever')
+    await selectComplaint(user, 'Fever')
     return user
   }
 

@@ -1,16 +1,15 @@
 import { useState } from 'react'
-import { Combobox, Input } from '../../components'
-import { cleanComplaint, COMPLAINT_MAX_LENGTH } from '../../lib/complaints'
+import { Input, Select } from '../../components'
+import { COMPLAINT_MAX_LENGTH } from '../../lib/complaints'
 
 /** How many complaint suggestions the list shows at once. */
 const COMPLAINT_SUGGESTION_LIMIT = 8
-const OTHER_OPTION = { kind: 'other' as const, label: 'Other (type your own)' }
-type ComplaintOption = typeof OTHER_OPTION | { kind: 'suggestion'; label: string }
+const OTHER_VALUE = '__other__'
 
 /**
- * The visit Complaint field (cliniq-combobox-patterns): free text with suggestions, filtered by a
- * case-insensitive "contains" match. Used by New Visit and the Visit Detail edit form; both save
- * through `normalizeComplaint`.
+ * The visit Complaint field (cliniq-combobox-patterns): a dropdown of familiar suggestions with
+ * an explicit Other path. Used by New Visit and the Visit Detail edit form; both save through
+ * `normalizeComplaint`.
  */
 export function ComplaintField({
   value,
@@ -24,35 +23,32 @@ export function ComplaintField({
   error?: string
 }) {
   const [otherSelected, setOtherSelected] = useState(false)
-  const typed = cleanComplaint(value).toLowerCase()
-  const matches = suggestions.filter((label) => label.toLowerCase().includes(typed)).slice(0, COMPLAINT_SUGGESTION_LIMIT)
-  const options: ComplaintOption[] = [OTHER_OPTION, ...matches.map((label) => ({ kind: 'suggestion' as const, label }))]
+  const options = [
+    { value: OTHER_VALUE, label: 'Other (type your own)' },
+    ...suggestions.slice(0, COMPLAINT_SUGGESTION_LIMIT).map((label) => ({ value: label, label })),
+  ]
+  const usingOther = otherSelected || (Boolean(value) && !suggestions.includes(value))
   return (
     <>
-      <Combobox
-      label="Complaint"
-      required
-      allowFreeText
-      value={otherSelected ? '' : value}
-      onValueChange={(nextValue) => {
-        setOtherSelected(false)
-        onChange(nextValue)
-      }}
-      options={options}
-      optionKey={(option) => option.kind === 'other' ? option.kind : option.label}
-      optionLabel={(option) => option.label}
-      onPick={(option) => {
-        if (option.kind !== 'other') return
-        setOtherSelected(true)
-        return false
-      }}
-      noMatchesText="No matching suggestion. What you typed is saved as is."
-      maxLength={COMPLAINT_MAX_LENGTH}
-      placeholder="e.g. Headache"
-      hint="The complaint or symptom only. Don't include names."
-      error={otherSelected ? undefined : error}
+      <Select
+        label="Complaint"
+        required
+        value={usingOther ? OTHER_VALUE : value}
+        onChange={(nextValue) => {
+          if (nextValue === OTHER_VALUE) {
+            setOtherSelected(true)
+            onChange('')
+            return
+          }
+          setOtherSelected(false)
+          onChange(nextValue)
+        }}
+        options={options}
+        placeholder="Select complaint"
+        hint="The complaint or symptom only. Don't include names."
+        error={usingOther ? undefined : error}
       />
-      {otherSelected && (
+      {usingOther && (
         <Input
         label="Specify other complaint"
         required

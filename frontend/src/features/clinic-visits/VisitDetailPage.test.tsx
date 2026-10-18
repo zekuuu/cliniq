@@ -34,7 +34,8 @@ describe('Visit Details', () => {
 
     await screen.findByRole('heading', { name: 'Visit Details' })
     await user.click(screen.getByRole('button', { name: 'Edit' }))
-    await user.clear(screen.getByRole('combobox', { name: /complaint/i }))
+    await user.click(screen.getByRole('button', { name: /complaint/i }))
+    await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
     await user.click(screen.getByRole('button', { name: 'Remove Paracetamol 500mg' }))
     await user.clear(screen.getByLabelText(/treatment/i))
     expect(screen.getByText('No treatment recorded. You can still save.')).toBeInTheDocument()
@@ -43,23 +44,22 @@ describe('Visit Details', () => {
     expect(screen.getByText('Enter the visit complaint.')).toBeInTheDocument()
     expect(screen.queryByText(/enter treatment notes/i)).not.toBeInTheDocument()
 
-    await user.type(screen.getByRole('combobox', { name: /complaint/i }), 'Headache')
+    await user.click(screen.getByRole('button', { name: /complaint/i }))
+    await user.click(screen.getByRole('option', { name: 'Headache' }))
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
     expect(screen.getByText('No treatment recorded.')).toBeInTheDocument()
     expect((await getVisit('visit-0157')).treatment).toBe('')
   })
 
-  it('edits the complaint with the shared combobox and stores the suggestion spelling', async () => {
+  it('edits the complaint with the shared dropdown and stores the suggestion spelling', async () => {
     const user = userEvent.setup()
     renderWithRouter(<VisitDetailPage visitId="visit-0158" />)
 
     await screen.findByRole('heading', { name: 'Visit Details' })
     await user.click(screen.getByRole('button', { name: 'Edit' }))
-    const complaint = screen.getByRole('combobox', { name: /complaint/i })
-    await user.clear(complaint)
-    await user.type(complaint, '  headACHE ')
-    await user.keyboard('{Escape}')
+    await user.click(screen.getByRole('button', { name: /complaint/i }))
+    await user.click(screen.getByRole('option', { name: 'Headache' }))
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
     expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
@@ -72,17 +72,18 @@ describe('Visit Details', () => {
 
     await screen.findByRole('heading', { name: 'Visit Details' })
     await user.click(screen.getByRole('button', { name: 'Edit' }))
-    const complaint = screen.getByRole('combobox', { name: /complaint/i })
+    const complaint = screen.getByRole('button', { name: /complaint/i })
     await user.click(complaint)
     await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
-    expect(complaint).toHaveValue('')
+    expect(complaint).toHaveTextContent('Other (type your own)')
     const otherComplaint = screen.getByLabelText(/specify other complaint/i)
-    expect(otherComplaint).toHaveValue('Stomachache')
+    expect(otherComplaint).toHaveValue('')
     expect(otherComplaint).toHaveFocus()
+    await user.type(otherComplaint, 'Noise-related discomfort')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
     expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
-    expect((await getVisit('visit-0158')).complaint).toBe('Stomachache')
+    expect((await getVisit('visit-0158')).complaint).toBe('Noise-related discomfort')
   })
 
   it('updates the visit and writes an audit entry', async () => {
