@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import {
   BackButton,
   Badge,
@@ -17,6 +17,7 @@ import {
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
+import { useGoBack } from '../../hooks/useGoBack'
 import { isPhilippinePhone, PHONE_ERROR } from '../../lib/phone'
 import { paths } from '../../routes/paths'
 import type { SessionUser } from '../../lib/mock-db'
@@ -175,6 +176,9 @@ function StudentFormEditor({
   const [isSaving, setIsSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const navigate = useNavigate()
+  // Set by the Incomplete Records queue's Edit Record, so a save goes back there instead of to the profile.
+  const returnTo = (useLocation().state as { returnTo?: string } | null)?.returnTo
+  const goBackToReturn = useGoBack(returnTo ?? paths.students)
   const invalidRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(invalidRef)
 
@@ -221,6 +225,11 @@ function StudentFormEditor({
         return
       }
       setDuplicateMatches([])
+      if (result.action === 'update' && returnTo) {
+        // Back through history, not a new entry, so Back on the queue doesn't show the queue again.
+        goBackToReturn()
+        return
+      }
       if (result.action === 'update') {
         // An edit ends on the record it changed, like Visit Details; the profile shows the confirmation.
         void navigate(paths.studentProfile(result.student.studentNumber), {

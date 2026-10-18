@@ -5,7 +5,6 @@ import { IncompleteRecordsQueuePage } from './IncompleteRecordsQueuePage'
 
 vi.mock('./api/incompleteRecordsApi', () => ({
   fetchIncompleteRecords: () => new Promise(() => {}),
-  markIncompleteRecordResolved: vi.fn(),
 }))
 
 describe('Incomplete Records Review Queue: first-load skeleton', () => {

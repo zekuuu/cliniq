@@ -1,10 +1,16 @@
 import { renderWithRouter } from '../../test/renderWithRouter'
-import { screen, within } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
+import { createMemoryRouter, RouterProvider, useParams } from 'react-router'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { getMockSessionUser, getRecordedAuditEntries, resetMockDb } from '../../lib/mock-db'
 import { IncompleteRecordsQueuePage } from './IncompleteRecordsQueuePage'
+import { StudentFormPage } from './StudentFormPage'
 import { fetchIncompleteRecords } from './api/incompleteRecordsApi'
+
+function EditRoute() {
+  return <StudentFormPage studentNumber={useParams().studentNumber} />
+}
 
 describe('Incomplete Records', () => {
   beforeEach(() => resetMockDb())
@@ -36,34 +42,53 @@ describe('Incomplete Records', () => {
     expect(screen.getByText(record.studentNumber)).toBeInTheDocument()
   })
 
-  it('marks a record reviewed and tracks who resolved it', async () => {
-    const user = userEvent.setup()
-    const [record] = await fetchIncompleteRecords()
+  it('offers Edit Record on every row instead of a Mark Reviewed shortcut', async () => {
     renderWithRouter(<IncompleteRecordsQueuePage />)
 
     await screen.findByRole('heading', { name: 'Incomplete Records' })
-    await user.type(screen.getByLabelText('Search'), record.studentNumber)
-    const row = await screen.findByRole('row', { name: new RegExp(record.studentNumber) })
-    await user.click(within(row).getByRole('button', { name: 'Mark Reviewed' }))
-
-    await user.click(screen.getByRole('radio', { name: 'Resolved' }))
-    const resolvedRow = await screen.findByRole('row', { name: new RegExp(record.studentNumber) })
-    expect(within(resolvedRow).getByText('Resolved')).toBeInTheDocument()
-    expect(within(resolvedRow).getByText(new RegExp(getMockSessionUser().name))).toBeInTheDocument()
-    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['approve'])
+    expect(screen.queryByRole('button', { name: /Mark Reviewed/ })).not.toBeInTheDocument()
+    const [record] = await fetchIncompleteRecords()
+    expect(screen.getByRole('link', { name: `Edit Record for ${record.studentNumber}` })).toHaveAttribute(
+      'href',
+      `/students/${record.studentNumber}/edit`,
+    )
   })
 
-  it('can show the resolved queue view', async () => {
+  it('edits a record from the queue, returns to it, and credits who resolved it', async () => {
     const user = userEvent.setup()
-    const [record] = await fetchIncompleteRecords()
-    renderWithRouter(<IncompleteRecordsQueuePage />)
+    const fillable = ['Student contact information', 'Emergency contact', 'Emergency contact name', 'Emergency contact phone']
+    const record = (await fetchIncompleteRecords()).find(
+      (row) => !row.resolvedAt && row.missingFields.every((field) => fillable.includes(field)),
+    )!
+    const router = createMemoryRouter(
+      [
+        { path: '/students/incomplete', element: <IncompleteRecordsQueuePage /> },
+        { path: '/students/:studentNumber/edit', element: <EditRoute /> },
+      ],
+      { initialEntries: ['/students/incomplete'] },
+    )
+    render(<RouterProvider router={router} />)
+
+    await user.click(await screen.findByRole('link', { name: `Edit Record for ${record.studentNumber}` }))
+    await screen.findByRole('heading', { name: 'Edit Student' })
+    for (const [label, value] of [
+      ['Student contact information', '09171234567'],
+      ['Contact name', 'Maria Santos'],
+      ['Relationship', 'Mother'],
+      ['Contact phone', '09171234568'],
+    ]) {
+      const field = screen.getByLabelText(new RegExp(`^${label}`))
+      if (!(field as HTMLInputElement).value) await user.type(field, value)
+    }
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
     await screen.findByRole('heading', { name: 'Incomplete Records' })
-    await user.type(screen.getByLabelText('Search'), record.studentNumber)
-    await user.click(screen.getByRole('button', { name: 'Mark Reviewed' }))
-
+    expect(router.state.location.pathname).toBe('/students/incomplete')
+    expect(router.state.historyAction).toBe('POP')
     await user.click(screen.getByRole('radio', { name: 'Resolved' }))
-    expect(await screen.findByText('1 record shown')).toBeInTheDocument()
-    expect(screen.getByText(record.studentNumber)).toBeInTheDocument()
+    const row = await screen.findByRole('row', { name: new RegExp(record.studentNumber) })
+    expect(within(row).getByText('Resolved')).toBeInTheDocument()
+    expect(within(row).getByText(new RegExp(getMockSessionUser().name))).toBeInTheDocument()
+    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['update'])
   })
 })

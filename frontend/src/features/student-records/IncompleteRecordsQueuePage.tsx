@@ -1,8 +1,9 @@
 import { useMemo, useState, type ReactNode } from 'react'
+import { Link } from 'react-router'
 import {
   BackButton,
   Badge,
-  Button,
+  buttonClassName,
   Card,
   CardBody,
   CardHeader,
@@ -20,19 +21,10 @@ import { paths } from '../../routes/paths'
 import { formatDate } from '../../lib/dates'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
-import {
-  fetchIncompleteRecords,
-  markIncompleteRecordResolved,
-  type IncompleteRecord,
-} from './api/incompleteRecordsApi'
+import { fetchIncompleteRecords, type IncompleteRecord } from './api/incompleteRecordsApi'
 
 type QueueFilter = 'open' | 'resolved' | 'all'
 type IncompleteSortKey = 'student' | 'grade' | 'missing' | 'imported' | 'status'
-
-interface ResolvedRecord {
-  resolvedBy: string
-  resolvedAt: string
-}
 
 function QueueSkeleton({ back }: { back: ReactNode }) {
   return (
@@ -80,27 +72,11 @@ export function IncompleteRecordsQueuePage({
   )
   const [filter, setFilter] = useState<QueueFilter>('all')
   const [search, setSearch] = useState('')
-  const [resolved, setResolved] = useState<Record<string, ResolvedRecord>>({})
-  const [savingId, setSavingId] = useState<string | null>(null)
   const [sort, setSort] = useState<TableSortState<IncompleteSortKey>>({ key: 'imported', direction: 'descending' })
 
-  async function resolveRecord(record: IncompleteRecord) {
-    setSavingId(record.id)
-    try {
-      const updated = await markIncompleteRecordResolved(record, viewer)
-      setResolved((current) => ({
-        ...current,
-        [record.id]: { resolvedBy: updated.resolvedBy ?? viewer.name, resolvedAt: updated.resolvedAt ?? '' },
-      }))
-    } finally {
-      setSavingId(null)
-    }
-  }
-
-  // Resolutions come from the data layer; `resolved` only holds ones made since this page loaded.
-  const resolutionOf = (record: IncompleteRecord): ResolvedRecord | undefined =>
-    resolved[record.id] ??
-    (record.resolvedAt ? { resolvedBy: record.resolvedBy ?? 'Unknown user', resolvedAt: record.resolvedAt } : undefined)
+  // A record is resolved when Edit Student saves it complete; the data layer records who and when.
+  const resolutionOf = (record: IncompleteRecord) =>
+    record.resolvedAt ? { resolvedBy: record.resolvedBy ?? 'Unknown user', resolvedAt: record.resolvedAt } : undefined
 
   const visibleRows = useMemo(() => {
     if (!data) return []
@@ -120,8 +96,7 @@ export function IncompleteRecordsQueuePage({
           record.gradeLevel.toLowerCase().includes(term)
         )
       })
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- resolutionOf only reads `resolved`
-  }, [data, filter, resolved, search])
+  }, [data, filter, search])
 
   const sortedRows = useMemo(
     () => sortTableRows(visibleRows, sort, (record, key) => {
@@ -131,8 +106,7 @@ export function IncompleteRecordsQueuePage({
       if (key === 'imported') return record.importedAt
       return resolutionOf(record) ? 'Resolved' : 'Open'
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- resolutionOf only reads `resolved`
-    [visibleRows, sort, resolved],
+    [visibleRows, sort],
   )
 
   const sortColumn = (key: IncompleteSortKey, label: string) => ({
@@ -145,6 +119,7 @@ export function IncompleteRecordsQueuePage({
     {
       key: 'student',
       header: 'Student',
+      width: '19%',
       rowHeader: true,
       sort: sortColumn('student', 'Student'),
       cell: (record) => (
@@ -157,17 +132,20 @@ export function IncompleteRecordsQueuePage({
     {
       key: 'grade',
       header: 'Grade level',
+      width: '11%',
       sort: sortColumn('grade', 'Grade level'),
       cell: (record) => record.gradeLevel,
     },
     {
       key: 'missing',
       header: 'Missing fields',
+      width: '25%',
       sort: sortColumn('missing', 'Missing fields'),
       cell: (record) => (
         <div className="flex flex-wrap gap-1">
           {record.missingFields.map((field) => (
-            <Badge key={field} tone="warning" variant="soft">
+            // Long field names wrap inside the column instead of spilling into the next one.
+            <Badge key={field} tone="warning" variant="soft" className="whitespace-normal!">
               {field}
             </Badge>
           ))}
@@ -177,6 +155,7 @@ export function IncompleteRecordsQueuePage({
     {
       key: 'imported',
       header: 'Imported',
+      width: '14%',
       sort: sortColumn('imported', 'Imported'),
       cell: (record) => (
         <div>
@@ -188,6 +167,7 @@ export function IncompleteRecordsQueuePage({
     {
       key: 'status',
       header: 'Resolution',
+      width: '16%',
       sort: sortColumn('status', 'Resolution'),
       cell: (record) => {
         const resolution = resolutionOf(record)
@@ -204,17 +184,28 @@ export function IncompleteRecordsQueuePage({
           )
         }
         return (
-          <Button
-            size="sm"
-            variant="secondary"
-            icon="checkCircle"
-            loading={savingId === record.id}
-            onClick={() => void resolveRecord(record)}
-          >
-            Mark Reviewed
-          </Button>
+          <Badge tone="warning" variant="soft">
+            Open
+          </Badge>
         )
       },
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      width: '15%',
+      cell: (record) => (
+        // Save returns here (Edit Student's `returnTo`), so the record is fixed without leaving the queue.
+        <Link
+          to={paths.studentEdit(record.studentNumber)}
+          state={{ returnTo: paths.incompleteRecords }}
+          aria-label={`Edit Record for ${record.studentNumber}`}
+          className={buttonClassName({ size: 'sm' })}
+        >
+          <Icon name="pencil" />
+          Edit Record
+        </Link>
+      ),
     },
   ]
 
@@ -311,6 +302,9 @@ export function IncompleteRecordsQueuePage({
                 rows={sortedRows}
                 rowKey={(record) => record.id}
                 fixedLayout
+                // Below this the six columns squeeze; the table scrolls inside the card instead, name pinned.
+                minTableWidth="60rem"
+                stickyFirstColumn
               />
             ) : (
               <EmptyState

@@ -41,6 +41,7 @@ import {
   gradeLevels,
   incompleteRecordQueue,
   inventoryStatusFor,
+  missingRequiredFields,
   monthlyCounts,
   nextStudentNumber,
   searchStudents as searchStudentRecords,
@@ -541,6 +542,7 @@ export function saveStudent(
       emergencyContact: input.emergencyContact,
     }
     const summary = existing ? changedSummary(existing, fields) : undefined
+    const wasIncomplete = existing ? missingRequiredFields(existing).length > 0 : false
     let record: SeedStudent
     if (existing) record = Object.assign(existing, fields)
     else {
@@ -548,7 +550,18 @@ export function saveStudent(
       s.students.push(record)
     }
     const action = existing ? 'update' : 'create'
-    audit(s, actorOr(options.actor), action, { type: 'student', id: record.id }, summary)
+    const by = actorOr(options.actor)
+    audit(s, by, action, { type: 'student', id: record.id }, summary)
+    // Completing a flagged record resolves it in the Incomplete Records queue, crediting whoever saved it.
+    if (wasIncomplete && !missingRequiredFields(record).length) {
+      let review = s.frontendOnly.recordReviews.find((r) => r.studentNumber === record.studentNumber)
+      if (!review) {
+        review = { studentNumber: record.studentNumber, importedAt: s.today, importedBy: 'Flagged in CLINIQ', resolvedByUserId: null, resolvedAt: null }
+        s.frontendOnly.recordReviews.push(review)
+      }
+      review.resolvedByUserId = by.id
+      review.resolvedAt = now(s)
+    }
     return { status: 'saved', student: toStudent(record), action }
   })
 }
@@ -569,24 +582,6 @@ export function getIncompleteRecordQueue(): Promise<IncompleteRecord[]> {
   return read('incomplete records', (s) =>
     incompleteRecordQueue(s).map((row) => ({ ...row, resolvedByName: userName(s, row.review?.resolvedByUserId ?? null) })),
   )
-}
-
-/** Staff marks a flagged record resolved; who resolved it is recorded (Module 2). */
-export function resolveIncompleteRecord(studentNumber: StudentNumber, actor?: SessionUser): Promise<IncompleteRecord> {
-  return write('resolve incomplete record', (s) => {
-    const by = actorOr(actor)
-    const student = must(s.students.find((st) => st.studentNumber === studentNumber), 'Student')
-    let review = s.frontendOnly.recordReviews.find((r) => r.studentNumber === studentNumber)
-    if (!review) {
-      review = { studentNumber, importedAt: s.today, importedBy: 'Flagged in CLINIQ', resolvedByUserId: null, resolvedAt: null }
-      s.frontendOnly.recordReviews.push(review)
-    }
-    review.resolvedByUserId = by.id
-    review.resolvedAt = now(s)
-    audit(s, by, 'approve', { type: 'student', id: student.id })
-    const row = must(incompleteRecordQueue(s).find((r) => r.student.studentNumber === studentNumber), 'Record')
-    return { ...row, resolvedByName: userName(s, by.id) }
-  })
 }
 
 // ---- visits --------------------------------------------------------------------------------
