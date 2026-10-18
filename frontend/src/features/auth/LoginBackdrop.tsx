@@ -19,7 +19,7 @@ export function LoginBackdrop() {
     <div
       aria-hidden="true"
       data-testid="login-backdrop"
-      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden bg-brand-green-dark bg-linear-to-br from-brand-green-dark to-brand-green print:hidden"
+      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-brand-green-dark bg-linear-to-br from-brand-green-dark to-brand-green print:hidden"
     >
       {/* Scaled past the edges so the blur doesn't fade into a fringe of the fallback at the viewport edge. */}
       {!failed && <img src={LOGIN_BACKDROP_SRC} alt="" className="size-full scale-110 object-cover blur-sm" onError={() => setFailed(true)} />}

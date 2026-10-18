@@ -21,8 +21,8 @@ describe('LoginPage', () => {
     expect(screen.getByText('CLINIQ')).toBeInTheDocument()
     expect(screen.queryByText(/assigned clinic account/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/clinic account/i)).not.toBeInTheDocument()
-    expect(screen.getByText(/all rights reserved/i)).toBeInTheDocument()
-    expect(screen.getByAltText('Mendez Christian Academy logo')).toBeInTheDocument()
+    expect(screen.queryByText(/all rights reserved/i)).not.toBeInTheDocument()
+    expect(screen.queryByAltText('Mendez Christian Academy logo')).not.toBeInTheDocument()
   })
 
   it('keeps the demo accounts and the simulated-auth notice off the page until asked for', async () => {

@@ -83,6 +83,8 @@ Clean, organized, compact, comfortable, uncluttered — avoid both extremes: cro
 
 Don't introduce a third width for one screen. The only exception is the mobile-first QR screens (Scan/Lookup hub, Emergency), which keep a phone-width column because they are designed for a phone held in one hand.
 
+**Login lockup (Sunday, October 18, 2026 — 18:06 PHT):** Login is its own centered auth composition, not a shell page. Its desktop card is `23rem` (368px) wide with a `20rem` (320px) form column; phones use the available viewport width minus 16px gutters. The HealWare mark overlaps the card above the shared content edge: size the image box to 108px so its 88.6px visible mark is about 24% of the card, account for the PNG's transparent padding when aligning it, and keep about 25px overlap plus 27–28px from the visible mark's bottom to the rendered Sign In heading. The white CLINIQ wordmark stays beside it with its soft shadow, about 137px wide at desktop. Login has no app footer; the shared footer belongs to the signed-in shell only.
+
 ### Forms
 Should be especially intuitive for non-technical users. Use real labels, not placeholder-text-only. Group related fields, clearly mark required fields, explain a confusing field when necessary, and give understandable validation messages rather than exposing raw technical errors. Preserve entered data when validation fails, where possible. A user should always be able to answer: *What do I enter? → Why am I entering it? → What happens next?*
 
