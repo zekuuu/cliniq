@@ -210,7 +210,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
         <CardHeader
           title="Incident summary"
           icon={<Icon name="fileText" />}
-          actions={<Badge tone={incident.stage === 1 ? 'warning' : 'success'} variant="soft">{incident.stage === 1 ? 'Needs completion' : 'Complete'}</Badge>}
+          actions={<Badge tone={incident.stage === 1 ? 'warning' : 'info'} variant="soft">{incident.stage === 1 ? 'Needs completion' : 'Complete'}</Badge>}
         />
         <CardBody className="flex flex-col gap-5">
           <div className="print:hidden">

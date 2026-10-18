@@ -33,7 +33,7 @@ import { archiveStudentRecord, fetchStudentProfile, type StudentProfileData } fr
 
 const incidentStageMap = {
   1: { label: 'Needs completion', tone: 'warning', icon: 'alertTriangle', variant: 'soft' },
-  2: { label: 'Complete', tone: 'success', icon: 'checkCircle', variant: 'soft' },
+  2: { label: 'Complete', tone: 'info', icon: 'checkCircle', variant: 'soft' },
 } satisfies StatusMap<'1' | '2'>
 
 /** The screen lists the most recent records; the printout lists them all. */
@@ -43,6 +43,12 @@ const dispositionLabel: Record<Disposition, string> = {
   returned_to_class: 'Returned to class',
   sent_home: 'Sent home',
   referred_to_hospital: 'Referred to hospital',
+}
+
+const dispositionTone: Record<Disposition, 'success' | 'warning' | 'error'> = {
+  returned_to_class: 'success',
+  sent_home: 'warning',
+  referred_to_hospital: 'error',
 }
 
 function tagList(items: string[], empty: string) {
@@ -202,7 +208,7 @@ function OverviewCard({ student }: { student: Student }) {
         </div>
         <div>
           <p className="text-xs font-semibold text-text-secondary">Record status</p>
-          <Badge tone={student.recordComplete ? 'success' : 'warning'} variant="soft">
+          <Badge tone={student.recordComplete ? 'info' : 'warning'} variant="soft">
             {student.recordComplete ? 'Complete' : 'Incomplete'}
           </Badge>
         </div>
@@ -279,7 +285,7 @@ function VisitHistoryCard({ visits }: { visits: Visit[] }) {
               secondary={visitCareSummary(visit)}
               meta={formatDateTime(visit.dateTime)}
               trailing={
-                <Badge tone="info" variant="soft" icon="checkCircle">
+                <Badge tone={dispositionTone[visit.disposition]} variant="soft" icon="checkCircle">
                   {dispositionLabel[visit.disposition]}
                 </Badge>
               }

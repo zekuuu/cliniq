@@ -194,7 +194,7 @@ export function IncompleteRecordsQueuePage({
         if (resolution) {
           return (
             <div>
-              <Badge tone="success" variant="soft" icon="checkCircle">
+              <Badge tone="info" variant="soft" icon="checkCircle">
                 Resolved
               </Badge>
               <p className="mt-1 text-xs text-text-secondary">
@@ -268,7 +268,7 @@ export function IncompleteRecordsQueuePage({
             <Badge tone="warning" variant="soft">
               {openCount} open
             </Badge>
-            <Badge tone="success" variant="soft">
+            <Badge tone="info" variant="soft">
               {resolvedCount} resolved
             </Badge>
           </div>

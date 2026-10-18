@@ -45,7 +45,7 @@ const completionOptions = [
 
 const completionMeta: Record<IncidentCompletion, { label: string; tone: BadgeTone }> = {
   needs_completion: { label: 'Needs completion', tone: 'warning' },
-  complete: { label: 'Complete', tone: 'success' },
+  complete: { label: 'Complete', tone: 'info' },
 }
 
 function IncidentLogSkeleton({ back }: { back: ReactNode }) {

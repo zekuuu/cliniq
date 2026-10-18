@@ -15,6 +15,7 @@ import {
   SegmentedControl,
   Skeleton,
   type ItemLineDraft,
+  type BadgeTone,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
@@ -46,6 +47,12 @@ const dispositionLabel: Record<Disposition, string> = {
   returned_to_class: 'Returned to class',
   sent_home: 'Sent home',
   referred_to_hospital: 'Referred to hospital',
+}
+
+const dispositionTone: Record<Disposition, BadgeTone> = {
+  returned_to_class: 'success',
+  sent_home: 'warning',
+  referred_to_hospital: 'error',
 }
 
 interface Errors extends DispositionErrors {
@@ -285,7 +292,7 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
             }
             icon={<Icon name="clipboardList" />}
             actions={
-              <Badge tone={editing ? 'warning' : 'success'} variant="soft">
+              <Badge tone={editing ? 'warning' : dispositionTone[visit.disposition]} variant="soft">
                 {editing ? 'Editing' : dispositionLabel[visit.disposition]}
               </Badge>
             }
@@ -390,7 +397,7 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                 </section>
                 <section>
                   <h2 className="text-sm font-bold text-text-primary">Disposition</h2>
-                  <Badge tone="info" variant="soft">
+                  <Badge tone={dispositionTone[visit.disposition]} variant="soft">
                     {dispositionLabel[visit.disposition]}
                   </Badge>
                 </section>

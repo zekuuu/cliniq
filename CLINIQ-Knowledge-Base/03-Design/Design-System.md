@@ -56,12 +56,14 @@ Restrained, cohesive palette. Prioritize strong text/background contrast, consis
 
 | Token | Hex | Use | Contrast w/ white | Note |
 |---|---|---|---|---|
-| `success` | `#20753A` | Confirmation messages, success buttons/badges carrying white text | 5.73:1 — passes normal text | The original brighter green idea (`#2E9E4F`) only reaches 3.43:1 — fine for a large icon or bold label, not safe for a small white-text badge, so this darker shade is the one to actually build with |
+| `success` | `#20753A` | Active, verified, approved, or go states; confirmation messages and badges carrying white text | 5.73:1 — passes normal text | The original brighter green idea (`#2E9E4F`) only reaches 3.43:1 — fine for a large icon or bold label, not safe for a small white-text badge, so this darker shade is the one to actually build with |
 | `success-light` | `#2E9E4F` | Icon color, or badge/accent paired with dark text, where a slightly brighter green reads better | — (used with dark text, not white) | |
-| `warning` | `#A85F00` | Low-stock, nearing-expiration, frequent-visitor warnings — anywhere carrying white text | 4.88:1 — passes normal text | The first candidate (`#ED8B00`) measured **2.53:1 — an outright fail**, not just borderline. Genuinely don't use that shade with white text anywhere |
+| `warning` | `#A85F00` | Pending, in-progress, due-soon, nearing-expiration, or review-needed states — anywhere carrying white text | 4.88:1 — passes normal text | The first candidate (`#ED8B00`) measured **2.53:1 — an outright fail**, not just borderline. Genuinely don't use that shade with white text anywhere |
 | `warning-light` | `#ED8B00` | Badge/icon backgrounds paired with dark text only | — (used with dark text, not white) | |
-| `error` / `destructive` | `#D32F2F` | Delete/irreversible actions, validation errors, missed follow-ups | 4.98:1 — passes | Outside the brand palette entirely — unambiguous |
-| `info` | `#1976D2` | Neutral system messages | 4.60:1 — passes | The one cool hue in the palette, reserved for neutral/informational only |
+| `error` / `destructive` | `#D32F2F` | Incidents, expired or critically low stock, overdue/missed work, delete/irreversible actions, and validation errors | 4.98:1 — passes | Outside the brand palette entirely — unambiguous |
+| `info` | `#1976D2` | Completed, closed, resolved, and neutral informational states | 4.60:1 — passes | The one cool hue in the palette, reserved for completion and informational context |
+
+**Status mapping (Sunday, October 18, 2026 — 17:26 PHT):** use `error` red for incidents, expired or low stock, and overdue/critical states; `success` green for active, verified, approved, or go states; `warning` yellow for pending, in-progress, due-soon, and review-needed states; `info` blue for completed, closed, resolved, and informational states; and `neutral` gray for archived, inactive, and no-state labels. Use the soft variant for statuses inside cards and rows. Icons and text labels remain required; color never carries the meaning alone.
 
 **Contrast rules, stated plainly:**
 - Small white text: only ever on `brand-green-dark`, `success`, `warning`, `error`, or `info` — never on `brand-green`, `brand-yellow`, `brand-yellow-dark`, `brand-green-light`, `success-light`, or `warning-light`.

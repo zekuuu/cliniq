@@ -56,7 +56,7 @@ const incidentStatusMap = {
     variant: 'soft',
   },
   in_progress: { label: 'In progress', tone: 'info', icon: 'clock', variant: 'soft' },
-  complete: { label: 'Complete', tone: 'success', icon: 'checkCircle', variant: 'soft' },
+  complete: { label: 'Complete', tone: 'info', icon: 'checkCircle', variant: 'soft' },
 } satisfies StatusMap<IncidentStatus>
 
 const notificationOutcomes = [

@@ -4,7 +4,7 @@ import type { StatusMap } from '../ui/StatusBadge'
 /** FollowUp.status lifecycle (Module 3): Pending → Completed / Missed / Cancelled. */
 export const followUpStatusMap: StatusMap<FollowUpStatus> = {
   pending: { label: 'Pending', tone: 'info', icon: 'clock', variant: 'soft' },
-  completed: { label: 'Completed', tone: 'success', icon: 'checkCircle', variant: 'soft' },
+  completed: { label: 'Completed', tone: 'info', icon: 'checkCircle', variant: 'soft' },
   missed: { label: 'Missed', tone: 'error', icon: 'xCircle', variant: 'soft' },
   cancelled: { label: 'Cancelled', tone: 'neutral', icon: 'xCircle', variant: 'soft' },
 }

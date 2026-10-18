@@ -79,7 +79,7 @@ export function StatCardRow({
     },
     {
       key: 'follow-ups',
-      card: <StatCard icon={CARDS.followUps.icon} label={CARDS.followUps.label} tone={CARDS.followUps.tone} value={summary.dueFollowUps.length} scope={overdue ? `${overdue} overdue` : 'None overdue'} labelAction={canNavigate ? <TitleLink to={paths.followUps}>{CARDS.followUps.label}</TitleLink> : undefined} />,
+      card: <StatCard icon={CARDS.followUps.icon} label={CARDS.followUps.label} tone={overdue ? 'error' : CARDS.followUps.tone} value={summary.dueFollowUps.length} scope={overdue ? `${overdue} overdue` : 'None overdue'} labelAction={canNavigate ? <TitleLink to={paths.followUps}>{CARDS.followUps.label}</TitleLink> : undefined} />,
     },
   ]
 

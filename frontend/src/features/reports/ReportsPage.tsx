@@ -21,7 +21,7 @@ const baseIncidentColumns: Array<DataTableColumn<ArchiveRow>> = [
   { key: 'student', header: 'Student Number', rowHeader: true, cell: (incident) => incident.studentNumber },
   { key: 'date', header: 'Date', cell: (incident) => formatDateTime(incident.time) },
   { key: 'complaint', header: 'Complaint', cell: (incident) => incident.complaint },
-  { key: 'status', header: 'Status', cell: (incident) => <Badge tone={incident.stage === 1 ? 'warning' : 'success'} variant="soft">{incident.stage === 1 ? 'Needs completion' : 'Complete'}</Badge> },
+  { key: 'status', header: 'Status', cell: (incident) => <Badge tone={incident.stage === 1 ? 'warning' : 'info'} variant="soft">{incident.stage === 1 ? 'Needs completion' : 'Complete'}</Badge> },
 ]
 
 function ReportBodySkeleton() {

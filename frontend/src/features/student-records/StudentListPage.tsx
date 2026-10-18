@@ -94,7 +94,7 @@ const baseColumns: Array<DataTableColumn<Student>> = [
     width: '23%',
     cell: (student) => (
       <div className="flex flex-wrap gap-1">
-        <Badge tone={student.recordComplete ? 'success' : 'warning'} variant="soft">
+        <Badge tone={student.recordComplete ? 'info' : 'warning'} variant="soft">
           {student.recordComplete ? 'Complete' : 'Incomplete'}
         </Badge>
         {student.archived && (

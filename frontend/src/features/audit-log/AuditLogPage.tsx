@@ -54,7 +54,7 @@ const actionStatusMap: StatusMap<AuditActionType> = {
   create: { label: 'Create', tone: 'success' },
   update: { label: 'Update', tone: 'info' },
   delete: { label: 'Delete', tone: 'error' },
-  archive: { label: 'Archive', tone: 'warning' },
+  archive: { label: 'Archive', tone: 'neutral' },
 }
 
 const targetLabels: Record<AuditTargetType, string> = {

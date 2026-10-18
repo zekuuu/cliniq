@@ -42,7 +42,7 @@ function FollowUpSkeleton({ back }: { back: ReactNode }) {
 function statusBadge(status: FollowUpStatus) {
   const tone =
     status === 'completed'
-      ? 'success'
+      ? 'info'
       : status === 'missed'
         ? 'error'
         : status === 'cancelled'
