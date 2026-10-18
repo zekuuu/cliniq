@@ -186,6 +186,7 @@ const FIELD_LABELS: Record<string, string> = {
   eventTag: 'event tag',
   treatment: 'treatment notes',
   itemsGiven: 'medicines and supplies',
+  profilePicture: 'profile picture',
 }
 
 /** "Updated allergies and grade level" — names the changed fields for the audit summary, never their values. */
@@ -377,6 +378,7 @@ export interface UserInput {
   name: string
   username: string
   role: UserRole
+  profilePicture?: string | null
 }
 
 /**
@@ -396,14 +398,18 @@ export function saveUser(input: UserInput, options: { userId?: string; actor?: S
       throw new DuplicateUsernameError()
     }
     const existing = options.userId ? must(s.users.find((u) => u.id === options.userId), 'User') : null
-    const summary = existing ? changedSummary(existing, { name: input.name.trim(), username: input.username.trim(), role: input.role }) : undefined
+    const next = {
+      name: input.name.trim(),
+      username: input.username.trim(),
+      role: input.role,
+      profilePicture: input.profilePicture ?? null,
+    }
+    const summary = existing ? changedSummary(existing, next) : undefined
     const user: User = existing
-      ? Object.assign(existing, { name: input.name.trim(), username: input.username.trim(), role: input.role })
+      ? Object.assign(existing, next)
       : {
           id: nextUserId(s, input.role),
-          name: input.name.trim(),
-          username: input.username.trim(),
-          role: input.role,
+          ...next,
           lastLogin: null,
         }
     if (!existing) s.users.push(user)

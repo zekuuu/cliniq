@@ -33,6 +33,8 @@ export interface SelectProps {
   className?: string
   required?: boolean
   disabled?: boolean
+  /** Focuses the trigger when the field first mounts. */
+  autoFocus?: boolean
   /** Places the label beside the control from the small breakpoint upward. */
   inline?: boolean
   /** Keeps the label for screen readers only, e.g. a per-row control whose column header names it. */
@@ -61,6 +63,7 @@ export function Select({
   id,
   required,
   disabled,
+  autoFocus = false,
   className,
   inline = false,
   hideLabel = false,
@@ -197,6 +200,7 @@ export function Select({
           ref={triggerRef}
           id={selectId}
           type="button"
+          autoFocus={autoFocus}
           disabled={disabled}
           aria-labelledby={`${labelId} ${valueId}`}
           aria-haspopup="listbox"

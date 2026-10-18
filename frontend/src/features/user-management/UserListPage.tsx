@@ -20,11 +20,22 @@ import { ROLE_LABELS } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
 import type { User } from '../../types/entities'
 import { fetchUsers } from './api/userApi'
+import { UserAvatar } from './UserAvatar'
 
 type UserSortKey = 'name' | 'username' | 'role' | 'lastLogin'
 
 const baseColumns: Array<DataTableColumn<User>> = [
-  { key: 'name', header: 'Name', rowHeader: true, cell: (user) => user.name },
+  {
+    key: 'name',
+    header: 'Name',
+    rowHeader: true,
+    cell: (user) => (
+      <span className="flex min-w-0 items-center gap-2">
+        <UserAvatar name={user.name} picture={user.profilePicture} />
+        <span className="truncate">{user.name}</span>
+      </span>
+    ),
+  },
   { key: 'username', header: 'Username', cell: (user) => user.username },
   {
     key: 'role',

@@ -31,6 +31,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 **User Account Management** *(Staff only)*
 - Add new user account, including PE/Sports Instructor accounts
 - Edit user account (name, username, role)
+- Optionally add, replace, or remove a staff-account profile picture (JPEG, PNG, or WebP, client-cropped/resized to a 256 px square); show an initials avatar when absent, keep the role badge visible, and audit the change by field name only
 - Deactivate/remove user account
 - View list of all user accounts
 - Search/filter user accounts

@@ -29,6 +29,18 @@ function getSavedVisit() {
 describe('New Visit', () => {
   beforeEach(() => resetMockDb())
 
+  it('focuses student lookup first when the visit has no identified student', async () => {
+    renderWithRouter(<NewVisitEntryPage />)
+
+    expect(await screen.findByRole('combobox', { name: /student/i })).toHaveFocus()
+  })
+
+  it('focuses Complaint first when the student is already identified', async () => {
+    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+
+    expect(await screen.findByRole('button', { name: /complaint/i })).toHaveFocus()
+  })
+
   it('shows the identified student and reveals Smart Triage for a case-insensitive complaint match', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)

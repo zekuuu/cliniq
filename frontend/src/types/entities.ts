@@ -58,6 +58,8 @@ export interface User {
   name: string
   username: string
   role: UserRole
+  /** Optional staff-account avatar, stored as a resized data URL by the mock layer. Never a student image. */
+  profilePicture?: string | null
   lastLogin: ISODateTime | null
 }
 

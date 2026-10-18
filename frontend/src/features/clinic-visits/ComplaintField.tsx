@@ -16,11 +16,14 @@ export function ComplaintField({
   onChange,
   suggestions,
   error,
+  autoFocus = false,
 }: {
   value: string
   onChange: (value: string) => void
   suggestions: string[]
   error?: string
+  /** Focus the dropdown trigger when it is the first field in an identified-student visit. */
+  autoFocus?: boolean
 }) {
   const [otherSelected, setOtherSelected] = useState(false)
   const options = [
@@ -32,6 +35,7 @@ export function ComplaintField({
     <>
       <Select
         label="Complaint"
+        autoFocus={autoFocus}
         required
         value={usingOther ? OTHER_VALUE : value}
         onChange={(nextValue) => {

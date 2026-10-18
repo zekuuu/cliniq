@@ -454,6 +454,7 @@ export function NewVisitEntryPage({
                 }}
                 error={identified.error}
                 addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
+                autoFocus
               />
             )}
             <ComplaintField
@@ -461,6 +462,7 @@ export function NewVisitEntryPage({
               onChange={updateComplaint}
               suggestions={suggestions}
               error={errors.complaint}
+              autoFocus={Boolean(data.student)}
             />
             {cleanComplaint(complaint) ? (
               <TriagePanel

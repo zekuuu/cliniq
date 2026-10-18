@@ -1,6 +1,6 @@
 ---
 name: cliniq-combobox-patterns
-description: Apply when building or changing a CLINIQ text field with a suggestion list (a combobox), such as the New Visit complaint field, or a student lookup by Student Number or name (StudentPicker). Keeps every combobox on the one shared, keyboard-usable primitive in the shared dropdown look.
+description: Apply when building or changing a CLINIQ text field with a suggestion list (a combobox), such as a student lookup by Student Number or name (StudentPicker). Keeps every combobox on the one shared, keyboard-usable primitive in the shared dropdown look.
 ---
 
 # CLINIQ Combobox Patterns
@@ -17,10 +17,10 @@ Use this with `cliniq-dropdown-patterns` (the panel and option look), `cliniq-in
 - States: `loading` ("Searching…"), `loadError` (shown in the panel as an alert), and "No matches" (`noMatchesText`, or `null` to keep the panel closed when empty).
 - The caller filters and caps the options. The primitive doesn't filter, so it serves a local list and an async search alike.
 
-## Complaint field (free text)
+## Complaint field (select plus Other)
 
-- The visit Complaint field is the shared `ComplaintField` (`frontend/src/features/clinic-visits/ComplaintField.tsx`), a Combobox with free text allowed. New Visit and the Visit Detail edit form both use it. "Other (type your own)" is always the first action row: selecting it visibly retains that selection, reveals a required, focused **Specify other complaint** field, carries any typed value into it, and is never stored as a complaint. Suggestions are the predefined visit complaint types plus complaints already saved on visits, ranked by use count, then most recent. The pool comes from a data-layer selector (`complaintSuggestions`, ADR-014), never stored data.
-- Filtering is a case-insensitive "contains" match. At most 8 suggestions show, on focus and while typing, in addition to Other.
+- The visit Complaint field is the shared `ComplaintField` (`frontend/src/features/clinic-visits/ComplaintField.tsx`), built on the shared `Select`, not a Combobox. New Visit and the Visit Detail edit form both use it. "Other (type your own)" is always the first option: selecting it visibly retains that selection, clears a prior suggestion, reveals a required, focused **Specify other complaint** field, and never stores the option label.
+- The select lists Other plus at most 8 ranked suggestions. Suggestions are predefined visit complaint types plus complaints already saved on visits, ranked by use count, then most recent. The pool comes from a data-layer selector (`complaintSuggestions`, ADR-014), never stored data.
 - On save the text is normalized (`frontend/src/lib/complaints.ts`): trimmed, repeated spaces collapsed, 60 characters max. Text that matches a suggestion case-insensitively is stored in that suggestion's spelling. Whitespace-only is invalid. The data layer applies the same normalization on create (`recordVisit`) and on edit (`updateVisit`).
 - Helper text says complaint only, no names.
 - Smart Triage triggers on a case-insensitive match to a predefined type. Free text with no match shows no checklist.
