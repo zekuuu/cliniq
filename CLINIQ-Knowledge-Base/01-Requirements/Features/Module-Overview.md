@@ -250,7 +250,7 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 
 - View total clinic counts (visits, incidents, active students)
 - View pending/incomplete records (pulled from the Student Records review queue, Module 2)
-- *Staff only:* excuse letters awaiting approval (Module 3), by Student Number, each linking to its letter; hidden when there are none. Navigation only, so the dashboard stays view-only (ADR-011)
+- *Staff only:* the "Pending excuse letters" stat card opens the Visit Log filtered to visits whose letter awaits approval, each with a "Review Letter" link (ADR-011 amendment, October 19, 2026; the separate Overview list was removed). Navigation only, so the dashboard stays view-only (ADR-011)
 - View common-complaint aggregation by week/month
 - View aggregate-only Sex and grade-level Trend counts. Selecting either dimension filters only the Trend charts and complaint/weekday statistics; no student name appears and the Overview totals stay unfiltered. A production minimum-group-size rule remains open.
 - View symptom-clustering alerts (possible outbreak early warning)

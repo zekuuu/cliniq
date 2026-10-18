@@ -25,6 +25,7 @@ export const paths = {
   studentProfile: (studentNumber: string) => `/students/${seg(studentNumber)}`,
   studentEdit: (studentNumber: string) => `/students/${seg(studentNumber)}/edit`,
   visits: '/visits',
+  visitsWithPendingLetter: '/visits?letter=pending',
   visitsInRange: (from: string, to: string) => `/visits?from=${seg(from)}&to=${seg(to)}`,
   /** The Visits list opened on one day's custom range (the Dashboard calendar's "View visits"). */
   visitsOnDate: (date: string) => `/visits?from=${date}&to=${date}`,

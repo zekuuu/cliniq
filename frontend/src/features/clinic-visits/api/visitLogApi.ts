@@ -8,6 +8,8 @@ export interface VisitLogQuery {
   to: ISODate
   search: string
   disposition: Disposition | 'all'
+  /** `pending`: only visits whose excuse-letter draft awaits approval (the Dashboard's count). */
+  letter?: 'pending' | ''
 }
 
 export interface VisitLogRow {
@@ -20,6 +22,8 @@ export interface VisitLogRow {
   disposition: Disposition
   eventTag: string | null
   loggedBy: string
+  /** Same rule as the Dashboard's "Pending excuse letters" count: a draft, for a student not archived. */
+  letterPending: boolean
 }
 
 export function defaultVisitLogRange(today = todayISO()): { from: ISODate; to: ISODate } {
@@ -51,10 +55,12 @@ export async function fetchVisitLog(query: VisitLogQuery): Promise<VisitLogRow[]
               disposition: visit.disposition,
               eventTag: visit.eventTag,
               loggedBy: userNames.get(visit.loggedByUserId) ?? 'Unknown user',
+              letterPending: Boolean(visit.excuseLetterDraft) && !student.archived,
             },
           ]
         : []
     })
+    .filter((row) => query.letter !== 'pending' || row.letterPending)
     .filter((row) => {
       if (!search) return true
       return (

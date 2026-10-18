@@ -29,18 +29,11 @@ describe('Clinic Overview Dashboard', () => {
     expect(screen.getByRole('link', { name: /incomplete records/i })).toHaveAttribute('href', '/students/incomplete')
   })
 
-  it('jumps from the Pending excuse letters card to the list, on every click', async () => {
-    const user = userEvent.setup()
+  it('sends Staff from the Pending excuse letters card to the filtered Visit Log, with no duplicate list', async () => {
     renderWithRouter(<DashboardPage />)
     await screen.findByRole('region', { name: 'Summary counts' })
-    const link = await screen.findByRole('link', { name: 'Pending excuse letters' })
-    const list = document.getElementById('pending-excuse-letters')!
-
-    await user.click(link)
-    expect(list).toHaveFocus()
-    link.focus()
-    await user.click(link)
-    expect(list).toHaveFocus()
+    expect(screen.getByRole('link', { name: 'Pending excuse letters' })).toHaveAttribute('href', '/visits?letter=pending')
+    expect(screen.queryByRole('heading', { name: /excuse letters awaiting approval/i })).not.toBeInTheDocument()
   })
 
   it('keeps the Dashboard focused on Overview and Trends', async () => {

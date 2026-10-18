@@ -14,11 +14,12 @@ import {
   Input,
   Pagination,
   SegmentedControl,
+  Select,
   Skeleton,
   type BadgeTone,
   type DataTableColumn,
 } from '../../components'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useDateRangeEntryParams } from '../../hooks/useDateRangeEntryParams'
 import { formatDateTime } from '../../lib/dates'
@@ -33,6 +34,7 @@ import {
 } from './api/visitLogApi'
 
 type DispositionFilter = Disposition | 'all'
+type LetterFilter = 'pending' | ''
 
 const PAGE_SIZE = 10
 type VisitLogSortKey = 'dateTime' | 'studentNumber' | 'record' | 'disposition'
@@ -84,12 +86,15 @@ export function VisitLogListPage() {
   const [range, setRange] = useState<DateRange>(initialRange)
   const [search, setSearch] = useState('')
   const [disposition, setDisposition] = useState<DispositionFilter>('all')
+  // `?letter=pending` (the Dashboard's "Pending excuse letters" card) applies only on arrival.
+  const [searchParams] = useSearchParams()
+  const [letter, setLetter] = useState<LetterFilter>(searchParams.get('letter') === 'pending' ? 'pending' : '')
   const [sort, setSort] = useState<TableSortState<VisitLogSortKey>>({ key: 'dateTime', direction: 'descending' })
   const [page, setPage] = useState(1)
 
   const { data, status, isRefetching, reload } = useAsyncData(
-    `${range.from}|${range.to}|${search}|${disposition}`,
-    () => fetchVisitLog({ from: range.from, to: range.to, search, disposition }),
+    `${range.from}|${range.to}|${search}|${disposition}|${letter}`,
+    () => fetchVisitLog({ from: range.from, to: range.to, search, disposition, letter }),
   )
 
   // Filters reset to the first page in the same event, so a narrower result never lands on an
@@ -105,6 +110,10 @@ export function VisitLogListPage() {
   }
   function changeDisposition(next: DispositionFilter) {
     setDisposition(next)
+    setPage(1)
+  }
+  function changeLetter(next: string) {
+    setLetter(next === 'pending' ? 'pending' : '')
     setPage(1)
   }
 
@@ -202,10 +211,21 @@ export function VisitLogListPage() {
       key: 'actions',
       header: 'Actions',
       cell: (row) => (
-        <Link to={paths.visitDetail(row.id)} className={buttonClassName({ size: 'sm' })}>
-          <Icon name="fileText" />
-          View Details
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to={paths.visitDetail(row.id)} className={buttonClassName({ size: 'sm' })}>
+            <Icon name="fileText" />
+            View Details
+          </Link>
+          {row.letterPending && (
+            <Link
+              to={paths.excuseLetter(row.id)}
+              aria-label={`Review Letter for ${row.studentNumber}`}
+              className={buttonClassName({ size: 'sm' })}
+            >
+              Review Letter
+            </Link>
+          )}
+        </div>
       ),
     },
   ]
@@ -260,6 +280,15 @@ export function VisitLogListPage() {
               onChange={(event) => changeSearch(event.target.value)}
               className="min-w-56 flex-1"
             />
+            <Select
+              label="Excuse letter"
+              value={letter}
+              options={[{ value: 'pending', label: 'Pending approval' }]}
+              placeholder="All visits"
+              clearable
+              onChange={changeLetter}
+              className="w-48"
+            />
             <DateRangePicker
               value={range}
               onChange={changeRange}
@@ -293,7 +322,7 @@ export function VisitLogListPage() {
               <EmptyState
                 icon="clipboardList"
                 title="No visits found"
-                description="Try another date range, Student Number, or disposition filter."
+                description="Try another date range, Student Number, disposition, or excuse-letter filter."
               />
             )}
           </div>

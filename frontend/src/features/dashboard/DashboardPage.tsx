@@ -20,7 +20,6 @@ import { AttentionChips } from './components/AttentionChips'
 import { ComplaintTrends, ComplaintTrendsSkeleton } from './components/ComplaintTrends'
 import { DashboardPrint } from './components/DashboardPrint'
 import { DashboardHeader } from './components/DashboardHeader'
-import { PendingExcuseLetters } from './components/PendingExcuseLetters'
 import { BackupStatusLink, NewVisitLink } from './components/StaffShortcuts'
 import { StatCardRow, StatCardRowSkeleton } from './components/StatCardRow'
 
@@ -45,7 +44,7 @@ function parseSex(value: string | null): StudentSex | null {
  * view-only for both: no create, update, or delete happens here, so there are no audit-log writes.
  *
  * Header (Staff: backup status above Print) → view tabs, with Staff's New Visit on the tab row
- * (ADR-025): Overview (stat cards, three alert groups, Staff's pending excuse letters), Trends (complaint trends), Calendar. One view shows at a time; the choice
+ * (ADR-025): Overview (stat cards and three alert groups; pending excuse letters open in the Visit Log), Trends (complaint trends), Calendar. One view shows at a time; the choice
  * lives in `?view=` (replace, so Back is unaffected). Every panel stays mounted, so switching keeps
  * the calendar's state and refetches nothing. Print produces the "Clinic Overview Report" instead of
  * the screen (`DashboardPrint`, ADR-026), from data loaded here. Each view shows its own
@@ -73,7 +72,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
     `${range.preset}|${range.from}|${range.to}|${demographicFilters.sex ?? ''}|${demographicFilters.gradeLevel ?? ''}`,
     () => fetchDashboardSummary({ range, ...demographicFilters }),
   )
-  // For the Overview list and the printout; Admin/Principal can't open excuse letters.
+  // For the stat card's count and the printout's list; Admin/Principal can't open excuse letters.
   const letters = useAsyncData(`dashboard-pending-excuse-letters|${viewer.role}`, () =>
     viewer.role === 'staff' ? fetchPendingExcuseLetters() : Promise.resolve([]),
   )
@@ -199,7 +198,6 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                     <section aria-label="Frequent visitor warnings">
                       <FrequentVisitorsAlert summary={d} range={range} canNavigate={canNavigate} />
                     </section>
-                    {viewer.role === 'staff' && <PendingExcuseLetters data={letters.data} />}
                   </>
                 ),
               ),

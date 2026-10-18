@@ -21,7 +21,7 @@ Design these five in full detail first. Everything else in the system should be 
    - Due/upcoming follow-ups (student number, reason, due date, status badge)
    - Frequent-visitor warnings (student number, visit count, `warning`-colored badge — labeled clearly as a warning, never styled to look like a diagnosis)
    - Low-stock / nearing-expiration inventory items (item name — not student-linked, no privacy concern here)
-   - **Excuse letters awaiting approval (Staff only, below the alert groups):** shown only while drafts exist. Each row shows the Student Number and links to its letter page. It is navigation only, so the Dashboard stays view-only and writes no audit entries. Admin/Principal doesn't see it, since that role can't open the letter page (ADR-011 amendment, October 07, 2026).
+   - **Pending excuse letters (Staff):** no separate list on the Overview since Monday, October 19, 2026 (ADR-011 amendment). The "Pending excuse letters" stat card opens the Visit Log at `?letter=pending` ("Excuse letter: Pending approval" filter, clearable), where each pending visit has "Review Letter". Admin/Principal sees the count without a link. The Dashboard printout still lists the pending letters.
 4. **Trends chart** — common complaints by week/month (bar or line chart), plus a symptom-clustering indicator (a simple highlighted marker on the chart, not a separate widget)
 5. **Calendar view** — toggle control for weekly / monthly / yearly, a calendar grid showing visit+incident count intensity per day (heatmap-style shading), and any free-text event tag Staff attached to a visit/incident shown as small text on the relevant day
 6. **Export/print button**

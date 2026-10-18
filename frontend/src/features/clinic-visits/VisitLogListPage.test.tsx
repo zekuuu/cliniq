@@ -26,6 +26,25 @@ describe('Visit Log', () => {
     )
   })
 
+  it('opens with ?letter=pending showing only visits whose letter awaits approval, each with Review Letter', async () => {
+    const user = userEvent.setup()
+    const range = defaultVisitLogRange()
+    const pending = await fetchVisitLog({ ...range, search: '', disposition: 'all', letter: 'pending' })
+    expect(pending.length).toBeGreaterThan(0)
+    renderWithRouter(<VisitLogListPage />, { route: '/visits?letter=pending' })
+
+    expect(await screen.findByRole('button', { name: /Excuse letter/ })).toHaveTextContent('Pending approval')
+    await waitFor(() => expect(screen.getAllByRole('row')).toHaveLength(Math.min(pending.length, 10) + 1))
+    for (const row of pending.slice(0, 10)) {
+      expect(screen.getByRole('link', { name: `Review Letter for ${row.studentNumber}` })).toHaveAttribute('href', `/visits/${row.id}/excuse-letter`)
+    }
+
+    await user.click(screen.getByRole('button', { name: /Excuse letter/ }))
+    await user.click(screen.getByRole('option', { name: 'All visits' }))
+    const all = await fetchVisitLog({ ...range, search: '', disposition: 'all' })
+    await waitFor(() => expect(screen.getAllByRole('row')).toHaveLength(Math.min(all.length, 10) + 1))
+  })
+
   it.each([
     ['/visits?from=2026-02-30&to=2026-03-01', 'an invalid date'],
     ['/visits?from=2026-03-01', 'a partial range'],
