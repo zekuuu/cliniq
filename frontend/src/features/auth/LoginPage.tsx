@@ -96,16 +96,13 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
               <Button type="submit" variant="primary" className="mt-2 w-full" loading={loading}>Sign In</Button>
             </form>
           </div>
-          <div className="flex flex-col gap-1 text-xs text-text-secondary">
-            <p className="text-balance">Authorized clinic personnel only. Sign-ins are recorded.</p>
-            <p className="flex flex-wrap items-center gap-x-2">
-              <Link to={paths.privacyPolicy} className="cursor-pointer font-semibold text-brand-green-dark underline-offset-2 hover:underline">Privacy Policy</Link>
-              <span aria-hidden="true">·</span>
-              <span>Powered by HealWare™</span>
-              <span aria-hidden="true">·</span>
-              <span>v{APP_VERSION}</span>
-            </p>
-          </div>
+          <p className="flex flex-wrap items-center gap-x-2 text-xs text-text-secondary">
+            <Link to={paths.privacyPolicy} className="cursor-pointer font-semibold text-brand-green-dark underline-offset-2 hover:underline">Privacy Policy</Link>
+            <span aria-hidden="true">·</span>
+            <span>Powered by HealWare™</span>
+            <span aria-hidden="true">·</span>
+            <span>v{APP_VERSION}</span>
+          </p>
         </div>
       </div>
       <Modal open={forgotOpen} title="Forgot your password?" onClose={() => setForgotOpen(false)}>

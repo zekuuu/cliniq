@@ -26,10 +26,12 @@ export function LoginBackdrop({ className = 'fixed inset-0' }: { className?: str
         className,
       )}
     >
-      {/* Scaled past the edges so the blur doesn't fade into a fringe of the fallback at the viewport edge. */}
-      {!failed && <img src={LOGIN_BACKDROP_SRC} alt="" className="size-full scale-110 object-cover object-[50%_40%] blur-sm" onError={() => setFailed(true)} />}
-      {/* Darkens the photo so the white Login panel and Force Password Change card stand apart from it; the fallback gradient is already dark. */}
-      {!failed && <div className="absolute inset-0 bg-brand-green-dark/45" />}
+      {/* Scaled past the edges so the blur doesn't fade into a fringe of the fallback at the viewport edge.
+          3px keeps the building recognizable while hiding the stand-in's video softness at up to 1.5x (2560px). */}
+      {!failed && <img src={LOGIN_BACKDROP_SRC} alt="" className="size-full scale-105 object-cover object-[50%_40%] blur-[3px]" onError={() => setFailed(true)} />}
+      {/* Darker at the bottom, lighter at the top: depth instead of a flat tint, and the white Login panel
+          and Force Password Change card still stand apart. The fallback gradient is already dark. */}
+      {!failed && <div className="absolute inset-0 bg-linear-to-t from-brand-green-dark/75 via-brand-green-dark/35 via-55% to-brand-green-dark/20" />}
     </div>
   )
 }

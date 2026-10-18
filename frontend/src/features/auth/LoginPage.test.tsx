@@ -79,9 +79,9 @@ describe('LoginPage', () => {
     expect(screen.queryByText(/^Locked until/)).not.toBeInTheDocument()
   })
 
-  it('shows the authorized-use notice, the privacy link, the attribution and the version', () => {
+  it('shows the privacy link, the attribution and the version', () => {
     renderLogin()
-    expect(screen.getByText('Authorized clinic personnel only. Sign-ins are recorded.')).toBeInTheDocument()
+    expect(screen.queryByText(/Authorized clinic personnel/)).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute('href', '/privacy-policy')
     expect(screen.getByText('Powered by HealWare™')).toBeInTheDocument()
     expect(screen.getByText(/^v\d/)).toBeInTheDocument()
