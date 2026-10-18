@@ -9,6 +9,7 @@ import {
 import { rangeLengthDays, type DateRange } from '../../../lib/dateRange'
 import { paths } from '../../../routes/paths'
 import type { DashboardSummary } from '../../../types/dashboard'
+import { PENDING_EXCUSE_LETTERS_ID } from './PendingExcuseLetters'
 
 const CARDS = {
   visits: { icon: 'activity', label: 'Clinic visits', tone: 'brand' },
@@ -75,7 +76,7 @@ export function StatCardRow({
     },
     {
       key: 'letters',
-      card: <StatCard icon={CARDS.letters.icon} label={CARDS.letters.label} tone={CARDS.letters.tone} value={pendingLetterCount} scope="Current · awaiting approval" labelAction={canNavigate ? <TitleLink to="#pending-excuse-letters">{CARDS.letters.label}</TitleLink> : undefined} />,
+      card: <StatCard icon={CARDS.letters.icon} label={CARDS.letters.label} tone={CARDS.letters.tone} value={pendingLetterCount} scope="Current · awaiting approval" labelAction={canNavigate && pendingLetterCount > 0 ? <TitleLink to={`#${PENDING_EXCUSE_LETTERS_ID}`}>{CARDS.letters.label}</TitleLink> : undefined} />,
     },
     {
       key: 'follow-ups',
