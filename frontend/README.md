@@ -4,7 +4,7 @@
 
 **Current state:** the app is built and runs on the shared mock-data layer (`src/lib/mock-db/`); there is no backend yet. From this folder: `npm ci`, then `npm run dev` (http://localhost:5173), `npm test`, `npm run build`. First-time Windows setup: `../setup-step.md`. Sign-in accounts: `src/lib/mock-db/README.md`.
 
-Login is a standalone centered auth composition with its overlapping HealWare/CLINIQ lockup; it deliberately has no application footer. The shared copyright/footer remains on signed-in shell pages only.
+Login is a standalone auth composition: a full-height white left panel (HealWare/CLINIQ lockup, Sign In form, school name) beside the blurred school photo; it deliberately has no application footer. The shared copyright/footer remains on signed-in shell pages only.
 
 React + TypeScript + Vite frontend. Feature-based structure under `src/features/` — see `CLINIQ-Knowledge-Base/06-Decisions/ADR-008-Frontend-Folder-Structure.md` for the full reasoning, and `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md` for the actual build process an agent follows when adding real screens here.
 

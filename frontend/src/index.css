@@ -95,6 +95,10 @@
     background-color: var(--color-background);
     scrollbar-gutter: stable;
   }
+  /* Login fills the viewport and never scrolls on desktop; a reserved gutter would show as a white strip beside the photo. */
+  html:has([data-login-page]) {
+    scrollbar-gutter: auto;
+  }
   body {
     font-size: var(--text-sm);
     line-height: var(--text-sm--line-height);

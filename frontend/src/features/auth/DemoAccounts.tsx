@@ -9,7 +9,7 @@ const DEMO_ACCOUNTS = [
 ]
 
 /**
- * Frontend-demo helper for Login: a floating trigger that opens the sample accounts and the
+ * Frontend-demo helper for Login: a trigger at the bottom right of the photo region (never over the form) that opens the sample accounts and the
  * simulated-authentication notice in the shared Modal (the trigger + Modal pattern
  * KeyboardShortcuts used before its floating button moved into the shell header). Self-contained
  * on purpose: when the Sanctum API is connected, deleting this component removes both.
@@ -22,7 +22,7 @@ export function DemoAccounts() {
         type="button"
         aria-haspopup="dialog"
         onClick={() => setOpen(true)}
-        className="fixed right-4 bottom-4 z-20 inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-text-secondary shadow-card transition-colors hover:bg-surface hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none print:hidden"
+        className="absolute right-4 bottom-4 z-20 inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-text-secondary shadow-card transition-colors hover:bg-surface hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none print:hidden"
       >
         <Icon name="users" className="text-brand-green-dark" />
         Demo Accounts
