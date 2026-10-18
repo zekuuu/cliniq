@@ -40,6 +40,21 @@ describe('LoginPage', () => {
     expect(screen.getByLabelText(/^Password/)).toHaveFocus()
   })
 
+  it('explains that password reset is not available yet, without resetting anything', async () => {
+    const user = userEvent.setup()
+    renderLogin()
+
+    const trigger = screen.getByRole('button', { name: 'Forgot password?' })
+    await user.click(trigger)
+    const dialog = screen.getByRole('dialog', { name: 'Forgot your password?' })
+    expect(dialog).toHaveTextContent(/not available in CLINIQ yet/i)
+    expect(dialog.querySelector('input')).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
+  })
+
   it('keeps the demo accounts and the simulated-auth notice off the page until asked for', async () => {
     const user = userEvent.setup()
     renderLogin()

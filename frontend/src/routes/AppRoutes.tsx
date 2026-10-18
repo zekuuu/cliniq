@@ -546,7 +546,22 @@ export function AppRoutes({
         }
       />
       {APP_ROUTES.map((route) => {
-        if (!user) return <Route key={route.path} path={route.path} element={<RequireLogin />} />
+        if (!user) {
+          // The privacy notice is static and holds no student data, so Login can link to it.
+          const element =
+            route.path === paths.privacyPolicy ? (
+              <PageTitle title={route.title}>
+                <main id="main-content" className="min-h-dvh bg-surface">
+                  <Suspense fallback={<RouteLoading />}>
+                    <PrivacyPolicyPage viewer={null} />
+                  </Suspense>
+                </main>
+              </PageTitle>
+            ) : (
+              <RequireLogin />
+            )
+          return <Route key={route.path} path={route.path} element={element} />
+        }
         const allowed = route.roles.includes(user.role)
         const content = (
           <PageTitle title={route.title}>

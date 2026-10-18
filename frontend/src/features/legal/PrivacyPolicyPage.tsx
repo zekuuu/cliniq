@@ -1,21 +1,28 @@
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
-import { homePathFor } from '../../routes/paths'
+import { homePathFor, paths } from '../../routes/paths'
 import { BackButton, Card } from '../../components'
 
 const sectionHeadingClass = 'text-lg font-semibold leading-7 text-text-primary'
 const paragraphClass = 'mt-3 leading-7'
 const listClass = 'mt-3 list-disc space-y-2 pl-6 leading-7'
 
-/** Static legal copy for Screen #36. Keep this content synchronized with the reference draft. */
-export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser }) {
+/**
+ * Static legal copy for Screen #36. Keep this content synchronized with the reference draft.
+ * `viewer={null}` is the signed-out copy linked from Login: no shell, and Back returns to Sign In.
+ */
+export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser | null }) {
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-6 pb-6 sm:px-8">
       {/* Every role opens this page; Back falls back to a home screen that role can open. The
           Instructor has no navigation menu here, so Back is their main way out. */}
-      <BackButton
-        fallback={homePathFor(viewer.role)}
-        variant={viewer.role === 'instructor' ? 'prominent' : 'quiet'}
-      />
+      {viewer ? (
+        <BackButton
+          fallback={homePathFor(viewer.role)}
+          variant={viewer.role === 'instructor' ? 'prominent' : 'quiet'}
+        />
+      ) : (
+        <BackButton to={paths.login} label="Back to Sign In" variant="prominent" />
+      )}
       <Card className="p-5 sm:p-8">
         <article
           aria-labelledby="privacy-policy-title"
