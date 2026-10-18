@@ -1,6 +1,7 @@
 // Shared, design-system-level components. Import from here rather than deep paths.
 export { Icon, type IconName } from './icons/Icon'
 export { BackButton } from './ui/BackButton'
+export { AppFooter } from './ui/AppFooter'
 export { Badge, type BadgeTone, type BadgeVariant } from './ui/Badge'
 export { Button, type ButtonVariant } from './ui/Button'
 export { buttonClassName } from './ui/buttonClassName'

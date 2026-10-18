@@ -45,6 +45,8 @@ describe('App Shell / Navigation', () => {
     expect(screen.getAllByText('·')).toHaveLength(2)
     expect(screen.getByText('v0.1.0')).toBeInTheDocument()
     expect(screen.getByText('Powered by HealWare™')).toBeInTheDocument()
+    expect(screen.getByText(/all rights reserved/i)).toBeInTheDocument()
+    expect(screen.getByAltText('Mendez Christian Academy logo')).toHaveAttribute('src', '/MCA_Logo.png')
     expect(screen.getAllByAltText('Healware logo')).toHaveLength(2)
     screen
       .getAllByAltText('Healware logo')
@@ -63,6 +65,21 @@ describe('App Shell / Navigation', () => {
     )
 
     expect(screen.getByRole('button', { name: 'Log out' })).toHaveClass('text-error')
+  })
+
+  it('shows a plain Shortcuts label while keeping its accessible purpose', () => {
+    renderWithRouter(
+      <AppShell
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        active="dashboard"
+        onLogout={() => {}}
+      >
+        <div>Screen</div>
+      </AppShell>,
+    )
+
+    expect(screen.getByRole('button', { name: 'Show keyboard shortcuts' })).toHaveTextContent('Shortcuts')
+    expect(screen.getByRole('button', { name: 'Show keyboard shortcuts' })).not.toHaveTextContent('?')
   })
 
   it('opens the Report an Issue modal from the footer', async () => {

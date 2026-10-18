@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { Icon } from '../components'
+import { AppFooter, Icon } from '../components'
 import { Modal } from '../components'
 import { cn } from '../lib/cn'
 import { logoutMockSession, ROLE_LABELS, type SessionUser } from '../lib/mock-db'
@@ -99,7 +99,7 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
               onClick={showKeyboardShortcuts}
               className="mr-1 hidden h-8 cursor-pointer items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none md:inline-flex"
             >
-              Shortcuts <span className="ml-1" aria-hidden="true">?</span>
+              Shortcuts
             </button>
             <span
               aria-hidden="true"
@@ -126,6 +126,7 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
         <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 focus:outline-none">
           {children}
         </main>
+        <AppFooter />
       </div>
       <Modal open={isMobileNavOpen} title="Navigation" onClose={() => setIsMobileNavOpen(false)}>
         <nav aria-label="Mobile navigation" className="flex max-h-[70dvh] flex-col gap-4 overflow-y-auto">
