@@ -97,7 +97,7 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
             </form>
           </div>
           <div className="flex flex-col gap-1 text-xs text-text-secondary">
-            <p>For authorized clinic personnel only. Sign-ins are recorded.</p>
+            <p className="text-balance">Authorized clinic personnel only. Sign-ins are recorded.</p>
             <p className="flex flex-wrap items-center gap-x-2">
               <Link to={paths.privacyPolicy} className="cursor-pointer font-semibold text-brand-green-dark underline-offset-2 hover:underline">Privacy Policy</Link>
               <span aria-hidden="true">·</span>

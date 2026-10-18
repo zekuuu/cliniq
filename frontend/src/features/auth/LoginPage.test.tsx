@@ -55,6 +55,38 @@ describe('LoginPage', () => {
     expect(trigger).toHaveFocus()
   })
 
+  it('warns while Caps Lock is on in the password field', () => {
+    renderLogin()
+    const password = screen.getByLabelText(/^Password/)
+
+    fireEvent.keyDown(password, { key: 'A', modifierCapsLock: true })
+    expect(password).toHaveAccessibleDescription('Caps Lock is on.')
+    fireEvent.keyUp(password, { key: 'a', modifierCapsLock: false })
+    expect(screen.queryByText('Caps Lock is on.')).not.toBeInTheDocument()
+  })
+
+  it('says when a locked account can try again, in one message', async () => {
+    const user = userEvent.setup()
+    renderLogin()
+    await user.type(screen.getByLabelText(/Username/), 'demo.principal')
+    for (let attempt = 0; attempt < 5; attempt++) {
+      await user.clear(screen.getByLabelText(/^Password/))
+      await user.type(screen.getByLabelText(/^Password/), `wrong-${attempt}`)
+      await user.click(screen.getByRole('button', { name: 'Sign In' }))
+      await screen.findByRole('alert')
+    }
+    expect(await screen.findByText(/locked after repeated failed attempts\. Try again at \d{1,2}:\d{2}/)).toBeInTheDocument()
+    expect(screen.queryByText(/^Locked until/)).not.toBeInTheDocument()
+  })
+
+  it('shows the authorized-use notice, the privacy link, the attribution and the version', () => {
+    renderLogin()
+    expect(screen.getByText('Authorized clinic personnel only. Sign-ins are recorded.')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute('href', '/privacy-policy')
+    expect(screen.getByText('Powered by HealWare™')).toBeInTheDocument()
+    expect(screen.getByText(/^v\d/)).toBeInTheDocument()
+  })
+
   it('keeps the demo accounts and the simulated-auth notice off the page until asked for', async () => {
     const user = userEvent.setup()
     renderLogin()

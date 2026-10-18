@@ -96,6 +96,33 @@ describe('App routes', () => {
     ).toHaveAttribute('aria-current', 'page')
   })
 
+  it('opens Privacy Policy signed out, without the shell, and keeps every other route behind Login', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter initialEntries={['/privacy-policy']}>
+        <AppRoutes user={null} onLogout={() => {}} />
+        <CurrentPath />
+      </MemoryRouter>,
+    )
+
+    expect(
+      await screen.findByRole('heading', { name: 'CLINIQ Privacy Policy — Draft' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('link', { name: 'Back to Sign In' }))
+    expect(screen.getByTestId('path')).toHaveTextContent('/login')
+  })
+
+  it('redirects a signed-out visitor from any other route to Login', () => {
+    render(
+      <MemoryRouter initialEntries={['/students']}>
+        <AppRoutes user={null} onLogout={() => {}} />
+        <CurrentPath />
+      </MemoryRouter>,
+    )
+    expect(screen.getByTestId('path')).toHaveTextContent('/login')
+  })
+
   it.each([
     ['Staff', STAFF],
     ['Admin/Principal', ADMIN],
