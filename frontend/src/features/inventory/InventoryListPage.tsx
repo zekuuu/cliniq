@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { formatDate } from '../../lib/dates'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import {
   BackButton,
   Badge,
@@ -78,11 +78,18 @@ const baseColumns: Array<DataTableColumn<InventoryItemView>> = [
 type StockAction = { kind: 'adjust' | 'restock' | 'batches'; item: InventoryItemView }
 
 export function InventoryListPage() {
-  const [filters, setFilters] = useState<InventoryFilters>({ search: '', category: '', hasExpiredStock: false })
+  const [searchParams] = useSearchParams()
+  const attention = searchParams.get('attention')
+  const [filters, setFilters] = useState<InventoryFilters>(() => ({
+    search: '',
+    category: '',
+    hasExpiredStock: false,
+    attention: attention === 'low_stock' || attention === 'expiry' ? attention : '',
+  }))
   const [sort, setSort] = useState<TableSortState<InventorySortKey>>({ key: 'status', direction: 'ascending' })
   const [action, setAction] = useState<StockAction | null>(null)
   const [message, setMessage] = useState('')
-  const key = `${filters.search}|${filters.category}|${filters.hasExpiredStock}`
+  const key = `${filters.search}|${filters.category}|${filters.hasExpiredStock}|${filters.attention}`
   const { data, status, isRefetching, reload } = useAsyncData(key, () => fetchInventory(filters))
   // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
   const back = <BackButton fallback={paths.dashboard} drillThroughOnly />
@@ -125,7 +132,7 @@ export function InventoryListPage() {
       {back}
       <Card className="p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">Inventory</h1><p className="mt-1 text-sm text-text-secondary">Track medicine and supplies, expiration dates, and low-stock thresholds.</p></div><Link className={buttonClassName({ variant: 'primary' })} to={paths.inventoryNew}><Icon name="package" />Add Item</Link></div></Card>
       <Card aria-labelledby="inventory-list-title"><CardHeader titleId="inventory-list-title" title="Medicine and supplies" description={`${data.length} item${data.length === 1 ? '' : 's'} shown`} icon={<Icon name="package" />} /><CardBody className="flex flex-col gap-4">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_14rem_14rem_auto] md:items-end"><Input label="Search" value={filters.search} placeholder="Item name" onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} /><Select label="Category" value={filters.category} options={[{ value: 'medicine', label: 'Medicine' }, { value: 'supply', label: 'Supply' }]} placeholder="All categories" clearable onChange={(value) => setFilters((current) => ({ ...current, category: value as InventoryFilters['category'] }))} /><Select label="Stock status" value={filters.hasExpiredStock ? 'has_expired' : ''} options={[{ value: 'has_expired', label: 'Has expired stock' }]} placeholder="All stock" clearable onChange={(value) => setFilters((current) => ({ ...current, hasExpiredStock: value === 'has_expired' }))} /><Button variant="secondary" onClick={() => setFilters({ search: '', category: '', hasExpiredStock: false })}>Clear Filters</Button></div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_14rem_14rem_auto] md:items-end"><Input label="Search" value={filters.search} placeholder="Item name" onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} /><Select label="Category" value={filters.category} options={[{ value: 'medicine', label: 'Medicine' }, { value: 'supply', label: 'Supply' }]} placeholder="All categories" clearable onChange={(value) => setFilters((current) => ({ ...current, category: value as InventoryFilters['category'] }))} /><Select label="Attention" value={filters.attention ?? ''} options={[{ value: 'low_stock', label: 'Low stock' }, { value: 'expiry', label: 'Expired or expiring' }, { value: 'has_expired', label: 'Has expired stock' }]} placeholder="All stock" clearable onChange={(value) => setFilters((current) => ({ ...current, attention: value === 'low_stock' || value === 'expiry' ? value : '', hasExpiredStock: value === 'has_expired' }))} /><Button variant="secondary" onClick={() => setFilters({ search: '', category: '', hasExpiredStock: false, attention: '' })}>Clear Filters</Button></div>
         {message && <p role="status" className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary">{message}</p>}
         <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>{data.length ? <DataTable caption="Inventory items" columns={columns} rows={sortedData} rowKey={(item) => item.id} fixedLayout /> : <EmptyState icon="package" title="No inventory items found" description="Try a different search or category." />}</div>
       </CardBody></Card>

@@ -29,6 +29,7 @@ function page<K extends string, P>(load: () => Promise<Record<K, ComponentType<P
 }
 
 const DashboardPage = page(() => import('../features/dashboard/DashboardPage'), 'DashboardPage')
+const CalendarPage = page(() => import('../features/dashboard/CalendarPage'), 'CalendarPage')
 const StudentListPage = page(
   () => import('../features/student-records/StudentListPage'),
   'StudentListPage',
@@ -216,6 +217,14 @@ const APP_ROUTES: AppRoute[] = [
     nav: 'dashboard',
     shell: true,
     render: (viewer) => <DashboardPage viewer={viewer} />,
+  },
+  {
+    path: paths.calendar,
+    title: 'Clinic Calendar',
+    roles: ['staff', 'admin'],
+    nav: 'calendar',
+    shell: true,
+    render: (viewer) => <CalendarPage viewer={viewer} />,
   },
   {
     path: paths.students,

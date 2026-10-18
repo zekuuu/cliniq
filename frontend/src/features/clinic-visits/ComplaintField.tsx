@@ -50,14 +50,14 @@ export function ComplaintField({
       />
       {usingOther && (
         <Input
-        label="Specify other complaint"
-        required
-        autoFocus
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        maxLength={COMPLAINT_MAX_LENGTH}
-        hint="The complaint or symptom only. Don't include names."
-        error={error}
+          label="Specify other complaint"
+          required
+          autoFocus
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          maxLength={COMPLAINT_MAX_LENGTH}
+          hint="The complaint or symptom only. Don't include names."
+          error={error}
         />
       )}
     </>

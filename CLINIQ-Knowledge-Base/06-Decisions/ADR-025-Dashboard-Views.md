@@ -1,7 +1,7 @@
 # ADR-025: Dashboard Shows One View at a Time (Overview / Trends / Calendar)
 
 **Date:** Thursday, October 15, 2026 — 19:08
-**Status:** Accepted (requested by Ghenly, project manager; details agent-decided)
+**Status:** Accepted — amended by ADR-032 (Sunday, October 18, 2026 — 13:17 PHT; requested by Ghenly, project manager; details agent-decided)
 
 ## Context
 The Clinic Overview Dashboard loaded every section at once: stat cards, three alert groups, Staff's

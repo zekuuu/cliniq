@@ -752,15 +752,13 @@ const viewNounTitle: Record<CalendarView, string> = { week: 'Week', month: 'Mont
 
 export interface VisitCalendarProps {
   today: ISODate
-  /** The date the calendar opens on (the end of the dashboard's date range). */
+  /** The date the calendar opens on. */
   initialAnchor: ISODate
   /**
    * Staff open a day to see its counts and add, edit, or delete events, and can page into future
    * periods. Admin sees the same chips as a static summary (ADR-019).
    */
   canNavigate: boolean
-  /** Shows the period's skeleton instead of the grid, e.g. briefly after a dashboard view switch. */
-  showSkeleton?: boolean
 }
 
 /**
@@ -773,14 +771,13 @@ export function VisitCalendar({
   today,
   initialAnchor,
   canNavigate,
-  showSkeleton = false,
 }: VisitCalendarProps) {
   const headingId = useId()
   const [view, setView] = useState<CalendarView>('month')
   const [display, setDisplay] = useState<'calendar' | 'table'>('calendar')
   const [anchor, setAnchor] = useState<ISODate>(initialAnchor)
   const [selectedDate, setSelectedDate] = useState<ISODate | null>(null)
-  // When the dashboard date range changes, jump to its end date but keep the chosen view.
+  // Reset the anchor only when a caller intentionally changes the opening date.
   const [lastInitial, setLastInitial] = useState(initialAnchor)
   if (lastInitial !== initialAnchor) {
     setLastInitial(initialAnchor)
@@ -844,7 +841,7 @@ export function VisitCalendar({
       />
       <CardBody className="flex flex-col gap-3">
         <p className="text-xs text-text-secondary">
-          The calendar has its own period; the Date range used by Overview and Trends doesn't change it.
+          Choose the calendar period independently; it does not change the Dashboard range.
         </p>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-text-primary" aria-live="polite">
@@ -876,7 +873,7 @@ export function VisitCalendar({
 
         {status === 'error' ? (
           <ErrorState title="Unable to load the calendar." onRetry={reload} />
-        ) : (status === 'loading' && !data) || showSkeleton ? (
+        ) : status === 'loading' && !data ? (
           <>
             <p className="sr-only" role="status">
               Loading calendar…

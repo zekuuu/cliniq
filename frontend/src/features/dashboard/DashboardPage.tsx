@@ -1,41 +1,37 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { useSearchParams } from 'react-router'
+import { Navigate, useSearchParams } from 'react-router'
 import { Card, ErrorState, Icon, Tabs } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { cn } from '../../lib/cn'
 import { todayISO } from '../../lib/dates'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { rangeForPreset, type DateRange } from '../../lib/dateRange'
+import { paths } from '../../routes/paths'
 import type { DashboardSummary } from '../../types/dashboard'
 import type { StudentSex } from '../../types/entities'
 import {
   fetchDashboardSummary,
   fetchPendingExcuseLetters,
-  fetchPeriodEvents,
 } from './api/dashboardApi'
 import {
-  ALERT_GRID,
-  AlertListsSkeleton,
-  FollowUpsAlert,
   FrequentVisitorsAlert,
-  InventoryAlert,
 } from './components/AlertLists'
+import { AttentionChips } from './components/AttentionChips'
 import { ComplaintTrends, ComplaintTrendsSkeleton } from './components/ComplaintTrends'
 import { DashboardPrint } from './components/DashboardPrint'
 import { DashboardHeader } from './components/DashboardHeader'
 import { PendingExcuseLetters } from './components/PendingExcuseLetters'
 import { BackupStatusLink, NewVisitLink } from './components/StaffShortcuts'
 import { StatCardRow, StatCardRowSkeleton } from './components/StatCardRow'
-import { VisitCalendar } from './components/VisitCalendar'
 
-type DashboardView = 'overview' | 'trends' | 'calendar'
+type DashboardView = 'overview' | 'trends'
 
 /** How long a view shows its skeleton after a switch, so the change reads as a load, not a jump. */
 const VIEW_SWITCH_SKELETON_MS = 300
 
 /** `?view=` value → view. No parameter or an unknown value opens Overview (ADR-025). */
 function parseDashboardView(value: string | null): DashboardView {
-  return value === 'trends' || value === 'calendar' ? value : 'overview'
+  return value === 'trends' ? value : 'overview'
 }
 
 function parseSex(value: string | null): StudentSex | null {
@@ -60,6 +56,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   // A summary view opens on the current month; operational logs keep the All default.
   const [range, setRange] = useState<DateRange>(() => rangeForPreset('thisMonth', today))
   const [searchParams, setSearchParams] = useSearchParams()
+  if (searchParams.get('view') === 'calendar') return <Navigate to={paths.calendar} replace />
   const view = parseDashboardView(searchParams.get('view'))
   const demographicFilters = { sex: parseSex(searchParams.get('sex')), gradeLevel: searchParams.get('grade') || null }
   const canNavigate = viewer.role === 'staff'
@@ -79,10 +76,6 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   // For the Overview list and the printout; Admin/Principal can't open excuse letters.
   const letters = useAsyncData(`dashboard-pending-excuse-letters|${viewer.role}`, () =>
     viewer.role === 'staff' ? fetchPendingExcuseLetters() : Promise.resolve([]),
-  )
-  // Only the printout lists the period's school events and holidays.
-  const periodEvents = useAsyncData(`dashboard-period-events|${range.from}|${range.to}`, () =>
-    fetchPeriodEvents(range.from, range.to),
   )
 
   function changeView(next: DashboardView) {
@@ -141,9 +134,9 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
     )
   }
 
-  // Follow-ups, frequent visitors, and inventory alerts, counted from the summary already loaded.
+  // The overview tab flags actionable follow-ups, inventory attention, and incomplete records.
   const alertCount = data
-    ? data.dueFollowUps.length + data.frequentVisitors.length + data.inventoryAlerts.length
+    ? data.dueFollowUps.length + data.inventoryAlerts.length + data.counts.pendingRecords
     : 0
 
   return (
@@ -161,7 +154,6 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           isRefetching={isRefetching}
           onPrint={() => window.print()}
           oldestRecordDate={data?.oldestRecordDate}
-          showRange={view !== 'calendar'}
           status={viewer.role === 'staff' && <BackupStatusLink />}
         />
       </Card>
@@ -178,7 +170,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
               value: 'overview',
               label: 'Overview',
               icon: 'layoutGrid',
-              // Visible from every view, so alerts aren't missed while on Trends or Calendar.
+              // Visible from every view, so alerts are not missed while on Trends.
               badge:
                 alertCount > 0 ? (
                   <>
@@ -194,17 +186,18 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                 ) : undefined,
               panel: summaryPanel(
                 'Loading clinic overview…',
-                <>
-                  <StatCardRowSkeleton />
-                  <AlertListsSkeleton />
-                </>,
+                <StatCardRowSkeleton />,
                 (d) => (
                   <>
-                    <StatCardRow summary={d} range={range} canNavigate={canNavigate} />
-                    <section aria-label="Alerts" className={ALERT_GRID}>
-                      <FollowUpsAlert summary={d} canNavigate={canNavigate} />
+                    <StatCardRow
+                      summary={d}
+                      range={range}
+                      canNavigate={canNavigate}
+                      pendingLetterCount={letters.data?.length ?? 0}
+                    />
+                    <AttentionChips summary={d} canNavigate={canNavigate} />
+                    <section aria-label="Frequent visitor warnings">
                       <FrequentVisitorsAlert summary={d} range={range} canNavigate={canNavigate} />
-                      <InventoryAlert summary={d} canNavigate={canNavigate} />
                     </section>
                     {viewer.role === 'staff' && <PendingExcuseLetters data={letters.data} />}
                   </>
@@ -222,20 +215,6 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                 </>
               )),
             },
-            {
-              value: 'calendar',
-              label: 'Calendar',
-              icon: 'calendar',
-              // Separate data source: loads with its own skeleton, and fails/retries on its own.
-              panel: (
-                <VisitCalendar
-                  today={today}
-                  initialAnchor={range.to}
-                  canNavigate={canNavigate}
-                  showSkeleton={switching}
-                />
-              ),
-            },
           ]}
         />
       </div>
@@ -245,7 +224,6 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           range={range}
           viewer={viewer}
           letters={viewer.role === 'staff' ? (letters.data ?? []) : undefined}
-          periodEvents={periodEvents.data}
         />
       )}
     </div>

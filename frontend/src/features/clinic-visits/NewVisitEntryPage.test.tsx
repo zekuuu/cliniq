@@ -276,4 +276,14 @@ describe('New Visit: disposition-specific fields', () => {
     expect((await getSavedVisit()).excuseLetterDraft).toBeNull()
     expect(screen.queryByRole('link', { name: 'Review excuse letter' })).not.toBeInTheDocument()
   })
+
+  it('uses the last successfully saved disposition for the next visit in this session', async () => {
+    const user = await openForm()
+    await user.click(screen.getByRole('radio', { name: 'Sent home' }))
+    await user.click(screen.getByLabelText(/prepare an excuse letter/i))
+    await user.click(screen.getByRole('button', { name: 'Save Visit' }))
+
+    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Sent home' })).toHaveAttribute('aria-checked', 'true')
+  })
 })

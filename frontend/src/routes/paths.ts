@@ -18,12 +18,14 @@ export const paths = {
   login: '/login',
   forcePasswordChange: '/force-password-change',
   dashboard: '/',
+  calendar: '/calendar',
   students: '/students',
   studentNew: '/students/new',
   incompleteRecords: '/students/incomplete',
   studentProfile: (studentNumber: string) => `/students/${seg(studentNumber)}`,
   studentEdit: (studentNumber: string) => `/students/${seg(studentNumber)}/edit`,
   visits: '/visits',
+  visitsInRange: (from: string, to: string) => `/visits?from=${seg(from)}&to=${seg(to)}`,
   /** The Visits list opened on one day's custom range (the Dashboard calendar's "View visits"). */
   visitsOnDate: (date: string) => `/visits?from=${date}&to=${date}`,
   /** `?student=` pre-selects the identified student (e.g. from a QR lookup). */
@@ -33,6 +35,7 @@ export const paths = {
   visitDetail: (visitId: string) => `/visits/${seg(visitId)}`,
   excuseLetter: (visitId: string) => `/visits/${seg(visitId)}/excuse-letter`,
   incidents: '/incidents',
+  incidentsInRange: (from: string, to: string) => `/incidents?from=${seg(from)}&to=${seg(to)}`,
   /** `?student=` pre-selects the identified student; the Emergency button opens it without one. */
   incidentNew: (studentNumber?: string) => withStudent('/incidents/new', studentNumber),
   /** Reopens a saved Stage-1 incident to complete Stage 2 (Screen #16b). */

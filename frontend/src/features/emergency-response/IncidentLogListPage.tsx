@@ -20,6 +20,7 @@ import {
   type DataTableColumn,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useDateRangeEntryParams } from '../../hooks/useDateRangeEntryParams'
 import { formatDateTime } from '../../lib/dates'
 import { describeRange, type DateRange } from '../../lib/dateRange'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
@@ -68,8 +69,9 @@ const baseColumns: Array<DataTableColumn<IncidentLogRow>> = [
 ]
 
 export function IncidentLogListPage() {
-  const defaultRange = defaultIncidentLogRange()
-  const [range, setRange] = useState<DateRange>({ preset: 'all', ...defaultRange })
+  const defaultRange: DateRange = { preset: 'all', ...defaultIncidentLogRange() }
+  const { initialRange, clearDateParams } = useDateRangeEntryParams(defaultRange)
+  const [range, setRange] = useState<DateRange>(initialRange)
   const [search, setSearch] = useState('')
   const [completion, setCompletion] = useState<CompletionFilter>('all')
   const [page, setPage] = useState(1)
@@ -80,7 +82,7 @@ export function IncidentLogListPage() {
     () => fetchIncidentLog({ from, to, search, completion }),
   )
   // Filter changes reset to the first page in the same event (cliniq-pagination-patterns).
-  function changeRange(next: DateRange) { setRange(next); setPage(1) }
+  function changeRange(next: DateRange) { setRange(next); clearDateParams(); setPage(1) }
   function changeSearch(next: string) { setSearch(next); setPage(1) }
   function changeCompletion(next: CompletionFilter) { setCompletion(next); setPage(1) }
 

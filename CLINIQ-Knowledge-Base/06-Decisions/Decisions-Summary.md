@@ -44,7 +44,11 @@ Multi-student lists may show a visit reason, complaint, or description beside th
 
 ## 011 Dashboard scope
 
-The Clinic Overview Dashboard is view-only for both Staff and Admin, so changes happen in the proper module rather than from a summary screen. It shows five key totals, while Staff also get links to start a visit and check backup status.
+The Clinic Overview Dashboard is view-only for both Staff and Admin, so changes happen in the proper module rather than from a summary screen. Its first row is operational totals, while Staff also get links to start a visit and check backup status.
+
+## 032 Dashboard summary and Calendar
+
+The Dashboard now keeps Overview and Trends only. Inventory and incomplete-record counts are compact Staff drill-through chips, while the existing Calendar is a separate Staff/Admin screen with its own controls and state.
 
 ## 012 Clear page addresses
 

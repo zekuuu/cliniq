@@ -14,16 +14,17 @@ import { paths } from '../../../routes/paths'
 export function PendingExcuseLetters({ data }: { data: PendingExcuseLetter[] | undefined }) {
   if (!data?.length) return null
   return (
-    <ListCard
-      title="Excuse letters awaiting approval"
-      icon="fileText"
-      count={data.length}
-      maxHeightClass="max-h-80"
-      description="Drafts saved with a visit. Review and approve each one on its letter page. Oldest visit first."
-      empty={{ title: 'No excuse letters awaiting approval' }}
-    >
-      {data.map((row) => (
-        <ListRow
+    <div id="pending-excuse-letters">
+      <ListCard
+        title="Excuse letters awaiting approval"
+        icon="fileText"
+        count={data.length}
+        maxHeightClass="max-h-80"
+        description="Drafts saved with a visit. Review and approve each one on its letter page. Oldest visit first."
+        empty={{ title: 'No excuse letters awaiting approval' }}
+      >
+        {data.map((row) => (
+          <ListRow
           key={row.visitId}
           primary={<ListItemLink to={paths.studentProfile(row.studentNumber)}>{row.studentNumber}</ListItemLink>}
           secondary={`Excused ${formatDateRange(row.excusedFrom, row.excusedUntil)}`}
@@ -37,8 +38,9 @@ export function PendingExcuseLetters({ data }: { data: PendingExcuseLetter[] | u
               Review letter
             </Link>
           }
-        />
-      ))}
-    </ListCard>
+          />
+        ))}
+      </ListCard>
+    </div>
   )
 }

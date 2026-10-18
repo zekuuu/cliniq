@@ -1067,7 +1067,7 @@ function inventoryView(s: DbState, item: InventoryItem): InventoryItemView {
   return { ...item, ...inventoryStatusFor(s, item) }
 }
 
-export function listInventory(query: { search?: string; category?: InventoryCategory | ''; hasExpiredStock?: boolean } = {}): Promise<InventoryItemView[]> {
+export function listInventory(query: { search?: string; category?: InventoryCategory | ''; hasExpiredStock?: boolean; attention?: '' | 'low_stock' | 'expiry' } = {}): Promise<InventoryItemView[]> {
   return read('inventory', (s) => {
     const search = query.search?.trim().toLowerCase() ?? ''
     return s.inventoryItems
@@ -1075,6 +1075,7 @@ export function listInventory(query: { search?: string; category?: InventoryCate
       .filter((i) => !query.category || i.category === query.category)
       .map((i) => inventoryView(s, i))
       .filter((i) => !query.hasExpiredStock || i.expiredStock > 0)
+      .filter((i) => !query.attention || (query.attention === 'low_stock' ? i.flags.includes('low_stock') : i.flags.some((flag) => flag !== 'low_stock')))
   })
 }
 

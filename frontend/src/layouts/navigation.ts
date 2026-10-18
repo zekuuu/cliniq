@@ -13,6 +13,7 @@ import type { UserRole } from '../types/entities'
  */
 export type NavKey =
   | 'dashboard'
+  | 'calendar'
   | 'students'
   | 'visits'
   | 'incidents'
@@ -36,6 +37,7 @@ export interface NavItem {
 
 const ALL: Record<NavKey, NavItem> = {
   dashboard: { key: 'dashboard', label: 'Dashboard', icon: 'layoutGrid', available: true, to: paths.dashboard },
+  calendar: { key: 'calendar', label: 'Calendar', icon: 'calendar', available: true, to: paths.calendar },
   students: { key: 'students', label: 'Students', icon: 'users', available: true, to: paths.students },
   visits: { key: 'visits', label: 'Visits', icon: 'stethoscope', available: true, to: paths.visits },
   incidents: { key: 'incidents', label: 'Incidents', icon: 'alertTriangle', available: true, to: paths.incidents },
@@ -56,13 +58,13 @@ export interface NavGroup {
 export function navGroupsFor(role: UserRole): NavGroup[] {
   if (role === 'admin') {
     return [
-      { label: 'Overview', items: [ALL.dashboard] },
+      { label: 'Overview', items: [ALL.dashboard, ALL.calendar] },
       { label: 'Reporting', items: [ALL.reports, ALL.auditLog] },
     ]
   }
   if (role === 'staff') {
     return [
-      { label: 'Overview', items: [ALL.dashboard] },
+      { label: 'Overview', items: [ALL.dashboard, ALL.calendar] },
       {
         label: 'Student Care',
         items: [ALL.students, ALL.visits, ALL.incidents, ALL.followUps, ALL.qrLookup],

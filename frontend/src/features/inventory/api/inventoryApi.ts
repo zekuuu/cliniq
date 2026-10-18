@@ -29,6 +29,7 @@ export interface InventoryFilters {
   search: string
   category: '' | InventoryCategory
   hasExpiredStock?: boolean
+  attention?: '' | 'low_stock' | 'expiry'
 }
 
 export interface InventoryFormValues {

@@ -1,7 +1,7 @@
 # ADR-011: Clinic Overview Dashboard — View-Only for Both Roles, Five Stat Cards
 
 **Date:** Saturday, September 26, 2026 — 20:43
-**Status:** Accepted
+**Status:** Accepted — amended by ADR-032 (Sunday, October 18, 2026 — 13:17 PHT)
 
 ## Context
 Building the Clinic Overview Dashboard (Screen Inventory #31) turned up two places where the canonical documents disagree:

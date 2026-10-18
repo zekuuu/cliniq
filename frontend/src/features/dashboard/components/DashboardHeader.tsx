@@ -23,7 +23,6 @@ export interface DashboardHeaderProps {
    * False on the Calendar view, which has its own period: the Date range and its "Showing …" line
    * hide on screen so nobody reads them as filtering the calendar. Print always shows the line.
    */
-  showRange?: boolean
   /** Staff's backup-status indicator, shown above the Date range and Print. */
   status?: ReactNode
 }
@@ -42,7 +41,6 @@ export function DashboardHeader({
   isRefetching,
   onPrint,
   oldestRecordDate,
-  showRange = true,
   status,
 }: DashboardHeaderProps) {
   const isStaff = viewer.role === 'staff'
@@ -57,7 +55,7 @@ export function DashboardHeader({
         </p>
         <p className="mt-0.5 text-xs text-text-secondary" aria-live="polite">
           <time dateTime={today}>{formatLongDate(today)}</time>
-          <span className={showRange ? undefined : 'hidden print:inline'}>
+          <span>
             <span aria-hidden="true"> · </span>
             {isRefetching ? 'Updating…' : `Showing ${describeRangeDates(range, oldestRecordDate)}`}
           </span>
@@ -68,14 +66,7 @@ export function DashboardHeader({
       <div className="ml-auto flex flex-col items-end gap-2 print:hidden">
         {status}
         <div className="flex flex-wrap items-center justify-end gap-2">
-          {showRange ? (
-            <DateRangePicker value={range} onChange={onRangeChange} today={today} compact />
-          ) : (
-            // Holds the picker's slot (and height) so the tabs below don't jump when switching views.
-            <p className="flex min-h-10 items-center text-sm text-text-secondary">
-              Date range not used in Calendar
-            </p>
-          )}
+          <DateRangePicker value={range} onChange={onRangeChange} today={today} compact />
           <Button variant="secondary" icon="printer" onClick={onPrint}>
             Print overview
           </Button>

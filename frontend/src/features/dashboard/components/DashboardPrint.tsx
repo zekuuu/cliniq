@@ -13,9 +13,8 @@ import {
 import { formatDate, formatDateRange, formatDateTime } from '../../../lib/dates'
 import { rangeLengthDays, type DateRange } from '../../../lib/dateRange'
 import type { PendingExcuseLetter, SessionUser } from '../../../lib/mock-db'
-import type { CalendarDayEvent, DashboardSummary, Holiday } from '../../../types/dashboard'
+import type { DashboardSummary } from '../../../types/dashboard'
 import { dueText, expiryLabel } from '../lib/alerts'
-import { HOLIDAY_KIND_LABEL, holidayName } from '../lib/calendar'
 import { activityRows, overviewSentences, periodPhrase } from '../lib/printSummary'
 import { bucketName, findClusters } from '../lib/trends'
 
@@ -32,19 +31,16 @@ export function DashboardPrint({
   range,
   viewer,
   letters,
-  periodEvents,
 }: {
   summary: DashboardSummary
   range: DateRange
   viewer: SessionUser
   /** Staff only: excuse letters awaiting approval. */
   letters?: PendingExcuseLetter[]
-  periodEvents?: { events: CalendarDayEvent[]; holidays: Holiday[] }
 }) {
   const { counts, previousCounts, complaintTrends: trends } = summary
   const oldest = summary.oldestRecordDate
   const period = periodPhrase(range, oldest)
-  const from = range.preset === 'all' ? (oldest ?? range.to) : range.from
   const days = rangeLengthDays(range)
   const previousNote = (n: number) => `Previous ${days === 1 ? 'day' : `${days} days`}: ${n}`
   const figures: PrintFigure[] = [
@@ -87,24 +83,6 @@ export function DashboardPrint({
     : complaints
   const clusters = findClusters(trends)
   const activity = activityRows(trends)
-  const events = periodEvents?.events.filter((e) => (e.endDate ?? e.startDate) >= from) ?? []
-  const holidays = periodEvents?.holidays.filter((h) => h.date >= from) ?? []
-  const dated = [
-    ...events.map((e) => ({
-      key: e.id,
-      date: e.startDate,
-      when: formatDateRange(e.startDate, e.endDate ?? e.startDate),
-      name: e.title,
-      kind: 'School event',
-    })),
-    ...holidays.map((h) => ({
-      key: `${h.date}|${h.name}`,
-      date: h.date,
-      when: formatDate(h.date),
-      name: holidayName(h),
-      kind: HOLIDAY_KIND_LABEL[h.kind],
-    })),
-  ].sort((a, b) => a.date.localeCompare(b.date))
 
   return (
     <PrintDocument
@@ -259,51 +237,24 @@ export function DashboardPrint({
       </PrintSection>
 
       <PrintSection title="Visit activity">
-        <div className="grid grid-cols-2 items-start gap-[6mm]">
-          <PrintTable
-            caption="Visits and incidents per period"
-            rows={activity}
-            rowKey={(row) => row.label}
-            empty={`No visits or incidents ${period}.`}
-            columns={[
-              {
-                header: trends.granularity === 'day' ? 'Week' : 'Period',
-                cell: (row) => row.label,
-              },
-              {
-                header: 'Visits and incidents',
-                width: '40%',
-                align: 'right',
-                cell: (row) => row.total,
-              },
-            ]}
-          />
-          <div>
-            <h3 className="mb-[1mm] border-b-[1.5px] border-text-primary pb-[0.8mm] text-[9pt] font-semibold">
-              School events and holidays
-            </h3>
-            {dated.length ? (
-              <ul
-                aria-label="School events and holidays in the period"
-                className="text-[9pt] leading-tight"
-              >
-                {dated.map((row) => (
-                  <li
-                    key={row.key}
-                    className="break-inside-avoid border-b border-border py-[0.5mm]"
-                  >
-                    <span className="font-semibold">{row.when}</span> · {row.name}{' '}
-                    <span className="text-text-secondary">({row.kind.toLowerCase()})</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <PrintNote className="text-text-primary">
-                No school events or holidays are recorded in the period.
-              </PrintNote>
-            )}
-          </div>
-        </div>
+        <PrintTable
+          caption="Visits and incidents per period"
+          rows={activity}
+          rowKey={(row) => row.label}
+          empty={`No visits or incidents ${period}.`}
+          columns={[
+            {
+              header: trends.granularity === 'day' ? 'Week' : 'Period',
+              cell: (row) => row.label,
+            },
+            {
+              header: 'Visits and incidents',
+              width: '40%',
+              align: 'right',
+              cell: (row) => row.total,
+            },
+          ]}
+        />
       </PrintSection>
     </PrintDocument>
   )

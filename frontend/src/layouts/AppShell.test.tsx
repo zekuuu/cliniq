@@ -175,10 +175,11 @@ describe('App Shell / Navigation', () => {
     )
   })
 
-  it('limits Admin/Principal navigation to Dashboard, Reports, and Audit Log', () => {
+  it('limits Admin/Principal navigation to Dashboard, Calendar, Reports, and Audit Log', () => {
     const groups = navGroupsFor('admin')
     expect(groups.flatMap((group) => group.items.map((item) => item.key))).toEqual([
       'dashboard',
+      'calendar',
       'reports',
       'auditLog',
     ])

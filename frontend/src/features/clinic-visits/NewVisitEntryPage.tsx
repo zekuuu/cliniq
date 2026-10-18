@@ -236,6 +236,8 @@ export function NewVisitEntryPage({
   const formRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(formRef)
   const saveAndNewRef = useRef(false)
+  // The next visit in this open form starts with the last successfully saved disposition.
+  const lastSavedDisposition = useRef<Disposition>('returned_to_class')
   // Anything typed or chosen beyond the defaults; a save clears the form back to them.
   const { cancel, discardDialog } = useCancelNavigation(
     paths.visits,
@@ -243,7 +245,7 @@ export function NewVisitEntryPage({
       treatment.trim() !== '' ||
       lines.length > 0 ||
       triageSteps.length > 0 ||
-      disposition !== 'returned_to_class' ||
+      disposition !== lastSavedDisposition.current ||
       needsFollowUp,
   )
 
@@ -327,7 +329,8 @@ export function NewVisitEntryPage({
       setFreshSuggestions(await fetchComplaintSuggestions())
       setComplaint('')
       setTreatment('')
-      setDisposition('returned_to_class')
+      lastSavedDisposition.current = disposition
+      setDisposition(disposition)
       setDispositionValues(emptyDispositionValues(today))
       setTriageSteps([])
       setNeedsFollowUp(false)

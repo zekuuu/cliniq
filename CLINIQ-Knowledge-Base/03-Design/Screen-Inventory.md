@@ -11,7 +11,7 @@ Give the agent this full list — it maps directly to the two module groups (bas
 ### Auth & Shell
 1. **Login** — username/password, role-aware redirect after login; the session lasts 1 week until the token expires, with no idle timeout
 2. **Force Password Change** — shown on first login (backend enforces this)
-3. **App Shell/Nav** — role-aware sidebar or nav; Staff sees all modules, Admin sees only Reports + Dashboard, Instructor sees only the mobile scan/lookup screen (no shell/nav needed for that one). The desktop header shows the signed-in user's name and role with a red, icon-only Log out control carrying an accessible label.
+3. **App Shell/Nav** — role-aware sidebar or nav; Staff sees all modules, Admin sees Dashboard, Calendar, Reports and Audit Log, Instructor sees only the mobile scan/lookup screen (no shell/nav needed for that one). The desktop header shows the signed-in user's name and role with a red, icon-only Log out control carrying an accessible label.
 
 ### Dashboard
 4. **Staff Dashboard** — today's visit count, low-stock alerts, expiring-medicine alerts, backup status widget, quick "New Visit" action. Delivered on the shared Clinic Overview (#31): Staff get a strip under the header with the "New Visit" action and a backup-status indicator (status + last-backup date) linking to #32
@@ -65,7 +65,8 @@ No separate login screen for Staff here — the computer and mobile Staff flows 
 30. **Dispense/Log Usage** — for non-visit use; must name a student or choose "Not for a student (general use)"; shows a notice linking to the student's visit today when one exists; expired items can't be picked (ADR-018)
 
 ### Clinic Overview Dashboard (enhancement, expanded from "Health Trends Dashboard"; Staff + Admin-facing)
-31. **Dashboard View** — total visit/incident counts, pending/incomplete records (pulled from #9's queue), common complaints over time, grouped by day/week/month/year derived from the selected date range (no manual grouping toggle; Chart/Table remains), symptom-clustering flag, frequent-visitor flag identified by **Student Number** per the display-privacy rule (a warning only, never a diagnosis), plus a **calendar view** of visit counts toggleable weekly/monthly/yearly, with school events Staff add, edit, and delete from a per-day panel (Admin view-only; ADR-019). Charts should have a simple table fallback for the low-spec machine
+31. **Dashboard View** — Overview starts with visit, incident, active-student, pending-excuse-letter, and due/overdue-follow-up totals; Inventory and incomplete-record attention counts drill through for Staff; Frequent visitors appear lower. Trends keep date-derived grouping, Chart/Table fallback, symptom clustering, and display-private frequent-visitor warnings.
+31a. **Clinic Calendar** — Staff and Admin top-level calendar with Weekly/Monthly/Yearly and Calendar/Table controls, holidays, visit/incident tags, and Staff-only school-event management (ADR-019, ADR-020).
 
 ### Backup Verification Assistant (enhancement)
 32. **Backup Status Screen** — last backup date/size/status, plus a plain-language guided recovery checklist (Staff-only, likely nurse-only)
