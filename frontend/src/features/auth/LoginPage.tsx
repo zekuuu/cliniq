@@ -59,36 +59,27 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
 
   const lockMessage = lockedUntil ? `Locked until ${formatTime(lockedUntil)}.` : null
   return (
-    <main className="relative isolate grid min-h-screen items-center gap-6 px-4 pt-8 pb-20 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-16 lg:px-12 xl:px-20">
+    <main className="relative isolate flex min-h-screen items-center justify-center px-4 pt-8 pb-20">
       <LoginBackdrop />
-      <section className="hidden max-w-xl justify-self-end border-r border-white/25 pr-16 text-white lg:block">
-        <img src="/Healware_Logo.png" alt="Healware logo" className="size-24 object-contain" />
-        <p className="mt-8 text-sm font-semibold uppercase tracking-[0.18em] text-brand-yellow">Clinic tracking and monitoring</p>
-        <h1 className="mt-3 text-5xl font-bold tracking-tight">CLINIQ</h1>
-        <p className="mt-3 text-2xl font-semibold">Mendez Christian Academy</p>
-        <p className="mt-6 max-w-md text-base leading-7 text-white/85">A focused clinic workspace for visits, follow-ups, and student care records.</p>
-      </section>
-      {/* Login only: the overlay shadow keeps the compact form distinct against the photo. */}
-      <Card className="w-full max-w-sm justify-self-center p-6 shadow-overlay! lg:justify-self-start">
-        <header>
-          <div className="flex items-center gap-3 lg:hidden">
-            <img src="/Healware_Logo.png" alt="Healware logo" className="size-12 object-contain" />
-            <span className="flex flex-col leading-tight">
-              <span className="text-xl font-bold tracking-tight text-brand-green-dark">CLINIQ</span>
-              <span className="text-xs font-medium text-text-secondary">Mendez Christian Academy</span>
-            </span>
-          </div>
-          <p className="mt-5 text-xs font-semibold uppercase tracking-[0.16em] text-brand-green-dark">Clinic account</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-text-primary">Sign In</h1>
-        </header>
-        <form className="mt-6 flex flex-col gap-4" onSubmit={submit} noValidate>
-          <Input label="Username" icon="user" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} error={fieldErrors.username} required />
-          <Input label="Password" icon="lock" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} error={fieldErrors.password} required />
-          {error && <p role="alert" className="text-sm font-semibold text-error">{error}</p>}
-          {lockMessage && <p className="text-xs text-text-secondary">{lockMessage}</p>}
-          <Button type="submit" variant="primary" className="mt-2 w-full" loading={loading}>Sign In</Button>
-        </form>
-      </Card>
+      <div className="w-full max-w-[26rem]">
+        <div className="relative z-10 -mb-6 ml-6 flex h-24 items-center gap-[18px]">
+          <img src="/Healware_Logo.png" alt="Healware logo" className="size-24 shrink-0 object-contain" />
+          <span className="truncate text-4xl font-bold tracking-tight text-white sm:text-5xl">CLINIQ</span>
+        </div>
+        {/* The logo overlaps the card; the top padding reserves clear space before the heading. */}
+        <Card className="w-full rounded-md p-6 pt-16 shadow-card!">
+          <header>
+            <h1 className="text-2xl font-bold tracking-tight text-text-primary">Sign In</h1>
+          </header>
+          <form className="mt-6 flex flex-col gap-4" onSubmit={submit} noValidate>
+            <Input label="Username" icon="user" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} error={fieldErrors.username} required />
+            <Input label="Password" icon="lock" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} error={fieldErrors.password} required />
+            {error && <p role="alert" className="text-sm font-semibold text-error">{error}</p>}
+            {lockMessage && <p className="text-xs text-text-secondary">{lockMessage}</p>}
+            <Button type="submit" variant="primary" className="mt-2 w-full" loading={loading}>Sign In</Button>
+          </form>
+        </Card>
+      </div>
       <DemoAccounts />
     </main>
   )

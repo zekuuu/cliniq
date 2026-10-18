@@ -14,6 +14,15 @@ function renderLogin() {
 }
 
 describe('LoginPage', () => {
+  it('keeps the brand lockup outside the card and only the Sign In heading inside it', () => {
+    renderLogin()
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Sign In' })).toBeInTheDocument()
+    expect(screen.getByText('CLINIQ')).toBeInTheDocument()
+    expect(screen.queryByText(/assigned clinic account/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/clinic account/i)).not.toBeInTheDocument()
+  })
+
   it('keeps the demo accounts and the simulated-auth notice off the page until asked for', async () => {
     const user = userEvent.setup()
     renderLogin()
