@@ -16,6 +16,7 @@ import type {
 } from '../../types/dashboard'
 import holidayData from './holidays-ph.json'
 import {
+  compareGradeLevels,
   dateOf,
   dueFollowUps,
   followUpDueState,
@@ -306,7 +307,7 @@ export function buildDemographicAnalysis(
 ): DemographicAnalysis {
   const sexEvents = inRangeEvents.filter((event) => !query.gradeLevel || event.gradeLevel === query.gradeLevel)
   const gradeEvents = inRangeEvents.filter((event) => !query.sex || event.sex === query.sex)
-  const grades = [...new Set(inRangeEvents.map((event) => event.gradeLevel))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+  const grades = [...new Set(inRangeEvents.map((event) => event.gradeLevel))].sort(compareGradeLevels)
   return {
     sex: demographicCounts(sexEvents, 'sex', [['female', 'Female'], ['male', 'Male']]),
     gradeLevel: demographicCounts(gradeEvents, 'gradeLevel', grades.map((grade) => [grade, grade])),

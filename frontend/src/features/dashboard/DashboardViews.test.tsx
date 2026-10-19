@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
@@ -35,6 +35,23 @@ describe('Clinic Overview Dashboard: views', () => {
     expect(screen.getByLabelText('More items needing attention')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /frequent-visitor warnings/i })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /^calendar$/i })).not.toBeInTheDocument()
+  })
+
+  it('says in the printout when a Trends filter narrows its complaint figures', async () => {
+    renderDashboard('/?view=trends&sex=female&grade=Grade%205', ADMIN)
+    await screen.findByText(/^Filtered:/)
+    // The print listener is attached in an effect, so retry until the printout mounts.
+    await waitFor(() => {
+      act(() => {
+        window.dispatchEvent(new Event('beforeprint'))
+      })
+      expect(document.querySelector('[data-print-document]')?.textContent ?? '').toMatch(
+        /count only Female × Grade 5 visits and incidents/,
+      )
+    })
+    act(() => {
+      window.dispatchEvent(new Event('afterprint'))
+    })
   })
 
   it('switches between Overview and Trends with replace navigation', async () => {

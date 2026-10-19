@@ -286,7 +286,8 @@ function WeekdayComparisonChart({ comparison }: { comparison: WeekdayComparison 
           responsive: true,
           maintainAspectRatio: false,
           animation: prefersReducedMotion ? false : { duration: 280, easing: 'easeOutCubic' },
-          interaction: { mode: 'index', intersect: false },
+          transitions: { active: { animation: { duration: prefersReducedMotion ? 0 : HOVER_MS, easing: 'easeInOutCubic' } } },
+          interaction: { mode: 'index', axis: 'x', intersect: false },
           scales: {
             x: { grid: { display: false }, border: { color: grid }, ticks: { color: tick, maxRotation: 0 } },
             y: { beginAtZero: true, grid: { color: grid }, border: { display: false }, ticks: { color: tick, precision: 0 } },
@@ -294,7 +295,8 @@ function WeekdayComparisonChart({ comparison }: { comparison: WeekdayComparison 
           plugins: {
             legend: { display: true, labels: { color: tick, boxWidth: 14 } },
             tooltip: {
-              enabled: true,
+              enabled: false,
+              external: (context) => smoothTooltip(context, HOVER_MS),
               callbacks: {
                 title: (items) => comparison.rows[items[0].dataIndex].label,
                 label: (item) => `${item.dataset.label?.replace(/ \(.+\)/, '')}: ${item.parsed.y}`,
@@ -521,7 +523,12 @@ function VisitsTrendCard({
               </p>
             )}
             {comparison ? showTable ? (
-              <WeekdayComparisonTable comparison={comparison} />
+              // The complaint × day table follows, so every complaint type stays reachable on a
+              // month range too (Common complaints points here for the ones it leaves out).
+              <>
+                <WeekdayComparisonTable comparison={comparison} />
+                <TrendTable trends={trends} />
+              </>
             ) : (
               <WeekdayComparisonChart comparison={comparison} />
             ) : showTable ? (
@@ -529,7 +536,8 @@ function VisitsTrendCard({
             ) : (
               <TrendLineChart trends={trends} clusters={clusters} />
             )}
-            {!comparison && clusters.length > 0 && (
+            {/* Weekday bars can't mark the day a cluster fell on, so the note carries it on month ranges. */}
+            {clusters.length > 0 && (
               <div role="note" className="flex items-start gap-2 text-xs text-text-primary">
                 <Icon name="alertTriangle" size={14} className="mt-0.5 shrink-0 text-warning" />
                 <p>
@@ -630,21 +638,42 @@ function percent(value: number) {
   return `${Math.round(value * 100)}%`
 }
 
+/**
+ * Filter toggles. Selected reads like a `SegmentedControl` chip (green ring, raised, heavier
+ * weight), so the active filter is visible without relying on color alone.
+ */
+const FILTER_BUTTON =
+  'cursor-pointer rounded-md border border-border px-3 py-2 text-left text-sm transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green aria-pressed:border-brand-green aria-pressed:bg-background aria-pressed:shadow-card aria-pressed:ring-1 aria-pressed:ring-brand-green motion-reduce:transition-none'
+
+function countsText(rows: DemographicAnalysis['sex']) {
+  return rows.map((row) => `${row.label} ${row.count} (${percent(row.share)})`).join('; ')
+}
+
 function DemographicCharts({
   demographics,
   filters,
   onFiltersChange,
 }: Required<Pick<ComplaintTrendsProps, 'demographics' | 'filters' | 'onFiltersChange'>>) {
-  const sexColors = ['#475569', '#7c3aed']
+  const prefersReducedMotion = usePrefersReducedMotion()
+  const animation = prefersReducedMotion ? false : ({ duration: 280, easing: 'easeOutCubic' } as const)
+  // The same gliding tooltip as the trend charts, instead of Chart.js's canvas tooltip that jumps.
+  const hover = {
+    transitions: { active: { animation: { duration: prefersReducedMotion ? 0 : HOVER_MS, easing: 'easeInOutCubic' as const } } },
+    tooltip: { enabled: false, external: (context: Parameters<typeof smoothTooltip>[0]) => smoothTooltip(context, HOVER_MS) },
+  }
+  // The same two tokens as the weekday comparison; the buttons below carry the text labels.
+  const sexColors = [colorToken('brand-green-dark'), colorToken('text-secondary')]
+  const tick = colorToken('text-secondary')
   return (
     <section aria-label="Demographic analysis" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader title="Visits by Sex" description="Visits and incidents in the selected period; aggregated only." icon={<Icon name="barChart" />} />
         <CardBody className="flex flex-col gap-3">
-          <div className="h-56"><Doughnut data={{ labels: demographics.sex.map((row) => row.label), datasets: [{ data: demographics.sex.map((row) => row.count), backgroundColor: sexColors, borderColor: colorToken('background'), borderWidth: 2 }] }} options={{ plugins: { legend: { display: true, position: 'bottom' } } }} aria-label="Visits and incidents by Sex" role="img" /></div>
+          {/* Legend clicks would hide a segment while its count stays on the button below; filtering is the buttons' job. */}
+          <div className="relative h-56"><Doughnut data={{ labels: demographics.sex.map((row) => row.label), datasets: [{ data: demographics.sex.map((row) => row.count), backgroundColor: sexColors, borderColor: colorToken('background'), borderWidth: 2 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick } } } }} aria-label={`Visits and incidents by Sex: ${countsText(demographics.sex)}.`} role="img" /></div>
           <div className="grid grid-cols-2 gap-2">
             {demographics.sex.map((row) => (
-              <button key={row.key} type="button" aria-pressed={filters.sex === row.key} onClick={() => onFiltersChange({ ...filters, sex: filters.sex === row.key ? null : row.key as 'female' | 'male' })} className="cursor-pointer rounded-md border border-border px-3 py-2 text-left text-sm transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green">
+              <button key={row.key} type="button" aria-pressed={filters.sex === row.key} onClick={() => onFiltersChange({ ...filters, sex: filters.sex === row.key ? null : row.key as 'female' | 'male' })} className={FILTER_BUTTON}>
                 <span className="block font-semibold text-text-primary">{row.label}</span><span className="text-text-secondary">{row.count} · {percent(row.share)}</span>
               </button>
             ))}
@@ -654,10 +683,10 @@ function DemographicCharts({
       <Card>
         <CardHeader title="Visits by grade level" description="Visits and incidents in the selected period; aggregated only." icon={<Icon name="barChart" />} />
         <CardBody className="flex flex-col gap-3">
-          <div className="h-56"><Bar data={{ labels: demographics.gradeLevel.map((row) => row.label), datasets: [{ label: 'Visits and incidents', data: demographics.gradeLevel.map((row) => row.count), backgroundColor: '#64748b', borderRadius: 3 }] }} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }} aria-label="Visits and incidents by grade level" role="img" /></div>
+          <div className="relative h-56"><Bar data={{ labels: demographics.gradeLevel.map((row) => row.label), datasets: [{ label: 'Visits and incidents', data: demographics.gradeLevel.map((row) => row.count), backgroundColor: colorToken('brand-green-dark'), borderRadius: 3 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, interaction: { mode: 'index', axis: 'x', intersect: false }, plugins: { tooltip: hover.tooltip, legend: { display: false } }, scales: { x: { ticks: { color: tick } }, y: { beginAtZero: true, ticks: { precision: 0, color: tick } } } }} aria-label={`Visits and incidents by grade level: ${countsText(demographics.gradeLevel)}.`} role="img" /></div>
           <div className="flex flex-wrap gap-2">
             {demographics.gradeLevel.map((row) => (
-              <button key={row.key} type="button" aria-pressed={filters.gradeLevel === row.key} onClick={() => onFiltersChange({ ...filters, gradeLevel: filters.gradeLevel === row.key ? null : row.key })} className="cursor-pointer rounded-md border border-border px-3 py-2 text-left text-sm transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green">
+              <button key={row.key} type="button" aria-pressed={filters.gradeLevel === row.key} onClick={() => onFiltersChange({ ...filters, gradeLevel: filters.gradeLevel === row.key ? null : row.key })} className={FILTER_BUTTON}>
                 <span className="font-semibold text-text-primary">{row.label}</span><span className="ml-1 text-text-secondary">{row.count} · {percent(row.share)}</span>
               </button>
             ))}
@@ -691,64 +720,88 @@ const TRENDS_GRID = 'grid grid-cols-1 items-start gap-4 lg:grid-cols-3'
  */
 export function ComplaintTrendsSkeleton() {
   return (
-    <div aria-hidden="true" data-skeleton="complaint-trends" className={TRENDS_GRID}>
-      <div data-skeleton="trend-chart" className={cn(CARD_SURFACE, 'lg:col-span-2')}>
-        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-5 pt-5 pb-3">
-          <div className="flex items-start gap-2">
-            <span className="mt-0.5 text-brand-green-dark">
-              <Icon name="activity" />
-            </span>
-            <div className="flex flex-col gap-1.5">
-              <span className="text-base font-semibold text-text-primary">Visits trend</span>
-              <Skeleton className="h-3 w-40" />
+    <div aria-hidden="true" className="flex flex-col gap-4">
+      <div data-skeleton="demographics" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {['Visits by Sex', 'Visits by grade level'].map((title) => (
+          <div key={title} className={CARD_SURFACE}>
+            <div className="flex items-start gap-2.5 px-5 pt-5 pb-3">
+              <span className="mt-0.5 text-brand-green-dark">
+                <Icon name="barChart" />
+              </span>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-base font-semibold text-text-primary">{title}</span>
+                <Skeleton className="h-3 w-56" />
+              </div>
+            </div>
+            <div className="flex flex-col gap-3 px-5 pb-5">
+              <Skeleton className="h-56" />
+              <div className="flex gap-2">
+                <Skeleton className="h-14 flex-1" />
+                <Skeleton className="h-14 flex-1" />
+              </div>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Skeleton className="h-8 w-32" />
-            <Skeleton className="h-8 w-32" />
-          </div>
-        </div>
-        <div className="px-5 pb-5">
-          <div className="flex h-72 flex-col justify-between border-b border-border pt-7">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-2">
-                <Skeleton className="h-2.5 w-5" />
-                <div className="h-px flex-1 bg-border" />
-              </div>
-            ))}
-          </div>
-          <div className="mt-2 flex justify-around">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-2.5 w-10" />
-            ))}
-          </div>
-        </div>
+        ))}
       </div>
-      <div data-skeleton="complaints-list" className={CARD_SURFACE}>
-        <div className="flex items-start gap-2.5 px-5 pt-5 pb-3">
-          <span className="mt-0.5 text-brand-green-dark">
-            <Icon name="barChart" />
-          </span>
-          <div className="flex flex-col gap-1.5">
-            <span className="text-base font-semibold text-text-primary">Common complaints</span>
-            <Skeleton className="h-3 w-44" />
+      <div data-skeleton="complaint-trends" className={TRENDS_GRID}>
+        <div data-skeleton="trend-chart" className={cn(CARD_SURFACE, 'lg:col-span-2')}>
+          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-5 pt-5 pb-3">
+            <div className="flex items-start gap-2">
+              <span className="mt-0.5 text-brand-green-dark">
+                <Icon name="activity" />
+              </span>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-base font-semibold text-text-primary">Visits trend</span>
+                <Skeleton className="h-3 w-40" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-8 w-32" />
+              <Skeleton className="h-8 w-32" />
+            </div>
+          </div>
+          <div className="px-5 pb-5">
+            <div className="flex h-72 flex-col justify-between border-b border-border pt-7">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Skeleton className="h-2.5 w-5" />
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 flex justify-around">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-2.5 w-10" />
+              ))}
+            </div>
           </div>
         </div>
-        <ol className="flex flex-col gap-5 px-5 pb-5">
-          {[90, 72, 55, 40, 28].map((w) => (
-            <li
-              key={w}
-              data-skeleton="complaint-row"
-              className="grid grid-cols-[minmax(0,8rem)_1fr_2.5rem] items-center gap-3"
-            >
-              <Skeleton className="h-3 w-24" />
-              <span className="h-3 rounded-full bg-surface">
-                <Skeleton className="h-3 rounded-full" style={{ width: `${w}%` }} />
-              </span>
-              <Skeleton className="ml-auto h-3 w-6" />
-            </li>
-          ))}
-        </ol>
+        <div data-skeleton="complaints-list" className={CARD_SURFACE}>
+          <div className="flex items-start gap-2.5 px-5 pt-5 pb-3">
+            <span className="mt-0.5 text-brand-green-dark">
+              <Icon name="barChart" />
+            </span>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-base font-semibold text-text-primary">Common complaints</span>
+              <Skeleton className="h-3 w-44" />
+            </div>
+          </div>
+          <ol className="flex flex-col gap-5 px-5 pb-5">
+            {[90, 72, 55, 40, 28].map((w) => (
+              <li
+                key={w}
+                data-skeleton="complaint-row"
+                className="grid grid-cols-[minmax(0,8rem)_1fr_2.5rem] items-center gap-3"
+              >
+                <Skeleton className="h-3 w-24" />
+                <span className="h-3 rounded-full bg-surface">
+                  <Skeleton className="h-3 rounded-full" style={{ width: `${w}%` }} />
+                </span>
+                <Skeleton className="ml-auto h-3 w-6" />
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </div>
   )

@@ -31,10 +31,13 @@ export function DashboardPrint({
   range,
   viewer,
   letters,
+  filterLabel,
 }: {
   summary: DashboardSummary
   range: DateRange
   viewer: SessionUser
+  /** Active Trends filter (e.g. "Female × Grade 5"); it narrows the complaint figures only. */
+  filterLabel?: string
   /** Staff only: excuse letters awaiting approval. */
   letters?: PendingExcuseLetter[]
 }) {
@@ -95,6 +98,7 @@ export function DashboardPrint({
           </span>{' '}
           The period applies to visits, incidents, complaints, and frequent visitors. Follow-ups,
           stock, and record counts are as of {formatDate(summary.today)}.
+          {filterLabel && ` The activity, complaint, and cluster figures count only ${filterLabel} visits and incidents.`}
         </>
       }
     >

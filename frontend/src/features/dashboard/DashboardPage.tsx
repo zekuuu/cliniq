@@ -55,9 +55,14 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   // A summary view opens on the current month; operational logs keep the All default.
   const [range, setRange] = useState<DateRange>(() => rangeForPreset('thisMonth', today))
   const [searchParams, setSearchParams] = useSearchParams()
-  if (searchParams.get('view') === 'calendar') return <Navigate to={paths.calendar} replace />
   const view = parseDashboardView(searchParams.get('view'))
   const demographicFilters = { sex: parseSex(searchParams.get('sex')), gradeLevel: searchParams.get('grade') || null }
+  const filterLabel = [
+    demographicFilters.sex === 'female' ? 'Female' : demographicFilters.sex === 'male' ? 'Male' : null,
+    demographicFilters.gradeLevel,
+  ]
+    .filter(Boolean)
+    .join(' × ')
   const canNavigate = viewer.role === 'staff'
   const [switching, setSwitching] = useState(false)
   useEffect(() => {
@@ -76,6 +81,9 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   const letters = useAsyncData(`dashboard-pending-excuse-letters|${viewer.role}`, () =>
     viewer.role === 'staff' ? fetchPendingExcuseLetters() : Promise.resolve([]),
   )
+
+  // After every hook: an early return above them would change the hook order between renders.
+  if (searchParams.get('view') === 'calendar') return <Navigate to={paths.calendar} replace />
 
   function changeView(next: DashboardView) {
     if (next === view) return
@@ -208,7 +216,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
               icon: 'activity',
               panel: summaryPanel('Loading trends…', <ComplaintTrendsSkeleton />, (d) => (
                 <>
-                  {(demographicFilters.sex || demographicFilters.gradeLevel) && <p role="status" className="w-fit rounded-full bg-surface px-3 py-1 text-sm font-semibold text-text-primary">Filtered: {[demographicFilters.sex === 'female' ? 'Female' : demographicFilters.sex === 'male' ? 'Male' : null, demographicFilters.gradeLevel].filter(Boolean).join(' × ')} <button type="button" className="ml-1 cursor-pointer underline" onClick={() => changeDemographicFilters({ sex: null, gradeLevel: null })}>Clear</button></p>}
+                  {filterLabel && <p role="status" className="w-fit rounded-full bg-surface px-3 py-1 text-sm font-semibold text-text-primary">Filtered: {filterLabel} <button type="button" className="ml-1 cursor-pointer rounded-sm underline underline-offset-2 transition-colors hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none" onClick={() => changeDemographicFilters({ sex: null, gradeLevel: null })}>Clear</button></p>}
                   <ComplaintTrends trends={d.complaintTrends} demographics={d.demographics} filters={demographicFilters} onFiltersChange={changeDemographicFilters} />
                 </>
               )),
@@ -221,6 +229,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           summary={data}
           range={range}
           viewer={viewer}
+          filterLabel={filterLabel}
           letters={viewer.role === 'staff' ? (letters.data ?? []) : undefined}
         />
       )}

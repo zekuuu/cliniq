@@ -5,6 +5,7 @@ import {
   buildBuckets,
   buildCalendarDays,
   buildComplaintTrends,
+  buildDemographicAnalysis,
   buildDashboardSummary,
   buildDueFollowUps,
   buildInventoryAlerts,
@@ -296,6 +297,11 @@ describe('complaint trends', () => {
   it('keeps an All range with no events to a single bucket instead of a century of months', () => {
     const trends = buildComplaintTrends([], rangeForPreset('all', TODAY), CONFIG)
     expect(trends.buckets).toHaveLength(1)
+  })
+
+  it('lists grade levels in school order, Kinder first', () => {
+    const events = ['Grade 10', 'Kinder', 'Grade 2'].map((gradeLevel) => ({ sex: 'female' as const, gradeLevel }))
+    expect(buildDemographicAnalysis(events, { sex: null, gradeLevel: null }).gradeLevel.map((g) => g.key)).toEqual(['Kinder', 'Grade 2', 'Grade 10'])
   })
 
   it('exposes This year as January 1 through today', () => {

@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { ComplaintTrends, TrendTable } from './ComplaintTrends'
+import { ComplaintTrends, ComplaintTrendsSkeleton, TrendTable } from './ComplaintTrends'
 import type { ComplaintTrends as ComplaintTrendsData, TrendBucket } from '../../../types/dashboard'
 
 interface LineProps {
@@ -23,7 +23,10 @@ interface LineProps {
             caretY: number
             opacity: number
             title: string[]
-            body: Array<{ lines: string[] }>
+            beforeBody: string[]
+            body: Array<{ before: string[]; lines: string[]; after: string[] }>
+            afterBody: string[]
+            footer: string[]
           }
         }) => void
       }
@@ -102,6 +105,47 @@ describe('TrendTable', () => {
     const table = screen.getByRole('table', { name: /weekday comparison/i })
     expect(within(table).getByRole('row', { name: /Friday.*Foundation Day/i })).toHaveAttribute('tabindex', '0')
     expect(within(table).getByText(/busiest Oct 30, 2026/i)).toBeInTheDocument()
+  })
+
+  it('keeps the cluster note and every complaint type reachable on a month comparison', async () => {
+    const user = userEvent.setup()
+    const clustered = {
+      ...trends,
+      series: trends.series.map((s, i) => (i === 0 ? { ...s, clusterBuckets: [2] } : s)),
+      weekdayComparison: {
+        currentLabel: 'October 2026',
+        previousLabel: 'September 2026',
+        rows: [{ label: 'Monday', current: 1, previous: 0, currentPeak: null, previousPeak: null }],
+      },
+    }
+    render(<ComplaintTrends trends={clustered} />)
+    expect(screen.getByRole('note')).toHaveTextContent(/Possible symptom cluster: Headache, 1 cases/)
+    await user.click(screen.getByRole('radio', { name: 'Table' }))
+    expect(screen.getByRole('table', { name: /weekday comparison/i })).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: /Complaint counts per period/i })).toBeInTheDocument()
+    expect(screen.getByText(/1 other complaint types, 2 cases \(see the/)).toBeInTheDocument()
+  })
+
+  it('marks the selected demographic filter visibly, not by aria-pressed alone', () => {
+    render(
+      <ComplaintTrends
+        trends={trends}
+        demographics={{ sex: [{ key: 'female', label: 'Female', count: 2, share: 0.5 }, { key: 'male', label: 'Male', count: 2, share: 0.5 }], gradeLevel: [] }}
+        filters={{ sex: 'female', gradeLevel: null }}
+        onFiltersChange={() => {}}
+      />,
+    )
+    expect(screen.getByRole('button', { name: /^Female/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /^Female/ }).className).toContain('aria-pressed:ring-brand-green')
+    expect(screen.getByRole('img', { name: /by Sex: Female 2 \(50%\); Male 2 \(50%\)/ })).toBeInTheDocument()
+  })
+
+  it('shapes the loading skeleton like the demographic cards above the trend row', () => {
+    const { container } = render(<ComplaintTrendsSkeleton />)
+    const demographics = container.querySelector('[data-skeleton="demographics"]')
+    expect(demographics?.textContent).toContain('Visits by Sex')
+    expect(demographics?.textContent).toContain('Visits by grade level')
+    expect(demographics?.compareDocumentPosition(container.querySelector('[data-skeleton="complaint-trends"]')!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
   })
 
   it('keeps a genuinely empty multi-bucket range as a zero chart', () => {
@@ -195,7 +239,10 @@ describe('TrendTable', () => {
         caretY: 24,
         opacity: 1,
         title: ['Oct 6, 2026'],
-        body: [{ lines: ['6 visits and incidents'] }],
+        beforeBody: [],
+        body: [{ before: [], lines: ['6 visits and incidents'], after: [] }],
+        afterBody: [],
+        footer: [],
       },
     })
 

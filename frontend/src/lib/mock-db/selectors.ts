@@ -266,13 +266,15 @@ export function complaintSuggestions(state: DbState): string[] {
     .map((entry) => entry.label)
 }
 
+/** School order: Kinder comes before Grade 1, not alphabetically after Grade 12. */
+export function compareGradeLevels(a: string, b: string): number {
+  const rank = (level: string) => (level === 'Kinder' ? 0 : 1)
+  return rank(a) - rank(b) || a.localeCompare(b, undefined, { numeric: true })
+}
+
 export function gradeLevels(state: DbState): string[] {
   const levels = new Set(state.students.map((s) => s.gradeLevel).filter(Boolean))
-  // School order: Kinder comes before Grade 1, not alphabetically after Grade 12.
-  const rank = (level: string) => (level === 'Kinder' ? 0 : 1)
-  return [...levels].sort(
-    (a, b) => rank(a) - rank(b) || a.localeCompare(b, undefined, { numeric: true }),
-  )
+  return [...levels].sort(compareGradeLevels)
 }
 
 /** Next `YYYY-NNNNN` for the current year (ADR-005: system-generated at creation). */
