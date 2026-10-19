@@ -31,7 +31,10 @@ export interface DashboardQuery {
 export interface DemographicCount {
   key: string
   label: string
+  /** Visits plus incidents. */
   count: number
+  visits: number
+  incidents: number
   share: number
 }
 

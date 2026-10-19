@@ -49,11 +49,11 @@ export function buildDashboardSummary(
   const trendEvents = [
     ...state.visits.flatMap((v) => {
       const student = students.get(v.studentId)
-      return student ? [{ date: dateOf(v.dateTime), hour: hourOf(v.dateTime), complaint: v.complaint, eventTag: v.eventTag, sex: student.sex ?? 'female', gradeLevel: student.gradeLevel }] : []
+      return student ? [{ date: dateOf(v.dateTime), hour: hourOf(v.dateTime), complaint: v.complaint, eventTag: v.eventTag, sex: student.sex ?? 'female', gradeLevel: student.gradeLevel, kind: 'visit' as const }] : []
     }),
     ...state.incidents.flatMap((i) => {
       const student = students.get(i.studentId)
-      return student ? [{ date: dateOf(i.time), hour: hourOf(i.time), complaint: i.complaint, eventTag: i.eventTag, sex: student.sex ?? 'female', gradeLevel: student.gradeLevel }] : []
+      return student ? [{ date: dateOf(i.time), hour: hourOf(i.time), complaint: i.complaint, eventTag: i.eventTag, sex: student.sex ?? 'female', gradeLevel: student.gradeLevel, kind: 'incident' as const }] : []
     }),
   ]
   const inRangeEvents = trendEvents.filter((event) => isWithin(event.date, from, to))
@@ -284,25 +284,31 @@ export function buildComplaintTrends(
   }
 }
 
+type DemographicEvent = { sex: 'male' | 'female'; gradeLevel: string; kind: 'visit' | 'incident' }
+
 function demographicCounts(
-  events: Array<{ sex: 'male' | 'female'; gradeLevel: string }>,
+  events: DemographicEvent[],
   key: 'sex' | 'gradeLevel',
   labels: Array<[string, string]>,
 ): DemographicAnalysis['sex'] {
   const total = events.length
-  const counts = new Map(events.map((event) => [event[key], 0]))
-  for (const event of events) counts.set(event[key], (counts.get(event[key]) ?? 0) + 1)
-  return labels.map(([value, label]) => ({
-    key: value,
-    label,
-    count: counts.get(value) ?? 0,
-    share: total === 0 ? 0 : (counts.get(value) ?? 0) / total,
-  }))
+  return labels.map(([value, label]) => {
+    const group = events.filter((event) => event[key] === value)
+    const visits = group.filter((event) => event.kind === 'visit').length
+    return {
+      key: value,
+      label,
+      count: group.length,
+      visits,
+      incidents: group.length - visits,
+      share: total === 0 ? 0 : group.length / total,
+    }
+  })
 }
 
 /** Each chart applies the *other* active dimension, so a selection can meaningfully refine it. */
 export function buildDemographicAnalysis(
-  inRangeEvents: Array<{ sex: 'male' | 'female'; gradeLevel: string }>,
+  inRangeEvents: DemographicEvent[],
   query: Pick<DashboardQuery, 'sex' | 'gradeLevel'>,
 ): DemographicAnalysis {
   const sexEvents = inRangeEvents.filter((event) => !query.gradeLevel || event.gradeLevel === query.gradeLevel)

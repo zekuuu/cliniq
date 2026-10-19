@@ -300,8 +300,15 @@ describe('complaint trends', () => {
   })
 
   it('lists grade levels in school order, Kinder first', () => {
-    const events = ['Grade 10', 'Kinder', 'Grade 2'].map((gradeLevel) => ({ sex: 'female' as const, gradeLevel }))
+    const events = ['Grade 10', 'Kinder', 'Grade 2'].map((gradeLevel) => ({ sex: 'female' as const, gradeLevel, kind: 'visit' as const }))
     expect(buildDemographicAnalysis(events, { sex: null, gradeLevel: null }).gradeLevel.map((g) => g.key)).toEqual(['Kinder', 'Grade 2', 'Grade 10'])
+  })
+
+  it('splits each grade level into visits and incidents', () => {
+    const events = (['visit', 'visit', 'incident'] as const).map((kind) => ({ sex: 'male' as const, gradeLevel: 'Grade 5', kind }))
+    expect(buildDemographicAnalysis(events, { sex: null, gradeLevel: null }).gradeLevel).toEqual([
+      { key: 'Grade 5', label: 'Grade 5', count: 3, visits: 2, incidents: 1, share: 1 },
+    ])
   })
 
   it('exposes This year as January 1 through today', () => {
@@ -352,10 +359,10 @@ describe('dashboard summary', () => {
   it('returns aggregate demographic counts and applies those filters only to Trends', () => {
     expect(summary.demographics).toEqual({
       sex: [
-        { key: 'female', label: 'Female', count: 4, share: 1 },
-        { key: 'male', label: 'Male', count: 0, share: 0 },
+        { key: 'female', label: 'Female', count: 4, visits: 4, incidents: 0, share: 1 },
+        { key: 'male', label: 'Male', count: 0, visits: 0, incidents: 0, share: 0 },
       ],
-      gradeLevel: [{ key: 'Grade 5', label: 'Grade 5', count: 4, share: 1 }],
+      gradeLevel: [{ key: 'Grade 5', label: 'Grade 5', count: 4, visits: 4, incidents: 0, share: 1 }],
     })
 
     const filtered = buildDashboardSummary(
@@ -366,7 +373,7 @@ describe('dashboard summary', () => {
     expect(filtered.counts).toMatchObject({ visits: 4, activeStudents: 2 })
     expect(filtered.complaintTrends.series).toEqual([])
     expect(filtered.demographics.gradeLevel).toEqual([
-      { key: 'Grade 5', label: 'Grade 5', count: 0, share: 0 },
+      { key: 'Grade 5', label: 'Grade 5', count: 0, visits: 0, incidents: 0, share: 0 },
     ])
   })
 })

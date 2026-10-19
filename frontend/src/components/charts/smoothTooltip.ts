@@ -48,9 +48,13 @@ export function smoothTooltip<TType extends ChartType>(
   const title = document.createElement('p')
   title.className = 'font-semibold'
   title.textContent = tooltip.title.join(' ')
-  const body = document.createElement('p')
-  body.className = 'mt-0.5 text-text-secondary'
-  body.textContent = tooltip.body.flatMap((item) => item.lines).join(' · ')
+  // One line per series, so two datasets read as rows instead of one run-on line.
+  const body = tooltip.body.map((item) => {
+    const p = document.createElement('p')
+    p.className = 'mt-0.5 text-text-secondary tabular-nums'
+    p.textContent = item.lines.join(' ')
+    return p
+  })
   // Text from the afterLabel/afterBody callbacks (cluster notes, busiest dates), one line each.
   const extra = [
     ...tooltip.beforeBody,
@@ -65,7 +69,7 @@ export function smoothTooltip<TType extends ChartType>(
       p.textContent = line
       return p
     })
-  tooltipElement.replaceChildren(title, body, ...extra)
+  tooltipElement.replaceChildren(title, ...body, ...extra)
   tooltipElement.style.opacity = '1'
   tooltipElement.style.transform = transform('calc(-100% - 10px)', '1')
 }

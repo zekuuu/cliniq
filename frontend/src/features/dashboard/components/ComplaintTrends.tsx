@@ -300,12 +300,13 @@ function WeekdayComparisonChart({ comparison }: { comparison: WeekdayComparison 
               callbacks: {
                 title: (items) => comparison.rows[items[0].dataIndex].label,
                 label: (item) => `${item.dataset.label?.replace(/ \(.+\)/, '')}: ${item.parsed.y}`,
+                // One short line: the counts are already above, and the prior month's busiest date
+                // stays in the Table view.
                 afterBody: (items) => {
-                  const row = comparison.rows[items[0].dataIndex]
-                  return [
-                    weekdayPeakText(comparison.currentLabel, row.current, row.currentPeak),
-                    weekdayPeakText(comparison.previousLabel, row.previous, row.previousPeak),
-                  ]
+                  const peak = comparison.rows[items[0].dataIndex].currentPeak
+                  if (!peak) return []
+                  const context = peak.annotations.length ? ` · ${peak.annotations.join(', ')}` : ''
+                  return [`Busiest day: ${formatShortDate(peak.date)} (${peak.count} ${peak.count === 1 ? 'case' : 'cases'})${context}`]
                 },
               },
             },
@@ -649,6 +650,12 @@ function countsText(rows: DemographicAnalysis['sex']) {
   return rows.map((row) => `${row.label} ${row.count} (${percent(row.share)})`).join('; ')
 }
 
+function splitText(rows: DemographicAnalysis['gradeLevel']) {
+  return rows
+    .map((row) => `${row.label} ${row.visits} ${row.visits === 1 ? 'visit' : 'visits'}, ${row.incidents} ${row.incidents === 1 ? 'incident' : 'incidents'}`)
+    .join('; ')
+}
+
 function DemographicCharts({
   demographics,
   filters,
@@ -683,7 +690,8 @@ function DemographicCharts({
       <Card>
         <CardHeader title="Visits by grade level" description="Visits and incidents in the selected period; aggregated only." icon={<Icon name="barChart" />} />
         <CardBody className="flex flex-col gap-3">
-          <div className="relative h-56"><Bar data={{ labels: demographics.gradeLevel.map((row) => row.label), datasets: [{ label: 'Visits and incidents', data: demographics.gradeLevel.map((row) => row.count), backgroundColor: colorToken('brand-green-dark'), borderRadius: 3 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, interaction: { mode: 'index', axis: 'x', intersect: false }, plugins: { tooltip: hover.tooltip, legend: { display: false } }, scales: { x: { ticks: { color: tick } }, y: { beginAtZero: true, ticks: { precision: 0, color: tick } } } }} aria-label={`Visits and incidents by grade level: ${countsText(demographics.gradeLevel)}.`} role="img" /></div>
+          {/* Stacked, so each bar's height is still the grade's total; incidents use the incident red. */}
+          <div className="relative h-56"><Bar data={{ labels: demographics.gradeLevel.map((row) => row.label), datasets: [{ label: 'Visits', data: demographics.gradeLevel.map((row) => row.visits), backgroundColor: colorToken('brand-green-dark'), borderColor: colorToken('background'), borderWidth: 1 }, { label: 'Incidents', data: demographics.gradeLevel.map((row) => row.incidents), backgroundColor: colorToken('error'), borderColor: colorToken('background'), borderWidth: 1 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, interaction: { mode: 'index', axis: 'x', intersect: false }, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick, boxWidth: 14 } } }, scales: { x: { stacked: true, ticks: { color: tick } }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0, color: tick } } } }} aria-label={`Visits and incidents by grade level: ${splitText(demographics.gradeLevel)}.`} role="img" /></div>
           <div className="flex flex-wrap gap-2">
             {demographics.gradeLevel.map((row) => (
               <button key={row.key} type="button" aria-pressed={filters.gradeLevel === row.key} onClick={() => onFiltersChange({ ...filters, gradeLevel: filters.gradeLevel === row.key ? null : row.key })} className={FILTER_BUTTON}>

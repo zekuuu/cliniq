@@ -35,13 +35,17 @@ interface LineProps {
 }
 
 const lineMock = vi.hoisted(() => ({ props: undefined as unknown }))
+const barMock = vi.hoisted(() => ({ props: undefined as unknown }))
 
 vi.mock('react-chartjs-2', () => ({
   Line: (props: LineProps) => {
     lineMock.props = props
     return <div role="img" aria-label={props['aria-label']} />
   },
-  Bar: (props: LineProps) => <div role="img" aria-label={props['aria-label']} />,
+  Bar: (props: LineProps) => {
+    barMock.props = props
+    return <div role="img" aria-label={props['aria-label']} />
+  },
   Doughnut: (props: LineProps) => <div role="img" aria-label={props['aria-label']} />,
 }))
 
@@ -107,6 +111,23 @@ describe('TrendTable', () => {
     expect(within(table).getByText(/busiest Oct 30, 2026/i)).toBeInTheDocument()
   })
 
+  it('keeps the weekday tooltip to the two counts and one busiest-day line', () => {
+    render(
+      <ComplaintTrends
+        trends={{
+          ...trends,
+          weekdayComparison: {
+            currentLabel: 'October 2026',
+            previousLabel: 'September 2026',
+            rows: [{ label: 'Saturday', current: 11, previous: 1, currentPeak: { date: '2026-10-17', count: 6, annotations: ['Intramurals'] }, previousPeak: { date: '2026-09-05', count: 1, annotations: [] } }],
+          },
+        }}
+      />,
+    )
+    const callbacks = (barMock.props as { options: { plugins: { tooltip: { callbacks: { afterBody: (items: Array<{ dataIndex: number }>) => string[] } } } } }).options.plugins.tooltip.callbacks
+    expect(callbacks.afterBody([{ dataIndex: 0 }])).toEqual(['Busiest day: Oct 17 (6 cases) · Intramurals'])
+  })
+
   it('keeps the cluster note and every complaint type reachable on a month comparison', async () => {
     const user = userEvent.setup()
     const clustered = {
@@ -130,7 +151,7 @@ describe('TrendTable', () => {
     render(
       <ComplaintTrends
         trends={trends}
-        demographics={{ sex: [{ key: 'female', label: 'Female', count: 2, share: 0.5 }, { key: 'male', label: 'Male', count: 2, share: 0.5 }], gradeLevel: [] }}
+        demographics={{ sex: [{ key: 'female', label: 'Female', count: 2, visits: 2, incidents: 0, share: 0.5 }, { key: 'male', label: 'Male', count: 2, visits: 2, incidents: 0, share: 0.5 }], gradeLevel: [] }}
         filters={{ sex: 'female', gradeLevel: null }}
         onFiltersChange={() => {}}
       />,
@@ -183,10 +204,10 @@ describe('TrendTable', () => {
         trends={trends}
         demographics={{
           sex: [
-            { key: 'female', label: 'Female', count: 3, share: 0.75 },
-            { key: 'male', label: 'Male', count: 1, share: 0.25 },
+            { key: 'female', label: 'Female', count: 3, visits: 3, incidents: 0, share: 0.75 },
+            { key: 'male', label: 'Male', count: 1, visits: 0, incidents: 1, share: 0.25 },
           ],
-          gradeLevel: [{ key: 'Grade 5', label: 'Grade 5', count: 4, share: 1 }],
+          gradeLevel: [{ key: 'Grade 5', label: 'Grade 5', count: 4, visits: 3, incidents: 1, share: 1 }],
         }}
         filters={{ sex: null, gradeLevel: null }}
         onFiltersChange={onFiltersChange}
@@ -194,7 +215,7 @@ describe('TrendTable', () => {
     )
 
     expect(screen.getByRole('img', { name: /by Sex/i })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: /by grade level/i })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /by grade level: Grade 5 3 visits, 1 incident\./i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Female.*3.*75%/i })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /Male.*1.*25%/i }))
     expect(onFiltersChange).toHaveBeenCalledWith({ sex: 'male', gradeLevel: null })
