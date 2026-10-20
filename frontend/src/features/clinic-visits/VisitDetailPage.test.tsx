@@ -6,6 +6,7 @@ import { getExcuseLetterApproval, getRecordedAuditEntries, getVisit, resetMockDb
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { VisitDetailPage } from './VisitDetailPage'
 import { fetchVisitDetail } from './api/visitDetailApi'
+import { maskLrn } from '../../lib/lrn'
 
 const letterCard = () => screen.getByRole('region', { name: 'Excuse letter' })
 
@@ -18,7 +19,7 @@ describe('Visit Details', () => {
 
     expect(await screen.findByRole('heading', { name: 'Visit Details' })).toBeInTheDocument()
     expect(screen.getByText(detail.student.fullName)).toBeInTheDocument()
-    expect(screen.getAllByText(detail.student.studentNumber).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(maskLrn(detail.student.lrn)).length).toBeGreaterThan(0)
     expect(screen.getByText(detail.complaint)).toBeInTheDocument()
     expect(screen.getByText(detail.treatment)).toBeInTheDocument()
   })

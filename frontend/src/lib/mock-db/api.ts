@@ -1,3 +1,4 @@
+import { isLrn, normalizeLrn } from '../lrn'
 import type {
   AuditActionType,
   AuditLogEntry,
@@ -19,7 +20,6 @@ import type {
   Report,
   ReportType,
   Student,
-  StudentNumber,
   StudentSearchResult,
   User,
   UserRole,
@@ -43,7 +43,6 @@ import {
   inventoryStatusFor,
   missingRequiredFields,
   monthlyCounts,
-  nextStudentNumber,
   searchStudents as searchStudentRecords,
   studentsById,
   toStudent,
@@ -176,6 +175,7 @@ function audit(
 
 const FIELD_LABELS: Record<string, string> = {
   fullName: 'name',
+  lrn: 'LRN',
   gradeLevel: 'grade level',
   contactInfo: 'contact info',
   medicalConditions: 'medical conditions',
@@ -519,7 +519,7 @@ export function listStudents(query: StudentQuery = {}): Promise<Student[]> {
       .filter((st) => !query.gradeLevel || st.gradeLevel === query.gradeLevel)
       .filter(
         (st) =>
-          !search || st.fullName.toLowerCase().includes(search) || st.studentNumber.toLowerCase().includes(search),
+          !search || st.fullName.toLowerCase().includes(search) || (/^\d+$/.test(search) && st.lrn.startsWith(search)),
       )
       .sort((a, b) => a.fullName.localeCompare(b.fullName))
       .slice(0, query.limit ?? Infinity)
@@ -528,26 +528,21 @@ export function listStudents(query: StudentQuery = {}): Promise<Student[]> {
 }
 
 /**
- * Student lookup by Student Number prefix or name: active students only, nothing under 2
- * characters, at most `limit` results, no medical fields (see `searchStudents` in selectors.ts).
+ * Student lookup by name or LRN prefix: active students only, at most `limit` results, no medical
+ * fields (see `searchStudents` in selectors.ts).
  */
 export function searchStudents(query: string, limit = 8): Promise<StudentSearchResult[]> {
   return read('student search', (s) => searchStudentRecords(s, query, limit))
 }
 
-export function getStudent(studentNumber: StudentNumber): Promise<Student> {
-  return read('student', (s) =>
-    toStudent(must(s.students.find((st) => st.studentNumber === studentNumber), 'Student')),
-  )
-}
-
-export function getStudentById(id: string): Promise<Student> {
+/** By the internal id, which addresses carry; the LRN never goes in a URL (ADR-028). */
+export function getStudent(id: string): Promise<Student> {
   return read('student', (s) => toStudent(studentOf(s, id)))
 }
 
 /**
  * A default student for screens opened without one (demo convenience until real navigation always
- * supplies a Student Number): the first active, complete record, preferring one with history.
+ * supplies a student): the first active, complete record, preferring one with history.
  */
 export function getDemoStudent(options: { withHistory?: boolean } = {}): Promise<Student> {
   return read('demo student', (s) => {
@@ -578,20 +573,23 @@ export function getStudentHistory(studentId: string, limit = 8): Promise<Student
   }))
 }
 
-export function getNextStudentNumber(): Promise<StudentNumber> {
-  return read('next student number', nextStudentNumber)
-}
-
 export type StudentInput = Pick<
   Student,
-  'fullName' | 'gradeLevel' | 'sex' | 'contactInfo' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
+  'lrn' | 'fullName' | 'gradeLevel' | 'sex' | 'contactInfo' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
 >
 
 export interface DuplicateMatch {
   id: string
   fullName: string
-  studentNumber: StudentNumber
+  lrn: string
   gradeLevel: string
+}
+
+/** The LRN is unique; the message never names the other student (ADR-028). */
+export class DuplicateLrnError extends Error {
+  constructor() {
+    super('This LRN is already used by another student record.')
+  }
 }
 
 export type SaveStudentResult =
@@ -607,15 +605,19 @@ export function saveStudent(
   options: { studentId?: string; confirmDuplicate?: boolean; actor?: SessionUser } = {},
 ): Promise<SaveStudentResult> {
   return write('save student', (s): SaveStudentResult => {
+    const lrn = normalizeLrn(input.lrn)
+    if (!isLrn(lrn)) throw new Error('The LRN must be exactly 12 digits.')
+    if (s.students.some((st) => st.id !== options.studentId && st.lrn === lrn)) throw new DuplicateLrnError()
     const name = input.fullName.trim().toLowerCase()
     const matches = s.students
       .filter((st) => st.id !== options.studentId && !st.archived)
       .filter((st) => st.fullName.trim().toLowerCase() === name && st.gradeLevel === input.gradeLevel)
-      .map((st) => ({ id: st.id, fullName: st.fullName, studentNumber: st.studentNumber, gradeLevel: st.gradeLevel }))
+      .map((st) => ({ id: st.id, fullName: st.fullName, lrn: st.lrn, gradeLevel: st.gradeLevel }))
     if (!options.studentId && matches.length && !options.confirmDuplicate) return { status: 'duplicate', matches }
 
     const existing = options.studentId ? studentOf(s, options.studentId) : null
     const fields = {
+      lrn,
       fullName: input.fullName.trim(),
       gradeLevel: input.gradeLevel,
       sex: input.sex,
@@ -629,7 +631,7 @@ export function saveStudent(
     let record: SeedStudent
     if (existing) record = Object.assign(existing, fields)
     else {
-      record = { id: nextId('student', s.students), studentNumber: nextStudentNumber(s), archived: false, ...fields }
+      record = { id: nextId('student', s.students), archived: false, ...fields }
       s.students.push(record)
     }
     const action = existing ? 'update' : 'create'
@@ -637,9 +639,9 @@ export function saveStudent(
     audit(s, by, action, { type: 'student', id: record.id }, summary)
     // Completing a flagged record resolves it in the Incomplete Records queue, crediting whoever saved it.
     if (wasIncomplete && !missingRequiredFields(record).length) {
-      let review = s.frontendOnly.recordReviews.find((r) => r.studentNumber === record.studentNumber)
+      let review = s.frontendOnly.recordReviews.find((r) => r.studentId === record.id)
       if (!review) {
-        review = { studentNumber: record.studentNumber, importedAt: s.today, importedBy: 'Flagged in CLINIQ', resolvedByUserId: null, resolvedAt: null }
+        review = { studentId: record.id, importedAt: s.today, importedBy: 'Flagged in CLINIQ', resolvedByUserId: null, resolvedAt: null }
         s.frontendOnly.recordReviews.push(review)
       }
       review.resolvedByUserId = by.id
@@ -650,9 +652,9 @@ export function saveStudent(
 }
 
 /** Archive, never delete (data retention policy): hidden from active lists, kept for 5 years. */
-export function archiveStudent(studentNumber: StudentNumber, actor?: SessionUser): Promise<Student> {
+export function archiveStudent(studentId: string, actor?: SessionUser): Promise<Student> {
   return write('archive student', (s) => {
-    const record = must(s.students.find((st) => st.studentNumber === studentNumber), 'Student')
+    const record = studentOf(s, studentId)
     record.archived = true
     audit(s, actorOr(actor), 'archive', { type: 'student', id: record.id })
     return toStudent(record)
@@ -809,7 +811,7 @@ export function recordVisit(
     }
     s.visits.push(visit)
     audit(s, by, 'submit', { type: 'visit', id: visit.id })
-    const given = applyItemLines(s, by, { studentNumber: student.studentNumber, visitId: visit.id }, [], itemLines, 'dispense')
+    const given = applyItemLines(s, by, { studentId: student.id, visitId: visit.id }, [], itemLines, 'dispense')
     visit.itemsGiven = given.lines
     const followUp = input.followUp
       ? createFollowUp(s, by, input.studentId, { type: 'visit', id: visit.id }, input.followUp)
@@ -853,7 +855,7 @@ export function updateVisit(
     )
     const fields = { ...rest, complaint: normalizeComplaint(rest.complaint, complaintSuggestions(s)), ...extra, ...logbook }
     const given = itemsGiven
-      ? applyItemLines(s, by, { studentNumber: studentOf(s, visit.studentId).studentNumber, visitId: id }, visit.itemsGiven, itemsGiven, 'adjust')
+      ? applyItemLines(s, by, { studentId: visit.studentId, visitId: id }, visit.itemsGiven, itemsGiven, 'adjust')
       : { lines: visit.itemsGiven, belowZero: [] }
     const summary = changedSummary(visit, { ...fields, itemsGiven: given.lines })
     Object.assign(visit, fields, { itemsGiven: given.lines })
@@ -898,8 +900,8 @@ export function getStudentExcuseLetters(studentId: string): Promise<StudentExcus
 export interface PendingExcuseLetter extends ExcusedPeriod {
   visitId: string
   visitDateTime: ISODateTime
-  /** Multi-student list: the Student Number only, never the name (ADR-004). */
-  studentNumber: StudentNumber
+  /** Multi-student list: the LRN only (masked on screen), never the name (ADR-004, ADR-028). */
+  lrn: string
 }
 
 /** Every excuse-letter draft still awaiting approval, oldest visit first, for active students. */
@@ -909,7 +911,7 @@ export function listPendingExcuseLetters(): Promise<PendingExcuseLetter[]> {
       .flatMap((v) => {
         const student = s.students.find((st) => st.id === v.studentId)
         return v.excuseLetterDraft && student && !student.archived
-          ? [{ visitId: v.id, visitDateTime: v.dateTime, studentNumber: student.studentNumber, excusedFrom: v.excuseLetterDraft.excusedFrom, excusedUntil: v.excuseLetterDraft.excusedUntil }]
+          ? [{ visitId: v.id, visitDateTime: v.dateTime, lrn: student.lrn, excusedFrom: v.excuseLetterDraft.excusedFrom, excusedUntil: v.excuseLetterDraft.excusedUntil }]
           : []
       })
       .sort((a, b) => a.visitDateTime.localeCompare(b.visitDateTime)),
@@ -966,7 +968,7 @@ export type PeReferralInput = Omit<PeReferral, 'id' | 'createdAt'>
 export function submitPeReferral(input: PeReferralInput, actor?: SessionUser): Promise<PeReferral> {
   return write('submit PE referral', (s) => {
     const by = actorOr(actor)
-    must(s.students.find((st) => st.studentNumber === input.studentNumber), 'Student')
+    studentOf(s, input.studentId)
     const referral: PeReferral = {
       ...input,
       id: nextId('pe-referral', s.frontendOnly.peReferrals),
@@ -1057,8 +1059,7 @@ export function completeIncidentStageTwo(
       if (input.itemsGiven && !same(lines, incident.itemsGiven))
         throw new StockRuleError("Medicines on a completed incident can't be changed.")
     } else {
-      const studentNumber = studentOf(s, incident.studentId).studentNumber
-      const given = applyItemLines(s, by, { studentNumber, incidentId: incident.id }, [], lines, 'dispense')
+      const given = applyItemLines(s, by, { studentId: incident.studentId, incidentId: incident.id }, [], lines, 'dispense')
       incident.itemsGiven = given.lines
       belowZero = given.belowZero
     }
@@ -1147,7 +1148,7 @@ export function approveIncidentReport(incidentId: string, actor?: SessionUser): 
 
 // ---- follow-ups ------------------------------------------------------------------------------
 
-export type FollowUpView = FollowUp & { studentNumber: StudentNumber; dueState: FollowUpDueState | null }
+export type FollowUpView = FollowUp & { lrn: string; dueState: FollowUpDueState | null }
 
 export function listFollowUps(query: { status?: FollowUpStatus | '' } = {}): Promise<FollowUpView[]> {
   return read('follow-ups', (s) => {
@@ -1157,7 +1158,7 @@ export function listFollowUps(query: { status?: FollowUpStatus | '' } = {}): Pro
       .sort((a, b) => a.followUpDate.localeCompare(b.followUpDate))
       .map((f) => ({
         ...f,
-        studentNumber: byId.get(f.studentId)?.studentNumber ?? 'Unknown student',
+        lrn: byId.get(f.studentId)?.lrn ?? '',
         dueState: followUpDueState(f, s.today),
       }))
   })
@@ -1258,15 +1259,15 @@ export interface DispenseResult {
 export function dispenseInventoryItem(
   itemId: string,
   quantity: number,
-  link: { studentNumber?: StudentNumber; visitId?: string } = {},
+  link: { studentId?: string; visitId?: string } = {},
   actor?: SessionUser,
 ): Promise<DispenseResult> {
   return write('dispense', (s) => {
     const by = actorOr(actor)
     const item = must(s.inventoryItems.find((i) => i.id === itemId), 'Inventory item')
     if (!Number.isInteger(quantity) || quantity < 1) throw new StockRuleError(QUANTITY_RULE)
-    if (link.studentNumber && !s.students.some((st) => st.studentNumber === link.studentNumber))
-      throw new StockRuleError('No student has this Student Number.')
+    if (link.studentId && !s.students.some((st) => st.id === link.studentId))
+      throw new StockRuleError('This student record was not found.')
     if (link.visitId && !s.visits.some((v) => v.id === link.visitId)) throw new StockRuleError('That visit no longer exists.')
     const batchAllocations = takeUsableBatches(s, item, quantity)
     const txn = {
@@ -1276,7 +1277,7 @@ export function dispenseInventoryItem(
       quantity,
       timestamp: now(s),
       userId: by.id,
-      studentNumber: link.studentNumber ?? null,
+      studentId: link.studentId ?? null,
       visitId: link.visitId ?? null,
       batchAllocations,
     }
@@ -1307,7 +1308,7 @@ export function restockInventoryItem(
     item.batches.push(batch)
     const id = nextId('txn', s.frontendOnly.inventoryTransactions)
     s.frontendOnly.inventoryTransactions.push({
-      id, itemId, type: 'restock', quantity, timestamp: now(s), userId: by.id, studentNumber: null, visitId: null,
+      id, itemId, type: 'restock', quantity, timestamp: now(s), userId: by.id, studentId: null, visitId: null,
       batchAllocations: [{ batchId: batch.id, quantity }],
     })
     audit(s, by, 'submit', { type: 'inventory-restock', id })
@@ -1370,7 +1371,7 @@ export function adjustInventoryStock(itemId: string, input: StockAdjustmentInput
       quantity: change,
       timestamp: now(s),
       userId: by.id,
-      studentNumber: null,
+      studentId: null,
       visitId: null,
       reason: input.reason,
       note,
@@ -1453,7 +1454,7 @@ function splitAllocations(allocations: ReadonlyArray<InventoryBatchAllocation>, 
 
 /**
  * Moves a record's medicine lines from `before` to `next`. Every line is validated first; then each
- * changed item moves stock and gets one transaction and one audit entry, linked by Student Number
+ * changed item moves stock and gets one transaction and one audit entry, linked by LRN
  * and visit. A new record dispenses; an edit writes `visit_edited` adjustments instead of rewriting
  * history. The expired rule covers only added or increased quantity. New lines snapshot the item's
  * current name and unit; kept lines keep theirs. Returns the lines and the items now below zero.
@@ -1461,7 +1462,7 @@ function splitAllocations(allocations: ReadonlyArray<InventoryBatchAllocation>, 
 function applyItemLines(
   s: DbState,
   by: SessionUser,
-  link: { studentNumber: StudentNumber; visitId?: string; incidentId?: string },
+  link: { studentId: string; visitId?: string; incidentId?: string },
   before: ItemGivenLine[],
   next: ItemLineInput[],
   mode: 'dispense' | 'adjust',
@@ -1500,7 +1501,7 @@ function applyItemLines(
       itemId,
       timestamp: now(s),
       userId: by.id,
-      studentNumber: link.studentNumber,
+      studentId: link.studentId,
       visitId: link.visitId ?? null,
       ...(link.incidentId ? { incidentId: link.incidentId } : {}),
     }
@@ -1565,8 +1566,8 @@ export interface MonthlyReportData {
    * returned (`visit_edited` adjustments), from the recorded stock movements. Totals only, no students.
    */
   itemsGiven: Array<{ itemName: string; unit: string; quantity: number }>
-  /** Incident archive rows carry the Student Number only (multi-student list, ADR-004). */
-  incidents: Array<Incident & { studentNumber: StudentNumber }>
+  /** Incident archive rows carry the LRN only, masked when shown (multi-student list, ADR-004). */
+  incidents: Array<Incident & { lrn: string }>
   /** Visits per complaint, most frequent first (ties alphabetical, so the order is stable). */
   complaintCounts: ComplaintCount[]
 }
@@ -1616,7 +1617,7 @@ export function getMonthlyReport(month: string): Promise<MonthlyReportData> {
       incidents: s.incidents
         .filter((i) => i.time.startsWith(month))
         .sort((a, b) => b.time.localeCompare(a.time))
-        .map((i) => ({ ...i, studentNumber: byId.get(i.studentId)?.studentNumber ?? 'Unknown student' })),
+        .map((i) => ({ ...i, lrn: byId.get(i.studentId)?.lrn ?? '' })),
       complaintCounts: complaintCounts(s.visits.filter((v) => v.dateTime.startsWith(month))),
     }
   })

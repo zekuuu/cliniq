@@ -62,14 +62,14 @@ export function fetchComplaintSuggestions(): Promise<string[]> {
   return getVisitComplaintSuggestions()
 }
 
-/** The New Visit student search: Student Number prefix or name, active students, at most 8. */
+/** The New Visit student search: LRN prefix or name, active students, at most 8. */
 export function searchVisitStudents(query: string): Promise<StudentSearchResult[]> {
   return searchStudents(query)
 }
 
 /** Loads the picked student in full (allergies included). */
-export function findVisitStudent(studentNumber: string): Promise<Student> {
-  return getStudent(studentNumber)
+export function findVisitStudent(studentId: string): Promise<Student> {
+  return getStudent(studentId)
 }
 
 /** Fresh stock figures after a save, so the picker shows what's left. */

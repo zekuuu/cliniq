@@ -4,7 +4,7 @@ import {
   approveIncidentReport,
   getIncident,
   getIncidentTrail,
-  getStudentById,
+  getStudent,
   listApprovedIncidentReportIds,
   listIncidents,
   type IncidentTrail,
@@ -37,7 +37,7 @@ export async function fetchIncidentRecord(incidentId?: string): Promise<Incident
   const pending = incidents.filter((item) => !approved.has(item.id))
   const incident = incidentId ? await getIncident(incidentId) : pending[0]
   if (!incident) return null
-  const [student, trail] = await Promise.all([getStudentById(incident.studentId), getIncidentTrail(incident.id)])
+  const [student, trail] = await Promise.all([getStudent(incident.studentId), getIncidentTrail(incident.id)])
   const listed = approved.has(incident.id) ? [incident, ...pending] : pending
   return {
     incident,

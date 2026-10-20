@@ -3,12 +3,15 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { getIncident, getRecordedAuditEntries, getStudent, listIncidents, resetMockDb } from '../../lib/mock-db'
 import { selectOption } from '../../test/selectOption'
+import { lrnLabel, maskLrn } from '../../lib/lrn'
 import { pickStudent } from '../../test/pickStudent'
 import { IncidentEntryPage } from './IncidentEntryPage'
 import { IncidentReportPage } from './IncidentReportPage'
 import { renderWithRouter } from '../../test/renderWithRouter'
 
-const STUDENT = '2026-00001'
+/** Gian Quizon's synthetic LRN in the seed. */
+const STUDENT = '000000260001'
+const STUDENT_ID = 'student-0001'
 
 describe('Report Incident', () => {
   beforeEach(() => resetMockDb())
@@ -21,7 +24,7 @@ describe('Report Incident', () => {
     expect(await screen.findByRole('heading', { name: 'Report Incident' })).toBeInTheDocument()
     expect(screen.getByText('Needs completion')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Stage 1 fast capture' })).toBeInTheDocument()
-    expect(screen.getAllByText(new RegExp(STUDENT)).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(maskLrn(STUDENT)).length).toBeGreaterThan(0)
   })
 
   it('validates Stage 1 essentials inline: the complaint only, no reading is required', async () => {
@@ -81,7 +84,7 @@ describe('Report Incident', () => {
     expect(field.parentElement?.querySelector('svg')).toBeTruthy()
   })
 
-  it('asks for the Student Number when the Emergency button opened it without a student', async () => {
+  it('asks for the LRN when the Emergency button opened it without a student', async () => {
     const user = userEvent.setup()
     renderWithRouter(<IncidentEntryPage />)
 
@@ -91,24 +94,24 @@ describe('Report Incident', () => {
     await user.type(screen.getByLabelText(/temperature/i), '37.2')
     await user.type(screen.getByLabelText(/pulse/i), '92')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
-    expect(screen.getByText('Choose the student: type a Student Number or name, then pick from the list.')).toBeInTheDocument()
+    expect(screen.getByText('Choose the student: type the LRN or name, then pick from the list.')).toBeInTheDocument()
     expect(getRecordedAuditEntries()).toEqual([])
 
     const field = screen.getByRole('combobox', { name: /student/i })
     await user.type(field, '209999999')
     expect(await screen.findByText(/no active student matches/i)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
-    expect(screen.getByText('Choose the student: type a Student Number or name, then pick from the list.')).toBeInTheDocument()
+    expect(screen.getByText('Choose the student: type the LRN or name, then pick from the list.')).toBeInTheDocument()
     expect(getRecordedAuditEntries()).toEqual([])
 
     await user.clear(field)
-    await user.type(field, STUDENT.replace('-', ''))
-    await screen.findByRole('option', { name: new RegExp(STUDENT) })
+    await user.type(field, STUDENT)
+    await screen.findByRole('option', { name: new RegExp(lrnLabel(STUDENT)) })
     await user.keyboard('{Enter}')
     expect(await screen.findByRole('button', { name: /change student/i })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
     expect(await screen.findByText(/stage 1 saved/i)).toBeInTheDocument()
-    const student = await getStudent(STUDENT)
+    const student = await getStudent(STUDENT_ID)
     expect(screen.getByText(new RegExp(student.fullName))).toBeInTheDocument()
     const saved = (await listIncidents()).find((incident) => incident.studentId === student.id && incident.complaint === 'Fainting' && incident.stage === 1)
     expect(saved).toBeTruthy()

@@ -25,6 +25,8 @@ import {
   type ExcuseLetterContext,
   type ExcusedPeriod,
 } from './api/excuseLetterApi'
+import { maskLrn } from '../../lib/lrn'
+import { MaskedLrn } from '../../components/ui/MaskedLrn'
 
 function LetterSkeleton({ back }: { back: ReactNode }) {
   return (
@@ -93,7 +95,7 @@ function PrintableLetter({
           <p className="text-text-secondary">School Clinic Staff</p>
         </div>
         <div className="rounded-md border border-border bg-surface px-3 py-2 text-xs print:bg-transparent">
-          Student: {context.student.fullName} · {context.student.studentNumber}
+          Student: {context.student.fullName} · LRN <MaskedLrn lrn={context.student.lrn} />
           <br />
           Clinic visit: {formatDateTime(context.visit.dateTime)}
           <br />
@@ -132,7 +134,7 @@ function ExcuseLetterPrint({
     <PrintDocument
       title="Clinic Excuse Letter"
       viewer={viewer}
-      scope={`For ${student.fullName} (${student.studentNumber}), ${student.gradeLevel}, after a clinic visit on ${formatDateTime(visit.dateTime)}.`}
+      scope={`For ${student.fullName} (LRN ${maskLrn(student.lrn)}), ${student.gradeLevel}, after a clinic visit on ${formatDateTime(visit.dateTime)}.`}
     >
       {!approved && (
         <>
@@ -162,7 +164,7 @@ function ExcuseLetterPrint({
         <p className="mb-[2mm] font-semibold">Reference</p>
         <PrintFields
           fields={[
-            { label: 'Student', value: `${student.fullName} · ${student.studentNumber}` },
+            { label: 'Student', value: `${student.fullName} · LRN ${maskLrn(student.lrn)}` },
             { label: 'Grade level', value: student.gradeLevel },
             { label: 'Clinic visit', value: formatDateTime(visit.dateTime) },
             {
@@ -218,7 +220,7 @@ function ExcuseLetterEditor({
               Excuse Letter
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
-              {context.student.fullName} · {context.student.studentNumber} · visit on{' '}
+              {context.student.fullName} · LRN <MaskedLrn lrn={context.student.lrn} /> · visit on{' '}
               {formatDateTime(context.visit.dateTime)}
             </p>
           </div>

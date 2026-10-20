@@ -37,8 +37,8 @@ export async function fetchPeReferralContext(): Promise<PeReferralContext> {
 }
 
 /** Loads the picked student in full. */
-export function findReferralStudent(studentNumber: string): Promise<Student> {
-  return getStudent(studentNumber)
+export function findReferralStudent(studentId: string): Promise<Student> {
+  return getStudent(studentId)
 }
 
 /**
@@ -53,7 +53,7 @@ export async function submitPeReferral(
 ): Promise<void> {
   await submitToLayer(
     {
-      studentNumber: student.studentNumber,
+      studentId: student.id,
       referredBy: values.referredBy.trim(),
       activity: values.activity,
       injurySummary: values.injurySummary,
@@ -65,7 +65,7 @@ export async function submitPeReferral(
   )
 }
 
-/** the PE/Sports Referral student search: Student Number prefix or name, active students, at most 8. */
+/** the PE/Sports Referral student search: LRN prefix or name, active students, at most 8. */
 export function searchReferralStudents(query: string): Promise<StudentSearchResult[]> {
   return searchStudents(query)
 }

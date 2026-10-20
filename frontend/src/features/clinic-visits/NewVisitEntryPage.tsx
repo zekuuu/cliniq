@@ -54,6 +54,7 @@ import {
   logbookPayload,
   type LogbookErrors,
 } from './logbookValues'
+import { maskLrn } from '../../lib/lrn'
 
 /** Smart Triage's complaint type for what was typed: a case-insensitive match, or none. */
 function matchComplaintType(complaint: string, complaintTypes: ComplaintType[]): ComplaintType | undefined {
@@ -297,7 +298,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
     event.preventDefault()
     if (!data) return
     const nextErrors = validate()
-    const studentOk = identified.validate('Choose the student: type a Student Number or name, then pick from the list.')
+    const studentOk = identified.validate('Choose the student: type the LRN or name, then pick from the list.')
     setErrors(nextErrors)
     if (nextErrors.timeOut) setMoreOpen(true)
     invalid.report(Object.keys(nextErrors).length + (studentOk ? 0 : 1))
@@ -396,8 +397,8 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">New Visit</h1>
             <p className="mt-1 text-sm text-text-secondary">
               {identified.student
-                ? `${identified.student.fullName} · ${identified.student.studentNumber} · ${identified.student.gradeLevel}`
-                : 'Student not identified yet. Search by Student Number or name below.'}
+                ? `${identified.student.fullName} · LRN ${maskLrn(identified.student.lrn)} · ${identified.student.gradeLevel}`
+                : 'Student not identified yet. Search by LRN or name below.'}
             </p>
           </div>
           <Badge tone="info" variant="soft" icon="stethoscope">
@@ -450,7 +451,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
             titleId="visit-form-title"
             title="Visit details"
             icon={<Icon name="stethoscope" />}
-            description="Required fields are marked. Search by Student Number or name to identify the student."
+            description="Required fields are marked. Search by LRN or name to identify the student."
           />
           <CardBody className="flex flex-col gap-4">
             <StudentPicker
@@ -459,7 +460,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
               onClear={identified.reset}
               onSelect={(student) => {
                 setSaved(null)
-                void identified.select(student.studentNumber)
+                void identified.select(student.id)
               }}
               error={identified.error}
               addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}

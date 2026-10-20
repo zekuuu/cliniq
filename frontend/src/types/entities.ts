@@ -9,8 +9,6 @@
 export type ISODate = string
 /** Full timestamp, ISO 8601. */
 export type ISODateTime = string
-/** `YYYY-NNNNN` (enrollment year + zero-padded sequence). System-generated; see ADR-005. */
-export type StudentNumber = string
 /** Sex as recorded by the school; the agreed field is deliberately not a free-text identity question. */
 export type StudentSex = 'male' | 'female'
 
@@ -25,7 +23,8 @@ export interface EmergencyContact {
 
 export interface Student {
   id: string
-  studentNumber: StudentNumber
+  /** Learner Reference Number: 12 digits, text, unique, entered by Staff (ADR-028). Masked on lists (`lib/lrn.ts`). */
+  lrn: string
   fullName: string
   gradeLevel: string
   sex: StudentSex
@@ -44,13 +43,13 @@ export interface Student {
  * The only student fields a multi-student, glanceable list may carry (display-privacy rule,
  * ADR-004). There's no `fullName` here on purpose, so a list row can't render a name by accident.
  */
-export type StudentListRef = Pick<Student, 'id' | 'studentNumber'>
+export type StudentListRef = Pick<Student, 'id' | 'lrn'>
 
 /**
  * One result of a deliberate student search (a single lookup, so the name is shown): enough to
  * tell similar names apart, and nothing medical.
  */
-export type StudentSearchResult = Pick<Student, 'id' | 'studentNumber' | 'fullName' | 'gradeLevel'>
+export type StudentSearchResult = Pick<Student, 'id' | 'lrn' | 'fullName' | 'gradeLevel'>
 
 export type UserRole = 'staff' | 'admin'
 

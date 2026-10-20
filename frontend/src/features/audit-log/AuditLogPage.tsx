@@ -94,7 +94,7 @@ function targetPath(row: AuditLogRow, viewer: SessionUser): string | undefined {
   if (viewer.role === 'admin') return isReport ? paths.reports : undefined
   switch (target.type) {
     case 'student':
-      return target.studentNumber ? paths.studentProfile(target.studentNumber) : undefined
+      return target.studentId ? paths.studentProfile(target.studentId) : undefined
     case 'visit':
       return paths.visitDetail(target.id)
     case 'incident':
@@ -116,7 +116,16 @@ function recordCell(row: AuditLogRow, viewer: SessionUser) {
   if (!row.target) return <span className="text-text-secondary">No record</span>
   const path = targetPath(row, viewer)
   if (!row.target.label) return path ? <ListItemLink to={path}>View<span className="sr-only"> {row.target.kind}</span></ListItemLink> : emptyCell
-  return path ? <ListItemLink to={path}>{row.target.label}</ListItemLink> : row.target.label
+  // A student-related record shows its masked LRN; a screen reader hears "LRN ending in 1234", not bullets.
+  const label = row.target.studentId ? (
+    <span>
+      <span aria-hidden="true">{row.target.label}</span>
+      <span className="sr-only">LRN ending in {row.target.label.slice(-4)}</span>
+    </span>
+  ) : (
+    row.target.label
+  )
+  return path ? <ListItemLink to={path}>{label}</ListItemLink> : label
 }
 
 /** The applied filters in words, for the printout's scope line. */

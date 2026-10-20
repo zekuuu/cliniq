@@ -13,7 +13,7 @@ import { InventoryFormPage } from './inventory/InventoryFormPage'
 import { StudentFormPage } from './student-records/StudentFormPage'
 import { UserFormPage } from './user-management/UserFormPage'
 
-const STUDENT = '2026-00001'
+const STUDENT = 'student-0001'
 
 /** Opens the form as the first screen (no history), so Cancel must use its fallback route. */
 function renderForm(form: ReactElement, fallback: string, entries = ['/form']) {
@@ -60,7 +60,7 @@ describe('Cancel on entry and edit forms', () => {
     ['Incident Stage 1', <IncidentEntryPage />, '/incidents'],
     ['Incident Stage 2', <IncidentEntryPage incidentId="incident-0022" />, '/incidents'],
     ['Add Student', <StudentFormPage />, '/students'],
-    ['Edit Student', <StudentFormPage studentNumber={STUDENT} />, `/students/${STUDENT}`],
+    ['Edit Student', <StudentFormPage studentId={STUDENT} />, `/students/${STUDENT}`],
     ['PE/Sports Referral', <PeSportsReferralPage />, '/visits'],
     ['Add Inventory Item', <InventoryFormPage />, '/inventory'],
     ['Dispense', <InventoryDispensePage />, '/inventory'],
@@ -97,7 +97,7 @@ describe('Cancel with unsaved changes asks first', () => {
     ['Add Student', <StudentFormPage />, '/students', /full name/i],
     [
       'Edit Student',
-      <StudentFormPage studentNumber={STUDENT} />,
+      <StudentFormPage studentId={STUDENT} />,
       `/students/${STUDENT}`,
       /full name/i,
     ],

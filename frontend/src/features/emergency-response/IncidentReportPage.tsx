@@ -8,6 +8,8 @@ import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { READING_LABELS, readingText, takenReadings } from '../../lib/vitals'
 import type { ParentNotificationOutcome } from '../../types/entities'
 import { approveReport, fetchIncidentRecord, type IncidentRecord } from './api/incidentRecordApi'
+import { maskLrn } from '../../lib/lrn'
+import { MaskedLrn } from '../../components/ui/MaskedLrn'
 
 const OUTCOME_LABELS: Record<ParentNotificationOutcome, string> = {
   reached: 'Reached',
@@ -30,7 +32,7 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
     <PrintDocument
       title="Incident Report"
       viewer={viewer}
-      scope={`${student.fullName} (${student.studentNumber}), ${student.gradeLevel}. Incident recorded ${formatDateTime(incident.time)}.`}
+      scope={`${student.fullName} (LRN ${maskLrn(student.lrn)}), ${student.gradeLevel}. Incident recorded ${formatDateTime(incident.time)}.`}
     >
       {incident.stage === 1 && (
         <p className="mb-[4mm] border-2 border-text-primary px-[3mm] py-[2mm] text-[11pt] font-bold">
@@ -42,7 +44,7 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
           <PrintFields
             columns={3}
             fields={[
-              { label: 'Student', value: `${student.fullName} · ${student.studentNumber}` },
+              { label: 'Student', value: `${student.fullName} · LRN ${maskLrn(student.lrn)}` },
               { label: 'Grade level', value: student.gradeLevel },
               { label: 'Date and time', value: formatDateTime(incident.time) },
               { label: 'Complaint', value: incident.complaint },
@@ -210,7 +212,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
           </div>
 
           <dl className="grid gap-4 sm:grid-cols-2">
-            <Field label="Student"><span className="font-semibold">{student.fullName} · {student.studentNumber}</span></Field>
+            <Field label="Student"><span className="font-semibold">{student.fullName} · LRN <MaskedLrn lrn={student.lrn} /></span></Field>
             <Field label="Recorded">{formatDateTime(incident.time)}</Field>
             <Field label="Complaint">{incident.complaint}</Field>
             <Field label="Sign-off">{approved ? 'Approved' : 'Pending sign-off'}</Field>
@@ -286,7 +288,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
 
       <Modal open={confirming} title="Approve this incident report?" onClose={() => setConfirming(false)}>
         <p className="text-sm text-text-secondary">
-          Approving signs off the report for {student.studentNumber} ({incident.complaint}, {formatDateTime(incident.time)}) and records it in the audit log. It can't be un-approved from this screen.
+          Approving signs off the report for LRN <MaskedLrn lrn={student.lrn} /> ({incident.complaint}, {formatDateTime(incident.time)}) and records it in the audit log. It can't be un-approved from this screen.
         </p>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <Button variant="neutral" data-autofocus onClick={() => setConfirming(false)}>Cancel</Button>

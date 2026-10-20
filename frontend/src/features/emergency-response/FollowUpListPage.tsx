@@ -22,6 +22,8 @@ import { getMockSessionUser } from '../../lib/mock-db'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { FollowUpStatus } from '../../types/entities'
 import { fetchFollowUps, updateFollowUpStatus, type FollowUpRow } from './api/followUpApi'
+import { MaskedLrn } from '../../components/ui/MaskedLrn'
+import { lrnLabel } from '../../lib/lrn'
 
 function FollowUpSkeleton({ back }: { back: ReactNode }) {
   return (
@@ -96,7 +98,7 @@ export function FollowUpListPage() {
     onSort: () => setSort((current) => toggleTableSort(current, key)),
   })
   const sortedRows = sortTableRows(rows, sort, (item, key) => {
-    if (key === 'student') return item.studentNumber
+    if (key === 'student') return item.lrn
     if (key === 'reason') return item.reason
     if (key === 'due') return item.followUpDate
     return item.status
@@ -116,10 +118,10 @@ export function FollowUpListPage() {
   const columns: Array<DataTableColumn<FollowUpRow>> = [
     {
       key: 'student',
-      header: 'Student Number',
+      header: 'LRN',
       rowHeader: true,
-      sort: sortColumn('student', 'Student Number'),
-      cell: (item) => item.studentNumber,
+      sort: sortColumn('student', 'LRN'),
+      cell: (item) => <MaskedLrn lrn={item.lrn} />,
     },
     { key: 'reason', header: 'Reason', sort: sortColumn('reason', 'Reason'), cell: (item) => item.reason },
     { key: 'due', header: 'Due date', sort: sortColumn('due', 'Due date'), cell: (item) => formatDate(item.followUpDate) },
@@ -133,7 +135,7 @@ export function FollowUpListPage() {
             className="w-44"
             size="sm"
             hideLabel
-            label={`Update status for ${item.studentNumber}, ${item.reason}`}
+            label={`Update status for ${lrnLabel(item.lrn)}, ${item.reason}`}
             value=""
             placeholder="Update status"
             options={OUTCOME_OPTIONS}
@@ -204,7 +206,7 @@ export function FollowUpListPage() {
         {confirming && (
           <>
             <p className="text-sm text-text-secondary">
-              {confirming.item.studentNumber} · {confirming.item.reason} · due {formatDate(confirming.item.followUpDate)}.{' '}
+              <MaskedLrn lrn={confirming.item.lrn} /> · {confirming.item.reason} · due {formatDate(confirming.item.followUpDate)}.{' '}
               {confirming.status === 'missed'
                 ? 'The student did not return for this follow-up.'
                 : 'This follow-up is no longer needed.'}{' '}

@@ -39,10 +39,10 @@ describe('New Visit', () => {
   it('shows the identified student and reveals Smart Triage for a case-insensitive complaint match', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
-    await pickStudent(user, '2026-00001')
+    await pickStudent(user, '000000260001')
 
     expect(await screen.findByRole('heading', { name: 'New Visit' })).toBeInTheDocument()
-    expect(screen.getAllByText(/2026-00001/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText('••••••••0001').length).toBeGreaterThan(0)
     expect(screen.queryByRole('combobox', { name: /student/i })).not.toBeInTheDocument()
     await selectComplaint(user, 'Fever')
     expect(screen.getByRole('heading', { name: /suggested first-aid steps for: Fever/i })).toBeInTheDocument()
@@ -52,7 +52,7 @@ describe('New Visit', () => {
   it('validates required fields inline, and whitespace is not a complaint', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
-    await pickStudent(user, '2026-00001')
+    await pickStudent(user, '000000260001')
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
@@ -65,7 +65,7 @@ describe('New Visit', () => {
   it('saves a visit with neither treatment notes nor a medicine', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
-    await pickStudent(user, '2026-00001')
+    await pickStudent(user, '000000260001')
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await selectComplaint(user, 'Headache')
@@ -78,7 +78,7 @@ describe('New Visit', () => {
   it('creates audit entries for visit submission and follow-up creation', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
-    await pickStudent(user, '2026-00001')
+    await pickStudent(user, '000000260001')
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await selectComplaint(user, 'Headache')
@@ -96,7 +96,7 @@ describe('New Visit', () => {
   it('lists a capped set of complaints and saves typed Other text with no checklist', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
-    await pickStudent(user, '2026-00001')
+    await pickStudent(user, '000000260001')
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await user.click(complaintField())
@@ -116,7 +116,7 @@ describe('New Visit', () => {
   it('selects Other and focuses an empty Other field', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
-    await pickStudent(user, '2026-00001')
+    await pickStudent(user, '000000260001')
 
     await screen.findByRole('heading', { name: 'New Visit' })
     const complaint = complaintField()
@@ -135,7 +135,7 @@ describe('New Visit', () => {
   it('stores a selected complaint in its suggestion spelling', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
-    await pickStudent(user, '2026-00001')
+    await pickStudent(user, '000000260001')
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await selectComplaint(user, 'Headache')
@@ -155,41 +155,41 @@ describe('New Visit student lookup', () => {
     renderWithRouter(<NewVisitEntryPage />)
 
     const field = await screen.findByRole('combobox', { name: /student/i })
-    expect(field).toHaveAttribute('placeholder', 'YYYY-NNNNN or student name')
+    expect(field).toHaveAttribute('placeholder', 'LRN or student name')
     await user.click(field)
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
     await user.type(field, 'q')
     expect(await screen.findByRole('listbox')).toBeInTheDocument()
     await user.type(field, 'uizon')
-    const option = await screen.findByRole('option', { name: /2026-00001.*Gian Quizon/ })
+    const option = await screen.findByRole('option', { name: /LRN ending in 0001 Gian Quizon Kinder/ })
     expect(option).toHaveTextContent("Kinder")
     await user.click(option)
 
     const changeButton = await screen.findByRole('button', { name: /change student \(Gian Quizon\)/i })
-    expect(within(changeButton.parentElement!).getByText('2026-00001')).toBeInTheDocument()
+    expect(within(changeButton.parentElement!).getByText('••••••••0001')).toBeInTheDocument()
     await user.click(changeButton)
     expect(screen.getByRole('combobox', { name: /student/i })).toHaveFocus()
   })
 
-  it('picks with Enter after a complete Student Number, keyboard only', async () => {
+  it('picks with Enter after a complete LRN, keyboard only', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
 
     await user.click(await screen.findByRole('combobox', { name: /student/i }))
-    await user.keyboard('2026-00001')
+    await user.keyboard('000000260001')
     await screen.findByRole('option', { name: /Gian Quizon/ })
     await user.keyboard('{Enter}')
     expect(await screen.findByRole('button', { name: /change student/i })).toBeInTheDocument()
   })
 
-  it('finds a Student Number typed without its dash, leaves the text as typed, and picks on Enter', async () => {
+  it('finds an LRN typed with spaces or dashes, leaves the text as typed, and picks on Enter', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
 
     const field = await screen.findByRole('combobox', { name: /student/i })
-    await user.type(field, '202600001')
-    expect(field).toHaveValue('202600001')
-    await screen.findByRole('option', { name: /2026-00001.*Gian Quizon/ })
+    await user.type(field, '0000-0026 0001')
+    expect(field).toHaveValue('0000-0026 0001')
+    await screen.findByRole('option', { name: /LRN ending in 0001 Gian Quizon Kinder/ })
     await user.keyboard('{Enter}')
     expect(await screen.findByRole('button', { name: /change student \(Gian Quizon\)/i })).toBeInTheDocument()
   })
@@ -219,7 +219,7 @@ describe('New Visit: disposition-specific fields', () => {
   async function openForm() {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
-    await pickStudent(user, '2026-00001')
+    await pickStudent(user, '000000260001')
     await screen.findByRole('heading', { name: 'New Visit' })
     await selectComplaint(user, 'Fever')
     return user

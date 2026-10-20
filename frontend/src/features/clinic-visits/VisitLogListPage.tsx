@@ -32,12 +32,14 @@ import {
   fetchVisitLog,
   type VisitLogRow,
 } from './api/visitLogApi'
+import { MaskedLrn } from '../../components/ui/MaskedLrn'
+import { lrnLabel } from '../../lib/lrn'
 
 type DispositionFilter = Disposition | 'all'
 type LetterFilter = 'pending' | ''
 
 const PAGE_SIZE = 10
-type VisitLogSortKey = 'dateTime' | 'studentNumber' | 'record' | 'disposition'
+type VisitLogSortKey = 'dateTime' | 'lrn' | 'record' | 'disposition'
 
 const dispositionOptions = [
   { value: 'all', label: 'All' },
@@ -148,8 +150,8 @@ export function VisitLogListPage() {
     switch (key) {
       case 'dateTime':
         return row.dateTime
-      case 'studentNumber':
-        return row.studentNumber
+      case 'lrn':
+        return row.lrn
       case 'record':
         return row.complaint
       case 'disposition':
@@ -177,11 +179,11 @@ export function VisitLogListPage() {
     },
     {
       key: 'student',
-      header: 'Student Number',
-      sort: sortColumn('studentNumber', 'Student Number'),
+      header: 'LRN',
+      sort: sortColumn('lrn', 'LRN'),
       cell: (row) => (
         <div>
-          <p>{row.studentNumber}</p>
+          <p><MaskedLrn lrn={row.lrn} /></p>
           <p className="text-xs text-text-secondary">{row.gradeLevel}</p>
         </div>
       ),
@@ -219,7 +221,7 @@ export function VisitLogListPage() {
           {row.letterPending && (
             <Link
               to={paths.excuseLetter(row.id)}
-              aria-label={`Review Letter for ${row.studentNumber}`}
+              aria-label={`Review Letter for ${lrnLabel(row.lrn)}`}
               className={buttonClassName({ size: 'sm' })}
             >
               Review Letter
@@ -240,7 +242,7 @@ export function VisitLogListPage() {
               Visit Log
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
-              Review daily clinic visits by Student Number and complaint. Treatment details open
+              Review daily clinic visits by LRN and complaint. Treatment details open
               from the individual record.
             </p>
           </div>
@@ -273,7 +275,7 @@ export function VisitLogListPage() {
             <Input
               label="Search"
               value={search}
-              placeholder="Student Number, grade, complaint, or event"
+              placeholder="LRN, grade, complaint, or event"
               onChange={(event) => changeSearch(event.target.value)}
               className="min-w-56 flex-1"
             />
@@ -320,7 +322,7 @@ export function VisitLogListPage() {
               <EmptyState
                 icon="clipboardList"
                 title="No visits found"
-                description="Try another date range, Student Number, disposition, or excuse-letter filter."
+                description="Try another date range, LRN, disposition, or excuse-letter filter."
               />
             )}
           </div>

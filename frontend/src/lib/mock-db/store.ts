@@ -16,7 +16,7 @@ import type { DbState } from './types'
  * - `resetMockDb()` is the one-call reset to seed. In dev it's also on `window.cliniqMockDb`.
  */
 
-const STATE_KEY = 'cliniq.mockDb.state.v1'
+const STATE_KEY = 'cliniq.mockDb.state.v2'
 const PERSIST_KEY = 'cliniq.mockDb.persist'
 
 let todayOverride: ISODate | null = null

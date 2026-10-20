@@ -64,15 +64,15 @@ describe('App routes', () => {
     expect(screen.getByTestId('path')).toHaveTextContent('/incidents')
   })
 
-  it('resolves the student from the /students/:studentNumber segment', async () => {
+  it('resolves the student from the /students/:studentId segment', async () => {
     const [student] = await listStudents()
-    renderAt(`/students/${student.studentNumber}`)
+    renderAt(`/students/${student.id}`)
 
     expect(await screen.findByRole('heading', { name: student.fullName })).toBeInTheDocument()
   })
 
-  it('shows an error, not a different student, for an unknown Student Number', async () => {
-    renderAt('/students/1999-99999')
+  it('shows an error, not a different student, for an unknown LRN', async () => {
+    renderAt('/students/student-9999')
 
     expect(await screen.findByText('Unable to load the student profile.')).toBeInTheDocument()
   })

@@ -3,7 +3,6 @@ import {
   getIncident,
   getIncidentComplaintTypes,
   getStudent,
-  getStudentById,
   getVitalsWarningRanges,
   listInventory,
   saveIncidentStageOne,
@@ -26,7 +25,7 @@ import { storedReadings, type ReadingValues } from '../../../lib/vitals'
 export interface IncidentEntryContext {
   /**
    * `null` when the Emergency button opened Stage 1 before anyone identified the student; Stage 1
-   * then asks for the Student Number instead of silently attaching a default student.
+   * then asks for the student instead of silently attaching a default student.
    */
   student: Student | null
   /** Incident complaint options (mock-only vocabulary; see mock-db.json). */
@@ -72,15 +71,15 @@ export async function fetchIncidentEntryContext(incidentId?: string): Promise<In
   const vitalsRanges = await getVitalsWarningRanges()
   if (incidentId) {
     const incident = await getIncident(incidentId)
-    const [student, types] = await Promise.all([getStudentById(incident.studentId), complaintTypes])
+    const [student, types] = await Promise.all([getStudent(incident.studentId), complaintTypes])
     return { student, complaintTypes: types, incident, items: await items, vitalsRanges }
   }
   return { student: null, complaintTypes: await complaintTypes, incident: null, items: await items, vitalsRanges }
 }
 
-/** Resolves the Student Number typed on Stage 1 when the student wasn't identified beforehand. */
-export function findIncidentStudent(studentNumber: string): Promise<Student> {
-  return getStudent(studentNumber)
+/** Loads the picked student in full. */
+export function findIncidentStudent(studentId: string): Promise<Student> {
+  return getStudent(studentId)
 }
 
 /** Stage 1 needs only the complaint, plus whichever readings were taken; the layer logs it as its own event. */
@@ -114,7 +113,7 @@ export function completeStageTwoIncident(
   )
 }
 
-/** Incident Stage 1 student search: Student Number prefix or name, active students, at most 8. */
+/** Incident Stage 1 student search: LRN prefix or name, active students, at most 8. */
 export function searchIncidentStudents(query: string): Promise<StudentSearchResult[]> {
   return searchStudents(query)
 }

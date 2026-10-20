@@ -16,14 +16,16 @@ import { StudentFormPage } from './student-records/StudentFormPage'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
 import { UserFormPage } from './user-management/UserFormPage'
 
-const STUDENT = '2026-00001'
+const STUDENT = 'student-0001'
+/** The same student's synthetic LRN, typed into the student search. */
+const STUDENT_LRN = '000000260001'
 
 function LetterRoute() {
   return <ExcuseLetterPage visitId={useParams().visitId} />
 }
 
 function ProfileRoute() {
-  return <StudentProfilePage studentNumber={useParams().studentNumber} />
+  return <StudentProfilePage studentId={useParams().studentId} />
 }
 
 /** Opens `screen` after "/previous", so Back has in-app history to return through. */
@@ -34,7 +36,7 @@ function renderAfterPrevious(path: string, page: ReactElement) {
         <Route path="/previous" element={<p>Previous screen</p>} />
         <Route path="/fallback" element={<p>Fallback screen</p>} />
         <Route path="/visits/:visitId/excuse-letter" element={<LetterRoute />} />
-        <Route path="/students/:studentNumber" element={<ProfileRoute />} />
+        <Route path="/students/:studentId" element={<ProfileRoute />} />
         <Route path="*" element={page} />
       </Routes>
     </MemoryRouter>,
@@ -49,7 +51,7 @@ describe('Back after a save never returns to the submitted form', () => {
   it('New Visit: Save, Review excuse letter, Back skips the submitted form', async () => {
     const user = userEvent.setup()
     renderAfterPrevious('/visits/new', <NewVisitEntryPage />)
-    await pickStudent(user, STUDENT)
+    await pickStudent(user, STUDENT_LRN)
     await screen.findByRole('heading', { name: 'New Visit' })
     await user.type(screen.getByRole('combobox', { name: /complaint/i }), 'Fever')
     await user.click(screen.getByRole('radio', { name: 'Sent home' }))
@@ -68,7 +70,7 @@ describe('Back after a save never returns to the submitted form', () => {
 
   it('Edit Student: Save Changes, then Back from the profile skips the edit form', async () => {
     const user = userEvent.setup()
-    renderAfterPrevious(`/students/${STUDENT}/edit`, <StudentFormPage studentNumber={STUDENT} />)
+    renderAfterPrevious(`/students/${STUDENT}/edit`, <StudentFormPage studentId={STUDENT} />)
     await screen.findByRole('heading', { name: 'Edit Student' })
     await user.type(screen.getByLabelText(/student contact information/i), '0')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
@@ -82,6 +84,7 @@ describe('Back after a save never returns to the submitted form', () => {
     const user = userEvent.setup()
     renderAfterPrevious('/add-student', <StudentFormPage />)
     await screen.findByRole('heading', { name: 'Add Student' })
+    await user.type(screen.getByLabelText(/^LRN/), '123456789012')
     await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
     await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
     await user.type(screen.getByLabelText(/student contact information/i), '09XX-111-2222')
@@ -118,7 +121,7 @@ describe('Back after a save never returns to the submitted form', () => {
   it('Incident: Save Stage 1 opens Stage 2 in place, and Back leaves to the previous screen', async () => {
     const user = userEvent.setup()
     renderAfterPrevious('/incidents/new', <IncidentEntryPage />)
-    await pickStudent(user, STUDENT)
+    await pickStudent(user, STUDENT_LRN)
     await screen.findByRole('heading', { name: 'Report Incident' })
     await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
     await user.type(screen.getByLabelText(/temperature/i), '37.2')

@@ -112,13 +112,13 @@ const PrivacyPolicyPage = page(
 type Viewer = { viewer: SessionUser }
 
 function StudentProfileRoute({ viewer }: Viewer) {
-  const { studentNumber } = useParams()
-  return <StudentProfilePage viewer={viewer} studentNumber={studentNumber} />
+  const { studentId } = useParams()
+  return <StudentProfilePage viewer={viewer} studentId={studentId} />
 }
 
 function StudentEditRoute({ viewer }: Viewer) {
-  const { studentNumber } = useParams()
-  return <StudentFormPage viewer={viewer} studentNumber={studentNumber} />
+  const { studentId } = useParams()
+  return <StudentFormPage viewer={viewer} studentId={studentId} />
 }
 
 function IncidentCompleteRoute({ viewer }: Viewer) {
@@ -213,14 +213,14 @@ const APP_ROUTES: AppRoute[] = [
     render: (viewer) => <IncompleteRecordsQueuePage viewer={viewer} />,
   },
   {
-    path: '/students/:studentNumber',
+    path: '/students/:studentId',
     title: 'Student Profile',
     roles: ['staff'],
     nav: 'students',
     render: (viewer) => <StudentProfileRoute viewer={viewer} />,
   },
   {
-    path: '/students/:studentNumber/edit',
+    path: '/students/:studentId/edit',
     title: 'Edit Student',
     roles: ['staff'],
     nav: 'students',

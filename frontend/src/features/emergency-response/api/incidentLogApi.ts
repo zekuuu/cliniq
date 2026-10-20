@@ -14,7 +14,8 @@ export interface IncidentLogQuery {
 
 export interface IncidentLogRow {
   id: string
-  studentNumber: string
+  /** Shown masked (`lib/lrn.ts`), never the name (ADR-004, ADR-028). */
+  lrn: string
   gradeLevel: string
   time: ISODateTime
   complaint: string
@@ -41,7 +42,7 @@ export async function fetchIncidentLog(query: IncidentLogQuery): Promise<Inciden
       return [
         {
           id: incident.id,
-          studentNumber: student.studentNumber,
+          lrn: student.lrn,
           gradeLevel: student.gradeLevel,
           time: incident.time,
           complaint: incident.complaint,
@@ -54,7 +55,7 @@ export async function fetchIncidentLog(query: IncidentLogQuery): Promise<Inciden
     .filter((row) => {
       if (!search) return true
       return (
-        row.studentNumber.toLowerCase().includes(search) ||
+        row.lrn.startsWith(search.replace(/[\s-]/g, '')) ||
         row.gradeLevel.toLowerCase().includes(search) ||
         row.complaint.toLowerCase().includes(search) ||
         (row.eventTag?.toLowerCase().includes(search) ?? false)

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { StudentListPage } from './StudentListPage'
 import { fetchStudentList } from './api/studentListApi'
+import { lrnLabel } from '../../lib/lrn'
 
 describe('Student List', () => {
   it('renders the masterlist without inline medical details', async () => {
@@ -11,7 +12,7 @@ describe('Student List', () => {
 
     expect(await screen.findByRole('heading', { name: 'Student List' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Full name' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'Student Number' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'LRN' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Record status' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: 'View Profile' }).length).toBeGreaterThan(0)
@@ -31,7 +32,7 @@ describe('Student List', () => {
     expect(screen.queryByText('Asthma')).not.toBeInTheDocument()
   })
 
-  it('searches by Student Number', async () => {
+  it('searches by LRN', async () => {
     const user = userEvent.setup()
     const [student] = await fetchStudentList({
       search: '',
@@ -41,14 +42,14 @@ describe('Student List', () => {
 
     renderWithRouter(<StudentListPage />)
     await screen.findByRole('heading', { name: 'Student List' })
-    await user.type(screen.getByLabelText('Search'), student.studentNumber)
+    await user.type(screen.getByLabelText('Search'), student.lrn)
 
     expect(await screen.findByText('1 result shown')).toBeInTheDocument()
     expect(screen.getByRole('rowheader', { name: student.fullName })).toBeInTheDocument()
-    expect(screen.getByRole('cell', { name: student.studentNumber })).toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: lrnLabel(student.lrn) })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'View Profile' })).toHaveAttribute(
       'href',
-      `/students/${student.studentNumber}`,
+      `/students/${student.id}`,
     )
   })
 
@@ -62,11 +63,11 @@ describe('Student List', () => {
     renderWithRouter(<StudentListPage />)
     await screen.findByRole('heading', { name: 'Student List' })
 
-    await user.type(screen.getByLabelText('Search'), archivedStudent!.studentNumber)
+    await user.type(screen.getByLabelText('Search'), archivedStudent!.lrn)
     expect(await screen.findByText('No students found')).toBeInTheDocument()
 
     await user.click(screen.getByLabelText('Include archived'))
-    const row = await screen.findByRole('row', { name: new RegExp(archivedStudent!.studentNumber) })
+    const row = await screen.findByRole('row', { name: new RegExp(lrnLabel(archivedStudent!.lrn)) })
     expect(within(row).getByText('Archived')).toBeInTheDocument()
   })
 

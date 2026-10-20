@@ -2,7 +2,7 @@ import {
   getExcuseLetterApproval,
   getLatestVisit,
   getVisitComplaintSuggestions,
-  getStudentById,
+  getStudent,
   getUser,
   getVisit,
   getVitalsWarningRanges,
@@ -74,7 +74,7 @@ export function valuesFromVisit(visit: VisitDetail): VisitDetailValues {
 export async function fetchVisitDetail(visitId?: string): Promise<VisitDetail> {
   const visit = visitId ? await getVisit(visitId) : await getLatestVisit()
   const [student, loggedBy, items, approval, complaintSuggestions, vitalsRanges] = await Promise.all([
-    getStudentById(visit.studentId),
+    getStudent(visit.studentId),
     getUser(visit.loggedByUserId).then((user) => user.name, () => 'Unknown user'),
     listInventory(),
     getExcuseLetterApproval(visit.id),

@@ -69,7 +69,7 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             </h2>
             <ul className={listClass}>
               <li>
-                <strong>Student information:</strong> name, Student Number, grade level, section,
+                <strong>Student information:</strong> name, LRN (Learner Reference Number), grade level, section,
                 date of birth, gender, contact information, emergency contact details, allergies,
                 and medical conditions.
               </li>
@@ -175,7 +175,7 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             <p className={paragraphClass}>
               No role can view information for a student they have not specifically looked up or
               that isn&apos;t relevant to their role. Multi-student list views (such as the visit
-              log) display a Student Number rather than a name, so that information isn&apos;t
+              log) show only the last digits of the LRN rather than a name, so that information isn&apos;t
               identifiable to someone glancing at a shared screen.
             </p>
           </section>

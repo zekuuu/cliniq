@@ -78,10 +78,10 @@ export function saveInventoryItem(
 export function dispenseInventoryItem(
   itemId: string,
   quantity: number,
-  studentNumber?: string,
+  studentId?: string,
   actor?: SessionUser,
 ): Promise<DispenseResult> {
-  return dispenseInLayer(itemId, quantity, { studentNumber }, actor)
+  return dispenseInLayer(itemId, quantity, { studentId }, actor)
 }
 
 /** Adjust Stock (ADR-018): a signed change or a counted quantity, with a required reason. */
@@ -95,14 +95,14 @@ export function restockItem(itemId: string, quantity: number, expirationDate: st
 }
 
 /** The student a standalone dispense is for, plus any visit they already have today. */
-export async function findDispenseStudent(studentNumber: string): Promise<{ student: Student; todaysVisit: Visit | null }> {
-  const student = await getStudent(studentNumber)
+export async function findDispenseStudent(studentId: string): Promise<{ student: Student; todaysVisit: Visit | null }> {
+  const student = await getStudent(studentId)
   const today = getMockToday()
   const visits = await listVisits({ from: today, to: today })
   return { student, todaysVisit: visits.find((visit) => visit.studentId === student.id) ?? null }
 }
 
-/** the Dispense student search: Student Number prefix or name, active students, at most 8. */
+/** the Dispense student search: LRN prefix or name, active students, at most 8. */
 export function searchDispenseStudents(query: string): Promise<StudentSearchResult[]> {
   return searchStudents(query)
 }

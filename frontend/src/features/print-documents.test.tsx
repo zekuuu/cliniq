@@ -12,6 +12,7 @@ import { DashboardPage } from './dashboard/DashboardPage'
 import { IncidentReportPage } from './emergency-response/IncidentReportPage'
 import { ReportsPage } from './reports/ReportsPage'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
+import { maskLrn } from '../lib/lrn'
 
 vi.mock('react-chartjs-2', () => ({ Bar: () => null, Line: () => null }))
 
@@ -71,7 +72,7 @@ describe('purpose-built printouts', () => {
     expect(document.body.querySelector('[data-print-document]')).toBeNull()
   })
 
-  it('Dashboard: a Clinic Overview Report with the screen’s figures, Student Numbers only', async () => {
+  it('Dashboard: a Clinic Overview Report with the screen’s figures, masked LRNs only', async () => {
     renderWithRouter(<DashboardPage viewer={STAFF} />)
     await screen.findByRole('heading', { name: /due & upcoming follow-ups/i })
     expectScreenControlHidden('Print overview')
@@ -90,7 +91,7 @@ describe('purpose-built printouts', () => {
       summary.counts.activeStudents,
     ])
       expect(figures).toContain(String(value))
-    for (const row of summary.dueFollowUps) expect(doc).toHaveTextContent(row.student.studentNumber)
+    for (const row of summary.dueFollowUps) expect(doc).toHaveTextContent(maskLrn(row.student.lrn))
     expect(doc).toHaveTextContent('Excuse letters awaiting approval')
     await expectNoNamesOrIds(doc)
   })
@@ -149,7 +150,7 @@ describe('purpose-built printouts', () => {
     expectDocument(doc, 'Clinic Excuse Letter')
     expect(doc).toHaveTextContent('DRAFT, NOT APPROVED')
     expect(doc).toHaveTextContent('Not a medical certificate')
-    expect(doc).toHaveTextContent('2021-00005')
+    expect(doc).toHaveTextContent('••••••••0041')
     expect(doc.textContent).not.toMatch(/visit-\d+/)
   })
 
@@ -174,7 +175,7 @@ describe('purpose-built printouts', () => {
   })
 
   it('Student Profile: a Student Health Record with every visit, not just the screen’s eight', async () => {
-    renderWithRouter(<StudentProfilePage viewer={STAFF} studentNumber="2022-00001" />)
+    renderWithRouter(<StudentProfilePage viewer={STAFF} studentId="student-0004" />)
     await screen.findByRole('heading', { name: 'Visit History' })
     expectScreenControlHidden('Print')
     const doc = print()

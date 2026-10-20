@@ -31,6 +31,7 @@ import {
   type IncidentCompletion,
   type IncidentLogRow,
 } from './api/incidentLogApi'
+import { MaskedLrn } from '../../components/ui/MaskedLrn'
 
 type CompletionFilter = IncidentCompletion | 'all'
 
@@ -62,7 +63,7 @@ function IncidentLogSkeleton({ back }: { back: ReactNode }) {
 
 const baseColumns: Array<DataTableColumn<IncidentLogRow>> = [
   { key: 'time', header: 'Date and time', rowHeader: true, cell: (row) => formatDateTime(row.time) },
-  { key: 'student', header: 'Student Number', cell: (row) => <div><p>{row.studentNumber}</p><p className="text-xs text-text-secondary">{row.gradeLevel}</p></div> },
+  { key: 'student', header: 'LRN', cell: (row) => <div><p><MaskedLrn lrn={row.lrn} /></p><p className="text-xs text-text-secondary">{row.gradeLevel}</p></div> },
   { key: 'complaint', header: 'Reason / description', cell: (row) => <div><p>{row.complaint}</p>{row.eventTag && <p className="text-xs text-text-secondary">{row.eventTag}</p>}</div> },
   { key: 'status', header: 'Status', cell: (row) => <Badge tone={completionMeta[row.completion].tone} variant="soft">{completionMeta[row.completion].label}</Badge> },
   { key: 'actions', header: 'Actions', cell: (row) => <div className="flex flex-wrap gap-2">{row.completion === 'needs_completion' && <Link to={paths.incidentComplete(row.id)} className={buttonClassName({ size: 'sm' })}><Icon name="clipboardList" />Complete Stage 2</Link>}<Link to={paths.incidentReport(row.id)} className={buttonClassName({ size: 'sm' })}><Icon name="fileText" />View Report</Link></div> },
@@ -96,7 +97,7 @@ export function IncidentLogListPage() {
   }
   const sortedRows = sortTableRows(data, sort, (row, key) => {
     if (key === 'time') return row.time
-    if (key === 'student') return row.studentNumber
+    if (key === 'student') return row.lrn
     if (key === 'complaint') return row.complaint
     return completionMeta[row.completion].label
   })
@@ -107,7 +108,7 @@ export function IncidentLogListPage() {
   })
   const columns: Array<DataTableColumn<IncidentLogRow>> = baseColumns.map((column) => {
     if (column.key === 'time') return { ...column, sort: sortColumn('time', 'Date and time') }
-    if (column.key === 'student') return { ...column, sort: sortColumn('student', 'Student Number') }
+    if (column.key === 'student') return { ...column, sort: sortColumn('student', 'LRN') }
     if (column.key === 'complaint') return { ...column, sort: sortColumn('complaint', 'Reason / description') }
     if (column.key === 'status') return { ...column, sort: sortColumn('status', 'Status') }
     return column
@@ -118,7 +119,7 @@ export function IncidentLogListPage() {
 
   return <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
     {back}
-    <Card className="p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">Incident Log</h1><p className="mt-1 text-sm text-text-secondary">Review incidents by Student Number and complete records that still need follow-up detail.</p></div><div className="flex flex-wrap items-center gap-3"><Link className={buttonClassName({ variant: 'primary' })} to={paths.incidentNew}><Icon name="alertTriangle" />New Incident</Link></div></div></Card>
-    <Card aria-labelledby="incident-log-title"><CardHeader titleId="incident-log-title" title="Incidents" description={`${data.length.toLocaleString('en-PH')} record${data.length === 1 ? '' : 's'} shown`} icon={<Icon name="alertTriangle" />} actions={<SegmentedControl label="Completion filter" value={completion} onChange={(value) => changeCompletion(value as CompletionFilter)} options={completionOptions} />} /><CardBody className="flex flex-col gap-4"><div className="flex flex-wrap items-end gap-3"><Input label="Search" value={search} placeholder="Student Number, grade, reason, or event" onChange={(event) => changeSearch(event.target.value)} className="min-w-56 flex-1" /><DateRangePicker value={range} onChange={changeRange} today={defaultRange.to} presets={['all', 'today', 'last7', 'thisMonth', 'custom']} presetLabels={{ last7: 'This week' }} customPopover /></div><div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>{data.length ? <><DataTable caption="Clinic incident log" columns={columns} rows={pageRows} rowKey={(row) => row.id} fixedLayout minTableWidth="58rem" /><Pagination page={currentPage} pageCount={pageCount} total={data.length} pageSize={PAGE_SIZE} itemLabel="incidents" onPageChange={setPage} /></> : <EmptyState icon="alertTriangle" title="No incidents found" description="Try another date range, Student Number, reason, or completion status." />}</div></CardBody></Card>
+    <Card className="p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">Incident Log</h1><p className="mt-1 text-sm text-text-secondary">Review incidents by LRN and complete records that still need follow-up detail.</p></div><div className="flex flex-wrap items-center gap-3"><Link className={buttonClassName({ variant: 'primary' })} to={paths.incidentNew}><Icon name="alertTriangle" />New Incident</Link></div></div></Card>
+    <Card aria-labelledby="incident-log-title"><CardHeader titleId="incident-log-title" title="Incidents" description={`${data.length.toLocaleString('en-PH')} record${data.length === 1 ? '' : 's'} shown`} icon={<Icon name="alertTriangle" />} actions={<SegmentedControl label="Completion filter" value={completion} onChange={(value) => changeCompletion(value as CompletionFilter)} options={completionOptions} />} /><CardBody className="flex flex-col gap-4"><div className="flex flex-wrap items-end gap-3"><Input label="Search" value={search} placeholder="LRN, grade, reason, or event" onChange={(event) => changeSearch(event.target.value)} className="min-w-56 flex-1" /><DateRangePicker value={range} onChange={changeRange} today={defaultRange.to} presets={['all', 'today', 'last7', 'thisMonth', 'custom']} presetLabels={{ last7: 'This week' }} customPopover /></div><div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>{data.length ? <><DataTable caption="Clinic incident log" columns={columns} rows={pageRows} rowKey={(row) => row.id} fixedLayout minTableWidth="58rem" /><Pagination page={currentPage} pageCount={pageCount} total={data.length} pageSize={PAGE_SIZE} itemLabel="incidents" onPageChange={setPage} /></> : <EmptyState icon="alertTriangle" title="No incidents found" description="Try another date range, LRN, reason, or completion status." />}</div></CardBody></Card>
   </div>
 }

@@ -30,6 +30,7 @@ import { getMockSessionUser, type SessionUser, type StudentExcuseLetter } from '
 import type { Disposition, Incident, Student, Visit } from '../../types/entities'
 import { paths } from '../../routes/paths'
 import { archiveStudentRecord, fetchStudentProfile, type StudentProfileData } from './api/studentProfileApi'
+import { maskLrn } from '../../lib/lrn'
 
 const incidentStageMap = {
   1: { label: 'Needs completion', tone: 'warning', icon: 'alertTriangle', variant: 'soft' },
@@ -115,7 +116,7 @@ function ProfileHeader({
   async function archive() {
     setArchiving(true)
     try {
-      await archiveStudentRecord(student.studentNumber, viewer)
+      await archiveStudentRecord(student.id, viewer)
       setConfirmingArchive(false)
       onArchived()
     } finally {
@@ -138,12 +139,12 @@ function ProfileHeader({
             )}
           </div>
           <p className="mt-1 text-sm text-text-secondary">
-            {student.studentNumber} · {student.gradeLevel}
+            LRN {student.lrn} · {student.gradeLevel}
           </p>
         </div>
         {staffCanAct && (
           <div className="flex flex-wrap justify-end gap-2 print:hidden">
-            <Link to={paths.studentEdit(student.studentNumber)} className={buttonClassName()}>
+            <Link to={paths.studentEdit(student.id)} className={buttonClassName()}>
               Edit
             </Link>
             <Button variant="secondary" icon="printer" onClick={() => window.print()}>
@@ -163,7 +164,7 @@ function ProfileHeader({
         onClose={() => setConfirmingArchive(false)}
       >
         <p className="text-sm text-text-secondary">
-          {student.fullName} ({student.studentNumber}) will be hidden from active lists. Nothing is
+          {student.fullName} (LRN {student.lrn}) will be hidden from active lists. Nothing is
           deleted: the record, visits, and incidents stay available under "Include archived".
         </p>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
@@ -189,8 +190,8 @@ function OverviewCard({ student }: { student: Student }) {
           <p className="text-sm font-semibold text-text-primary">{student.gradeLevel}</p>
         </div>
         <div>
-          <p className="text-xs font-semibold text-text-secondary">Student Number</p>
-          <p className="text-sm font-semibold text-text-primary">{student.studentNumber}</p>
+          <p className="text-xs font-semibold text-text-secondary">LRN</p>
+          <p className="text-sm font-semibold text-text-primary tabular-nums">{student.lrn}</p>
         </div>
         <div>
           <p className="text-xs font-semibold text-text-secondary">Sex</p>
@@ -372,13 +373,13 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
     <PrintDocument
       title="Student Health Record"
       viewer={viewer}
-      scope={`${student.fullName}, Student Number ${student.studentNumber}, ${student.gradeLevel}.${student.archived ? ' Archived record.' : ''} Every recorded clinic visit and incident, newest first.`}
+      scope={`${student.fullName}, LRN ${maskLrn(student.lrn)}, ${student.gradeLevel}.${student.archived ? ' Archived record.' : ''} Every recorded clinic visit and incident, newest first.`}
     >
       <PrintSection title="Student">
         <PrintFields
           fields={[
             { label: 'Full name', value: student.fullName },
-            { label: 'Student Number', value: student.studentNumber },
+            { label: 'LRN', value: maskLrn(student.lrn) },
             { label: 'Grade level', value: student.gradeLevel },
             { label: 'Sex', value: student.sex === 'female' ? 'Female' : 'Male' },
             { label: 'Contact info', value: student.contactInfo || 'Not recorded' },
@@ -456,13 +457,13 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
  */
 export function StudentProfilePage({
   viewer = getMockSessionUser(),
-  studentNumber,
+  studentId,
 }: {
   viewer?: SessionUser
-  studentNumber?: string
+  studentId?: string
 }) {
-  const { data, status, reload } = useAsyncData(`student-profile|${studentNumber ?? 'default'}`, () =>
-    fetchStudentProfile(studentNumber, viewer),
+  const { data, status, reload } = useAsyncData(`student-profile|${studentId ?? 'default'}`, () =>
+    fetchStudentProfile(studentId, viewer),
   )
   // Set by Edit Student after a successful save, which returns here.
   const savedMessage = (useLocation().state as { savedMessage?: string } | null)?.savedMessage

@@ -26,12 +26,12 @@ export interface StudentProfileData {
   excuseLetters: StudentExcuseLetter[]
 }
 
-/** `studentNumber` comes from the `/students/:studentNumber` route; omitted, a demo student is used. */
+/** `studentId` comes from the `/students/:studentId` route; omitted, a demo student is used. */
 export async function fetchStudentProfile(
-  studentNumber?: string,
+  studentId?: string,
   viewer?: SessionUser,
 ): Promise<StudentProfileData> {
-  const student = studentNumber ? await getStudent(studentNumber) : await getDemoStudent({ withHistory: true })
+  const student = studentId ? await getStudent(studentId) : await getDemoStudent({ withHistory: true })
   const [history, excuseLetters] = await Promise.all([
     getStudentHistory(student.id, Infinity),
     viewer?.role === 'staff' ? getStudentExcuseLetters(student.id) : [],
@@ -40,6 +40,6 @@ export async function fetchStudentProfile(
 }
 
 /** Archive hides the student from active lists without deleting anything; the write is audited. */
-export function archiveStudentRecord(studentNumber: string, actor: SessionUser): Promise<Student> {
-  return archiveStudent(studentNumber, actor)
+export function archiveStudentRecord(studentId: string, actor: SessionUser): Promise<Student> {
+  return archiveStudent(studentId, actor)
 }

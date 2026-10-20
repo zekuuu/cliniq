@@ -34,10 +34,8 @@ const shapeChecked: Widen<MockDbSeed> = rawSeed
 
 export const seed = shapeChecked as unknown as MockDbSeed
 
-/** Resolves every relative date and every Student Number reference into the in-memory store. */
+/** Resolves every relative date into the in-memory store. */
 export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
-  const idByNumber = new Map(source.students.map((s) => [s.studentNumber, s.id]))
-  const studentId = (studentNumber: string) => idByNumber.get(studentNumber) ?? `missing:${studentNumber}`
   const config = { ...source.config }
   delete config._note
   const fo = source.frontendOnly
@@ -56,9 +54,8 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
       ...student,
       sex: student.sex ?? (index % 2 === 0 ? 'female' : 'male'),
     })),
-    visits: source.visits.map(({ studentNumber, ...v }) => ({
+    visits: source.visits.map((v) => ({
       ...v,
-      studentId: studentId(studentNumber),
       dateTime: resolveDateTime(v.dateTime, today),
       excuseLetterDraft: v.excuseLetterDraft
         ? {
@@ -68,9 +65,8 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
           }
         : null,
     })),
-    incidents: source.incidents.map(({ studentNumber, ...i }) => ({
+    incidents: source.incidents.map((i) => ({
       ...i,
-      studentId: studentId(studentNumber),
       time: resolveDateTime(i.time, today),
       hospitalReferral: i.hospitalReferral
         ? {
@@ -83,9 +79,8 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
         timestamp: resolveDateTime(n.timestamp, today),
       })),
     })),
-    followUps: source.followUps.map(({ studentNumber, ...f }) => ({
+    followUps: source.followUps.map((f) => ({
       ...f,
-      studentId: studentId(studentNumber),
       followUpDate: resolveDate(f.followUpDate, today),
     })),
     inventoryItems: source.inventoryItems.map(({ currentStock, expirationDate, ...item }) => ({

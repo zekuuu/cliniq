@@ -74,15 +74,16 @@ describe('mock-db.json integrity', () => {
     ).toMatch(/excusedUntil: can't be before excusedFrom/)
   })
 
-  it('rejects a dangling Student Number reference', () => {
-    expect(problemsAfter((s) => (s.visits[0].studentNumber = '2019-99999'))).toMatch(
-      /visits\[0\].*Student Number "2019-99999" doesn't exist/,
+  it('rejects a dangling student reference', () => {
+    expect(problemsAfter((s) => (s.visits[0].studentId = 'student-9999'))).toMatch(
+      /visits\[0\].*student "student-9999" doesn't exist/,
     )
   })
 
-  it('rejects duplicate and malformed Student Numbers', () => {
-    expect(problemsAfter((s) => (s.students[1].studentNumber = s.students[0].studentNumber))).toMatch(/duplicate/)
-    expect(problemsAfter((s) => (s.students[0].studentNumber = '26-001'))).toMatch(/isn't YYYY-NNNNN/)
+  it('rejects duplicate and malformed LRNs (ADR-028)', () => {
+    expect(problemsAfter((s) => (s.students[1].lrn = s.students[0].lrn))).toMatch(/duplicate/)
+    expect(problemsAfter((s) => (s.students[0].lrn = '12345'))).toMatch(/isn't 12 digits/)
+    expect(problemsAfter((s) => (s.students[0].lrn = '1234-5678-901'))).toMatch(/isn't 12 digits/)
   })
 
   it('rejects a follow-up pointing at a missing record or at another student', () => {
@@ -91,8 +92,8 @@ describe('mock-db.json integrity', () => {
     )
     expect(
       problemsAfter((s) => {
-        const other = s.students.find((st) => st.studentNumber !== s.followUps[0].studentNumber)!
-        s.followUps[0].studentNumber = other.studentNumber
+        const other = s.students.find((st) => st.id !== s.followUps[0].studentId)!
+        s.followUps[0].studentId = other.id
       }),
     ).toMatch(/doesn't match its visit's student/)
   })
@@ -114,7 +115,7 @@ describe('mock-db.json integrity', () => {
   it('rejects transactions whose student or visit link is wrong, and an adjustment without a reason', () => {
     const linked = () => seed.frontendOnly.inventoryTransactions.findIndex((t) => t.visitId)
     expect(problemsAfter((s) => (s.frontendOnly.inventoryTransactions[linked()].visitId = 'visit-9999'))).toMatch(/visitId: "visit-9999" doesn't exist/)
-    expect(problemsAfter((s) => (s.frontendOnly.inventoryTransactions[linked()].studentNumber = s.students[0].studentNumber))).toMatch(/must match visit/)
+    expect(problemsAfter((s) => (s.frontendOnly.inventoryTransactions[linked()].studentId = s.students[0].id))).toMatch(/must match visit/)
     expect(problemsAfter((s) => delete s.frontendOnly.inventoryTransactions.find((t) => t.type === 'adjustment')!.reason)).toMatch(/reason/)
   })
 

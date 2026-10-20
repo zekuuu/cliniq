@@ -5,11 +5,11 @@ import { cn } from '../../lib/cn'
  * The list-row pattern. Reference-Screens.md §5 names this as the template for every list view
  * (Visit Log, Incident Log, Follow-Up List, Inventory List, User List).
  *
- * Display-privacy rule (ADR-004): in a multi-student list, `primary` is the Student Number,
+ * Display-privacy rule (ADR-004): in a multi-student list, `primary` is the LRN,
  * never the student's name. See `.claude/skills/cliniq-display-privacy/`.
  */
 export interface ListRowProps {
-  /** The row's identifier (Student Number, item name). */
+  /** The row's identifier (LRN, item name). */
   primary: ReactNode
   /** Supporting detail under the identifier. */
   secondary?: ReactNode

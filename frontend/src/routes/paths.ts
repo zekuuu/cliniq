@@ -16,8 +16,9 @@ export const paths = {
   students: '/students',
   studentNew: '/students/new',
   incompleteRecords: '/students/incomplete',
-  studentProfile: (studentNumber: string) => `/students/${seg(studentNumber)}`,
-  studentEdit: (studentNumber: string) => `/students/${seg(studentNumber)}/edit`,
+  /** By the internal id: an LRN never goes in an address, history or logs (ADR-028). */
+  studentProfile: (studentId: string) => `/students/${seg(studentId)}`,
+  studentEdit: (studentId: string) => `/students/${seg(studentId)}/edit`,
   visits: '/visits',
   visitsWithPendingLetter: '/visits?letter=pending',
   visitsInRange: (from: string, to: string) => `/visits?from=${seg(from)}&to=${seg(to)}`,

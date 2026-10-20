@@ -13,7 +13,6 @@ import type {
   ParentNotificationAttempt,
   Report,
   Student,
-  StudentNumber,
   StudentSex,
   User,
   UserRole,
@@ -26,7 +25,7 @@ import type {
  * The seed is the §5 entity shapes from `types/entities.ts` with exactly three kinds of change:
  * 1. Dates are relative to "today" (`{ daysAgo }` / `{ daysFromNow }`, plus `time` for timestamps),
  *    so the seed never goes stale. The data layer resolves them.
- * 2. Records point at students by `studentNumber` (ADR-005), not the internal `id`.
+ * 2. Records point at students by the internal `studentId`; the LRN is only an attribute (ADR-028).
  * 3. Derived values are left out (`Student.recordComplete`, `Report.data`). Selectors compute them.
  * Everything else is the entity type itself, so a shape change in `types/entities.ts` breaks here.
  */
@@ -42,28 +41,18 @@ export type SeedUser = Replace<User, { lastLogin: RelativeDateTime | null }>
 /** Old mock JSON did not hold Sex; `resolveSeed` assigns a deterministic synthetic value on load. */
 export type SeedStudent = Omit<Student, 'recordComplete' | 'sex'> & { sex?: StudentSex }
 
-export type SeedVisit = Omit<
-  Replace<Visit, { dateTime: RelativeDateTime; excuseLetterDraft: ExcuseLetterDraft<RelativeDate> | null }>,
-  'studentId'
-> & {
-  studentNumber: StudentNumber
-}
+export type SeedVisit = Replace<Visit, { dateTime: RelativeDateTime; excuseLetterDraft: ExcuseLetterDraft<RelativeDate> | null }>
 
-export type SeedIncident = Omit<
-  Replace<
-    Incident,
-    {
-      time: RelativeDateTime
-      hospitalReferral: Replace<HospitalReferral, { departureTime: RelativeDateTime }> | null
-      parentNotifications: Array<Replace<ParentNotificationAttempt, { timestamp: RelativeDateTime }>>
-    }
-  >,
-  'studentId'
-> & { studentNumber: StudentNumber }
+export type SeedIncident = Replace<
+  Incident,
+  {
+    time: RelativeDateTime
+    hospitalReferral: Replace<HospitalReferral, { departureTime: RelativeDateTime }> | null
+    parentNotifications: Array<Replace<ParentNotificationAttempt, { timestamp: RelativeDateTime }>>
+  }
+>
 
-export type SeedFollowUp = Omit<Replace<FollowUp, { followUpDate: RelativeDate }>, 'studentId'> & {
-  studentNumber: StudentNumber
-}
+export type SeedFollowUp = Replace<FollowUp, { followUpDate: RelativeDate }>
 
 /**
  * The JSON seed predates batch tracking. It is deliberately accepted in its old one-stock/one-date
@@ -162,7 +151,7 @@ export interface InventoryTransaction<D = ISODateTime> {
   quantity: number
   timestamp: D
   userId: string
-  studentNumber: StudentNumber | null
+  studentId: string | null
   visitId: string | null
   /** Set when the dispense was part of an incident's Stage 2. PROVISIONAL (ADR-018). */
   incidentId?: string
@@ -176,7 +165,7 @@ export interface InventoryTransaction<D = ISODateTime> {
 
 /** Registrar-import review tracking for the Incomplete Records queue (#9). */
 export interface RecordReview<D = ISODate, T = ISODateTime> {
-  studentNumber: StudentNumber
+  studentId: string
   importedAt: D
   importedBy: string
   resolvedByUserId: string | null
@@ -197,7 +186,7 @@ export interface ExcuseLetterApproval<T = ISODateTime, D = ISODate> {
 
 export interface PeReferral<T = ISODateTime> {
   id: string
-  studentNumber: StudentNumber
+  studentId: string
   /** The PE/Sports Instructor's name as Staff typed it; instructors have no account (ADR-029). */
   referredBy: string
   activity: string

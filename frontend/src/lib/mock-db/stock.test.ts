@@ -30,7 +30,7 @@ const stock = async (id: string) => (await getInventoryItem(id)).currentStock
 const transactions = () => db().frontendOnly.inventoryTransactions
 
 async function newVisit(itemsGiven: Array<{ itemId: string; quantity: number; instructions?: string }>, treatment = '') {
-  const student = await getStudent('2026-00001')
+  const student = await getStudent('student-0001')
   return recordVisit({ studentId: student.id, complaint: 'Headache', treatment, disposition: 'returned_to_class', followUp: null, itemsGiven })
 }
 
@@ -46,9 +46,9 @@ describe('recording a visit with medicines and supplies', () => {
     expect(await stock(PARACETAMOL)).toBe(10)
     expect(await stock(GAUZE)).toBe(37)
     const added = transactions().slice(txnsBefore)
-    expect(added.map((t) => [t.type, t.itemId, t.quantity, t.studentNumber, t.visitId])).toEqual([
-      ['dispense', PARACETAMOL, 2, '2026-00001', visit.id],
-      ['dispense', GAUZE, 3, '2026-00001', visit.id],
+    expect(added.map((t) => [t.type, t.itemId, t.quantity, t.studentId, t.visitId])).toEqual([
+      ['dispense', PARACETAMOL, 2, 'student-0001', visit.id],
+      ['dispense', GAUZE, 3, 'student-0001', visit.id],
     ])
     expect(getRecordedAuditEntries().map((e) => e.targetRecord?.type)).toEqual([
       'visit',
@@ -146,10 +146,10 @@ describe('editing a saved visit', () => {
     })
     expect([await stock(PARACETAMOL), await stock(GAUZE), await stock(CETIRIZINE)]).toEqual([11, 40, 7])
     const added = transactions().slice(txnsAfterSave)
-    expect(added.map((t) => [t.type, t.itemId, t.quantity, t.reason, t.visitId, t.studentNumber])).toEqual([
-      ['adjustment', PARACETAMOL, 3, 'visit_edited', visit.id, '2026-00001'],
-      ['adjustment', GAUZE, 2, 'visit_edited', visit.id, '2026-00001'],
-      ['adjustment', CETIRIZINE, -2, 'visit_edited', visit.id, '2026-00001'],
+    expect(added.map((t) => [t.type, t.itemId, t.quantity, t.reason, t.visitId, t.studentId])).toEqual([
+      ['adjustment', PARACETAMOL, 3, 'visit_edited', visit.id, 'student-0001'],
+      ['adjustment', GAUZE, 2, 'visit_edited', visit.id, 'student-0001'],
+      ['adjustment', CETIRIZINE, -2, 'visit_edited', visit.id, 'student-0001'],
     ])
     // Past transactions are never rewritten.
     expect(transactions().slice(0, txnsAfterSave)).toEqual(original)
@@ -219,7 +219,7 @@ describe('Adjust Stock', () => {
     expect(after.currentStock).toBe(0)
     expect(after.expirationDate).toBe(before.expirationDate)
     expect(after.flags).toContain('low_stock')
-    expect(transactions().at(-1)).toMatchObject({ type: 'adjustment', itemId: ORS, quantity: -25, reason: 'expired_disposed', studentNumber: null, visitId: null })
+    expect(transactions().at(-1)).toMatchObject({ type: 'adjustment', itemId: ORS, quantity: -25, reason: 'expired_disposed', studentId: null, visitId: null })
     expect(getRecordedAuditEntries().at(-1)).toMatchObject({ actionType: 'submit', targetRecord: { type: 'inventory-adjustment' }, summary: 'Expired - disposed' })
     const restocked = await restockInventoryItem(ORS, 30, '2099-12-31')
     expect(restocked.flags).not.toContain('expired')
@@ -240,7 +240,7 @@ describe('incident Stage 2', () => {
   beforeEach(() => resetMockDb())
 
   it('accepts no treatment notes and no medicine lines', async () => {
-    const student = await getStudent('2026-00001')
+    const student = await getStudent('student-0001')
     const stageOne = await saveIncidentStageOne({ studentId: student.id, complaint: 'Fall injury', vitals: { temperatureC: 36.8 } })
 
     const { incident } = await completeIncidentStageTwo({
@@ -257,7 +257,7 @@ describe('incident Stage 2', () => {
   })
 
   it('dispenses its lines with transactions that reference the incident, and fixes them once complete', async () => {
-    const student = await getStudent('2026-00001')
+    const student = await getStudent('student-0001')
     const stageOne = await saveIncidentStageOne({ studentId: student.id, complaint: 'Fall injury', vitals: { temperatureC: 36.8 } })
     expect(stageOne.itemsGiven).toEqual([])
     const input = {
@@ -271,7 +271,7 @@ describe('incident Stage 2', () => {
     }
     const { incident } = await completeIncidentStageTwo(input)
     expect(incident.itemsGiven).toMatchObject([{ itemId: GAUZE, itemName: 'Gauze Pads', quantity: 2 }])
-    expect(transactions().at(-1)).toMatchObject({ type: 'dispense', itemId: GAUZE, quantity: 2, studentNumber: '2026-00001', visitId: null, incidentId: stageOne.id })
+    expect(transactions().at(-1)).toMatchObject({ type: 'dispense', itemId: GAUZE, quantity: 2, studentId: 'student-0001', visitId: null, incidentId: stageOne.id })
     expect(await stock(GAUZE)).toBe(38)
     await expect(completeIncidentStageTwo({ ...input, itemsGiven: [{ itemId: GAUZE, quantity: 3 }] })).rejects.toThrow(/completed incident/)
     await expect(completeIncidentStageTwo(input)).resolves.toBeTruthy()
@@ -279,7 +279,7 @@ describe('incident Stage 2', () => {
   })
 
   it('rejects an expired item at Stage 2 and saves nothing', async () => {
-    const student = await getStudent('2026-00001')
+    const student = await getStudent('student-0001')
     const stageOne = await saveIncidentStageOne({ studentId: student.id, complaint: 'Fall injury', vitals: {} })
     await expect(
       completeIncidentStageTwo({ incidentId: stageOne.id, complaint: 'Fall injury', vitals: {}, hospitalReferral: null, newParentNotifications: [], followUp: null, itemsGiven: [{ itemId: ORS, quantity: 1 }] }),

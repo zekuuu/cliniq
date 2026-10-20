@@ -39,6 +39,7 @@ import {
   type VisitDetail,
   type VisitDetailValues,
 } from './api/visitDetailApi'
+import { MaskedLrn } from '../../components/ui/MaskedLrn'
 
 const dispositionOptions = [
   { value: 'returned_to_class', label: 'Returned to class' },
@@ -232,7 +233,7 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
               Visit Details
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
-              {visit.student.fullName} · {visit.student.studentNumber} · {visit.student.gradeLevel}
+              {visit.student.fullName} · LRN <MaskedLrn lrn={visit.student.lrn} /> · {visit.student.gradeLevel}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -281,8 +282,8 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
               <p className="text-sm font-semibold text-text-primary">{visit.student.fullName}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold text-text-secondary">Student Number</p>
-              <p className="text-sm font-semibold text-text-primary">{visit.student.studentNumber}</p>
+              <p className="text-xs font-semibold text-text-secondary">LRN</p>
+              <p className="text-sm font-semibold text-text-primary tabular-nums"><MaskedLrn lrn={visit.student.lrn} /></p>
             </div>
             <div>
               <p className="text-xs font-semibold text-text-secondary">Logged by</p>

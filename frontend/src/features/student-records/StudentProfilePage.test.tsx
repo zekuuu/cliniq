@@ -10,7 +10,7 @@ describe('Student Profile', () => {
     renderWithRouter(<StudentProfilePage />)
 
     expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(/\w+ \w+/)
-    expect(screen.getAllByText(/\d{4}-\d{5}/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/^\d{12}$/).length).toBeGreaterThan(0)
     expect(screen.getByRole('heading', { name: 'Overview' })).toBeInTheDocument()
     expect(screen.getByText('Sex')).toBeInTheDocument()
     expect(screen.getByText(/Female|Male/)).toBeInTheDocument()
@@ -25,7 +25,7 @@ describe('Student Profile', () => {
 
     expect(await screen.findByRole('link', { name: 'Edit' })).toHaveAttribute(
       'href',
-      expect.stringMatching(/^\/students\/\d{4}-\d{5}\/edit$/),
+      expect.stringMatching(/^\/students\/student-\d{4}\/edit$/),
     )
     screen.getByRole('button', { name: 'Print' }).click()
     expect(print).toHaveBeenCalledOnce()
@@ -33,7 +33,7 @@ describe('Student Profile', () => {
   })
 
   it('lists every emergency contact with primary and verification states', async () => {
-    renderWithRouter(<StudentProfilePage studentNumber="2023-00002" />)
+    renderWithRouter(<StudentProfilePage studentId="student-0012" />)
 
     expect(await screen.findByText('Arnel Cabrera')).toBeInTheDocument()
     expect(screen.getByText('Bea Cabrera')).toBeInTheDocument()
@@ -42,7 +42,7 @@ describe('Student Profile', () => {
   })
 
   it("lists Staff the student's excused periods with a link to each visit", async () => {
-    renderWithRouter(<StudentProfilePage studentNumber="2021-00002" />)
+    renderWithRouter(<StudentProfilePage studentId="student-0022" />)
 
     expect(await screen.findByRole('heading', { name: 'Excuse Letters' })).toBeInTheDocument()
     const today = getMockToday()
@@ -55,7 +55,7 @@ describe('Student Profile', () => {
   it('keeps excuse letters off a non-Staff view', async () => {
     renderWithRouter(
       <StudentProfilePage
-        studentNumber="2021-00002"
+        studentId="student-0022"
         viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }}
       />,
     )
@@ -65,7 +65,7 @@ describe('Student Profile', () => {
   })
 
   it('lists a pending draft with a link to review its letter', async () => {
-    renderWithRouter(<StudentProfilePage studentNumber="2021-00005" />)
+    renderWithRouter(<StudentProfilePage studentId="student-0041" />)
 
     expect(await screen.findByRole('heading', { name: 'Excuse Letters' })).toBeInTheDocument()
     expect(screen.getByText('Pending approval')).toBeInTheDocument()

@@ -1,7 +1,7 @@
 import { listFollowUps, setFollowUpStatus, type FollowUpView, type SessionUser } from '../../../lib/mock-db'
 import type { FollowUpStatus } from '../../../types/entities'
 
-/** Follow-Up List (#18c). Rows carry the Student Number only (multi-student list, ADR-004). */
+/** Follow-Up List (#18c). Rows carry the LRN only (multi-student list, ADR-004). */
 export type FollowUpRow = FollowUpView
 
 export function fetchFollowUps(status: '' | FollowUpStatus): Promise<FollowUpRow[]> {

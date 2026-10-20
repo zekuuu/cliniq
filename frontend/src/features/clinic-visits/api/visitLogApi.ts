@@ -14,10 +14,11 @@ export interface VisitLogQuery {
 
 export interface VisitLogRow {
   id: string
-  studentNumber: string
+  /** Shown masked (`lib/lrn.ts`), never the name (ADR-004, ADR-028). */
+  lrn: string
   gradeLevel: string
   dateTime: ISODateTime
-  /** Shown beside the Student Number in the list (ADR-010, Option A). */
+  /** Shown beside the LRN in the list (ADR-010, Option A). */
   complaint: string
   disposition: Disposition
   eventTag: string | null
@@ -48,7 +49,7 @@ export async function fetchVisitLog(query: VisitLogQuery): Promise<VisitLogRow[]
         ? [
             {
               id: visit.id,
-              studentNumber: student.studentNumber,
+              lrn: student.lrn,
               gradeLevel: student.gradeLevel,
               dateTime: visit.dateTime,
               complaint: visit.complaint,
@@ -64,7 +65,7 @@ export async function fetchVisitLog(query: VisitLogQuery): Promise<VisitLogRow[]
     .filter((row) => {
       if (!search) return true
       return (
-        row.studentNumber.toLowerCase().includes(search) ||
+        row.lrn.startsWith(search.replace(/[\s-]/g, '')) ||
         row.gradeLevel.toLowerCase().includes(search) ||
         row.complaint.toLowerCase().includes(search) ||
         (row.eventTag?.toLowerCase().includes(search) ?? false)

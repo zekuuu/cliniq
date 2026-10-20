@@ -98,11 +98,11 @@ describe('Standalone Dispense', () => {
   })
 
   it("links to the student's visit today instead of recording twice; the notice names no student", async () => {
-    const student = await getStudent('2026-00005')
+    const student = await getStudent('student-0015')
     const user = userEvent.setup()
     renderWithRouter(<InventoryDispensePage />, { route: '/inventory/dispense' })
     await selectOption(user, await screen.findByLabelText(/^For/), 'A student')
-    await pickStudent(user, student.studentNumber)
+    await pickStudent(user, student.lrn)
     const notice = (await screen.findByText(/This student already has a visit today/)).closest('[role="status"]') as HTMLElement
     expect(within(notice).getByRole('link', { name: /Open today’s visit/ })).toHaveAttribute('href', '/visits/visit-0159')
     expect(within(notice).queryByText(new RegExp(student.fullName))).not.toBeInTheDocument()
@@ -115,7 +115,7 @@ describe('Standalone Dispense', () => {
     renderWithRouter(<InventoryDispensePage />, { route: '/inventory/dispense' })
     await selectOption(user, await screen.findByLabelText(/^For/), 'A student')
     await user.type(screen.getByRole('combobox', { name: /student/i }), 'Gian')
-    await user.click(await screen.findByRole('option', { name: /2026-00001.*Gian Quizon/ }))
+    await user.click(await screen.findByRole('option', { name: /LRN ending in 0001 Gian Quizon Kinder/ }))
     expect(screen.getByRole('button', { name: 'Change student (Gian Quizon)' })).toBeInTheDocument()
   })
 

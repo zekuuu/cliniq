@@ -31,7 +31,7 @@ describe('UI/UX review regressions', () => {
 
   it('archives a student only after a confirmation step, then shows the archived badge', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<StudentProfilePage studentNumber="2026-00001" />)
+    renderWithRouter(<StudentProfilePage studentId="student-0001" />)
 
     await user.click(await screen.findByRole('button', { name: 'Archive' }))
     const dialog = screen.getByRole('dialog', { name: 'Archive this student record?' })
@@ -39,7 +39,7 @@ describe('UI/UX review regressions', () => {
 
     await user.click(within(dialog).getByRole('button', { name: 'Archive Record' }))
     expect(await screen.findByText('Archived')).toBeInTheDocument()
-    expect((await getStudent('2026-00001')).archived).toBe(true)
+    expect((await getStudent('student-0001')).archived).toBe(true)
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['archive'])
     expect(screen.queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument()
   })
@@ -95,7 +95,7 @@ describe('UI/UX review regressions', () => {
     expect(screen.getByText(`Showing 1–10 of ${total} visits`)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Next' }))
     expect(screen.getByText(`Showing 11–20 of ${total} visits`)).toBeInTheDocument()
-    await user.type(screen.getByLabelText('Search'), '2026')
+    await user.type(screen.getByLabelText('Search'), '00000026')
     expect(await screen.findByText(/^Showing 1–/)).toBeInTheDocument()
   })
 })
@@ -210,7 +210,7 @@ describe('UI/UX review Group B decisions', () => {
     expect(screen.queryByRole('link', { name: 'New Visit' })).not.toBeInTheDocument()
   })
 
-  it('asks for the Student Number on New Visit instead of using a default student', async () => {
+  it('asks for the LRN on New Visit instead of using a default student', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
 
@@ -222,13 +222,13 @@ describe('UI/UX review Group B decisions', () => {
     expect(screen.getByText(/choose the student/i)).toBeInTheDocument()
     expect(getRecordedAuditEntries()).toEqual([])
 
-    await user.type(screen.getByRole('combobox', { name: /student/i }), '2026-00001')
-    await screen.findByRole('option', { name: /2026-00001/ })
+    await user.type(screen.getByRole('combobox', { name: /student/i }), '000000260001')
+    await screen.findByRole('option', { name: /LRN ending in 0001/ })
     await user.keyboard('{Enter}')
     await screen.findByRole('button', { name: /change student/i })
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
     expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
-    const student = await getStudent('2026-00001')
+    const student = await getStudent('student-0001')
     const visits = await listVisits()
     expect(visits.some((visit) => visit.studentId === student.id && visit.treatment === 'Rested in clinic.')).toBe(true)
     // Ready for the next student: the field is back and empty.
@@ -256,6 +256,6 @@ describe('UI/UX review Group B decisions', () => {
 
     const table = await screen.findByRole('table', { name: 'Filtered audit log' })
     expect(table.textContent).not.toMatch(/\b(visit|incident|item|student|user|followup)-(staff-|admin-)?\d{2,4}\b/)
-    expect(table.textContent).toMatch(/(Visit|Incident)\d{4}-\d{5}/)
+    expect(table.textContent).toMatch(/(Visit|Incident)•{8}\d{4}/)
   })
 })

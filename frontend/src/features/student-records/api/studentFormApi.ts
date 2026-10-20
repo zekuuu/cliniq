@@ -1,17 +1,20 @@
 import {
+  DuplicateLrnError,
   getGradeLevels,
-  getNextStudentNumber,
   getStudent,
   saveStudent,
   type DuplicateMatch,
   type SessionUser,
 } from '../../../lib/mock-db'
-import type { EmergencyContact, Student, StudentNumber, StudentSex } from '../../../types/entities'
+import type { EmergencyContact, Student, StudentSex } from '../../../types/entities'
 
+export { DuplicateLrnError }
 export type { DuplicateMatch }
 export type StudentFormMode = 'add' | 'edit'
 
 export interface StudentFormValues {
+  /** Typed by Staff; spaces and dashes are stripped (ADR-028). */
+  lrn: string
   fullName: string
   gradeLevel: string
   sex: StudentSex | ''
@@ -24,7 +27,6 @@ export interface StudentFormValues {
 export interface StudentFormContext {
   mode: StudentFormMode
   gradeLevels: string[]
-  nextStudentNumber: StudentNumber
   student: Student | null
 }
 
@@ -40,14 +42,13 @@ function parseList(value: string): string[] {
     .filter((item) => item.toLowerCase() !== 'none')
 }
 
-/** Edit mode when `studentNumber` is given (`/students/:studentNumber/edit`); add mode otherwise. */
-export async function fetchStudentFormContext(studentNumber?: string): Promise<StudentFormContext> {
-  const [student, gradeLevels, nextStudentNumber] = await Promise.all([
-    studentNumber ? getStudent(studentNumber) : Promise.resolve(null),
+/** Edit mode when `studentId` is given (`/students/:studentId/edit`); add mode otherwise. */
+export async function fetchStudentFormContext(studentId?: string): Promise<StudentFormContext> {
+  const [student, gradeLevels] = await Promise.all([
+    studentId ? getStudent(studentId) : Promise.resolve(null),
     getGradeLevels(),
-    getNextStudentNumber(),
   ])
-  return { mode: studentNumber ? 'edit' : 'add', gradeLevels, nextStudentNumber, student }
+  return { mode: studentId ? 'edit' : 'add', gradeLevels, student }
 }
 
 export async function submitStudentForm(
@@ -56,6 +57,7 @@ export async function submitStudentForm(
 ): Promise<StudentFormSubmitResult> {
   return saveStudent(
     {
+      lrn: values.lrn,
       fullName: values.fullName,
       gradeLevel: values.gradeLevel,
       sex: values.sex as StudentSex,

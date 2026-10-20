@@ -3,7 +3,7 @@ import {
   getExcuseLetterApproval,
   getLatestVisit,
   getMockSessionUser,
-  getStudentById,
+  getStudent,
   getUser,
   getVisit,
   type ExcuseLetterApproval,
@@ -43,7 +43,7 @@ function defaultBody(student: Student, visit: Visit): string {
 export async function fetchExcuseLetterContext(visitId?: string): Promise<ExcuseLetterContext> {
   const visit = visitId ? await getVisit(visitId) : await getLatestVisit()
   const [student, approval] = await Promise.all([
-    getStudentById(visit.studentId),
+    getStudent(visit.studentId),
     getExcuseLetterApproval(visit.id),
   ])
   const visitDate = visit.dateTime.slice(0, 10)

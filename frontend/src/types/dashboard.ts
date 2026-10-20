@@ -14,7 +14,7 @@ import type {
  * the Phase B9 aggregation endpoint is expected to return. Every row is built from the shared
  * entities in `types/entities.ts`, so it lines up with Frontend Context Brief §5.
  *
- * Privacy by type: every student reference here is a `StudentListRef` (id + Student Number only).
+ * Privacy by type: every student reference here is a `StudentListRef` (id + LRN only).
  * A dashboard component can't render a name because it never receives one (ADR-004).
  */
 

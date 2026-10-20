@@ -23,7 +23,7 @@ async function pick(user: UserEvent, search: string, name: RegExp) {
 
 async function openNewVisit(user: UserEvent) {
   renderWithRouter(<NewVisitEntryPage />)
-  await pickStudent(user, '2026-00001')
+  await pickStudent(user, '000000260001')
   await screen.findByRole('heading', { name: 'New Visit' })
   await selectOption(user, screen.getByLabelText(/complaint/i), 'Headache')
 }
@@ -84,10 +84,10 @@ describe('New Visit: medicines and supplies given', () => {
   })
 
   it("shows the student's recorded allergies beside the picker", async () => {
-    const student = await getStudent('2020-00001')
+    const student = await getStudent('student-0002')
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
-    await pickStudent(user, student.studentNumber)
+    await pickStudent(user, student.lrn)
     await screen.findByRole('heading', { name: 'New Visit' })
     expect(screen.getByRole('note', { name: 'Recorded allergies' })).toHaveTextContent('Allergies: Peanuts')
   })
@@ -116,7 +116,7 @@ describe('Student Profile visit history', () => {
   beforeEach(() => resetMockDb())
 
   it('shows medicines given on each visit', async () => {
-    renderWithRouter(<StudentProfilePage studentNumber="2026-00006" />)
+    renderWithRouter(<StudentProfilePage studentId="student-0020" />)
     expect(await screen.findByText(/Given: Paracetamol 500mg × 2 tablets \(1 tablet every 6 hours\)/)).toBeInTheDocument()
   })
 })
@@ -127,7 +127,7 @@ describe('Incident: medicines and supplies given', () => {
   it('keeps Stage 1 fast with no medicine entry', async () => {
     const user = userEvent.setup()
     renderWithRouter(<IncidentEntryPage />)
-    await pickStudent(user, '2026-00001')
+    await pickStudent(user, '000000260001')
     await screen.findByRole('heading', { name: 'Report Incident' })
     expect(screen.queryByRole('combobox', { name: 'Add medicine or supply' })).not.toBeInTheDocument()
   })

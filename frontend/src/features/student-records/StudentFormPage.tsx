@@ -25,6 +25,7 @@ import type { SessionUser } from '../../lib/mock-db'
 import { getMockSessionUser } from '../../lib/mock-db'
 import type { Student } from '../../types/entities'
 import {
+  DuplicateLrnError,
   fetchStudentFormContext,
   submitStudentForm,
   type DuplicateMatch,
@@ -32,10 +33,12 @@ import {
   type StudentFormMode,
   type StudentFormValues,
 } from './api/studentFormApi'
+import { isLrn, maskLrn, normalizeLrn } from '../../lib/lrn'
 
 type StudentFormErrors = Partial<Record<string, string>>
 
 const EMPTY_VALUES: StudentFormValues = {
+  lrn: '',
   fullName: '',
   gradeLevel: '',
   sex: '',
@@ -48,6 +51,7 @@ const EMPTY_VALUES: StudentFormValues = {
 function valuesFromStudent(student: Student | null): StudentFormValues {
   if (!student) return EMPTY_VALUES
   return {
+    lrn: student.lrn,
     fullName: student.fullName,
     gradeLevel: student.gradeLevel,
     sex: student.sex,
@@ -111,7 +115,7 @@ function DuplicateDialog({
             <li key={match.id} className="rounded-md border border-border bg-surface px-3 py-2">
               <p className="text-sm font-semibold text-text-primary">{match.fullName}</p>
               <p className="text-xs text-text-secondary">
-                {match.studentNumber} · {match.gradeLevel}
+                LRN {maskLrn(match.lrn)} · {match.gradeLevel}
               </p>
             </li>
           ))}
@@ -136,6 +140,8 @@ function contactErrorKey(index: number, field: 'name' | 'relationship' | 'phone'
 
 function validate(values: StudentFormValues): StudentFormErrors {
   const errors: StudentFormErrors = {}
+  if (!values.lrn) errors.lrn = 'Enter the 12-digit LRN.'
+  else if (!isLrn(values.lrn)) errors.lrn = 'The LRN must be exactly 12 digits.'
   if (!values.fullName.trim()) errors.fullName = 'Enter the student full name.'
   if (!values.gradeLevel) errors.gradeLevel = 'Select the grade level.'
   if (!values.sex) errors.sex = 'Select the sex recorded by the school.'
@@ -175,18 +181,17 @@ function StudentFormEditor({
   const invalid = useFocusFirstInvalid(invalidRef)
 
   const mode: StudentFormMode = data.mode
-  const studentNumber = data.student?.studentNumber ?? data.nextStudentNumber
   // What the form last matched in storage: the loaded record, then a newly created one.
   const [baseline, setBaseline] = useState<StudentFormValues>(() => valuesFromStudent(data.student))
   const { cancel, discardDialog } = useCancelNavigation(
-    data.student ? paths.studentProfile(data.student.studentNumber) : paths.students,
+    data.student ? paths.studentProfile(data.student.id) : paths.students,
     JSON.stringify(values) !== JSON.stringify(baseline),
   )
   const title = mode === 'edit' ? 'Edit Student' : 'Add Student'
   const description =
     mode === 'edit'
       ? 'Update the record fields Staff maintain directly.'
-      : 'Encode a new student record. Student Number is assigned by the system on save.'
+      : 'Encode a new student record with the LRN from the school records.'
 
   const requiredCount = useMemo(
     () => Object.keys(validate(values)).length,
@@ -247,11 +252,19 @@ function StudentFormEditor({
 
     setIsSaving(true)
     try {
-      const result = await submitStudentForm(values, {
-        mode,
-        studentId: data.student?.id,
-        confirmDuplicate,
-      })
+      let result
+      try {
+        result = await submitStudentForm(values, {
+          mode,
+          studentId: data.student?.id,
+          confirmDuplicate,
+        })
+      } catch (cause) {
+        if (!(cause instanceof DuplicateLrnError)) throw cause
+        setErrors({ lrn: cause.message })
+        invalid.report(1)
+        return
+      }
       if (result.status === 'duplicate') {
         setDuplicateMatches(result.matches)
         return
@@ -264,7 +277,7 @@ function StudentFormEditor({
       }
       if (result.action === 'update') {
         // An edit ends on the record it changed, like Visit Details; the profile shows the confirmation.
-        void navigate(paths.studentProfile(result.student.studentNumber), {
+        void navigate(paths.studentProfile(result.student.id), {
           replace: true,
           state: { savedMessage: `Student record updated for ${result.student.fullName}.` },
         })
@@ -301,10 +314,6 @@ function StudentFormEditor({
             </div>
             <p className="mt-1 text-sm text-text-secondary">{description}</p>
           </div>
-          <div className="rounded-md border border-border bg-surface px-3 py-2 text-right">
-            <p className="text-xs font-semibold text-text-secondary">Student Number</p>
-            <p className="font-semibold text-text-primary">{studentNumber}</p>
-          </div>
         </div>
       </Card>
 
@@ -335,6 +344,16 @@ function StudentFormEditor({
               <h2 id="identity-title" className="sr-only">
                 Identity
               </h2>
+              <Input
+                label="LRN"
+                required
+                inputMode="numeric"
+                autoComplete="off"
+                value={values.lrn}
+                error={errors.lrn}
+                hint="The 12-digit Learner Reference Number. Spaces and dashes are removed."
+                onChange={(event) => setField('lrn', normalizeLrn(event.target.value))}
+              />
               <Input
                 label="Full name"
                 required
@@ -475,14 +494,14 @@ function StudentFormEditor({
 
 export function StudentFormPage({
   viewer = getMockSessionUser(),
-  studentNumber,
+  studentId,
 }: {
   viewer?: SessionUser
-  studentNumber?: string
+  studentId?: string
 }) {
   const { data, status, isRefetching, reload } = useAsyncData(
-    `student-form|${studentNumber ?? 'new'}`,
-    () => fetchStudentFormContext(studentNumber),
+    `student-form|${studentId ?? 'new'}`,
+    () => fetchStudentFormContext(studentId),
   )
 
   if (viewer.role !== 'staff') {
@@ -494,7 +513,7 @@ export function StudentFormPage({
   }
 
   const back = (
-    <BackButton fallback={studentNumber ? paths.studentProfile(studentNumber) : paths.students} />
+    <BackButton fallback={studentId ? paths.studentProfile(studentId) : paths.students} />
   )
 
   if (status === 'error') {
@@ -517,6 +536,6 @@ export function StudentFormPage({
     )
   }
 
-  const editorKey = `${data.mode}:${data.student?.id ?? data.nextStudentNumber}`
+  const editorKey = `${data.mode}:${data.student?.id ?? 'new'}`
   return <StudentFormEditor key={editorKey} data={data} isRefetching={isRefetching} />
 }

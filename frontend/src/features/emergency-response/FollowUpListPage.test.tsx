@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { getRecordedAuditEntries, listFollowUps, resetMockDb } from '../../lib/mock-db'
 import { selectOption } from '../../test/selectOption'
 import { FollowUpListPage } from './FollowUpListPage'
+import { maskLrn } from '../../lib/lrn'
 
 const followUpUpdate = expect.objectContaining({
   actionType: 'update',
@@ -18,11 +19,11 @@ describe('FollowUpListPage', () => {
     const user = userEvent.setup()
     renderWithRouter(<FollowUpListPage />)
     const [firstFollowUp] = await listFollowUps()
-    expect((await screen.findAllByText(firstFollowUp.studentNumber)).length).toBeGreaterThan(0)
+    expect((await screen.findAllByText(maskLrn(firstFollowUp.lrn))).length).toBeGreaterThan(0)
     return user
   }
 
-  it('uses the linked Student Number and records completion as an audited update, with no extra step', async () => {
+  it('uses the linked LRN and records completion as an audited update, with no extra step', async () => {
     const user = await renderList()
     const pendingBefore = screen.getAllByRole('button', { name: /update status for/i }).length
 

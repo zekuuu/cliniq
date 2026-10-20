@@ -14,7 +14,7 @@ import { AdjustStockModal, RestockModal } from './inventory/StockModals'
 import { StudentFormPage } from './student-records/StudentFormPage'
 import { UserFormPage } from './user-management/UserFormPage'
 
-const STUDENT = '2026-00001'
+const STUDENT = 'student-0001'
 
 /** The element a failed submit must focus: the first invalid field, or the form's one message. */
 function firstInvalid(): Element | null {
@@ -68,7 +68,7 @@ describe('A failed submit focuses the first invalid field', () => {
   })
 
   it('Edit Student: a cleared required field takes focus', async () => {
-    await submitEmpty(<StudentFormPage studentNumber={STUDENT} />, async (user) => {
+    await submitEmpty(<StudentFormPage studentId={STUDENT} />, async (user) => {
       await user.clear(screen.getByLabelText(/full name/i))
     })
     expect(screen.getByLabelText(/full name/i)).toHaveFocus()

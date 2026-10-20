@@ -11,10 +11,10 @@ describe('PE/Sports Injury Referral', () => {
   beforeEach(() => resetMockDb())
 
   it('renders a deliberate single-student referral form', async () => {
-    const student = await getStudent('2026-00001')
+    const student = await getStudent('student-0001')
     const user = userEvent.setup()
     renderWithRouter(<PeSportsReferralPage />)
-    await pickStudent(user, '2026-00001')
+    await pickStudent(user, '000000260001')
 
     expect(
       await screen.findByRole('heading', { name: 'PE/Sports Injury Referral' }),
@@ -26,7 +26,7 @@ describe('PE/Sports Injury Referral', () => {
   it('validates required fields inline', async () => {
     const user = userEvent.setup()
     renderWithRouter(<PeSportsReferralPage />)
-    await pickStudent(user, '2026-00001')
+    await pickStudent(user, '000000260001')
 
     await screen.findByRole('heading', { name: 'PE/Sports Injury Referral' })
     await user.click(screen.getByRole('button', { name: 'Save Referral' }))
@@ -39,7 +39,7 @@ describe('PE/Sports Injury Referral', () => {
   it('loads PE defaults and saves a non-hospital referral audit entry', async () => {
     const user = userEvent.setup()
     renderWithRouter(<PeSportsReferralPage />)
-    await pickStudent(user, '2026-00001')
+    await pickStudent(user, '000000260001')
 
     await screen.findByRole('heading', { name: 'PE/Sports Injury Referral' })
     await user.click(screen.getByRole('button', { name: 'Use PE Defaults' }))
@@ -64,7 +64,7 @@ describe('PE/Sports Injury Referral', () => {
   it('queues Emergency Response escalation when hospital referral is selected', async () => {
     const user = userEvent.setup()
     renderWithRouter(<PeSportsReferralPage />)
-    await pickStudent(user, '2026-00001')
+    await pickStudent(user, '000000260001')
 
     await screen.findByRole('heading', { name: 'PE/Sports Injury Referral' })
     await user.click(screen.getByRole('button', { name: 'Use PE Defaults' }))
@@ -81,7 +81,7 @@ describe('PE/Sports Injury Referral', () => {
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['submit', 'create'])
   })
 
-  it('asks for the Student Number instead of using a default student', async () => {
+  it('asks for the LRN instead of using a default student', async () => {
     const user = userEvent.setup()
     renderWithRouter(<PeSportsReferralPage />)
 
@@ -90,11 +90,11 @@ describe('PE/Sports Injury Referral', () => {
     await user.click(screen.getByRole('button', { name: 'Use PE Defaults' }))
     await user.type(screen.getByLabelText(/referred by/i), 'Coach Reyes')
     await user.click(screen.getByRole('button', { name: 'Save Referral' }))
-    expect(screen.getByText('Choose the student: type a Student Number or name, then pick from the list.')).toBeInTheDocument()
+    expect(screen.getByText('Choose the student: type the LRN or name, then pick from the list.')).toBeInTheDocument()
     expect(getRecordedAuditEntries()).toEqual([])
 
-    await user.type(screen.getByRole('combobox', { name: /student/i }), '202600001')
-    await user.click(await screen.findByRole('option', { name: /2026-00001/ }))
+    await user.type(screen.getByRole('combobox', { name: /student/i }), '000000260001')
+    await user.click(await screen.findByRole('option', { name: /LRN ending in 0001/ }))
     expect(await screen.findByRole('button', { name: /change student/i })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save Referral' }))
     expect(await screen.findByText('PE/Sports referral saved.')).toBeInTheDocument()

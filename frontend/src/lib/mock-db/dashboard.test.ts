@@ -32,7 +32,7 @@ const CONFIG: MockDbConfig = {
 // file stops compiling, which is exactly the check the loop's "Simulate" step wants.
 const student = (id: string, n: string, extra: Partial<SeedStudent> = {}): SeedStudent => ({
   id,
-  studentNumber: n,
+  lrn: n,
   fullName: `SECRET NAME ${id}`,
   gradeLevel: 'Grade 5',
   sex: 'female',
@@ -119,7 +119,7 @@ function dataset(partial: Partial<DbState>): DbState {
 }
 
 describe('due/upcoming follow-ups', () => {
-  const students = [student('s1', '2026-00001')]
+  const students = [student('s1', '000000260001')]
 
   it('lists only pending follow-ups up to the upcoming window, with the right due state', () => {
     const data = dataset({
@@ -141,9 +141,9 @@ describe('due/upcoming follow-ups', () => {
     ])
   })
 
-  it('carries the Student Number and never the name', () => {
+  it('carries the LRN and never the name', () => {
     const rows = buildDueFollowUps(dataset({ students, followUps: [followUp('a', TODAY)] }))
-    expect(rows[0].student).toEqual({ id: 's1', studentNumber: '2026-00001' })
+    expect(rows[0].student).toEqual({ id: 's1', lrn: '000000260001' })
     expect(JSON.stringify(rows)).not.toContain('SECRET NAME')
   })
 })
@@ -329,7 +329,7 @@ describe('complaint trends', () => {
 
 describe('dashboard summary', () => {
   const students = [
-    student('s1', '2026-00001'),
+    student('s1', '000000260001'),
     student('s2', '2026-00002', { emergencyContacts: [] }), // incomplete: counts as pending
     student('s3', '2020-00003', { archived: true, emergencyContacts: [] }), // archived: doesn't
   ]
@@ -351,9 +351,9 @@ describe('dashboard summary', () => {
     expect(summary.counts).toMatchObject({ visits: 4, pendingRecords: 1, activeStudents: 2 })
   })
 
-  it('raises a frequent-visitor warning by Student Number at the threshold', () => {
+  it('raises a frequent-visitor warning by LRN at the threshold', () => {
     expect(summary.frequentVisitors).toEqual([
-      { student: { id: 's1', studentNumber: '2026-00001' }, visitCount: 3 },
+      { student: { id: 's1', lrn: '000000260001' }, visitCount: 3 },
     ])
   })
 

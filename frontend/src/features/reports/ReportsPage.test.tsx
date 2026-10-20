@@ -6,6 +6,7 @@ import { pickMonth } from '../../test/pickDate'
 import { ReportsPage } from './ReportsPage'
 import { todayISO } from '../../lib/dates'
 import { getMonthlyReport } from '../../lib/mock-db'
+import { maskLrn } from '../../lib/lrn'
 
 // jsdom has no canvas. Replace the chart with a stub that keeps its accessible label.
 const barMock = vi.hoisted(() => ({ props: undefined as unknown }))
@@ -43,13 +44,13 @@ describe('Reports', () => {
     expect(screen.getByRole('heading', { name: 'Health Summaries' })).toBeInTheDocument()
   })
 
-  it('uses the linked student’s actual Student Number in the incident archive', async () => {
+  it('uses the linked student’s actual LRN in the incident archive', async () => {
     const user = userEvent.setup()
     renderReports({ id: 'usr-nurse', name: 'Nurse', role: 'staff' })
     await user.click(screen.getByRole('tab', { name: 'Incident Archive' }))
     const [incident] = (await thisMonth()).incidents
     const archive = await screen.findByRole('table', { name: 'Incident report archive' })
-    expect(within(archive).getAllByText(incident.studentNumber).length).toBeGreaterThan(0)
+    expect(within(archive).getAllByText(maskLrn(incident.lrn)).length).toBeGreaterThan(0)
   })
 
   it('lists the newest incidents first, matching the Incident Log', async () => {

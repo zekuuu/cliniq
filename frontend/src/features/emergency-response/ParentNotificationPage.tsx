@@ -6,6 +6,7 @@ import { paths } from '../../routes/paths'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import type { ParentNotificationOutcome } from '../../types/entities'
 import { fetchIncidentRecord, logParentNotification } from './api/incidentRecordApi'
+import { MaskedLrn } from '../../components/ui/MaskedLrn'
 
 const outcomes: Array<{ value: ParentNotificationOutcome; label: string }> = [
   { value: 'reached', label: 'Reached' }, { value: 'not_reached', label: 'Not reached' },
@@ -45,7 +46,7 @@ export function ParentNotificationPage({ viewer = getMockSessionUser(), incident
   const attempts = incident.parentNotifications
   return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
     {back}
-    <Card className="p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">Parent Notification Log</h1><p className="mt-1 text-sm text-text-secondary">{student.fullName} · {student.studentNumber} · {incident.complaint}</p></div><Badge tone={incident.stage === 1 ? 'warning' : 'info'} variant="soft">{incident.stage === 1 ? 'Needs completion' : 'Complete'}</Badge></div></Card>
+    <Card className="p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">Parent Notification Log</h1><p className="mt-1 text-sm text-text-secondary">{student.fullName} · LRN <MaskedLrn lrn={student.lrn} /> · {incident.complaint}</p></div><Badge tone={incident.stage === 1 ? 'warning' : 'info'} variant="soft">{incident.stage === 1 ? 'Needs completion' : 'Complete'}</Badge></div></Card>
     <Card aria-labelledby="notification-title"><CardHeader titleId="notification-title" title="Record a notification attempt" icon={<Icon name="activity" />} description="Keep every attempt tied to this incident with its real timestamp." /><CardBody className="flex flex-col gap-4">
       <div className="rounded-md border border-border bg-surface p-3" aria-label="Emergency contact details">
         <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Emergency contact</p>

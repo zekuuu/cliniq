@@ -45,6 +45,7 @@ import {
   saveStageOneIncident,
   type IncidentEntryContext,
 } from './api/incidentEntryApi'
+import { maskLrn } from '../../lib/lrn'
 
 type ScreenStage = 'stage1' | 'stage2'
 type IncidentStatus = 'needs_completion' | 'in_progress' | 'complete'
@@ -465,8 +466,8 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
               {student
-                ? `${student.fullName} · ${student.studentNumber} · ${student.gradeLevel}`
-                : 'Student not identified yet. Enter the Student Number in Stage 1.'}
+                ? `${student.fullName} · LRN ${maskLrn(student.lrn)} · ${student.gradeLevel}`
+                : 'Student not identified yet. Search by LRN or name in Stage 1.'}
             </p>
           </div>
           <StatusBadge status={statusValue} map={incidentStatusMap} />
@@ -519,9 +520,9 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                   search={searchIncidentStudents}
                   selected={identified.student}
                   onClear={identified.reset}
-                  onSelect={(picked) => void identified.select(picked.studentNumber)}
+                  onSelect={(picked) => void identified.select(picked.id)}
                   error={identified.error}
-                  hint="No student was identified before this emergency. Type a Student Number or the student name, then pick the student."
+                  hint="No student was identified before this emergency. Type the LRN or the student name, then pick the student."
                   addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
                 />
               )}

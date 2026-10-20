@@ -22,6 +22,7 @@ import { formatDate } from '../../lib/dates'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { fetchIncompleteRecords, type IncompleteRecord } from './api/incompleteRecordsApi'
+import { MaskedLrn } from '../../components/ui/MaskedLrn'
 
 type QueueFilter = 'open' | 'resolved' | 'all'
 type IncompleteSortKey = 'student' | 'grade' | 'missing' | 'imported' | 'status'
@@ -92,7 +93,7 @@ export function IncompleteRecordsQueuePage({
         if (!term) return true
         return (
           record.fullName.toLowerCase().includes(term) ||
-          record.studentNumber.toLowerCase().includes(term) ||
+          record.lrn.startsWith(term.replace(/[\s-]/g, '')) ||
           record.gradeLevel.toLowerCase().includes(term)
         )
       })
@@ -125,7 +126,7 @@ export function IncompleteRecordsQueuePage({
       cell: (record) => (
         <div>
           <p>{record.fullName}</p>
-          <p className="text-xs font-normal text-text-secondary">{record.studentNumber}</p>
+          <p className="text-xs font-normal text-text-secondary"><MaskedLrn lrn={record.lrn} /></p>
         </div>
       ),
     },
@@ -197,9 +198,9 @@ export function IncompleteRecordsQueuePage({
       cell: (record) => (
         // Save returns here (Edit Student's `returnTo`), so the record is fixed without leaving the queue.
         <Link
-          to={paths.studentEdit(record.studentNumber)}
+          to={paths.studentEdit(record.studentId)}
           state={{ returnTo: paths.incompleteRecords }}
-          aria-label={`Edit Record for ${record.studentNumber}`}
+          aria-label={`Edit Record for ${record.fullName}`}
           className={buttonClassName({ size: 'sm' })}
         >
           <Icon name="pencil" />
@@ -289,7 +290,7 @@ export function IncompleteRecordsQueuePage({
           <Input
             label="Search"
             value={search}
-            placeholder="Name, Student Number, or grade"
+            placeholder="Name, LRN, or grade"
             onChange={(event) => setSearch(event.target.value)}
             className="max-w-xl"
           />

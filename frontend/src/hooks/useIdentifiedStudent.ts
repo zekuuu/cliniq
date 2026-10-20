@@ -11,7 +11,7 @@ import type { Student } from '../types/entities'
 export function useIdentifiedStudent(
   /** A reopened incident's student; may arrive once the form's data has loaded. */
   preselected: Student | null | undefined,
-  find: (studentNumber: string) => Promise<Student>,
+  find: (studentId: string) => Promise<Student>,
 ) {
   const [picked, setPicked] = useState<Student | null>(null)
   const student = preselected ?? picked
@@ -22,16 +22,16 @@ export function useIdentifiedStudent(
     error,
     /** Inline check, run with the rest of the form's validation. */
     validate(
-      message = 'Choose the student: type a Student Number or name, then pick from the list.',
+      message = 'Choose the student: type the LRN or name, then pick from the list.',
     ): boolean {
       if (student) return true
       setError(message)
       return false
     },
     /** A student picked from a search (`StudentPicker`), looked up in full (allergies included). */
-    async select(studentNumber: string): Promise<void> {
+    async select(studentId: string): Promise<void> {
       try {
-        setPicked(await find(studentNumber))
+        setPicked(await find(studentId))
         setError(undefined)
       } catch {
         setError("This student couldn't be loaded. Search again.")

@@ -43,7 +43,7 @@ const NO_BACK: Record<string, string> = {
 
 /** A real record for each route parameter, from the mock seed. */
 const SAMPLE: Record<string, string> = {
-  studentNumber: '2026-00001',
+  studentId: 'student-0001',
   visitId: 'visit-0157',
   incidentId: 'incident-0022',
   userId: 'user-staff-01',
@@ -123,7 +123,7 @@ describe('Back on every route (route coverage)', () => {
       // The loading skeleton has its own Back; wait for the screen itself before using it.
       await screen.findByRole('heading', { level: 1 }, { timeout: 5000 })
       const back = await findBack()
-      // The label never names a student or a Student Number.
+      // The label never names a student or an LRN.
       expect(back.textContent).toMatch(/^Back( to (Sign In|Dashboard))?$/)
       expect(back).toHaveClass('print:hidden')
 
@@ -149,8 +149,8 @@ describe('Back in dead ends and drill-throughs', () => {
   it.each([
     ['an unknown address', '/no-such-screen', 'Page Not Found', paths.dashboard],
     [
-      'a Student Number that does not exist',
-      '/students/1999-99999',
+      'a student that does not exist',
+      '/students/student-9999',
       'Unable to load the student profile.',
       paths.students,
     ],
