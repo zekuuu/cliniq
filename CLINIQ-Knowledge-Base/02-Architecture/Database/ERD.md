@@ -34,7 +34,7 @@ Important fact worth stating early: **XAMPP ships MariaDB, not MySQL.** `Environ
 **Keys**
 
 - **K-1.** Every table has `id BIGINT UNSIGNED AUTO_INCREMENT` as its primary key. It is internal: the UI never shows it (display rules already forbid internal ids). The API may return it as a string. Exceptions: `system_settings` (key is `setting_key`) and `number_sequences` (composite key).
-- **K-2.** A student is *identified to people* by `student_number`, which is unique and **immutable**. Foreign keys use `students.id`, not the number, so a correction could never cascade through millions of rows. This resolves the mock's inconsistency (seed uses Student Number, entities use `id`).
+- **K-2.** A student is *identified to people* by `lrn` (Learner Reference Number, ADR-028): 12 digits stored as text, unique, required, and editable so a wrong LRN can be corrected (the change is audited by field name only). Foreign keys and addresses use `students.id`, never the LRN, so a correction never cascades and an LRN never reaches a URL or a log.
 - **K-3.** If the project ever needs offline sync or multi-site merging, switch ids to ULIDs; nothing else in the design depends on the id type.
 
 **Time**
@@ -159,7 +159,7 @@ erDiagram
     }
     students {
         bigint id PK
-        char student_number UK "YYYY-NNNNN, immutable"
+        char lrn UK "12 digits, editable, audited"
         varchar full_name
         bigint grade_level_id FK "nullable until complete"
         varchar sex "female or male; required when complete (ADR-031)"
@@ -213,7 +213,7 @@ erDiagram
 erDiagram
     students {
         bigint id PK
-        char student_number UK
+        char lrn UK
     }
     complaint_types {
         bigint id PK
@@ -440,7 +440,7 @@ erDiagram
         varchar action_type
         varchar target_type
         bigint target_id "no FK, survives purges"
-        char subject_student_number "snapshot"
+        bigint subject_student_id "snapshot, no FK, never the LRN"
         varchar summary "field names only"
     }
     calendar_events {
@@ -568,7 +568,7 @@ erDiagram
 
 ## 6. Lifecycles
 
-**Student.** Created (Student Number assigned from `number_sequences`) → active → *archived* (`archived_at`, reason, hidden from default lists, 5-year clock starts) → *purged* 5 years later by the purge procedure. Restore (set `archived_at` back to NULL) keeps the same Student Number and history; this is how a returning student should come back (D-11).
+**Student.** Created (LRN entered by Staff from the school records) → active → *archived* (`archived_at`, reason, hidden from default lists, 5-year clock starts) → *purged* 5 years later by the purge procedure. Restore (set `archived_at` back to NULL) keeps the same LRN and history; this is how a returning student should come back (D-11).
 
 **Visit and excuse letter.** Visit saved (medicine lines dispense stock in the same transaction) → optional `excuse_letters` row in `draft` (only for Sent home / Referred) → nurse approves: status `approved`, `approved_by`, `approved_at`, `reference_no`, `snapshot_text` are set together (the CHECK refuses a half-approved row) → the letter is now permanent. A draft may be deleted if the disposition changes; an approved letter may not be changed or deleted.
 
@@ -588,7 +588,7 @@ erDiagram
 
 Policy (from `Data-Retention-Policy.md`): archived students are kept up to 5 years, then deleted. The audit trail has a shorter, separate retention (the number is still open, D-09).
 
-A nightly or monthly `retention:purge` command (disabled until the team turns it on) does this in **one transaction per student**, in this order, and writes one `audit_logs` row per student with `actor_user_id = NULL` and only the Student Number:
+A nightly or monthly `retention:purge` command (disabled until the team turns it on) does this in **one transaction per student**, in this order, and writes one `audit_logs` row per student with `actor_user_id = NULL` and only the internal student id:
 
 1. Select students with `archived_at < NOW() - INTERVAL retention_years YEAR`.
 2. `inventory_transactions`: set `student_id`, `visit_id`, `incident_id` to NULL (the stock history stays, the person link goes).
@@ -596,7 +596,7 @@ A nightly or monthly `retention:purge` command (disabled until the team turns it
 4. Delete `incident_vital_readings`, `hospital_referrals`, `parent_notification_attempts`, `incident_report_approvals`, then `incidents` and `visits`.
 5. Delete the student (cascades profile parts: health entries, contacts, reviews).
 
-What survives: the inventory ledger (anonymized), the audit trail (Student Number only), generated paper copies. What changes: historical report numbers computed from live data will drop (D-13). Run it only after a verified backup.
+What survives: the inventory ledger (anonymized), the audit trail (internal student id only, never the LRN), generated paper copies. What changes: historical report numbers computed from live data will drop (D-13). Run it only after a verified backup.
 
 ---
 
@@ -622,13 +622,12 @@ Each row is a real situation and where the design handles it. "DB" = enforced by
 
 | Situation | How it's handled |
 |---|---|
-| Two students share a name and grade (namesakes, twins) | Warning only, never a unique constraint: `idx_students_name` supports the check; the Student Number tells them apart (App). |
+| Two students share a name and grade (namesakes, twins) | Warning only, never a unique constraint: `idx_students_name` supports the check; the masked LRN and grade level tell them apart (App). |
 | A returning student was archived earlier | The mock's duplicate check ignores archived students, so the nurse could create a second record and split the history. Make the check include archived matches and offer **Restore** (D-11). Restoring keeps the same number (App). |
 | Student transfers or graduates | Archive with `archive_reason`; kept 5 years; purge afterwards (DB + App). |
 | Name has an accent or different capitalization ("Nuñez") | Collation matches accent- and case-insensitively (DB, tested). |
-| Two staff save a new student at the same instant | Student Number comes from the atomic counter, not `max()+1`; no collision (DB, tested). |
-| Year rolls over | A new `(student_number, '2027')` row starts at 1; no reset job needed (DB, tested). |
-| A student number is mistyped in a student search | Lookup is by exact unique number; the CHECK also guarantees only valid shapes exist (DB). |
+| Two staff save the same LRN at the same instant | The UNIQUE key on `lrn` rejects the second save (DB). |
+| An LRN is mistyped on a student record | It is corrected in Edit Student; the change is audited as "Updated LRN", with neither value (App). The CHECK guarantees 12 digits (DB). |
 | Registrar import row has no grade or contact | `grade_level_id` and `contact_number` are nullable; a review row flags it; "record complete" is derived (DB + App). |
 | Same masterlist file imported twice | `source_file_sha256` is unique, so the second apply is refused (DB). |
 | Student has no allergies vs. was never asked | `health_reviewed_at` can tell the two apart once decided (D-03). |
@@ -696,7 +695,7 @@ Each row is a real situation and where the design handles it. "DB" = enforced by
 | Password reuse of the last 5 | `password_histories` (App). |
 | A user's role changes later | Audit rows snapshot `actor_role`, so old actions show the role held at the time (D-01). |
 | Head Nurse absent | `is_head_nurse` marks the actions reserved to her; the client has not answered who covers (D-04). |
-| Audit entry for a record that was purged | No FK; Student Number snapshot remains (DB). |
+| Audit entry for a record that was purged | No FK; the student id snapshot remains (DB). |
 | System actions (backup ingest, holiday sync, purge) | `actor_user_id` NULL (DB). |
 | Someone edits or deletes an audit row | There is no API path; in production the app's DB account also lacks UPDATE/DELETE on the table (App + hardening). Hash-chaining is a later option (section 12). |
 | Audit table growth | Measured 390 MB for 1.5 million rows; retention purge by date keeps it bounded (section 10). |
@@ -710,7 +709,7 @@ Each row is a real situation and where the design handles it. "DB" = enforced by
 | An estimated Islamic holiday is later confirmed on another date | Unique key includes the date, so the sync must delete unconfirmed rows for that name and year before inserting (App, noted in the dictionary). |
 | Event spans two months | Generated `last_date` makes the overlap query an index range scan (DB, tested). |
 | Backup fails or the DB itself is the problem | The script writes a status file; Laravel ingests it later; a failed run is recorded and cannot be verified (DB). |
-| Restoring an older backup | Student Numbers issued after that backup may already be in use and would be reissued. After any restore, run a command that bumps every `number_sequences` row ahead (for example +200) before opening the app (D-14). |
+| Restoring an older backup | Reference numbers issued after that backup may be reissued. After any restore, run a command that bumps every `number_sequences` row ahead (for example +200) before opening the app (D-14). |
 | Threshold needs tuning (frequent-visitor count, expiry window) | Edit `system_settings`; no deployment (DB). |
 | Dev, staging and production differ in engine | Only portable features are used (section 1). |
 | System later moves to a cloud server | Everything is API-driven; ULID keys become an option (K-3). |
@@ -733,7 +732,7 @@ Run on MariaDB 10.11 with 2,000 students, 150,000 visits, 25,000 incidents, 25,0
 | Audit by date range + user / + action type | 1.7 ms / 0.8 ms |
 | Audit by target type, newest first | 4.7 ms |
 | Audit row count for one month (pagination) | 7.2 ms |
-| Audit history of one Student Number | 0.4 ms |
+| Audit history of one student | 0.4 ms |
 | Due follow-ups | 0.8 ms |
 | Student search, prefix / contains | 0.9 ms / 1.8 ms |
 | Incidents still in Stage 1 | 1.6 ms |
@@ -763,7 +762,7 @@ Each has a recommended default so the design stands either way. "Cost to change 
 | **D-11** | Should the duplicate check include archived students and offer Restore? | Yes. | App rule only. |
 | **D-12** | Encrypt sensitive columns (allergies, conditions)? | No: it would block the "flag students with restrictions" search. Use BitLocker on the workstation, encrypted backup drives, role-scoped API. | Moderate. |
 | **D-13** | After a purge, historical report numbers drop. Freeze monthly totals before purging? | Keep PDF exports of official reports; optionally store `reports.frozen_data` later. | Cheap. |
-| **D-14** | Student Number reuse after restoring an older backup. | Post-restore command that bumps all sequences; add to the recovery checklist. | Cheap. |
+| **D-14** | Reference-number reuse after restoring an older backup (Student Numbers no longer exist, ADR-028). | Post-restore command that bumps all sequences; add to the recovery checklist. | Cheap. |
 | **D-15** | Split `full_name` into last/first/middle? | Wait for the registrar's file format, then add columns and keep `full_name` as the displayed value. | Moderate. |
 | **D-16** | Role storage: one `users.role` column or Spatie `laravel-permission` (suggested in Development-Phases)? | One column + policy classes. Roles are fixed (3), one per user, and the matrix is static; Spatie adds 5 tables for a 3-row matrix. | Moderate. |
 | **D-17** | Do vitals live in readings rows or as columns on `incidents`? | Readings rows (keeps the Stage 1 reading and allows rechecks); the API still presents one merged `vitals` object. | Expensive to flip later. |
@@ -789,7 +788,6 @@ These are deliberate. Each needs a yes/no from the team, and a matching change i
 | Triage | Checklist shown; completion not stored | `triage_checks` stores it | Module 7: "save checklist completion with the visit record". |
 | Triage editing | Static data | `triage_steps` editable | Module 7: Head Nurse can edit content. |
 | Settings | Constants in the mock config | `system_settings` | The requirements call these open decisions. |
-| Student Number generation | `max() + 1` in memory | Atomic counter table | Safe under concurrent saves. |
 | Reference numbers | Internal ids on printouts (known issue) | `reference_no` from the same counter table | Closes the Issues-and-TODOs item. |
 | Database engine | "MySQL" | "MariaDB (XAMPP), MySQL-compatible" | What XAMPP actually installs. |
 | Visit logbook fields (Tuesday, October 20, 2026) | `Visit` has five optional, nullable fields from the clinic's daily logbook: `temperatureC` (°C), `timeOut` ("HH:MM" on the visit's date, not before the time in), `assistedBy`, `parentGuardian` (free-text names) and `remarks` (free text). PROVISIONAL. | Not in this draft yet. Suggested: `visits.temperature_c DECIMAL(4,1) NULL`, `visits.time_out TIME NULL` (CHECK not before `TIME(visited_at)`), `assisted_by VARCHAR NULL`, `parent_guardian VARCHAR NULL`, `remarks TEXT NULL`. A note only, no schema change until the team approves. | The clinic's own logbook has these columns. `assisted_by` is a name, kept apart from the signed-in `logged_by`, because the helper may have no account. Unlike an incident, a visit takes one reading only (temperature), so it stays a column, not `incident_vital_readings`. |
@@ -797,7 +795,6 @@ These are deliberate. Each needs a yes/no from the team, and a matching change i
 
 **Extension points, deliberately not built.** Each is an additive change if the need appears.
 
-- `student_identifiers` (student_id, scheme, value): school barcode or LRN, if the pending barcode proposal (ADR-005) is approved. Scanning would try the Student Number first, then identifiers.
 - `student_grade_history` and `student_import_rows`: yearly promotion history and a staged import preview, once the client answers the masterlist questions.
 - `inventory_batches`: per-batch expiry if the clinic ever needs it.
 - `voided_at`/`voided_reason` on visits and incidents, with stock-return adjustments, if voiding is ever allowed.

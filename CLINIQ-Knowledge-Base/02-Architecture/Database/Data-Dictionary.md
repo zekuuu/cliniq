@@ -11,7 +11,7 @@ How to read it: **Tier** is `Core` (a built screen or the mock already needs it)
 | 1 | [`users`](#users) | UserManagement | Core | Accounts for Staff and Admin/Principal. |
 | 2 | [`password_histories`](#password_histories) | UserManagement | Core | The last N password hashes per user, so "no reuse of the last 5" can be checked without storing plaintext. |
 | 3 | [`system_settings`](#system_settings) | Shared | Core | Tunable thresholds and policy numbers that the requirements leave open, so changing one is a data change, not a deployment. |
-| 4 | [`number_sequences`](#number_sequences) | Shared | Core | Collision-free counters: Student Numbers per enrollment year, and reference numbers for printed documents. |
+| 4 | [`number_sequences`](#number_sequences) | Shared | Core | Collision-free counters for reference numbers on printed documents. |
 | 5 | [`grade_levels`](#grade_levels) | Shared | Core | Ordered list of grade levels. |
 | 6 | [`complaint_types`](#complaint_types) | SmartTriage | Core | Predefined complaint labels. |
 | 7 | [`triage_steps`](#triage_steps) | SmartTriage | Core | Ordered first-aid checklist steps per complaint type. |
@@ -124,13 +124,13 @@ Tunable thresholds and policy numbers that the requirements leave open, so chang
 
 **Module:** Shared  |  **Tier:** Core
 
-Collision-free counters: Student Numbers per enrollment year, and reference numbers for printed documents.
+Collision-free counters for reference numbers on printed documents. (Student Numbers no longer exist; students carry the LRN, ADR-028.)
 
-**Frontend:** `nextStudentNumber()` (max + 1) in the mock, which is not safe under concurrent saves.
+**Frontend:** not in the mock.
 
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
-| `sequence_name` | `varchar(40)` | no |  | e.g. `student_number`, `excuse_letter`, `incident_report`. |
+| `sequence_name` | `varchar(40)` | no |  | e.g. `excuse_letter`, `incident_report`. |
 | `scope` | `varchar(10)` | no |  | The year (`2026`). A new year simply creates a new row, which is what resets the sequence. |
 | `last_value` | `int unsigned` | no | 0 | Increment atomically: `INSERT ... ON DUPLICATE KEY UPDATE last_value = LAST_INSERT_ID(last_value + 1)`, then read `LAST_INSERT_ID()`. Inside the same transaction as the insert that uses it. Gaps after a rollback are acceptable. |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
@@ -235,14 +235,14 @@ One row per registrar masterlist import, for traceability and for "which import 
 
 **Module:** StudentRecords  |  **Tier:** Core
 
-The student record. The Student Number is the public identifier (lists, URLs); `id` is internal and never shown.
+The student record. The LRN identifies the student to people (masked on lists, ADR-028); `id` is internal, never shown, and the only key used in URLs and foreign keys.
 
-**Frontend:** `Student` (id, studentNumber, fullName, gradeLevel, contactInfo, archived). `allergies`, `medicalConditions`, `emergencyContact` move to child tables; `recordComplete` is derived.
+**Frontend:** `Student` (id, lrn, fullName, gradeLevel, contactInfo, archived). `allergies`, `medicalConditions`, `emergencyContact` move to child tables; `recordComplete` is derived.
 
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
 | `id` **PK** | `bigint unsigned` | no |  |  |
-| `student_number` | `char(10)` | no |  | `YYYY-NNNNN`, unique, IMMUTABLE. CHECK enforces the shape. Generated from `number_sequences`, never by `max()+1`. |
+| `lrn` | `char(12)` | no |  | Learner Reference Number, entered by Staff: exactly 12 digits, stored as text so leading zeros survive, unique, editable (a correction is audited as "Updated LRN", no values). Never in a URL or an audit entry (ADR-028). |
 | `full_name` | `varchar(150)` | no |  | Required and non-blank. Single field for now; splitting into last/first/middle waits for the registrar file format (D-15). Accent- and case-insensitive matching comes from the collation. |
 | `grade_level_id` | `bigint unsigned` | yes | NULL | Nullable on purpose: an imported record may lack it and is then flagged "incomplete". Never nullable for a completed record (rule in the app). |
 | `sex` | `varchar(6)` | yes | NULL | `female` or `male`, as recorded by the school. Required for a completed record (ADR-031); nullable during an incomplete import. |
@@ -258,7 +258,7 @@ The student record. The Student Number is the public identifier (lists, URLs); `
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
 
-**Indexes:** `idx_students_archived_at` (`archived_at`); `idx_students_grade_archived` (`grade_level_id`, `archived_at`); `idx_students_name` (`full_name`); UNIQUE `uq_students_number` (`student_number`)
+**Indexes:** `idx_students_archived_at` (`archived_at`); `idx_students_grade_archived` (`grade_level_id`, `archived_at`); `idx_students_name` (`full_name`); UNIQUE `uq_students_lrn` (`lrn`)
 
 **Foreign keys:** `archived_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `import_batch_id` -> `student_import_batches`(`id`) ON DELETE RESTRICT; `created_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `grade_level_id` -> `grade_levels`(`id`) ON DELETE RESTRICT; `health_reviewed_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
 
@@ -267,7 +267,7 @@ The student record. The Student Number is the public identifier (lists, URLs); `
 - `chk_students_archive_pair`: `archived_at is null and archive_reason is null and archived_by_user_id is null or archived_at is not null`
 - `chk_students_archive_reason`: `archive_reason is null or archive_reason in ('transferred','graduated','other')`
 - `chk_students_name`: `char_length(trim(full_name)) >= 1`
-- `chk_students_number`: `student_number regexp '^[0-9]{4}-[0-9]{5}$'`
+- `chk_students_lrn`: `lrn regexp '^[0-9]{12}$'`
 - `chk_students_sex`: `sex is null or sex in ('female','male')`
 
 ## student_health_entries
@@ -954,11 +954,11 @@ Append-only record of who did what and when (RA 10173 accountability). Written f
 | `action_type` | `varchar(8)` | no |  |  |
 | `target_type` | `varchar(40)` | yes | NULL | Controlled vocabulary kept in code (e.g. `student`, `visit`, `incident`, `excuse_letter`, `inventory_item`, `inventory_transaction`, `calendar_event`, `backup_log`). Not a CHECK, so adding a target needs no ALTER on the biggest table. |
 | `target_id` | `bigint unsigned` | yes | NULL | Id of the target row. NO foreign key on purpose: the log must outlive purged records. |
-| `subject_student_number` | `char(10)` | yes | NULL | Snapshot of the Student Number the action concerned (resolves the viewer's "Student 2023-00002" label without a join, and survives a purge). |
+| `subject_student_id` | `bigint unsigned` | yes | NULL | Snapshot of the student the action concerned, by internal id: no FK, so it survives a purge. Never the LRN (ADR-028); the viewer shows the masked LRN while the student exists. |
 | `summary` | `varchar(255)` | yes | NULL | Field names or states only, never values (ADR-017). Max 255. |
 | `client_ip` | `varbinary(16)` | yes | NULL | Optional. IPv4/IPv6 as 4 or 16 bytes; useful to tell the workstation from a phone. |
 
-**Indexes:** `idx_audit_action_time` (`action_type`, `occurred_at`); `idx_audit_actor_time` (`actor_user_id`, `occurred_at`); `idx_audit_subject` (`subject_student_number`, `occurred_at`); `idx_audit_target` (`target_type`, `target_id`); `idx_audit_target_time` (`target_type`, `occurred_at`); `idx_audit_time` (`occurred_at`)
+**Indexes:** `idx_audit_action_time` (`action_type`, `occurred_at`); `idx_audit_actor_time` (`actor_user_id`, `occurred_at`); `idx_audit_subject` (`subject_student_id`, `occurred_at`); `idx_audit_target` (`target_type`, `target_id`); `idx_audit_target_time` (`target_type`, `occurred_at`); `idx_audit_time` (`occurred_at`)
 
 **Foreign keys:** `actor_user_id` -> `users`(`id`) ON DELETE RESTRICT
 
