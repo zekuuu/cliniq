@@ -94,6 +94,9 @@
     color: var(--color-text-primary);
     background-color: var(--color-background);
     scrollbar-gutter: stable;
+    /* Focus scrolling stops clear of the sticky 4rem top bar and of the bottom edge, with room
+       for the 2px + 2px-offset focus ring on both sides. */
+    scroll-padding-block: calc(4rem + 0.5rem) 0.5rem;
   }
   /* Login fills the viewport and never scrolls on desktop; a reserved gutter would show as a white strip beside the photo. */
   html:has([data-login-page]) {

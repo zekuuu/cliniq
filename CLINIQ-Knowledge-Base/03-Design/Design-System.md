@@ -90,6 +90,8 @@ Should be especially intuitive for non-technical users. Use real labels, not pla
 
 **Failed submit (Wednesday, October 14, 2026 — 17:59):** when a save fails validation, focus moves to the first invalid field, scrolled into view clear of the sticky top bar, and screen readers hear how many fields need attention. One shared hook does this on every entry and edit form. Rules: `.claude/skills/cliniq-input-patterns/`.
 
+**Focus ring never clipped (Tuesday, October 20, 2026 — 17:42 PHT):** the one focus ring (2px outline, 2px offset, `brand-green-dark`) must show whole on all four sides. Scrolling containers keep 4px of room and scroll padding for it, keyboard focus is scrolled fully into view clear of the sticky top bar, no button spills out of its table column, and popovers close when focus leaves them. Rules: `.claude/skills/cliniq-interactive-states/` ("Room for the focus ring").
+
 ### Navigation
 Predictable and simple. Familiar terminology over technical jargon. Make the current location obvious, keep important functionality easy to discover, keep recurring controls in a consistent place, and organize navigation around what the user is trying to do — not around the app's internal module structure.
 

@@ -63,8 +63,23 @@ export function DataTable<Row>({
   return (
     <div
       tabIndex={0}
+      onFocus={
+        stickyFirstColumn || stickyLastColumn
+          ? (event) => {
+              // Keyboard focus is scrolled into view (main.tsx) clear of the pinned columns, which
+              // would otherwise cover a focused cell and its ring.
+              const scroller = event.currentTarget
+              const head = scroller.querySelectorAll<HTMLElement>('thead th')
+              const ring = 6
+              if (stickyFirstColumn) scroller.style.scrollPaddingLeft = `${(head[0]?.offsetWidth ?? 0) + ring}px`
+              if (stickyLastColumn) scroller.style.scrollPaddingRight = `${(head[head.length - 1]?.offsetWidth ?? 0) + ring}px`
+            }
+          : undefined
+      }
       className={cn(
-        'relative overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green',
+        // -mx-1 px-1: 4px inside the scroller for the focus ring of a cell flush with its edge;
+        // scroll-px-1.5 keeps that room (plus sub-pixel slack) when focus scrolls a cell into view.
+        'relative -mx-1 scroll-px-1.5 overflow-x-auto px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green',
         className,
       )}
     >

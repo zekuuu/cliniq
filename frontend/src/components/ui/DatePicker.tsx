@@ -342,7 +342,14 @@ export function DatePicker({
   const todayAllowed = isMonth ? !monthDisabled(today) : !dayDisabled(today)
 
   return (
-    <div ref={rootRef} className={cn('flex flex-col gap-1', className)}>
+    <div
+      ref={rootRef}
+      onBlur={(event) => {
+        // Tab out closes the calendar, as an outside click does; otherwise it covers what gets focus.
+        if (event.relatedTarget && !rootRef.current?.contains(event.relatedTarget as Node)) setOpen(false)
+      }}
+      className={cn('flex flex-col gap-1', className)}
+    >
       <label htmlFor={pickerId} className="text-xs font-semibold text-text-primary">
         {label}
         {required && (

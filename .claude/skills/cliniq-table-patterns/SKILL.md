@@ -28,6 +28,9 @@ Use this alongside `cliniq-interactive-states`, `cliniq-pagination-patterns`,
 - When a fixed-layout table must grow past its scroller (a wide time series), give it an explicit `minTableWidth` equal to the sum of its column widths (e.g. `calc(26ch + 12 * 8rem + 5rem)`). Don't use `min-w-max` / `min-width: max-content` on a fixed-layout table: how browsers resolve max-content for `table-layout: fixed` isn't consistently defined. Don't drop `fixedLayout` to get overflow either: the column widths only apply with it, so columns would reshuffle as rows are filtered.
 - Verify the actual scroll interaction at the left edge, middle, and far-right positions. Each sticky edge column must remain inside the scroller viewport, readable, and not show the columns underneath through its background.
 
+- No button or link may spill out of its column at any width: a fixed-layout table whose columns are percentages or unsized gets a `minTableWidth` large enough for its widest action at the narrowest column share (Visits 48rem, Incidents 58rem, Follow-Ups 60rem, Students 40rem, Accounts 48rem, Inventory 62.5rem), and an Actions cell with several buttons lets them wrap (`flex flex-wrap`). A spilled button is cut off by the scroller, with its focus ring (Tuesday, October 20, 2026 — 17:42 PHT).
+- `DataTable`'s scroller keeps 4px of room for the focus ring (`-mx-1 px-1`, `scroll-px-1.5`) and, with pinned columns, scroll padding the width of the pinned column, so a focused cell never scrolls under it (`cliniq-interactive-states`, "Room for the focus ring").
+
 ## Wide time-series tables
 
 - Cap period columns in the table view itself when a date range can produce a wide time series; do not cap the shared aggregation or chart data just to make a table fit.

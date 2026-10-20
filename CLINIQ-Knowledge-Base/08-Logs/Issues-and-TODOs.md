@@ -15,7 +15,7 @@
 
 ## Open work at a glance
 
-Open: FIX 16 · AUDIT 10 · DOC 29 · DECIDE 78 · LATER 17 | Notes: NOTE 45 · VERIFY 16 | Done: 187 (all in `Issues-Done-Archive.md`)
+Open: FIX 16 · AUDIT 10 · DOC 29 · DECIDE 80 · LATER 17 | Notes: NOTE 48 · VERIFY 17 | Done: 187 (all in `Issues-Done-Archive.md`)
 
 **Open `FIX` items:**
 
@@ -38,7 +38,7 @@ Open: FIX 16 · AUDIT 10 · DOC 29 · DECIDE 78 · LATER 17 | Notes: NOTE 45 · 
 
 - **AUDIT** (10): Free-text complaints and student lookup; Pending excuse letters on the Dashboard and profile; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep; Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026)
 - **DOC** (29): Issues-and-TODOs fix sweep; Groupmate system review; Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); README sync; Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open
-- **DECIDE** (78): Open decisions, waiting on someone outside the dev team; Open design questions; Known gaps; QR scan/lookup; Visit and incident entry; Open after the Group B fixes; Open product decisions from the mock-data layer; Free-text complaints and student lookup; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep; Groupmate system review; Dashboard view tabs (ADR-025); Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; Meeting with the clinician
+- **DECIDE** (80): Open decisions, waiting on someone outside the dev team; Open design questions; Known gaps; QR scan/lookup; Visit and incident entry; Open after the Group B fixes; Open product decisions from the mock-data layer; Free-text complaints and student lookup; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep; Groupmate system review; Dashboard view tabs (ADR-025); Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; Meeting with the clinician; Keyboard focus outline clipping
 - **LATER** (17): Known gaps; Reported UI/UX follow-ups; Medicines & supplies given (ADR-018); Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); README sync; Professor consultation and team meeting, October 16
 
 ---
@@ -112,7 +112,7 @@ Open: FIX 16 · AUDIT 10 · DOC 29 · DECIDE 78 · LATER 17 | Notes: NOTE 45 · 
 - Does the phone Emergency button stay?
 - Ask the Principal about PE instructors, now that the team plans no direct access
 
-**Ours to decide (28)** — Product, design and code choices that need no outside answer, although some ask the clinician for input (named in the entry). Zean has the last word.
+**Ours to decide (30)** — Product, design and code choices that need no outside answer, although some ask the clinician for input (named in the entry). Zean has the last word.
 
 - Holiday source for the backend sync job
 - Additional backup layer beyond local + external drive
@@ -142,6 +142,8 @@ Open: FIX 16 · AUDIT 10 · DOC 29 · DECIDE 78 · LATER 17 | Notes: NOTE 45 · 
 - Set the date, the place and who attends the next meeting
 - Monthly Report and complaint list: follow the clinic's own report
 - Inventory: a monthly sheet like the clinic's notebook
+- Incomplete Records on a phone: the pinned Student column leaves no room for "Edit Record"
+- Add Playwright to the project for a pixel-level focus-ring regression test?
 
 ## Open decisions, waiting on someone outside the dev team
 
@@ -592,6 +594,20 @@ Left by the session that rebuilt every Print / Save as PDF as an A4 document at 
 - [ ] **[DECIDE]** **Inventory: a monthly sheet like the clinic's notebook** (logged Tuesday, October 20, 2026 — 14:58 PHT). The clinic's page has, per item and month: unit, New Purchase, Total Available and Ending Inventory (transcribed in "The clinic's own papers"). The system tracks stock movements (ADR-018) and batches with expiry dates, so it could print the same sheet: new purchase = restocks in the month, total available = stock at the start plus restocks, ending = stock at month end. Decide: whether to add that printout (under Reports or Inventory); whether "Ending Inventory" is the system's figure or a physical count the clinician types in, since the two can differ; how brand names and strengths are written (the clinic lists Mefenamic 500 mg tablet and 250 mg capsule as two rows); and what happens to the expiry check she does by hand every month, because her page has no expiry column and the system's batch expiry could replace that check. Related: "Inventory: expiry must be tracked per batch". Session: [2026-10-20-clinician-meeting-findings](Agent-Sessions/2026-10-20-clinician-meeting-findings.md)
 
 - **[VERIFY]** **What the recording does not give us** (logged Tuesday, October 20, 2026 — 14:58 PHT): lost stretches 00:00 to 00:20, 02:36 to 03:30, 04:20 to 04:50, 06:12 to 06:54, 09:25 to 10:12, the equipment talk at 10:12 to 10:59 (including an item that "needs to be replaced", possibly unrelated), and the last 20 seconds. Interpreted rather than clear: the answers on staff records, on what is "not done" with the inventory, and the remark about the RHU. Unclear: whether the clinic has a blood-pressure apparatus (only the oximeter was heard). Session: [2026-10-20-clinician-meeting-findings](Agent-Sessions/2026-10-20-clinician-meeting-findings.md)
+
+## Keyboard focus outline clipping — Tuesday, October 20, 2026 — 17:42 PHT
+
+- **[NOTE]** **About this section** (logged Tuesday, October 20, 2026 — 17:42 PHT). Playwright audit of every route, role and listed state at 1440, 1024, 768 and 390 px for focus outlines that a container clips, another layer covers, or that sit off-screen when focused: 1,464 problem stops before the fixes, 6 after (with real Windows scrollbars, at 100% and 125% display scaling). The script and its results stay outside the repo (`%USERPROFILE%\cliniq-audit\audit-focus.mjs`, `results-*.csv`, `shots-*\`). Session: [2026-10-20-focus-outline-clipping-audit](Agent-Sessions/2026-10-20-focus-outline-clipping-audit.md)
+
+- [ ] **[DECIDE]** **Incomplete Records on a phone: the pinned Student column leaves no room for "Edit Record"** (logged Tuesday, October 20, 2026 — 17:42 PHT). At 390 px the pinned first column (19% of the table's 60rem minimum, 182px) leaves about 129px of scrolling area; the "Edit Record" button needs 134px with its focus ring, so 2.5px of the ring is cut on the right, or 2px of it sits under the pinned column (6 audit stops, the only ones left). Options: (a) a narrower pinned column below `sm` (for example the Student Number only), (b) no pinned column below `sm`, (c) accept it. The pinned column was chosen on October 19 (Changelog 02:44 PHT), so this is not changed without Zean. Session: [2026-10-20-focus-outline-clipping-audit](Agent-Sessions/2026-10-20-focus-outline-clipping-audit.md)
+
+- [ ] **[DECIDE]** **Add Playwright to the project for a pixel-level focus-ring regression test?** (logged Tuesday, October 20, 2026 — 17:42 PHT). jsdom has no layout, so the new in-repo tests only check the classes that give the ring room (and that popovers close on Tab-out). A Playwright test in the repo could measure the real pixels on every push, but it adds a dev dependency and a browser download, which is new technology for the project. Until then, re-run the audit outside the repo after changes to the shell, a shared scroller or a popover. Session: [2026-10-20-focus-outline-clipping-audit](Agent-Sessions/2026-10-20-focus-outline-clipping-audit.md)
+
+- **[NOTE]** **Layout changes that came with the fix, open to veto** (logged Tuesday, October 20, 2026 — 17:42 PHT). (1) Inventory's Actions cell had four buttons (359px) in a 16.5rem column since Batches was added on October 17: Batches was cut and Edit was not visible even at 1440. The buttons now wrap onto two rows, as Visits and Incidents already do, so Inventory rows are taller. The alternative is a wider Actions column, which then squeezes the "Next usable expiry" header at 1440. (2) Visits (48rem), Incidents (58rem), Follow-Ups (60rem), Students (40rem), Accounts (48rem) and Inventory (62.5rem) now have a minimum table width, so below it they scroll sideways (at 1024 px for Visits, Incidents, Follow-Ups and Accounts) instead of cutting their buttons off. Session: [2026-10-20-focus-outline-clipping-audit](Agent-Sessions/2026-10-20-focus-outline-clipping-audit.md)
+
+- **[VERIFY]** **Add Student "Back" once landed under the top bar** (logged Tuesday, October 20, 2026 — 17:42 PHT). In the visible after-fix pass on Zean's screen (1440, 125% scaling), focusing "Back" on /students/new left it 27px above the viewport, under the sticky top bar. Not reproduced: the fresh visible re-run of /students/new (69 stops) and every headless run show 0 problems. Probably the page hot-reloaded during that pass (a Sidebar edit was saved while it ran); re-check if it is ever seen again. Session: [2026-10-20-focus-outline-clipping-audit](Agent-Sessions/2026-10-20-focus-outline-clipping-audit.md)
+
+- **[NOTE]** **The `label-content-name-mismatch` nodes, identified** (logged Tuesday, October 20, 2026 — 17:42 PHT). Present before and after this change, not touched: the date-range trigger is named "Date range" while it shows the preset ("All"), and the Calendar day buttons' names do not start with their visible text (31 nodes on /calendar). Relates to the `VERIFY` "axe `label-content-name-mismatch` on 2 Dashboard nodes" (Dashboard view tabs section). Session: [2026-10-20-focus-outline-clipping-audit](Agent-Sessions/2026-10-20-focus-outline-clipping-audit.md)
 
 ## Format for new entries
 When you find or resolve something, add it here with a date and enough context that someone with zero memory of the conversation that created it can still act on it.

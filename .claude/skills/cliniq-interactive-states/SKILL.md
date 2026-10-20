@@ -40,6 +40,13 @@ shows Back (`cliniq-back-navigation-patterns`).
 
 **Dropdowns and selects must match the design system — never left as native OS/browser chrome.** A plain `<select>` renders with whatever the operating system defaults to, and that default has nothing to do with `brand-green`, this system's border-radius, or its focus-ring treatment. Minimum fix, no new dependency required: `appearance: none`, a custom chevron icon, and the same border/background/border-radius/focus-ring styling already used on text inputs. Only reach for a headless UI library (Radix UI, Headless UI) if genuinely richer interaction is needed later — not as the default fix for basic styling. In practice, don't style a native `<select>` at all: use the shared `Select`, `DateRangePicker`, or `MultiSelect`, which already share one look (see `cliniq-dropdown-patterns`).
 
+**Room for the focus ring (Tuesday, October 20, 2026 — 17:42 PHT).** The one focus ring (`index.css`: 2px outline, 2px offset, never changed per component) is drawn 4px outside the element, and any `overflow` other than `visible` on an ancestor cuts it off, on both axes (`overflow-y-auto` clips horizontally too). So:
+- A scrolling container whose focusable items touch its edge keeps 4px of room inside that edge without moving its items: `-m-1 p-1` (or `-mx-1 px-1` for a horizontal scroller), widening a full-width container by `0.5rem` (`w-[calc(100%+0.5rem)]`), as the sidebar nav and the phone navigation do.
+- It also gets scroll padding (`scroll-py-1` vertical, `scroll-px-1.5` horizontal), so focus scrolling stops short of the edge. The page itself has `scroll-padding-block` that clears the sticky 4rem top bar.
+- Do not rely on Chrome to reveal a partly visible element; `main.tsx` scrolls every `:focus-visible` target into view (`nearest`), which honours that scroll padding.
+- Never fix a clipped ring with `outline: none`, `:focus` instead of `:focus-visible`, a smaller offset or a different color. If padding would break the layout, draw it inside for that component only (`outline-offset: -2px`) and say so.
+- Check with the focus audit (`%USERPROFILE%\cliniq-audit\audit-focus.mjs`, Session 2026-10-20-focus-outline-clipping-audit), not by eye.
+
 ## When to apply this
 
 Every time you build or touch a button, link, dropdown, icon action, or navigable row — check this before considering it done, as part of the Audit step in `04-Development/Frontend-Loop-Engineering.md`. Don't wait for a visual review to catch a missing hover state; it should never ship without one in the first place.

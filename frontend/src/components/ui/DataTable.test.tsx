@@ -86,4 +86,19 @@ describe('DataTable sortable headers', () => {
       'bg-background',
     )
   })
+
+  it('keeps room inside its horizontal scroller for the focus ring of an edge cell', () => {
+    render(
+      <DataTable
+        caption="Records"
+        columns={[{ key: 'action', header: 'Actions', cell: () => <a href="/x">View</a> }]}
+        rows={[{ id: 'row-1' }]}
+        rowKey={(row) => row.id}
+      />,
+    )
+
+    // 4px padding cancelled by a -4px margin (layout unchanged), and scroll-padding so focus
+    // scrolling stops 6px short of the edge: the 2px ring with its 2px offset fits, with slack.
+    expect(screen.getByRole('link', { name: 'View' }).closest('.overflow-x-auto')).toHaveClass('-mx-1', 'px-1', 'scroll-px-1.5')
+  })
 })

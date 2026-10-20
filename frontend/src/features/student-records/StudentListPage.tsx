@@ -230,6 +230,7 @@ export function StudentListPage() {
                 rows={sortedData}
                 rowKey={(student) => student.id}
                 fixedLayout
+                minTableWidth="40rem"
               />
             ) : (
               <EmptyState

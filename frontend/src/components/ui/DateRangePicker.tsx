@@ -181,6 +181,13 @@ export function DateRangePicker({
   return (
     <div
       ref={rootRef}
+      onBlur={(event) => {
+        // Tab out closes the menu and popover, as an outside click does; otherwise they cover what gets focus.
+        if (event.relatedTarget && !rootRef.current?.contains(event.relatedTarget as Node)) {
+          setOpen(false)
+          setCustomOpen(false)
+        }
+      }}
       className={cn(
         floating
           ? cn('relative flex', !fullWidth && 'justify-end')

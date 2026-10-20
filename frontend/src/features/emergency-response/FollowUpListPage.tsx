@@ -185,6 +185,7 @@ export function FollowUpListPage() {
               rows={sortedRows}
               rowKey={(item) => item.id}
               fixedLayout
+              minTableWidth="60rem"
             />
           ) : (
             <EmptyState

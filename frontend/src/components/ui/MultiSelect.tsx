@@ -62,7 +62,14 @@ export function MultiSelect({
   }
 
   return (
-    <div ref={rootRef} className={cn('relative flex flex-col gap-1', className)}>
+    <div
+      ref={rootRef}
+      onBlur={(event) => {
+        // Tab out closes the panel, as an outside click does; otherwise it covers what gets focus.
+        if (event.relatedTarget && !rootRef.current?.contains(event.relatedTarget as Node)) setOpen(false)
+      }}
+      className={cn('relative flex flex-col gap-1', className)}
+    >
       <span id={`${id}-label`} className="text-xs font-semibold text-text-primary">
         {label}
       </span>

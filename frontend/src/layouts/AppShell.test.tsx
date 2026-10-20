@@ -6,6 +6,23 @@ import { getRecordedAuditEntries } from '../lib/mock-db'
 import { AppShell } from './AppShell'
 import { navGroupsFor } from './navigation'
 
+/**
+ * The global focus ring is a 2px outline 2px outside the element, so an `overflow` container cuts it
+ * off unless it keeps 4px of room inside its edge (padding) and scrolls focus clear of that edge
+ * (scroll-padding). jsdom has no layout, so this checks the classes that give the room; the
+ * Playwright focus audit measures the real pixels.
+ */
+function clippingAncestorsWithoutRingRoom(element: Element): string[] {
+  // The nearest scroller is the one an edge item touches; outer ones are a padded dialog or page.
+  const scroller = element.parentElement?.closest('.overflow-y-auto, .overflow-x-auto')
+  if (!scroller) return []
+  const classes = scroller.classList
+  const room = classes.contains('overflow-y-auto')
+    ? classes.contains('p-1') && classes.contains('scroll-py-1')
+    : classes.contains('px-1') && classes.contains('scroll-px-1.5')
+  return room ? [] : [`${scroller.tagName} ${scroller.className}`]
+}
+
 describe('App Shell / Navigation', () => {
   it('shows Staff navigation groups across modules', () => {
     renderWithRouter(
@@ -271,5 +288,27 @@ describe('App Shell / Mobile navigation', () => {
     )
     expect(navGroupsFor('instructor')).toEqual([])
     expect(screen.queryByRole('button', { name: 'Open navigation' })).not.toBeInTheDocument()
+  })
+
+  it('leaves room for the focus ring inside the scrolling sidebar and phone navigation', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(
+      <AppShell user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} active="auditLog" onLogout={() => {}}>
+        <div>Screen</div>
+      </AppShell>,
+    )
+
+    const sidebarLinks = within(screen.getByRole('navigation', { name: 'Main' })).getAllByRole('link')
+    expect(sidebarLinks.length).toBeGreaterThan(5)
+    sidebarLinks[0].focus()
+    for (const link of sidebarLinks) {
+      expect(link).toHaveFocus()
+      expect(clippingAncestorsWithoutRingRoom(link)).toEqual([])
+      await user.tab()
+    }
+
+    await user.click(screen.getByRole('button', { name: 'Open navigation' }))
+    const phoneLinks = within(await screen.findByRole('navigation', { name: 'Mobile navigation' })).getAllByRole('link')
+    for (const link of phoneLinks) expect(clippingAncestorsWithoutRingRoom(link)).toEqual([])
   })
 })

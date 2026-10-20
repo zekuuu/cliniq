@@ -119,11 +119,14 @@ export function Sidebar({
         )}
       </div>
 
+      {/* overflow-y-auto also clips horizontally, so the nav gets 4px of padding (the focus ring's
+          2px width + 2px offset) on every side, cancelled by a -4px margin so items keep their place. */}
       <nav
         aria-label="Main"
         className={cn(
-          'flex min-h-0 flex-1 w-full flex-col overflow-y-auto',
-          collapsed ? 'items-center gap-2 pr-0' : 'gap-4 pr-1',
+          '-m-1 flex min-h-0 w-[calc(100%+0.5rem)] flex-1 scroll-py-1 flex-col overflow-y-auto p-1',
+          // The collapsed rail is 4.75rem: a full Windows scrollbar would leave less than its 40px icons.
+          collapsed ? 'items-center gap-2 scrollbar-thin' : 'gap-4 pr-2',
         )}
       >
         {groups.map((group) => {

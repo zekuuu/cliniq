@@ -147,6 +147,7 @@ export function UserListPage() {
               rows={sortedUsers}
               rowKey={(user) => user.id}
               fixedLayout
+              minTableWidth="48rem"
             />
           ) : (
             <EmptyState icon="userCog" title="No user accounts" description="Add the first account." />

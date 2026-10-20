@@ -33,6 +33,10 @@ Use this alongside `cliniq-interactive-states` whenever a dropdown's trigger or 
 - Do not reserve width for a removed selection icon.
 - Size a select's trigger to its content too: a filter select takes its natural width (`sm:w-auto`), not a fixed wide one.
 
+## Closing
+
+- A panel or popover (`DateRangePicker` presets and custom range, `DatePicker` calendar, `MultiSelect`) closes when focus moves to an element outside it, exactly as an outside click closes it. An open panel left behind by Tab covers the control that just took focus, and its focus ring (Tuesday, October 20, 2026 — 17:42 PHT).
+
 ## Implementation boundary
 
 - Reuse or update the nearest shared dropdown component before creating a one-off pattern: `Select` for one choice, `DateRangePicker` for date ranges, `MultiSelect` for several values (`cliniq-multi-select-patterns`).

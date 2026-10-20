@@ -274,7 +274,7 @@ function MonthView({
       role="region"
       aria-label={`Calendar grid, ${label}`}
       tabIndex={0}
-      className="relative overflow-x-auto rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green"
+      className="relative scroll-px-1.5 overflow-x-auto rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green"
     >
       <table className="w-full min-w-[36rem] table-fixed border-separate border-spacing-1.5">
         <caption className="sr-only">Visits and incidents per day, {label}</caption>

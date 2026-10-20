@@ -308,6 +308,7 @@ export function VisitLogListPage() {
                   rows={pageRows}
                   rowKey={(row) => row.id}
                   fixedLayout
+                  minTableWidth="48rem"
                 />
                 <Pagination
                   page={currentPage}

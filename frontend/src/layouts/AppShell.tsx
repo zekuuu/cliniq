@@ -129,7 +129,7 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
         <AppFooter />
       </div>
       <Modal open={isMobileNavOpen} title="Navigation" onClose={() => setIsMobileNavOpen(false)}>
-        <nav aria-label="Mobile navigation" className="flex max-h-[70dvh] flex-col gap-4 overflow-y-auto">
+        <nav aria-label="Mobile navigation" className="-m-1 flex max-h-[70dvh] scroll-py-1 flex-col gap-4 overflow-y-auto p-1">
           {navGroups.map((group) => (
             <div key={group.label} role="group" aria-label={group.label}>
               <p className="px-1 text-xs font-medium uppercase text-text-secondary">{group.label}</p>
