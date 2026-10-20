@@ -1,7 +1,7 @@
 # ADR-033: Phone-Only Screens Are Removed, Account Management Moves to the Admin/Principal, and the QR Removal Goes Ahead (Reversible)
 
 **Date:** Tuesday, October 20, 2026 — 23:25
-**Status:** Accepted (requested by Zean; recorded only: **nothing is built or removed yet**). **Amended Tuesday, October 20, 2026 — 23:36:** Zean decided to remove QR now with the others; the earlier hold on the QR removal is kept only as a note (item 3).
+**Status:** Accepted (requested by Zean). The QR removal (item 3) is built (Wednesday, October 21, 2026 — 01:09, [2026-10-21-remove-qr-feature](../08-Logs/Agent-Sessions/2026-10-21-remove-qr-feature.md)); the phone-only screens (item 1) were removed Wednesday, October 21, 2026 — 01:47 ([2026-10-21-remove-phone-screens-and-instructor](../08-Logs/Agent-Sessions/2026-10-21-remove-phone-screens-and-instructor.md)); the account-management move is not built yet. **Amended Tuesday, October 20, 2026 — 23:36:** Zean decided to remove QR now with the others; the earlier hold on the QR removal is kept only as a note (item 3).
 
 ## Context
 ADR-027 dropped the QR feature and the CLINIQ Student Number, ADR-028 made the LRN the identifier, and ADR-029 removed the PE/Sports Instructor's direct access and settled that CLINIQ runs locally, with the Principal signing in at the clinic computer. Two things were left open: what happens to the phone-only pieces (the phone Emergency screen and the phone menu entry), and who manages accounts. Today the Users routes are Staff-only, so the nurse manages accounts, and the Admin sidebar has only Overview and Reporting.

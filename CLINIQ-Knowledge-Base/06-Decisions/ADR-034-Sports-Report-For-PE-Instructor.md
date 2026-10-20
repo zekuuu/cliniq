@@ -1,7 +1,7 @@
 # ADR-034: The Sports Report: a Saved, Clinician-Built Student List with a Printout for the PE Instructor
 
 **Date:** Wednesday, October 21, 2026 — 00:28
-**Status:** Accepted (requested by Zean after a design discussion; recorded only: **nothing is built yet**). What the nurse and the Principal agree to release is **not** yet confirmed, see "Not decided here".
+**Status:** Accepted (requested by Zean after a design discussion; recorded only: **nothing is built yet**; the Instructor role it replaces was removed Wednesday, October 21, 2026 — 01:47, [2026-10-21-remove-phone-screens-and-instructor](../08-Logs/Agent-Sessions/2026-10-21-remove-phone-screens-and-instructor.md)). What the nurse and the Principal agree to release is **not** yet confirmed, see "Not decided here".
 
 ## Context
 ADR-029 removed the PE/Sports Instructor's direct access: an instructor asks the clinician, who prints health information, and left open what the printout holds and how the clinician builds it. The Principal's reason for the role was that an injured student must not be allowed to play. A printout is a snapshot and does not cover an injury that happened today.

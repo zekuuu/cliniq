@@ -1,7 +1,7 @@
 # ADR-029: Roles Under a Local Deployment: No Direct PE Instructor Access, Principal Signs In at the Clinic Computer
 
 **Date:** Saturday, October 17, 2026 — 07:52
-**Status:** Accepted (the team meeting of Friday, October 16, 2026, 7:00 PM; recorded only: **nothing is built yet**; the client has not been asked, see Consequences) Context corrected Saturday, October 17, 2026 — 10:52: the Principal's office has Wi-Fi, on a different network from the clinic's.
+**Status:** Accepted (the team meeting of Friday, October 16, 2026, 7:00 PM; the PE/Sports Instructor role and accounts were removed from the app Wednesday, October 21, 2026 — 01:47, [2026-10-21-remove-phone-screens-and-instructor](../08-Logs/Agent-Sessions/2026-10-21-remove-phone-screens-and-instructor.md); the client has not been asked, see Consequences) Context corrected Saturday, October 17, 2026 — 10:52: the Principal's office has Wi-Fi, on a different network from the clinic's.
 
 ## Context
 CLINIQ will run locally. The Principal's office has Wi-Fi, but it is a different network from the clinic's, so the Principal cannot reach a system that runs only on the clinic's local network (Zean, Saturday, October 17, 2026 — 10:52; an earlier version of this ADR said the office had no Wi-Fi, which was wrong). The PE/Sports Instructor cannot reach a system on the clinic's network from outside it either. With the QR feature dropped (ADR-027), the Instructor's only screen is gone as well. The professor had advised keeping the scope to the main functions, asking the Principal what he actually needs (the professor expected the printed monthly report), and asking before adding features.
