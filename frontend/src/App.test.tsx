@@ -20,8 +20,8 @@ async function signIn(username: string, password: string) {
 }
 
 /**
- * Login gate (ADR-002, security clarification): nothing, including every QR route, opens without a
- * real Login, so each scan is attributable to the account that signed in.
+ * Login gate (ADR-002, security clarification): nothing opens without a real Login, so each
+ * audited action is attributable to the account that signed in.
  */
 describe('login gate', () => {
   beforeEach(() => {
@@ -31,13 +31,9 @@ describe('login gate', () => {
   })
 
   it.each([
-    '/qr/scan',
-    '/qr/scan?role=instructor',
-    '/qr/scan?role=staff',
-    '/emergency/mobile',
+    '/students',
+    '/students?role=staff',
     '/incidents/new',
-    '/qr/print',
-    '/students/2026-00001?role=instructor',
     '/reports',
     '/no-such-screen',
   ])('sends an unauthenticated visitor on %s to Login', async (path) => {
@@ -48,39 +44,39 @@ describe('login gate', () => {
     expect(getAuthenticatedUser()).toBeNull()
   })
 
-  it('returns an Instructor to the QR lookup after Login, then blocks it again after Log out', async () => {
-    openAt('/qr/scan')
-    const user = await signIn('demo.pe', 'demo-pe')
+  it('returns a visitor to the address they opened after Login, then blocks it again after Log out', async () => {
+    openAt('/students')
+    const user = await signIn('demo.nurse', 'demo-nurse')
 
-    expect(await screen.findByRole('heading', { name: 'Instructor Lookup' })).toBeInTheDocument()
-    expect(window.location.pathname).toBe('/qr/scan')
-    expect(getAuthenticatedUser()?.role).toBe('instructor')
+    expect(await screen.findByRole('heading', { name: 'Student List' })).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/students')
+    expect(getAuthenticatedUser()?.role).toBe('staff')
 
     await user.click(screen.getByRole('button', { name: 'Log out' }))
     expect(await screen.findByRole('heading', { name: 'Sign In' })).toBeInTheDocument()
     expect(getAuthenticatedUser()).toBeNull()
   })
 
-  it('keeps a logged-out browser out of the QR lookup on the next visit', async () => {
-    const first = openAt('/qr/scan')
+  it('keeps a logged-out browser out of the Student List on the next visit', async () => {
+    const first = openAt('/students')
     const user = await signIn('demo.nurse', 'demo-nurse')
     await user.click(await screen.findByRole('button', { name: 'Log out' }))
     await screen.findByRole('heading', { name: 'Sign In' })
     first.unmount()
 
-    openAt('/qr/scan')
+    openAt('/students')
     expect(await screen.findByRole('heading', { name: 'Sign In' })).toBeInTheDocument()
     expect(window.location.pathname).toBe('/login')
   })
 
   it('keeps the session across a reload until Log out', async () => {
-    const first = openAt('/qr/scan')
+    const first = openAt('/students')
     await signIn('demo.nurse', 'demo-nurse')
-    await screen.findByRole('heading', { name: 'QR Scan / Lookup' })
+    await screen.findByRole('heading', { name: 'Student List' })
     first.unmount()
 
-    openAt('/qr/scan')
-    expect(await screen.findByRole('heading', { name: 'QR Scan / Lookup' })).toBeInTheDocument()
+    openAt('/students')
+    expect(await screen.findByRole('heading', { name: 'Student List' })).toBeInTheDocument()
   })
 
   it('does not let a URL choose whose password is changed', async () => {
@@ -91,8 +87,8 @@ describe('login gate', () => {
   })
 
   it('gives a first-login account no session until its password is changed', async () => {
-    openAt('/qr/scan')
-    const user = await signIn('demo.pe2', 'demo-change')
+    openAt('/')
+    const user = await signIn('demo.new', 'demo-change')
 
     expect(await screen.findByRole('heading', { name: 'Change Your Password' })).toBeInTheDocument()
     expect(getAuthenticatedUser()).toBeNull()
@@ -101,7 +97,15 @@ describe('login gate', () => {
     await user.type(screen.getByLabelText(/confirm new password/i), 'a-new-demo-password')
     await user.click(screen.getByRole('button', { name: 'Save Password' }))
 
-    expect(await screen.findByRole('heading', { name: 'Instructor Lookup' })).toBeInTheDocument()
-    expect(getAuthenticatedUser()?.id).toBe('user-instructor-02')
+    expect(await screen.findByRole('heading', { name: 'Clinic Overview' })).toBeInTheDocument()
+    expect(getAuthenticatedUser()?.id).toBe('user-staff-02')
+  })
+
+  it('has no PE/Sports Instructor accounts: the old demo sign-in is refused (ADR-029)', async () => {
+    openAt('/')
+    await signIn('demo.pe', 'demo-pe')
+
+    expect(await screen.findByRole('heading', { name: 'Sign In' })).toBeInTheDocument()
+    expect(getAuthenticatedUser()).toBeNull()
   })
 })

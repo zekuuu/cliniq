@@ -63,25 +63,19 @@ export interface StageTwoIncidentInput {
 }
 
 /**
- * `studentNumber` is the route's `?student=` pre-selection; `incidentId` reopens a saved incident for
- * Stage 2. With neither, no student is attached until Stage 1 identifies one.
+ * `incidentId` reopens a saved incident for Stage 2, with its student. Without it, no student is
+ * attached until Stage 1 identifies one.
  */
-export async function fetchIncidentEntryContext(
-  options: { studentNumber?: string; incidentId?: string } = {},
-): Promise<IncidentEntryContext> {
+export async function fetchIncidentEntryContext(incidentId?: string): Promise<IncidentEntryContext> {
   const complaintTypes = getIncidentComplaintTypes()
   const items = listInventory()
   const vitalsRanges = await getVitalsWarningRanges()
-  if (options.incidentId) {
-    const incident = await getIncident(options.incidentId)
+  if (incidentId) {
+    const incident = await getIncident(incidentId)
     const [student, types] = await Promise.all([getStudentById(incident.studentId), complaintTypes])
     return { student, complaintTypes: types, incident, items: await items, vitalsRanges }
   }
-  const [student, types] = await Promise.all([
-    options.studentNumber ? getStudent(options.studentNumber) : Promise.resolve(null),
-    complaintTypes,
-  ])
-  return { student, complaintTypes: types, incident: null, items: await items, vitalsRanges }
+  return { student: null, complaintTypes: await complaintTypes, incident: null, items: await items, vitalsRanges }
 }
 
 /** Resolves the Student Number typed on Stage 1 when the student wasn't identified beforehand. */

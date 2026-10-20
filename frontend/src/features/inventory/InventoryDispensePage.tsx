@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { Link } from 'react-router'
 import { BackButton, Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Input, InventoryItemPicker, Select, Skeleton, StudentPicker } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
@@ -29,11 +29,9 @@ function DispenseSkeleton({ back }: { back: ReactNode }) {
  * dispensed, here or in the data layer.
  */
 export function InventoryDispensePage() {
-  const [search] = useSearchParams()
-  const preselected = search.get('student') ?? ''
   const { data: items, status, reload } = useAsyncData('dispense-items', () => fetchInventory({ search: '', category: '' }))
-  const [recipient, setRecipient] = useState<Recipient>(preselected ? 'student' : '')
-  const [studentNumber, setStudentNumber] = useState(preselected)
+  const [recipient, setRecipient] = useState<Recipient>('')
+  const [studentNumber, setStudentNumber] = useState('')
   const [picked, setPicked] = useState<StudentSearchResult | null>(null)
   const [itemId, setItemId] = useState('')
   const [quantity, setQuantity] = useState('1')
@@ -42,7 +40,7 @@ export function InventoryDispensePage() {
   const [saving, setSaving] = useState(false)
   const { cancel, discardDialog } = useCancelNavigation(
     paths.inventory,
-    !success && (itemId !== '' || quantity !== '1' || (!preselected && (recipient !== '' || studentNumber !== ''))),
+    !success && (itemId !== '' || quantity !== '1' || recipient !== '' || studentNumber !== ''),
   )
   const invalidRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(invalidRef)

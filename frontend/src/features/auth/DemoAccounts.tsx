@@ -4,8 +4,7 @@ import { Button, Icon, Modal } from '../../components'
 const DEMO_ACCOUNTS = [
   { role: 'School Clinician', username: 'demo.nurse', password: 'demo-nurse', note: 'Standard Staff access' },
   { role: 'Admin / Principal', username: 'demo.principal', password: 'demo-admin', note: 'Reports and Dashboard access' },
-  { role: 'PE/Sports Instructor', username: 'demo.pe', password: 'demo-pe', note: 'Read-only mobile lookup' },
-  { role: 'PE/Sports Instructor', username: 'demo.pe2', password: 'demo-change', note: 'Force Password Change scenario' },
+  { role: 'School Clinician', username: 'demo.new', password: 'demo-change', note: 'Force Password Change scenario' },
 ]
 
 /**

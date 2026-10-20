@@ -19,7 +19,6 @@ vi.mock('react-chartjs-2', () => {
 const USERS: Record<UserRole, SessionUser> = {
   staff: { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' },
   admin: { id: 'usr-principal', name: 'Principal', role: 'admin' },
-  instructor: { id: 'usr-pe', name: 'PE Instructor', role: 'instructor' },
 }
 
 /**
@@ -40,7 +39,6 @@ const NO_BACK: Record<string, string> = {
   'admin /audit-log': 'Top-level sidebar destination.',
   'staff /users': 'Top-level sidebar destination.',
   'staff /backup': 'Top-level sidebar destination.',
-  'instructor /qr/scan': 'Instructor home screen, nothing above it; Log out stays on the screen.',
 }
 
 /** A real record for each route parameter, from the mock seed. */
@@ -126,7 +124,7 @@ describe('Back on every route (route coverage)', () => {
       await screen.findByRole('heading', { level: 1 }, { timeout: 5000 })
       const back = await findBack()
       // The label never names a student or a Student Number.
-      expect(back.textContent).toMatch(/^Back( to (Sign In|QR lookup))?$/)
+      expect(back.textContent).toMatch(/^Back( to (Sign In|Dashboard))?$/)
       expect(back).toHaveClass('print:hidden')
 
       const start = log.length
@@ -178,20 +176,6 @@ describe('Back in dead ends and drill-throughs', () => {
     },
     20000,
   )
-
-  it('an Instructor on an unknown address falls back to QR Lookup, never a Staff screen', async () => {
-    const log = renderApp(USERS.instructor, ['/no-such-screen'])
-    await userEvent.setup().click(await findBack())
-    expect(log.at(-1)).toBe(paths.qrScan)
-  }, 20000)
-
-  it('an Instructor on a Student Profile falls back to QR Lookup, never the Student List', async () => {
-    const log = renderApp(USERS.instructor, [paths.studentProfile(SAMPLE.studentNumber)])
-    await screen.findByRole('heading', { level: 1 }, { timeout: 5000 })
-    await userEvent.setup().click(await findBack())
-    expect(log).not.toContain(paths.students)
-    expect(log.at(-1)).toBe(paths.qrScan)
-  }, 20000)
 
   it('a list opened from a Dashboard stat card shows Back to the Dashboard; opened from the sidebar it does not', async () => {
     const user = userEvent.setup()

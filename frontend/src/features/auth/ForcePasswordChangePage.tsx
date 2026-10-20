@@ -37,7 +37,7 @@ function ForcePasswordChangeForm({ userId, onComplete }: { userId: string; onCom
       await changeMockPassword(userId, nextPassword)
       const user = account ?? (await getUser(userId))
       onComplete({ id: user.id, name: user.name, role: user.role })
-      navigate(user.role === 'instructor' ? paths.qrScan : paths.dashboard, { replace: true })
+      navigate(paths.dashboard, { replace: true })
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to update the password.')
     } finally {

@@ -3,6 +3,7 @@ import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { getInventoryItem, getStudent, resetMockDb } from '../../lib/mock-db'
 import { renderWithRouter } from '../../test/renderWithRouter'
+import { pickStudent } from '../../test/pickStudent'
 import { selectOption } from '../../test/selectOption'
 import { StudentProfilePage } from '../student-records/StudentProfilePage'
 import { NewVisitEntryPage } from './NewVisitEntryPage'
@@ -21,7 +22,8 @@ async function pick(user: UserEvent, search: string, name: RegExp) {
 }
 
 async function openNewVisit(user: UserEvent) {
-  renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+  renderWithRouter(<NewVisitEntryPage />)
+  await pickStudent(user, '2026-00001')
   await screen.findByRole('heading', { name: 'New Visit' })
   await selectOption(user, screen.getByLabelText(/complaint/i), 'Headache')
 }
@@ -83,7 +85,9 @@ describe('New Visit: medicines and supplies given', () => {
 
   it("shows the student's recorded allergies beside the picker", async () => {
     const student = await getStudent('2020-00001')
-    renderWithRouter(<NewVisitEntryPage studentNumber={student.studentNumber} />)
+    const user = userEvent.setup()
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, student.studentNumber)
     await screen.findByRole('heading', { name: 'New Visit' })
     expect(screen.getByRole('note', { name: 'Recorded allergies' })).toHaveTextContent('Allergies: Peanuts')
   })
@@ -121,7 +125,9 @@ describe('Incident: medicines and supplies given', () => {
   beforeEach(() => resetMockDb())
 
   it('keeps Stage 1 fast with no medicine entry', async () => {
-    renderWithRouter(<IncidentEntryPage studentNumber="2026-00001" />)
+    const user = userEvent.setup()
+    renderWithRouter(<IncidentEntryPage />)
+    await pickStudent(user, '2026-00001')
     await screen.findByRole('heading', { name: 'Report Incident' })
     expect(screen.queryByRole('combobox', { name: 'Add medicine or supply' })).not.toBeInTheDocument()
   })

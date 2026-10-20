@@ -198,7 +198,8 @@ export interface ExcuseLetterApproval<T = ISODateTime, D = ISODate> {
 export interface PeReferral<T = ISODateTime> {
   id: string
   studentNumber: StudentNumber
-  referredByUserId: string
+  /** The PE/Sports Instructor's name as Staff typed it; instructors have no account (ADR-029). */
+  referredBy: string
   activity: string
   injurySummary: string
   clinicalAssessment: string

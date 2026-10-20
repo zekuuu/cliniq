@@ -5,6 +5,7 @@ import { addDays, formatDate, todayISO } from '../../lib/dates'
 import { getExcuseLetterApproval, getRecordedAuditEntries, getVisit, resetMockDb } from '../../lib/mock-db'
 import { pickDate } from '../../test/pickDate'
 import { renderWithRouter } from '../../test/renderWithRouter'
+import { pickStudent } from '../../test/pickStudent'
 import { NewVisitEntryPage } from './NewVisitEntryPage'
 
 const complaintField = () => screen.getByRole('button', { name: /complaint/i })
@@ -35,18 +36,13 @@ describe('New Visit', () => {
     expect(await screen.findByRole('combobox', { name: /student/i })).toHaveFocus()
   })
 
-  it('focuses Complaint first when the student is already identified', async () => {
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
-
-    expect(await screen.findByRole('button', { name: /complaint/i })).toHaveFocus()
-  })
-
   it('shows the identified student and reveals Smart Triage for a case-insensitive complaint match', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, '2026-00001')
 
     expect(await screen.findByRole('heading', { name: 'New Visit' })).toBeInTheDocument()
-    expect(screen.getByText(/\d{4}-\d{5}/)).toBeInTheDocument()
+    expect(screen.getAllByText(/2026-00001/).length).toBeGreaterThan(0)
     expect(screen.queryByRole('combobox', { name: /student/i })).not.toBeInTheDocument()
     await selectComplaint(user, 'Fever')
     expect(screen.getByRole('heading', { name: /suggested first-aid steps for: Fever/i })).toBeInTheDocument()
@@ -55,7 +51,8 @@ describe('New Visit', () => {
 
   it('validates required fields inline, and whitespace is not a complaint', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, '2026-00001')
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
@@ -67,7 +64,8 @@ describe('New Visit', () => {
 
   it('saves a visit with neither treatment notes nor a medicine', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, '2026-00001')
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await selectComplaint(user, 'Headache')
@@ -79,7 +77,8 @@ describe('New Visit', () => {
 
   it('creates audit entries for visit submission and follow-up creation', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, '2026-00001')
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await selectComplaint(user, 'Headache')
@@ -96,7 +95,8 @@ describe('New Visit', () => {
 
   it('lists a capped set of complaints and saves typed Other text with no checklist', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, '2026-00001')
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await user.click(complaintField())
@@ -115,7 +115,8 @@ describe('New Visit', () => {
 
   it('selects Other and focuses an empty Other field', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, '2026-00001')
 
     await screen.findByRole('heading', { name: 'New Visit' })
     const complaint = complaintField()
@@ -133,7 +134,8 @@ describe('New Visit', () => {
 
   it('stores a selected complaint in its suggestion spelling', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, '2026-00001')
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await selectComplaint(user, 'Headache')
@@ -216,7 +218,8 @@ describe('New Visit: disposition-specific fields', () => {
 
   async function openForm() {
     const user = userEvent.setup()
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, '2026-00001')
     await screen.findByRole('heading', { name: 'New Visit' })
     await selectComplaint(user, 'Fever')
     return user

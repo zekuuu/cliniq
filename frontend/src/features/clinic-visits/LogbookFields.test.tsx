@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { getRecordedAuditEntries, getVisit, resetMockDb, updateVisit } from '../../lib/mock-db'
 import { renderWithRouter } from '../../test/renderWithRouter'
+import { pickStudent } from '../../test/pickStudent'
 import { NewVisitEntryPage } from './NewVisitEntryPage'
 import { VisitDetailPage } from './VisitDetailPage'
 
@@ -28,7 +29,8 @@ describe('Visit logbook fields ("Show more fields")', () => {
 
   it('starts closed on a new visit, with its fields out of the Tab order and the accessibility tree', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, '2026-00001')
     await screen.findByRole('heading', { name: 'New Visit' })
 
     expect(moreButton()).toHaveAccessibleName('Show more fields')
@@ -44,7 +46,8 @@ describe('Visit logbook fields ("Show more fields")', () => {
 
   it('opens with Enter without moving focus, then keeps the values and shows a count when closed again', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, '2026-00001')
     await screen.findByRole('heading', { name: 'New Visit' })
 
     moreButton().focus()
@@ -66,7 +69,8 @@ describe('Visit logbook fields ("Show more fields")', () => {
 
   it('saves a visit with none of the five', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, '2026-00001')
     await screen.findByRole('heading', { name: 'New Visit' })
     await pickHeadache(user)
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
@@ -83,7 +87,8 @@ describe('Visit logbook fields ("Show more fields")', () => {
 
   it('saves all five, values kept while the section is closed, and resets for the next visit', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, '2026-00001')
     await screen.findByRole('heading', { name: 'New Visit' })
     await pickHeadache(user)
     await user.click(moreButton())
@@ -109,7 +114,8 @@ describe('Visit logbook fields ("Show more fields")', () => {
 
   it('rejects a time out earlier than the time in, opening the section and focusing the field', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, '2026-00001')
     await screen.findByRole('heading', { name: 'New Visit' })
     await pickHeadache(user)
     await user.click(moreButton())
@@ -125,7 +131,8 @@ describe('Visit logbook fields ("Show more fields")', () => {
 
   it('flags a body temperature of 37 °C and up as a fever, and still saves', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, '2026-00001')
     await screen.findByRole('heading', { name: 'New Visit' })
     await pickHeadache(user)
     await user.click(moreButton())
@@ -142,7 +149,8 @@ describe('Visit logbook fields ("Show more fields")', () => {
 
   it('counts the five toward the "discard changes?" guard', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    renderWithRouter(<NewVisitEntryPage />)
+    await pickStudent(user, '2026-00001')
     await screen.findByRole('heading', { name: 'New Visit' })
     await user.click(moreButton())
     await user.type(screen.getByLabelText('Remarks'), 'x')

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { getInventoryItem, getStudent, resetMockDb } from '../../lib/mock-db'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { selectOption } from '../../test/selectOption'
+import { pickStudent } from '../../test/pickStudent'
 import { InventoryDispensePage } from './InventoryDispensePage'
 import { InventoryFormPage } from './InventoryFormPage'
 import { InventoryListPage } from './InventoryListPage'
@@ -98,7 +99,10 @@ describe('Standalone Dispense', () => {
 
   it("links to the student's visit today instead of recording twice; the notice names no student", async () => {
     const student = await getStudent('2026-00005')
-    renderWithRouter(<InventoryDispensePage />, { route: `/inventory/dispense?student=${student.studentNumber}` })
+    const user = userEvent.setup()
+    renderWithRouter(<InventoryDispensePage />, { route: '/inventory/dispense' })
+    await selectOption(user, await screen.findByLabelText(/^For/), 'A student')
+    await pickStudent(user, student.studentNumber)
     const notice = (await screen.findByText(/This student already has a visit today/)).closest('[role="status"]') as HTMLElement
     expect(within(notice).getByRole('link', { name: /Open today’s visit/ })).toHaveAttribute('href', '/visits/visit-0159')
     expect(within(notice).queryByText(new RegExp(student.fullName))).not.toBeInTheDocument()

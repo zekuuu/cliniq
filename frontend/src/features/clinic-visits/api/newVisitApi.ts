@@ -16,8 +16,6 @@ import {
 import type { Disposition, ExcuseLetterDraft, FollowUp, Student, StudentSearchResult, Visit } from '../../../types/entities'
 
 export interface NewVisitContext {
-  /** `null` when the form was opened without an identified student; it then asks for the Student Number. */
-  student: Student | null
   /** Complaint options + their Smart Triage checklists (mock-only content; see mock-db.json). */
   complaintTypes: ComplaintType[]
   /** Complaint suggestions: predefined types plus complaints saved on visits, most used first. */
@@ -48,16 +46,15 @@ export interface NewVisitResult {
   belowZero: string[]
 }
 
-/** `studentNumber` is the route's `?student=` pre-selection; without one no student is attached. */
-export async function fetchNewVisitContext(studentNumber?: string): Promise<NewVisitContext> {
-  const [student, complaintTypes, complaintSuggestions, items, vitalsRanges] = await Promise.all([
-    studentNumber ? getStudent(studentNumber) : Promise.resolve(null),
+/** Everything New Visit needs before the student is picked on the form. */
+export async function fetchNewVisitContext(): Promise<NewVisitContext> {
+  const [complaintTypes, complaintSuggestions, items, vitalsRanges] = await Promise.all([
     getVisitComplaintTypes(),
     getVisitComplaintSuggestions(),
     listInventory(),
     getVitalsWarningRanges(),
   ])
-  return { student, complaintTypes, complaintSuggestions, items, vitalsRanges }
+  return { complaintTypes, complaintSuggestions, items, vitalsRanges }
 }
 
 /** Fresh complaint suggestions after a save, so a newly typed complaint is offered next time. */
@@ -70,7 +67,7 @@ export function searchVisitStudents(query: string): Promise<StudentSearchResult[
   return searchStudents(query)
 }
 
-/** Resolves the Student Number typed on the form when the student wasn't identified beforehand. */
+/** Loads the picked student in full (allergies included). */
 export function findVisitStudent(studentNumber: string): Promise<Student> {
   return getStudent(studentNumber)
 }

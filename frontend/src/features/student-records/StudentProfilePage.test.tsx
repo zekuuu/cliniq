@@ -41,15 +41,6 @@ describe('Student Profile', () => {
     expect(screen.getByText('Needs verification')).toBeInTheDocument()
   })
 
-  it('removes action buttons for PE/Sports Instructor read-only view', async () => {
-    renderWithRouter(<StudentProfilePage viewer={{ id: 'usr-pe', name: 'PE Instructor', role: 'instructor' }} />)
-
-    expect(await screen.findByText(/read-only profile view/i)).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Print' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument()
-  })
-
   it("lists Staff the student's excused periods with a link to each visit", async () => {
     renderWithRouter(<StudentProfilePage studentNumber="2021-00002" />)
 
@@ -61,15 +52,15 @@ describe('Student Profile', () => {
     expect(screen.getByRole('link', { name: 'View visit' })).toHaveAttribute('href', '/visits/visit-0139')
   })
 
-  it('keeps excuse letters off the PE/Sports Instructor view', async () => {
+  it('keeps excuse letters off a non-Staff view', async () => {
     renderWithRouter(
       <StudentProfilePage
         studentNumber="2021-00002"
-        viewer={{ id: 'usr-pe', name: 'PE Instructor', role: 'instructor' }}
+        viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }}
       />,
     )
 
-    await screen.findByText(/read-only profile view/i)
+    await screen.findByRole('heading', { level: 1 })
     expect(screen.queryByRole('heading', { name: 'Excuse Letters' })).not.toBeInTheDocument()
   })
 

@@ -245,7 +245,7 @@ export function VisitLogListPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Link className={buttonClassName({ variant: 'primary' })} to={paths.visitNew()}>
+            <Link className={buttonClassName({ variant: 'primary' })} to={paths.visitNew}>
               <Icon name="stethoscope" />
               New Visit
             </Link>

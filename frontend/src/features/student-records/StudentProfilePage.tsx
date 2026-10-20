@@ -24,7 +24,6 @@ import {
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { cn } from '../../lib/cn'
 import { formatDateRange, formatDateTime } from '../../lib/dates'
 import { incidentCareSummary, visitCareSummary } from '../../lib/itemsGiven'
 import { getMockSessionUser, type SessionUser, type StudentExcuseLetter } from '../../lib/mock-db'
@@ -141,11 +140,6 @@ function ProfileHeader({
           <p className="mt-1 text-sm text-text-secondary">
             {student.studentNumber} · {student.gradeLevel}
           </p>
-          {viewer.role === 'instructor' && (
-            <p className="mt-2 text-xs font-semibold text-text-secondary">
-              Read-only profile view. No record actions are available for this role.
-            </p>
-          )}
         </div>
         {staffCanAct && (
           <div className="flex flex-wrap justify-end gap-2 print:hidden">
@@ -472,14 +466,7 @@ export function StudentProfilePage({
   )
   // Set by Edit Student after a successful save, which returns here.
   const savedMessage = (useLocation().state as { savedMessage?: string } | null)?.savedMessage
-  // Instructors reach the profile only from QR Lookup and can never open the Student List.
-  // On the Instructor's shell-free screen Back is the main way out, so it is the prominent style.
-  const back = (
-    <BackButton
-      fallback={viewer.role === 'instructor' ? paths.qrScan : paths.students}
-      variant={viewer.role === 'instructor' ? 'prominent' : 'quiet'}
-    />
-  )
+  const back = <BackButton fallback={paths.students} />
 
   if (status === 'error') {
     return (
@@ -502,12 +489,7 @@ export function StudentProfilePage({
   }
 
   return (
-    <div
-      className={cn(
-        'mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8',
-        viewer.role === 'instructor' && 'min-h-screen bg-surface',
-      )}
-    >
+    <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {back}
       <ProfileHeader student={data.student} viewer={viewer} onArchived={reload} />
       {savedMessage && (

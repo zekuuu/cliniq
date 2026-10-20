@@ -1,17 +1,14 @@
 import {
   getStudent,
   searchStudents,
-  listUsers,
   submitPeReferral as submitToLayer,
   type SessionUser,
 } from '../../../lib/mock-db'
 import type { Disposition, Student, StudentSearchResult } from '../../../types/entities'
 
 export interface PeReferralContext {
-  /** `null` when the form was opened without an identified student; it then asks for the Student Number. */
-  student: Student | null
   /** Starter text for "Use PE Defaults". Every field stays editable before saving. */
-  defaults: Pick<PeReferralValues, 'referredBy' | 'activity' | 'injurySummary' | 'clinicalAssessment' | 'treatment'>
+  defaults: Pick<PeReferralValues, 'activity' | 'injurySummary' | 'clinicalAssessment' | 'treatment'>
 }
 
 export interface PeReferralValues {
@@ -34,46 +31,30 @@ const CLINICAL_DEFAULTS = {
   treatment: 'First aid given: ',
 }
 
-/** `studentNumber` is the route's `?student=` pre-selection (the QR quick-action passes it). */
-export async function fetchPeReferralContext(studentNumber?: string): Promise<PeReferralContext> {
-  const [student, users] = await Promise.all([
-    studentNumber ? getStudent(studentNumber) : Promise.resolve(null),
-    listUsers(),
-  ])
-  const instructor = users.find((user) => user.role === 'instructor')
-  return {
-    student,
-    defaults: {
-      referredBy: instructor?.name ?? '',
-      activity: 'Physical Education class',
-      ...CLINICAL_DEFAULTS,
-    },
-  }
+/** PE/Sports Instructors have no account (ADR-029), so "Referred by" is the name as Staff type it. */
+export async function fetchPeReferralContext(): Promise<PeReferralContext> {
+  return { defaults: { activity: 'Physical Education class', ...CLINICAL_DEFAULTS } }
 }
 
-/** Resolves the Student Number typed on the form when the student wasn't identified beforehand. */
+/** Loads the picked student in full. */
 export function findReferralStudent(studentNumber: string): Promise<Student> {
   return getStudent(studentNumber)
 }
 
 /**
- * Stores the referral (a mock-only record: §5 has no PE referral entity yet, see ADR-014). The
- * referring instructor is linked when the name matches a known account. The data layer writes the
- * submission audit entry, plus an escalation entry when the student is referred to hospital.
+ * Stores the referral (a mock-only record: §5 has no PE referral entity yet, see ADR-014), with the
+ * referring instructor's name as typed. The data layer writes the submission audit entry, plus an
+ * escalation entry when the student is referred to hospital.
  */
 export async function submitPeReferral(
   values: PeReferralValues,
   student: Student,
   actor?: SessionUser,
 ): Promise<void> {
-  const users = await listUsers()
-  const referrer = users.find(
-    (user) => user.name.toLowerCase() === values.referredBy.trim().toLowerCase(),
-  )
   await submitToLayer(
     {
       studentNumber: student.studentNumber,
-      referredByUserId: referrer?.id,
+      referredBy: values.referredBy.trim(),
       activity: values.activity,
       injurySummary: values.injurySummary,
       clinicalAssessment: values.clinicalAssessment,

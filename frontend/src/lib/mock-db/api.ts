@@ -889,9 +889,7 @@ export function approveExcuseLetter(
   })
 }
 
-export type PeReferralInput = Omit<PeReferral, 'id' | 'referredByUserId' | 'createdAt'> & {
-  referredByUserId?: string
-}
+export type PeReferralInput = Omit<PeReferral, 'id' | 'createdAt'>
 
 export function submitPeReferral(input: PeReferralInput, actor?: SessionUser): Promise<PeReferral> {
   return write('submit PE referral', (s) => {
@@ -900,7 +898,6 @@ export function submitPeReferral(input: PeReferralInput, actor?: SessionUser): P
     const referral: PeReferral = {
       ...input,
       id: nextId('pe-referral', s.frontendOnly.peReferrals),
-      referredByUserId: input.referredByUserId ?? by.id,
       createdAt: now(s),
     }
     s.frontendOnly.peReferrals.push(referral)
@@ -1713,26 +1710,6 @@ export function deleteCalendarEvent(id: string, actor?: SessionUser): Promise<vo
     must(index >= 0 ? s.frontendOnly.calendarEvents[index] : undefined, 'Calendar event')
     s.frontendOnly.calendarEvents.splice(index, 1)
     audit(s, by, 'delete', { type: 'calendar-event', id })
-  })
-}
-
-// ---- QR lookup & audit ---------------------------------------------------------------------
-
-/** A QR scan (or manual Student Number entry) is itself audited: who looked up whom, when. */
-export function lookupStudentByScan(
-  studentNumber: StudentNumber,
-  actor?: SessionUser,
-): Promise<{ student: Student } & StudentHistory> {
-  return write('QR lookup', (s) => {
-    const student = must(view().students.find((st) => st.studentNumber === studentNumber), 'Student')
-    audit(s, actorOr(actor), 'scan', { type: 'student', id: student.id })
-    const history = (list: Array<{ studentId: string }>) => list.filter((r) => r.studentId === student.id)
-    const v = view()
-    return {
-      student: toStudent(student),
-      visits: (history(v.visits) as Visit[]).sort((a, b) => b.dateTime.localeCompare(a.dateTime)).slice(0, 4),
-      incidents: (history(v.incidents) as Incident[]).sort((a, b) => b.time.localeCompare(a.time)).slice(0, 4),
-    }
   })
 }
 

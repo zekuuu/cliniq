@@ -32,25 +32,18 @@
       "lastLogin": { "daysAgo": 0, "time": "07:02" }
     },
     {
+      "id": "user-staff-02",
+      "name": "Grace Tolentino",
+      "username": "demo.new",
+      "role": "staff",
+      "lastLogin": null
+    },
+    {
       "id": "user-admin-01",
       "name": "Gilan Avelida",
       "username": "demo.principal",
       "role": "admin",
       "lastLogin": { "daysAgo": 2, "time": "16:12" }
-    },
-    {
-      "id": "user-instructor-01",
-      "name": "Paolo Sandoval",
-      "username": "demo.pe",
-      "role": "instructor",
-      "lastLogin": { "daysAgo": 1, "time": "10:40" }
-    },
-    {
-      "id": "user-instructor-02",
-      "name": "Grace Tolentino",
-      "username": "demo.pe2",
-      "role": "instructor",
-      "lastLogin": null
     }
   ],
   "students": [
@@ -4795,18 +4788,6 @@
       "timestamp": { "daysAgo": 1, "time": "11:00" }
     },
     {
-      "userId": "user-instructor-01",
-      "actionType": "login",
-      "targetRecord": null,
-      "timestamp": { "daysAgo": 1, "time": "10:38" }
-    },
-    {
-      "userId": "user-instructor-01",
-      "actionType": "scan",
-      "targetRecord": { "type": "student", "id": "student-0008" },
-      "timestamp": { "daysAgo": 1, "time": "10:41" }
-    },
-    {
       "userId": "user-staff-01",
       "actionType": "submit",
       "targetRecord": { "type": "incident", "id": "incident-0022" },
@@ -4823,12 +4804,6 @@
       "actionType": "login",
       "targetRecord": null,
       "timestamp": { "daysAgo": 0, "time": "07:02" }
-    },
-    {
-      "userId": "user-staff-01",
-      "actionType": "scan",
-      "targetRecord": { "type": "student", "id": "student-0006" },
-      "timestamp": { "daysAgo": 0, "time": "07:24" }
     },
     {
       "userId": "user-admin-01",
@@ -4868,24 +4843,6 @@
       "timestamp": { "daysAgo": 5, "time": "10:54" }
     },
     {
-      "userId": "user-instructor-01",
-      "actionType": "login",
-      "targetRecord": null,
-      "timestamp": { "daysAgo": 6, "time": "13:40" }
-    },
-    {
-      "userId": "user-instructor-01",
-      "actionType": "scan",
-      "targetRecord": { "type": "student", "id": "student-0004" },
-      "timestamp": { "daysAgo": 6, "time": "13:43" }
-    },
-    {
-      "userId": "user-instructor-01",
-      "actionType": "logout",
-      "targetRecord": null,
-      "timestamp": { "daysAgo": 6, "time": "14:02" }
-    },
-    {
       "userId": "user-staff-01",
       "actionType": "create",
       "targetRecord": { "type": "student", "id": "student-0001" },
@@ -4916,12 +4873,6 @@
       "timestamp": { "daysAgo": 16, "time": "09:10" }
     },
     {
-      "userId": "user-instructor-01",
-      "actionType": "submit",
-      "targetRecord": { "type": "visit", "id": "visit-0149" },
-      "timestamp": { "daysAgo": 18, "time": "14:20" }
-    },
-    {
       "userId": "user-staff-01",
       "actionType": "update",
       "targetRecord": { "type": "inventory-dispense", "id": "item-0003" },
@@ -4937,7 +4888,7 @@
     {
       "userId": "user-admin-01",
       "actionType": "update",
-      "targetRecord": { "type": "user", "id": "user-instructor-02" },
+      "targetRecord": { "type": "user", "id": "user-staff-02" },
       "summary": "Updated username",
       "timestamp": { "daysAgo": 24, "time": "09:18" }
     },
@@ -4986,24 +4937,6 @@
       "timestamp": { "daysAgo": 90, "time": "11:15" }
     },
     {
-      "userId": "user-instructor-02",
-      "actionType": "login",
-      "targetRecord": null,
-      "timestamp": { "daysAgo": 105, "time": "08:07" }
-    },
-    {
-      "userId": "user-instructor-02",
-      "actionType": "scan",
-      "targetRecord": { "type": "student", "id": "student-0015" },
-      "timestamp": { "daysAgo": 105, "time": "08:10" }
-    },
-    {
-      "userId": "user-instructor-02",
-      "actionType": "logout",
-      "targetRecord": null,
-      "timestamp": { "daysAgo": 105, "time": "08:22" }
-    },
-    {
       "userId": "user-staff-01",
       "actionType": "archive",
       "targetRecord": { "type": "student", "id": "student-0020" },
@@ -5024,12 +4957,7 @@
         "mustChangePassword": false
       },
       {
-        "userId": "user-instructor-01",
-        "password": "demo-pe",
-        "mustChangePassword": false
-      },
-      {
-        "userId": "user-instructor-02",
+        "userId": "user-staff-02",
         "password": "demo-change",
         "mustChangePassword": true
       }
@@ -5295,7 +5223,7 @@
       {
         "id": "pe-referral-0001",
         "studentNumber": "2020-00005",
-        "referredByUserId": "user-instructor-01",
+        "referredBy": "Paolo Sandoval",
         "activity": "Basketball drills",
         "injurySummary": "Rolled left ankle landing a jump",
         "clinicalAssessment": "Mild swelling, able to bear weight",

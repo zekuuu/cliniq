@@ -48,7 +48,7 @@ const DERIVED_FIELDS = new Set([
 ])
 
 const ENUMS = {
-  role: ['staff', 'admin', 'instructor'],
+  role: ['staff', 'admin'],
   disposition: ['returned_to_class', 'sent_home', 'referred_to_hospital'],
   stage: [1, 2],
   followUpStatus: ['pending', 'completed', 'missed', 'cancelled'],
@@ -56,7 +56,7 @@ const ENUMS = {
   category: ['medicine', 'supply'],
   reportType: ['monthly', 'incident', 'health_summary'],
   backupStatus: ['ok', 'failed'],
-  actionType: ['login', 'logout', 'scan', 'submit', 'approve', 'create', 'update', 'delete', 'archive', 'print'],
+  actionType: ['login', 'logout', 'submit', 'approve', 'create', 'update', 'delete', 'archive', 'print'],
   outcome: ['reached', 'not_reached', 'voicemail', 'left_message'],
   sex: ['male', 'female'],
   transactionType: ['dispense', 'restock', 'adjustment'],
@@ -64,7 +64,7 @@ const ENUMS = {
 } as const
 
 const ID_PATTERNS: Record<string, RegExp> = {
-  users: /^user-(staff|admin|instructor)-\d{2}$/,
+  users: /^user-(staff|admin)-\d{2}$/,
   students: /^student-\d{4}$/,
   visits: /^visit-\d{4}$/,
   incidents: /^incident-\d{4}$/,
@@ -416,7 +416,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   ;((fo.peReferrals ?? []) as Rec[]).forEach((p, i) => {
     const w = `frontendOnly.peReferrals[${i}]`
     studentRef(`${w}.studentNumber`, p.studentNumber)
-    userRef(`${w}.referredByUserId`, p.referredByUserId)
+    if (typeof p.referredBy !== 'string' || !p.referredBy.trim()) fail(`${w}.referredBy: must be the referrer's name`)
     oneOf(`${w}.disposition`, p.disposition, ENUMS.disposition)
     relDateTime(`${w}.createdAt`, p.createdAt)
   })

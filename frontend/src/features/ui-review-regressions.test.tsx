@@ -3,25 +3,12 @@ import { useState } from 'react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// jsdom has no Web Worker, which the real scanner needs. A camera that fails to start is exactly the
-// case under test here ("Camera scan is unavailable").
-vi.mock('qr-scanner', () => ({
-  default: class {
-    start() {
-      return Promise.reject(new Error('Camera unavailable in tests'))
-    }
-    stop() {}
-    destroy() {}
-  },
-}))
-
 // jsdom has no canvas. Replace the chart with a stub that keeps its accessible label.
 vi.mock('react-chartjs-2', () => {
   const Stub = (props: { 'aria-label'?: string }) => <div role="img" aria-label={props['aria-label']} />
   return { Bar: Stub, Line: Stub }
 })
 import { renderWithRouter } from '../test/renderWithRouter'
-import { db } from '../lib/mock-db/store'
 import { getGradeLevels, getRecordedAuditEntries, getStudent, listIncidents, listVisits, resetMockDb } from '../lib/mock-db'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
 import { IncidentReportPage } from './emergency-response/IncidentReportPage'
@@ -32,7 +19,6 @@ import { AuditLogPage } from './audit-log/AuditLogPage'
 import { BackupStatusPage } from './backup/BackupStatusPage'
 import { DashboardPage } from './dashboard/DashboardPage'
 import { useAsyncData } from '../hooks/useAsyncData'
-import { QrMobileHubPage } from './qr-digital-health-id/mobile/QrMobileHubPage'
 import { Button, Modal } from '../components'
 import { AppShell } from '../layouts/AppShell'
 
@@ -190,21 +176,6 @@ describe('UI/UX review follow-up fixes', () => {
     expect(result.current.isRefetching).toBe(false)
   })
 
-  it('clears a previous "Student not found" message when a camera scan starts', async () => {
-    const user = userEvent.setup()
-    renderWithRouter(<QrMobileHubPage />)
-
-    // The student leaves the records between the search and the pick, so the lookup can't find them.
-    await user.type(screen.getByRole('combobox', { name: /student number or student name/i }), '202600001')
-    await screen.findByRole('option', { name: /2026-00001/ })
-    db().students = db().students.filter((student) => student.studentNumber !== '2026-00001')
-    await user.keyboard('{Enter}')
-    expect(await screen.findByText('Student not found.')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Scan QR Code' }))
-    expect(screen.queryByText('Student not found.')).not.toBeInTheDocument()
-  })
-
   it('does not expose sidebar nav groups as landmark regions', () => {
     renderWithRouter(
       <AppShell user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} active="dashboard" onLogout={() => {}}>
@@ -283,7 +254,7 @@ describe('UI/UX review Group B decisions', () => {
     renderWithRouter(<AuditLogPage viewer={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} />)
 
     const table = await screen.findByRole('table', { name: 'Filtered audit log' })
-    expect(table.textContent).not.toMatch(/\b(visit|incident|item|student|user|followup)-(staff-|admin-|instructor-)?\d{2,4}\b/)
+    expect(table.textContent).not.toMatch(/\b(visit|incident|item|student|user|followup)-(staff-|admin-)?\d{2,4}\b/)
     expect(table.textContent).toMatch(/(Visit|Incident)\d{4}-\d{5}/)
   })
 })

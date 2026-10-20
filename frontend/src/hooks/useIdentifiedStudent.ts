@@ -2,14 +2,14 @@ import { useState } from 'react'
 import type { Student } from '../types/entities'
 
 /**
- * Which student an entry form is about. The student is either identified before the form opens (a
- * QR scan or a quick-action passes `?student=`), or searched and picked on the form (`StudentPicker`).
+ * Which student an entry form is about: searched and picked on the form (`StudentPicker`), or the
+ * student of a saved incident reopened for Stage 2.
  * A form never falls back to a default student.
  *
  * `find` is the feature's own lookup (its `api/` module), so this hook stays free of data access.
  */
 export function useIdentifiedStudent(
-  /** The student identified before the form opened; may arrive once the form's data has loaded. */
+  /** A reopened incident's student; may arrive once the form's data has loaded. */
   preselected: Student | null | undefined,
   find: (studentNumber: string) => Promise<Student>,
 ) {

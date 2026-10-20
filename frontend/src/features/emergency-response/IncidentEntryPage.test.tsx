@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { getIncident, getRecordedAuditEntries, getStudent, listIncidents, resetMockDb } from '../../lib/mock-db'
 import { selectOption } from '../../test/selectOption'
+import { pickStudent } from '../../test/pickStudent'
 import { IncidentEntryPage } from './IncidentEntryPage'
 import { IncidentReportPage } from './IncidentReportPage'
 import { renderWithRouter } from '../../test/renderWithRouter'
@@ -13,12 +14,14 @@ describe('Report Incident', () => {
   beforeEach(() => resetMockDb())
 
   it('starts as Stage 1 fast capture with visible status', async () => {
-    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+    const user = userEvent.setup()
+    renderWithRouter(<IncidentEntryPage />)
+    await pickStudent(user, STUDENT)
 
     expect(await screen.findByRole('heading', { name: 'Report Incident' })).toBeInTheDocument()
     expect(screen.getByText('Needs completion')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Stage 1 fast capture' })).toBeInTheDocument()
-    expect(screen.getByText(/\d{4}-\d{5}/)).toBeInTheDocument()
+    expect(screen.getAllByText(new RegExp(STUDENT)).length).toBeGreaterThan(0)
   })
 
   it('validates Stage 1 essentials inline: the complaint only, no reading is required', async () => {
@@ -35,7 +38,8 @@ describe('Report Incident', () => {
 
   it('saves Stage 1, then completes Stage 2 with audit entries', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+    renderWithRouter(<IncidentEntryPage />)
+    await pickStudent(user, STUDENT)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
     await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
@@ -139,7 +143,8 @@ describe('Report Incident: optional additional notes', () => {
 
   async function saveStageOne(notes?: string) {
     const user = userEvent.setup()
-    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+    renderWithRouter(<IncidentEntryPage />)
+    await pickStudent(user, STUDENT)
     await screen.findByRole('heading', { name: 'Report Incident' })
     await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
     await user.type(screen.getByLabelText(/temperature/i), '37.2')
@@ -177,7 +182,8 @@ describe('Report Incident: failed submit and unusual vitals', () => {
 
   it('moves focus to the first invalid field when Stage 1 is incomplete', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+    renderWithRouter(<IncidentEntryPage />)
+    await pickStudent(user, STUDENT)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
     await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
@@ -192,7 +198,8 @@ describe('Report Incident: failed submit and unusual vitals', () => {
 
   it('moves focus to the first invalid Stage 2 field', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+    renderWithRouter(<IncidentEntryPage />)
+    await pickStudent(user, STUDENT)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
     await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
@@ -209,7 +216,8 @@ describe('Report Incident: failed submit and unusual vitals', () => {
 
   it('blocks completion when the departure time is only partly typed', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+    renderWithRouter(<IncidentEntryPage />)
+    await pickStudent(user, STUDENT)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
     await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
@@ -233,7 +241,8 @@ describe('Report Incident: failed submit and unusual vitals', () => {
 
   it('warns about an implausible reading but still saves Stage 1', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+    renderWithRouter(<IncidentEntryPage />)
+    await pickStudent(user, STUDENT)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
     await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
@@ -251,7 +260,8 @@ describe('Report Incident: failed submit and unusual vitals', () => {
 
   it('warns about an implausible pulse, and never about the oximeter (no range from the clinician yet)', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+    renderWithRouter(<IncidentEntryPage />)
+    await pickStudent(user, STUDENT)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
     await user.type(screen.getByLabelText(/pulse/i), '920')
@@ -263,7 +273,8 @@ describe('Report Incident: failed submit and unusual vitals', () => {
 
   it('flags a fever from 37 °C up, without blocking the save', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+    renderWithRouter(<IncidentEntryPage />)
+    await pickStudent(user, STUDENT)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
     await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
@@ -278,7 +289,8 @@ describe('Report Incident: failed submit and unusual vitals', () => {
 
   it('shows no warning for an ordinary reading', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+    renderWithRouter(<IncidentEntryPage />)
+    await pickStudent(user, STUDENT)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
     await user.type(screen.getByLabelText(/temperature/i), '36.8')
@@ -310,7 +322,8 @@ describe('Report Incident: optional readings, never all four forced', () => {
 
   async function saveStageOne(readings: Partial<Record<ReadingLabel, string>>) {
     const user = userEvent.setup()
-    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+    renderWithRouter(<IncidentEntryPage />)
+    await pickStudent(user, STUDENT)
     await screen.findByRole('heading', { name: 'Report Incident' })
     await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
     for (const [label, value] of Object.entries(readings)) await user.type(screen.getByLabelText(new RegExp(label, 'i')), value)

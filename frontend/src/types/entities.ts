@@ -52,7 +52,7 @@ export type StudentListRef = Pick<Student, 'id' | 'studentNumber'>
  */
 export type StudentSearchResult = Pick<Student, 'id' | 'studentNumber' | 'fullName' | 'gradeLevel'>
 
-export type UserRole = 'staff' | 'admin' | 'instructor'
+export type UserRole = 'staff' | 'admin'
 
 export interface User {
   id: string
@@ -227,7 +227,7 @@ export interface BackupLog {
 }
 
 export type AuditActionType =
-  'login' | 'logout' | 'scan' | 'submit' | 'approve' | 'create' | 'update' | 'delete' | 'archive' | 'print'
+  'login' | 'logout' | 'submit' | 'approve' | 'create' | 'update' | 'delete' | 'archive' | 'print'
 
 export interface AuditLogEntry {
   userId: string

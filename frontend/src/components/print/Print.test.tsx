@@ -9,7 +9,6 @@ describe('PrintDocument', () => {
       <PrintDocument
         title="Test"
         scope="Scope"
-        auditPrint={false}
         viewer={{ id: 'u', name: 'Ana "Q" \\ O’Neil\n}', role: 'staff' }}
       >
         Body

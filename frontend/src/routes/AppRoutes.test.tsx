@@ -16,7 +16,6 @@ vi.mock('react-chartjs-2', () => {
 
 const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
 const ADMIN: SessionUser = { id: 'usr-principal', name: 'Principal', role: 'admin' }
-const INSTRUCTOR: SessionUser = { id: 'usr-pe', name: 'PE Instructor', role: 'instructor' }
 
 function CurrentPath() {
   const location = useLocation()
@@ -126,7 +125,6 @@ describe('App routes', () => {
   it.each([
     ['Staff', STAFF],
     ['Admin/Principal', ADMIN],
-    ['PE/Sports Instructor', INSTRUCTOR],
   ] as const)('opens Privacy Policy for %s with the footer link available', async (_, user) => {
     renderAt('/privacy-policy', user)
 
@@ -145,19 +143,11 @@ describe('App routes', () => {
     expect(getRecordedAuditEntries()).toEqual([])
   })
 
-  it('does not allow the PE/Sports Instructor to open the audit log', async () => {
-    renderAt('/audit-log', INSTRUCTOR)
+  it.each(['/qr/scan', '/qr/print', '/emergency/mobile'])('shows Staff the not-found screen on the removed address %s', async (path) => {
+    renderAt(path)
 
-    expect(await screen.findByRole('heading', { name: 'Instructor Lookup' })).toBeInTheDocument()
-    expect(screen.getByTestId('path')).toHaveTextContent('/qr/scan')
-  })
-
-  it('sends the PE/Sports Instructor to the read-only QR lookup, with no shell', async () => {
-    renderAt('/', INSTRUCTOR)
-
-    expect(await screen.findByRole('heading', { name: 'Instructor Lookup' })).toBeInTheDocument()
-    expect(screen.getByTestId('path')).toHaveTextContent('/qr/scan')
-    expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Page Not Found' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /QR/ })).not.toBeInTheDocument()
   })
 
   it('shows a not-found screen for an unknown path', async () => {

@@ -10,7 +10,6 @@ import { AuditLogPage } from './audit-log/AuditLogPage'
 import { ExcuseLetterPage } from './clinic-visits/ExcuseLetterPage'
 import { DashboardPage } from './dashboard/DashboardPage'
 import { IncidentReportPage } from './emergency-response/IncidentReportPage'
-import { QrPrintPage } from './qr-digital-health-id/desktop/QrPrintPage'
 import { ReportsPage } from './reports/ReportsPage'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
 
@@ -42,18 +41,16 @@ afterEach(() => {
   })
 })
 
-function expectDocument(doc: HTMLElement, title: string | RegExp, { footer = true } = {}) {
+function expectDocument(doc: HTMLElement, title: string | RegExp) {
   // Rendered outside the app root, so print CSS can hide the screen entirely.
   expect(doc.parentElement).toBe(document.body)
   expect(doc).toHaveTextContent('Mendez Christian Academy — School Clinic')
   expect(within(doc).getByRole('heading', { level: 1 })).toHaveTextContent(title)
   expect(doc.querySelector('[data-print-scope]')?.textContent?.trim()).toBeTruthy()
   const css = doc.querySelector('style')?.textContent ?? ''
-  if (footer) {
-    expect(css).toContain('Printed ')
-    expect(css).toContain(CONFIDENTIALITY_LINE)
-    expect(css).toContain('counter(pages)')
-  } else expect(css).toBe('')
+  expect(css).toContain('Printed ')
+  expect(css).toContain(CONFIDENTIALITY_LINE)
+  expect(css).toContain('counter(pages)')
 }
 
 async function expectNoNamesOrIds(doc: HTMLElement) {
@@ -205,16 +202,6 @@ describe('purpose-built printouts', () => {
       `${rows.length} entries. Filters: all dates; all users; all actions; all targets`,
     )
     expect(within(doc).getAllByRole('row')).toHaveLength(rows.length + 1)
-    await expectNoNamesOrIds(doc)
-  })
-
-  it('QR sticker: the QR and the Student Number only, no footer', async () => {
-    renderWithRouter(<QrPrintPage />)
-    await screen.findByRole('heading', { name: 'Print QR Health IDs' })
-    expectScreenControlHidden('Print Sticker')
-    const doc = print()
-    expectDocument(doc, 'QR Health ID Sticker', { footer: false })
-    expect(within(doc).getByRole('img', { name: /^QR code for \d{4}-\d{5}$/ })).toBeInTheDocument()
     await expectNoNamesOrIds(doc)
   })
 

@@ -127,7 +127,6 @@ function UserForm({
               options={[
                 { value: 'staff', label: 'School Clinician' },
                 { value: 'admin', label: 'Admin / Principal' },
-                { value: 'instructor', label: 'PE/Sports Instructor' },
               ]}
               onChange={(value) => setRole(value as UserRole)}
             />

@@ -228,17 +228,15 @@ function ReadingsFields({
  */
 export function IncidentEntryPage({
   viewer = getMockSessionUser(),
-  studentNumber,
   incidentId,
 }: {
   viewer?: SessionUser
-  studentNumber?: string
   /** Reopens this saved incident at Stage 2 (Screen #16b). */
   incidentId?: string
 }) {
   const { data, status, reload } = useAsyncData(
-    `incident-entry|${incidentId ?? ''}|${studentNumber ?? 'unidentified'}`,
-    () => fetchIncidentEntryContext({ studentNumber, incidentId }),
+    `incident-entry|${incidentId ?? ''}`,
+    () => fetchIncidentEntryContext(incidentId),
   )
 
   const back = <BackButton fallback={paths.incidents} />

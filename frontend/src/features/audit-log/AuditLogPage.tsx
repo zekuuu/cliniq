@@ -36,7 +36,6 @@ type AuditSortKey = 'timestamp' | 'user' | 'action' | 'module' | 'record'
 const actionOptions: Array<{ value: AuditActionType; label: string }> = [
   { value: 'login', label: 'Login' },
   { value: 'logout', label: 'Logout' },
-  { value: 'scan', label: 'Scan' },
   { value: 'submit', label: 'Submit' },
   { value: 'approve', label: 'Approve' },
   { value: 'create', label: 'Create' },
@@ -49,7 +48,6 @@ const actionOptions: Array<{ value: AuditActionType; label: string }> = [
 const actionStatusMap: StatusMap<AuditActionType> = {
   login: { label: 'Login', tone: 'success' },
   logout: { label: 'Logout', tone: 'neutral' },
-  scan: { label: 'Scan', tone: 'info' },
   submit: { label: 'Submit', tone: 'info' },
   approve: { label: 'Approve', tone: 'success' },
   create: { label: 'Create', tone: 'success' },

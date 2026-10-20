@@ -258,9 +258,23 @@ describe('App Shell / Navigation', () => {
     ])
   })
 
-  it('gives PE/Sports Instructor no shell navigation groups', () => {
-    expect(navGroupsFor('instructor')).toEqual([])
+  it('gives Staff the full navigation, with no QR entry (ADR-027)', () => {
+    const groups = navGroupsFor('staff')
+    expect(groups.flatMap((group) => group.items.map((item) => item.key))).toEqual([
+      'dashboard',
+      'calendar',
+      'students',
+      'visits',
+      'incidents',
+      'followUps',
+      'inventory',
+      'reports',
+      'accounts',
+      'backup',
+      'auditLog',
+    ])
   })
+
 })
 
 describe('App Shell / Mobile navigation', () => {
@@ -278,16 +292,6 @@ describe('App Shell / Mobile navigation', () => {
     await user.click(within(menu).getByRole('button', { name: 'Report an Issue' }))
     expect(screen.queryByRole('navigation', { name: 'Mobile navigation' })).not.toBeInTheDocument()
     expect(await screen.findByRole('dialog', { name: /report an issue/i })).toBeInTheDocument()
-  })
-
-  it('shows no menu button to a role with no menu entries', () => {
-    renderWithRouter(
-      <AppShell user={{ id: 'user-instructor-01', name: 'PE Instructor', role: 'instructor' }} active={null} onLogout={() => {}}>
-        <div>Screen</div>
-      </AppShell>,
-    )
-    expect(navGroupsFor('instructor')).toEqual([])
-    expect(screen.queryByRole('button', { name: 'Open navigation' })).not.toBeInTheDocument()
   })
 
   it('leaves room for the focus ring inside the scrolling sidebar and phone navigation', async () => {

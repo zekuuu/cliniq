@@ -7,6 +7,7 @@ import { addDays, todayISO } from '../lib/dates'
 import { db, resetMockDb } from '../lib/mock-db/store'
 import { pickDate } from '../test/pickDate'
 import { selectOption } from '../test/selectOption'
+import { pickStudent } from '../test/pickStudent'
 import { ExcuseLetterPage } from './clinic-visits/ExcuseLetterPage'
 import { NewVisitEntryPage } from './clinic-visits/NewVisitEntryPage'
 import { IncidentEntryPage } from './emergency-response/IncidentEntryPage'
@@ -47,7 +48,8 @@ describe('Back after a save never returns to the submitted form', () => {
 
   it('New Visit: Save, Review excuse letter, Back skips the submitted form', async () => {
     const user = userEvent.setup()
-    renderAfterPrevious('/visits/new', <NewVisitEntryPage studentNumber={STUDENT} />)
+    renderAfterPrevious('/visits/new', <NewVisitEntryPage />)
+    await pickStudent(user, STUDENT)
     await screen.findByRole('heading', { name: 'New Visit' })
     await user.type(screen.getByRole('combobox', { name: /complaint/i }), 'Fever')
     await user.click(screen.getByRole('radio', { name: 'Sent home' }))
@@ -115,7 +117,8 @@ describe('Back after a save never returns to the submitted form', () => {
 
   it('Incident: Save Stage 1 opens Stage 2 in place, and Back leaves to the previous screen', async () => {
     const user = userEvent.setup()
-    renderAfterPrevious('/incidents/new', <IncidentEntryPage studentNumber={STUDENT} />)
+    renderAfterPrevious('/incidents/new', <IncidentEntryPage />)
+    await pickStudent(user, STUDENT)
     await screen.findByRole('heading', { name: 'Report Incident' })
     await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
     await user.type(screen.getByLabelText(/temperature/i), '37.2')
@@ -145,7 +148,7 @@ describe('Back and Cancel behave identically on forms', () => {
   beforeEach(() => resetMockDb())
 
   it.each([
-    ['New Visit', <NewVisitEntryPage studentNumber={STUDENT} />, /complaint/i],
+    ['New Visit', <NewVisitEntryPage />, /complaint/i],
     ['Add Student', <StudentFormPage />, /full name/i],
     ['Add Inventory Item', <InventoryFormPage />, /item name/i],
     ['User form', <UserFormPage />, /full name/i],

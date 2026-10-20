@@ -5,7 +5,7 @@ import { paths } from '../../../routes/paths'
 
 export function NewVisitLink({ className }: { className?: string }) {
   return (
-    <Link to={paths.visitNew()} className={cn(buttonClassName({ variant: 'primary' }), className)}>
+    <Link to={paths.visitNew} className={cn(buttonClassName({ variant: 'primary' }), className)}>
       <Icon name="stethoscope" />
       New Visit
     </Link>

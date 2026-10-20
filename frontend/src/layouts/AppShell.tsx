@@ -77,7 +77,6 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
       <div className="flex min-w-0 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border bg-background px-4 sm:px-8 print:hidden">
           <div className="flex min-w-0 items-center gap-2 lg:hidden">
-            {/* A role with no menu entries (the Instructor on the shared privacy page) gets no empty menu. */}
             {navGroups.length > 0 && (
               <button
                 type="button"

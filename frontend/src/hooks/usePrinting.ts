@@ -12,13 +12,13 @@ let printListeners = 0
  * When a document title is supplied, the first `beforeprint` event records one audit entry for the
  * signed-in viewer. Print-only trees therefore cost nothing on screen and never render twice in tests.
  */
-export function usePrinting(documentTitle?: string, viewer?: SessionUser, auditPrint = true): string | null {
+export function usePrinting(documentTitle?: string, viewer?: SessionUser): string | null {
   const [printedAt, setPrintedAt] = useState<string | null>(null)
   useEffect(() => {
     printListeners += 1
     const before = () => {
       flushSync(() => setPrintedAt(new Date().toISOString()))
-      if (!activePrintAudit && auditPrint && documentTitle) {
+      if (!activePrintAudit && documentTitle) {
         activePrintAudit = true
         void recordPrint(documentTitle, viewer)
       }
@@ -35,6 +35,6 @@ export function usePrinting(documentTitle?: string, viewer?: SessionUser, auditP
       printListeners -= 1
       if (!printListeners) activePrintAudit = false
     }
-  }, [auditPrint, documentTitle, viewer])
+  }, [documentTitle, viewer])
   return printedAt
 }

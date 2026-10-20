@@ -6,7 +6,7 @@ import { ForcePasswordChangePage } from './ForcePasswordChangePage'
 
 describe('Force Password Change', () => {
   it('shares the Login backdrop and brand header, so the first sign-in reads as one flow', async () => {
-    beginPasswordChange('user-instructor-02')
+    beginPasswordChange('user-staff-02')
     renderWithRouter(<ForcePasswordChangePage onComplete={() => {}} />, {
       route: '/force-password-change',
     })

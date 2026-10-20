@@ -112,17 +112,9 @@ function validate(values: PeReferralValues): Errors {
   return errors
 }
 
-export function PeSportsReferralPage({
-  viewer = getMockSessionUser(),
-  studentNumber,
-}: {
-  viewer?: SessionUser
-  studentNumber?: string
-}) {
-  const { data, status, reload } = useAsyncData(`pe-referral|${studentNumber ?? 'unidentified'}`, () =>
-    fetchPeReferralContext(studentNumber),
-  )
-  const identified = useIdentifiedStudent(data?.student, findReferralStudent)
+export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser }) {
+  const { data, status, reload } = useAsyncData('pe-referral', fetchPeReferralContext)
+  const identified = useIdentifiedStudent(null, findReferralStudent)
   const [values, setValues] = useState<PeReferralValues>({
     referredBy: '',
     activity: '',
@@ -156,7 +148,6 @@ export function PeSportsReferralPage({
     // Fills every empty field; anything already typed is kept.
     setValues((current) => ({
       ...current,
-      referredBy: current.referredBy || data.defaults.referredBy,
       activity: current.activity || data.defaults.activity,
       injurySummary: current.injurySummary || data.defaults.injurySummary,
       clinicalAssessment: current.clinicalAssessment || data.defaults.clinicalAssessment,
@@ -262,16 +253,14 @@ export function PeSportsReferralPage({
             }
           />
           <CardBody className="flex flex-col gap-4">
-            {!data.student && (
-              <StudentPicker
-                search={searchReferralStudents}
-                selected={identified.student}
-                onClear={identified.reset}
-                onSelect={(picked) => void identified.select(picked.studentNumber)}
-                error={identified.error}
-                addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
-              />
-            )}
+            <StudentPicker
+              search={searchReferralStudents}
+              selected={identified.student}
+              onClear={identified.reset}
+              onSelect={(picked) => void identified.select(picked.studentNumber)}
+              error={identified.error}
+              addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
+            />
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Input
                 label="Referred by"

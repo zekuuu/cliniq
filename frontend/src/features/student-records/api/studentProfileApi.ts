@@ -11,7 +11,7 @@ import type { Incident, Student, Visit } from '../../../types/entities'
 
 /**
  * Student Profile data access (Screen #7 / Reference 3). A read-only profile fetch, so no audit-log
- * write is needed for Staff; Instructor profile views are logged through the QR lookup flow.
+ * write is needed.
  *
  * Preview an empty history with `?mockEmpty=visits,incidents` (`lib/mock-db/devToggles.ts`).
  * The whole history loads, newest first: the screen lists the most recent, the printed Student Health

@@ -201,18 +201,10 @@ function TriagePanel({
  * New Visit Entry (Screen #11 / Reference 2). Mutating saves call the mock audit helper now, and
  * will become real audit-log writes when the Laravel endpoints land.
  */
-export function NewVisitEntryPage({
-  viewer = getMockSessionUser(),
-  studentNumber,
-}: {
-  viewer?: SessionUser
-  studentNumber?: string
-}) {
+export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser }) {
   const today = todayISO()
-  const { data, status, reload } = useAsyncData(`new-visit|${studentNumber ?? 'unidentified'}`, () =>
-    fetchNewVisitContext(studentNumber),
-  )
-  const identified = useIdentifiedStudent(data?.student, findVisitStudent)
+  const { data, status, reload } = useAsyncData('new-visit', fetchNewVisitContext)
+  const identified = useIdentifiedStudent(null, findVisitStudent)
   const [complaint, setComplaint] = useState('')
   const [treatment, setTreatment] = useState('')
   const [disposition, setDisposition] = useState<Disposition>('returned_to_class')
@@ -458,33 +450,26 @@ export function NewVisitEntryPage({
             titleId="visit-form-title"
             title="Visit details"
             icon={<Icon name="stethoscope" />}
-            description={
-              data.student
-                ? 'Required fields are marked. The student is already identified from lookup/scan.'
-                : 'Required fields are marked. Search by Student Number or name to identify the student.'
-            }
+            description="Required fields are marked. Search by Student Number or name to identify the student."
           />
           <CardBody className="flex flex-col gap-4">
-            {!data.student && (
-              <StudentPicker
-                search={searchVisitStudents}
-                selected={identified.student}
-                onClear={identified.reset}
-                onSelect={(student) => {
-                  setSaved(null)
-                  void identified.select(student.studentNumber)
-                }}
-                error={identified.error}
-                addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
-                autoFocus
-              />
-            )}
+            <StudentPicker
+              search={searchVisitStudents}
+              selected={identified.student}
+              onClear={identified.reset}
+              onSelect={(student) => {
+                setSaved(null)
+                void identified.select(student.studentNumber)
+              }}
+              error={identified.error}
+              addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
+              autoFocus
+            />
             <ComplaintField
               value={complaint}
               onChange={updateComplaint}
               suggestions={suggestions}
               error={errors.complaint}
-              autoFocus={Boolean(data.student)}
             />
             {cleanComplaint(complaint) ? (
               <TriagePanel

@@ -50,10 +50,6 @@ export interface PrintDocumentProps {
   /** The "what is this" line, in plain words: the period, month, filters, or student it covers. */
   scope: ReactNode
   children: ReactNode
-  /** False only for sheets meant to be cut up (QR stickers). */
-  footer?: boolean
-  /** QR stickers carry no health information and are excluded from print auditing. */
-  auditPrint?: boolean
   /** Only for a table that can't be read in portrait (`@page landscape` in `index.css`). */
   landscape?: boolean
   viewer?: SessionUser
@@ -63,12 +59,10 @@ export function PrintDocument({
   title,
   scope,
   children,
-  footer = true,
-  auditPrint = true,
   landscape = false,
   viewer = getMockSessionUser(),
 }: PrintDocumentProps) {
-  const printedAt = usePrinting(title, viewer, auditPrint)
+  const printedAt = usePrinting(title, viewer)
   if (!printedAt) return null
   return createPortal(
     <div
@@ -78,7 +72,7 @@ export function PrintDocument({
         landscape && '[page:landscape]',
       )}
     >
-      {footer && <style>{footerCss(printedByLine(printedAt, viewer))}</style>}
+      <style>{footerCss(printedByLine(printedAt, viewer))}</style>
       <header className="flex items-center gap-[4mm] border-b-2 border-text-primary pb-[3mm]">
         <img src={LOGO_SRC} alt="" className="size-[15mm] shrink-0 object-contain" />
         <div className="min-w-0">

@@ -98,7 +98,9 @@ describe('LoginPage', () => {
     const trigger = screen.getByRole('button', { name: 'Demo Accounts' })
     await user.click(trigger)
     const dialog = screen.getByRole('dialog', { name: 'Demo accounts' })
-    for (const username of ['demo.nurse', 'demo.principal', 'demo.pe', 'demo.pe2']) {
+    // No PE/Sports Instructor account any more (ADR-029).
+    expect(dialog).not.toHaveTextContent('demo.pe')
+    for (const username of ['demo.nurse', 'demo.principal', 'demo.new']) {
       expect(dialog).toHaveTextContent(username)
     }
     expect(dialog).toHaveTextContent(/authentication is simulated until the Laravel Sanctum API is connected/i)

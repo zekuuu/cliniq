@@ -4,13 +4,12 @@ import { describe, expect, it, vi } from 'vitest'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { rangeForPreset } from '../dateRange'
 import { todayISO } from '../dates'
-import { fetchNewVisitContext, submitNewVisit } from '../../features/clinic-visits/api/newVisitApi'
+import { findVisitStudent, submitNewVisit } from '../../features/clinic-visits/api/newVisitApi'
 import { fetchVisitLog, defaultVisitLogRange } from '../../features/clinic-visits/api/visitLogApi'
 import { fetchDashboardSummary } from '../../features/dashboard/api/dashboardApi'
 import { fetchIncidentLog } from '../../features/emergency-response/api/incidentLogApi'
 import { fetchInventory } from '../../features/inventory/api/inventoryApi'
 import { InventoryListPage } from '../../features/inventory/InventoryListPage'
-import { lookupStudentByNumber } from '../../features/qr-digital-health-id/api/qrLookupApi'
 import { fetchStudentList } from '../../features/student-records/api/studentListApi'
 import { fetchStudentProfile } from '../../features/student-records/api/studentProfileApi'
 import { StudentProfilePage } from '../../features/student-records/StudentProfilePage'
@@ -63,10 +62,6 @@ describe('editing mock-db.json changes every screen consistently', () => {
     expect(profile.student).toMatchObject({ fullName: EDITED_NAME, gradeLevel: EDITED_GRADE })
     expect(profile.visits.length).toBeGreaterThan(0)
 
-    // QR lookup (Staff quick-actions / Instructor read-only view).
-    const scan = await lookupStudentByNumber(student.studentNumber, getMockSessionUser())
-    expect(scan.student.fullName).toBe(EDITED_NAME)
-
     // Visit Log List: every row for this student carries the new grade (and never the name).
     const visitRows = (await fetchVisitLog({ ...defaultVisitLogRange(), search: student.studentNumber, disposition: 'all' }))
     expect(visitRows.length).toBeGreaterThan(0)
@@ -77,8 +72,8 @@ describe('editing mock-db.json changes every screen consistently', () => {
     const incidentRows = await fetchIncidentLog({ from: '2000-01-01', to: todayISO(), search: student.studentNumber, completion: 'all' })
     for (const row of incidentRows) expect(row.gradeLevel).toBe(EDITED_GRADE)
 
-    // New Visit Entry pre-fill (QR quick-action → Record Visit).
-    expect((await fetchNewVisitContext(student.studentNumber)).student?.fullName).toBe(EDITED_NAME)
+    // New Visit Entry: the picked student is loaded with the edited name.
+    expect((await findVisitStudent(student.studentNumber)).fullName).toBe(EDITED_NAME)
 
     // Dashboard: they're a frequent visitor, shown by Student Number only (ADR-004).
     const dash = await fetchDashboardSummary({ range: rangeForPreset('last30', todayISO()) })
