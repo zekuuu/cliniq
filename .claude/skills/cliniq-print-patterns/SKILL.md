@@ -43,8 +43,9 @@ Every printout has:
   screen's figure because it comes from the same data function. If a figure isn't in the data, it
   doesn't print; log it as `LATER`.
 - Never print an internal record id (`visit-0001`) and never invent a reference number (backend
-  `LATER`). A printout that lists several students shows Student Numbers only; a printout about one
-  deliberately opened student may show the full name (ADR-004).
+  `LATER`). A printout that lists several students shows masked LRNs only; a printout about one
+  deliberately opened student may show the full name. Every printout shows the LRN masked (ADR-004,
+  ADR-028).
 - A draft or unapproved record must not look official on paper (the excuse letter's DRAFT mark).
 
 ## Where it lives

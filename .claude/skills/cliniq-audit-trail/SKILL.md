@@ -17,6 +17,8 @@ Every one of the following action types must write an audit log entry, across ev
 
 Per the `AuditLogEntry` shape already defined (Frontend Context Brief, Section 5): **who** (the authenticated user), **what action type**, **what target record**, **when** (timestamp). This is what makes every access accountable under RA 10173: each action is attributable to a signed-in Staff or Admin/Principal account and timestamped.
 
+**Never write an LRN in an entry (ADR-028).** A summary names fields, never values (ADR-017): a corrected LRN is "Updated LRN", with neither the old nor the new value. Where the Audit Log shows a student-related record, it shows the masked LRN (`••••••••1234`), and links to the student by the internal id.
+
 ## When you're implementing a new endpoint or mutation
 
 If it touches student data, visit/incident records, inventory, or any account — write the audit log entry in the same change, not as a follow-up task. This isn't a "nice to have" logging layer; it's a named functional requirement (Project Plan, Section 5.1: "Audit logging of every login, submission, and approval across all modules").

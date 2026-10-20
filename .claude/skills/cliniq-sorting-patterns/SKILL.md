@@ -19,7 +19,7 @@ meaningful data columns use the same shared header control, and its action colum
 - Keep sort state controlled by the page. Store the key and direction explicitly, copy the source rows before sorting, and sort the complete filtered result before slicing the current pagination page.
 - A first click on an unsorted column uses ascending order. A second click on the active column reverses the direction. Selecting a different column starts that column in ascending order unless the product requirement specifies another default.
 - Whenever a table exposes a date or date-time column, make that column the active default sort in descending order so the latest record appears first. Only choose a different default when a documented product requirement makes the date order secondary.
-- Use deterministic comparators for the displayed value (for example, locale-aware comparison with numeric ordering for Student Numbers and timestamps). Keep ties stable where the data layer provides a meaningful original order.
+- Use deterministic comparators for the displayed value (for example, locale-aware comparison with numeric ordering for LRNs and timestamps). Keep ties stable where the data layer provides a meaningful original order.
 - Reset pagination to page 1 whenever the sort key or direction changes, just as when a filter changes.
 
 ## Accessibility and interaction

@@ -25,7 +25,7 @@ Use this with `cliniq-interactive-states` (hover, cursor, focus) and `cliniq-dis
 
 - History target: the visible text is plain **"Back"**, because history can land anywhere.
 - "Back to <screen>" only for a fixed target, through `to` and `label` (a `Link`): "Back to Sign In", "Back to Dashboard".
-- The visible text is the accessible name (no `aria-label`). Never a student name or Student Number.
+- The visible text is the accessible name (no `aria-label`). Never a student name or LRN.
 
 ## Look and placement
 
