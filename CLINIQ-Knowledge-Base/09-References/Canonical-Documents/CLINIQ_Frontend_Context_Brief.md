@@ -7,7 +7,7 @@ This is the context package to hand to an AI coding agent before it writes any f
 ## 1. Project Context (the "why")
 
 - **What it is:** CLINIQ is a clinic tracking and monitoring system for Mendez Christian Academy, a private school in Cavite, Philippines, serving 900+ students with a single school nurse and one shared workstation.
-- **Who uses it:** A School Head Nurse and part-time clinic staff (full access), School Administration/Principal (read-only reports), and PE/Sports instructors (a narrow emergency-info view only).
+- **Who uses it:** A School Head Nurse and part-time clinic staff (full access), and School Administration/Principal (read-only reports). PE/Sports instructors have no account; they ask the clinician (ADR-029).
 - **The constraint that shapes everything:** one existing low-spec Windows 11 workstation (Intel i3 / 4GB RAM), no budget for new hardware, non-technical staff, LAN-only deployment (no public internet). The UI has to be fast on weak hardware and usable by someone who has never used a web app professionally before.
 - **Give the agent the two source documents if it can read files:** the CLINIQ Project Plan and the CLINIQ Review of Related Systems (both PDFs you already have). Section 5.3 of the Project Plan is the single source of truth for the module list.
 
@@ -17,19 +17,19 @@ This is the context package to hand to an AI coding agent before it writes any f
 - **Backend (separate, consumed via REST API):** Laravel (PHP), MySQL, Laravel Sanctum for authentication.
 - **Build target:** `npm run build` produces static assets served by Laravel/Apache on the local LAN — no SSR, no edge functions, no cloud-only APIs. Assume everything must work with zero internet access.
 - **State/data fetching:** tell the agent your preferred library (React Query/TanStack Query, SWR, or plain fetch+context) — this brief intentionally leaves that open since it wasn't fixed in planning.
-- **Auth model:** token-based login against Laravel Sanctum; three roles gate the UI (Staff, Admin/Principal, PE/Sports Instructor — see Section 3). A session lasts **1 week, until the token expires — there is no idle timeout, so do not build inactivity-logout logic in the frontend.** When a token expires, the user simply lands back on Login.
+- **Auth model:** token-based login against Laravel Sanctum; two roles gate the UI (Staff, Admin/Principal — see Section 3). A session lasts **1 week, until the token expires — there is no idle timeout, so do not build inactivity-logout logic in the frontend.** When a token expires, the user simply lands back on Login.
 
 ## 3. User Roles & Permissions
 
 | Role | Can do |
 |---|---|
-| **Staff** (nurse/clinic assistant) | Full read/write on students, visits, incidents, inventory; generates reports; manages own account and other Staff/Admin/Instructor accounts; uses the QR scan/lookup hub on both computer and mobile |
+| **Staff** (nurse/clinic assistant) | Full read/write on students, visits, incidents, inventory; generates reports; manages own account and other Staff/Admin accounts |
 | **Admin/Principal** | Read-only: reports, the Clinic Overview Dashboard. No edit access anywhere |
-| **PE/Sports Instructor** | Mobile-only, read-only: scan or manually enter a Student Number to view that student's full profile and visit/incident history (so recent injuries are visible). No action buttons, no editing, no access outside this one lookup flow |
+| **PE/Sports Instructor** | No account and no access (ADR-029). An instructor asks the clinician, who decides what to share |
 
-**Display-privacy rule:** the actual risk isn't a single deliberate lookup — it's a desktop screen showing a **list or pattern across multiple students at once** (a visit log, an incident log, a "frequent visitor" flag) being glanced at by a passerby, who can then attach a specific named student to a health pattern ("he visits a lot, what's going on?"). So: the **Visit Log List, Incident Log List, and the Dashboard's frequent-visitor section default to Student Number**, not full name. A **single deliberate lookup — the QR scan result (Staff or Instructor), the full profile page, search results, and the masterlist — shows the full name normally**, since someone has already identified and is looking at one specific student for a legitimate reason. The masterlist shows names freely (it's just a roster) but shouldn't show medical/confidential fields inline — those still require opening the individual profile.
+**Display-privacy rule:** the actual risk isn't a single deliberate lookup — it's a desktop screen showing a **list or pattern across multiple students at once** (a visit log, an incident log, a "frequent visitor" flag) being glanced at by a passerby, who can then attach a specific named student to a health pattern ("he visits a lot, what's going on?"). So: the **Visit Log List, Incident Log List, and the Dashboard's frequent-visitor section default to Student Number**, not full name. A **single deliberate lookup — the full profile page, search results, and the masterlist — shows the full name normally**, since someone has already identified and is looking at one specific student for a legitimate reason. The masterlist shows names freely (it's just a roster) but shouldn't show medical/confidential fields inline — those still require opening the individual profile.
 
-**Note for the agent:** a second external role, **Canteen Staff** (narrower than Instructor — food allergies only), was designed but remains deferred to a future phase. See Section 9.
+**Note for the agent:** a second external role, **Canteen Staff** (food allergies only), was designed but remains deferred to a future phase. See Section 9.
 
 ## 4. Complete Page/Screen Inventory
 
@@ -38,7 +38,7 @@ Give the agent this full list — it maps directly to the two module groups (bas
 ### Auth & Shell
 1. **Login** — username/password, role-aware redirect after login; the session lasts 1 week until the token expires, with no idle timeout
 2. **Force Password Change** — shown on first login (backend enforces this)
-3. **App Shell/Nav** — role-aware sidebar or nav; Staff sees all modules, Admin sees only Reports + Dashboard, Instructor sees only the mobile scan/lookup screen (no shell/nav needed for that one). The desktop header shows the signed-in user's name and role with a red, icon-only Log out control carrying an accessible label.
+3. **App Shell/Nav** — role-aware sidebar or nav; Staff sees all modules, Admin sees only Reports + Dashboard. The desktop header shows the signed-in user's name and role with a red, icon-only Log out control carrying an accessible label.
 
 ### Dashboard
 4. **Staff Dashboard** — today's visit count, low-stock alerts, expiring-medicine alerts, backup status widget, quick "New Visit" action. Delivered on the shared Clinic Overview (#31): Staff get a strip under the header with the "New Visit" action and a backup-status indicator (status + last-backup date) linking to #32
@@ -74,14 +74,8 @@ Give the agent this full list — it maps directly to the two module groups (bas
 21. **Health Summaries View**
 (All three need print/export-friendly layouts — this is a paper-replacement feature, so print CSS matters.)
 
-### QR Digital Health ID (enhancement) — computer (Staff) + mobile (Staff and PE/Sports Instructor)
-22. **QR Code Print View** — generates/prints a QR sticker per student, encoding their Student Number (Staff only, computer)
-23. **Scan/Lookup Hub (Staff, computer or mobile)** — two ways to identify a student: "Scan QR Code" (camera) or "Enter Student Number" (manual text fallback); once identified, shows the student's full name and details normally — this is a deliberate single-student lookup, not a glanceable list (see the display-privacy rule)
-24. **Student Quick-Actions (Staff)** — appears once a student is identified: **Record Visit** (→ #11, pre-filled), **Log Emergency** (→ #16, Stage 1, pre-filled), **View Full Profile** (→ #7), **Dispense Medicine** (→ #30, pre-linkable to the visit), **PE/Sports Referral** (→ #14, pre-filled — this is #14's entry point)
-25. **Emergency Button (Staff, mobile)** — separate, faster entry point than the quick-actions above; jumps straight to #16 (Stage 1) rather than routing through student identification first if a scan already happened
-26. **Instructor Scan/Lookup (PE/Sports Instructor, mobile only)** — scan or enter a Student Number; opens a **read-only** view of that student's full profile plus visit/incident history. No buttons for any action — this screen only displays data
-
-No separate login screen for Staff here — the computer and mobile Staff flows both run inside the existing Staff session. The Instructor flow does need its own login (Instructor role), since it's a different account type, but it's still a normal auth-gated screen, not a public/unauthenticated one — nothing in this system is reachable without logging in as something.
+### (Removed) Screens #22–26
+The QR screens (#22–24, #26) were removed with the QR feature (ADR-027), and the phone Emergency screen (#25) with the phone-only screens (ADR-033). Their numbers are kept so later screens keep theirs; Staff start an incident from Report Incident (#16).
 
 ### Smart Triage Quick-Reference (enhancement)
 27. Not a standalone page — a checklist panel/modal embedded in **New Visit Entry** (#11), triggered by the selected complaint type
@@ -98,35 +92,33 @@ No separate login screen for Staff here — the computer and mobile Staff flows 
 32. **Backup Status Screen** — last backup date/size/status, plus a plain-language guided recovery checklist (Staff-only, likely nurse-only)
 
 ### User Management
-33. **User List** — Staff only; Staff, Admin/Principal, and PE/Sports Instructor accounts
+33. **User List** — Staff only; Staff and Admin/Principal accounts (PE/Sports Instructors have no account, ADR-029)
 34. **Add/Edit User & Role Assignment**
 
-**Total: ~35 screens/views** (accounting for the two-stage incident entry and the new Instructor and Emergency-button screens), several of which (Excuse Letter, Incident Report, Monthly Report, QR print) also need a distinct print layout — call that out to the agent explicitly since print CSS is easy to forget.
+**Total: ~30 screens/views** (accounting for the two-stage incident entry; the four QR screens and the phone Emergency screen were removed, ADR-027 and ADR-033), several of which (Excuse Letter, Incident Report, Monthly Report) also need a distinct print layout — call that out to the agent explicitly since print CSS is easy to forget.
 
 ## 5. Data Entities the Frontend Should Expect
 
 Give the agent this even without a finalized API spec, so component props and forms are built against realistic shapes:
 
-- **Student** — id, **studentNumber** (format `YYYY-NNNNN`, system-generated at creation, encoded into the printed QR code), full name, grade level, contact info, allergies, medical conditions, an ordered emergency-contact list (at least one required; first is primary; each has name, relationship, phone, and verification state), record-complete flag, **archived flag** (archived students stay in the database but are excluded from active lists/search by default)
-- **User** — id, name, username, role (`staff` / `admin` / `instructor`), last login
+- **Student** — id, **studentNumber** (format `YYYY-NNNNN`, system-generated at creation), full name, grade level, contact info, allergies, medical conditions, an ordered emergency-contact list (at least one required; first is primary; each has name, relationship, phone, and verification state), record-complete flag, **archived flag** (archived students stay in the database but are excluded from active lists/search by default)
+- **User** — id, name, username, role (`staff` / `admin`), last login
 - **Visit** — id, student, date/time, complaint, treatment, disposition, staff who logged it, **eventTag** (optional free text, e.g. "MCA Dance Program" — the lightweight version of calendar context described below, not a managed entity of its own)
 - **Incident** — id, student, time, complaint, vitals, hospital referral fields, parent-notification log (array of attempts with outcome + timestamp), **stage** (`1`=fast-capture / `2`=complete) so the UI can show which incidents still need completion, **eventTag** (same optional free-text field as Visit)
 - **FollowUp** — id, student, related record (visit or incident id + type), follow-up date, reason/monitoring instruction, status (`pending` / `completed` / `missed` / `cancelled`), notes, created-by (staff)
 - **InventoryItem** — id, name, category (medicine/supply), current stock, unit, expiration date, low-stock threshold
 - **Report** — type (monthly/incident/health-summary), date range, generated file/data
 - **BackupLog** — last run timestamp, file size, status (ok/failed), verified-by
-- **AuditLogEntry** — user, action type (login/scan/submit/approve/create/update/delete/archive), target record, timestamp, and an optional summary that names fields or states only, never their values (e.g. "Updated allergies"; omitted when the action and target already say everything — ADR-017) — written for every action across every module, not just QR
+- **AuditLogEntry** — user, action type (login/logout/submit/approve/create/update/delete/archive/print), target record, timestamp, and an optional summary that names fields or states only, never their values (e.g. "Updated allergies"; omitted when the action and target already say everything — ADR-017) — written for every action across every module
 
 **Note on the calendar:** there is deliberately no separate "SchoolEvent" entity this phase — `eventTag` is a free-text field on Visit/Incident, not a managed list. A fuller, independently-manageable school-events calendar is a documented future decision (see Section 9), not something to build now.
 
 ## 6. Key Interaction Flows Worth Getting Right
 
 - **New Visit → Smart Triage:** selecting a complaint (e.g. "fainting") surfaces a standardized checklist inline, not a separate page — it should feel like part of filling the form, not an interruption.
-- **QR scan/lookup → Quick-Actions:** scanning (or manually entering a Student Number) should feel instant and stay inside the Staff member's current session — no extra auth step, no separate app state. Landing on Record Visit or Log Emergency with the student already identified is the whole point; don't make the user re-select the student on the next screen.
 - **Duplicate detection:** on saving a new student, if name+grade level matches an existing record, block save and show a confirmation modal rather than silently creating a duplicate.
 - **Low-stock / expiring-item alerts:** should be visible from the Staff Dashboard, not buried only inside the Inventory page.
-- **Emergency button → Stage 1 save:** tapping Emergency on mobile should reach a savable form in as few taps as possible — only complaint and immediate vitals required. Saving Stage 1 must succeed even if Stage 2 fields are empty; don't validate the full form up front or you defeat the point of the two-stage design.
-- **Instructor scan → read-only view:** the Instructor's scan result should make it visually obvious there are no actions available — no greyed-out buttons implying something is almost clickable, just a clean read-only display of profile + injury history.
+- **Report Incident → Stage 1 save:** starting an incident should reach a savable form in as few steps as possible — only complaint and immediate vitals required. Saving Stage 1 must succeed even if Stage 2 fields are empty; don't validate the full form up front or you defeat the point of the two-stage design.
 
 ## 7. Design & UX Guidelines
 
@@ -203,7 +195,7 @@ Clean, organized, compact, comfortable, uncluttered — avoid both extremes: cro
 | `--container-page-wide` (`max-w-page-wide`) | 1200px | Lists, tables, reports, and dashboards |
 | `--container-page-narrow` (`max-w-page-narrow`) | 720px | Single-record forms and detail views, stacked in one column |
 
-Don't introduce a third width for one screen. The only exception is the mobile-first QR screens (Scan/Lookup hub, Emergency), which keep a phone-width column because they are designed for a phone held in one hand.
+Don't introduce a third width for one screen.
 
 ### Forms
 Should be especially intuitive for non-technical users. Use real labels, not placeholder-text-only. Group related fields, clearly mark required fields, explain a confusing field when necessary, and give understandable validation messages rather than exposing raw technical errors. Preserve entered data when validation fails, where possible. A user should always be able to answer: *What do I enter? → Why am I entering it? → What happens next?*
@@ -217,7 +209,7 @@ Treat as part of the normal design process, not an optional pass at the end. Ens
 ### Feedback & System States
 Clearly communicate what's happening: loading, saving, success, error, warning, empty data, disabled, hover, focus, and completed-action states all need a defined look (hover and cursor specifics: see Buttons, Controls & Shape Language above — this was previously stated too vaguely and got missed in the first Dashboard build). Messages should be concise and actionable — prefer "Unable to save changes. Please check the required fields." over surfacing a raw database/API error.
 
-**Loading state, specifically — skeleton screens, on every page, not spinners and not a blank screen.** Every screen that fetches data on load shows a skeleton (gray placeholder shapes matching the final layout) while that data is in flight. This is a stated rule, not a preference: it makes a load *feel* faster on the 4GB RAM target hardware (the eye has structure to anticipate rather than nothing), and reassures non-technical staff who could otherwise read a blank screen or lone spinner as "did it freeze?" Apply to every list, table, card grid, and detail view — a form pre-filled from a QR scan or search result skeletons the fields being populated, not just appears blank. A save/submit button's own in-progress spinner is a separate, narrower state and doesn't need a full-page skeleton.
+**Loading state, specifically — skeleton screens, on every page, not spinners and not a blank screen.** Every screen that fetches data on load shows a skeleton (gray placeholder shapes matching the final layout) while that data is in flight. This is a stated rule, not a preference: it makes a load *feel* faster on the 4GB RAM target hardware (the eye has structure to anticipate rather than nothing), and reassures non-technical staff who could otherwise read a blank screen or lone spinner as "did it freeze?" Apply to every list, table, card grid, and detail view — a form pre-filled from a search result skeletons the fields being populated, not just appears blank. A save/submit button's own in-progress spinner is a separate, narrower state and doesn't need a full-page skeleton.
 
 ### Modals & Confirmation
 Use only when they add real value — don't interrupt users with confirmations for harmless, reversible actions. For destructive or irreversible actions: clearly explain what will happen, visually distinguish the destructive action from the cancel option, and never make a destructive and a safe action look visually identical.
@@ -245,13 +237,13 @@ Where a requirement doesn't specify behavior, use established usability judgment
 ### CLINIQ-Specific Implementation Notes
 - Must render fast on a 4GB RAM machine — keep bundle size and animation weight modest; avoid heavy chart libraries if a lighter one covers the Clinic Overview Dashboard's needs.
 - Tailwind CSS for styling; keep the palette simple and consistent across all ~35 screens.
-- Print layouts (excuse letters, incident reports, monthly reports, QR stickers) are first-class, not an afterthought.
-- Mobile-responsive is required for the QR mobile flows (Staff and PE/Sports Instructor) — the rest is primarily used on the one desktop workstation, but reasonable responsiveness doesn't hurt.
+- Print layouts (excuse letters, incident reports, monthly reports) are first-class, not an afterthought.
+- The system is primarily used on the one desktop workstation; every screen still keeps a usable responsive layout down to phone width.
 
 ## 8. Non-Functional Requirements
 
 - No external CDN dependencies that require live internet access at runtime (LAN-only deployment).
-- RA 10173 (Philippine Data Privacy Act) awareness: the PE/Sports Instructor role is the one place a non-Staff account can see student health data — every login, scan, and profile view must be logged (see the AuditLogEntry entity above) so that access stays attributable and auditable. Keep Instructor access read-only, no exceptions, in the frontend as well as the API.
+- RA 10173 (Philippine Data Privacy Act) awareness: only Staff see student health data; every login and action is logged (see the AuditLogEntry entity above) so access stays attributable and auditable. PE/Sports Instructors have no account (ADR-029).
 - Role-based UI gating must be enforced by the backend too — don't rely on hiding buttons in the frontend as the only access control.
 
 ## 9. Explicitly Out of Scope — tell the agent NOT to build these
@@ -262,7 +254,7 @@ Where a requirement doesn't specify behavior, use established usability judgment
 - Barcode/RFID scanning, purchase-order or vendor management
 - Multi-location/multi-room inventory views (single clinic room only)
 - Remote/off-campus access beyond the school LAN (a future phase, not this build)
-- **A separate scoped role for Canteen Staff** — designed but deferred (unlike PE/Sports Instructor access, which is now in scope — see Section 3). When it's picked up later: the same kind of scoped sign-in that Instructor accounts already use, letting canteen staff scan or enter a Student Number to see only food allergies/restrictions — narrower than even the Instructor's view. Nothing about the current build needs to change to support this later; the QR code already just encodes the Student Number.
+- **A separate scoped role for Canteen Staff** — designed but deferred. When it's picked up later: a scoped sign-in letting canteen staff enter a Student Number to see only food allergies/restrictions. Nothing about the current build needs to change to support this later.
 
 ## 10. Supporting Reference Documents
 

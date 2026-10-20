@@ -6,17 +6,17 @@ This is a companion to `CLINIQ_Frontend_Context_Brief.md` (the fuller technical/
 
 ## 1. Project Context
 
-CLINIQ is a clinic tracking and monitoring system for Mendez Christian Academy, a private school in Cavite, Philippines, serving 900+ students with a single school nurse and one shared workstation. Users are not technical — the design has to be immediately understandable to someone who has never used a professional web app, without looking childish or oversimplified. Most screens run on one desktop workstation; a few (the QR scan flows) run on personal mobile phones over the school Wi-Fi.
+CLINIQ is a clinic tracking and monitoring system for Mendez Christian Academy, a private school in Cavite, Philippines, serving 900+ students with a single school nurse and one shared workstation. Users are not technical — the design has to be immediately understandable to someone who has never used a professional web app, without looking childish or oversimplified. Most screens run on one desktop workstation; every screen keeps a usable layout at phone width.
 
 ## 2. User Roles & Permissions
 
 | Role | Can do |
 |---|---|
-| **Staff** (nurse/clinic assistant) | Full read/write on everything — students, visits, incidents, inventory; generates reports; manages accounts; uses the QR hub on computer and mobile |
+| **Staff** (nurse/clinic assistant) | Full read/write on everything — students, visits, incidents, inventory; generates reports; manages accounts |
 | **Admin/Principal** | Read-only: reports and the Clinic Overview Dashboard. No edit access anywhere |
-| **PE/Sports Instructor** | Mobile-only, read-only: scans or types a Student Number to view a student's full profile and visit/incident history. No buttons, no editing |
+| **PE/Sports Instructor** | No account and no access (ADR-029). An instructor asks the clinician, who decides what to share |
 
-**Display-privacy rule — affects how student names appear across the system:** a screen showing a **list of multiple students at once** (visit logs, incident logs, the dashboard's frequent-visitor section) shows the **Student Number**, not the name — these are the screens a bystander could glance at on a desktop monitor. A screen showing **one specific, deliberately-identified student** (a QR scan result, the full profile, search results, the masterlist) shows the **full name** normally. Design both list rows and detail views with this in mind — a list row template should have no name field at all; a detail/card template should lead with the name prominently.
+**Display-privacy rule — affects how student names appear across the system:** a screen showing a **list of multiple students at once** (visit logs, incident logs, the dashboard's frequent-visitor section) shows the **Student Number**, not the name — these are the screens a bystander could glance at on a desktop monitor. A screen showing **one specific, deliberately-identified student** (the full profile, search results, the masterlist) shows the **full name** normally. Design both list rows and detail views with this in mind — a list row template should have no name field at all; a detail/card template should lead with the name prominently.
 
 ## 3. Full Design System
 
@@ -80,7 +80,7 @@ Readable text, adequate contrast, clear labels, obviously-interactive elements, 
 ### Feedback & System States
 Every screen needs defined looks for: loading, saving, success, error, warning, empty data, disabled, hover, focus, completed action. Messages concise and actionable — "Unable to save changes. Please check the required fields," never a raw technical error.
 
-**Loading = skeleton screens, every page, not spinners, not blank.** Gray placeholder shapes matching the final layout, shown while data is in flight. Makes a load feel faster on the 4GB RAM target hardware, and reassures non-technical staff who'd otherwise read a blank screen as "did it freeze?" Applies to every list, table, card grid, and detail view — including a form pre-filling from a QR scan, which skeletons the fields being populated rather than sitting blank. A button's own save-in-progress spinner is separate and narrower — it doesn't need a full-page skeleton.
+**Loading = skeleton screens, every page, not spinners, not blank.** Gray placeholder shapes matching the final layout, shown while data is in flight. Makes a load feel faster on the 4GB RAM target hardware, and reassures non-technical staff who'd otherwise read a blank screen as "did it freeze?" Applies to every list, table, card grid, and detail view — including a form pre-filling from a search result, which skeletons the fields being populated rather than sitting blank. A button's own save-in-progress spinner is separate and narrower — it doesn't need a full-page skeleton.
 
 ### Modals & Confirmation
 Only for real value — don't interrupt for harmless, reversible actions. For destructive/irreversible actions: explain what will happen, visually distinguish the destructive option, make cancellation obvious, never let destructive and safe actions look visually identical.
@@ -124,7 +124,7 @@ Design these five in full detail first. Everything else in the system should be 
 **Why this one:** the richest **form** screen, including a dynamic embedded panel and an inline prompt at the end — the pattern every other data-entry screen should follow.
 
 **Layout, top to bottom:**
-1. **Student header** — name, Student Number, grade level (already identified via search, scan, or manual entry before reaching this screen)
+1. **Student header** — name, Student Number, grade level (picked on the form)
 2. **Complaint field** — dropdown or searchable select
 3. **Smart Triage panel** — appears dynamically the moment a complaint is selected: a titled checklist card ("Suggested first-aid steps for: [complaint]"), checkboxes, visually distinct from the surrounding form (e.g., `surface` background) so it reads as guidance, not a required field
 4. **Treatment field** — textarea
@@ -139,7 +139,7 @@ Design these five in full detail first. Everything else in the system should be 
 ---
 
 ### Reference 3 — Student Profile (Full Record View)
-*(Staff sees Edit/Archive actions; PE/Sports Instructor sees the identical layout read-only, no action buttons)*
+*(Staff sees Edit/Archive actions)*
 
 **Why this one:** the richest **detail/read** screen — the template for viewing any single record in depth (a visit, an incident, an inventory item, a follow-up).
 
@@ -154,23 +154,8 @@ Design these five in full detail first. Everything else in the system should be 
 
 ---
 
-### Reference 4 — QR Scan/Lookup Hub + Quick-Actions (Mobile)
-*(Staff and PE/Sports Instructor both use a version of this — the only screens in the system designed mobile-first)*
-
-**Why this one:** the only genuinely mobile-native pattern in CLINIQ, and it needs to work one-handed, in a hurry, possibly outdoors (PE field) or in a crowded hallway.
-
-**Layout — Staff version:**
-1. **Entry screen** — one large, unmistakable "Scan QR Code" button (camera icon) as the dominant element; a secondary "Enter Student Number manually" link/input below it for the fallback path
-2. **Post-identification — Quick-Actions** — student header (full name, since this is a deliberate single lookup), then a grid or stack of large, thumb-friendly action buttons: **Record Visit**, **Log Emergency**, **View Full Profile**, **Dispense Medicine**
-3. **Emergency button** — treated as visually distinct and more urgent than the others (a `warning`-or-stronger color treatment, not the calm brand green), and reachable even faster than the others if a scan just happened
-
-**Layout — Instructor version:**
-1. Same entry screen (scan or manual entry)
-2. Post-identification — a read-only profile card (allergies, conditions, emergency contact, injury/visit history) with **no buttons at all** — make the absence of actions visually obvious (no greyed-out buttons implying near-clickability), just a clean stop-here display
-
-**Components this exercises:** large touch-target buttons (bigger than the desktop button scale), camera/scanner UI, manual-entry fallback input, icon+label button grid, read-only info card, urgency-styled button variant.
-
-**States:** scanning in progress, scan failed/retry, student not found (routes to the manual-entry fallback).
+### Reference 4 — (Removed)
+The QR Scan/Lookup Hub reference screen was removed with the QR feature (ADR-027). The number is kept so Reference 5 keeps its number.
 
 ---
 
@@ -180,7 +165,7 @@ Design these five in full detail first. Everything else in the system should be 
 **Why this one:** the only screen in the system with an explicit incomplete/complete status lifecycle, and the one place urgency should visibly shape the design.
 
 **Layout — Stage 1 (fast capture):**
-1. **Student header** (from the QR/quick-action flow that led here)
+1. **Student header** (picked on the form)
 2. **Complaint field** and a **minimal vitals field group** (2–3 key fields only) — deliberately short
 3. **Save button** — styled with urgency in mind (bigger, higher-contrast, `warning`-adjacent treatment) since speed matters more than anything else on this screen
 4. **Post-save** — a clear "Needs completion" status badge/banner, not just a generic success toast

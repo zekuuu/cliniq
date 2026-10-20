@@ -5,57 +5,57 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 **Roles in the system (current scope):**
 - **Staff** — School Head Nurse / clinic assistants. Full read/write access.
 - **Admin/Principal** — School Administration. Read-only access, scoped to reports and health summaries only.
-- **PE/Sports Instructor** — Read-only access to a student's full profile (medical history, allergies, conditions, emergency contact) **and** their visit/incident history, so recent injuries are visible. No operational actions — no recording visits, no logging emergencies, no editing anything.
+- **PE/Sports Instructor** — No account and no access (ADR-029). An instructor asks the clinician, who decides what to share.
 
 **Role documented for future development (not built this phase):** Canteen Staff — see "Future Development" at the end of this document.
 
-**Display-privacy rule (applies across the whole system):** the actual privacy risk isn't a single deliberate lookup — it's a **desktop screen showing a list or pattern across multiple students at once** (a visit log, an incident log, or a "frequent visitor" flag) being glanced at by a passerby, who can then attach a specific named student to a health pattern ("he visits a lot, what's going on?"). So: the **Visit Log List, Incident Log List, and the Dashboard's frequent-visitor section default to Student Number**, not full name, since these are rolling, multi-student, glanceable-by-bystanders screens. A **single deliberate lookup of one specific student — the QR scan result (whether Staff or PE/Sports Instructor), the full profile page, search results, and the masterlist/directory — shows the full name normally**, since at that point someone has already identified and is looking at one particular student for a legitimate reason. The masterlist shows names freely (it's just a roster of who's enrolled) but should not show medical/confidential fields inline — allergies, conditions, or visit reasons still require opening the individual profile.
+**Display-privacy rule (applies across the whole system):** the actual privacy risk isn't a single deliberate lookup — it's a **desktop screen showing a list or pattern across multiple students at once** (a visit log, an incident log, or a "frequent visitor" flag) being glanced at by a passerby, who can then attach a specific named student to a health pattern ("he visits a lot, what's going on?"). So: the **Visit Log List, Incident Log List, and the Dashboard's frequent-visitor section default to Student Number**, not full name, since these are rolling, multi-student, glanceable-by-bystanders screens. A **single deliberate lookup of one specific student — the full profile page, search results, and the masterlist/directory — shows the full name normally**, since at that point someone has already identified and is looking at one particular student for a legitimate reason. The masterlist shows names freely (it's just a roster of who's enrolled) but should not show medical/confidential fields inline — allergies, conditions, or visit reasons still require opening the individual profile.
 
 ---
 
 ## Baseline Modules
 
 ### 1. User Management — *Access: Staff (manages accounts for all current roles)*
-**Login Authentication** *(Staff, Admin/Principal, PE/Sports Instructor — everyone with an account)*
+**Login Authentication** *(Staff, Admin/Principal — everyone with an account)*
 - Log in (username/password)
 - Log out
-- Session lasts 1 week, until the login token expires — there is no idle timeout. One session lifetime applies to every role (Staff, Admin/Principal, PE/Sports Instructor)
+- Session lasts 1 week, until the login token expires — there is no idle timeout. One session lifetime applies to every role (Staff, Admin/Principal)
 - Account lockout after 5 consecutive failed attempts (30-minute lock)
 - Every login logged with who and when (see Audit Trail, below)
 
 **User Account Management** *(Staff only)*
-- Add new user account, including PE/Sports Instructor accounts
+- Add new user account
 - Edit user account (name, username, role)
 - Deactivate/remove user account
 - View list of all user accounts
 - Search/filter user accounts
 
-**Password Management** *(Staff, Admin/Principal, PE/Sports Instructor — self-service for whoever is logged in)*
+**Password Management** *(Staff, Admin/Principal — self-service for whoever is logged in)*
 - Change password (self-service)
 - Force password change on first login
 - Prevent reuse of last 5 passwords
 - Enforce minimum 8-character password length
 
 **Role-Based Access** *(Staff only)*
-- Assign role (Staff / Admin-Principal / PE-Sports Instructor)
+- Assign role (Staff / Admin-Principal)
 - Edit role assignment
 - View permissions per role
 
-### 2. Student Records — *Access: Staff full read/write; PE/Sports Instructor read-only (full profile + visit/incident history); Admin/Principal has no direct access (reports and trends only)*
+### 2. Student Records — *Access: Staff full read/write; Admin/Principal has no direct access (reports and trends only)*
 
 **Student Information Encoding**
 - Add new student record — *Staff*
 - Record the required **Sex** recorded by the school (Female or Male). Show it on the deliberate single-student profile and Student Health Record; audit changes by field name only, never the value.
-- Auto-generate the student's Student Number in `YYYY-NNNNN` format (enrollment year + zero-padded 5-digit sequence, e.g. `2026-00001`) — system-assigned, not manually entered; sequence resets each enrollment year, giving up to 99,999 new enrollees of headroom per year against the school's ~900-student population, so the format scales well past 20 years. This same number is embedded in the student's QR code (Module 6) and is the default label on visit/incident list and dashboard views, per the display-privacy rule above
+- Auto-generate the student's Student Number in `YYYY-NNNNN` format (enrollment year + zero-padded 5-digit sequence, e.g. `2026-00001`) — system-assigned, not manually entered; sequence resets each enrollment year, giving up to 99,999 new enrollees of headroom per year against the school's ~900-student population, so the format scales well past 20 years. This same number is the default label on visit/incident list and dashboard views, per the display-privacy rule above
 - Edit student record — *Staff*
-- View student profile/detail — *Staff (full); PE/Sports Instructor (read-only)*
+- View student profile/detail — *Staff*
 - View list of all students (masterlist, shown with full names) — *Staff*
 - Search/filter students (name, grade level, status, or Student Number) — *Staff*
 - Archive/deactivate a student record (e.g., transferred or graduated) — *Staff*. Archived records are **not deleted** — they stay in the system for historical/audit continuity but are filtered out of default active-student lists, search results, and dropdowns unless a Staff member explicitly chooses to include archived records
 
 **Medical History Recording**
 - Add/update medical history entry (allergies, past illnesses, family history) — *Staff*
-- View medical history — *Staff (full); PE/Sports Instructor (read-only)*
+- View medical history — *Staff*
 
 **Allergy/Food Restriction Monitoring**
 - Add/edit an allergy or food-restriction entry — *Staff*
@@ -63,7 +63,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 
 **Contact Information Management**
 - Add/edit one or more emergency contacts — *Staff*. At least one is required; the ordered list has no fixed maximum, its first contact is primary, and Staff can move another contact to the top.
-- View all emergency contacts, primary first, with each contact's verification state — *Staff; PE/Sports Instructor (read-only)*
+- View all emergency contacts, primary first, with each contact's verification state — *Staff*
 - Mark each contact number as verified/unverified — *Staff*
 
 **Duplicate Detection**
@@ -84,7 +84,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 ### 3. Clinic Visit Monitoring — *Access: Staff only*
 
 **Daily Visit Logging**
-- Add new visit entry. A visit opened without an identified student finds one by Student Number or student name (results appear from the first character typed, at most 8 active students, each shown with Student Number, full name, and grade). Incident Stage 1, PE/Sports Referral, Dispense, and the QR manual fallback use the same search. A `?student=` link or QR scan still identifies the student directly
+- Add new visit entry. A visit opened without an identified student finds one by Student Number or student name (results appear from the first character typed, at most 8 active students, each shown with Student Number, full name, and grade). Incident Stage 1, PE/Sports Referral, and Dispense use the same search.
 - Edit visit entry
 - View visit detail (full name shown — a deliberately opened single record)
 - View list of visits (filterable by date) — shows **Student Number**, not full name, per the display-privacy rule, since this rolling multi-student list is the kind of screen a bystander could glance at
@@ -92,7 +92,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 
 **Complaint Monitoring**
 - Record complaint/symptom for the visit: free text with suggestions (the predefined complaint types plus complaints already recorded, most used first). Text matching a suggestion is stored in that suggestion's spelling, so counts don't split by capitalization. Smart Triage's checklist appears when the complaint matches a predefined type. Editing a visit uses the same field and the same normalization
-- View a student's complaint history (also visible to PE/Sports Instructor as part of visit/incident history)
+- View a student's complaint history
 
 **Treatment Recording** *(two parts — ADR-018, Wednesday, October 07, 2026 — 10:43 PHT)*
 - **Treatment notes** (free text): care that isn't stock — rest, cold compress, wound cleaning, advice
@@ -128,10 +128,10 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - View due/upcoming follow-ups — surfaced on the Clinic Overview Dashboard (Module 9), computed fresh each time the page loads by comparing today's date to the follow-up date, not a background or push-based alert (the system has no external SMS/push service — see Module 9 and the Out of Scope notes)
 - Mark a follow-up Completed, Missed, or Cancelled
 
-### 4. Emergency Response — *Access: Staff only for recording; PE/Sports Instructor can view past incidents read-only as part of a student's history*
+### 4. Emergency Response — *Access: Staff only*
 
 **Incident Recording — two-stage flow**
-- **Stage 1 (fast capture):** open a prefilled emergency form (student already identified via QR scan or manual entry), complete only the essential field (the complaint) plus whichever readings the case needs (temperature, pulse, blood pressure, oximeter; none is required, "don't force all 4 if not relevant to the case"), and save immediately — speed matters more than completeness in the first moment
+- **Stage 1 (fast capture):** open a prefilled emergency form (student picked on the form), complete only the essential field (the complaint) plus whichever readings the case needs (temperature, pulse, blood pressure, oximeter; none is required, "don't force all 4 if not relevant to the case"), and save immediately — speed matters more than completeness in the first moment
 - **Stage 2 (complete later):** return to the same incident record to fill in remaining details (any further readings, still all optional, and referral specifics) once the immediate situation is handled. Treatment notes and medicines/supplies given are both optional; when neither is recorded, views show “No treatment recorded,” and the Incident Report gives Staff a non-blocking check-before-approving notice
 - Edit incident entry
 - View incident detail (full name shown — a deliberately opened single record)
@@ -172,32 +172,8 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 
 ## Team-Proposed Enhancements
 
-### 6. QR Digital Health ID — *Access: Staff (full, computer + mobile); PE/Sports Instructor (mobile, read-only)*
-Two distinct paths: the **computer system** (Staff's existing desktop flow) and a **mobile flow** used for fast scanning in the field. Both identify a student the same way, then branch by role.
-
-**QR Code Generation & Printing** *(Staff only)*
-- Generate a QR code per student, encoding their Student Number
-- Print QR sticker/ID card (Student Number also printed in human-readable text as a fallback)
-- Regenerate a QR code (invalidates the old one) if lost or damaged
-
-**Mobile Scan/Lookup (Staff)**
-- Scan QR Code, or search by Student Number or student name as a fallback (pick from the list)
-- Form auto-fills the student's basic information
-- Staff completes only what's missing (visit reason, etc.) and saves
-- **Emergency button**, separate from the normal flow: opens a prefilled Stage-1 emergency form (see Module 4) for the fastest possible path when speed matters most
-
-**Mobile Scan/Lookup (PE/Sports Instructor)**
-- Scan QR Code, or search by Student Number or student name (pick from the list)
-- View the student's full profile read-only, full name shown (this is a deliberate single-student lookup, not a glanceable list — see the display-privacy rule): allergies, conditions, emergency contact, and visit/incident history (so recent injuries are visible)
-- No action buttons — no recording, no editing, nothing operational
-- Every profile view logged in the audit trail
-
-**Student Quick-Actions (Staff, after identifying a student)**
-- View at-a-glance info, full name shown (a QR scan is a deliberate lookup of one student, per the display-privacy rule)
-- **Record Visit** — jumps into Clinic Visit Monitoring's New Visit Entry, pre-filled
-- **Log Emergency** — jumps into the Stage-1 emergency form, pre-filled
-- **View Full Profile** — opens the student's full record
-- **Dispense Medicine** — jumps into the Inventory Tracker's Dispense/Log Usage, pre-linkable to the current visit
+### 6. (Removed) — the QR Digital Health ID module was removed from the app (ADR-027)
+Staff identify a student through Students search or each form's student picker. Module numbers 7–11 are kept unchanged so existing references stay valid.
 
 ### 7. Smart Triage Quick-Reference — *Access: Staff only*
 
@@ -263,11 +239,11 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 
 ---
 
-### 11. Audit Log Viewer — *Access: Staff (view); Admin/Principal (view); PE/Sports Instructor — none*
+### 11. Audit Log Viewer — *Access: Staff (view); Admin/Principal (view)*
 
 A dedicated screen to review the Audit Trail (below), not just write to it — added by `ADR-016` after the write side existed with no way to actually read it back.
 
-- View the audit log, filtered by date range, user, action type (login/logout/scan/submit/approve/create/update/delete/archive/print), and target/module type — *Staff, Admin/Principal*
+- View the audit log, filtered by date range, user, action type (login/logout/submit/approve/create/update/delete/archive/print), and target/module type — *Staff, Admin/Principal*
 - Each entry: timestamp, who, action type, and the target record (Student Number, not name, when the target is a student — per the display-privacy rule) — *Staff, Admin/Principal*
 - Export/print a filtered view, for handing to a DPO or during a compliance review — *Staff, Admin/Principal*
 - **No role can edit or delete an entry.** The log is read-only by design; that's what makes it a log.
@@ -275,32 +251,32 @@ A dedicated screen to review the Audit Trail (below), not just write to it — a
 ---
 
 ## Audit Trail (Cross-Cutting — Expanded Per September 19 Meeting)
-Applies to every module above, not just QR. Every one of the following gets logged with **who** performed it and **when**:
+Applies to every module above. Every one of the following gets logged with **who** performed it and **when**:
 - Login and logout (Module 1)
-- Every QR scan, whether by Staff or PE/Sports Instructor, and which student was viewed
 - Every form submission (new visit, new incident, inventory dispense/restock, etc.)
 - Every approval (excuse letter sign-off, incident report sign-off)
 - Every create/update/delete/archive action on a record
-- Every Print / Save as PDF of a page containing student or clinic health information: one entry with the signed-in user, real time, and document title; log from shared `beforeprint` handling so buttons and Ctrl+P are covered. QR stickers are excluded.
-This satisfies RA 10173 (Data Privacy Act) alignment and is the mechanism that makes the PE/Sports Instructor's read-only access accountable — every profile they open is attributable to their account and timestamped. **Module 11, Audit Log Viewer, is the read side of this same requirement** — see `ADR-016`.
+- Every Print / Save as PDF of a page containing student or clinic health information: one entry with the signed-in user, real time, and document title; log from shared `beforeprint` handling so buttons and Ctrl+P are covered.
+This satisfies RA 10173 (Data Privacy Act) alignment and is the mechanism that makes every access accountable — each action is attributable to a signed-in account and timestamped. **Module 11, Audit Log Viewer, is the read side of this same requirement** — see `ADR-016`.
 
 ---
 
 ## Access Summary at a Glance (Current Scope)
 
-| Module | Staff | Admin/Principal | PE/Sports Instructor |
-|---|---|---|---|
-| 1. User Management | Full | Login + own password only | Login + own password only |
-| 2. Student Records | Full | — | Read-only (full profile) |
-| 3. Clinic Visit Monitoring | Full | — | — (visit history visible via Module 2/6) |
-| 4. Emergency Response | Full | — | Read-only (past incidents, via history) |
-| 5. Reports Generation | Full | View/print only | — |
-| 6. QR Digital Health ID | Full (generate, mobile quick-actions) | — | Mobile read-only scan/lookup |
-| 7. Smart Triage Quick-Reference | Full | — | — |
-| 8. Medicine & Supply Inventory Tracker | Full | — | — |
-| 9. Clinic Overview Dashboard | View | View | — |
-| 10. Backup Verification Assistant | Full | — | — |
-| 11. Audit Log Viewer | View | View | — |
+| Module | Staff | Admin/Principal |
+|---|---|---|
+| 1. User Management | Full | Login + own password only |
+| 2. Student Records | Full | — |
+| 3. Clinic Visit Monitoring | Full | — |
+| 4. Emergency Response | Full | — |
+| 5. Reports Generation | Full | View/print only |
+| 7. Smart Triage Quick-Reference | Full | — |
+| 8. Medicine & Supply Inventory Tracker | Full | — |
+| 9. Clinic Overview Dashboard | View | View |
+| 10. Backup Verification Assistant | Full | — |
+| 11. Audit Log Viewer | View | View |
+
+PE/Sports Instructors have no account (ADR-029).
 
 ---
 
@@ -322,12 +298,12 @@ These came out of the September 19 meeting as good ideas worth flagging, but the
 ## Future Development — Deferred Items (Documented, Not Built This Phase)
 
 ### Future Role: Canteen Staff Access
-The current build gives PE/Sports Instructors read-only QR access (Module 6). A second external role, **Canteen Staff**, was also designed but remains deferred to a later phase.
-- **What it would do:** Let canteen staff scan or enter a student's Student Number to check food allergies/restrictions before serving food — a digital version of the "Canteen health restriction enforcement" service already named in the Technical Documentation, which today is handled manually by the clinic head.
-- **Access model:** The same scoped sign-in pattern as PE/Sports Instructor access (reused, not reinvented).
-- **Data scope:** Narrower than the Instructor view — food allergies/restrictions only. No conditions, no emergency contact, no visit history.
+A second external role, **Canteen Staff**, was also designed but remains deferred to a later phase.
+- **What it would do:** Let canteen staff enter a student's Student Number to check food allergies/restrictions before serving food — a digital version of the "Canteen health restriction enforcement" service already named in the Technical Documentation, which today is handled manually by the clinic head.
+- **Access model:** A scoped sign-in with its own narrow role.
+- **Data scope:** Food allergies/restrictions only. No conditions, no emergency contact, no visit history.
 - **Auditability:** Same per-view logging pattern as everything else in this document.
-- **Why still deferred:** Unlike PE/Sports Instructor access, this wasn't brought back into scope at the September 19 meeting — it stays a documented future addition, reusing infrastructure already being built now.
+- **Why still deferred:** It stays a documented future addition. Note that a local-only deployment cannot reach canteen staff either (ADR-029).
 
 ### Future Decision: Full School-Events Calendar
 The Dashboard's calendar (Module 9) currently supports only a lightweight, free-text event tag on visits/incidents — deliberately kept minimal for this phase. A fuller calendar, where school events (academic, sports, performances, assemblies, field trips) are their own managed entries plotted alongside clinic activity, was discussed but the two real open questions were left for a future decision rather than guessed at:

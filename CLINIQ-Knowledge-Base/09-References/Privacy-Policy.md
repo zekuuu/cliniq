@@ -9,14 +9,14 @@
 
 ## 1. Who this applies to
 
-This policy covers CLINIQ, the clinic tracking and monitoring system used by Mendez Christian Academy's clinic. It applies to the information CLINIQ holds about students, and about the staff, administrators, and instructors who use the system.
+This policy covers CLINIQ, the clinic tracking and monitoring system used by Mendez Christian Academy's clinic. It applies to the information CLINIQ holds about students, and about the staff and administrators who use the system.
 
 ## 2. What information CLINIQ collects
 
 - **Student information:** name, Student Number, grade level, section, date of birth, gender, contact information, emergency contact details, allergies, and medical conditions.
 - **Clinic records:** visit records (date, complaint, treatment, outcome), incident/emergency records (including hospital referral and parent-notification details where applicable), and follow-up records.
 - **Inventory records:** medicine and supply stock levels and usage history. This does not identify students except where a specific dispensing is linked to a visit record.
-- **Account information:** name, username, and role, for every Staff, Admin/Principal, and PE/Sports Instructor account.
+- **Account information:** name, username, and role, for every Staff and Admin/Principal account.
 - **Audit records:** who accessed or acted on a record, what action was taken, and when — logged automatically for every login, scan, submission, approval, and create/update/delete/archive action.
 
 ## 3. Why CLINIQ collects this information
@@ -34,7 +34,7 @@ Access is role-based and limited to what each role needs:
 |---|---|
 | **Staff** (School Clinician) | Full access to student records, visits, incidents, inventory, reports, and the audit log. |
 | **Admin/Principal** | View-only access to reports, the Clinic Overview Dashboard, and the audit log. No access to individual student records. |
-| **PE/Sports Instructor** | Read-only access to a student's profile and injury/visit history, only when that student's QR code is scanned — for immediate first-aid context during PE/sports activities. No access to any other student's information, and no access to reports, inventory, or other modules. |
+| **PE/Sports Instructor** | No account and no access to CLINIQ. An instructor asks the clinic, and the school clinician decides what health information to share. |
 
 No role can view information for a student they have not specifically looked up or that isn't relevant to their role. Multi-student list views (such as the visit log) display a Student Number rather than a name, so that information isn't identifiable to someone glancing at a shared screen.
 
