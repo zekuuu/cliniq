@@ -1,6 +1,6 @@
-import { screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { getIncident, getRecordedAuditEntries, getStudent, listIncidents, resetMockDb } from '../../lib/mock-db'
 import { selectOption } from '../../test/selectOption'
 import { IncidentEntryPage } from './IncidentEntryPage'
@@ -21,15 +21,16 @@ describe('Report Incident', () => {
     expect(screen.getByText(/\d{4}-\d{5}/)).toBeInTheDocument()
   })
 
-  it('validates Stage 1 essentials inline', async () => {
+  it('validates Stage 1 essentials inline: the complaint only, no reading is required', async () => {
     const user = userEvent.setup()
     renderWithRouter(<IncidentEntryPage />)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
+    for (const label of [/temperature/i, /pulse/i, /blood pressure/i, /oxygen saturation/i])
+      expect(screen.getByLabelText(label)).not.toBeRequired()
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
     expect(screen.getByText('Select the emergency complaint.')).toBeInTheDocument()
-    expect(screen.getByText('Enter the temperature.')).toBeInTheDocument()
-    expect(screen.getByText('Enter the pulse.')).toBeInTheDocument()
+    expect(screen.queryByText(/enter the (temperature|pulse|blood pressure)/i)).not.toBeInTheDocument()
   })
 
   it('saves Stage 1, then completes Stage 2 with audit entries', async () => {
@@ -180,10 +181,13 @@ describe('Report Incident: failed submit and unusual vitals', () => {
 
     await screen.findByRole('heading', { name: 'Report Incident' })
     await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await user.type(screen.getByLabelText(/oxygen saturation/i), '150')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
 
-    expect(screen.getByLabelText(/temperature/i)).toHaveFocus()
-    expect(screen.getByText('2 fields need attention.')).toBeInTheDocument()
+    expect(screen.getByText('Enter the oxygen saturation as a whole percent from 0 to 100.')).toBeInTheDocument()
+    expect(screen.getByLabelText(/oxygen saturation/i)).toHaveFocus()
+    expect(screen.getByText('1 field needs attention.')).toBeInTheDocument()
+    expect(getRecordedAuditEntries()).toEqual([])
   })
 
   it('moves focus to the first invalid Stage 2 field', async () => {
@@ -196,10 +200,11 @@ describe('Report Incident: failed submit and unusual vitals', () => {
     await user.type(screen.getByLabelText(/pulse/i), '92')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
     await screen.findByRole('heading', { name: 'Stage 2 completion' })
-    await user.type(screen.getByLabelText(/blood pressure/i), '120/80')
+    await user.type(screen.getByLabelText(/oxygen saturation/i), '97.5')
     await user.click(screen.getByRole('button', { name: 'Complete Incident' }))
 
     expect(screen.getByLabelText(/oxygen saturation/i)).toHaveFocus()
+    expect(screen.queryByText(/incident completed/i)).not.toBeInTheDocument()
   })
 
   it('blocks completion when the departure time is only partly typed', async () => {
@@ -235,9 +240,38 @@ describe('Report Incident: failed submit and unusual vitals', () => {
     await user.type(screen.getByLabelText(/temperature/i), '370')
     await user.type(screen.getByLabelText(/pulse/i), '92')
 
-    expect(screen.getByText(/Temperature 370 °C looks unusual\. Please check the reading\. You can still save\./)).toBeInTheDocument()
+    // A typing slip gets the "check the reading" note, not the fever flag.
+    expect(screen.getByText(/^Temperature 370 °C looks unusual\. Please check the reading\. You can still save\./)).toBeInTheDocument()
+    expect(screen.queryByText(/fever/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/Pulse .* looks unusual/)).not.toBeInTheDocument()
 
+    await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
+    expect(await screen.findByText(/stage 1 saved/i)).toBeInTheDocument()
+  })
+
+  it('warns about an implausible pulse, and never about the oximeter (no range from the clinician yet)', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+
+    await screen.findByRole('heading', { name: 'Report Incident' })
+    await user.type(screen.getByLabelText(/pulse/i), '920')
+    expect(screen.getByText(/Pulse 920 bpm looks unusual\./)).toBeInTheDocument()
+    await user.clear(screen.getByLabelText(/pulse/i))
+    await user.type(screen.getByLabelText(/oxygen saturation/i), '5')
+    expect(screen.queryByText(/looks unusual/)).not.toBeInTheDocument()
+  })
+
+  it('flags a fever from 37 °C up, without blocking the save', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+
+    await screen.findByRole('heading', { name: 'Report Incident' })
+    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await user.type(screen.getByLabelText(/temperature/i), '36.9')
+    expect(screen.queryByText(/fever/i)).not.toBeInTheDocument()
+    await user.clear(screen.getByLabelText(/temperature/i))
+    await user.type(screen.getByLabelText(/temperature/i), '37')
+    expect(screen.getByText('Fever: 37 °C (37 °C and up). You can still save.')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
     expect(await screen.findByText(/stage 1 saved/i)).toBeInTheDocument()
   })
@@ -247,8 +281,91 @@ describe('Report Incident: failed submit and unusual vitals', () => {
     renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
-    await user.type(screen.getByLabelText(/temperature/i), '37.2')
+    await user.type(screen.getByLabelText(/temperature/i), '36.8')
     await user.type(screen.getByLabelText(/pulse/i), '92')
     expect(screen.queryByText(/looks unusual/)).not.toBeInTheDocument()
+  })
+})
+
+describe('Report Incident: optional readings, never all four forced', () => {
+  beforeEach(() => resetMockDb())
+
+  /** Fires beforeprint, as Print or Ctrl+P does, and returns the mounted printout. */
+  function printReport(): HTMLElement {
+    act(() => {
+      window.dispatchEvent(new Event('beforeprint'))
+    })
+    const doc = document.body.querySelector<HTMLElement>('[data-print-document]')
+    if (!doc) throw new Error('No print document mounted')
+    return doc
+  }
+
+  afterEach(() => {
+    act(() => {
+      window.dispatchEvent(new Event('afterprint'))
+    })
+  })
+
+  type ReadingLabel = 'temperature' | 'pulse' | 'blood pressure' | 'oxygen saturation'
+
+  async function saveStageOne(readings: Partial<Record<ReadingLabel, string>>) {
+    const user = userEvent.setup()
+    renderWithRouter(<IncidentEntryPage studentNumber={STUDENT} />)
+    await screen.findByRole('heading', { name: 'Report Incident' })
+    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    for (const [label, value] of Object.entries(readings)) await user.type(screen.getByLabelText(new RegExp(label, 'i')), value)
+    await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
+    await screen.findByRole('heading', { name: 'Stage 2 completion' })
+    const [entry] = getRecordedAuditEntries()
+    return { user, incident: await getIncident(entry.targetRecord!.id) }
+  }
+
+  it('saves Stage 1 with no readings, and says so at Stage 2 and on the report', async () => {
+    const { incident } = await saveStageOne({})
+    expect(incident.vitals).toEqual({})
+    expect(screen.getByText('No readings taken')).toBeInTheDocument()
+
+    renderWithRouter(<IncidentReportPage incidentId={incident.id} />)
+    await screen.findByRole('heading', { name: 'Incident Report' })
+    // Stage 2's summary and the report screen.
+    expect(screen.getAllByText('No readings taken')).toHaveLength(2)
+    expect(printReport()).toHaveTextContent('No readings taken.')
+  })
+
+  it('saves Stage 1 with only the oximeter, and the report shows only that reading', async () => {
+    const { incident } = await saveStageOne({ 'oxygen saturation': '97' })
+    expect(incident.vitals).toEqual({ oxygenSaturationPct: 97 })
+
+    renderWithRouter(<IncidentReportPage incidentId={incident.id} />)
+    await screen.findByRole('heading', { name: 'Incident Report' })
+    // Stage 2's summary and the report screen; neither lists a reading that wasn't taken.
+    expect(screen.getAllByText('97%')).toHaveLength(2)
+    expect(screen.queryByText(/^(Temperature|Pulse|Blood pressure)$/)).not.toBeInTheDocument()
+    const doc = printReport()
+    expect(doc).toHaveTextContent('Oxygen saturation97%')
+    expect(doc).not.toHaveTextContent(/Temperature|Pulse|Blood pressure/)
+  })
+
+  it('saves Stage 1 with all four, then completes Stage 2 without blood pressure', async () => {
+    const { incident, user } = await saveStageOne({ temperature: '37.2', pulse: '92', 'blood pressure': '110/70', 'oxygen saturation': '98' })
+    expect(incident.vitals).toEqual({ temperatureC: 37.2, pulseBpm: 92, bloodPressure: '110/70', oxygenSaturationPct: 98 })
+    expect(screen.getByText('37.2 °C · 92 bpm · 110/70 mmHg · 98%')).toBeInTheDocument()
+
+    // Stage 2 shows the same four, prefilled; clearing blood pressure doesn't block completion.
+    await user.clear(screen.getByLabelText(/blood pressure/i))
+    await user.click(screen.getByRole('button', { name: 'Complete Incident' }))
+    expect(await screen.findByText(/incident completed/i)).toBeInTheDocument()
+    expect((await getIncident(incident.id)).vitals).toEqual({ temperatureC: 37.2, pulseBpm: 92, oxygenSaturationPct: 98, treatmentNotes: '' })
+  }, 15_000)
+
+  it('completes a saved Stage 1 incident with no readings at all', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
+    await screen.findByRole('heading', { name: 'Complete Incident Record' })
+    for (const label of [/temperature/i, /pulse/i, /blood pressure/i, /oxygen saturation/i]) await user.clear(screen.getByLabelText(label))
+    await user.click(screen.getByRole('button', { name: 'Complete Incident' }))
+
+    expect(await screen.findByText(/incident completed/i)).toBeInTheDocument()
+    expect((await getIncident('incident-0022')).vitals).toEqual({ treatmentNotes: '' })
   })
 })

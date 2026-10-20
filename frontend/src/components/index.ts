@@ -11,6 +11,7 @@ export { DataTable, type DataTableColumn, type DataTableSortDirection } from './
 export { DatePicker, MonthPicker } from './ui/DatePicker'
 export { DateRangePicker } from './ui/DateRangePicker'
 export { EmptyState } from './ui/EmptyState'
+export { ExpandableSection } from './ui/ExpandableSection'
 export { ErrorState } from './ui/ErrorState'
 export { Input } from './ui/Input'
 export { ListRow, RowList } from './ui/ListRow'
@@ -38,6 +39,7 @@ export {
   type FollowUpErrors,
 } from './forms/FollowUpPrompt'
 export { StudentPicker } from './forms/StudentPicker'
+export { VitalsWarning } from './forms/VitalsWarning'
 export { InventoryItemPicker, type PickableItem } from './forms/InventoryItemPicker'
 export { ItemsGivenField, INSTRUCTIONS_MAX, type ItemLineDraft } from './forms/ItemsGivenField'
 export {

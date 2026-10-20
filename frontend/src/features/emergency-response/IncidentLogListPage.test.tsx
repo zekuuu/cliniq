@@ -11,6 +11,13 @@ describe('Incident Log', () => {
     expect(await screen.findByRole('link', { name: 'New Incident' })).toHaveAttribute('href', '/incidents/new')
   })
 
+  it('does not repeat the all-incidents scope in the page header', async () => {
+    renderWithRouter(<IncidentLogListPage />)
+
+    await screen.findByRole('heading', { name: 'Incident Log' })
+    expect(screen.queryByText('All incidents')).not.toBeInTheDocument()
+  })
+
   it('renders a privacy-safe multi-student incident list with completion statuses', async () => {
     renderWithRouter(<IncidentLogListPage />)
 

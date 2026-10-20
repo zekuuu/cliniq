@@ -23,7 +23,7 @@ import { Link, useSearchParams } from 'react-router'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useDateRangeEntryParams } from '../../hooks/useDateRangeEntryParams'
 import { formatDateTime } from '../../lib/dates'
-import { describeRange, type DateRange } from '../../lib/dateRange'
+import type { DateRange } from '../../lib/dateRange'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import { paths } from '../../routes/paths'
 import type { Disposition } from '../../types/entities'
@@ -245,9 +245,6 @@ export function VisitLogListPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Badge tone="info" variant="soft">
-              {range.preset === 'all' ? 'All visits' : describeRange(range)}
-            </Badge>
             <Link className={buttonClassName({ variant: 'primary' })} to={paths.visitNew()}>
               <Icon name="stethoscope" />
               New Visit

@@ -117,6 +117,10 @@ export interface VitalRange {
 export interface VitalsWarningRanges {
   temperatureC: VitalRange
   pulseBpm: VitalRange
+  /** The oximeter reading. `null` = no warning: the clinician hasn't given a range yet. */
+  oxygenSaturationPct: VitalRange | null
+  /** A temperature at or above this (°C) is flagged as a fever. Team rule, clinician to confirm. */
+  feverFromC: number
 }
 
 // ---- frontendOnly: MOCK-ONLY data that §5 doesn't define. Not a schema. ----------------------

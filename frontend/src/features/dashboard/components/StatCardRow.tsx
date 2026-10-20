@@ -13,7 +13,7 @@ import type { DashboardSummary } from '../../../types/dashboard'
 const CARDS = {
   visits: { icon: 'activity', label: 'Clinic visits', tone: 'brand' },
   incidents: { icon: 'alertTriangle', label: 'Incidents', tone: 'error' },
-  students: { icon: 'users', label: 'Active students', tone: 'neutral' },
+  students: { icon: 'users', label: 'Active students', tone: 'brand' },
   letters: { icon: 'fileText', label: 'Pending excuse letters', tone: 'warning' },
   followUps: { icon: 'calendarClock', label: 'Due & overdue follow-ups', tone: 'warning' },
 } satisfies Record<string, { icon: IconName; label: string; tone: StatTone }>

@@ -16,6 +16,7 @@ describe('Clinic Overview Dashboard', () => {
     for (const label of ['Clinic visits', 'Incidents', 'Active students', 'Pending excuse letters', 'Due & overdue follow-ups']) {
       expect(within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === label)).toBeInTheDocument()
     }
+    expect(within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === 'Active students')).toHaveClass('text-brand-green-dark')
     expect(screen.getByRole('heading', { name: /frequent-visitor warnings/i })).toBeInTheDocument()
   })
 

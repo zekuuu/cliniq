@@ -86,6 +86,20 @@ export interface Visit {
   excuseLetterDraft: ExcuseLetterDraft | null
   /** Referred to hospital only: where the student was referred. PROVISIONAL, pending the ERD. */
   referredTo: string | null
+  /*
+   * The clinic's daily logbook columns the Visit lacked (Issues-and-TODOs, "The clinic's two
+   * logbooks"). All optional. PROVISIONAL, pending the ERD.
+   */
+  /** Body temperature in °C; the logbook says it can be left blank. */
+  temperatureC: number | null
+  /** "HH:MM" the student left the clinic, on the visit's date, never earlier than `dateTime`. */
+  timeOut: string | null
+  /** Free-text name of whoever assisted (may be a teacher with no account); `loggedByUserId` stays the signed-in user. */
+  assistedBy: string | null
+  /** Free-text name of the parent or guardian (Zean's reading of the logbook column; not yet confirmed by the clinician). */
+  parentGuardian: string | null
+  /** Free-text notes, "can be anything"; separate from `treatment`. */
+  remarks: string | null
 }
 
 /** Excuse-letter values entered on a visit before approval. PROVISIONAL, pending the ERD. */
@@ -131,7 +145,11 @@ export interface Incident {
   studentId: string
   time: ISODateTime
   complaint: string
-  /** PROVISIONAL: §5 says "vitals" without listing fields. Pending the ERD. */
+  /**
+   * PROVISIONAL: §5 says "vitals" without listing fields. Pending the ERD. Every reading is optional
+   * ("don't force all 4"); only the ones taken are stored: `temperatureC`, `pulseBpm`, `bloodPressure`,
+   * `oxygenSaturationPct` (whole percent, 0 to 100). Stage 2 also keeps `treatmentNotes` here.
+   */
   vitals: Record<string, string | number>
   hospitalReferral: HospitalReferral | null
   parentNotifications: ParentNotificationAttempt[]

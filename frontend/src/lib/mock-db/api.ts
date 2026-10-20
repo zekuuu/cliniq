@@ -187,6 +187,10 @@ const FIELD_LABELS: Record<string, string> = {
   eventTag: 'event tag',
   treatment: 'treatment notes',
   itemsGiven: 'medicines and supplies',
+  temperatureC: 'body temperature',
+  timeOut: 'time out',
+  assistedBy: 'assisted by',
+  parentGuardian: 'parent/guardian',
   profilePicture: 'profile picture',
 }
 
@@ -616,7 +620,7 @@ export function getLatestVisit(): Promise<Visit> {
 
 export type FollowUpInput = Pick<FollowUp, 'followUpDate' | 'reason' | 'notes'>
 
-export interface RecordVisitInput {
+export interface RecordVisitInput extends Partial<VisitLogbookFields> {
   studentId: string
   complaint: string
   /** Treatment notes: care that isn't stock (rest, cold compress, advice). */
@@ -630,6 +634,26 @@ export interface RecordVisitInput {
   excuseLetterDraft?: ExcuseLetterDraft | null
   /** Referred to hospital only. */
   referredTo?: string | null
+}
+
+/** The visit's optional logbook fields (body temperature, time out, assisted by, parent/guardian, remarks). */
+export type VisitLogbookFields = Pick<Visit, 'temperatureC' | 'timeOut' | 'assistedBy' | 'parentGuardian' | 'remarks'>
+
+/** Blank text is stored as null; a time out must be "HH:MM" and not earlier than the time in. */
+function logbookFields(input: Partial<VisitLogbookFields>, timeIn: ISODateTime): VisitLogbookFields {
+  const text = (value: string | null | undefined) => value?.trim() || null
+  const timeOut = text(input.timeOut)
+  if (timeOut && !/^\d{2}:\d{2}$/.test(timeOut)) throw new Error('Time out must be HH:MM.')
+  if (timeOut && timeOut < timeIn.slice(11, 16)) throw new Error("Time out can't be earlier than the time in.")
+  const temperatureC = input.temperatureC ?? null
+  if (temperatureC !== null && !Number.isFinite(temperatureC)) throw new Error('Body temperature must be a number.')
+  return {
+    temperatureC,
+    timeOut,
+    assistedBy: text(input.assistedBy),
+    parentGuardian: text(input.parentGuardian),
+    remarks: text(input.remarks),
+  }
 }
 
 /**
@@ -696,10 +720,11 @@ export function recordVisit(
     const itemLines = input.itemsGiven ?? []
     // Treatment notes and items given are both optional: a visit may record no treatment.
     const extra = dispositionFields(s, null, input.disposition, input.excuseLetterDraft ?? null, input.referredTo ?? null)
+    const dateTime = now(s)
     const visit: Visit = {
       id: nextId('visit', s.visits),
       studentId: input.studentId,
-      dateTime: now(s),
+      dateTime,
       // Stored in a known suggestion's spelling, so counts never split by case.
       complaint: normalizeComplaint(input.complaint, complaintSuggestions(s)),
       treatment: input.treatment,
@@ -708,6 +733,7 @@ export function recordVisit(
       eventTag: input.eventTag?.trim() || null,
       itemsGiven: [],
       ...extra,
+      ...logbookFields(input, dateTime),
     }
     s.visits.push(visit)
     audit(s, by, 'submit', { type: 'visit', id: visit.id })
@@ -723,7 +749,7 @@ export function recordVisit(
 export type VisitPatch = Pick<Visit, 'complaint' | 'treatment' | 'disposition' | 'eventTag'> & {
   /** The full new set of lines. Omitted, the lines stay as they are. */
   itemsGiven?: ItemLineInput[]
-} & Partial<Pick<Visit, 'excuseLetterDraft' | 'referredTo'>>
+} & Partial<Pick<Visit, 'excuseLetterDraft' | 'referredTo'> & VisitLogbookFields>
 
 /**
  * Edits a saved visit. Changed medicine lines move stock through `visit_edited` adjustment
@@ -738,11 +764,22 @@ export function updateVisit(
   return write('update visit', (s) => {
     const by = actorOr(actor)
     const visit = must(s.visits.find((v) => v.id === id), 'Visit')
-    const { itemsGiven, excuseLetterDraft, referredTo, ...rest } = patch
+    const { itemsGiven, excuseLetterDraft, referredTo, temperatureC, timeOut, assistedBy, parentGuardian, remarks, ...rest } = patch
     // Omitted disposition fields stay as they are; checked against the (possibly new) disposition.
     const extra = dispositionFields(s, id, rest.disposition, excuseLetterDraft === undefined ? visit.excuseLetterDraft : excuseLetterDraft, referredTo === undefined ? visit.referredTo : referredTo)
     // Same normalization as a new visit, so an edit can't reintroduce a spelling or case variant.
-    const fields = { ...rest, complaint: normalizeComplaint(rest.complaint, complaintSuggestions(s)), ...extra }
+    // Omitted logbook fields stay as they are.
+    const logbook = logbookFields(
+      {
+        temperatureC: temperatureC === undefined ? visit.temperatureC : temperatureC,
+        timeOut: timeOut === undefined ? visit.timeOut : timeOut,
+        assistedBy: assistedBy === undefined ? visit.assistedBy : assistedBy,
+        parentGuardian: parentGuardian === undefined ? visit.parentGuardian : parentGuardian,
+        remarks: remarks === undefined ? visit.remarks : remarks,
+      },
+      visit.dateTime,
+    )
+    const fields = { ...rest, complaint: normalizeComplaint(rest.complaint, complaintSuggestions(s)), ...extra, ...logbook }
     const given = itemsGiven
       ? applyItemLines(s, by, { studentNumber: studentOf(s, visit.studentId).studentNumber, visitId: id }, visit.itemsGiven, itemsGiven, 'adjust')
       : { lines: visit.itemsGiven, belowZero: [] }
@@ -896,7 +933,7 @@ export interface StageOneInput {
   generalNotes?: string
 }
 
-/** Stage 1 fast capture: saves with only complaint + immediate vitals (Activity Diagram 2). */
+/** Stage 1 fast capture: saves with only the complaint plus whichever readings were taken (Activity Diagram 2). */
 export function saveIncidentStageOne(input: StageOneInput, actor?: SessionUser): Promise<Incident> {
   return write('save incident stage 1', (s) => {
     const by = actorOr(actor)

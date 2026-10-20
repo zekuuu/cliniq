@@ -44,13 +44,13 @@ The clearest case of a genuine state machine in the whole system — modeled as 
 stateDiagram-v2
     [*] --> Stage1_InProgress: Staff opens Incident Entry
 
-    Stage1_InProgress --> Stage1_Saved: Save (complaint +<br/>immediate vitals only —<br/>nothing else required)
+    Stage1_InProgress --> Stage1_Saved: Save (complaint only,<br/>readings as needed —<br/>nothing else required)
 
     Stage1_Saved --> NeedsCompletion: Status badge shows<br/>"Needs Completion"
 
     NeedsCompletion --> Stage2_InProgress: Staff reopens the record<br/>once the immediate<br/>situation is handled
 
-    Stage2_InProgress --> Stage2_InProgress: Add full vitals,<br/>treatment notes,<br/>hospital referral,<br/>parent notification attempts
+    Stage2_InProgress --> Stage2_InProgress: Add readings as needed,<br/>treatment notes,<br/>hospital referral,<br/>parent notification attempts
 
     Stage2_InProgress --> Complete: All required fields<br/>present, save
 

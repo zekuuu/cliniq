@@ -32,8 +32,8 @@ Give the agent this full list — it maps directly to the two module groups (bas
 
 ### Emergency Response
 15. **Incident Log List** — shows which incidents are still Stage-1 (fast-capture, incomplete) vs fully completed; shows **Student Number**, not full name, per the display-privacy rule. Header has a primary **New Incident** button (→ #16, Stage 1)
-16. **New Incident Entry — Stage 1 (fast capture)** — student, complaint, immediate vitals only; saves immediately, speed over completeness
-16b. **Incident Entry — Stage 2 (complete later)** — same record, opened afterward to fill in full vitals, treatment notes, hospital referral fields (destination, transport, departure time)
+16. **New Incident Entry — Stage 1 (fast capture)** — student and complaint required; the four readings (temperature, pulse, blood pressure, oximeter) optional; saves immediately, speed over completeness
+16b. **Incident Entry — Stage 2 (complete later)** — same record, opened afterward to fill in any further readings (still optional), treatment notes, hospital referral fields (destination, transport, departure time)
 17. **Parent Notification Outcome Logging** — timestamped, tied to the incident (Reached / Not Reached / Voicemail / Left Message)
 18. **Incident Report View/Print** — generated summary for the nurse to review, sign, and print
 

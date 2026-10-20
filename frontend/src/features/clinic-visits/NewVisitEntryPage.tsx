@@ -45,6 +45,15 @@ import {
   emptyDispositionValues,
   type DispositionErrors,
 } from './dispositionValues'
+import { LogbookFields } from './LogbookFields'
+import {
+  currentClock,
+  emptyLogbookValues,
+  filledLogbookCount,
+  logbookErrors,
+  logbookPayload,
+  type LogbookErrors,
+} from './logbookValues'
 
 /** Smart Triage's complaint type for what was typed: a case-insensitive match, or none. */
 function matchComplaintType(complaint: string, complaintTypes: ComplaintType[]): ComplaintType | undefined {
@@ -59,7 +68,7 @@ const dispositionOptions = [
   { value: 'referred_to_hospital', label: 'Referred to hospital' },
 ] satisfies Array<{ value: Disposition; label: string }>
 
-interface Errors extends DispositionErrors {
+interface Errors extends DispositionErrors, LogbookErrors {
   complaint?: string
   itemsGiven?: string
   followUpDate?: string
@@ -214,6 +223,10 @@ export function NewVisitEntryPage({
   const [followUpReason, setFollowUpReason] = useState('')
   const [followUpNotes, setFollowUpNotes] = useState('')
   const [lines, setLines] = useState<ItemLineDraft[]>([])
+  const [logbook, setLogbook] = useState(emptyLogbookValues)
+  /** "Show more fields": closed on a new visit; opens by itself when one of its fields has an error. */
+  const [moreOpen, setMoreOpen] = useState(false)
+  const timeOutRef = useRef<HTMLInputElement>(null)
   /** Stock figures refreshed after a save; until then, the ones loaded with the form. */
   const [freshItems, setFreshItems] = useState<InventoryItemView[] | null>(null)
   /** Complaint suggestions refreshed after a save, so a newly typed complaint is offered next time. */
@@ -246,7 +259,8 @@ export function NewVisitEntryPage({
       lines.length > 0 ||
       triageSteps.length > 0 ||
       disposition !== lastSavedDisposition.current ||
-      needsFollowUp,
+      needsFollowUp ||
+      filledLogbookCount(logbook) > 0,
   )
 
   useEffect(() => {
@@ -280,7 +294,11 @@ export function NewVisitEntryPage({
       if (!followUpDate) next.followUpDate = 'Choose a follow-up date.'
       if (!followUpReason.trim()) next.followUpReason = 'Enter the follow-up reason.'
     }
-    return { ...next, ...dispositionErrors(disposition, dispositionValues) }
+    return {
+      ...next,
+      ...dispositionErrors(disposition, dispositionValues),
+      ...logbookErrors(logbook, currentClock(), timeOutRef.current?.validity.badInput),
+    }
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -289,6 +307,7 @@ export function NewVisitEntryPage({
     const nextErrors = validate()
     const studentOk = identified.validate('Choose the student: type a Student Number or name, then pick from the list.')
     setErrors(nextErrors)
+    if (nextErrors.timeOut) setMoreOpen(true)
     invalid.report(Object.keys(nextErrors).length + (studentOk ? 0 : 1))
     if (Object.keys(nextErrors).length || !studentOk) return
     setSaving(true)
@@ -312,6 +331,7 @@ export function NewVisitEntryPage({
             : null,
           itemsGiven: lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity, instructions: line.instructions })),
           ...dispositionPayload(disposition, dispositionValues),
+          ...logbookPayload(logbook),
         },
         viewer,
       )
@@ -337,6 +357,8 @@ export function NewVisitEntryPage({
       setFollowUpDate(addDays(today, 1))
       setFollowUpReason('')
       setFollowUpNotes('')
+      setLogbook(emptyLogbookValues())
+      setMoreOpen(false)
       setErrors({})
       identified.reset()
       saveAndNewRef.current = false
@@ -575,6 +597,20 @@ export function NewVisitEntryPage({
                 </div>
               )}
             </fieldset>
+
+            <LogbookFields
+              values={logbook}
+              onChange={(next) => {
+                setLogbook(next)
+                setSaved(null)
+                setErrors((current) => ({ ...current, timeOut: undefined }))
+              }}
+              errors={errors}
+              open={moreOpen}
+              onOpenChange={setMoreOpen}
+              ranges={data.vitalsRanges}
+              timeOutRef={timeOutRef}
+            />
 
             <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
               {!treatment.trim() && !lines.length && (

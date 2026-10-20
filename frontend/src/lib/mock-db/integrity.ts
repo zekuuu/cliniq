@@ -21,7 +21,7 @@ const FIELDS = {
   users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture'],
   students: ['id', 'studentNumber', 'fullName', 'gradeLevel', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
   emergencyContact: ['name', 'relationship', 'phone', 'verified'],
-  visits: ['id', 'studentNumber', 'dateTime', 'complaint', 'treatment', 'disposition', 'loggedByUserId', 'eventTag', 'itemsGiven', 'excuseLetterDraft', 'referredTo'],
+  visits: ['id', 'studentNumber', 'dateTime', 'complaint', 'treatment', 'disposition', 'loggedByUserId', 'eventTag', 'itemsGiven', 'excuseLetterDraft', 'referredTo', 'temperatureC', 'timeOut', 'assistedBy', 'parentGuardian', 'remarks'],
   excuseLetterDraft: ['excusedFrom', 'excusedUntil', 'note'],
   itemGivenLine: ['itemId', 'itemName', 'unit', 'quantity', 'instructions'],
   incidents: ['id', 'studentNumber', 'time', 'complaint', 'vitals', 'hospitalReferral', 'parentNotifications', 'stage', 'eventTag', 'itemsGiven'],
@@ -114,9 +114,13 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   checkFields('config', s.config, FIELDS.config)
   for (const [key, value] of Object.entries((s.config ?? {}) as Rec)) {
     if (key === 'vitalsWarningRanges') {
-      checkFields('config.vitalsWarningRanges', value, ['_note', 'temperatureC', 'pulseBpm'])
-      for (const vital of ['temperatureC', 'pulseBpm']) {
-        const range = ((value ?? {}) as Rec)[vital] as Rec | undefined
+      checkFields('config.vitalsWarningRanges', value, ['_note', 'temperatureC', 'pulseBpm', 'oxygenSaturationPct', 'feverFromC'])
+      const fever = ((value ?? {}) as Rec).feverFromC
+      if (!(typeof fever === 'number' && fever > 0)) fail('config.vitalsWarningRanges.feverFromC: must be a positive number')
+      for (const vital of ['temperatureC', 'pulseBpm', 'oxygenSaturationPct']) {
+        const range = ((value ?? {}) as Rec)[vital] as Rec | null | undefined
+        // The oximeter has no range until the clinician gives one.
+        if (vital === 'oxygenSaturationPct' && range === null) continue
         const { min, max } = range ?? {}
         if (!(typeof min === 'number' && typeof max === 'number' && min > 0 && min < max))
           fail(`config.vitalsWarningRanges.${vital}: needs positive numbers with min < max`)
@@ -239,6 +243,12 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
       if (v.disposition !== 'referred_to_hospital') fail(`${w}.referredTo: only a Referred to hospital visit has one`)
       if (typeof v.referredTo !== 'string' || !v.referredTo.trim()) fail(`${w}.referredTo: must be null or non-empty text`)
     }
+    // The optional logbook fields.
+    if (v.temperatureC !== null && typeof v.temperatureC !== 'number') fail(`${w}.temperatureC: must be null or a number`)
+    if (v.timeOut !== null && !(typeof v.timeOut === 'string' && /^\d{2}:\d{2}$/.test(v.timeOut) && v.timeOut >= String((v.dateTime as Rec | null)?.time)))
+      fail(`${w}.timeOut: must be null or "HH:MM", not earlier than the visit's time`)
+    for (const key of ['assistedBy', 'parentGuardian', 'remarks'])
+      if (v[key] !== null && (typeof v[key] !== 'string' || !String(v[key]).trim())) fail(`${w}.${key}: must be null or non-empty text`)
   })
 
   // Incidents.

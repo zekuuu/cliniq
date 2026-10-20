@@ -47,6 +47,14 @@ shows Back (`cliniq-back-navigation-patterns`).
 - Never fix a clipped ring with `outline: none`, `:focus` instead of `:focus-visible`, a smaller offset or a different color. If padding would break the layout, draw it inside for that component only (`outline-offset: -2px`) and say so.
 - Check with the focus audit (`%USERPROFILE%\cliniq-audit\audit-focus.mjs`, Session 2026-10-20-focus-outline-clipping-audit), not by eye.
 
+**"Show more fields" (Tuesday, October 20, 2026 — 20:20 PHT).** Rarely filled, optional fields on an entry or edit form sit in the shared `ExpandableSection` (`frontend/src/components/ui/ExpandableSection.tsx`), placed under the fields filled every time. First use: the visit's five logbook fields (`features/clinic-visits/LogbookFields.tsx`).
+- The trigger is a real `<button>` with the small secondary Button look, a `chevronDown` that turns over when open, the label **Show more fields** / **Show fewer fields**, `aria-expanded` and `aria-controls`. Opening never moves focus; the first field inside is simply next in the Tab order.
+- Closed, the content is `hidden`: out of the Tab order and the accessibility tree, never just zero height. Its values stay in the form state and are saved and counted by the "discard changes?" guard.
+- Closed with something filled inside, the button says so: **Show more fields (2 filled)**.
+- The form keeps it controlled and opens it by itself when editing a record that has a value inside, and when a validation error sits inside, so `useFocusFirstInvalid` still lands on that field.
+- Opening plays a short slide-down (`animate-expand-down`, 150ms; off under `prefers-reduced-motion`). There is no `overflow: hidden` wrapper, so focus rings are never clipped.
+- Never put a required field inside, and never move an existing field into it without asking. Read views (Visit Detail) never collapse: they show the filled fields and leave out the empty ones. Emergency readings (incident) are never collapsed: speed matters there.
+
 ## When to apply this
 
 Every time you build or touch a button, link, dropdown, icon action, or navigable row — check this before considering it done, as part of the Audit step in `04-Development/Frontend-Loop-Engineering.md`. Don't wait for a visual review to catch a missing hover state; it should never ship without one in the first place.

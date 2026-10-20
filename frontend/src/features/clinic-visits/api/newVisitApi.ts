@@ -2,6 +2,7 @@ import {
   getStudent,
   getVisitComplaintSuggestions,
   getVisitComplaintTypes,
+  getVitalsWarningRanges,
   listInventory,
   recordVisit,
   searchStudents,
@@ -9,6 +10,8 @@ import {
   type InventoryItemView,
   type ItemLineInput,
   type SessionUser,
+  type VisitLogbookFields,
+  type VitalsWarningRanges,
 } from '../../../lib/mock-db'
 import type { Disposition, ExcuseLetterDraft, FollowUp, Student, StudentSearchResult, Visit } from '../../../types/entities'
 
@@ -21,9 +24,11 @@ export interface NewVisitContext {
   complaintSuggestions: string[]
   /** Every inventory item with its computed flags, for the Medicines & supplies picker. */
   items: InventoryItemView[]
+  /** Placeholder sanity bounds for the non-blocking body temperature warning (nurse to confirm). */
+  vitalsRanges: VitalsWarningRanges
 }
 
-export interface NewVisitInput {
+export interface NewVisitInput extends Partial<VisitLogbookFields> {
   studentId: string
   complaint: string
   treatment: string
@@ -45,13 +50,14 @@ export interface NewVisitResult {
 
 /** `studentNumber` is the route's `?student=` pre-selection; without one no student is attached. */
 export async function fetchNewVisitContext(studentNumber?: string): Promise<NewVisitContext> {
-  const [student, complaintTypes, complaintSuggestions, items] = await Promise.all([
+  const [student, complaintTypes, complaintSuggestions, items, vitalsRanges] = await Promise.all([
     studentNumber ? getStudent(studentNumber) : Promise.resolve(null),
     getVisitComplaintTypes(),
     getVisitComplaintSuggestions(),
     listInventory(),
+    getVitalsWarningRanges(),
   ])
-  return { student, complaintTypes, complaintSuggestions, items }
+  return { student, complaintTypes, complaintSuggestions, items, vitalsRanges }
 }
 
 /** Fresh complaint suggestions after a save, so a newly typed complaint is offered next time. */
@@ -89,6 +95,11 @@ export function submitNewVisit(input: NewVisitInput, user: SessionUser): Promise
       itemsGiven: input.itemsGiven,
       excuseLetterDraft: input.excuseLetterDraft ?? null,
       referredTo: input.referredTo ?? null,
+      temperatureC: input.temperatureC,
+      timeOut: input.timeOut,
+      assistedBy: input.assistedBy,
+      parentGuardian: input.parentGuardian,
+      remarks: input.remarks,
     },
     user,
   )

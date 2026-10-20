@@ -73,6 +73,15 @@
   --container-page-wide: 75rem; /* 1200px */
   --container-page-narrow: 45rem; /* 720px */
 
+  /* ExpandableSection: the revealed fields slide down a little and fade in. Short on purpose. */
+  --animate-expand-down: expand-down 150ms ease-out;
+  @keyframes expand-down {
+    from {
+      opacity: 0;
+      transform: translateY(-0.25rem);
+    }
+  }
+
   /* Elevation, reference-mockup style: cards separate from the page by a soft shadow, not an outline.
      Neutral near-black at low alpha (no new hue). */
   --shadow-card: 0 1px 2px 0 rgb(26 26 26 / 0.04), 0 2px 8px -2px rgb(26 26 26 / 0.06);

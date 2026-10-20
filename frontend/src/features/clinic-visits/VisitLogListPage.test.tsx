@@ -13,6 +13,16 @@ describe('Visit Log', () => {
     expect(await screen.findByRole('link', { name: 'New Visit' })).toHaveAttribute('href', '/visits/new')
   })
 
+  it('keeps the all-visits scope in the filter instead of repeating it in the page header', async () => {
+    renderWithRouter(<VisitLogListPage />)
+
+    await screen.findByRole('heading', { name: 'Visit Log' })
+    expect(screen.getByRole('button', { name: /Excuse letter/ })).toHaveTextContent('All visits')
+    expect(
+      screen.queryAllByText('All visits').filter((element) => !element.classList.contains('invisible')),
+    ).toHaveLength(1)
+  })
+
   it('opens on the day given by ?from=&to= (the Dashboard calendar\'s View visits)', async () => {
     const range = defaultVisitLogRange()
     const [visit] = await fetchVisitLog({ ...range, search: '', disposition: 'all' })

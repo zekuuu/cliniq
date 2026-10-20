@@ -25,7 +25,7 @@ const CONFIG: MockDbConfig = {
   clusterMinCount: 8,
   clusterRatio: 2,
   topComplaints: 5,
-  vitalsWarningRanges: { temperatureC: { min: 30, max: 43 }, pulseBpm: { min: 30, max: 250 } },
+  vitalsWarningRanges: { temperatureC: { min: 30, max: 43 }, pulseBpm: { min: 30, max: 250 }, oxygenSaturationPct: null, feverFromC: 37 },
 }
 
 // Hand-built records typed against the §5 entity shapes. If the entity contract changes, this
@@ -73,6 +73,11 @@ const visit = (
   itemsGiven: [],
   excuseLetterDraft: null,
   referredTo: null,
+  temperatureC: null,
+  timeOut: null,
+  assistedBy: null,
+  parentGuardian: null,
+  remarks: null,
 })
 
 const item = (id: string, extra: Partial<InventoryItem>): InventoryItem => ({

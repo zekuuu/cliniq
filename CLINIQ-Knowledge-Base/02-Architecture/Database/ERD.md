@@ -617,7 +617,7 @@ Cheap queries that prove the denormalized values and cross-table rules hold. The
 - For each `treatment_item_lines` row: `quantity` = `SUM(dispense)` minus `SUM(visit_edited adjustments)` for that visit/incident and item (a negative delta nets out; ADR-018).
 - A student with an approved `excuse_letters` row has no draft left on that visit (one row per visit enforces this).
 - Every `emergency_contacts.is_verified = 1` has `verified_at`; its latest `emergency_contact_verifications` row agrees.
-- Every stage-2 incident has at least one stage-2 vital reading *(app rule: the form requires BP and oxygen)*.
+- ~~Every stage-2 incident has at least one stage-2 vital reading~~ *(dropped Tuesday, October 20, 2026: no reading is required at either stage any more, "don't force all 4"; an incident may have no reading rows. See section 12, "Incident readings")*.
 - Every `number_sequences.last_value` is at least the largest used number for that scope.
 - No active student lacks a primary contact *(report, do not fail: incomplete records are allowed and flagged)*.
 
@@ -803,6 +803,8 @@ These are deliberate. Each needs a yes/no from the team, and a matching change i
 | Student Number generation | `max() + 1` in memory | Atomic counter table | Safe under concurrent saves. |
 | Reference numbers | Internal ids on printouts (known issue) | `reference_no` from the same counter table | Closes the Issues-and-TODOs item. |
 | Database engine | "MySQL" | "MariaDB (XAMPP), MySQL-compatible" | What XAMPP actually installs. |
+| Visit logbook fields (Tuesday, October 20, 2026) | `Visit` has five optional, nullable fields from the clinic's daily logbook: `temperatureC` (°C), `timeOut` ("HH:MM" on the visit's date, not before the time in), `assistedBy`, `parentGuardian` (free-text names) and `remarks` (free text). PROVISIONAL. | Not in this draft yet. Suggested: `visits.temperature_c DECIMAL(4,1) NULL`, `visits.time_out TIME NULL` (CHECK not before `TIME(visited_at)`), `assisted_by VARCHAR NULL`, `parent_guardian VARCHAR NULL`, `remarks TEXT NULL`. A note only, no schema change until the team approves. | The clinic's own logbook has these columns. `assisted_by` is a name, kept apart from the signed-in `logged_by`, because the helper may have no account. Unlike an incident, a visit takes one reading only (temperature), so it stays a column, not `incident_vital_readings`. |
+| Incident readings (Tuesday, October 20, 2026) | `Incident.vitals` holds only the readings taken, any of `temperatureC`, `pulseBpm`, `bloodPressure`, `oxygenSaturationPct` (whole percent 0 to 100; was free text `oxygenSaturation`); none is required at either stage. | `incident_vital_readings` already has nullable columns, including `spo2_percent` (CHECK 30 to 100). | "Don't force all 4 if not relevant to the case." The mock accepts 0 to 100; whether the database keeps 30 as its floor is open. |
 
 **Extension points, deliberately not built.** Each is an additive change if the need appears.
 

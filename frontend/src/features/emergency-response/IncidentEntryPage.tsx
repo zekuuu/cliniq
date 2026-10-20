@@ -18,6 +18,7 @@ import {
   Skeleton,
   StatusBadge,
   StudentPicker,
+  VitalsWarning,
   type ItemLineDraft,
   type StatusMap,
 } from '../../components'
@@ -28,7 +29,7 @@ import { paths } from '../../routes/paths'
 import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { addDays, todayISO } from '../../lib/dates'
 import { draftsFrom, formatItemGiven } from '../../lib/itemsGiven'
-import { formatDecimal } from '../../lib/numbers'
+import { readingText, takenReadings, type ReadingKey, type ReadingValues } from '../../lib/vitals'
 import {
   getMockSessionUser,
   StockRuleError,
@@ -68,10 +69,7 @@ const notificationOutcomes = [
 
 interface Errors {
   complaint?: string
-  temperatureC?: string
-  pulseBpm?: string
-  bloodPressure?: string
-  oxygenSaturation?: string
+  oxygenSaturationPct?: string
   itemsGiven?: string
   referralDestination?: string
   departureClock?: string
@@ -144,35 +142,89 @@ function TextareaField({
   )
 }
 
-function validateStageOne(complaint: string, temperatureC: string, pulseBpm: string): Errors {
-  const next: Errors = {}
+/** No reading is required ("don't force all 4"); a taken oximeter reading must be a whole percent. */
+function readingErrors(readings: ReadingValues): Errors {
+  const value = readings.oxygenSaturationPct.trim()
+  if (value && !(Number.isInteger(Number(value)) && Number(value) >= 0 && Number(value) <= 100))
+    return { oxygenSaturationPct: 'Enter the oxygen saturation as a whole percent from 0 to 100.' }
+  return {}
+}
+
+function validateStageOne(complaint: string, readings: ReadingValues): Errors {
+  const next = readingErrors(readings)
   if (!complaint) next.complaint = 'Select the emergency complaint.'
-  if (!temperatureC) next.temperatureC = 'Enter the temperature.'
-  if (!pulseBpm) next.pulseBpm = 'Enter the pulse.'
   return next
 }
 
-/**
- * Readings outside the configured ranges. A warning only, never a reason to block the save: Stage 1
- * is fast capture, and the ranges are placeholder sanity bounds until the nurse sets real ones.
- */
-function unusualVitals(
-  temperatureC: string,
-  pulseBpm: string,
-  ranges: VitalsWarningRanges,
-): string[] {
-  const outside = (value: string, { min, max }: { min: number; max: number }) =>
-    value.trim() !== '' && Number.isFinite(Number(value)) && (Number(value) < min || Number(value) > max)
-  const notes: string[] = []
-  if (outside(temperatureC, ranges.temperatureC)) notes.push(`Temperature ${formatDecimal(temperatureC)} °C looks unusual.`)
-  if (outside(pulseBpm, ranges.pulseBpm)) notes.push(`Pulse ${formatDecimal(pulseBpm)} bpm looks unusual.`)
-  return notes
+/** The readings saved on a record, for the Stage 2 summary: "37.2 °C · 98%", or none taken. */
+function readingSummary(vitals: Incident['vitals']): string {
+  const taken = takenReadings(vitals)
+  return taken.length ? taken.map(([key, value]) => readingText(key, value)).join(' · ') : 'No readings taken'
 }
 
 /**
- * Incident Entry (Screen #16 / #16b, Reference 5). Stage 1 intentionally accepts only the fast
- * essentials; Stage 2 completes the same incident with full vitals, referral, notifications, and
- * optional follow-up.
+ * The four optional readings, the same at both stages, in the logbook's order. Never collapsed: in an
+ * emergency they are the main data. Temperature and pulse keep the non-blocking unusual-value warning;
+ * the oximeter has none until the clinician gives a range (`vitalsWarningRanges.oxygenSaturationPct`).
+ */
+function ReadingsFields({
+  values,
+  onChange,
+  error,
+  ranges,
+}: {
+  values: ReadingValues
+  onChange: (key: ReadingKey, value: string) => void
+  error?: string
+  ranges: VitalsWarningRanges
+}) {
+  return (
+    <fieldset className="flex flex-col gap-3">
+      <legend className="mb-1 text-xs font-semibold text-text-primary">
+        Readings <span className="font-normal text-text-secondary">(optional; take what the case needs)</span>
+      </legend>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Input
+          type="number"
+          step="0.1"
+          inputMode="decimal"
+          label="Temperature (°C)"
+          value={values.temperatureC}
+          onChange={(event) => onChange('temperatureC', event.target.value)}
+        />
+        <Input
+          type="number"
+          inputMode="numeric"
+          label="Pulse (bpm)"
+          value={values.pulseBpm}
+          onChange={(event) => onChange('pulseBpm', event.target.value)}
+        />
+        <Input
+          label="Blood pressure (mmHg)"
+          value={values.bloodPressure}
+          onChange={(event) => onChange('bloodPressure', event.target.value)}
+        />
+        <Input
+          type="number"
+          step="1"
+          min={0}
+          max={100}
+          inputMode="numeric"
+          label="Oxygen saturation (%)"
+          value={values.oxygenSaturationPct}
+          onChange={(event) => onChange('oxygenSaturationPct', event.target.value)}
+          error={error}
+        />
+      </div>
+      <VitalsWarning readings={values} ranges={ranges} />
+    </fieldset>
+  )
+}
+
+/**
+ * Incident Entry (Screen #16 / #16b, Reference 5). Stage 1 needs only the complaint, plus whichever
+ * readings the case needs; Stage 2 completes the same incident with readings, treatment, referral,
+ * notifications, and an optional follow-up.
  */
 export function IncidentEntryPage({
   viewer = getMockSessionUser(),
@@ -223,6 +275,16 @@ function vital(incident: Incident | null, key: string): string {
   return value === undefined ? '' : String(value)
 }
 
+/** A saved record's readings as form values; blank where none was taken. */
+function savedReadings(incident: Incident | null): ReadingValues {
+  return {
+    temperatureC: vital(incident, 'temperatureC'),
+    pulseBpm: vital(incident, 'pulseBpm'),
+    bloodPressure: vital(incident, 'bloodPressure'),
+    oxygenSaturationPct: vital(incident, 'oxygenSaturationPct'),
+  }
+}
+
 function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: IncidentEntryContext }) {
   const today = todayISO()
   const existing = data.incident
@@ -232,11 +294,8 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const [incident, setIncident] = useState<Incident | null>(existing)
   const [completed, setCompleted] = useState(existing?.stage === 2)
   const [complaint, setComplaint] = useState(existing?.complaint ?? '')
-  const [temperatureC, setTemperatureC] = useState(vital(existing, 'temperatureC'))
-  const [pulseBpm, setPulseBpm] = useState(vital(existing, 'pulseBpm'))
+  const [readings, setReadings] = useState<ReadingValues>(() => savedReadings(existing))
   const [generalNotes, setGeneralNotes] = useState(existing?.generalNotes ?? '')
-  const [bloodPressure, setBloodPressure] = useState(vital(existing, 'bloodPressure'))
-  const [oxygenSaturation, setOxygenSaturation] = useState(vital(existing, 'oxygenSaturation'))
   const [treatmentNotes, setTreatmentNotes] = useState(vital(existing, 'treatmentNotes'))
   const [referToHospital, setReferToHospital] = useState(false)
   const [referralDestination, setReferralDestination] = useState('')
@@ -260,15 +319,14 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const invalidRef = useRef<HTMLFormElement>(null)
   const departureClockRef = useRef<HTMLInputElement>(null)
   const invalid = useFocusFirstInvalid(invalidRef)
-  const vitalsWarnings = unusualVitals(temperatureC, pulseBpm, data.vitalsRanges)
+  const readingsChanged = (from: Incident | null) =>
+    Object.entries(savedReadings(from)).some(([key, value]) => readings[key as ReadingKey] !== value)
   // Stage 1 typed but not saved, or Stage 2 changed from the saved incident but not completed.
-  const stageOneDirty =
-    !incident && (complaint !== '' || temperatureC !== '' || pulseBpm !== '' || generalNotes.trim() !== '')
+  const stageOneDirty = !incident && (complaint !== '' || readingsChanged(null) || generalNotes.trim() !== '')
   const stageTwoDirty =
     incident !== null &&
     !completed &&
-    (bloodPressure !== vital(incident, 'bloodPressure') ||
-      oxygenSaturation !== vital(incident, 'oxygenSaturation') ||
+    (readingsChanged(incident) ||
       treatmentNotes !== vital(incident, 'treatmentNotes') ||
       referToHospital ||
       notifications.length > 0 ||
@@ -277,13 +335,18 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       lines.length !== incident.itemsGiven.length)
   const { cancel, discardDialog } = useCancelNavigation(paths.incidents, stageOneDirty || stageTwoDirty)
 
+  function setReading(key: ReadingKey, value: string) {
+    setReadings((current) => ({ ...current, [key]: value }))
+    if (key === 'oxygenSaturationPct') setErrors((current) => ({ ...current, oxygenSaturationPct: undefined }))
+  }
+
   const statusValue: IncidentStatus = completed ? 'complete' : incident ? 'in_progress' : 'needs_completion'
 
   async function onStageOneSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     // Stage 1 is saved once; a second submit would create a duplicate incident.
     if (incident) return
-    const nextErrors = validateStageOne(complaint, temperatureC, pulseBpm)
+    const nextErrors = validateStageOne(complaint, readings)
     const studentOk = identified.validate()
     setErrors(nextErrors)
     invalid.report(Object.keys(nextErrors).length + (studentOk ? 0 : 1))
@@ -293,7 +356,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       const target = await identified.resolve()
       if (!target) return
       const saved = await saveStageOneIncident(
-        { studentId: target.id, complaint, temperatureC, pulseBpm, generalNotes },
+        { studentId: target.id, complaint, readings, generalNotes },
         viewer,
       )
       setIncident(saved)
@@ -324,9 +387,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   }
 
   function validateStageTwo(): Errors {
-    const next: Errors = {}
-    if (!bloodPressure.trim()) next.bloodPressure = 'Enter the blood pressure.'
-    if (!oxygenSaturation.trim()) next.oxygenSaturation = 'Enter oxygen saturation.'
+    const next = readingErrors(readings)
     if (referToHospital && !referralDestination.trim()) {
       next.referralDestination = 'Enter the hospital or clinic destination.'
     }
@@ -364,10 +425,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
           incidentId: incident.id,
           studentId: student.id,
           complaint,
-          temperatureC,
-          pulseBpm,
-          bloodPressure,
-          oxygenSaturation,
+          readings,
           treatmentNotes,
           hospitalReferral,
           parentNotifications: notifications.map((item) => ({
@@ -481,42 +539,12 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                 options={data.complaintTypes.map((type) => ({ value: type, label: type }))}
                 error={errors.complaint}
               />
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Input
-                  type="number"
-                  step="0.1"
-                  label="Temperature (°C)"
-                  value={temperatureC}
-                  required
-                  onChange={(event) => {
-                    setTemperatureC(event.target.value)
-                    setErrors((current) => ({ ...current, temperatureC: undefined }))
-                  }}
-                  error={errors.temperatureC}
-                />
-                <Input
-                  type="number"
-                  label="Pulse (bpm)"
-                  value={pulseBpm}
-                  required
-                  onChange={(event) => {
-                    setPulseBpm(event.target.value)
-                    setErrors((current) => ({ ...current, pulseBpm: undefined }))
-                  }}
-                  error={errors.pulseBpm}
-                />
-              </div>
-              {vitalsWarnings.length > 0 && (
-                <div
-                  role="status"
-                  className="flex items-start gap-2 rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm text-text-primary"
-                >
-                  <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning" />
-                  <p>
-                    {vitalsWarnings.join(' ')} Please check the reading. You can still save.
-                  </p>
-                </div>
-              )}
+              <ReadingsFields
+                values={readings}
+                onChange={setReading}
+                error={errors.oxygenSaturationPct}
+                ranges={data.vitalsRanges}
+              />
               <TextareaField label="Additional notes (optional)" value={generalNotes} onChange={setGeneralNotes} rows={3} />
               <div className="flex flex-wrap justify-end gap-2 pt-2">
                 <Button type="button" variant="neutral" className="h-11" onClick={cancel}>Cancel</Button>
@@ -543,7 +571,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
               titleId="stage-two-title"
               title="Stage 2 completion"
               icon={<Icon name="clipboardList" />}
-              description="Complete the same incident record with full vitals, treatment notes, referral details, and parent notification attempts."
+              description="Complete the same incident record with any further readings, treatment notes, referral details, and parent notification attempts."
             />
             <CardBody className="flex flex-col gap-4">
               {!incident ? (
@@ -558,9 +586,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                   <div className="rounded-md border border-border bg-surface p-3">
                     <p className="text-xs font-semibold text-text-secondary">Stage 1 summary</p>
                     <p className="mt-1 text-sm font-semibold text-text-primary">{complaint}</p>
-                    <p className="text-xs text-text-secondary">
-                      {formatDecimal(temperatureC)}°C · {formatDecimal(pulseBpm)} bpm
-                    </p>
+                    <p className="text-xs text-text-secondary">{readingSummary(incident.vitals)}</p>
                     {incident.generalNotes && (
                       <p className="mt-2 text-sm whitespace-pre-line text-text-primary">
                         <span className="text-xs font-semibold text-text-secondary">Additional notes: </span>
@@ -568,28 +594,12 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                       </p>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <Input
-                      label="Blood pressure"
-                      value={bloodPressure}
-                      required
-                      onChange={(event) => {
-                        setBloodPressure(event.target.value)
-                        setErrors((current) => ({ ...current, bloodPressure: undefined }))
-                      }}
-                      error={errors.bloodPressure}
-                    />
-                    <Input
-                      label="Oxygen saturation"
-                      value={oxygenSaturation}
-                      required
-                      onChange={(event) => {
-                        setOxygenSaturation(event.target.value)
-                        setErrors((current) => ({ ...current, oxygenSaturation: undefined }))
-                      }}
-                      error={errors.oxygenSaturation}
-                    />
-                  </div>
+                  <ReadingsFields
+                    values={readings}
+                    onChange={setReading}
+                    error={errors.oxygenSaturationPct}
+                    ranges={data.vitalsRanges}
+                  />
                   <TextareaField
                     label="Treatment notes"
                     value={treatmentNotes}

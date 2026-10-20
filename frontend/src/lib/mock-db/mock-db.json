@@ -16,9 +16,11 @@
     "clusterRatio": 2,
     "topComplaints": 5,
     "vitalsWarningRanges": {
-      "_note": "PLACEHOLDER SANITY BOUNDS, NOT CLINICAL THRESHOLDS. Nurse to confirm (Issues-and-TODOs: 'Unusual-vitals thresholds'). A reading outside a range is very unlikely to be real, usually a typing slip such as 370 for 37.0. The Incident form shows a warning and never blocks saving.",
+      "_note": "PLACEHOLDER SANITY BOUNDS, NOT CLINICAL THRESHOLDS. Nurse to confirm (Issues-and-TODOs: 'Unusual-vitals thresholds'). A reading outside a range is very unlikely to be real, usually a typing slip such as 370 for 37.0. The Incident and Visit forms show a warning and never block saving. oxygenSaturationPct (the oximeter) is null on purpose: no warning until the clinician gives a range; set {\"min\", \"max\"} here when she does. feverFromC: a temperature at or above it (37 °C, the team's rule of October 20, 2026; clinician to confirm) is flagged as a fever, also never blocking.",
       "temperatureC": { "min": 30, "max": 43 },
-      "pulseBpm": { "min": 30, "max": 250 }
+      "pulseBpm": { "min": 30, "max": 250 },
+      "oxygenSaturationPct": null,
+      "feverFromC": 37
     }
   },
   "users": [
@@ -993,7 +995,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0002",
@@ -1014,7 +1021,12 @@
         }
       ],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0003",
@@ -1027,7 +1039,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0004",
@@ -1040,7 +1057,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0005",
@@ -1053,7 +1075,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0006",
@@ -1066,7 +1093,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0007",
@@ -1079,7 +1111,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0008",
@@ -1092,7 +1129,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0009",
@@ -1105,7 +1147,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0010",
@@ -1118,7 +1165,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0011",
@@ -1131,7 +1183,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0012",
@@ -1144,7 +1201,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0013",
@@ -1157,7 +1219,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0014",
@@ -1170,7 +1237,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0015",
@@ -1183,7 +1255,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0016",
@@ -1196,7 +1273,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0017",
@@ -1209,7 +1291,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0018",
@@ -1222,7 +1309,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0019",
@@ -1235,7 +1327,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0020",
@@ -1248,7 +1345,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0021",
@@ -1261,7 +1363,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0022",
@@ -1274,7 +1381,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0023",
@@ -1287,7 +1399,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0024",
@@ -1300,7 +1417,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0025",
@@ -1313,7 +1435,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0026",
@@ -1326,7 +1453,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0027",
@@ -1339,7 +1471,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0028",
@@ -1352,7 +1489,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0029",
@@ -1365,7 +1507,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0030",
@@ -1378,7 +1525,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0031",
@@ -1391,7 +1543,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0032",
@@ -1404,7 +1561,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0033",
@@ -1417,7 +1579,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0034",
@@ -1430,7 +1597,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0035",
@@ -1443,7 +1615,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0036",
@@ -1456,7 +1633,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0037",
@@ -1469,7 +1651,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0038",
@@ -1482,7 +1669,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0039",
@@ -1495,7 +1687,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0040",
@@ -1508,7 +1705,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0041",
@@ -1521,7 +1723,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0042",
@@ -1534,7 +1741,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0043",
@@ -1547,7 +1759,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0044",
@@ -1560,7 +1777,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0045",
@@ -1573,7 +1795,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0046",
@@ -1586,7 +1813,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0047",
@@ -1599,7 +1831,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0048",
@@ -1612,7 +1849,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0049",
@@ -1625,7 +1867,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0050",
@@ -1638,7 +1885,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0051",
@@ -1651,7 +1903,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0052",
@@ -1664,7 +1921,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0053",
@@ -1677,7 +1939,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0054",
@@ -1690,7 +1957,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0055",
@@ -1703,7 +1975,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0056",
@@ -1716,7 +1993,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0057",
@@ -1729,7 +2011,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0058",
@@ -1742,7 +2029,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0059",
@@ -1755,7 +2047,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0060",
@@ -1768,7 +2065,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0061",
@@ -1781,7 +2083,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0062",
@@ -1794,7 +2101,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0063",
@@ -1807,7 +2119,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0064",
@@ -1820,7 +2137,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0065",
@@ -1833,7 +2155,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0066",
@@ -1846,7 +2173,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0067",
@@ -1859,7 +2191,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0068",
@@ -1872,7 +2209,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0069",
@@ -1885,7 +2227,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0070",
@@ -1898,7 +2245,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0071",
@@ -1911,7 +2263,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0072",
@@ -1924,7 +2281,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0073",
@@ -1937,7 +2299,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0074",
@@ -1950,7 +2317,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0075",
@@ -1963,7 +2335,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0076",
@@ -1976,7 +2353,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0077",
@@ -1989,7 +2371,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0078",
@@ -2002,7 +2389,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0079",
@@ -2015,7 +2407,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0080",
@@ -2028,7 +2425,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0081",
@@ -2041,7 +2443,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0082",
@@ -2054,7 +2461,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0083",
@@ -2067,7 +2479,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0084",
@@ -2080,7 +2497,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0085",
@@ -2093,7 +2515,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0086",
@@ -2106,7 +2533,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0087",
@@ -2119,7 +2551,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0088",
@@ -2132,7 +2569,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0089",
@@ -2145,7 +2587,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0090",
@@ -2158,7 +2605,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0091",
@@ -2171,7 +2623,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0092",
@@ -2184,7 +2641,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0093",
@@ -2197,7 +2659,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0094",
@@ -2210,7 +2677,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0095",
@@ -2223,7 +2695,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0096",
@@ -2236,7 +2713,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0097",
@@ -2249,7 +2731,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0098",
@@ -2262,7 +2749,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0099",
@@ -2275,7 +2767,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0100",
@@ -2288,7 +2785,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0101",
@@ -2301,7 +2803,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0102",
@@ -2314,7 +2821,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0103",
@@ -2327,7 +2839,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0104",
@@ -2340,7 +2857,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0105",
@@ -2353,7 +2875,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0106",
@@ -2366,7 +2893,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0107",
@@ -2379,7 +2911,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0108",
@@ -2392,7 +2929,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0109",
@@ -2405,7 +2947,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0110",
@@ -2418,7 +2965,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0111",
@@ -2431,7 +2983,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0112",
@@ -2444,7 +3001,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0113",
@@ -2457,7 +3019,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0114",
@@ -2470,7 +3037,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0115",
@@ -2483,7 +3055,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0116",
@@ -2496,7 +3073,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0117",
@@ -2509,7 +3091,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0118",
@@ -2522,7 +3109,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0119",
@@ -2535,7 +3127,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0120",
@@ -2548,7 +3145,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0121",
@@ -2561,7 +3163,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0122",
@@ -2574,7 +3181,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0123",
@@ -2587,7 +3199,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0124",
@@ -2600,7 +3217,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0125",
@@ -2613,7 +3235,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0126",
@@ -2626,7 +3253,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0127",
@@ -2639,7 +3271,12 @@
       "eventTag": "Intramurals",
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0128",
@@ -2652,7 +3289,12 @@
       "eventTag": "Intramurals",
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0129",
@@ -2665,7 +3307,12 @@
       "eventTag": "Intramurals",
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0130",
@@ -2678,7 +3325,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0131",
@@ -2691,7 +3343,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0132",
@@ -2704,7 +3361,12 @@
       "eventTag": "Intramurals",
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0133",
@@ -2717,7 +3379,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0134",
@@ -2730,7 +3397,12 @@
       "eventTag": "Intramurals",
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0135",
@@ -2743,7 +3415,12 @@
       "eventTag": "Intramurals",
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0136",
@@ -2756,7 +3433,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0137",
@@ -2769,7 +3451,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0138",
@@ -2782,7 +3469,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0139",
@@ -2795,7 +3487,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0140",
@@ -2816,7 +3513,12 @@
         }
       ],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0141",
@@ -2829,7 +3531,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0142",
@@ -2842,7 +3549,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": "Provincial Hospital emergency room"
+      "referredTo": "Provincial Hospital emergency room",
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0143",
@@ -2855,7 +3567,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0144",
@@ -2868,7 +3585,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0145",
@@ -2881,7 +3603,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0146",
@@ -2894,7 +3621,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0147",
@@ -2907,7 +3639,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0148",
@@ -2920,7 +3657,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0149",
@@ -2941,7 +3683,12 @@
         }
       ],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0150",
@@ -2954,7 +3701,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0151",
@@ -2971,7 +3723,12 @@
         "excusedUntil": { "daysAgo": 4 },
         "note": "Please allow the student to take the missed quiz."
       },
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0152",
@@ -2984,7 +3741,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0153",
@@ -2997,7 +3759,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0154",
@@ -3010,7 +3777,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0155",
@@ -3023,7 +3795,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0156",
@@ -3036,7 +3813,12 @@
       "eventTag": null,
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0157",
@@ -3057,7 +3839,12 @@
         }
       ],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0158",
@@ -3070,7 +3857,12 @@
       "eventTag": "MCA Dance Program",
       "itemsGiven": [],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     },
     {
       "id": "visit-0159",
@@ -3098,7 +3890,12 @@
         }
       ],
       "excuseLetterDraft": null,
-      "referredTo": null
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     }
   ],
   "incidents": [
@@ -3111,7 +3908,7 @@
         "temperatureC": 37.2,
         "pulseBpm": 97,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3134,7 +3931,7 @@
         "temperatureC": 36.6,
         "pulseBpm": 101,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3161,7 +3958,7 @@
         "temperatureC": 36.9,
         "pulseBpm": 84,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3184,7 +3981,7 @@
         "temperatureC": 37.5,
         "pulseBpm": 82,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3211,7 +4008,7 @@
         "temperatureC": 37.2,
         "pulseBpm": 81,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3238,7 +4035,7 @@
         "temperatureC": 36.9,
         "pulseBpm": 91,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3261,7 +4058,7 @@
         "temperatureC": 37.300000000000004,
         "pulseBpm": 93,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3284,7 +4081,7 @@
         "temperatureC": 37.2,
         "pulseBpm": 87,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3311,7 +4108,7 @@
         "temperatureC": 37.5,
         "pulseBpm": 90,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3338,7 +4135,7 @@
         "temperatureC": 37.5,
         "pulseBpm": 80,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3361,7 +4158,7 @@
         "temperatureC": 36.7,
         "pulseBpm": 93,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3388,7 +4185,7 @@
         "temperatureC": 36.800000000000004,
         "pulseBpm": 103,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3411,7 +4208,7 @@
         "temperatureC": 36.800000000000004,
         "pulseBpm": 98,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3434,7 +4231,7 @@
         "temperatureC": 37.5,
         "pulseBpm": 83,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3457,7 +4254,7 @@
         "temperatureC": 37.2,
         "pulseBpm": 81,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3484,7 +4281,7 @@
         "temperatureC": 36.800000000000004,
         "pulseBpm": 102,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3515,7 +4312,7 @@
         "temperatureC": 37.4,
         "pulseBpm": 101,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3538,7 +4335,7 @@
         "temperatureC": 37.4,
         "pulseBpm": 99,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3565,7 +4362,7 @@
         "temperatureC": 37.300000000000004,
         "pulseBpm": 97,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": null,
@@ -3588,7 +4385,7 @@
         "temperatureC": 36.800000000000004,
         "pulseBpm": 107,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": ""
       },
       "hospitalReferral": null,
@@ -3611,7 +4408,7 @@
         "temperatureC": 36.7,
         "pulseBpm": 80,
         "bloodPressure": "110/70",
-        "oxygenSaturation": "98%",
+        "oxygenSaturationPct": 98,
         "treatmentNotes": "Stabilized in clinic; observed until pickup"
       },
       "hospitalReferral": {

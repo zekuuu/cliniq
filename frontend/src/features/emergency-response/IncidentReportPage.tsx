@@ -4,18 +4,10 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
 import { formatDateTime } from '../../lib/dates'
 import { formatItemGiven, incidentCareSummary } from '../../lib/itemsGiven'
-import { formatDecimal } from '../../lib/numbers'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
+import { READING_LABELS, readingText, takenReadings } from '../../lib/vitals'
 import type { ParentNotificationOutcome } from '../../types/entities'
 import { approveReport, fetchIncidentRecord, type IncidentRecord } from './api/incidentRecordApi'
-
-/** Readable labels for the provisional `vitals` keys; unknown keys fall back to the key itself. */
-const VITAL_LABELS: Record<string, { label: string; unit?: string }> = {
-  temperatureC: { label: 'Temperature', unit: '°C' },
-  pulseBpm: { label: 'Pulse', unit: 'bpm' },
-  bloodPressure: { label: 'Blood pressure', unit: 'mmHg' },
-  oxygenSaturation: { label: 'Oxygen saturation' },
-}
 
 const OUTCOME_LABELS: Record<ParentNotificationOutcome, string> = {
   reached: 'Reached',
@@ -23,14 +15,6 @@ const OUTCOME_LABELS: Record<ParentNotificationOutcome, string> = {
   voicemail: 'Voicemail',
   left_message: 'Left message',
 }
-
-/** A vital as the screen shows it: the same rounding, with the unit unless the value already has it. */
-function vitalText(key: string, value: string | number): string {
-  const unit = VITAL_LABELS[key]?.unit
-  return `${formatDecimal(value)}${unit && !String(value).endsWith(unit) ? ` ${unit}` : ''}`
-}
-
-const vitalEntries = (vitals: Record<string, string | number>) => Object.entries(vitals).filter(([key]) => key !== 'treatmentNotes')
 
 /**
  * The incident report on A4 (ADR-026): one student, deliberately opened, so the full name is correct
@@ -40,7 +24,7 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
   const { incident, student, approved, trail } = record
   const referral = incident.hospitalReferral
   const notes = String(incident.vitals.treatmentNotes ?? '').trim()
-  const vitals = vitalEntries(incident.vitals)
+  const vitals = takenReadings(incident.vitals)
   const signed = (step: { by: string; at: string } | null) => (step ? `${step.by}, ${formatDateTime(step.at)}` : 'Not recorded')
   return (
     <PrintDocument
@@ -70,9 +54,9 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
         </PrintSection>
         <PrintSection title="Vitals">
           {vitals.length ? (
-            <PrintFields columns={4} fields={vitals.map(([key, value]) => ({ label: VITAL_LABELS[key]?.label ?? key, value: vitalText(key, value) }))} />
+            <PrintFields columns={4} fields={vitals.map(([key, value]) => ({ label: READING_LABELS[key]?.label ?? key, value: readingText(key, value) }))} />
           ) : (
-            <PrintNote className="text-text-primary">No vitals recorded.</PrintNote>
+            <PrintNote className="text-text-primary">No readings taken.</PrintNote>
           )}
         </PrintSection>
         <PrintSection title="Treatment">
@@ -239,14 +223,18 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
 
           <section className="border-t border-border pt-4">
             <h2 className="text-sm font-semibold text-text-primary">Vitals and response</h2>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              {vitalEntries(incident.vitals).map(([key, value]) => (
-                <div key={key} className="rounded-md border border-border bg-surface p-3">
-                  <p className="text-xs text-text-secondary">{VITAL_LABELS[key]?.label ?? key}</p>
-                  <p className="mt-1 text-sm font-semibold text-text-primary">{vitalText(key, value)}</p>
-                </div>
-              ))}
-            </div>
+            {takenReadings(incident.vitals).length ? (
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                {takenReadings(incident.vitals).map(([key, value]) => (
+                  <div key={key} className="rounded-md border border-border bg-surface p-3">
+                    <p className="text-xs text-text-secondary">{READING_LABELS[key]?.label ?? key}</p>
+                    <p className="mt-1 text-sm font-semibold text-text-primary">{readingText(key, value)}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-text-secondary">No readings taken</p>
+            )}
           </section>
 
           <section className="border-t border-border pt-4" aria-labelledby="report-treatment-title">

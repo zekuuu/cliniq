@@ -21,6 +21,7 @@ import type {
   Student,
   StudentSearchResult,
 } from '../../../types/entities'
+import { storedReadings, type ReadingValues } from '../../../lib/vitals'
 
 export interface IncidentEntryContext {
   /**
@@ -41,8 +42,8 @@ export interface IncidentEntryContext {
 export interface StageOneIncidentInput {
   studentId: string
   complaint: string
-  temperatureC: string
-  pulseBpm: string
+  /** All optional; only the readings taken are saved. */
+  readings: ReadingValues
   generalNotes?: string
 }
 
@@ -50,10 +51,8 @@ export interface StageTwoIncidentInput {
   incidentId: string
   studentId: string
   complaint: string
-  temperatureC: string
-  pulseBpm: string
-  bloodPressure: string
-  oxygenSaturation: string
+  /** All optional; only the readings taken are saved. */
+  readings: ReadingValues
   treatmentNotes: string
   hospitalReferral: HospitalReferral | null
   /** Attempts logged on this form; appended to the incident's notification log. */
@@ -90,13 +89,13 @@ export function findIncidentStudent(studentNumber: string): Promise<Student> {
   return getStudent(studentNumber)
 }
 
-/** Stage 1 saves with only complaint + immediate vitals; the layer logs it as its own event. */
+/** Stage 1 needs only the complaint, plus whichever readings were taken; the layer logs it as its own event. */
 export function saveStageOneIncident(input: StageOneIncidentInput, user: SessionUser): Promise<Incident> {
   return saveIncidentStageOne(
     {
       studentId: input.studentId,
       complaint: input.complaint,
-      vitals: { temperatureC: Number(input.temperatureC), pulseBpm: Number(input.pulseBpm) },
+      vitals: storedReadings(input.readings),
       generalNotes: input.generalNotes,
     },
     user,
@@ -111,13 +110,7 @@ export function completeStageTwoIncident(
     {
       incidentId: input.incidentId,
       complaint: input.complaint,
-      vitals: {
-        temperatureC: Number(input.temperatureC),
-        pulseBpm: Number(input.pulseBpm),
-        bloodPressure: input.bloodPressure,
-        oxygenSaturation: input.oxygenSaturation,
-        treatmentNotes: input.treatmentNotes,
-      },
+      vitals: { ...storedReadings(input.readings), treatmentNotes: input.treatmentNotes },
       hospitalReferral: input.hospitalReferral,
       newParentNotifications: input.parentNotifications,
       followUp: input.followUp,

@@ -23,12 +23,15 @@ import { cn } from '../../lib/cn'
 import { cleanComplaint } from '../../lib/complaints'
 import { formatDateRange, formatDateTime } from '../../lib/dates'
 import { draftsFrom, formatItemGiven } from '../../lib/itemsGiven'
+import { formatDecimal } from '../../lib/numbers'
 import { getMockSessionUser, StockRuleError, type SessionUser } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
 import type { Disposition } from '../../types/entities'
 import { ComplaintField } from './ComplaintField'
 import { DispositionFields } from './DispositionFields'
 import { dispositionErrors, emptyDispositionValues, type DispositionErrors } from './dispositionValues'
+import { LogbookFields } from './LogbookFields'
+import { filledLogbookCount, formatClock, logbookErrors, type LogbookErrors, type LogbookValues } from './logbookValues'
 import {
   fetchVisitDetail,
   updateVisitDetail,
@@ -55,7 +58,7 @@ const dispositionTone: Record<Disposition, BadgeTone> = {
   referred_to_hospital: 'error',
 }
 
-interface Errors extends DispositionErrors {
+interface Errors extends DispositionErrors, LogbookErrors {
   complaint?: string
   itemsGiven?: string
 }
@@ -148,6 +151,14 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
   const [saved, setSaved] = useState<null | { belowZero: string[] }>(null)
   const invalidRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(invalidRef)
+  /** "Show more fields": opens by itself when the visit already has a value in it, or an error sits in it. */
+  const [moreOpen, setMoreOpen] = useState(false)
+  const timeOutRef = useRef<HTMLInputElement>(null)
+
+  function startEdit() {
+    setMoreOpen(filledLogbookCount(valuesFromVisit(visit)) > 0)
+    setEditing(true)
+  }
 
   function setField<K extends keyof VisitDetailValues>(field: K, value: VisitDetailValues[K]) {
     setValues((current) => ({ ...current, [field]: value }))
@@ -166,13 +177,18 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
     const next: Errors = {}
     if (!cleanComplaint(values.complaint)) next.complaint = 'Enter the visit complaint.'
     if (lines.some((line) => line.quantity < 1)) next.itemsGiven = 'Each quantity must be at least 1.'
-    return { ...next, ...dispositionErrors(values.disposition, values, Boolean(visit.approval)) }
+    return {
+      ...next,
+      ...dispositionErrors(values.disposition, values, Boolean(visit.approval)),
+      ...logbookErrors(values, visit.dateTime.slice(11, 16), timeOutRef.current?.validity.badInput),
+    }
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const nextErrors = validate()
     setErrors(nextErrors)
+    if (nextErrors.timeOut) setMoreOpen(true)
     invalid.report(Object.keys(nextErrors).length)
     if (Object.keys(nextErrors).length) return
     setSaving(true)
@@ -224,7 +240,7 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
               {formatDateTime(visit.dateTime)}
             </Badge>
             {!editing && (
-              <Button variant="secondary" icon="fileText" onClick={() => setEditing(true)}>
+              <Button variant="secondary" icon="fileText" onClick={startEdit}>
                 Edit
               </Button>
             )}
@@ -355,6 +371,19 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                   placeholder="Optional school event"
                   onChange={(event) => setField('eventTag', event.target.value)}
                 />
+                <LogbookFields
+                  values={values}
+                  onChange={(next: LogbookValues) => {
+                    setValues((current) => ({ ...current, ...next }))
+                    setErrors((current) => ({ ...current, timeOut: undefined }))
+                    setSaved(null)
+                  }}
+                  errors={errors}
+                  open={moreOpen}
+                  onOpenChange={setMoreOpen}
+                  ranges={visit.vitalsRanges}
+                  timeOutRef={timeOutRef}
+                />
                 <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
                   {!values.treatment.trim() && !lines.length && (
                     <p className="mr-auto text-xs text-text-secondary">No treatment recorded. You can still save.</p>
@@ -405,6 +434,37 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                   <section>
                     <h2 className="text-sm font-bold text-text-primary">Referred to</h2>
                     <p className="mt-1 text-sm text-text-primary">{visit.referredTo}</p>
+                  </section>
+                )}
+                {/* The optional logbook fields: only the filled ones, nothing collapsed. */}
+                {visit.temperatureC !== null && (
+                  <section>
+                    <h2 className="text-sm font-bold text-text-primary">Body temperature</h2>
+                    <p className="mt-1 text-sm text-text-primary">{formatDecimal(visit.temperatureC)} °C</p>
+                  </section>
+                )}
+                {visit.timeOut && (
+                  <section>
+                    <h2 className="text-sm font-bold text-text-primary">Time out</h2>
+                    <p className="mt-1 text-sm text-text-primary">{formatClock(visit.timeOut)}</p>
+                  </section>
+                )}
+                {visit.assistedBy && (
+                  <section>
+                    <h2 className="text-sm font-bold text-text-primary">Assisted by</h2>
+                    <p className="mt-1 text-sm text-text-primary">{visit.assistedBy}</p>
+                  </section>
+                )}
+                {visit.parentGuardian && (
+                  <section>
+                    <h2 className="text-sm font-bold text-text-primary">Parent/Guardian</h2>
+                    <p className="mt-1 text-sm text-text-primary">{visit.parentGuardian}</p>
+                  </section>
+                )}
+                {visit.remarks && (
+                  <section>
+                    <h2 className="text-sm font-bold text-text-primary">Remarks</h2>
+                    <p className="mt-1 text-sm whitespace-pre-line text-text-primary">{visit.remarks}</p>
                   </section>
                 )}
               </div>
