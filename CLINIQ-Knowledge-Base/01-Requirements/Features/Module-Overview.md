@@ -14,7 +14,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 
 **Role documented for future development (not built this phase):** Canteen Staff — see "Future Development" at the end of this document.
 
-**Display-privacy rule (applies across the whole system):** the actual privacy risk isn't a single deliberate lookup — it's a **desktop screen showing a list or pattern across multiple students at once** (a visit log, an incident log, or a "frequent visitor" flag) being glanced at by a passerby, who can then attach a specific named student to a health pattern ("he visits a lot, what's going on?"). So: the **Visit Log List, Incident Log List, and the Dashboard's frequent-visitor section default to Student Number**, not full name, since these are rolling, multi-student, glanceable-by-bystanders screens. A **single deliberate lookup of one specific student — the full profile page, search results, and the masterlist/directory — shows the full name normally**, since at that point someone has already identified and is looking at one particular student for a legitimate reason. The masterlist shows names freely (it's just a roster of who's enrolled) but should not show medical/confidential fields inline — allergies, conditions, or visit reasons still require opening the individual profile.
+**Display-privacy rule (applies across the whole system):** the actual privacy risk isn't a single deliberate lookup — it's a **desktop screen showing a list or pattern across multiple students at once** (a visit log, an incident log, or a "frequent visitor" flag) being glanced at by a passerby, who can then attach a specific named student to a health pattern ("he visits a lot, what's going on?"). So: the **Visit Log List, Incident Log List, and the Dashboard's frequent-visitor section default to the masked LRN**, not full name, since these are rolling, multi-student, glanceable-by-bystanders screens. A **single deliberate lookup of one specific student — the full profile page, search results, and the masterlist/directory — shows the full name normally**, since at that point someone has already identified and is looking at one particular student for a legitimate reason. The masterlist shows names freely (it's just a roster of who's enrolled) but should not show medical/confidential fields inline — allergies, conditions, or visit reasons still require opening the individual profile.
 
 ---
 
@@ -54,11 +54,11 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 **Student Information Encoding**
 - Add new student record — *Staff*
 - Record the required **Sex** recorded by the school (Female or Male). Show it on the deliberate single-student profile and Student Health Record; audit changes by field name only, never the value.
-- Auto-generate the student's Student Number in `YYYY-NNNNN` format (enrollment year + zero-padded 5-digit sequence, e.g. `2026-00001`) — system-assigned, not manually entered; sequence resets each enrollment year, giving up to 99,999 new enrollees of headroom per year against the school's ~900-student population, so the format scales well past 20 years. This same number is the default label on visit/incident list and dashboard views, per the display-privacy rule above
+- Record the student's LRN (Learner Reference Number, ADR-028), entered by Staff from the school records: exactly 12 digits, kept as text so leading zeros survive, required and unique (a repeat shows "This LRN is already used by another student record" without naming that student); spaces and dashes are removed when typed or pasted; a wrong LRN is corrected in Edit Student and audited as "Updated LRN" with neither value. Lists, pickers, printouts and the Audit Trail show it masked to the last four digits (`••••••••1234`, read as "LRN ending in 1234"); only the Student Profile and the edit form show it in full; addresses carry the internal id, never the LRN
 - Edit student record — *Staff*
 - View student profile/detail — *Staff*
 - View list of all students (masterlist, shown with full names) — *Staff*
-- Search/filter students (name, grade level, status, or Student Number) — *Staff*
+- Search/filter students (name, grade level, status, or LRN) — *Staff*
 - Archive/deactivate a student record (e.g., transferred or graduated) — *Staff*. Archived records are **not deleted** — they stay in the system for historical/audit continuity but are filtered out of default active-student lists, search results, and dropdowns unless a Staff member explicitly chooses to include archived records
 
 **Medical History Recording**
@@ -92,10 +92,10 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 ### 3. Clinic Visit Monitoring — *Access: Staff only*
 
 **Daily Visit Logging**
-- Add new visit entry. A visit opened without an identified student finds one by Student Number or student name (results appear from the first character typed, at most 8 active students, each shown with Student Number, full name, and grade). Incident Stage 1, PE/Sports Referral, and Dispense use the same search.
+- Add new visit entry. A visit opened without an identified student finds one by LRN or student name (results appear from the first character typed, at most 8 active students, each shown with masked LRN, full name, and grade). Incident Stage 1, PE/Sports Referral, and Dispense use the same search.
 - Edit visit entry
 - View visit detail (full name shown — a deliberately opened single record)
-- View list of visits (filterable by date) — shows **Student Number**, not full name, per the display-privacy rule, since this rolling multi-student list is the kind of screen a bystander could glance at
+- View list of visits (filterable by date) — shows **masked LRN**, not full name, per the display-privacy rule, since this rolling multi-student list is the kind of screen a bystander could glance at
 - Search visits by student
 
 **Complaint Monitoring**
@@ -118,7 +118,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - Print excuse letter
 - Excused periods ("Excused from" / "Excused until") are recorded so teachers and the registrar can cross-check attendance, and there is no attendance integration.
 - On the visit form (new or edit), fields follow the disposition: none for Returned to class; for Sent home, an "Excuse letter" section ("Prepare an excuse letter", on by default; Excused from, default today; Excused until, required while ticked; optional note for the teacher); for Referred to hospital, the same section plus an optional "Referred to (hospital or clinic)". Fields clear when the disposition changes and are validated only while shown. Saving stores these as a draft with the visit, not an approved letter; "Review excuse letter" opens the letter prefilled, and approval moves the period and note onto the letter and clears the draft. Once a letter is approved, editing the visit (even to another disposition) never changes or removes it, and the form says so
-- Drafts awaiting approval are findable without remembering the visit: the Student Profile's Staff-only Excuse Letters card lists them with a "Pending approval" badge and a "Review letter" link, and the Dashboard shows Staff an "Excuse letters awaiting approval" list (Student Number, excused period, visit time; oldest first), shown only while drafts exist
+- Drafts awaiting approval are findable without remembering the visit: the Student Profile's Staff-only Excuse Letters card lists them with a "Pending approval" badge and a "Review letter" link, and the Dashboard shows Staff an "Excuse letters awaiting approval" list (masked LRN, excused period, visit time; oldest first), shown only while drafts exist
 - Visit detail (Staff only) shows an "Excuse letter" section: Not prepared, Pending approval, or Approved, with the excused period, the teacher note, and a link to the letter; and "Referred to" when recorded
 - **Out of scope:** medical certificates are hospital-issued documents, not generated by CLINIQ — the excuse letter is a distinct, clinic-issued document and the system should never conflate the two
 
@@ -143,7 +143,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - **Stage 2 (complete later):** return to the same incident record to fill in remaining details (any further readings, still all optional, and referral specifics) once the immediate situation is handled. Treatment notes and medicines/supplies given are both optional; when neither is recorded, views show “No treatment recorded,” and the Incident Report gives Staff a non-blocking check-before-approving notice
 - Edit incident entry
 - View incident detail (full name shown — a deliberately opened single record)
-- View list of incidents, including which are still in Stage 1 (incomplete) vs fully completed — shows **Student Number**, not full name, per the display-privacy rule
+- View list of incidents, including which are still in Stage 1 (incomplete) vs fully completed — shows **masked LRN**, not full name, per the display-privacy rule
 
 **Hospital Referral Monitoring**
 - Add hospital referral (destination, transport mode, departure time)
@@ -215,7 +215,7 @@ Staff identify a student through Students search or each form's student picker. 
 - Expired batches can't be dispensed (rejected by the data layer, not just the UI); items with no expiration date are always dispensable. Dispensing uses the earliest-expiry usable batch first and records the allocation so visit edits return stock to its original batch.
 - Restock/add stock (row action: quantity received + the **new batch's** expiration date; adds a batch; logs the restock). It never overwrites earlier batches; the dialog warns when expired stock remains. Edit Item no longer edits stock or expiry.
 - **Adjust Stock** (Staff, row action): choose a batch, then a +/- change or "set to counted quantity", with a required reason (Expired - disposed / Damaged or spilled / Miscount correction / Other with a required note). The selected batch cannot go below 0. Writes an adjustment transaction and audit entry; a disposal remains in batch movement history.
-- View inventory usage history/log — not built yet; when built, it shows the Student Number, never the name
+- View inventory usage history/log — not built yet; when built, it shows the masked LRN, never the name
 
 **Alerts & Thresholds**
 - Set/edit the low-stock threshold per item
@@ -232,7 +232,7 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 - View common-complaint aggregation by week/month
 - View aggregate-only Sex and grade-level Trend counts. Selecting either dimension filters only the Trend charts and complaint/weekday statistics; no student name appears and the Overview totals stay unfiltered. A production minimum-group-size rule remains open.
 - View symptom-clustering alerts (possible outbreak early warning)
-- View frequent-visitor flags, shown by **Student Number** per the display-privacy rule, not full name — **a warning only**, never a diagnosis or suggested action; it exists to help the nurse decide what to do next, not to decide for her
+- View frequent-visitor flags, shown by **masked LRN** per the display-privacy rule, not full name — **a warning only**, never a diagnosis or suggested action; it exists to help the nurse decide what to do next, not to decide for her
 - **Due/upcoming follow-ups** (Module 3/4's Follow-Up Handling) — this is the system's internal reminder mechanism, since there's no external SMS/push service; computed fresh on page load by comparing today's date to each follow-up's date, not a background alert
 - **Calendar view** of visit and incident counts, toggleable weekly / monthly / yearly, for spotting patterns at a glance (e.g., a calendar-style heatmap of how many visits happened each day). It also surfaces any free-text event tag Staff applied when logging a visit or incident (e.g., "MCA Dance Program") on the relevant day, so clinic activity can be read in context
 - **School events, maintained by Staff** (ADR-019): Staff click any calendar day (past, today, or future) to open that day's panel: its visit and incident counts (past and today only), its events with edit and delete, Add event, and a "View visits" link to the Visit Log filtered to that day. An event has a title (up to 60 characters), a start date, and an optional end date for multi-day events. Each event shows as a yellow chip on every day it covers (up to 2 chips per day, then "+N more"); a visit/incident tag with the same text on the same day shows once. Create, edit, and delete are audit-logged. Admin/Principal sees the same chips but can't open or change anything
@@ -255,7 +255,7 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 A dedicated screen to review the Audit Trail (below), not just write to it — added by `ADR-016` after the write side existed with no way to actually read it back.
 
 - View the audit log, filtered by date range, user, action type (login/logout/submit/approve/create/update/delete/archive/print), and target/module type — *Staff, Admin/Principal*
-- Each entry: timestamp, who, action type, and the target record (Student Number, not name, when the target is a student — per the display-privacy rule) — *Staff, Admin/Principal*
+- Each entry: timestamp, who, action type, and the target record (masked LRN, not name, when the target is a student — per the display-privacy rule) — *Staff, Admin/Principal*
 - Export/print a filtered view, for handing to a DPO or during a compliance review — *Staff, Admin/Principal*
 - **No role can edit or delete an entry.** The log is read-only by design; that's what makes it a log.
 
@@ -310,7 +310,7 @@ These came out of the September 19 meeting as good ideas worth flagging, but the
 
 ### Future Role: Canteen Staff Access
 A second external role, **Canteen Staff**, was also designed but remains deferred to a later phase.
-- **What it would do:** Let canteen staff enter a student's Student Number to check food allergies/restrictions before serving food — a digital version of the "Canteen health restriction enforcement" service already named in the Technical Documentation, which today is handled manually by the clinic head.
+- **What it would do:** Let canteen staff enter a student's LRN to check food allergies/restrictions before serving food — a digital version of the "Canteen health restriction enforcement" service already named in the Technical Documentation, which today is handled manually by the clinic head.
 - **Access model:** A scoped sign-in with its own narrow role.
 - **Data scope:** Food allergies/restrictions only. No conditions, no emergency contact, no visit history.
 - **Auditability:** Same per-view logging pattern as everything else in this document.

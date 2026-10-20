@@ -42,9 +42,9 @@ Build in this order — each establishes a pattern the next several phases lean 
 ### Phase F2 — Extrapolate to Remaining Screens, Module by Module
 Follow the mapping table already defined in `03-Design/Reference-Screens.md` (§5, "Extrapolating to the Rest of the Screens") rather than re-deriving patterns from scratch. Suggested module order, matching the WBS's sprint grouping:
 1. **Student Records** remainder — Student List (masterlist, full names per the display-privacy rule), Add/Edit Student, Incomplete Records Queue.
-2. **Clinic Visit Monitoring** remainder — Visit Log List (Student Number, not name — glanceable multi-student list), Visit Detail/Edit, Excuse Letter Generator (+ print layout), PE/Sports Referral Form.
+2. **Clinic Visit Monitoring** remainder — Visit Log List (masked LRN, not name — glanceable multi-student list), Visit Detail/Edit, Excuse Letter Generator (+ print layout), PE/Sports Referral Form.
 3. *(Built, then removed with the QR feature, ADR-027.)* The rest of the QR Digital Health ID screens.
-4. **Emergency Response** remainder — Incident Log List (Student Number, status badge from the Phase F1 pattern), Parent Notification Outcome Logging, Incident Report View/Print.
+4. **Emergency Response** remainder — Incident Log List (masked LRN, status badge from the Phase F1 pattern), Parent Notification Outcome Logging, Incident Report View/Print.
 5. **Medicine & Supply Inventory Tracker** — Inventory List, Add/Edit Item, Dispense/Log Usage (the stock-flow mechanics from `Modules-and-Features` §8 — threshold check, independent low-stock/nearing-expiry badges).
 6. **Reports Generation** — Monthly/Incident/Health Summary views, all print-layout-first.
 7. **User Management** — User List, Add/Edit User & Role Assignment (Staff, Admin/Principal).
@@ -76,7 +76,7 @@ Sanctum SPA authentication. Two roles (Staff, Admin/Principal; PE/Sports Instruc
 Build this as reusable middleware/service/trait *before* the module APIs below, so each subsequent phase hooks into existing infrastructure instead of retrofitting logging afterward. Must capture: who, what action type, what target record, when — for every login, scan, submission, approval, and create/update/delete/archive, across every module (`Modules-and-Features`, "Audit Trail" section; `.claude/skills/cliniq-audit-trail/`).
 
 ### Phase B4 — Student Records API
-CRUD, server-side Student Number generation (`YYYY-NNNNN`, sequence resets yearly), duplicate detection (name + grade level), archive (not delete) semantics.
+CRUD, LRN validation (12 digits, unique; ADR-028), duplicate detection (name + grade level), archive (not delete) semantics.
 
 ### Phase B5 — Clinic Visit Monitoring API
 Visit CRUD, Excuse Letter generation/approval workflow, Follow-Up Handling endpoints (shared with B7 — same feature, two entry points).
@@ -91,7 +91,7 @@ Two-stage incident endpoints (Stage 1 minimal-fields save; Stage 2 completion). 
 The stock-flow logic exactly as specified in `Modules-and-Features` §8: dispense decrements + auto threshold-check; restock is a separate action, increments + updates the one expiration date tracked per item; a dispense that would go negative warns but does not block the save (a deliberate, already-decided behavior — don't "fix" this into a hard block).
 
 ### Phase B9 — Dashboard & Reports API
-Aggregation queries for the Clinic Overview Dashboard (counts, trends, frequent-visitor flags by Student Number, due/upcoming follow-ups computed on request — not a background job, since none exists in this architecture). Monthly/Incident/Health Summary report generation.
+Aggregation queries for the Clinic Overview Dashboard (counts, trends, frequent-visitor flags by masked LRN, due/upcoming follow-ups computed on request — not a background job, since none exists in this architecture). Monthly/Incident/Health Summary report generation.
 
 **Holiday sync job (ADR-020).** A monthly scheduled job fetches this year's and next year's nationwide Philippine holidays when internet is available, stores them for `getHolidays`, keeps the last good data on failure, updates `lastUpdated`, and raises a warning when the last successful sync is stale (about 45 days) or next year's list is still missing in December. This is the one scheduled job in this architecture, and it never blocks a page load. The source is still open (ADR-020 lists two candidates); before choosing, read the source code, call it, compare its current-year output with the official proclamation, check Islamic and special days, test failure cases (site down, empty result, layout change), pin versions, and keep last-good data.
 

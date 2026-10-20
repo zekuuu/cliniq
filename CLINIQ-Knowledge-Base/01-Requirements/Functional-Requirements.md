@@ -12,8 +12,8 @@ Kept in sync with the canonical Project Plan, Section 5.1. If you edit one, edit
 - Two-stage emergency incident logging — essential fields captured fast, remaining detail completed afterward — plus hospital referral tracking and timestamped parent-notification outcome logging
 - Follow-up handling for students told to return for monitoring, recorded inline after a visit or incident, with a Pending/Completed/Missed/Cancelled status and no dependency on external SMS or push notifications
 - Automated monthly and incident report generation
-- Student lookup by Student Number or name from each form's student picker, so recording a visit or logging an emergency starts with the student already identified
-- Screen-context display rule: multi-student list/dashboard views (visit logs, incident logs, frequent-visitor flags) show the Student Number, not the student's name, since these are the screens a bystander could glance at; a deliberate single-student lookup — full profile, search — shows the full name normally
+- Student lookup by LRN or name from each form's student picker, so recording a visit or logging an emergency starts with the student already identified
+- Screen-context display rule: multi-student list/dashboard views (visit logs, incident logs, frequent-visitor flags) show the masked LRN, not the student's name, since these are the screens a bystander could glance at; a deliberate single-student lookup — full profile, search — shows the full name normally
 - Rule-based first-aid checklist prompts during visit logging
 - Medicine/supply consumption logging with low-stock alerts
 - Clinic-wide operational dashboard: visit/incident counts, pending records, health trends, frequent-visitor warnings, due/upcoming follow-ups, and a calendar view of visit volume with lightweight event tagging

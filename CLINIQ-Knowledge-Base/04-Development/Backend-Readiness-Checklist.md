@@ -22,7 +22,7 @@ The backend is a blank slate. A [proposed ERD and data dictionary](../02-Archite
 |---|---|
 | `backend/` | Only a README and `.env.example`. Laravel is not scaffolded, and `Environment-Setup.md` still says "not yet executed". |
 | `ERD.md` | Proposed draft with a data dictionary and reference schema; it is not final or approved. Development-Phases B1 still prohibits migrations until team approval. |
-| Mock API (`api.ts`) | 64 functions, about 1,500 lines. It holds real business rules: stock integrity, excused-period checks, duplicate-student detection, next Student Number, incident stage rules. It is a working but unwritten API contract. |
+| Mock API (`api.ts`) | 64 functions, about 1,500 lines. It holds real business rules: stock integrity, excused-period checks, duplicate-student detection, LRN validation and uniqueness, incident stage rules. It is a working but unwritten API contract. |
 | Auth and roles | The access matrix covers the 11 numbered modules × 3 roles in `Module-Overview.md`, although its introduction and the NFR still say 10 modules. ADR-015 sets a 7-day session lifetime and lockout after 5 failed attempts for 30 minutes. |
 
 ---
@@ -41,8 +41,7 @@ The backend is a blank slate. A [proposed ERD and data dictionary](../02-Archite
   - record reviews
   - vitals (an open key/value shape, so decide which fields exist)
 - [ ] **Frontend-only data needs a real home.** `devAccounts` becomes the users table, which also needs `password_hash`, `must_change_password`, `failed_attempts`, and `locked_until`. None of these are in the `User` type today. The complaint types with Smart Triage steps are clinical content, so they need a table and a nurse's sign-off.
-- [ ] **Foreign-key decision.** The mock seed links records by Student Number, while the entity types use an internal id. Recommendation: a surrogate id for foreign keys, plus a unique, immutable Student Number. This is a recommendation, not an approved decision; do not create or amend an ADR for it.
-- [ ] **Student Number generator.** The `YYYY-NNNNN` sequence resets yearly (ADR-005). Recommendation: design it as a transactional counter table so two simultaneous saves can't collide; this is not an approved decision.
+- [x] **Foreign-key decision.** Settled by ADR-028 and built in the mock: records link by the internal student id; the LRN is a unique, editable attribute that never appears in a URL or an audit entry.
 - [ ] **API contract.** Turn the 64 mock functions into endpoint specs: URL, method, allowed role, request and response shape, error cases. Use one error format (for example 422 with field errors, plus a separate shape for business rejections such as "Medicines on a completed incident can't be changed"). This is the cheapest document to produce, because the code is already the draft.
 - [ ] **Sanctum mode.** Development-Phases B2 says to confirm which mechanism applies. ADR-015 requires a 7-day lifetime but explicitly leaves API-token versus SPA-cookie configuration to B2; `.env.example` currently contains SPA-cookie settings. Choose with project approval before implementation; this checklist does not create or amend an ADR.
 - [ ] **Audit-log design.** Define the table, which events are logged, how `summary` is produced (field names only, never values, per ADR-017), and a retention number. `Data-Retention-Policy.md` only says "shorter, separate", with no figure. Decide whether the log can be edited or deleted; recommendation: append-only, not an approved decision.

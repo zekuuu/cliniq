@@ -17,9 +17,9 @@ Design these five in full detail first. Everything else in the system should be 
 1. **Header** — page title, current date, a date-range filter control
    - **Staff shortcuts (Staff only; since Thursday, October 15, 2026 — 20:38, at Zean's request, the backup indicator sits in the header above Date range and Print, showing the status and the short last-backup date, and New Visit sits on the view-tab row, right of the tabs, above them on phones):** a quick **New Visit** action and a minimal **backup-status indicator** (status + last-backup date) that links to the full Backup screen. Both are navigation, not edits, so the Dashboard stays view-only. Admin/Principal doesn't see this strip, since that role can open neither destination.
 2. **Stat card row** — 3–4 cards: today's visit count, incident count, pending/incomplete records count, low-stock item count. Each: icon, large number, label, optional small trend indicator
-3. **Alerts section** — three compact list groups, each row using the list-row pattern (Student Number, not name, per the display-privacy rule):
-   - Due/upcoming follow-ups (student number, reason, due date, status badge)
-   - Frequent-visitor warnings (student number, visit count, `warning`-colored badge — labeled clearly as a warning, never styled to look like a diagnosis)
+3. **Alerts section** — three compact list groups, each row using the list-row pattern (masked LRN, not name, per the display-privacy rule):
+   - Due/upcoming follow-ups (masked LRN, reason, due date, status badge)
+   - Frequent-visitor warnings (masked LRN, visit count, `warning`-colored badge — labeled clearly as a warning, never styled to look like a diagnosis)
    - Low-stock / nearing-expiration inventory items (item name — not student-linked, no privacy concern here)
    - **Pending excuse letters (Staff):** no separate list on the Overview since Monday, October 19, 2026 (ADR-011 amendment). The "Pending excuse letters" stat card opens the Visit Log at `?letter=pending` ("Excuse letter: Pending approval" filter, clearable), where each pending visit has "Review Letter". Admin/Principal sees the count without a link. The Dashboard printout still lists the pending letters.
 4. **Trends chart** — common complaints by week/month (bar or line chart), plus a symptom-clustering indicator (a simple highlighted marker on the chart, not a separate widget)
@@ -40,7 +40,7 @@ Design these five in full detail first. Everything else in the system should be 
 **Why this one:** the richest **form** screen, including a dynamic embedded panel and an inline prompt at the end — the pattern every other data-entry screen should follow.
 
 **Layout, top to bottom:**
-1. **Student header** — name, Student Number, grade level (already identified via search, scan, or manual entry before reaching this screen)
+1. **Student header** — name, masked LRN, grade level (already identified via search, scan, or manual entry before reaching this screen)
 2. **Complaint field** — dropdown or searchable select
 3. **Smart Triage panel** — appears dynamically the moment a complaint is selected: a titled checklist card ("Suggested first-aid steps for: [complaint]"), checkboxes, visually distinct from the surrounding form (e.g., `surface` background) so it reads as guidance, not a required field
 4. **Treatment field** — textarea
@@ -60,7 +60,7 @@ Design these five in full detail first. Everything else in the system should be 
 **Why this one:** the richest **detail/read** screen — the template for viewing any single record in depth (a visit, an incident, an inventory item, a follow-up).
 
 **Layout, top to bottom:**
-1. **Header** — full name (large), Student Number (smaller, secondary), grade level, an archived-status badge if applicable
+1. **Header** — full name (large), the full LRN (smaller, secondary; the profile is the one screen that shows it in full), grade level, an archived-status badge if applicable
 2. **Sectioned content** (tabs or stacked sections, designer's call, but pick one pattern and reuse it everywhere else this applies): Overview (demographics, emergency contact), Medical History (allergies and conditions as tag/chip components), Visit History (chronological list), Incident History (chronological list, including which are Stage 1/incomplete vs complete)
 3. **Actions** (Staff only) — Edit, Print, Archive. Archive should visually read as a lower-emphasis, non-destructive action (it's reversible and doesn't delete anything) — don't style it like a destructive button
 
