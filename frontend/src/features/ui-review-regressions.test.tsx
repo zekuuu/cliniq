@@ -146,11 +146,12 @@ describe('UI/UX review follow-up fixes', () => {
 
   it('rejects a username another account already uses, case-insensitively', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<UserFormPage />)
+    renderWithRouter(<UserFormPage viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }} />)
 
     await screen.findByRole('heading', { level: 1, name: 'Add User' })
     await user.type(screen.getByLabelText(/full name/i), 'Test Person')
     await user.type(screen.getByLabelText(/username/i), 'Demo.Nurse')
+    await user.type(screen.getByLabelText(/temporary password/i), 'temp-pass-123')
     await user.click(screen.getByRole('button', { name: 'Create User' }))
 
     expect(await screen.findByText('Another account already uses this username. Choose a different one.')).toBeInTheDocument()

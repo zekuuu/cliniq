@@ -3,14 +3,14 @@ import { BackButton, Button, Card, CardBody, CardHeader, ErrorState, Icon, Input
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
-import { getMockSessionUser } from '../../lib/mock-db'
+import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
 import type { UserRole } from '../../types/entities'
-import { DuplicateUsernameError, fetchUser, submitUser } from './api/userApi'
+import { DuplicateUsernameError, fetchUser, LastAdminError, submitUser } from './api/userApi'
 import { profilePictureError, resizeProfilePicture, PROFILE_PICTURE_ACCEPT } from './profilePicture'
 import { UserAvatar } from './UserAvatar'
 
-export function UserFormPage({ userId }: { userId?: string }) {
+export function UserFormPage({ userId, viewer = getMockSessionUser() }: { userId?: string; viewer?: SessionUser }) {
   const { data: existing, status, reload } = useAsyncData(`user|${userId ?? 'new'}`, () =>
     userId ? fetchUser(userId) : Promise.resolve(null),
   )
@@ -23,7 +23,7 @@ export function UserFormPage({ userId }: { userId?: string }) {
       </div>
     )
   if (existing === undefined) return <FormSkeleton back={back} />
-  return <UserForm key={existing?.id ?? 'new'} userId={userId} initial={existing} />
+  return <UserForm key={existing?.id ?? 'new'} userId={userId} initial={existing} viewer={viewer} />
 }
 
 function FormSkeleton({ back }: { back: ReactNode }) {
@@ -48,8 +48,10 @@ function FormSkeleton({ back }: { back: ReactNode }) {
 function UserForm({
   userId,
   initial,
+  viewer,
 }: {
   userId?: string
+  viewer: SessionUser
   initial: { name: string; username: string; role: UserRole; profilePicture?: string | null } | null
 }) {
   const [name, setName] = useState(initial?.name ?? '')
@@ -65,7 +67,8 @@ function UserForm({
     paths.users,
     name !== baseline.name || username !== baseline.username || role !== baseline.role || profilePicture !== baseline.profilePicture,
   )
-  const [errors, setErrors] = useState<{ name?: string; username?: string }>({})
+  const [temporaryPassword, setTemporaryPassword] = useState('')
+  const [errors, setErrors] = useState<{ name?: string; username?: string; role?: string; temporaryPassword?: string }>({})
   const invalidRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(invalidRef)
   async function submit(event: FormEvent) {
@@ -73,19 +76,30 @@ function UserForm({
     const nextErrors = {
       name: name.trim() ? undefined : "Enter the person's full name.",
       username: username.trim() ? undefined : 'Enter a username for this account.',
+      temporaryPassword: userId || temporaryPassword.trim().length >= 8 ? undefined : 'Set a temporary password of at least 8 characters.',
     }
     setErrors(nextErrors)
-    invalid.report([nextErrors.name, nextErrors.username].filter(Boolean).length)
+    invalid.report([nextErrors.name, nextErrors.username, nextErrors.temporaryPassword].filter(Boolean).length)
     setSaved(false)
-    if (nextErrors.name || nextErrors.username) return
+    if (nextErrors.name || nextErrors.username || nextErrors.temporaryPassword) return
     try {
-      await submitUser({ name, username, role, profilePicture }, { userId, actor: getMockSessionUser() })
+      await submitUser(
+        { name, username, role, profilePicture, temporaryPassword: userId ? undefined : temporaryPassword },
+        { userId, actor: viewer },
+      )
     } catch (cause) {
-      if (!(cause instanceof DuplicateUsernameError)) throw cause
-      setErrors({ username: 'Another account already uses this username. Choose a different one.' })
-      return
+      if (cause instanceof DuplicateUsernameError) {
+        setErrors({ username: 'Another account already uses this username. Choose a different one.' })
+        return
+      }
+      if (cause instanceof LastAdminError) {
+        setErrors({ role: cause.message })
+        return
+      }
+      throw cause
     }
     setSaved(true)
+    setTemporaryPassword('')
     setBaseline({ name, username, role, profilePicture })
   }
   return (
@@ -128,8 +142,21 @@ function UserForm({
                 { value: 'staff', label: 'School Clinician' },
                 { value: 'admin', label: 'Admin / Principal' },
               ]}
+              error={errors.role}
               onChange={(value) => setRole(value as UserRole)}
             />
+            {!userId && (
+              <Input
+                label="Temporary password"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={temporaryPassword}
+                error={errors.temporaryPassword}
+                hint="Tell the person in private. They must change it at the first sign-in."
+                onChange={(event) => setTemporaryPassword(event.target.value)}
+              />
+            )}
             <div className="flex flex-col gap-2 rounded-md border border-border bg-surface p-3">
               <div className="flex items-center gap-3">
                 <UserAvatar name={name || 'New user'} picture={profilePicture} className="size-12 text-sm" />
@@ -167,10 +194,6 @@ function UserForm({
                 </Button>
               )}
             </div>
-            <p className="text-xs text-text-secondary">
-              Passwords are provisioned through the future Sanctum account workflow and are never
-              displayed here.
-            </p>
             <div className="flex flex-wrap justify-end gap-2">
               <Button variant="neutral" onClick={cancel}>
                 Cancel
