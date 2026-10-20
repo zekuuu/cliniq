@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { BackButton, Badge, Button, Card, CardBody, CardHeader, ErrorState, Icon, Modal, PrintDocument, PrintFields, PrintNote, PrintSection, PrintSignatures, PrintTable, Select, Skeleton } from '../../components'
+import { BackButton, Badge, Button, Card, CardBody, CardHeader, EmergencyContactList, ErrorState, Icon, Modal, PrintDocument, PrintFields, PrintNote, PrintSection, PrintSignatures, PrintTable, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
 import { formatDateTime } from '../../lib/dates'
@@ -36,7 +36,7 @@ const vitalEntries = (vitals: Record<string, string | number>) => Object.entries
  * The incident report on A4 (ADR-026): one student, deliberately opened, so the full name is correct
  * (ADR-004). Ends with signature lines; a Stage 1 record prints a "Not yet completed" notice.
  */
-function IncidentReportPrint({ record }: { record: IncidentRecord }) {
+function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewer: SessionUser }) {
   const { incident, student, approved, trail } = record
   const referral = incident.hospitalReferral
   const notes = String(incident.vitals.treatmentNotes ?? '').trim()
@@ -45,6 +45,7 @@ function IncidentReportPrint({ record }: { record: IncidentRecord }) {
   return (
     <PrintDocument
       title="Incident Report"
+      viewer={viewer}
       scope={`${student.fullName} (${student.studentNumber}), ${student.gradeLevel}. Incident recorded ${formatDateTime(incident.time)}.`}
     >
       {incident.stage === 1 && (
@@ -282,6 +283,11 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
             )}
           </section>
 
+          <section className="border-t border-border pt-4" aria-labelledby="report-emergency-contacts-title">
+            <h2 id="report-emergency-contacts-title" className="text-sm font-semibold text-text-primary">Emergency contacts</h2>
+            <EmergencyContactList contacts={student.emergencyContacts} />
+          </section>
+
           {justApproved && approved && (
             <p role="status" className="rounded-md border border-success bg-success/10 px-3 py-2 text-sm font-semibold text-text-primary">
               Report approved and logged.
@@ -299,7 +305,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
           <Button variant="primary" loading={approving} onClick={approve}>Approve Report</Button>
         </div>
       </Modal>
-      <IncidentReportPrint record={data} />
+      <IncidentReportPrint record={data} viewer={viewer} />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLocation } from 'react-router'
 import { Badge, Button, Card, CardBody, CardHeader, DataTable, ErrorState, Icon, MonthPicker, Skeleton, type DataTableColumn } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { addMonths, formatDateTime, todayISO } from '../../lib/dates'
@@ -63,7 +64,9 @@ function IncidentArchiveTable({ rows, sort, setSort }: { rows: ArchiveRow[]; sor
 }
 
 export function ReportsPage({ viewer }: { viewer: SessionUser }) {
-  const [view, setView] = useState<ReportView>('monthly')
+  const location = useLocation()
+  const initialView = (location.state as { reportView?: ReportView } | null)?.reportView ?? 'monthly'
+  const [view, setView] = useState<ReportView>(initialView)
   const [month, setMonth] = useState(todayISO().slice(0, 7))
   // Kept here so the archive printout lists incidents in the order the screen shows.
   const [archiveSort, setArchiveSort] = useState<TableSortState<ArchiveSortKey>>({ key: 'date', direction: 'descending' })

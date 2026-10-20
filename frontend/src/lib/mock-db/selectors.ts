@@ -111,6 +111,7 @@ const AUDIT_RECORD_KINDS: Record<string, string> = {
   backup: 'Backup',
   'issue-report': 'Issue report',
   'calendar-event': 'Calendar event',
+  'print-document': 'Printed document',
 }
 
 const REPORT_NAMES: Record<string, string> = {
@@ -144,6 +145,7 @@ function auditTargetIdentifier(state: DbState, target: NonNullable<AuditLogEntry
   if (type === 'user') return { label: state.users.find((user) => user.id === target.id)?.name ?? '' }
   if (type === 'calendar-event') return { label: state.frontendOnly.calendarEvents.find((event) => event.id === target.id)?.title ?? '' }
   if (target.type === 'report') return { label: REPORT_NAMES[target.id] ?? '' }
+  if (target.type === 'print-document') return { label: target.id }
   if (target.type === 'backup') return { label: /^\d{4}-\d{2}-\d{2}T/.test(target.id) ? formatDateTime(target.id) : '' }
   return { label: '' }
 }
@@ -190,12 +192,13 @@ export function missingRequiredFields(student: SeedStudent): string[] {
   if (!student.gradeLevel.trim()) missing.push('Grade level')
   if (student.sex !== 'male' && student.sex !== 'female') missing.push('Sex')
   if (!student.contactInfo.trim()) missing.push('Student contact information')
-  const contact = student.emergencyContact
-  if (!contact) missing.push('Emergency contact')
-  else {
-    if (!contact.name.trim()) missing.push('Emergency contact name')
-    if (!contact.phone.trim()) missing.push('Emergency contact phone')
-  }
+  if (!student.emergencyContacts.length) missing.push('Emergency contact')
+  student.emergencyContacts.forEach((contact, index) => {
+    const prefix = student.emergencyContacts.length === 1 ? 'Emergency contact' : `Emergency contact ${index + 1}`
+    if (!contact.name.trim()) missing.push(`${prefix} name`)
+    if (!contact.relationship.trim()) missing.push(`${prefix} relationship`)
+    if (!contact.phone.trim()) missing.push(`${prefix} phone`)
+  })
   return missing
 }
 

@@ -43,6 +43,7 @@ const actionOptions: Array<{ value: AuditActionType; label: string }> = [
   { value: 'update', label: 'Update' },
   { value: 'delete', label: 'Delete' },
   { value: 'archive', label: 'Archive' },
+  { value: 'print', label: 'Print / Save as PDF' },
 ]
 
 const actionStatusMap: StatusMap<AuditActionType> = {
@@ -55,6 +56,7 @@ const actionStatusMap: StatusMap<AuditActionType> = {
   update: { label: 'Update', tone: 'info' },
   delete: { label: 'Delete', tone: 'error' },
   archive: { label: 'Archive', tone: 'neutral' },
+  print: { label: 'Print / Save as PDF', tone: 'info' },
 }
 
 const targetLabels: Record<AuditTargetType, string> = {

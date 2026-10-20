@@ -7,6 +7,7 @@ import {
   CardBody,
   CardHeader,
   EmptyState,
+  EmergencyContactList,
   ErrorState,
   Icon,
   ListRow,
@@ -185,7 +186,6 @@ function ProfileHeader({
 }
 
 function OverviewCard({ student }: { student: Student }) {
-  const contact = student.emergencyContact
   return (
     <Card aria-labelledby="profile-overview">
       <CardHeader titleId="profile-overview" title="Overview" icon={<Icon name="users" />} />
@@ -213,24 +213,8 @@ function OverviewCard({ student }: { student: Student }) {
           </Badge>
         </div>
         <div className="sm:col-span-2">
-          <p className="text-xs font-semibold text-text-secondary">Emergency contact</p>
-          {contact ? (
-            <div className="mt-1 flex flex-wrap items-start justify-between gap-x-4 gap-y-2 rounded-md border border-border bg-surface p-3">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-text-primary">{contact.name}</p>
-                <p className="text-xs text-text-secondary">{contact.relationship}</p>
-                <p className="mt-2 text-sm font-semibold tabular-nums text-text-primary">
-                  <span className="sr-only">Phone: </span>
-                  {contact.phone}
-                </p>
-              </div>
-              <Badge tone={contact.verified ? 'success' : 'warning'} variant="soft">
-                {contact.verified ? 'Verified' : 'Needs verification'}
-              </Badge>
-            </div>
-          ) : (
-            <p className="text-sm text-text-secondary">No emergency contact recorded.</p>
-          )}
+          <p className="text-xs font-semibold text-text-secondary">Emergency contacts</p>
+          <EmergencyContactList contacts={student.emergencyContacts} />
         </div>
       </CardBody>
     </Card>
@@ -387,7 +371,9 @@ function IncidentHistoryCard({ incidents }: { incidents: Incident[] }) {
  */
 function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer: SessionUser }) {
   const { student, visits, incidents, excuseLetters } = data
-  const contact = student.emergencyContact
+  const contact = student.emergencyContacts
+    .map((item, index) => `${index === 0 ? 'Primary: ' : ''}${item.name} (${item.relationship}) Â· ${item.phone} Â· ${item.verified ? 'verified' : 'needs verification'}`)
+    .join('\n')
   return (
     <PrintDocument
       title="Student Health Record"
@@ -403,10 +389,8 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
             { label: 'Sex', value: student.sex === 'female' ? 'Female' : 'Male' },
             { label: 'Contact info', value: student.contactInfo || 'Not recorded' },
             {
-              label: 'Emergency contact',
-              value: contact
-                ? `${contact.name} (${contact.relationship}) · ${contact.phone} · ${contact.verified ? 'verified' : 'needs verification'}`
-                : 'No emergency contact recorded.',
+              label: 'Emergency contacts',
+              value: contact || 'No emergency contact recorded.',
               wide: true,
             },
             { label: 'Record status', value: `${student.recordComplete ? 'Complete' : 'Incomplete'}${student.archived ? ', archived' : ''}` },

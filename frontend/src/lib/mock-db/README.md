@@ -34,7 +34,7 @@ is the file that becomes HTTP calls. Nothing above it has to change.
 1. **Store raw facts, never results.** No counts, totals, `recordComplete`, `isLowStock`,
    `dueState`, `flags`, report `data`… Selectors compute all of those. To make an item low-stock,
    lower its `currentStock`. To make a record incomplete, blank its `contactInfo` or set
-   `emergencyContact` to `null`. The integrity test names the field if you store a derived value.
+   `emergencyContacts` to an empty array. The integrity test names the field if you store a derived value.
 2. **Dates are relative.** Use `{ "daysAgo": 3 }` or `{ "daysFromNow": 11 }`. Timestamps add
    `"time": "HH:MM"` (Philippine time). Absolute dates are rejected because they go stale.
 3. **Reference by key.** Visits, incidents, follow-ups, and reviews point at a student by

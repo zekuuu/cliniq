@@ -107,7 +107,7 @@ No separate login screen for Staff here — the computer and mobile Staff flows 
 
 Give the agent this even without a finalized API spec, so component props and forms are built against realistic shapes:
 
-- **Student** — id, **studentNumber** (format `YYYY-NNNNN`, system-generated at creation, encoded into the printed QR code), full name, grade level, contact info, allergies, medical conditions, emergency contact, record-complete flag, **archived flag** (archived students stay in the database but are excluded from active lists/search by default)
+- **Student** — id, **studentNumber** (format `YYYY-NNNNN`, system-generated at creation, encoded into the printed QR code), full name, grade level, contact info, allergies, medical conditions, an ordered emergency-contact list (at least one required; first is primary; each has name, relationship, phone, and verification state), record-complete flag, **archived flag** (archived students stay in the database but are excluded from active lists/search by default)
 - **User** — id, name, username, role (`staff` / `admin` / `instructor`), last login
 - **Visit** — id, student, date/time, complaint, treatment, disposition, staff who logged it, **eventTag** (optional free text, e.g. "MCA Dance Program" — the lightweight version of calendar context described below, not a managed entity of its own)
 - **Incident** — id, student, time, complaint, vitals, hospital referral fields, parent-notification log (array of attempts with outcome + timestamp), **stage** (`1`=fast-capture / `2`=complete) so the UI can show which incidents still need completion, **eventTag** (same optional free-text field as Visit)

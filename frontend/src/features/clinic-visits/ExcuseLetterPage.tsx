@@ -111,6 +111,7 @@ function PrintableLetter({
  */
 function ExcuseLetterPrint({
   context,
+  viewer,
   recipient,
   body,
   period,
@@ -118,6 +119,7 @@ function ExcuseLetterPrint({
   approved,
 }: {
   context: ExcuseLetterContext
+  viewer: SessionUser
   recipient: string
   body: string
   period: ExcusedPeriod
@@ -129,6 +131,7 @@ function ExcuseLetterPrint({
   return (
     <PrintDocument
       title="Clinic Excuse Letter"
+      viewer={viewer}
       scope={`For ${student.fullName} (${student.studentNumber}), ${student.gradeLevel}, after a clinic visit on ${formatDateTime(visit.dateTime)}.`}
     >
       {!approved && (
@@ -177,7 +180,15 @@ function ExcuseLetterPrint({
   )
 }
 
-function ExcuseLetterEditor({ context, back }: { context: ExcuseLetterContext; back: ReactNode }) {
+function ExcuseLetterEditor({
+  context,
+  back,
+  viewer,
+}: {
+  context: ExcuseLetterContext
+  back: ReactNode
+  viewer: SessionUser
+}) {
   const [recipient, setRecipient] = useState(context.recipient)
   const [body, setBody] = useState(context.body)
   const [period, setPeriod] = useState(context.period)
@@ -332,6 +343,7 @@ function ExcuseLetterEditor({ context, back }: { context: ExcuseLetterContext; b
       </div>
       <ExcuseLetterPrint
         context={context}
+        viewer={viewer}
         recipient={recipient}
         body={body}
         period={period}
@@ -383,5 +395,5 @@ export function ExcuseLetterPage({
     )
   }
 
-  return <ExcuseLetterEditor context={data} back={back} />
+  return <ExcuseLetterEditor context={data} back={back} viewer={viewer} />
 }

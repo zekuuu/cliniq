@@ -52,6 +52,8 @@ export interface PrintDocumentProps {
   children: ReactNode
   /** False only for sheets meant to be cut up (QR stickers). */
   footer?: boolean
+  /** QR stickers carry no health information and are excluded from print auditing. */
+  auditPrint?: boolean
   /** Only for a table that can't be read in portrait (`@page landscape` in `index.css`). */
   landscape?: boolean
   viewer?: SessionUser
@@ -62,10 +64,11 @@ export function PrintDocument({
   scope,
   children,
   footer = true,
+  auditPrint = true,
   landscape = false,
   viewer = getMockSessionUser(),
 }: PrintDocumentProps) {
-  const printedAt = usePrinting()
+  const printedAt = usePrinting(title, viewer, auditPrint)
   if (!printedAt) return null
   return createPortal(
     <div

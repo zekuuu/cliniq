@@ -1,8 +1,8 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
-import { getRecordedAuditEntries, listStudents } from '../../lib/mock-db'
+import { getRecordedAuditEntries, listStudents, recordPrint } from '../../lib/mock-db'
 import { selectOption } from '../../test/selectOption'
 import { AuditLogPage } from './AuditLogPage'
 
@@ -81,6 +81,20 @@ describe('Audit Log', () => {
     expect(within(table).queryByText('Login')).not.toBeInTheDocument()
   })
 
+  it('shows and filters print entries by document title', async () => {
+    await recordPrint('Student profile', STAFF)
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByRole('table', { name: 'Filtered audit log' })
+
+    await user.click(screen.getByRole('button', { name: /action type all actions/i }))
+    await user.click(screen.getByRole('checkbox', { name: 'Print / Save as PDF' }))
+    await user.click(screen.getByRole('button', { name: /action type 1 selected/i }))
+
+    expect(await screen.findByText('Student profile')).toBeInTheDocument()
+    expect(screen.getAllByText('Print / Save as PDF').length).toBeGreaterThan(0)
+  })
+
   it('moves through audit pages without rendering the full list at once', async () => {
     const user = userEvent.setup()
     renderPage()
@@ -107,16 +121,18 @@ describe('Audit Log', () => {
     expect(screen.getByText('Showing 1\u20137 of 7 entries')).toBeInTheDocument()
   })
 
-  it('prints the current filtered view without writing another audit event', async () => {
+  it('audits printing the current filtered view once', async () => {
     const user = userEvent.setup()
-    const print = vi.spyOn(window, 'print').mockImplementation(() => {})
-    const auditCountBefore = getRecordedAuditEntries().length
+    const print = vi.spyOn(window, 'print').mockImplementation(() => window.dispatchEvent(new Event('beforeprint')))
     renderPage()
     await screen.findByRole('table', { name: 'Filtered audit log' })
 
     await user.click(screen.getByRole('button', { name: 'Print / Save as PDF' }))
 
     expect(print).toHaveBeenCalledOnce()
-    expect(getRecordedAuditEntries()).toHaveLength(auditCountBefore)
+    await waitFor(() => expect(getRecordedAuditEntries()).toEqual([
+      expect.objectContaining({ actionType: 'print', userId: STAFF.id, targetRecord: { type: 'print-document', id: 'Audit Log' } }),
+    ]))
+    window.dispatchEvent(new Event('afterprint'))
   })
 })

@@ -79,8 +79,8 @@ function StudentSummary({ result }: { result: QrLookupResult }) {
         <div>
           <p className="text-xs font-semibold text-text-secondary">Emergency contact</p>
           <p className="text-sm font-semibold text-text-primary">
-            {student.emergencyContact
-              ? `${student.emergencyContact.name} · ${student.emergencyContact.phone}`
+            {student.emergencyContacts[0]
+              ? `${student.emergencyContacts[0].name} · ${student.emergencyContacts[0].phone}`
               : 'No emergency contact recorded'}
           </p>
         </div>

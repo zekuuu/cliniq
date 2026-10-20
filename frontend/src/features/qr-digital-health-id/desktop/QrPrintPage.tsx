@@ -23,6 +23,7 @@ function QrStickerPrint({ studentNumber }: { studentNumber: string }) {
     <PrintDocument
       title="QR Health ID Sticker"
       footer={false}
+      auditPrint={false}
       scope={`One sticker for Student Number ${studentNumber}. The QR encodes the Student Number only. Cut along the dashed line.`}
     >
       <div className="flex w-[80mm] break-inside-avoid items-center gap-[4mm] border border-dashed border-text-secondary p-[4mm]">

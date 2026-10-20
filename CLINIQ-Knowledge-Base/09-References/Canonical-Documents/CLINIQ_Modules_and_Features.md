@@ -62,9 +62,9 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - View/flag students with restrictions — *Staff*
 
 **Contact Information Management**
-- Add/edit emergency contact info — *Staff*
-- View emergency contact — *Staff; PE/Sports Instructor (read-only)*
-- Mark a contact number as verified/unverified — *Staff*
+- Add/edit one or more emergency contacts — *Staff*. At least one is required; the ordered list has no fixed maximum, its first contact is primary, and Staff can move another contact to the top.
+- View all emergency contacts, primary first, with each contact's verification state — *Staff; PE/Sports Instructor (read-only)*
+- Mark each contact number as verified/unverified — *Staff*
 
 **Duplicate Detection**
 - Auto-check for name + grade-level match on save
@@ -267,7 +267,7 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 
 A dedicated screen to review the Audit Trail (below), not just write to it — added by `ADR-016` after the write side existed with no way to actually read it back.
 
-- View the audit log, filtered by date range, user, action type (login/logout/scan/submit/approve/create/update/delete/archive), and target/module type — *Staff, Admin/Principal*
+- View the audit log, filtered by date range, user, action type (login/logout/scan/submit/approve/create/update/delete/archive/print), and target/module type — *Staff, Admin/Principal*
 - Each entry: timestamp, who, action type, and the target record (Student Number, not name, when the target is a student — per the display-privacy rule) — *Staff, Admin/Principal*
 - Export/print a filtered view, for handing to a DPO or during a compliance review — *Staff, Admin/Principal*
 - **No role can edit or delete an entry.** The log is read-only by design; that's what makes it a log.
@@ -281,6 +281,7 @@ Applies to every module above, not just QR. Every one of the following gets logg
 - Every form submission (new visit, new incident, inventory dispense/restock, etc.)
 - Every approval (excuse letter sign-off, incident report sign-off)
 - Every create/update/delete/archive action on a record
+- Every Print / Save as PDF of a page containing student or clinic health information: one entry with the signed-in user, real time, and document title; log from shared `beforeprint` handling so buttons and Ctrl+P are covered. QR stickers are excluded.
 This satisfies RA 10173 (Data Privacy Act) alignment and is the mechanism that makes the PE/Sports Instructor's read-only access accountable — every profile they open is attributable to their account and timestamped. **Module 11, Audit Log Viewer, is the read side of this same requirement** — see `ADR-016`.
 
 ---

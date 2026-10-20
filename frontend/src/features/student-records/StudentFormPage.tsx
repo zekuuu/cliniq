@@ -7,6 +7,7 @@ import {
   Card,
   CardBody,
   CardHeader,
+  Combobox,
   ErrorState,
   Icon,
   Input,
@@ -32,26 +33,14 @@ import {
   type StudentFormValues,
 } from './api/studentFormApi'
 
-interface StudentFormErrors {
-  fullName?: string
-  gradeLevel?: string
-  sex?: string
-  contactInfo?: string
-  emergencyContactName?: string
-  emergencyContactRelationship?: string
-  emergencyContactPhone?: string
-  allergies?: string
-  medicalConditions?: string
-}
+type StudentFormErrors = Partial<Record<string, string>>
 
 const EMPTY_VALUES: StudentFormValues = {
   fullName: '',
   gradeLevel: '',
   sex: '',
   contactInfo: '',
-  emergencyContactName: '',
-  emergencyContactRelationship: '',
-  emergencyContactPhone: '',
+  emergencyContacts: [{ name: '', relationship: '', phone: '', verified: false }],
   allergies: '',
   medicalConditions: '',
 }
@@ -63,9 +52,9 @@ function valuesFromStudent(student: Student | null): StudentFormValues {
     gradeLevel: student.gradeLevel,
     sex: student.sex,
     contactInfo: student.contactInfo,
-    emergencyContactName: student.emergencyContact?.name ?? '',
-    emergencyContactRelationship: student.emergencyContact?.relationship ?? '',
-    emergencyContactPhone: student.emergencyContact?.phone ?? '',
+    emergencyContacts: student.emergencyContacts.length
+      ? student.emergencyContacts.map(({ name, relationship, phone, verified }) => ({ name, relationship, phone, verified }))
+      : [{ name: '', relationship: '', phone: '', verified: false }],
     allergies: student.allergies.length ? student.allergies.join(', ') : 'None',
     medicalConditions: student.medicalConditions.length
       ? student.medicalConditions.join(', ')
@@ -139,23 +128,26 @@ function DuplicateDialog({
   )
 }
 
+const RELATIONSHIP_SUGGESTIONS = ['Mother', 'Father', 'Guardian', 'Sister or brother', 'Relative', 'Other']
+
+function contactErrorKey(index: number, field: 'name' | 'relationship' | 'phone') {
+  return `emergencyContacts.${index}.${field}`
+}
+
 function validate(values: StudentFormValues): StudentFormErrors {
   const errors: StudentFormErrors = {}
   if (!values.fullName.trim()) errors.fullName = 'Enter the student full name.'
   if (!values.gradeLevel) errors.gradeLevel = 'Select the grade level.'
   if (!values.sex) errors.sex = 'Select the sex recorded by the school.'
   if (!values.contactInfo.trim()) errors.contactInfo = 'Enter the student contact information.'
-  if (!values.emergencyContactName.trim()) {
-    errors.emergencyContactName = 'Enter the emergency contact name.'
-  }
-  if (!values.emergencyContactRelationship.trim()) {
-    errors.emergencyContactRelationship = 'Enter the contact relationship.'
-  }
-  if (!values.emergencyContactPhone.trim()) {
-    errors.emergencyContactPhone = 'Enter the emergency contact phone.'
-  } else if (!isPhilippinePhone(values.emergencyContactPhone)) {
-    errors.emergencyContactPhone = PHONE_ERROR
-  }
+  values.emergencyContacts.forEach((contact, index) => {
+    const started = index === 0 || [contact.name, contact.relationship, contact.phone].some((value) => value.trim())
+    if (!started) return
+    if (!contact.name.trim()) errors[contactErrorKey(index, 'name')] = 'Enter the emergency contact name.'
+    if (!contact.relationship.trim()) errors[contactErrorKey(index, 'relationship')] = 'Enter the contact relationship.'
+    if (!contact.phone.trim()) errors[contactErrorKey(index, 'phone')] = 'Enter the emergency contact phone.'
+    else if (!isPhilippinePhone(contact.phone)) errors[contactErrorKey(index, 'phone')] = PHONE_ERROR
+  })
   if (!values.allergies.trim()) errors.allergies = 'Enter allergies, or write None.'
   if (!values.medicalConditions.trim()) {
     errors.medicalConditions = 'Enter medical conditions, or write None.'
@@ -188,7 +180,7 @@ function StudentFormEditor({
   const [baseline, setBaseline] = useState<StudentFormValues>(() => valuesFromStudent(data.student))
   const { cancel, discardDialog } = useCancelNavigation(
     data.student ? paths.studentProfile(data.student.studentNumber) : paths.students,
-    (Object.keys(values) as Array<keyof StudentFormValues>).some((field) => values[field] !== baseline[field]),
+    JSON.stringify(values) !== JSON.stringify(baseline),
   )
   const title = mode === 'edit' ? 'Edit Student' : 'Add Student'
   const description =
@@ -204,6 +196,46 @@ function StudentFormEditor({
   function setField<K extends keyof StudentFormValues>(field: K, value: StudentFormValues[K]) {
     setValues((current) => ({ ...current, [field]: value }))
     setErrors((current) => ({ ...current, [field]: undefined }))
+    setSuccessMessage('')
+  }
+
+  function setEmergencyContact(index: number, field: 'name' | 'relationship' | 'phone', value: string) {
+    setValues((current) => ({
+      ...current,
+      emergencyContacts: current.emergencyContacts.map((contact, contactIndex) =>
+        contactIndex === index ? { ...contact, [field]: value } : contact,
+      ),
+    }))
+    setErrors((current) => ({ ...current, [contactErrorKey(index, field)]: undefined }))
+    setSuccessMessage('')
+  }
+
+  function addEmergencyContact() {
+    setValues((current) => ({
+      ...current,
+      emergencyContacts: [...current.emergencyContacts, { name: '', relationship: '', phone: '', verified: false }],
+    }))
+    setSuccessMessage('')
+  }
+
+  function removeEmergencyContact(index: number) {
+    setValues((current) => ({
+      ...current,
+      emergencyContacts: current.emergencyContacts.filter((_, contactIndex) => contactIndex !== index),
+    }))
+    setErrors({})
+    setSuccessMessage('')
+  }
+
+  function makePrimaryEmergencyContact(index: number) {
+    setValues((current) => ({
+      ...current,
+      emergencyContacts: [
+        current.emergencyContacts[index],
+        ...current.emergencyContacts.filter((_, contactIndex) => contactIndex !== index),
+      ],
+    }))
+    setErrors({})
     setSuccessMessage('')
   }
 
@@ -343,34 +375,54 @@ function StudentFormEditor({
             </section>
 
             <section aria-labelledby="emergency-contact-title">
-              <h2 id="emergency-contact-title" className="mb-3 text-sm font-bold text-text-primary">
-                Emergency contact
+              <h2 id="emergency-contact-title" className="text-sm font-bold text-text-primary">
+                Emergency contacts
               </h2>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <Input
-                  label="Contact name"
-                  required
-                  value={values.emergencyContactName}
-                  error={errors.emergencyContactName}
-                  onChange={(event) => setField('emergencyContactName', event.target.value)}
-                />
-                <Input
-                  label="Relationship"
-                  required
-                  value={values.emergencyContactRelationship}
-                  error={errors.emergencyContactRelationship}
-                  onChange={(event) =>
-                    setField('emergencyContactRelationship', event.target.value)
-                  }
-                />
-                <Input
-                  label="Contact phone"
-                  required
-                  value={values.emergencyContactPhone}
-                  error={errors.emergencyContactPhone}
-                  onChange={(event) => setField('emergencyContactPhone', event.target.value)}
-                />
+              <p className="mt-1 text-sm text-text-secondary">The first contact is primary. Add every person the clinic may need to reach.</p>
+              <div className="mt-3 flex flex-col gap-3">
+                {values.emergencyContacts.map((contact, index) => {
+                  const label = index === 0 ? 'Primary emergency contact' : `Emergency contact ${index + 1}`
+                  return (
+                    <fieldset key={index} className="rounded-md border border-border bg-surface p-3">
+                      <legend className="px-1 text-sm font-semibold text-text-primary">{label}</legend>
+                      <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <Input
+                          label={`${label} name`}
+                          required={index === 0}
+                          value={contact.name}
+                          error={errors[contactErrorKey(index, 'name')]}
+                          onChange={(event) => setEmergencyContact(index, 'name', event.target.value)}
+                        />
+                        <Combobox
+                          label={`${label} relationship`}
+                          required={index === 0}
+                          value={contact.relationship}
+                          options={RELATIONSHIP_SUGGESTIONS}
+                          optionKey={(option) => option}
+                          optionLabel={(option) => option}
+                          allowFreeText
+                          error={errors[contactErrorKey(index, 'relationship')]}
+                          onValueChange={(value) => setEmergencyContact(index, 'relationship', value)}
+                        />
+                        <Input
+                          label={`${label} phone`}
+                          required={index === 0}
+                          value={contact.phone}
+                          error={errors[contactErrorKey(index, 'phone')]}
+                          onChange={(event) => setEmergencyContact(index, 'phone', event.target.value)}
+                        />
+                      </div>
+                      {values.emergencyContacts.length > 1 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {index > 0 && <Button variant="secondary" size="sm" onClick={() => makePrimaryEmergencyContact(index)}>Make primary</Button>}
+                          <Button variant="neutral" size="sm" onClick={() => removeEmergencyContact(index)}>Remove contact</Button>
+                        </div>
+                      )}
+                    </fieldset>
+                  )
+                })}
               </div>
+              <Button variant="secondary" className="mt-3" onClick={addEmergencyContact}>Add another contact</Button>
             </section>
 
             <section aria-labelledby="medical-title">

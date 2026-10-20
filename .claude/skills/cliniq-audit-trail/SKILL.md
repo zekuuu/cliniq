@@ -1,6 +1,6 @@
 ---
 name: cliniq-audit-trail
-description: Apply whenever implementing any action that creates, modifies, deletes, or views sensitive data — logins, QR scans, form submissions, approvals, or any create/update/delete/archive operation. Ensures the action gets logged for RA 10173 accountability.
+description: Apply whenever implementing any action that creates, modifies, deletes, views, or prints sensitive data — logins, QR scans, form submissions, approvals, Print / Save as PDF, or any create/update/delete/archive operation. Ensures the action gets logged for RA 10173 accountability.
 ---
 
 # CLINIQ Audit Trail Requirement
@@ -12,6 +12,7 @@ Every one of the following action types must write an audit log entry, across ev
 - **Every form submission** — new visit, new incident, inventory dispense/restock, follow-up creation, etc.
 - **Every approval** — excuse letter sign-off, incident report sign-off
 - **Every create/update/delete/archive** action on any record
+- **Every Print / Save as PDF** of student or clinic health information — one entry with the signed-in user, real time, and document title. Use shared `beforeprint` handling so buttons and Ctrl+P both log exactly once; QR stickers are excluded.
 
 ## What a log entry needs
 

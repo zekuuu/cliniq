@@ -32,6 +32,15 @@ describe('Student Profile', () => {
     expect(screen.getByRole('button', { name: 'Archive' })).toBeInTheDocument()
   })
 
+  it('lists every emergency contact with primary and verification states', async () => {
+    renderWithRouter(<StudentProfilePage studentNumber="2023-00002" />)
+
+    expect(await screen.findByText('Arnel Cabrera')).toBeInTheDocument()
+    expect(screen.getByText('Bea Cabrera')).toBeInTheDocument()
+    expect(screen.getByText('Primary')).toBeInTheDocument()
+    expect(screen.getByText('Needs verification')).toBeInTheDocument()
+  })
+
   it('removes action buttons for PE/Sports Instructor read-only view', async () => {
     renderWithRouter(<StudentProfilePage viewer={{ id: 'usr-pe', name: 'PE Instructor', role: 'instructor' }} />)
 

@@ -92,6 +92,24 @@ describe('Student Form', () => {
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['create'])
   })
 
+  it('adds, promotes, and removes repeatable emergency contacts', async () => {
+    renderWithRouter(<StudentFormPage />)
+    await screen.findByRole('heading', { name: 'Add Student' })
+    const user = await fillRequiredStudentFields()
+
+    await user.click(screen.getByRole('button', { name: 'Add another contact' }))
+    await user.type(screen.getByLabelText('Emergency contact 2 name'), 'Bea Santos')
+    await user.type(screen.getByLabelText('Emergency contact 2 relationship'), 'Sister or brother')
+    await user.type(screen.getByLabelText('Emergency contact 2 phone'), '0917-333-5555')
+    await user.click(screen.getByRole('button', { name: 'Make primary' }))
+
+    expect(screen.getByLabelText(/Primary emergency contact name/)).toHaveValue('Bea Santos')
+    expect(screen.getByLabelText('Emergency contact 2 name')).toHaveValue('Marisol Santos')
+
+    await user.click(screen.getAllByRole('button', { name: 'Remove contact' })[1])
+    expect(screen.queryByLabelText('Emergency contact 2 name')).not.toBeInTheDocument()
+  })
+
   it('supports edit mode, records an update audit entry, and returns to the profile', async () => {
     const user = userEvent.setup()
     const [existing] = await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false })

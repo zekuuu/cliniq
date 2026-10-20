@@ -4,7 +4,23 @@ Resolved entries (`- [x] **[DONE]**`) moved here from `Issues-and-TODOs.md` on T
 
 New resolved entries are moved here when they are resolved (see "Format for new entries" in `Issues-and-TODOs.md`). The open counts and the Done total are in that file's summary block. When an open entry refers to a resolved one by title, search this file.
 
-Moved: 180 entries (and 4 more on Tuesday, October 20, 2026 — 15:16 PHT, at the end). Session: [2026-10-20-issues-done-archive](Agent-Sessions/2026-10-20-issues-done-archive.md)
+Moved: 180 entries (and 7 more on Tuesday, October 20, 2026 — 16:13 PHT, at the end). Session: [2026-10-20-issues-done-archive](Agent-Sessions/2026-10-20-issues-done-archive.md)
+
+## Settled without waiting for an answer — Tuesday, October 20, 2026 — 15:16 PHT
+
+- [x] **[DONE]** **Allow several emergency contacts per student** (logged Tuesday, October 20, 2026 — 15:16 PHT). The student record now holds an ordered emergency-contact list; Staff can add, remove, and move contacts to primary, while Profile, Parent Notification, and Incident Report show every contact and verification state. Resolved Tuesday, October 20, 2026 — 16:13 PHT. Session: [2026-10-20-build-settled-decisions](Agent-Sessions/2026-10-20-build-settled-decisions.md)
+- [x] **[DONE]** **Audit-log every print and Save as PDF** (logged Tuesday, October 20, 2026 — 15:16 PHT). Shared `beforeprint` handling now logs a health-information print once with the signed-in user, real time, and document title; Audit Log filters `print`, and QR stickers stay excluded. Resolved Tuesday, October 20, 2026 — 16:13 PHT. Session: [2026-10-20-build-settled-decisions](Agent-Sessions/2026-10-20-build-settled-decisions.md)
+- [x] **[DONE]** **Add "View full report" links from the Dashboard to Reports** (logged Tuesday, October 20, 2026 — 15:16 PHT). Dashboard quick views now link to matching Reports tabs with accessible labels; the selected report month remains local state because Dashboard ranges can span months. Resolved Tuesday, October 20, 2026 — 16:13 PHT. Session: [2026-10-20-build-settled-decisions](Agent-Sessions/2026-10-20-build-settled-decisions.md)
+
+Exception calling "Substring" with "2" argument(s): "Length cannot be less than zero.
+Parameter name: length"
+At line:2 char:190
++ ... Of("`n## ",$start+3); Write-Output $raw.Substring($start,$end-$start)
++                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:) [], MethodInvocationException
+    + FullyQualifiedErrorId : ArgumentOutOfRangeExceptio
+
+
 
 
 ## Lead entry under the summary block (it has no section heading of its own)

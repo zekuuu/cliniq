@@ -2,12 +2,11 @@ import {
   getGradeLevels,
   getNextStudentNumber,
   getStudent,
-  getStudentById,
   saveStudent,
   type DuplicateMatch,
   type SessionUser,
 } from '../../../lib/mock-db'
-import type { Student, StudentNumber, StudentSex } from '../../../types/entities'
+import type { EmergencyContact, Student, StudentNumber, StudentSex } from '../../../types/entities'
 
 export type { DuplicateMatch }
 export type StudentFormMode = 'add' | 'edit'
@@ -17,9 +16,7 @@ export interface StudentFormValues {
   gradeLevel: string
   sex: StudentSex | ''
   contactInfo: string
-  emergencyContactName: string
-  emergencyContactRelationship: string
-  emergencyContactPhone: string
+  emergencyContacts: Array<Pick<EmergencyContact, 'name' | 'relationship' | 'phone' | 'verified'>>
   allergies: string
   medicalConditions: string
 }
@@ -57,7 +54,6 @@ export async function submitStudentForm(
   values: StudentFormValues,
   options: { mode: StudentFormMode; studentId?: string; confirmDuplicate?: boolean; actor?: SessionUser },
 ): Promise<StudentFormSubmitResult> {
-  const current = options.studentId ? await getStudentById(options.studentId) : null
   return saveStudent(
     {
       fullName: values.fullName,
@@ -66,12 +62,14 @@ export async function submitStudentForm(
       contactInfo: values.contactInfo,
       allergies: parseList(values.allergies),
       medicalConditions: parseList(values.medicalConditions),
-      emergencyContact: {
-        name: values.emergencyContactName.trim(),
-        relationship: values.emergencyContactRelationship.trim(),
-        phone: values.emergencyContactPhone.trim(),
-        verified: current?.emergencyContact?.verified ?? false,
-      },
+      emergencyContacts: values.emergencyContacts
+        .filter((contact) => [contact.name, contact.relationship, contact.phone].some((value) => value.trim()))
+        .map((contact) => ({
+          name: contact.name.trim(),
+          relationship: contact.relationship.trim(),
+          phone: contact.phone.trim(),
+          verified: contact.verified,
+        })),
     },
     { studentId: options.mode === 'edit' ? options.studentId : undefined, confirmDuplicate: options.confirmDuplicate, actor: options.actor },
   )

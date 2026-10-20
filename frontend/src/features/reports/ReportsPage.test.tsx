@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { pickMonth } from '../../test/pickDate'
@@ -26,11 +27,15 @@ const STAFF = { id: 'usr-nurse', name: 'Nurse', role: 'staff' } as const
 
 const thisMonth = () => getMonthlyReport(todayISO().slice(0, 7))
 
+function renderReports(viewer = STAFF, reportView?: 'monthly' | 'health') {
+  return render(<MemoryRouter initialEntries={[{ pathname: '/reports', state: reportView ? { reportView } : null }]}><ReportsPage viewer={viewer} /></MemoryRouter>)
+}
+
 describe('Reports', () => {
   it('switches between print-friendly report views', async () => {
     const user = userEvent.setup()
     vi.spyOn(window, 'print').mockImplementation(() => {})
-    render(<ReportsPage viewer={{ id: 'usr-nurse', name: 'Nurse', role: 'staff' }} />)
+    renderReports({ id: 'usr-nurse', name: 'Nurse', role: 'staff' })
     expect(await screen.findByRole('heading', { name: 'Monthly Report' })).toBeInTheDocument()
     await user.click(screen.getByRole('tab', { name: 'Incident Archive' }))
     expect(screen.getByRole('heading', { name: 'Incident Report Archive' })).toBeInTheDocument()
@@ -40,7 +45,7 @@ describe('Reports', () => {
 
   it('uses the linked student’s actual Student Number in the incident archive', async () => {
     const user = userEvent.setup()
-    render(<ReportsPage viewer={{ id: 'usr-nurse', name: 'Nurse', role: 'staff' }} />)
+    renderReports({ id: 'usr-nurse', name: 'Nurse', role: 'staff' })
     await user.click(screen.getByRole('tab', { name: 'Incident Archive' }))
     const [incident] = (await thisMonth()).incidents
     const archive = await screen.findByRole('table', { name: 'Incident report archive' })
@@ -49,7 +54,7 @@ describe('Reports', () => {
 
   it('lists the newest incidents first, matching the Incident Log', async () => {
     const user = userEvent.setup()
-    render(<ReportsPage viewer={STAFF} />)
+    renderReports()
     await user.click(screen.getByRole('tab', { name: 'Incident Archive' }))
 
     const rows = (await thisMonth()).incidents
@@ -60,7 +65,7 @@ describe('Reports', () => {
 
   it('shows the health summary as a sorted bar chart by default, with a table view', async () => {
     const user = userEvent.setup()
-    render(<ReportsPage viewer={STAFF} />)
+    renderReports()
     await user.click(screen.getByRole('tab', { name: 'Health Summaries' }))
 
     const rows = (await thisMonth()).complaintCounts
@@ -82,7 +87,7 @@ describe('Reports', () => {
 
   it('uses the shared smooth white tooltip behavior for the health summary chart', async () => {
     const user = userEvent.setup()
-    render(<ReportsPage viewer={STAFF} />)
+    renderReports()
     await user.click(screen.getByRole('tab', { name: 'Health Summaries' }))
     await screen.findByRole('img', { name: /clinic visits by complaint/i })
 
@@ -104,7 +109,7 @@ describe('Reports', () => {
 
   it('keeps both the chart and the table in the page so both print', async () => {
     const user = userEvent.setup()
-    const { container } = render(<ReportsPage viewer={STAFF} />)
+    const { container } = renderReports()
     await user.click(screen.getByRole('tab', { name: 'Health Summaries' }))
     await screen.findByRole('img', { name: /clinic visits by complaint/i })
 
@@ -120,12 +125,17 @@ describe('Reports', () => {
 
   it('shows an empty state instead of a blank chart for a month with no visits', async () => {
     const user = userEvent.setup()
-    render(<ReportsPage viewer={STAFF} />)
+    renderReports()
     await user.click(screen.getByRole('tab', { name: 'Health Summaries' }))
     await pickMonth(user, screen.getByLabelText('Report month'), '2000-01')
 
     expect(await screen.findByText('No clinic visits recorded this month')).toBeInTheDocument()
     expect(screen.queryByRole('img', { name: /clinic visits by complaint/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('radio', { name: 'Chart' })).not.toBeInTheDocument()
+  })
+
+  it('opens the matching dashboard report tab from router state', async () => {
+    renderReports(STAFF, 'health')
+    expect(await screen.findByRole('heading', { name: 'Health Summaries' })).toBeInTheDocument()
   })
 })

@@ -179,7 +179,7 @@ const FIELD_LABELS: Record<string, string> = {
   gradeLevel: 'grade level',
   contactInfo: 'contact info',
   medicalConditions: 'medical conditions',
-  emergencyContact: 'emergency contact',
+  emergencyContacts: 'emergency contacts',
   currentStock: 'stock',
   expirationDate: 'expiration date',
   lowStockThreshold: 'low-stock threshold',
@@ -214,6 +214,13 @@ export async function logoutMockSession(actor: SessionUser): Promise<void> {
     audit(s, actor, 'logout', null)
   })
   clearMockSession()
+}
+
+/** Records one completed print request. The document title is display-safe audit metadata. */
+export function recordPrint(documentTitle: string, actor?: SessionUser): Promise<void> {
+  return write('print document', (s) => {
+    audit(s, actorOr(actor), 'print', { type: 'print-document', id: documentTitle })
+  })
 }
 
 // ---- authentication (frontend-first mock only) --------------------------------------------
@@ -501,7 +508,7 @@ export function getNextStudentNumber(): Promise<StudentNumber> {
 
 export type StudentInput = Pick<
   Student,
-  'fullName' | 'gradeLevel' | 'sex' | 'contactInfo' | 'allergies' | 'medicalConditions' | 'emergencyContact'
+  'fullName' | 'gradeLevel' | 'sex' | 'contactInfo' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
 >
 
 export interface DuplicateMatch {
@@ -539,7 +546,7 @@ export function saveStudent(
       contactInfo: input.contactInfo.trim(),
       allergies: input.allergies,
       medicalConditions: input.medicalConditions,
-      emergencyContact: input.emergencyContact,
+      emergencyContacts: input.emergencyContacts,
     }
     const summary = existing ? changedSummary(existing, fields) : undefined
     const wasIncomplete = existing ? missingRequiredFields(existing).length > 0 : false

@@ -39,7 +39,7 @@ const student = (id: string, n: string, extra: Partial<SeedStudent> = {}): SeedS
   contactInfo: '0900-000-0000',
   allergies: [],
   medicalConditions: [],
-  emergencyContact: { name: 'Guardian', relationship: 'Parent', phone: '0900-111-0000', verified: true },
+  emergencyContacts: [{ name: 'Guardian', relationship: 'Parent', phone: '0900-111-0000', verified: true }],
   archived: false,
   ...extra,
 })
@@ -325,8 +325,8 @@ describe('complaint trends', () => {
 describe('dashboard summary', () => {
   const students = [
     student('s1', '2026-00001'),
-    student('s2', '2026-00002', { emergencyContact: null }), // incomplete: counts as pending
-    student('s3', '2020-00003', { archived: true, emergencyContact: null }), // archived: doesn't
+    student('s2', '2026-00002', { emergencyContacts: [] }), // incomplete: counts as pending
+    student('s3', '2020-00003', { archived: true, emergencyContacts: [] }), // archived: doesn't
   ]
   const data = dataset({
     students,

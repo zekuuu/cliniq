@@ -60,12 +60,14 @@
       "contactInfo": "0900-000-1000",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Ferdie Quizon",
-        "relationship": "Guardian",
-        "phone": "0900-111-2000",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Ferdie Quizon",
+          "relationship": "Guardian",
+          "phone": "0900-111-2000",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -76,12 +78,14 @@
       "contactInfo": "0900-000-1001",
       "allergies": ["Peanuts"],
       "medicalConditions": ["Allergic rhinitis"],
-      "emergencyContact": {
-        "name": "Maricel Valdez",
-        "relationship": "Father",
-        "phone": "0900-111-2001",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Maricel Valdez",
+          "relationship": "Father",
+          "phone": "0900-111-2001",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -92,12 +96,14 @@
       "contactInfo": "0900-000-1002",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Ferdie Umali",
-        "relationship": "Father",
-        "phone": "0900-111-2002",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Ferdie Umali",
+          "relationship": "Father",
+          "phone": "0900-111-2002",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -108,12 +114,14 @@
       "contactInfo": "0900-000-1003",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Joy Quizon",
-        "relationship": "Guardian",
-        "phone": "0900-111-2003",
-        "verified": false
-      },
+      "emergencyContacts": [
+        {
+          "name": "Joy Quizon",
+          "relationship": "Guardian",
+          "phone": "0900-111-2003",
+          "verified": false
+        }
+      ],
       "archived": false
     },
     {
@@ -124,12 +132,14 @@
       "contactInfo": "0900-000-1004",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Ramon Fajardo",
-        "relationship": "Guardian",
-        "phone": "0900-111-2004",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Ramon Fajardo",
+          "relationship": "Guardian",
+          "phone": "0900-111-2004",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -140,7 +150,7 @@
       "contactInfo": "0900-000-1005",
       "allergies": ["Penicillin"],
       "medicalConditions": ["Asthma"],
-      "emergencyContact": null,
+      "emergencyContacts": [],
       "archived": false
     },
     {
@@ -151,12 +161,14 @@
       "contactInfo": "0900-000-1006",
       "allergies": ["Shrimp"],
       "medicalConditions": ["Allergic rhinitis"],
-      "emergencyContact": {
-        "name": "Ferdie Rivera",
-        "relationship": "Mother",
-        "phone": "0900-111-2006",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Ferdie Rivera",
+          "relationship": "Mother",
+          "phone": "0900-111-2006",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -167,12 +179,14 @@
       "contactInfo": "0900-000-1007",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Arnel Ocampo",
-        "relationship": "Aunt",
-        "phone": "0900-111-2007",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Arnel Ocampo",
+          "relationship": "Aunt",
+          "phone": "0900-111-2007",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -183,12 +197,14 @@
       "contactInfo": "0900-000-1008",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Maricel Quizon",
-        "relationship": "Mother",
-        "phone": "0900-111-2008",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Maricel Quizon",
+          "relationship": "Mother",
+          "phone": "0900-111-2008",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -199,12 +215,14 @@
       "contactInfo": "0900-000-1009",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Cecilia Quizon",
-        "relationship": "Mother",
-        "phone": "0900-111-2009",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Cecilia Quizon",
+          "relationship": "Mother",
+          "phone": "0900-111-2009",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -215,12 +233,14 @@
       "contactInfo": "0900-000-1010",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Ramon Panganiban",
-        "relationship": "Grandmother",
-        "phone": "0900-111-2010",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Ramon Panganiban",
+          "relationship": "Grandmother",
+          "phone": "0900-111-2010",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -231,12 +251,20 @@
       "contactInfo": "0900-000-1011",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Arnel Cabrera",
-        "relationship": "Aunt",
-        "phone": "0900-111-2011",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Arnel Cabrera",
+          "relationship": "Aunt",
+          "phone": "0900-111-2011",
+          "verified": true
+        },
+        {
+          "name": "Bea Cabrera",
+          "relationship": "Sister or brother",
+          "phone": "0900-111-2111",
+          "verified": false
+        }
+      ],
       "archived": false
     },
     {
@@ -247,12 +275,14 @@
       "contactInfo": "0900-000-1012",
       "allergies": [],
       "medicalConditions": ["Allergic rhinitis"],
-      "emergencyContact": {
-        "name": "Joy Buenaventura",
-        "relationship": "Grandmother",
-        "phone": "0900-111-2012",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Joy Buenaventura",
+          "relationship": "Grandmother",
+          "phone": "0900-111-2012",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -263,12 +293,14 @@
       "contactInfo": "0900-000-1013",
       "allergies": ["Dust mites"],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Arnel Jimenez",
-        "relationship": "Mother",
-        "phone": "0900-111-2013",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Arnel Jimenez",
+          "relationship": "Mother",
+          "phone": "0900-111-2013",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -279,12 +311,14 @@
       "contactInfo": "0900-000-1014",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Joy Valdez",
-        "relationship": "Aunt",
-        "phone": "0900-111-2014",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Joy Valdez",
+          "relationship": "Aunt",
+          "phone": "0900-111-2014",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -295,12 +329,14 @@
       "contactInfo": "0900-000-1015",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Lorna Katigbak",
-        "relationship": "Mother",
-        "phone": "0900-111-2015",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Lorna Katigbak",
+          "relationship": "Mother",
+          "phone": "0900-111-2015",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -311,12 +347,14 @@
       "contactInfo": "0900-000-1016",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Arnel Nepomuceno",
-        "relationship": "Grandmother",
-        "phone": "0900-111-2016",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Arnel Nepomuceno",
+          "relationship": "Grandmother",
+          "phone": "0900-111-2016",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -327,7 +365,7 @@
       "contactInfo": "0900-000-1017",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": null,
+      "emergencyContacts": [],
       "archived": false
     },
     {
@@ -338,12 +376,14 @@
       "contactInfo": "0900-000-1018",
       "allergies": [],
       "medicalConditions": ["Eczema"],
-      "emergencyContact": {
-        "name": "Ferdie Lacson",
-        "relationship": "Mother",
-        "phone": "0900-111-2018",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Ferdie Lacson",
+          "relationship": "Mother",
+          "phone": "0900-111-2018",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -354,12 +394,14 @@
       "contactInfo": "0900-000-1019",
       "allergies": ["Peanuts"],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Arnel Tuazon",
-        "relationship": "Father",
-        "phone": "0900-111-2019",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Arnel Tuazon",
+          "relationship": "Father",
+          "phone": "0900-111-2019",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -370,12 +412,14 @@
       "contactInfo": "0900-000-1020",
       "allergies": ["Shrimp"],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Rodel Katigbak",
-        "relationship": "Mother",
-        "phone": "0900-111-2020",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Rodel Katigbak",
+          "relationship": "Mother",
+          "phone": "0900-111-2020",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -386,12 +430,14 @@
       "contactInfo": "0900-000-1021",
       "allergies": ["Shrimp"],
       "medicalConditions": ["Asthma"],
-      "emergencyContact": {
-        "name": "Ferdie Buenaventura",
-        "relationship": "Mother",
-        "phone": "0900-111-2021",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Ferdie Buenaventura",
+          "relationship": "Mother",
+          "phone": "0900-111-2021",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -402,12 +448,14 @@
       "contactInfo": "0900-000-1022",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Rodel Yap",
-        "relationship": "Mother",
-        "phone": "0900-111-2022",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Rodel Yap",
+          "relationship": "Mother",
+          "phone": "0900-111-2022",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -418,12 +466,14 @@
       "contactInfo": "",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Cecilia Tuazon",
-        "relationship": "Guardian",
-        "phone": "0900-111-2023",
-        "verified": false
-      },
+      "emergencyContacts": [
+        {
+          "name": "Cecilia Tuazon",
+          "relationship": "Guardian",
+          "phone": "0900-111-2023",
+          "verified": false
+        }
+      ],
       "archived": false
     },
     {
@@ -434,12 +484,14 @@
       "contactInfo": "0900-000-1024",
       "allergies": ["Peanuts"],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Cecilia Dimaculangan",
-        "relationship": "Mother",
-        "phone": "0900-111-2024",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Cecilia Dimaculangan",
+          "relationship": "Mother",
+          "phone": "0900-111-2024",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -450,12 +502,14 @@
       "contactInfo": "0900-000-1025",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Maricel Salazar",
-        "relationship": "Mother",
-        "phone": "0900-111-2025",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Maricel Salazar",
+          "relationship": "Mother",
+          "phone": "0900-111-2025",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -466,12 +520,14 @@
       "contactInfo": "0900-000-1026",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Maricel Hernandez",
-        "relationship": "Father",
-        "phone": "0900-111-2026",
-        "verified": false
-      },
+      "emergencyContacts": [
+        {
+          "name": "Maricel Hernandez",
+          "relationship": "Father",
+          "phone": "0900-111-2026",
+          "verified": false
+        }
+      ],
       "archived": false
     },
     {
@@ -482,12 +538,14 @@
       "contactInfo": "0900-000-1027",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Cecilia Macaraeg",
-        "relationship": "Father",
-        "phone": "0900-111-2027",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Cecilia Macaraeg",
+          "relationship": "Father",
+          "phone": "0900-111-2027",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -498,12 +556,14 @@
       "contactInfo": "0900-000-1028",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Maricel Yap",
-        "relationship": "Aunt",
-        "phone": "0900-111-2028",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Maricel Yap",
+          "relationship": "Aunt",
+          "phone": "0900-111-2028",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -514,12 +574,14 @@
       "contactInfo": "0900-000-1029",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Lorna Zamora",
-        "relationship": "Grandmother",
-        "phone": "0900-111-2029",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Lorna Zamora",
+          "relationship": "Grandmother",
+          "phone": "0900-111-2029",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -530,12 +592,14 @@
       "contactInfo": "0900-000-1030",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Maricel Yap",
-        "relationship": "Guardian",
-        "phone": "0900-111-2030",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Maricel Yap",
+          "relationship": "Guardian",
+          "phone": "0900-111-2030",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -546,12 +610,14 @@
       "contactInfo": "",
       "allergies": ["Peanuts"],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Joy Tuazon",
-        "relationship": "Guardian",
-        "phone": "0900-111-2031",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Joy Tuazon",
+          "relationship": "Guardian",
+          "phone": "0900-111-2031",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -562,12 +628,14 @@
       "contactInfo": "0900-000-1032",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Maricel Yap",
-        "relationship": "Father",
-        "phone": "0900-111-2032",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Maricel Yap",
+          "relationship": "Father",
+          "phone": "0900-111-2032",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -578,12 +646,14 @@
       "contactInfo": "0900-000-1033",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Joy Quizon",
-        "relationship": "Grandmother",
-        "phone": "0900-111-2033",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Joy Quizon",
+          "relationship": "Grandmother",
+          "phone": "0900-111-2033",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -594,12 +664,14 @@
       "contactInfo": "0900-000-1034",
       "allergies": ["Penicillin"],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Maricel Hernandez",
-        "relationship": "Aunt",
-        "phone": "0900-111-2034",
-        "verified": false
-      },
+      "emergencyContacts": [
+        {
+          "name": "Maricel Hernandez",
+          "relationship": "Aunt",
+          "phone": "0900-111-2034",
+          "verified": false
+        }
+      ],
       "archived": false
     },
     {
@@ -610,12 +682,14 @@
       "contactInfo": "0900-000-1035",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Joy Buenaventura",
-        "relationship": "Guardian",
-        "phone": "0900-111-2035",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Joy Buenaventura",
+          "relationship": "Guardian",
+          "phone": "0900-111-2035",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -626,12 +700,14 @@
       "contactInfo": "0900-000-1036",
       "allergies": [],
       "medicalConditions": ["Eczema"],
-      "emergencyContact": {
-        "name": "Ferdie Quizon",
-        "relationship": "Father",
-        "phone": "0900-111-2036",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Ferdie Quizon",
+          "relationship": "Father",
+          "phone": "0900-111-2036",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -642,12 +718,14 @@
       "contactInfo": "0900-000-1037",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Rodel Tuazon",
-        "relationship": "Aunt",
-        "phone": "0900-111-2037",
-        "verified": false
-      },
+      "emergencyContacts": [
+        {
+          "name": "Rodel Tuazon",
+          "relationship": "Aunt",
+          "phone": "0900-111-2037",
+          "verified": false
+        }
+      ],
       "archived": false
     },
     {
@@ -658,12 +736,14 @@
       "contactInfo": "0900-000-1038",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Ramon Lacson",
-        "relationship": "Mother",
-        "phone": "0900-111-2038",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Ramon Lacson",
+          "relationship": "Mother",
+          "phone": "0900-111-2038",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -674,12 +754,14 @@
       "contactInfo": "0900-000-1039",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Lorna Estrella",
-        "relationship": "Grandmother",
-        "phone": "0900-111-2039",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Lorna Estrella",
+          "relationship": "Grandmother",
+          "phone": "0900-111-2039",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -690,12 +772,14 @@
       "contactInfo": "0900-000-1040",
       "allergies": ["Peanuts"],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Lorna Jimenez",
-        "relationship": "Mother",
-        "phone": "",
-        "verified": false
-      },
+      "emergencyContacts": [
+        {
+          "name": "Lorna Jimenez",
+          "relationship": "Mother",
+          "phone": "",
+          "verified": false
+        }
+      ],
       "archived": false
     },
     {
@@ -706,12 +790,14 @@
       "contactInfo": "0900-000-1041",
       "allergies": ["Peanuts"],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Lorna Nepomuceno",
-        "relationship": "Guardian",
-        "phone": "0900-111-2041",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Lorna Nepomuceno",
+          "relationship": "Guardian",
+          "phone": "0900-111-2041",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -722,12 +808,14 @@
       "contactInfo": "0900-000-1042",
       "allergies": ["Shrimp"],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Arnel Nepomuceno",
-        "relationship": "Mother",
-        "phone": "0900-111-2042",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Arnel Nepomuceno",
+          "relationship": "Mother",
+          "phone": "0900-111-2042",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -738,12 +826,14 @@
       "contactInfo": "0900-000-1043",
       "allergies": [],
       "medicalConditions": ["Allergic rhinitis"],
-      "emergencyContact": {
-        "name": "Cecilia Lacson",
-        "relationship": "Guardian",
-        "phone": "0900-111-2043",
-        "verified": false
-      },
+      "emergencyContacts": [
+        {
+          "name": "Cecilia Lacson",
+          "relationship": "Guardian",
+          "phone": "0900-111-2043",
+          "verified": false
+        }
+      ],
       "archived": false
     },
     {
@@ -754,12 +844,14 @@
       "contactInfo": "0900-000-1044",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Joy Rivera",
-        "relationship": "Aunt",
-        "phone": "0900-111-2044",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Joy Rivera",
+          "relationship": "Aunt",
+          "phone": "0900-111-2044",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -770,12 +862,14 @@
       "contactInfo": "0900-000-1045",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Arnel Panganiban",
-        "relationship": "Father",
-        "phone": "0900-111-2045",
-        "verified": false
-      },
+      "emergencyContacts": [
+        {
+          "name": "Arnel Panganiban",
+          "relationship": "Father",
+          "phone": "0900-111-2045",
+          "verified": false
+        }
+      ],
       "archived": false
     },
     {
@@ -786,12 +880,14 @@
       "contactInfo": "0900-000-1046",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Arnel Valdez",
-        "relationship": "Grandmother",
-        "phone": "0900-111-2046",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Arnel Valdez",
+          "relationship": "Grandmother",
+          "phone": "0900-111-2046",
+          "verified": true
+        }
+      ],
       "archived": false
     },
     {
@@ -802,12 +898,14 @@
       "contactInfo": "0900-000-1047",
       "allergies": ["Penicillin"],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Rodel Abalos",
-        "relationship": "Aunt",
-        "phone": "0900-111-2047",
-        "verified": false
-      },
+      "emergencyContacts": [
+        {
+          "name": "Rodel Abalos",
+          "relationship": "Aunt",
+          "phone": "0900-111-2047",
+          "verified": false
+        }
+      ],
       "archived": false
     },
     {
@@ -818,12 +916,14 @@
       "contactInfo": "0900-000-1048",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Joy Lacson",
-        "relationship": "Mother",
-        "phone": "0900-111-2048",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Joy Lacson",
+          "relationship": "Mother",
+          "phone": "0900-111-2048",
+          "verified": true
+        }
+      ],
       "archived": true
     },
     {
@@ -834,12 +934,14 @@
       "contactInfo": "0900-000-1049",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Lorna Umali",
-        "relationship": "Father",
-        "phone": "0900-111-2049",
-        "verified": false
-      },
+      "emergencyContacts": [
+        {
+          "name": "Lorna Umali",
+          "relationship": "Father",
+          "phone": "0900-111-2049",
+          "verified": false
+        }
+      ],
       "archived": true
     },
     {
@@ -850,12 +952,14 @@
       "contactInfo": "0900-000-1050",
       "allergies": ["Peanuts"],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Lorna Cabrera",
-        "relationship": "Aunt",
-        "phone": "0900-111-2050",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Lorna Cabrera",
+          "relationship": "Aunt",
+          "phone": "0900-111-2050",
+          "verified": true
+        }
+      ],
       "archived": true
     },
     {
@@ -866,12 +970,14 @@
       "contactInfo": "0900-000-1051",
       "allergies": [],
       "medicalConditions": [],
-      "emergencyContact": {
-        "name": "Rodel Lacson",
-        "relationship": "Mother",
-        "phone": "0900-111-2051",
-        "verified": true
-      },
+      "emergencyContacts": [
+        {
+          "name": "Rodel Lacson",
+          "relationship": "Mother",
+          "phone": "0900-111-2051",
+          "verified": true
+        }
+      ],
       "archived": true
     }
   ],
@@ -2860,7 +2966,11 @@
       "loggedByUserId": "user-staff-01",
       "eventTag": null,
       "itemsGiven": [],
-      "excuseLetterDraft": { "excusedFrom": { "daysAgo": 5 }, "excusedUntil": { "daysAgo": 4 }, "note": "Please allow the student to take the missed quiz." },
+      "excuseLetterDraft": {
+        "excusedFrom": { "daysAgo": 5 },
+        "excusedUntil": { "daysAgo": 4 },
+        "note": "Please allow the student to take the missed quiz."
+      },
       "referredTo": null
     },
     {
@@ -4130,7 +4240,11 @@
     "visitComplaintTypes": [
       {
         "label": "Headache",
-        "triageSteps": ["Check temperature", "Ask about hydration and meals", "Allow supervised rest"]
+        "triageSteps": [
+          "Check temperature",
+          "Ask about hydration and meals",
+          "Allow supervised rest"
+        ]
       },
       {
         "label": "Stomachache",
@@ -4138,7 +4252,11 @@
       },
       {
         "label": "Fever",
-        "triageSteps": ["Check temperature", "Ask about onset of symptoms", "Notify parent if fever persists"]
+        "triageSteps": [
+          "Check temperature",
+          "Ask about onset of symptoms",
+          "Notify parent if fever persists"
+        ]
       },
       {
         "label": "Cough and colds",
@@ -4170,7 +4288,11 @@
       },
       {
         "label": "Fainting",
-        "triageSteps": ["Check responsiveness", "Record pulse and breathing", "Keep student lying down"]
+        "triageSteps": [
+          "Check responsiveness",
+          "Record pulse and breathing",
+          "Keep student lying down"
+        ]
       }
     ],
     "incidentComplaintTypes": [

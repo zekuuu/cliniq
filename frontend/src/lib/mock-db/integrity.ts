@@ -19,7 +19,7 @@ const FIELDS = {
   top: ['meta', 'config', 'users', 'students', 'visits', 'incidents', 'followUps', 'inventoryItems', 'reports', 'backupLogs', 'auditLog', 'frontendOnly'],
   config: ['_note', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'vitalsWarningRanges'],
   users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture'],
-  students: ['id', 'studentNumber', 'fullName', 'gradeLevel', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContact', 'archived', 'sex'],
+  students: ['id', 'studentNumber', 'fullName', 'gradeLevel', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
   emergencyContact: ['name', 'relationship', 'phone', 'verified'],
   visits: ['id', 'studentNumber', 'dateTime', 'complaint', 'treatment', 'disposition', 'loggedByUserId', 'eventTag', 'itemsGiven', 'excuseLetterDraft', 'referredTo'],
   excuseLetterDraft: ['excusedFrom', 'excusedUntil', 'note'],
@@ -56,7 +56,7 @@ const ENUMS = {
   category: ['medicine', 'supply'],
   reportType: ['monthly', 'incident', 'health_summary'],
   backupStatus: ['ok', 'failed'],
-  actionType: ['login', 'logout', 'scan', 'submit', 'approve', 'create', 'update', 'delete', 'archive'],
+  actionType: ['login', 'logout', 'scan', 'submit', 'approve', 'create', 'update', 'delete', 'archive', 'print'],
   outcome: ['reached', 'not_reached', 'voicemail', 'left_message'],
   sex: ['male', 'female'],
   transactionType: ['dispense', 'restock', 'adjustment'],
@@ -168,7 +168,8 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     numbers.add(number)
     if (!Array.isArray(st.allergies) || !Array.isArray(st.medicalConditions))
       fail(`${w}: allergies and medicalConditions must be arrays`)
-    if (st.emergencyContact !== null) checkFields(`${w}.emergencyContact`, st.emergencyContact, FIELDS.emergencyContact)
+    if (!Array.isArray(st.emergencyContacts)) fail(`${w}.emergencyContacts: must be an array`)
+    else st.emergencyContacts.forEach((contact, contactIndex) => checkFields(`${w}.emergencyContacts[${contactIndex}]`, contact, FIELDS.emergencyContact))
     if (typeof st.archived !== 'boolean') fail(`${w}.archived: must be true or false`)
     if (st.sex !== undefined) oneOf(`${w}.sex`, st.sex, ENUMS.sex)
   })

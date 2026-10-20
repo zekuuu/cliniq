@@ -32,7 +32,8 @@ export interface Student {
   contactInfo: string
   allergies: string[]
   medicalConditions: string[]
-  emergencyContact: EmergencyContact | null
+  /** Ordered contacts; the first is the student's primary emergency contact. */
+  emergencyContacts: EmergencyContact[]
   /** False when a required field is missing. This feeds the Incomplete Records Review Queue (#9). */
   recordComplete: boolean
   /** Archived students stay in the database but are excluded from active lists by default. */
@@ -208,7 +209,7 @@ export interface BackupLog {
 }
 
 export type AuditActionType =
-  'login' | 'logout' | 'scan' | 'submit' | 'approve' | 'create' | 'update' | 'delete' | 'archive'
+  'login' | 'logout' | 'scan' | 'submit' | 'approve' | 'create' | 'update' | 'delete' | 'archive' | 'print'
 
 export interface AuditLogEntry {
   userId: string
