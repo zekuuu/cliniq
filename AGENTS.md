@@ -46,7 +46,7 @@ Every entry you write — a session log, a changelog line, an ADR's Date field �
 1. Update whatever part of `01`–`05` your change actually affects.
 2. Add an entry to `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/` (format below) — **include the originating prompt/request**, not just the resulting diff, so the next agent or person understands *why*, not only *what*.
 3. Add a one-line pointer to that session in `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`, **with a real timestamp** (see above) — not just a bare date.
-4. Update `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md` if you found or resolved something. Use the tag and checkbox format in that file's legend: open work is `- [ ] **[TAG]**`, notes have no checkbox, resolved items become `- [x] **[DONE]**`, and update the 'Open work at a glance' block.
+4. Update `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md` if you found or resolved something. Use the tag and checkbox format in that file's legend: open work is `- [ ] **[TAG]**`, notes have no checkbox, resolved items become `- [x] **[DONE]**` with `Resolved <real timestamp>` and the session link, are then **moved unchanged to `CLINIQ-Knowledge-Base/08-Logs/Issues-Done-Archive.md`** under the same section heading (never deleted), and update the 'Open work at a glance' block.
 5. If you made a genuine requirement/scope decision (not just an implementation choice), add an ADR to `CLINIQ-Knowledge-Base/06-Decisions/` **and** flag that the matching canonical document (see `CLINIQ-Knowledge-Base/09-References/Canonical-Documents.md`) needs updating too — don't let the vault and the canonical docs quietly drift apart.
 6. Give a concise summary of what you did.
 
