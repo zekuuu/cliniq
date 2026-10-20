@@ -13,7 +13,7 @@ CLINIQ is a clinic tracking and monitoring system for Mendez Christian Academy, 
 | Role | Can do |
 |---|---|
 | **Staff** (nurse/clinic assistant) | Full read/write on everything — students, visits, incidents, inventory; generates reports; manages accounts |
-| **Admin/Principal** | Read-only: reports and the Clinic Overview Dashboard. No edit access anywhere |
+| **Admin/Principal** | Read-only: reports and the Clinic Overview Dashboard. Manages every account (ADR-033); no other edit access |
 | **PE/Sports Instructor** | No account and no access (ADR-029). An instructor asks the clinician, who decides what to share |
 
 **Display-privacy rule — affects how student names appear across the system:** a screen showing a **list of multiple students at once** (visit logs, incident logs, the dashboard's frequent-visitor section) shows the **Student Number**, not the name — these are the screens a bystander could glance at on a desktop monitor. A screen showing **one specific, deliberately-identified student** (the full profile, search results, the masterlist) shows the **full name** normally. Design both list rows and detail views with this in mind — a list row template should have no name field at all; a detail/card template should lead with the name prominently.

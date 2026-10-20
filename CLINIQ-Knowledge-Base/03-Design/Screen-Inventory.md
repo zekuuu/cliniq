@@ -11,7 +11,7 @@ Give the agent this full list — it maps directly to the two module groups (bas
 ### Auth & Shell
 1. **Login** — username/password, role-aware redirect after login; the session lasts 1 week until the token expires, with no idle timeout
 2. **Force Password Change** — shown on first login (backend enforces this)
-3. **App Shell/Nav** — role-aware sidebar or nav; Staff sees all modules, Admin sees Dashboard, Calendar, Reports and Audit Log. The desktop header shows the signed-in user's name and role with a red, icon-only Log out control carrying an accessible label.
+3. **App Shell/Nav** — role-aware sidebar or nav; Staff sees all modules, Admin sees Dashboard, Calendar, Reports, Audit Log and Accounts. The desktop header shows the signed-in user's name and role with a red, icon-only Log out control carrying an accessible label.
 
 ### Dashboard
 4. **Staff Dashboard** — today's visit count, low-stock alerts, expiring-medicine alerts, backup status widget, quick "New Visit" action. Delivered on the shared Clinic Overview (#31): Staff get a strip under the header with the "New Visit" action and a backup-status indicator (status + last-backup date) linking to #32
@@ -66,7 +66,7 @@ The QR screens (#22–24, #26) were removed with the QR feature (ADR-027), and t
 32. **Backup Status Screen** — last backup date/size/status, plus a plain-language guided recovery checklist (Staff-only, likely nurse-only)
 
 ### User Management
-33. **User List** — Staff only; Staff and Admin/Principal accounts (PE/Sports Instructors have no account, ADR-029)
+33. **User List** — Admin/Principal only (ADR-033); Staff and Admin/Principal accounts, with Disable/Enable and Reset Password (PE/Sports Instructors have no account, ADR-029)
 34. **Add/Edit User & Role Assignment**
 
 ### Audit Log Viewer

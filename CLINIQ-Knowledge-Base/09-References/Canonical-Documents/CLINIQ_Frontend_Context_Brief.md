@@ -23,8 +23,8 @@ This is the context package to hand to an AI coding agent before it writes any f
 
 | Role | Can do |
 |---|---|
-| **Staff** (nurse/clinic assistant) | Full read/write on students, visits, incidents, inventory; generates reports; manages own account and other Staff/Admin accounts |
-| **Admin/Principal** | Read-only: reports, the Clinic Overview Dashboard. No edit access anywhere |
+| **Staff** (nurse/clinic assistant) | Full read/write on students, visits, incidents, inventory; generates reports; own account only |
+| **Admin/Principal** | Read-only: reports, the Clinic Overview Dashboard. Manages every account (ADR-033); no other edit access |
 | **PE/Sports Instructor** | No account and no access (ADR-029). An instructor asks the clinician, who decides what to share |
 
 **Display-privacy rule:** the actual risk isn't a single deliberate lookup — it's a desktop screen showing a **list or pattern across multiple students at once** (a visit log, an incident log, a "frequent visitor" flag) being glanced at by a passerby, who can then attach a specific named student to a health pattern ("he visits a lot, what's going on?"). So: the **Visit Log List, Incident Log List, and the Dashboard's frequent-visitor section default to Student Number**, not full name. A **single deliberate lookup — the full profile page, search results, and the masterlist — shows the full name normally**, since someone has already identified and is looking at one specific student for a legitimate reason. The masterlist shows names freely (it's just a roster) but shouldn't show medical/confidential fields inline — those still require opening the individual profile.
@@ -38,7 +38,7 @@ Give the agent this full list — it maps directly to the two module groups (bas
 ### Auth & Shell
 1. **Login** — username/password, role-aware redirect after login; the session lasts 1 week until the token expires, with no idle timeout
 2. **Force Password Change** — shown on first login (backend enforces this)
-3. **App Shell/Nav** — role-aware sidebar or nav; Staff sees all modules, Admin sees only Reports + Dashboard. The desktop header shows the signed-in user's name and role with a red, icon-only Log out control carrying an accessible label.
+3. **App Shell/Nav** — role-aware sidebar or nav; Staff sees all modules, Admin sees Dashboard, Calendar, Reports, Audit Log and Accounts. The desktop header shows the signed-in user's name and role with a red, icon-only Log out control carrying an accessible label.
 
 ### Dashboard
 4. **Staff Dashboard** — today's visit count, low-stock alerts, expiring-medicine alerts, backup status widget, quick "New Visit" action. Delivered on the shared Clinic Overview (#31): Staff get a strip under the header with the "New Visit" action and a backup-status indicator (status + last-backup date) linking to #32
@@ -92,7 +92,7 @@ The QR screens (#22–24, #26) were removed with the QR feature (ADR-027), and t
 32. **Backup Status Screen** — last backup date/size/status, plus a plain-language guided recovery checklist (Staff-only, likely nurse-only)
 
 ### User Management
-33. **User List** — Staff only; Staff and Admin/Principal accounts (PE/Sports Instructors have no account, ADR-029)
+33. **User List** — Admin/Principal only (ADR-033); Staff and Admin/Principal accounts, with Disable/Enable and Reset Password (PE/Sports Instructors have no account, ADR-029)
 34. **Add/Edit User & Role Assignment**
 
 **Total: ~30 screens/views** (accounting for the two-stage incident entry; the four QR screens and the phone Emergency screen were removed, ADR-027 and ADR-033), several of which (Excuse Letter, Incident Report, Monthly Report) also need a distinct print layout — call that out to the agent explicitly since print CSS is easy to forget.

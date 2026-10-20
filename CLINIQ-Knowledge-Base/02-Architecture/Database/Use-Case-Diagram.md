@@ -23,8 +23,8 @@ flowchart LR
         UC12(["View Own Profile,<br/>Change Password"])
     end
 
-    STAFF --> UC1 & UC2 & UC3 & UC4 & UC5 & UC7 & UC8 & UC9 & UC10 & UC11
-    ADMIN --> UC5 & UC9 & UC12
+    STAFF --> UC2 & UC3 & UC4 & UC5 & UC7 & UC8 & UC9 & UC10 & UC11
+    ADMIN --> UC1 & UC5 & UC9 & UC12
 ```
 
 ## Detailed Use Cases by Role
@@ -34,7 +34,6 @@ flowchart LR
 | Use Case | Module |
 |---|---|
 | Log in / log out | User Management |
-| Manage user accounts (add/edit/deactivate, both roles) | User Management |
 | Add/edit/archive student records | Student Records |
 | Resolve incomplete-record queue entries | Student Records |
 | Log a clinic visit, with Smart Triage checklist | Clinic Visit Monitoring |
@@ -52,11 +51,12 @@ flowchart LR
 | View Clinic Overview Dashboard | Clinic Overview Dashboard |
 | Check/verify backup status | Backup Verification Assistant |
 
-### 👤 Admin/Principal — Read-only, Reports + Dashboard only
+### 👤 Admin/Principal — Reports, Dashboard and accounts
 
 | Use Case | Module |
 |---|---|
 | Log in / log out, change own password | User Management |
+| Manage user accounts (add, edit, disable, enable, reset password; never the last active Admin) | User Management |
 | View and print monthly/incident/health-summary reports | Reports Generation |
 | View Clinic Overview Dashboard | Clinic Overview Dashboard |
 

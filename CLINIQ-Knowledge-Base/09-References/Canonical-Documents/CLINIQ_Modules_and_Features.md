@@ -4,7 +4,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 
 **Roles in the system (current scope):**
 - **Staff** — School Head Nurse / clinic assistants. Full read/write access.
-- **Admin/Principal** — School Administration. Read-only access, scoped to reports and health summaries only.
+- **Admin/Principal** — School Administration. Read-only access to reports and health summaries, plus account management (ADR-033): creates, edits, disables and resets accounts.
 - **PE/Sports Instructor** — No account and no access (ADR-029). An instructor asks the clinician, who decides what to share.
 
 **Role documented for future development (not built this phase):** Canteen Staff — see "Future Development" at the end of this document.
@@ -15,7 +15,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 
 ## Baseline Modules
 
-### 1. User Management — *Access: Staff (manages accounts for all current roles)*
+### 1. User Management — *Access: Admin/Principal (manages every account, ADR-033)*
 **Login Authentication** *(Staff, Admin/Principal — everyone with an account)*
 - Log in (username/password)
 - Log out
@@ -23,10 +23,12 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - Account lockout after 5 consecutive failed attempts (30-minute lock)
 - Every login logged with who and when (see Audit Trail, below)
 
-**User Account Management** *(Staff only)*
-- Add new user account
+**User Account Management** *(Admin/Principal only, ADR-033)*
+- Add new user account, with a temporary password that must be changed at first sign-in
 - Edit user account (name, username, role)
-- Deactivate/remove user account
+- Disable or re-enable a user account (never deleted: a disabled account stays listed and in the audit history, and can't sign in)
+- Reset a password to a temporary one that must be changed at the next sign-in (no self-service recovery; a lost Admin password is fixed outside the app)
+- Never disable or demote the last active Admin/Principal, including one's own account
 - View list of all user accounts
 - Search/filter user accounts
 
@@ -36,7 +38,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - Prevent reuse of last 5 passwords
 - Enforce minimum 8-character password length
 
-**Role-Based Access** *(Staff only)*
+**Role-Based Access** *(Admin/Principal only)*
 - Assign role (Staff / Admin-Principal)
 - Edit role assignment
 - View permissions per role
@@ -265,7 +267,7 @@ This satisfies RA 10173 (Data Privacy Act) alignment and is the mechanism that m
 
 | Module | Staff | Admin/Principal |
 |---|---|---|
-| 1. User Management | Full | Login + own password only |
+| 1. User Management | Login + own password only | Full (accounts, ADR-033) |
 | 2. Student Records | Full | — |
 | 3. Clinic Visit Monitoring | Full | — |
 | 4. Emergency Response | Full | — |

@@ -2,8 +2,8 @@
 
 | Role | Access |
 |---|---|
-| **Staff** (nurse/clinic assistant) | Full read/write — students, visits, incidents, inventory, reports, accounts |
-| **Admin/Principal** | Read-only — reports, Clinic Overview Dashboard. No edit access anywhere |
+| **Staff** (nurse/clinic assistant) | Full read/write — students, visits, incidents, inventory, reports, backup; own account only |
+| **Admin/Principal** | Read-only — reports, Clinic Overview Dashboard, audit log. Manages every account (ADR-033); no other edit access |
 | **PE/Sports Instructor** | No account and no access (ADR-029). An instructor asks the clinician, who decides what to share |
 
 **Deferred role (designed, not built):** Canteen Staff — a scoped sign-in with a narrow data scope (food allergies only). See `08-Logs/Issues-and-TODOs.md`.
