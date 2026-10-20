@@ -5,7 +5,7 @@ Every CLINIQ screen reads and writes data through this folder during the fronten
 `CLINIQ-Knowledge-Base/06-Decisions/ADR-014-Central-Mock-Data-Layer.md`.
 
 > **Synthetic data only.** This repository is public, and these are minors' health records under
-> RA 10173. Every name, Student Number, phone number, allergy, and condition in `mock-db.json` is
+> RA 10173. Every name, LRN, phone number, allergy, and condition in `mock-db.json` is
 > invented. Never paste a real Mendez Christian Academy student or staff member into it. The
 > integrity test checks that the notice in `meta` is still there and that dev passwords are
 > obviously fake.
@@ -14,7 +14,7 @@ Every CLINIQ screen reads and writes data through this folder during the fronten
 
 ```
 mock-db.json        raw records only (hand-edited, never written at runtime)
-  └─ seed.ts        the ONLY importer of the JSON; resolves relative dates + Student Number refs
+  └─ seed.ts        the ONLY importer of the JSON; resolves relative dates
      └─ store.ts    in-memory copy + every write since; injectable "today"; reset; persistence
         ├─ selectors.ts / dashboard.ts   every derived value (counts, flags, due states…)
         └─ api.ts   async reads/writes, audit logging, latency + preview switches
@@ -37,8 +37,9 @@ is the file that becomes HTTP calls. Nothing above it has to change.
    `emergencyContacts` to an empty array. The integrity test names the field if you store a derived value.
 2. **Dates are relative.** Use `{ "daysAgo": 3 }` or `{ "daysFromNow": 11 }`. Timestamps add
    `"time": "HH:MM"` (Philippine time). Absolute dates are rejected because they go stale.
-3. **Reference by key.** Visits, incidents, follow-ups, and reviews point at a student by
-   `studentNumber` (`YYYY-NNNNN`, ADR-005). Follow-ups point at an existing visit or incident *of
+3. **Reference by key.** Visits, incidents, follow-ups, reviews and stock transactions point at a
+   student by its internal `studentId`. Each student has a unique 12-digit `lrn`, clearly synthetic
+   (`000000` + enrolment year + sequence; ADR-028). Follow-ups point at an existing visit or incident *of
    the same student*. Users are referenced by `id`. Complaints must come from
    `frontendOnly.visitComplaintTypes` / `incidentComplaintTypes`.
 4. **Keep ids readable and unique:** `student-0053`, `visit-0160`, `item-0015`, `user-staff-02`.
