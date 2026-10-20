@@ -37,7 +37,7 @@ const NO_BACK: Record<string, string> = {
   'admin /reports': 'Top-level sidebar destination.',
   'staff /audit-log': 'Top-level sidebar destination.',
   'admin /audit-log': 'Top-level sidebar destination.',
-  'staff /users': 'Top-level sidebar destination.',
+  'admin /users': 'Top-level sidebar destination.',
   'staff /backup': 'Top-level sidebar destination.',
 }
 

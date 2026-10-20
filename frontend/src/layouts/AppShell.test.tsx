@@ -248,17 +248,18 @@ describe('App Shell / Navigation', () => {
     )
   })
 
-  it('limits Admin/Principal navigation to Dashboard, Calendar, Reports, and Audit Log', () => {
+  it('limits Admin/Principal navigation to Dashboard, Calendar, Reports, Audit Log, and Accounts (ADR-033)', () => {
     const groups = navGroupsFor('admin')
     expect(groups.flatMap((group) => group.items.map((item) => item.key))).toEqual([
       'dashboard',
       'calendar',
       'reports',
       'auditLog',
+      'accounts',
     ])
   })
 
-  it('gives Staff the full navigation, with no QR entry (ADR-027)', () => {
+  it('gives Staff the full navigation, with no QR entry (ADR-027) and no Accounts (ADR-033)', () => {
     const groups = navGroupsFor('staff')
     expect(groups.flatMap((group) => group.items.map((item) => item.key))).toEqual([
       'dashboard',
@@ -269,7 +270,6 @@ describe('App Shell / Navigation', () => {
       'followUps',
       'inventory',
       'reports',
-      'accounts',
       'backup',
       'auditLog',
     ])

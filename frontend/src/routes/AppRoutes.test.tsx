@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
@@ -148,6 +148,23 @@ describe('App routes', () => {
 
     expect(await screen.findByRole('heading', { name: 'Page Not Found' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /QR/ })).not.toBeInTheDocument()
+  })
+
+  it.each(['/users', '/users/new', '/users/user-staff-01/edit'])('sends Staff from the Admin-only %s to the Dashboard (ADR-033)', async (path) => {
+    renderAt(path, STAFF)
+
+    await waitFor(() => expect(screen.getByTestId('path')).toHaveTextContent(/^\/$/))
+    expect(screen.queryByRole('heading', { name: /User Management|Add User|Edit User/ })).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['/users', 'User Management'],
+    ['/users/new', 'Add User'],
+    ['/users/user-staff-01/edit', 'Edit User'],
+  ])('lets the Admin/Principal open %s', async (path, heading) => {
+    renderAt(path, ADMIN)
+
+    expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument()
   })
 
   it('shows a not-found screen for an unknown path', async () => {

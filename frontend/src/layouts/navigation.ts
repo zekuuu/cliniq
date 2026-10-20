@@ -4,7 +4,7 @@ import type { UserRole } from '../types/entities'
 
 /**
  * Role-aware navigation (Screen Inventory #3; Module-Overview Access Summary). Staff sees every
- * module; Admin/Principal sees Dashboard, Reports, and Audit Log.
+ * module; Admin/Principal sees Dashboard, Calendar, Reports, Audit Log, and Accounts (ADR-033).
  *
  * `to` is the item's route (routes/paths.ts). `available: false` marks screens not built yet (no
  * route exists). The shell shows them as "Soon" and not clickable,
@@ -56,12 +56,13 @@ export function navGroupsFor(role: UserRole): NavGroup[] {
     return [
       { label: 'Overview', items: [ALL.dashboard, ALL.calendar] },
       { label: 'Reporting', items: [ALL.reports, ALL.auditLog] },
+      { label: 'Administration', items: [ALL.accounts] },
     ]
   }
   return [
     { label: 'Overview', items: [ALL.dashboard, ALL.calendar] },
     { label: 'Student Care', items: [ALL.students, ALL.visits, ALL.incidents, ALL.followUps] },
     { label: 'Operations', items: [ALL.inventory, ALL.reports] },
-    { label: 'Administration', items: [ALL.accounts, ALL.backup, ALL.auditLog] },
+    { label: 'Administration', items: [ALL.backup, ALL.auditLog] },
   ]
 }

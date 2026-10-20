@@ -143,9 +143,9 @@ function IncidentReportRoute({ viewer }: Viewer) {
   const { incidentId } = useParams()
   return <IncidentReportPage viewer={viewer} incidentId={incidentId} />
 }
-function UserFormRoute() {
+function UserFormRoute({ viewer }: Viewer) {
   const { userId } = useParams()
-  return <UserFormPage userId={userId} />
+  return <UserFormPage userId={userId} viewer={viewer} />
 }
 /**
  * Every app route requires a signed-in account (ADR-002, security clarification). Without one the
@@ -362,23 +362,23 @@ const APP_ROUTES: AppRoute[] = [
   {
     path: paths.users,
     title: 'User Accounts',
-    roles: ['staff'],
+    roles: ['admin'],
     nav: 'accounts',
-    render: () => <UserListPage />,
+    render: (viewer) => <UserListPage viewer={viewer} />,
   },
   {
     path: paths.userNew,
     title: 'Add User',
-    roles: ['staff'],
+    roles: ['admin'],
     nav: 'accounts',
-    render: () => <UserFormPage />,
+    render: (viewer) => <UserFormPage viewer={viewer} />,
   },
   {
     path: '/users/:userId/edit',
     title: 'Edit User',
-    roles: ['staff'],
+    roles: ['admin'],
     nav: 'accounts',
-    render: () => <UserFormRoute />,
+    render: (viewer) => <UserFormRoute viewer={viewer} />,
   },
   {
     path: paths.backup,
