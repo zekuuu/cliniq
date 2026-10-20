@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Link, Navigate, useSearchParams } from 'react-router'
+import { Navigate, useSearchParams } from 'react-router'
 import { Card, ErrorState, Icon, Tabs } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { cn } from '../../lib/cn'
@@ -20,7 +20,7 @@ import { AttentionChips } from './components/AttentionChips'
 import { ComplaintTrends, ComplaintTrendsSkeleton } from './components/ComplaintTrends'
 import { DashboardPrint } from './components/DashboardPrint'
 import { DashboardHeader } from './components/DashboardHeader'
-import { BackupStatusLink, NewVisitLink } from './components/StaffShortcuts'
+import { NewVisitLink } from './components/StaffShortcuts'
 import { StatCardRow, StatCardRowSkeleton } from './components/StatCardRow'
 
 type DashboardView = 'overview' | 'trends'
@@ -39,11 +39,11 @@ function parseSex(value: string | null): StudentSex | null {
 
 /**
  * Clinic Overview Dashboard (Screen Inventory #31, Reference 1, Module 9).
- * Staff and Admin/Principal see the same layout, except the header greeting and a Staff-only strip
- * with the "New Visit" shortcut and backup-status indicator (Screen #4; ADR-011 amendment). It's
+ * Staff and Admin/Principal see the same layout, except the header greeting and a Staff-only
+ * "New Visit" shortcut (Screen #4; ADR-011 amendment). It's
  * view-only for both: no create, update, or delete happens here, so there are no audit-log writes.
  *
- * Header (Staff: backup status above Print) → view tabs, with Staff's New Visit on the tab row
+ * Header → view tabs, with Staff's New Visit on the tab row
  * (ADR-025): Overview (stat cards and three alert groups; pending excuse letters open in the Visit Log), Trends (complaint trends), Calendar. One view shows at a time; the choice
  * lives in `?view=` (replace, so Back is unaffected). Every panel stays mounted, so switching keeps
  * the calendar's state and refetches nothing. Print produces the "Clinic Overview Report" instead of
@@ -161,7 +161,6 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           isRefetching={isRefetching}
           onPrint={() => window.print()}
           oldestRecordDate={data?.oldestRecordDate}
-          status={viewer.role === 'staff' && <BackupStatusLink />}
         />
       </Card>
 
@@ -202,7 +201,6 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                       canNavigate={canNavigate}
                       pendingLetterCount={letters.data?.length ?? 0}
                     />
-                    <Link to={paths.reports} state={{ reportView: 'monthly' }} aria-label="View full monthly report" className="w-fit text-sm font-semibold text-brand-green-dark underline decoration-brand-green-dark/40 underline-offset-2 cursor-pointer transition-colors hover:text-brand-green hover:decoration-brand-green focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none print:hidden">View full report</Link>
                     <AttentionChips summary={d} canNavigate={canNavigate} />
                     <section aria-label="Frequent visitor warnings">
                       <FrequentVisitorsAlert summary={d} range={range} canNavigate={canNavigate} />
@@ -218,7 +216,6 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
               panel: summaryPanel('Loading trends…', <ComplaintTrendsSkeleton />, (d) => (
                 <>
                   {filterLabel && <p role="status" className="w-fit rounded-full bg-surface px-3 py-1 text-sm font-semibold text-text-primary">Filtered: {filterLabel} <button type="button" className="ml-1 cursor-pointer rounded-sm underline underline-offset-2 transition-colors hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none" onClick={() => changeDemographicFilters({ sex: null, gradeLevel: null })}>Clear</button></p>}
-                  <Link to={paths.reports} state={{ reportView: 'health' }} aria-label="View full health summary report" className="w-fit text-sm font-semibold text-brand-green-dark underline decoration-brand-green-dark/40 underline-offset-2 cursor-pointer transition-colors hover:text-brand-green hover:decoration-brand-green focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none print:hidden">View full report</Link>
                   <ComplaintTrends trends={d.complaintTrends} demographics={d.demographics} filters={demographicFilters} onFiltersChange={changeDemographicFilters} />
                 </>
               )),

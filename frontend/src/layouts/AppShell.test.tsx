@@ -67,6 +67,45 @@ describe('App Shell / Navigation', () => {
     expect(screen.getByRole('button', { name: 'Log out' })).toHaveClass('text-error')
   })
 
+  it('marks the Backup navigation item when it needs attention', async () => {
+    renderWithRouter(
+      <AppShell
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        active="dashboard"
+        onLogout={() => {}}
+      >
+        <div>Screen</div>
+      </AppShell>,
+    )
+
+    expect(await screen.findByRole('img', { name: 'Backup needs attention' })).toHaveClass(
+      'rounded-md',
+      'bg-warning',
+      'text-white',
+    )
+    expect(screen.getByRole('link', { name: /backup.*needs attention/i })).toHaveAttribute(
+      'href',
+      '/backup',
+    )
+  })
+
+  it('keeps the Backup warning distinct while Backup is selected', async () => {
+    renderWithRouter(
+      <AppShell
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        active="backup"
+        onLogout={() => {}}
+      >
+        <div>Screen</div>
+      </AppShell>,
+    )
+
+    expect(await screen.findByRole('img', { name: 'Backup needs attention' })).toHaveClass(
+      'bg-[#c69214]',
+      'text-brand-green-dark',
+    )
+  })
+
   it('shows a plain Shortcuts label while keeping its accessible purpose', () => {
     renderWithRouter(
       <AppShell

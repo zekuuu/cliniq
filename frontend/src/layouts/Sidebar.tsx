@@ -1,5 +1,7 @@
 import { Link, useLocation } from 'react-router'
 import { Icon } from '../components'
+import { fetchBackupStatus } from '../features/backup/api/backupApi'
+import { useAsyncData } from '../hooks/useAsyncData'
 import { cn } from '../lib/cn'
 import { navGroupsFor, type NavKey } from './navigation'
 import type { SessionUser } from '../lib/mock-db'
@@ -52,6 +54,12 @@ export function Sidebar({
   onReportIssue,
   user,
 }: SidebarProps) {
+  const { data: backup } = useAsyncData('sidebar-backup-status', () =>
+    user.role === 'staff' ? fetchBackupStatus() : Promise.resolve(null),
+  )
+  const backupNeedsAttention = Boolean(
+    backup && (!backup.latest || backup.latest.status === 'failed' || backup.needsVerification),
+  )
   // The workstation has no QR scanner, so camera-only items stay in the phone menu.
   const groups = navGroupsFor(user.role)
     .map((group) => ({ ...group, items: group.items.filter((item) => !item.mobileOnly) }))
@@ -141,17 +149,19 @@ export function Sidebar({
               <ul className={cn('flex flex-col', collapsed ? 'items-center gap-1' : 'gap-1.5')}>
                 {group.items.map((item) => {
                   const isActive = item.key === active
+                  const hasBackupWarning = item.key === 'backup' && backupNeedsAttention
+                  const itemLabel = hasBackupWarning ? `${item.label}, needs attention` : item.label
                   if (item.available && item.to) {
                     return (
                       <li key={item.key}>
                         <Link
                           to={item.to}
-                          aria-label={collapsed ? item.label : undefined}
+                          aria-label={collapsed ? itemLabel : undefined}
                           aria-current={isActive ? 'page' : undefined}
-                          title={collapsed ? item.label : undefined}
+                          title={collapsed ? itemLabel : undefined}
                           className={cn(
                             'flex h-10 cursor-pointer items-center rounded-md text-sm transition-colors duration-150 motion-reduce:transition-none',
-                            collapsed ? 'w-10 justify-center' : 'gap-3 px-3.5',
+                            collapsed ? 'relative w-10 justify-center' : 'gap-3 px-3.5',
                             isActive
                               ? 'bg-brand-green-dark font-semibold text-white shadow-raised hover:brightness-90'
                               : 'font-medium text-text-primary hover:bg-surface',
@@ -159,6 +169,20 @@ export function Sidebar({
                         >
                           <Icon name={item.icon} />
                           <span className={labelVisibility}>{item.label}</span>
+                          {hasBackupWarning && (
+                            <span
+                              role="img"
+                              aria-label="Backup needs attention"
+                              title="Backup needs attention"
+                              className={cn(
+                                'flex size-5 shrink-0 items-center justify-center rounded-md',
+                                isActive ? 'bg-[#c69214] text-brand-green-dark' : 'bg-warning text-white',
+                                collapsed ? 'absolute -top-1 -right-1' : 'ml-auto',
+                              )}
+                            >
+                              <Icon name="alertTriangle" size={12} />
+                            </span>
+                          )}
                         </Link>
                       </li>
                     )
