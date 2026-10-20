@@ -2,6 +2,7 @@
 
 **Date:** Wednesday, October 07, 2026 — 16:48
 **Status:** Accepted
+**Note (Wednesday, October 21, 2026 — 01:47):** the PE/Sports Instructor role, the phone-only screens and the `?student=` parameter this ADR may mention were removed (ADR-029, ADR-033, [2026-10-21-remove-phone-screens-and-instructor](../08-Logs/Agent-Sessions/2026-10-21-remove-phone-screens-and-instructor.md)); the rest of the decision stands.
 
 ## Context
 The Dashboard calendar (Module 9) showed only the free-text event tag Staff typed on a visit or

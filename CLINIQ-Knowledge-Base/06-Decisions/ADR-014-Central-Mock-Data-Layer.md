@@ -2,6 +2,7 @@
 
 **Date:** Monday, September 28, 2026 — 09:18
 **Status:** Accepted
+**Note (Wednesday, October 21, 2026 — 01:09):** the QR feature this ADR mentions was removed (ADR-027, [2026-10-21-remove-qr-feature](../08-Logs/Agent-Sessions/2026-10-21-remove-qr-feature.md)); the rest of the decision stands.
 
 ## Context
 Frontend-first development (ADR-006) left mock data spread across the app. A seeded generator

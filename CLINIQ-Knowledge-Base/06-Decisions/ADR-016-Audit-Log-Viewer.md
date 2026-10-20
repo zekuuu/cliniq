@@ -2,6 +2,8 @@
 
 **Date:** Wednesday, September 30, 2026 — 17:28 PHT
 **Status:** Accepted
+**Note (Wednesday, October 21, 2026 — 01:09):** the QR feature this ADR mentions was removed (ADR-027, [2026-10-21-remove-qr-feature](../08-Logs/Agent-Sessions/2026-10-21-remove-qr-feature.md)); the rest of the decision stands.
+**Note (Wednesday, October 21, 2026 — 01:47):** the PE/Sports Instructor role, the phone-only screens and the `?student=` parameter this ADR may mention were removed (ADR-029, ADR-033, [2026-10-21-remove-phone-screens-and-instructor](../08-Logs/Agent-Sessions/2026-10-21-remove-phone-screens-and-instructor.md)); the rest of the decision stands.
 
 ## Context
 The Audit Trail (Module-Overview.md, "Audit Trail — Cross-Cutting") has always specified the **write** side only: every login, scan, submission, approval, and create/update/delete/archive gets logged with who and when. Nothing specified a **read** side — no screen anywhere lets a person actually open that log. Confirmed by checking Screen-Inventory.md, the Use-Case Diagram, and the built frontend: every "audit" reference in the app writes an entry; none reads one back. This quietly undercut the log's stated purpose — it's described as what makes the PE/Sports Instructor's access "accountable," but accountability requires someone to actually be able to look.

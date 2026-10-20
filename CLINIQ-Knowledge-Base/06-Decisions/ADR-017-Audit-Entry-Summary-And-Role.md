@@ -2,6 +2,7 @@
 
 **Date:** Friday, October 2, 2026 — 00:28 PHT
 **Status:** Accepted
+**Note (Wednesday, October 21, 2026 — 01:47):** the PE/Sports Instructor role, the phone-only screens and the `?student=` parameter this ADR may mention were removed (ADR-029, ADR-033, [2026-10-21-remove-phone-screens-and-instructor](../08-Logs/Agent-Sessions/2026-10-21-remove-phone-screens-and-instructor.md)); the rest of the decision stands.
 
 ## Context
 The Audit Log Viewer (ADR-016) showed timestamp, who, action, and target record. Reviewing it, the user felt information was missing but couldn't name it. Two gaps came out of that:
