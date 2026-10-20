@@ -9,29 +9,29 @@ Use this with `cliniq-interactive-states` (hover, cursor, focus) and `cliniq-dis
 
 ## When a screen gets Back
 
-- **Yes:** every child, detail, form, and flow-step screen (anything reached from another screen); every shell-free screen that is not the viewer's home (QR Lookup for Staff, Emergency Response, the Instructor's read-only Student Profile); every dead end (Not Found, load-error and "not found" states, an empty state with no next step); Privacy Policy.
-- **No:** top-level screens the sidebar reaches (Dashboard, Student List, Visit Log, Incident Log, Inventory, Follow-Ups, Reports, Audit Log, User Management, Backup), Login, and a role's home screen (Dashboard; QR Lookup for the Instructor, where Log out stays on the screen).
+- **Yes:** every child, detail, form, and flow-step screen (anything reached from another screen); every dead end (Not Found, load-error and "not found" states, an empty state with no next step); Privacy Policy.
+- **No:** top-level screens the sidebar reaches (Dashboard, Student List, Visit Log, Incident Log, Inventory, Follow-Ups, Reports, Audit Log, User Management, Backup), Login, and a role's home screen (the Dashboard, for both Staff and Admin/Principal).
 - **Drill-through exception:** a top-level list shows Back only when a drill-through link opened it. Drill-through links pass `DRILL_THROUGH_STATE` (`hooks/useGoBack.ts`) as router state: the shared `TitleLink` and `ListItemLink` do it already, and so does the Dashboard calendar's "View visits". The list renders `<BackButton fallback={paths.dashboard} drillThroughOnly />`. Opened from the sidebar or a URL, it shows nothing.
 - **In-page drill-ins** that swap content without changing the route get a way back to the previous view: Visit Details in edit mode passes `onBack={cancelEdit}` (Back = Cancel, back to the read view). Dialogs (the calendar day panel) already have Close/Cancel and need no Back.
 
 ## Where it goes and what it does
 
 - **History by default:** `<BackButton fallback={...} />` goes back in history when the user came from another screen in the app, and to `fallback` when the screen was the first one opened (bookmark, new tab, refreshed direct link). Back never leaves the app. Shared logic: `useGoBack` (also used by `useCancelNavigation`).
-- **Role-aware fallback:** the fallback must be a screen the viewer's role can open (route `roles` in `routes/AppRoutes.tsx`, ADR-003). Use `homePathFor(role)` from `routes/paths.ts` when the screen is shared by roles. The PE/Sports Instructor's Student Profile falls back to QR Lookup, never `/students`. Never grant access to make a Back work; leave Back off and record why instead.
+- **Role-aware fallback:** the fallback must be a screen the viewer's role can open (route `roles` in `routes/AppRoutes.tsx`, ADR-003). Both roles' home is the Dashboard (`paths.dashboard`), the fallback for a screen shared by roles. Never grant access to make a Back work; leave Back off and record why instead.
 - **Forms:** Back and Cancel are the same action: `<BackButton onBack={cancel} />` with `cancel` from `useCancelNavigation`, so Back never saves or submits and asks "Discard unsaved changes?" exactly when Cancel does. In loading and error states (no form yet) use `fallback` with the same route.
 - **No loops:** a save that moves to another screen uses `replace` (Edit Student → profile; New Visit's "Review excuse letter" link), so Back can't reopen a submitted form.
 
 ## Label
 
 - History target: the visible text is plain **"Back"**, because history can land anywhere.
-- "Back to <screen>" only for a fixed target, through `to` and `label` (a `Link`): "Back to Sign In", "Back to QR lookup".
+- "Back to <screen>" only for a fixed target, through `to` and `label` (a `Link`): "Back to Sign In", "Back to Dashboard".
 - The visible text is the accessible name (no `aria-label`). Never a student name or Student Number.
 
 ## Look and placement
 
 - First in the page content, above the page header card and before the `h1` in reading order; never in the sticky shell header.
 - `quiet` (default): text control with a left chevron, `text-secondary`, turning `brand-green-dark` on hover, with one underline running under the chevron and the label together (a 1px `currentColor` bottom border on a span holding both, since a text underline skips the icon; Tuesday, October 20, 2026 — 22:01 PHT), flush with the card edge. It must not compete with the page's primary action; a form's Cancel stays at the bottom.
-- `prominent`: the neutral outlined button, for shell-free phone screens where Back is the main way out (QR Lookup, Emergency Response, the Instructor's profile and privacy page).
+- `prominent`: the neutral outlined button, for a screen outside the App Shell where Back is the main way out (the signed-out Privacy Policy's "Back to Sign In").
 - Compact (updated Thursday, October 15, 2026 — 00:01): 44px tall below `sm`; from `sm` up the quiet style is 28px tall and pulled 12px into the page's top padding (`sm:-mt-3`). Both styles sit 8px above the header card (`-mb-2` against the page's `gap-4`), so the card starts at most 24px lower than without Back on desktop. Don't add page-level margins to Back; a parent that isn't a `gap-4` column sets its own gap with an important utility (Force Password Change: `mb-2!`). Visible focus ring (global `:focus-visible`); always `print:hidden`.
 - Shown while the page loads: render Back inside the page skeleton, outside its `aria-hidden` placeholders, so a slow screen can be left and nothing jumps when data arrives. Also render it in load-error and "not found" states.
 

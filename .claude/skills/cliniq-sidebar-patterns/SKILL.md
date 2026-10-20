@@ -30,4 +30,3 @@ description: Apply when building or changing CLINIQ's shared application sidebar
 
 - Below `lg` the sidebar is hidden; the top bar's "Open navigation" button opens the same role's entries in the shared `Modal` (focus trap, Escape, focus returns to the button). Entries are `min-h-11` (44px) touch targets.
 - The drawer ends with the sidebar footer's Privacy Policy link and Report an Issue button, so phones reach them too.
-- A role with no entries (the PE/Sports Instructor on the shared privacy page) gets no menu button, never an empty dialog.

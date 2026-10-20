@@ -1,6 +1,6 @@
 ---
 name: cliniq-print-patterns
-description: Apply when adding or changing any CLINIQ Print / Save as PDF, or any screen whose output is meant for paper (reports, letters, record sheets, logs, stickers). Keeps every printout a purpose-built A4 document with a letterhead, a scope line, and a printed-by footer, built on the shared print components, never the screen with its buttons hidden.
+description: Apply when adding or changing any CLINIQ Print / Save as PDF, or any screen whose output is meant for paper (reports, letters, record sheets, logs). Keeps every printout a purpose-built A4 document with a letterhead, a scope line, and a printed-by footer, built on the shared print components, never the screen with its buttons hidden.
 ---
 
 # CLINIQ Print Patterns
@@ -58,8 +58,7 @@ Every printout has:
 - The screen's Print button stays inside a `print:hidden` block, and calls `window.print()`.
 - Existing printouts: `DashboardPrint` (Clinic Overview Report), `ReportsPrint` (Monthly Clinic
   Report, Incident Report Archive, Health Summary), and the print trees in `ExcuseLetterPage`,
-  `IncidentReportPage`, `StudentProfilePage`, `AuditLogPage`, and `QrPrintPage` (no footer: the
-  sticker sheet is cut up).
+  `IncidentReportPage`, `StudentProfilePage`, and `AuditLogPage`.
 
 ## Verification
 

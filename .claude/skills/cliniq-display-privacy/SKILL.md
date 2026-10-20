@@ -13,7 +13,7 @@ CLINIQ's screen-context display rule (Modules & Features, cross-cutting; ADR-004
 Any screen showing more than one student at a glance: visit logs, incident logs, the Dashboard's frequent-visitor section, any future list view. These are the screens someone could walk past and read.
 
 **Single deliberate lookups → full name is correct and expected.**
-A QR scan result, the full Student Profile, search results, the masterlist/student directory. Someone has already identified and is looking at one specific student for a legitimate reason — hiding the name here would be unhelpful, not safer.
+The full Student Profile, search results, the masterlist/student directory. Someone has already identified and is looking at one specific student for a legitimate reason — hiding the name here would be unhelpful, not safer.
 
 **The masterlist is a special case:** show full names freely (it's just a roster of who's enrolled — low sensitivity), but never show medical/confidential fields inline in that list. Allergies, conditions, visit reasons, or anything else diagnostic still requires opening the individual profile.
 
@@ -37,4 +37,4 @@ Use the same test for a similar screen: a multi-student list may show names only
 
 ## Where this has already been applied correctly
 
-Reference these as the working pattern: the Visit Log List, Incident Log List, Follow-Up List, Audit Log, and Dashboard alert lists (Student Number, with the reason visible); the Student Profile, QR scan result, masterlist, and Incomplete Records queue (full name). See `CLINIQ-Knowledge-Base/01-Requirements/User-Roles-and-Permissions.md` for the full rule text.
+Reference these as the working pattern: the Visit Log List, Incident Log List, Follow-Up List, Audit Log, and Dashboard alert lists (Student Number, with the reason visible); the Student Profile, masterlist, and Incomplete Records queue (full name). See `CLINIQ-Knowledge-Base/01-Requirements/User-Roles-and-Permissions.md` for the full rule text.

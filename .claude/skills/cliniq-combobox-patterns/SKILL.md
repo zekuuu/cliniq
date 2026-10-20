@@ -33,5 +33,5 @@ Use this with `cliniq-dropdown-patterns` (the panel and option look), `cliniq-in
 - A complete Student Number, with or without its dash, highlights its match, so typing it and pressing Enter still works.
 - No match: say so under the field. Pass `addStudentHref` only to roles that can add a student (Staff).
 - Search goes through the feature's `api/` function (ADR-013), so the real backend can replace it. Results carry no medical fields (`StudentSearchResult`).
-- After a pick, the form shows the chosen student (name, number, grade) with a Change action that brings the search back, focused. Pass `selected` and `onClear` to get this from `StudentPicker` itself; don't rebuild it on the page. A `?student=` deep link skips the picker entirely.
-- Every field that identifies a student uses it: New Visit, Incident Stage 1, PE/Sports Referral, Dispense, and the QR hubs' manual fallback (mobile and desktop). On QR, picking a student runs the lookup at once, and the field is optional (`required={false}`, label ends "(optional)"). There is no separate typed Student Number field any more.
+- After a pick, the form shows the chosen student (name, number, grade) with a Change action that brings the search back, focused. Pass `selected` and `onClear` to get this from `StudentPicker` itself; don't rebuild it on the page.
+- Every field that identifies a student uses it: New Visit, Incident Stage 1, PE/Sports Referral, and Dispense. There is no separate typed Student Number field any more.
