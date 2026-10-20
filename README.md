@@ -10,7 +10,7 @@ This area explains why CLINIQ exists for a 900-plus-student school clinic with o
 
 - [Overview](./CLINIQ-Knowledge-Base/00-Project-Core/Overview.md) — the clinic setting, hardware and staffing constraints, team, client contact, and background rationale for digitizing the current paper-and-Excel process.
 - [Problem Statement](./CLINIQ-Knowledge-Base/00-Project-Core/Problem-Statement.md) — the four priority problems from the weighted SWOT analysis: slow manual work, insufficient staff, human error, and dependence on one device.
-- [Objectives](./CLINIQ-Knowledge-Base/00-Project-Core/Objectives.md) — the measurable aims, including faster visit documentation, QR lookup in under ten seconds, automated reports, verified backups, and the project budget target.
+- [Objectives](./CLINIQ-Knowledge-Base/00-Project-Core/Objectives.md) — the measurable aims, including faster visit documentation, automated reports, verified backups, and the project budget target.
 - [Scope](./CLINIQ-Knowledge-Base/00-Project-Core/Scope.md) — the baseline and enhancement modules in this release, plus clear exclusions such as remote access, parent portals, automated messaging, billing, and extra scanning hardware.
 - [Team and Roles](./CLINIQ-Knowledge-Base/00-Project-Core/Team-and-Roles.md) — the client, school partners, course adviser, three team members' responsibilities, planned deliverables, and target milestones.
 
@@ -18,9 +18,9 @@ This area explains why CLINIQ exists for a 900-plus-student school clinic with o
 
 This area turns the project scope into required system behavior, quality limits, access rules, and detailed module operations. It is the place to confirm what the system must do, who may do it, and the limits imposed by the school's equipment and privacy responsibilities.
 
-- [Functional Requirements](./CLINIQ-Knowledge-Base/01-Requirements/Functional-Requirements.md) — the required clinic functions, from role-based sign-in and student records to visits, two-stage emergencies, follow-ups, reports, QR lookup, inventory, dashboard alerts, backups, and audit entries.
+- [Functional Requirements](./CLINIQ-Knowledge-Base/01-Requirements/Functional-Requirements.md) — the required clinic functions, from role-based sign-in and student records to visits, two-stage emergencies, follow-ups, reports, inventory, dashboard alerts, backups, and audit entries.
 - [Non-Functional Requirements](./CLINIQ-Knowledge-Base/01-Requirements/Non-Functional-Requirements.md) — performance on the 4 GB workstation, LAN-only availability, privacy and session safeguards, usability for non-technical staff, maintainability, and modular growth expectations.
-- [User Roles and Permissions](./CLINIQ-Knowledge-Base/01-Requirements/User-Roles-and-Permissions.md) — the Staff, Admin or Principal, and PE or Sports Instructor access boundaries, including the privacy rule for names on multi-student screens and the deferred Canteen Staff role.
+- [User Roles and Permissions](./CLINIQ-Knowledge-Base/01-Requirements/User-Roles-and-Permissions.md) — the Staff and Admin or Principal access boundaries (PE/Sports Instructors have no account), including the privacy rule for names on multi-student screens and the deferred Canteen Staff role.
 - [Module Overview](./CLINIQ-Knowledge-Base/01-Requirements/Features/Module-Overview.md) — the complete operations and access rules for all clinic modules, including follow-up status handling, inventory stock flow, dashboard content, the audit trail, open questions, and deferred future work.
 
 ## Screens & UI Reference
@@ -35,7 +35,7 @@ The design area contains the full screen list alongside the design system, refer
 
 The architecture area explains how the browser app, clinic service, and database fit together, and also contains process and data diagrams, the data-retention policy, and the current ERD status. It is useful when the SRS needs to describe system boundaries, information flow, or the intended local-LAN deployment.
 
-- [Plain-language technology summary](./CLINIQ-Knowledge-Base/02-Architecture/Tech-Stack-Summary.md) — a short explanation of the browser app, server, database, local network, QR support, charts, routing, and shared data-loading approach.
+- [Plain-language technology summary](./CLINIQ-Knowledge-Base/02-Architecture/Tech-Stack-Summary.md) — a short explanation of the browser app, server, database, local network, charts, routing, and shared data-loading approach.
 - [Tech Stack](./CLINIQ-Knowledge-Base/02-Architecture/Tech-Stack.md) — the confirmed technology choices and the specific compatibility, maintenance, and low-spec-workstation reasons for each.
 - [System Architecture](./CLINIQ-Knowledge-Base/02-Architecture/System-Architecture.md) — the three-tier React, Laravel, and MySQL arrangement, local deployment path, future cloud path, and matching frontend and backend module organization.
 - [Entity-Relationship Diagram](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md) — the proposed 34-table design for student records, visits, emergency response, inventory, access, and operations; it is a draft, not final or approved, and its 18 open decisions must be settled before migrations can begin.
@@ -47,7 +47,7 @@ The architecture area explains how the browser app, clinic service, and database
 
 The decisions area holds the accepted records for choices that change system behavior or project direction, from privacy and roles to sessions, navigation, data handling, the audit-log screen, and the newer interface rules. Each full record explains the reason for the decision and any follow-on effects that the SRS may need to reflect.
 
-- [Plain-language decisions summary](./CLINIQ-Knowledge-Base/06-Decisions/Decisions-Summary.md) — 26 short explanations of the accepted decisions (ADR-001 to ADR-026), including the session-lifetime rule (ADR-015), Back navigation, QR scanning on phones only, the Dashboard's separate views, A4 printouts, the unsaved-changes confirmation, and the phone navigation menu.
+- [Plain-language decisions summary](./CLINIQ-Knowledge-Base/06-Decisions/Decisions-Summary.md) — 26 short explanations of the accepted decisions (ADR-001 to ADR-026), including the session-lifetime rule (ADR-015), Back navigation, the Dashboard's separate views, A4 printouts, the unsaved-changes confirmation, and the phone navigation menu.
 
 For the full records and their reasoning, see the CLINIQ-Knowledge-Base/06-Decisions/ folder.
 
