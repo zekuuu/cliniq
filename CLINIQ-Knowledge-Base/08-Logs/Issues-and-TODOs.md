@@ -15,7 +15,7 @@
 
 ## Open work at a glance
 
-Open: FIX 21 · AUDIT 10 · DOC 30 · DECIDE 75 · LATER 17 | Notes: NOTE 51 · VERIFY 16 | Done: 196 (all in `Issues-Done-Archive.md`)
+Open: FIX 20 · AUDIT 10 · DOC 30 · DECIDE 76 · LATER 17 | Notes: NOTE 52 · VERIFY 16 | Done: 197 (all in `Issues-Done-Archive.md`)
 
 **Open `FIX` items:**
 
@@ -38,12 +38,11 @@ Open: FIX 21 · AUDIT 10 · DOC 30 · DECIDE 75 · LATER 17 | Notes: NOTE 51 · 
 - [ ] **Add "View full report" links from the Dashboard to Reports** (Settled without waiting for an answer)
 - [ ] **Add Body temperature, Time out and Assisted by to the Visit form** (The clinic's two logbooks)
 - [ ] **Make the incident readings optional and add the oximeter** (The clinic's two logbooks)
-- [ ] **Move account management to the Admin/Principal account** (Phone-only screens and account management)
 - [ ] **Build the Sports Report (saved student lists printed for the PE instructor)** (The Sports Report for the PE instructor)
 
 - **AUDIT** (10): Free-text complaints and student lookup; Pending excuse letters on the Dashboard and profile; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep; Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026)
 - **DOC** (30): Issues-and-TODOs fix sweep; Groupmate system review; Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); README sync; Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; QR removal
-- **DECIDE** (75): Open decisions, waiting on someone outside the dev team; Open design questions; Known gaps; QR scan/lookup; Visit and incident entry; Open after the Group B fixes; Open product decisions from the mock-data layer; Free-text complaints and student lookup; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep; Groupmate system review; Dashboard view tabs (ADR-025); Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; Meeting with the clinician; Phone-only screens and account management; The Sports Report for the PE instructor
+- **DECIDE** (76): Open decisions, waiting on someone outside the dev team; Open design questions; Known gaps; QR scan/lookup; Visit and incident entry; Open after the Group B fixes; Open product decisions from the mock-data layer; Free-text complaints and student lookup; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep; Groupmate system review; Dashboard view tabs (ADR-025); Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; Meeting with the clinician; Phone-only screens and account management; The Sports Report for the PE instructor; Phone-only screens and account management
 - **LATER** (17): Known gaps; Reported UI/UX follow-ups; Medicines & supplies given (ADR-018); Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); README sync; Professor consultation and team meeting, October 16
 
 ---
@@ -114,7 +113,7 @@ Open: FIX 21 · AUDIT 10 · DOC 30 · DECIDE 75 · LATER 17 | Notes: NOTE 51 · 
 - Show the client both options: with integration (and a yearly cloud cost) and without
 - Ask the Principal about PE instructors, now that the team plans no direct access
 
-**Ours to decide (28)** — Product, design and code choices that need no outside answer, although some ask the clinician for input (named in the entry). Zean has the last word.
+**Ours to decide (29)** — Product, design and code choices that need no outside answer, although some ask the clinician for input (named in the entry). Zean has the last word.
 
 - Holiday source for the backend sync job
 - Additional backup layer beyond local + external drive
@@ -144,6 +143,7 @@ Open: FIX 21 · AUDIT 10 · DOC 30 · DECIDE 75 · LATER 17 | Notes: NOTE 51 · 
 - Monthly Report and complaint list: follow the clinic's own report
 - Inventory: a monthly sheet like the clinic's notebook
 - Should the Admin/Principal also get Backup, or does it stay with Staff?
+- What ends the session of an account the Admin disables?
 
 ## Open decisions, waiting on someone outside the dev team
 
@@ -617,9 +617,10 @@ When you find or resolve something, add it here with a date and enough context t
 
 - **[NOTE]** **About this section** (logged Tuesday, October 20, 2026 — 23:25 PHT). Zean asked for one prompt that removes the QR feature (on HOLD until the client is confirmed not to agree to online hosting), replaces the Student Number with the LRN, removes the mobile screens and the PE Instructor account, and moves account management to the Admin/Principal account, and asked me to add what he might forget. The decisions are in ADR-033 (the new ones) and ADR-027 to ADR-029 (the earlier ones). The prompt is `Prompt-Build-Removals-QR-LRN-Mobile-Instructor-UserMgmt.md`: five parts, 1 to 5, run one at a time in the order QR, phone screens, Instructor, accounts, LRN. Two phone `DECIDE`s are resolved by it; two new `DECIDE`s are logged below. Session: [2026-10-20-removals-prompt-and-adr-033](Agent-Sessions/2026-10-20-removals-prompt-and-adr-033.md) Update Tuesday, October 20, 2026 — 23:36 PHT: Zean decided to remove QR now with the others, so nothing in the prompt is on HOLD any more; the earlier hold survives as a note on part 1 (QR can be restored from a tag if the client agrees to online hosting). Session: [2026-10-20-qr-removal-goes-ahead](Agent-Sessions/2026-10-20-qr-removal-goes-ahead.md)
 
-- [ ] **[FIX]** **Move account management to the Admin/Principal account** (logged Tuesday, October 20, 2026 — 23:25 PHT). Zean: "move the account or user management to account of admin/principal" (ADR-033). Today the Users routes (`/users`, Add User, Edit User) are Staff-only and the Administration group sits in the Staff sidebar; the Admin sidebar has only Overview and Reporting. After this, the Admin/Principal creates, edits, disables and resets accounts, and Staff no longer sees or opens them. It is part 4 of `Prompt-Build-Removals-QR-LRN-Mobile-Instructor-UserMgmt.md`, with the safeguards it lists (the last Admin cannot be disabled or demoted, password resets, audit entries). Session: [2026-10-20-removals-prompt-and-adr-033](Agent-Sessions/2026-10-20-removals-prompt-and-adr-033.md) Update Wednesday, October 21, 2026 — 00:28 PHT: decided that only the Admin manages accounts, with no fallback (see the resolved "Who manages accounts if the admin is absent or has left?"); do not build a deputy. Session: [2026-10-21-sports-report-and-account-answers](Agent-Sessions/2026-10-21-sports-report-and-account-answers.md)
 
 - [ ] **[DECIDE]** **Should the Admin/Principal also get Backup, or does it stay with Staff?** (logged Tuesday, October 20, 2026 — 23:25 PHT). Zean moved account management to the Admin/Principal but did not mention Backup, which sits in the same Staff "Administration" group today. The prompt leaves Backup with Staff. Decide whether the Admin should also see the backup status (read-only) or run backups. Session: [2026-10-20-removals-prompt-and-adr-033](Agent-Sessions/2026-10-20-removals-prompt-and-adr-033.md)
+- [ ] **[DECIDE]** **What ends the session of an account the Admin disables?** (logged Wednesday, October 21, 2026 — 06:35 PHT). A disabled account can't sign in again, but a session already open on the clinic computer keeps working until Log out or the one-week token expiry (ADR-015). Decide whether disabling also ends open sessions (a backend rule once Sanctum exists). Session: [2026-10-21-account-management-to-admin](Agent-Sessions/2026-10-21-account-management-to-admin.md)
+- **[NOTE]** **A lost Admin/Principal password has no in-app recovery** (logged Wednesday, October 21, 2026 — 06:35 PHT). Zean decided only the Admin manages accounts, with no deputy; "Forgot password" is on hold. If the only Admin forgets the password, the developer resets it outside the app. Session: [2026-10-21-account-management-to-admin](Agent-Sessions/2026-10-21-account-management-to-admin.md)
 
 ## The Sports Report for the PE instructor — Wednesday, October 21, 2026 — 00:28 PHT
 
