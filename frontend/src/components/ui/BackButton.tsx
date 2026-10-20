@@ -39,17 +39,25 @@ export function BackButton({
   const classes = cn(
     variant === 'prominent'
       ? buttonClassName({ variant: 'neutral', className: 'h-11 pl-3' })
-      : 'inline-flex min-h-11 items-center gap-1 rounded-md pr-2 text-sm font-semibold text-text-secondary underline-offset-4 cursor-pointer transition-colors hover:text-brand-green-dark hover:underline motion-reduce:transition-none sm:-mt-3 sm:min-h-7',
+      : 'group inline-flex min-h-11 items-center rounded-md pr-2 text-sm font-semibold text-text-secondary cursor-pointer transition-colors hover:text-brand-green-dark motion-reduce:transition-none sm:-mt-3 sm:min-h-7',
     // Sits 8px above the header card in a `gap-4` page column, so it reads as part of the header.
     '-mb-2 self-start print:hidden',
     className,
   )
-  const content = (
-    <>
-      <Icon name="chevronLeft" />
-      {target.label ?? 'Back'}
-    </>
-  )
+  // A text underline skips the chevron (an SVG), so the quiet variant underlines with a border on one
+  // span holding both, and the line runs under the icon and the label together.
+  const content =
+    variant === 'prominent' ? (
+      <>
+        <Icon name="chevronLeft" />
+        {target.label ?? 'Back'}
+      </>
+    ) : (
+      <span className="inline-flex items-center gap-1 border-b border-transparent group-hover:border-current">
+        <Icon name="chevronLeft" />
+        {target.label ?? 'Back'}
+      </span>
+    )
 
   if (target.to) {
     return (
