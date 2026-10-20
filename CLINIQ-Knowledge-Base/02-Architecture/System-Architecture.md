@@ -14,12 +14,12 @@ CLINIQ/
 ├── CLAUDE.md                  ← pointer to AGENTS.md
 ├── README.md
 ├── frontend/                  ← React + TypeScript + Vite, feature-based structure (see ADR-008)
-│   └── src/features/          ← one folder per module; qr-digital-health-id/ further split into desktop/mobile/shared/api
+│   └── src/features/          ← one folder per module
 ├── backend/                   ← Laravel API, module-based structure (see ADR-009)
 │   └── app/Modules/           ← one folder per module, mirroring the frontend directly; Shared/ holds genuinely cross-cutting code (audit trail, base classes)
 └── CLINIQ-Knowledge-Base/     ← this vault
 ```
 
-**Modularity is a stated architectural principle on both sides of the stack, not just an implementation detail** (`01-Requirements/Non-Functional-Requirements.md` — Modularity & Scalability): frontend and backend both organize code by module, in parallel folder shapes, so a module can be developed, tested, reviewed, or handed off in isolation. Full reasoning for the frontend structure, and specifically why QR scanning splits into desktop/mobile/shared rather than being one responsive component or a separate mobile project: `06-Decisions/ADR-008-Frontend-Folder-Structure.md`. Full reasoning for the backend structure, including why a dedicated package (`nwidart/laravel-modules`) was considered and not chosen: `06-Decisions/ADR-009-Modular-Backend-Architecture.md`.
+**Modularity is a stated architectural principle on both sides of the stack, not just an implementation detail** (`01-Requirements/Non-Functional-Requirements.md` — Modularity & Scalability): frontend and backend both organize code by module, in parallel folder shapes, so a module can be developed, tested, reviewed, or handed off in isolation. Full reasoning for the frontend structure: `06-Decisions/ADR-008-Frontend-Folder-Structure.md`. Full reasoning for the backend structure, including why a dedicated package (`nwidart/laravel-modules`) was considered and not chosen: `06-Decisions/ADR-009-Modular-Backend-Architecture.md`.
 
 **Development methodology:** see `Development-Methodology.md` for the iterative + interface-construction (frontend-first) approach.

@@ -2,39 +2,9 @@
 
 **Status: first draft, built from already-documented requirements.** These three flows were identified (in this same file, before this draft existed) as the highest-priority candidates — the ones with the most non-obvious branching logic already written out in prose across the Frontend Context Brief, Frontend Design Reference, and Modules & Features. Built directly from that prose, not invented.
 
-## 1. QR Scan → Action Flow
+## 1. (Removed)
 
-Covers both Staff (full access, computer or mobile) and PE/Sports Instructor (mobile, read-only) — the branch point is the role, checked immediately after identification.
-
-```mermaid
-flowchart TD
-    START([Start]) --> IDENTIFY{Identify student}
-    IDENTIFY -->|Scan QR code| SCAN[Camera scans code]
-    IDENTIFY -->|Manual entry| MANUAL[Type Student Number]
-    SCAN --> FOUND{Student found?}
-    MANUAL --> FOUND
-    FOUND -->|No| NOTFOUND[Show not-found,<br/>offer manual entry] --> IDENTIFY
-    FOUND -->|Yes| LOGSCAN[/Log scan to Audit Trail/]
-    LOGSCAN --> ROLECHECK{Who is scanning?}
-
-    ROLECHECK -->|PE/Sports Instructor| READONLY[Show full profile +<br/>injury/visit history,<br/>READ-ONLY, full name shown]
-    READONLY --> LOGVIEW[/Log profile view to Audit Trail/]
-    LOGVIEW --> END1([End])
-
-    ROLECHECK -->|Staff| QUICKACTIONS[Show Quick-Actions:<br/>full name shown]
-    QUICKACTIONS --> ACTIONCHOICE{Staff picks an action}
-    ACTIONCHOICE -->|Record Visit| VISITFLOW[Open New Visit Entry,<br/>pre-filled]
-    ACTIONCHOICE -->|Log Emergency| EMERGENCYFLOW[Open Incident Entry<br/>Stage 1, pre-filled]
-    ACTIONCHOICE -->|View Full Profile| PROFILEFLOW[Open Student Profile]
-    ACTIONCHOICE -->|Dispense Medicine| DISPENSEFLOW[Open Dispense/Log Usage,<br/>pre-linkable to visit]
-
-    VISITFLOW --> END2([End])
-    EMERGENCYFLOW --> END2
-    PROFILEFLOW --> END2
-    DISPENSEFLOW --> END2
-```
-
-**Separately, the mobile Emergency button** (Staff only) bypasses this whole flow when speed matters most — it jumps directly to Incident Entry Stage 1 if a scan already happened, rather than routing through the Quick-Actions menu.
+This flow described the QR scan and its quick actions, which were removed from the app (ADR-027). The section number is kept so the other flows keep theirs.
 
 ## 2. Two-Stage Emergency Response Flow
 
@@ -60,7 +30,7 @@ stateDiagram-v2
     note right of Stage1_Saved
         Every save at every stage
         writes to the Audit Trail
-        (login/scan/submit/approve —
+        (login/submit/approve —
         Stage 1 save counts as a
         submit event, logged
         independently of Stage 2)
