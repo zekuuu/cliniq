@@ -171,6 +171,25 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           onChange={changeView}
           printAll
           actions={viewer.role === 'staff' && <NewVisitLink className="self-start md:self-auto" />}
+          // Beside the tabs, so it stays in view; the filter only narrows Trends.
+          status={
+            view === 'trends' &&
+            filterLabel && (
+              <p role="status" className="inline-flex items-center text-sm text-text-primary">
+                <span>
+                  Filtered: <span className="font-semibold">{filterLabel}</span>
+                </span>
+                {/* A 32px-tall hit area around the word, so Clear is easy to click. */}
+                <button
+                  type="button"
+                  className="ml-1 inline-flex h-8 cursor-pointer items-center rounded-sm px-2 font-semibold text-brand-green-dark underline underline-offset-2 transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
+                  onClick={() => changeDemographicFilters({ sex: null, gradeLevel: null })}
+                >
+                  Clear
+                </button>
+              </p>
+            )
+          }
           tabs={[
             {
               value: 'overview',
@@ -214,10 +233,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
               label: 'Trends',
               icon: 'activity',
               panel: summaryPanel('Loading trends…', <ComplaintTrendsSkeleton />, (d) => (
-                <>
-                  {filterLabel && <p role="status" className="w-fit rounded-full bg-surface px-3 py-1 text-sm font-semibold text-text-primary">Filtered: {filterLabel} <button type="button" className="ml-1 cursor-pointer rounded-sm underline underline-offset-2 transition-colors hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none" onClick={() => changeDemographicFilters({ sex: null, gradeLevel: null })}>Clear</button></p>}
-                  <ComplaintTrends trends={d.complaintTrends} demographics={d.demographics} filters={demographicFilters} onFiltersChange={changeDemographicFilters} />
-                </>
+                <ComplaintTrends trends={d.complaintTrends} demographics={d.demographics} filters={demographicFilters} onFiltersChange={changeDemographicFilters} />
               )),
             },
           ]}

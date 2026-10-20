@@ -673,11 +673,13 @@ function DemographicCharts({
   const tick = colorToken('text-secondary')
   return (
     <section aria-label="Demographic analysis" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <Card>
+      {/* On desktop the card stretches to the grade card beside it: a somewhat larger donut, with the
+          leftover height shared above and below instead of one empty band under the buttons. */}
+      <Card className="lg:flex lg:flex-col">
         <CardHeader title="Visits by Sex" description="Visits and incidents in the selected period; aggregated only." icon={<Icon name="barChart" />} />
-        <CardBody className="flex flex-col gap-3">
+        <CardBody className="flex flex-col gap-3 lg:flex-1 lg:justify-center">
           {/* Legend clicks would hide a segment while its count stays on the button below; filtering is the buttons' job. */}
-          <div className="relative h-56"><Doughnut data={{ labels: demographics.sex.map((row) => row.label), datasets: [{ data: demographics.sex.map((row) => row.count), backgroundColor: sexColors, borderColor: colorToken('background'), borderWidth: 2 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick } } } }} aria-label={`Visits and incidents by Sex: ${countsText(demographics.sex)}.`} role="img" /></div>
+          <div className="relative h-56 lg:h-72"><Doughnut data={{ labels: demographics.sex.map((row) => row.label), datasets: [{ data: demographics.sex.map((row) => row.count), backgroundColor: sexColors, borderColor: colorToken('background'), borderWidth: 2 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick } } } }} aria-label={`Visits and incidents by Sex: ${countsText(demographics.sex)}.`} role="img" /></div>
           <div className="grid grid-cols-2 gap-2">
             {demographics.sex.map((row) => (
               <button key={row.key} type="button" aria-pressed={filters.sex === row.key} onClick={() => onFiltersChange({ ...filters, sex: filters.sex === row.key ? null : row.key as 'female' | 'male' })} className={FILTER_BUTTON}>

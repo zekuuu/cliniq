@@ -6,7 +6,7 @@ import { Tabs } from './Tabs'
 
 type V = 'a' | 'b' | 'c'
 
-function Harness({ printAll, actions }: { printAll?: boolean; actions?: ReactNode }) {
+function Harness({ printAll, actions, status }: { printAll?: boolean; actions?: ReactNode; status?: ReactNode }) {
   const [value, setValue] = useState<V>('a')
   return (
     <>
@@ -17,6 +17,7 @@ function Harness({ printAll, actions }: { printAll?: boolean; actions?: ReactNod
         onChange={setValue}
         printAll={printAll}
         actions={actions}
+        status={status}
         tabs={[
           { value: 'a', label: 'Alpha', panel: <button type="button">Inside alpha</button> },
           { value: 'b', label: 'Beta', panel: <p>Beta content</p> },
@@ -107,8 +108,9 @@ describe('Tabs', () => {
     render(<Harness printAll actions={<button type="button">New thing</button>} />)
     const action = screen.getByRole('button', { name: 'New thing' })
     const tablist = screen.getByRole('tablist', { name: 'Views' })
-    expect(action.parentElement).toBe(tablist.parentElement)
-    expect(action.parentElement).toHaveClass('print:hidden')
+    const row = tablist.parentElement
+    expect(row).toContainElement(action)
+    expect(row).toHaveClass('print:hidden')
     // Tab order: the selected tab, then the action, then the panel.
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: 'Before' }))
@@ -118,5 +120,13 @@ describe('Tabs', () => {
     expect(action).toHaveFocus()
     await user.tab()
     expect(screen.getByRole('button', { name: 'Inside alpha' })).toHaveFocus()
+  })
+
+  it('shows a status note right after the tabs, on their row', () => {
+    render(<Harness printAll status={<p role="status">Filtered: Female</p>} />)
+    const tablist = screen.getByRole('tablist', { name: 'Views' })
+    const status = screen.getByRole('status')
+    expect(tablist.nextElementSibling).toBe(status)
+    expect(tablist.parentElement).toHaveClass('print:hidden')
   })
 })

@@ -28,6 +28,8 @@ export interface TabsProps<V extends string> {
    * them below `md`, so the tabs always sit directly over their panel.
    */
   actions?: ReactNode
+  /** A short state note shown right after the tabs on the same row (e.g. Dashboard's "Filtered"). */
+  status?: ReactNode
   className?: string
 }
 
@@ -44,6 +46,7 @@ export function Tabs<V extends string>({
   onChange,
   printAll = false,
   actions,
+  status,
   className,
 }: TabsProps<V>) {
   const id = useId()
@@ -65,7 +68,7 @@ export function Tabs<V extends string>({
     refs.current[next]?.focus()
   }
 
-  const tablist = (
+  const strip = (
     <div
       role="tablist"
       aria-label={label}
@@ -108,18 +111,28 @@ export function Tabs<V extends string>({
       })}
     </div>
   )
+  const tablist = status ? (
+    <div className={cn('flex flex-wrap items-center gap-3', printAll && 'print:hidden')}>
+      {strip}
+      {status}
+    </div>
+  ) : (
+    strip
+  )
 
   return (
     <>
       {actions ? (
         <div
           className={cn(
-            'flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-between',
+            // Wraps instead of squeezing: the actions move to their own line, right-aligned, so a
+            // status note keeps its place beside the tabs.
+            'flex flex-col-reverse gap-3 md:flex-row md:flex-wrap md:items-center',
             printAll && 'print:hidden',
           )}
         >
           {tablist}
-          {actions}
+          <div className="md:ml-auto">{actions}</div>
         </div>
       ) : (
         tablist
