@@ -132,7 +132,7 @@ Student Sex is required as recorded by the school (Female or Male). It is availa
 
 ## 033 Phone-only screens are removed, accounts move to the Admin/Principal, and QR is removed now (reversible)
 
-The phone Emergency screen and the phone-only navigation are removed, and the Admin/Principal (not Staff) manages accounts. QR is removed now with the others; it had been on hold until the client's answer on online hosting, so it is tagged first and can be restored if the client agrees to go online (ADR-027 unchanged). The last active Admin can never be disabled or demoted. The QR removal and the phone-screen removal are built (Wednesday, October 21, 2026); the account move is not built yet.
+The phone Emergency screen and the phone-only navigation are removed, and the Admin/Principal (not Staff) manages accounts. QR is removed now with the others; it had been on hold until the client's answer on online hosting, so it is tagged first and can be restored if the client agrees to go online (ADR-027 unchanged). The last active Admin can never be disabled or demoted. All three are built (Wednesday, October 21, 2026).
 
 ## 034 The Sports Report for the PE instructor
 
