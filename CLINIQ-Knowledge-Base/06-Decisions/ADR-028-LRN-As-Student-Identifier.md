@@ -1,7 +1,7 @@
 # ADR-028: The LRN Is the Student Identifier
 
 **Date:** Saturday, October 17, 2026 — 07:52
-**Status:** Accepted (the team meeting of Friday, October 16, 2026, 7:00 PM; recorded only: **nothing is built yet**, and the open points below are not decided)
+**Status:** Accepted (the team meeting of Friday, October 16, 2026, 7:00 PM). **Built Wednesday, October 21, 2026 — 07:00** ([2026-10-21-lrn-replaces-student-number](../08-Logs/Agent-Sessions/2026-10-21-lrn-replaces-student-number.md)). Zean confirmed the open points on Wednesday, October 21, 2026 ("ok to all" for the recommended defaults): the LRN is 12 digits kept as text, required, unique, editable (a correction is audited as "Updated LRN" with neither value), masked to its last four digits on lists, pickers, printouts and the Audit Trail, shown in full only on the Student Profile and the edit form, and never put in an address. Whether every student, transferees included, has an LRN is still unconfirmed by the school.
 
 ## Context
 ADR-027 dropped the QR feature and the CLINIQ-made Student Number (`YYYY-NNNNN`), and left open what identifies a student afterwards. Earlier that evening Zean had said "LRN can be used too then Student name, but mostly student name." At the team meeting of Friday, October 16, 2026, 7:00 PM the team took it further: with QR gone the Student Number has no purpose, but names alone are risky because they can be mistyped, edited, repeated, and are hard to match. The LRN (Learner Reference Number) is unique, and no other number exists. Participants said every student, transferees included, has one (stated in the meeting; **not yet confirmed by the school**).

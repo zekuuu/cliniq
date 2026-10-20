@@ -16,11 +16,11 @@ PE and Sports Instructors are included now, with mobile-only read access to a st
 
 ## 004 Privacy on shared screens
 
-Lists and dashboard areas that show several students use Student Numbers instead of names, reducing what a passer-by can learn at a glance. A deliberate one-student lookup, such as a profile, shows the student's name normally.
+Lists and dashboard areas that show several students use the masked LRN (its last four digits) instead of names, reducing what a passer-by can learn at a glance. A deliberate one-student lookup, such as a profile, shows the student's name normally.
 
 ## 005 Student Number format
 
-Each student receives a system-made number in the form YYYY-NNNNN, based on the enrollment year and a sequence number. It is easy to type, avoids confusing letters, and is used for lookups.
+Each student receives a system-made number in the form YYYY-NNNNN, based on the enrollment year and a sequence number. It is easy to type, avoids confusing letters, and is used for lookups. Replaced by the LRN on Wednesday, October 21, 2026 (see 028).
 
 ## 006 Interface-first work
 
@@ -40,7 +40,7 @@ The server side follows the same feature-based organization as the user-facing a
 
 ## 010 What list rows may show
 
-Multi-student lists may show a visit reason, complaint, or description beside the Student Number. Keeping names out is considered enough protection for a casual glance while still giving the nurse useful context.
+Multi-student lists may show a visit reason, complaint, or description beside the masked LRN. Keeping names out is considered enough protection for a casual glance while still giving the nurse useful context.
 
 ## 011 Dashboard scope
 
@@ -112,11 +112,11 @@ Printing no longer copies the screen. Every printout is an A4 document with the 
 
 ## 027 We are dropping the QR feature and the Student Number
 
-The team decided to drop the QR feature (printed QR stickers, the phone scan screen) and the Student Number CLINIQ made up for each student. At first the plan was to identify students mostly by name with the LRN as a helper; the team's meeting the same evening chose the LRN instead (see 028). CLINIQ stays independent and takes nothing from the school's existing ID card system, which belongs to another company. QR was removed from the app on Wednesday, October 21, 2026 (tagged first, so it can be restored); the Student Number is still in the app until it is replaced by the LRN (028). The open questions were taken up in 028 and 029. QR may come back as a future idea.
+The team decided to drop the QR feature (printed QR stickers, the phone scan screen) and the Student Number CLINIQ made up for each student. At first the plan was to identify students mostly by name with the LRN as a helper; the team's meeting the same evening chose the LRN instead (see 028). CLINIQ stays independent and takes nothing from the school's existing ID card system, which belongs to another company. QR was removed from the app on Wednesday, October 21, 2026 (tagged first, so it can be restored); the Student Number was replaced by the LRN on Wednesday, October 21, 2026 (028). The open questions were taken up in 028 and 029. QR may come back as a future idea.
 
 ## 028 The LRN is how we identify students
 
-With the QR code and our own Student Number gone, the team chose the LRN (the Learner Reference Number) as the one unique number for each student. Lists with many students show the LRN instead of the name, as the Student Number did before, so a screen left open does not show who visited the clinic. A student can be found by name and section, birthday or LRN. Still to settle: whether the LRN is shown in full or partly hidden (it is a government-issued number, so it reveals more than our old one), what to do when it is missing or mistyped, and the school's confirmation that every student has one. Nothing is built yet.
+With the QR code and our own Student Number gone, the team chose the LRN (the Learner Reference Number) as the one unique number for each student. Lists with many students show the LRN instead of the name, as the Student Number did before, so a screen left open does not show who visited the clinic. A student can be found by name and section, birthday or LRN. Built on Wednesday, October 21, 2026, with the defaults Zean confirmed: the LRN is 12 digits, required and unique; lists, pickers, printouts and the Audit Trail show only its last four digits, and only the student's own profile and edit form show it in full; a wrong LRN can be corrected and the change is recorded without the numbers; addresses never contain it. Students are found by name or LRN. Still to settle: the school's confirmation that every student, transferees included, has an LRN.
 
 ## 029 No direct access for PE instructors, and the Principal signs in at the clinic computer
 

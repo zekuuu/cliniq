@@ -3,6 +3,7 @@
 **Date:** Saturday, September 26, 2026 — actual time not available (no system clock access in this environment)
 **Status:** Accepted
 **Note (Wednesday, October 21, 2026 — 01:09):** the QR feature this ADR mentions was removed (ADR-027, [2026-10-21-remove-qr-feature](../08-Logs/Agent-Sessions/2026-10-21-remove-qr-feature.md)); the rest of the decision stands.
+**Note (Wednesday, October 21, 2026 — 07:00):** the CLINIQ Student Number this ADR mentions was replaced by the LRN (ADR-028, [2026-10-21-lrn-replaces-student-number](../08-Logs/Agent-Sessions/2026-10-21-lrn-replaces-student-number.md)); lists show it masked. The rest of the decision stands.
 
 **Update (Monday, September 28, 2026 — 19:19):** the top-level folder is `backend/`. Paths in this record use that name; the decision itself is unchanged.
 

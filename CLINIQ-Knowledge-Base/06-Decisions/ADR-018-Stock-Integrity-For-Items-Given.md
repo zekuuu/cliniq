@@ -3,6 +3,7 @@
 **Date:** Wednesday, October 07, 2026 — 10:43 PHT
 **Status:** Accepted — amended by ADR-030 (batch-level stock, disposal and usable-stock totals)
 **Note (Wednesday, October 21, 2026 — 01:09):** the QR feature this ADR mentions was removed (ADR-027, [2026-10-21-remove-qr-feature](../08-Logs/Agent-Sessions/2026-10-21-remove-qr-feature.md)); the rest of the decision stands.
+**Note (Wednesday, October 21, 2026 — 07:00):** the CLINIQ Student Number this ADR mentions was replaced by the LRN (ADR-028, [2026-10-21-lrn-replaces-student-number](../08-Logs/Agent-Sessions/2026-10-21-lrn-replaces-student-number.md)); lists show it masked. The rest of the decision stands.
 
 ## Context
 A visit's treatment was one free-text string and never touched stock. A nurse could write "paracetamol given" and the Inventory list would still show the same count, so low-stock flags were wrong and nothing linked a dispensation to the visit or student it was for. The data layer already had `dispenseInventoryItem` and `restockInventoryItem` (decrement/increment, a transaction with `studentNumber` and `visitId`, and an audit entry), but no screen used them from a visit, and the Edit Item form could overwrite stock and the expiration date directly.

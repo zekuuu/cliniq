@@ -1,7 +1,7 @@
 # ADR-005: Student Number Format — YYYY-NNNNN
 
 **Date:** September 17, 2026
-**Status:** Superseded by ADR-027 (decided Friday, October 16, 2026 — 18:54; not built yet, so the app still behaves as described here). Earlier note: "potentially superseded pending the barcode-scanner proposal". Replacement identifier: the LRN (ADR-028).
+**Status:** Superseded by ADR-027 (decided Friday, October 16, 2026 — 18:54). **The Student Number was removed from the app Wednesday, October 21, 2026 — 07:00** ([2026-10-21-lrn-replaces-student-number](../08-Logs/Agent-Sessions/2026-10-21-lrn-replaces-student-number.md)); students carry the LRN (ADR-028). Earlier note: "potentially superseded pending the barcode-scanner proposal". Replacement identifier: the LRN (ADR-028).
 
 ## Context
 Needed a unique, scalable, memorable student identifier to embed in the QR code and use as the system's primary lookup key.
