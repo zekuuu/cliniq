@@ -34,7 +34,7 @@ Important fact worth stating early: **XAMPP ships MariaDB, not MySQL.** `Environ
 **Keys**
 
 - **K-1.** Every table has `id BIGINT UNSIGNED AUTO_INCREMENT` as its primary key. It is internal: the UI never shows it (display rules already forbid internal ids). The API may return it as a string. Exceptions: `system_settings` (key is `setting_key`) and `number_sequences` (composite key).
-- **K-2.** A student is *identified to people* by `student_number`, which is unique and **immutable** (it is printed on QR cards). Foreign keys use `students.id`, not the number, so a correction could never cascade through millions of rows. This resolves the mock's inconsistency (seed uses Student Number, entities use `id`).
+- **K-2.** A student is *identified to people* by `student_number`, which is unique and **immutable**. Foreign keys use `students.id`, not the number, so a correction could never cascade through millions of rows. This resolves the mock's inconsistency (seed uses Student Number, entities use `id`).
 - **K-3.** If the project ever needs offline sync or multi-site merging, switch ids to ULIDs; nothing else in the design depends on the id type.
 
 **Time**
@@ -57,7 +57,7 @@ Important fact worth stating early: **XAMPP ships MariaDB, not MySQL.** `Environ
 
 **Foreign keys and deletes**
 
-- **F-1.** Default `ON DELETE RESTRICT`. `CASCADE` is used only for pure profile parts that cannot exist without their student (`student_health_entries`, `emergency_contacts`, `student_record_reviews`, `qr_card_issuances`, `emergency_contact_verifications`) and for `password_histories`. Clinical records are never removed by a cascade.
+- **F-1.** Default `ON DELETE RESTRICT`. `CASCADE` is used only for pure profile parts that cannot exist without their student (`student_health_entries`, `emergency_contacts`, `student_record_reviews`, `emergency_contact_verifications`) and for `password_histories`. Clinical records are never removed by a cascade.
 - **F-2.** Tables whose CHECKs touch FK columns use RESTRICT only. MySQL 8 rejects some referential actions on columns used in a CHECK (error 3823); RESTRICT sidesteps that on both engines. The retention purge is therefore an explicit, ordered procedure (section 7).
 - **F-3.** **Composite foreign keys guarantee "same student".** `visits` and `incidents` have `UNIQUE (id, student_id)`, and `follow_ups`, `pe_referrals` and `inventory_transactions` reference `(visit_id, student_id)` / `(incident_id, student_id)`. The database itself then refuses a follow-up or medicine dispense that points at another student's visit.
 - **F-4.** No global soft-delete. Domain archiving is explicit: `students.archived_at`, `inventory_items.archived_at`, `users.deactivated_at`. Visits and incidents can't be deleted or voided anywhere in the product, so they have no delete column; if voiding is ever added it must return stock through adjustments (ADR-018).
@@ -79,20 +79,20 @@ Foreign keys to `users` (`created_by_user_id`, `logged_by_user_id`, `approved_by
 
 ### 3.0 Picture of the whole database
 
-![All 34 tables grouped by owning module](./Diagrams/ERD-Overview.png)
+![All tables grouped by owning module](./Diagrams/ERD-Overview.png)
 
 Rendered images live in `Diagrams/` (PNG to view, SVG to zoom, `ERD-Overview.dot` is the Graphviz source). The image is generated from the foreign keys in the tested database, so it matches `Reference-Schema.sql`. Boxes are grouped by owning backend module; a dashed box is a `Spec` table (the requirements ask for it but the frontend contract does not carry it yet). The Mermaid diagrams below show the same relationships with key columns, and GitHub renders them directly. If you change the design, redraw both.
 
 | Image | What it shows |
 |---|---|
-| `Diagrams/ERD-Overview.png` / `.svg` | All 34 tables and their relationships, grouped by module |
-| `Diagrams/ERD-3.2-Students.png` | Students, grade levels, health entries, contacts, reviews, QR cards |
+| `Diagrams/ERD-Overview.png` / `.svg` | All tables and their relationships, grouped by module |
+| `Diagrams/ERD-3.2-Students.png` | Students, grade levels, health entries, contacts, reviews |
 | `Diagrams/ERD-3.3-Visits.png` | Visits, excuse letters, triage, follow-ups, PE referrals |
 | `Diagrams/ERD-3.4-Emergency.png` | Incidents, vitals, referrals, call attempts, sign-off |
 | `Diagrams/ERD-3.5-Inventory.png` | Items, medicines given, stock ledger |
 | `Diagrams/ERD-3.6-Access-and-Operations.png` | Users, settings, calendar, reports, backups, audit |
 
-### 3.1 Overview (all 34 tables)
+### 3.1 Overview (all 33 tables)
 
 ```mermaid
 erDiagram
@@ -103,7 +103,6 @@ erDiagram
     students ||--o{ emergency_contacts : has
     emergency_contacts ||--o{ emergency_contact_verifications : "verification log"
     students ||--o{ student_record_reviews : "review queue"
-    students ||--o{ qr_card_issuances : "cards printed"
     students ||--o{ visits : has
     students ||--o{ incidents : has
     students ||--o{ follow_ups : has
@@ -199,12 +198,6 @@ erDiagram
         bigint import_batch_id FK
         datetime resolved_at
     }
-    qr_card_issuances {
-        bigint id PK
-        bigint student_id FK
-        varchar reason
-        datetime issued_at
-    }
     grade_levels ||--o{ students : "current grade"
     student_import_batches |o--o{ students : "created by"
     student_import_batches |o--o{ student_record_reviews : "flagged by"
@@ -212,7 +205,6 @@ erDiagram
     students ||--o{ emergency_contacts : has
     emergency_contacts ||--o{ emergency_contact_verifications : "verification log"
     students ||--o{ student_record_reviews : "review queue"
-    students ||--o{ qr_card_issuances : "cards printed"
 ```
 
 ### 3.3 Clinic visits, letters and follow-ups
@@ -428,7 +420,7 @@ erDiagram
         bigint id PK
         varchar username UK "case-insensitive"
         varchar password_hash
-        varchar role "staff, admin, instructor"
+        varchar role "staff, admin"
         tinyint is_head_nurse "OPEN D-04"
         tinyint must_change_password
         smallint failed_login_count
@@ -515,7 +507,7 @@ erDiagram
 
 ## 4. Table inventory
 
-34 tables. **Core** = a built screen or the mock already needs it; **Spec** = the requirements ask for it but the frontend contract does not carry it yet (build it in that module's phase). Worst-case rows are the stress assumptions used for the performance test, not forecasts.
+33 tables. **Core** = a built screen or the mock already needs it; **Spec** = the requirements ask for it but the frontend contract does not carry it yet (build it in that module's phase). Worst-case rows are the stress assumptions used for the performance test, not forecasts.
 
 | # | Table | Owning module | Tier | Worst-case rows |
 |---|---|---|---|---|
@@ -532,29 +524,28 @@ erDiagram
 | 11 | `emergency_contacts` | StudentRecords | Core | about 3,000 |
 | 12 | `emergency_contact_verifications` | StudentRecords | Spec | thousands |
 | 13 | `student_record_reviews` | StudentRecords | Core | thousands |
-| 14 | `qr_card_issuances` | QrDigitalHealthId | Spec | thousands |
-| 15 | `inventory_items` | InventoryTracker | Core | hundreds |
-| 16 | `visits` | ClinicVisits | Core | 150,000 |
-| 17 | `excuse_letters` | ClinicVisits | Core | tens of thousands |
-| 18 | `triage_checks` | SmartTriage | Spec | hundreds of thousands |
-| 19 | `incidents` | EmergencyResponse | Core | 25,000 |
-| 20 | `incident_vital_readings` | EmergencyResponse | Core | 50,000 |
-| 21 | `hospital_referrals` | EmergencyResponse | Core | thousands |
-| 22 | `parent_notification_attempts` | EmergencyResponse | Core | tens of thousands |
-| 23 | `incident_report_approvals` | EmergencyResponse | Core | up to 25,000 |
-| 24 | `follow_ups` | Shared (FollowUps) | Core | about 25,000 |
-| 25 | `pe_referrals` | ClinicVisits | Core | thousands |
-| 26 | `treatment_item_lines` | InventoryTracker | Core | about 150,000 |
-| 27 | `inventory_transactions` | InventoryTracker | Core | about 200,000 |
-| 28 | `reports` | ReportsGeneration | Core | hundreds |
-| 29 | `backup_logs` | BackupVerification | Core | about 2,000 (daily for years) |
-| 30 | `holidays` | Dashboard | Core | hundreds |
-| 31 | `holiday_sync_runs` | Dashboard | Core | hundreds |
-| 32 | `calendar_events` | Dashboard | Core | thousands |
-| 33 | `issue_reports` | Shared (Feedback) | Core | hundreds |
-| 34 | `audit_logs` | Shared (AuditLog) | Core | 1,500,000 (about 390 MB with its indexes) |
+| 14 | `inventory_items` | InventoryTracker | Core | hundreds |
+| 15 | `visits` | ClinicVisits | Core | 150,000 |
+| 16 | `excuse_letters` | ClinicVisits | Core | tens of thousands |
+| 17 | `triage_checks` | SmartTriage | Spec | hundreds of thousands |
+| 18 | `incidents` | EmergencyResponse | Core | 25,000 |
+| 19 | `incident_vital_readings` | EmergencyResponse | Core | 50,000 |
+| 20 | `hospital_referrals` | EmergencyResponse | Core | thousands |
+| 21 | `parent_notification_attempts` | EmergencyResponse | Core | tens of thousands |
+| 22 | `incident_report_approvals` | EmergencyResponse | Core | up to 25,000 |
+| 23 | `follow_ups` | Shared (FollowUps) | Core | about 25,000 |
+| 24 | `pe_referrals` | ClinicVisits | Core | thousands |
+| 25 | `treatment_item_lines` | InventoryTracker | Core | about 150,000 |
+| 26 | `inventory_transactions` | InventoryTracker | Core | about 200,000 |
+| 27 | `reports` | ReportsGeneration | Core | hundreds |
+| 28 | `backup_logs` | BackupVerification | Core | about 2,000 (daily for years) |
+| 29 | `holidays` | Dashboard | Core | hundreds |
+| 30 | `holiday_sync_runs` | Dashboard | Core | hundreds |
+| 31 | `calendar_events` | Dashboard | Core | thousands |
+| 32 | `issue_reports` | Shared (Feedback) | Core | hundreds |
+| 33 | `audit_logs` | Shared (AuditLog) | Core | 1,500,000 (about 390 MB with its indexes) |
 
-**Module list (extends ADR-009).** `UserManagement`, `StudentRecords`, `ClinicVisits`, `EmergencyResponse`, `QrDigitalHealthId`, `SmartTriage` *(missing from the backend README)*, `InventoryTracker`, `Dashboard`, `ReportsGeneration`, `BackupVerification`, `AuditLogViewer` *(missing; the read side of `Shared/AuditLog`)*, and `Shared` (`AuditLog`, `Settings`, `Sequences`, `FollowUps`, `Feedback`). That makes 11 modules plus `Shared`, which also settles the 9 / 10 / 11 count mismatch between the backend README, the NFR doc and `Module-Overview.md`.
+**Module list (extends ADR-009).** `UserManagement`, `StudentRecords`, `ClinicVisits`, `EmergencyResponse`, `SmartTriage` *(missing from the backend README)*, `InventoryTracker`, `Dashboard`, `ReportsGeneration`, `BackupVerification`, `AuditLogViewer` *(missing; the read side of `Shared/AuditLog`)*, and `Shared` (`AuditLog`, `Settings`, `Sequences`, `FollowUps`, `Feedback`). That makes 10 modules plus `Shared` (the QR Digital Health ID module was removed, ADR-027), which also settles the 9 / 10 / 11 count mismatch between the backend README, the NFR doc and `Module-Overview.md`.
 
 ---
 
@@ -563,7 +554,7 @@ erDiagram
 | Parent | Child | On parent delete | Why |
 |---|---|---|---|
 | `students` | `visits`, `incidents`, `follow_ups`, `pe_referrals`, `inventory_transactions` | RESTRICT | Clinical records never vanish by accident; the purge procedure removes them in order. |
-| `students` | `student_health_entries`, `emergency_contacts`, `student_record_reviews`, `qr_card_issuances` | CASCADE | Profile parts with no life of their own. |
+| `students` | `student_health_entries`, `emergency_contacts`, `student_record_reviews` | CASCADE | Profile parts with no life of their own. |
 | `emergency_contacts` | `emergency_contact_verifications` | CASCADE | Same. |
 | `visits` | `excuse_letters`, `treatment_item_lines`, `triage_checks`, `follow_ups`, `pe_referrals`, `inventory_transactions` | RESTRICT | A visit is never deleted except by the purge, which clears children first. |
 | `incidents` | `incident_vital_readings`, `hospital_referrals`, `parent_notification_attempts`, `incident_report_approvals`, `treatment_item_lines`, `follow_ups`, `pe_referrals`, `inventory_transactions` | RESTRICT | Same. |
@@ -603,7 +594,7 @@ A nightly or monthly `retention:purge` command (disabled until the team turns it
 2. `inventory_transactions`: set `student_id`, `visit_id`, `incident_id` to NULL (the stock history stays, the person link goes).
 3. Delete `treatment_item_lines`, `triage_checks`, `excuse_letters`, `follow_ups`, `pe_referrals` for the student's visits and incidents.
 4. Delete `incident_vital_readings`, `hospital_referrals`, `parent_notification_attempts`, `incident_report_approvals`, then `incidents` and `visits`.
-5. Delete the student (cascades profile parts: health entries, contacts, reviews, QR log).
+5. Delete the student (cascades profile parts: health entries, contacts, reviews).
 
 What survives: the inventory ledger (anonymized), the audit trail (Student Number only), generated paper copies. What changes: historical report numbers computed from live data will drop (D-13). Run it only after a verified backup.
 
@@ -637,13 +628,12 @@ Each row is a real situation and where the design handles it. "DB" = enforced by
 | Name has an accent or different capitalization ("Nuñez") | Collation matches accent- and case-insensitively (DB, tested). |
 | Two staff save a new student at the same instant | Student Number comes from the atomic counter, not `max()+1`; no collision (DB, tested). |
 | Year rolls over | A new `(student_number, '2027')` row starts at 1; no reset job needed (DB, tested). |
-| A student number is mistyped on manual entry at the QR hub | Lookup is by exact unique number; the CHECK also guarantees only valid shapes exist (DB). |
+| A student number is mistyped in a student search | Lookup is by exact unique number; the CHECK also guarantees only valid shapes exist (DB). |
 | Registrar import row has no grade or contact | `grade_level_id` and `contact_number` are nullable; a review row flags it; "record complete" is derived (DB + App). |
 | Same masterlist file imported twice | `source_file_sha256` is unique, so the second apply is refused (DB). |
 | Student has no allergies vs. was never asked | `health_reviewed_at` can tell the two apart once decided (D-03). |
 | Several guardians | Many `emergency_contacts`, exactly one primary (DB, tested). The API shows the primary until the UI needs more. |
 | Guardian unreachable during an emergency | A `not_reached` attempt row, plus a `unverified` verification event linked to the incident; `is_verified` flips to 0 (App). |
-| Lost or damaged QR card | New `qr_card_issuances` row; the number itself never changes (D-02). |
 | Student archived while follow-ups or letters are pending | Rows stay; dashboards and pending lists hide archived students, as the mock does (App). |
 | Grade promotion at year end | Update `grade_level_id`; an optional history table is described in section 12 (waiting on the client's answer). |
 | Search by allergy to find students with a restriction | `idx_health_kind (kind, label)` (DB). |
@@ -711,7 +701,6 @@ Each row is a real situation and where the design handles it. "DB" = enforced by
 | Someone edits or deletes an audit row | There is no API path; in production the app's DB account also lacks UPDATE/DELETE on the table (App + hardening). Hash-chaining is a later option (section 12). |
 | Audit table growth | Measured 390 MB for 1.5 million rows; retention purge by date keeps it bounded (section 10). |
 | Admin must not see student detail | An API-layer rule on every endpoint, with a permission test per role (App). |
-| Instructor must be read-only | Same; the audit log records every profile they view (App). |
 
 ### Calendar and operations
 
@@ -721,7 +710,7 @@ Each row is a real situation and where the design handles it. "DB" = enforced by
 | An estimated Islamic holiday is later confirmed on another date | Unique key includes the date, so the sync must delete unconfirmed rows for that name and year before inserting (App, noted in the dictionary). |
 | Event spans two months | Generated `last_date` makes the overlap query an index range scan (DB, tested). |
 | Backup fails or the DB itself is the problem | The script writes a status file; Laravel ingests it later; a failed run is recorded and cannot be verified (DB). |
-| Restoring an older backup | Student Numbers issued after that backup may already be printed on QR cards and would be reissued. After any restore, run a command that bumps every `number_sequences` row ahead (for example +200) before opening the app (D-14). |
+| Restoring an older backup | Student Numbers issued after that backup may already be in use and would be reissued. After any restore, run a command that bumps every `number_sequences` row ahead (for example +200) before opening the app (D-14). |
 | Threshold needs tuning (frequent-visitor count, expiry window) | Edit `system_settings`; no deployment (DB). |
 | Dev, staging and production differ in engine | Only portable features are used (section 1). |
 | System later moves to a cloud server | Everything is API-driven; ULID keys become an option (K-3). |
@@ -762,7 +751,7 @@ Each has a recommended default so the design stands either way. "Cost to change 
 | ID | Question | Recommended default | Cost to change later |
 |---|---|---|---|
 | **D-01** | Store the actor's role on each audit row? ADR-017 says derive it at read time, which shows the wrong role after a role change. | **Yes**, `audit_logs.actor_role` snapshot, and amend ADR-017. | Expensive: past rows can't be backfilled correctly. Decide now. |
-| **D-02** | What does "regenerate a QR code (invalidates the old one)" mean? The QR only encodes the Student Number, so nothing is invalidated, and scanning already needs a login. | Keep the payload as the Student Number; log reissues in `qr_card_issuances`; tell the client old cards still work. If they need real invalidation, add `qr_version` and encode `number+version`. | Cheap before printing cards, expensive after. Ask the client now. |
+| **D-02** | *(Closed by ADR-027: the QR feature and its card log were removed, so there is nothing to regenerate.)* | — | — |
 | **D-03** | Are allergies and conditions "required" for a complete record (Module 2 says so; the code doesn't check)? And does empty mean "none" or "not asked"? | Add the `health_reviewed_at` confirmation: incomplete until entries exist or the nurse confirms "none". | Cheap (column already present, unused). |
 | **D-04** | Is "Head Nurse" a distinct permission within Staff (triage content, backup verification)? | Yes: `users.is_head_nurse`, checked in policies. Pending the client's answer on absent-nurse coverage. | Cheap (column present). |
 | **D-05** | Hospital referral status values (Module 4 says "track referral status"; no values exist). | Leave out until the client names them. | Cheap (one nullable column). |
@@ -820,7 +809,7 @@ These are deliberate. Each needs a yes/no from the team, and a matching change i
 
 ## 13. Laravel implementation notes
 
-- **Migration order** (matches `Reference-Schema.sql`): `users`, `password_histories`, `system_settings`, `number_sequences`, `grade_levels`, `complaint_types`, `triage_steps`, `student_import_batches`, `students`, `student_health_entries`, `emergency_contacts`, `emergency_contact_verifications` (add its `incident_id` foreign key after `incidents` exists), `student_record_reviews`, `qr_card_issuances`, `inventory_items`, `visits`, `excuse_letters`, `triage_checks`, `incidents`, `incident_vital_readings`, `hospital_referrals`, `parent_notification_attempts`, `incident_report_approvals`, `follow_ups`, `pe_referrals`, `treatment_item_lines`, `inventory_transactions`, `reports`, `backup_logs`, `holidays`, `holiday_sync_runs`, `calendar_events`, `issue_reports`, `audit_logs`. In `Reference-Schema.sql` the verification table is created after `incidents` to avoid the forward reference; in Laravel create it in that same slot.
+- **Migration order** (matches `Reference-Schema.sql`): `users`, `password_histories`, `system_settings`, `number_sequences`, `grade_levels`, `complaint_types`, `triage_steps`, `student_import_batches`, `students`, `student_health_entries`, `emergency_contacts`, `emergency_contact_verifications` (add its `incident_id` foreign key after `incidents` exists), `student_record_reviews`, `inventory_items`, `visits`, `excuse_letters`, `triage_checks`, `incidents`, `incident_vital_readings`, `hospital_referrals`, `parent_notification_attempts`, `incident_report_approvals`, `follow_ups`, `pe_referrals`, `treatment_item_lines`, `inventory_transactions`, `reports`, `backup_logs`, `holidays`, `holiday_sync_runs`, `calendar_events`, `issue_reports`, `audit_logs`. In `Reference-Schema.sql` the verification table is created after `incidents` to avoid the forward reference; in Laravel create it in that same slot.
 - **One migration per module**, in that module's folder, loaded with `loadMigrationsFrom`, so the modular structure of ADR-009 reaches the database layer.
 - **CHECK constraints** have no fluent builder: add them with `DB::statement('ALTER TABLE ... ADD CONSTRAINT ... CHECK (...)')` in the same migration, copying from `Reference-Schema.sql`.
 - **Generated columns:** `->storedAs('...')`. **Composite foreign keys:** `$table->foreign(['visit_id','student_id'])->references(['id','student_id'])->on('visits')`.
@@ -835,7 +824,7 @@ These are deliberate. Each needs a yes/no from the team, and a matching change i
 ## 14. Next steps
 
 1. Team review of sections 11 and 12; record the outcome as an ADR (and amend ADR-017 if D-01 is accepted).
-2. Send the client the questions that decide D-02, D-03, D-04, D-05 and the grade-promotion/masterlist format (already in `Client_Questions_MCA.md`).
+2. Send the client the questions that decide D-03, D-04, D-05 and the grade-promotion/masterlist format (already in `Client_Questions_MCA.md`).
 3. Turn `Data-Dictionary.md` and the API contract (derived from the 64 mock functions) into the B1 migrations, one module at a time.
 4. Replace the "MySQL" wording with "MariaDB (XAMPP)" in `Environment-Setup.md` and the Tech Stack docs.
 5. Then Phase B2 (auth) and B3 (audit), per the Backend Readiness Checklist.

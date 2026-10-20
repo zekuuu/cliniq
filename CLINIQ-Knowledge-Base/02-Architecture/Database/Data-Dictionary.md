@@ -8,7 +8,7 @@ How to read it: **Tier** is `Core` (a built screen or the mock already needs it)
 
 | # | Table | Module | Tier | Purpose |
 |---|---|---|---|---|
-| 1 | [`users`](#users) | UserManagement | Core | Accounts for Staff, Admin/Principal and PE/Sports Instructor. |
+| 1 | [`users`](#users) | UserManagement | Core | Accounts for Staff and Admin/Principal. |
 | 2 | [`password_histories`](#password_histories) | UserManagement | Core | The last N password hashes per user, so "no reuse of the last 5" can be checked without storing plaintext. |
 | 3 | [`system_settings`](#system_settings) | Shared | Core | Tunable thresholds and policy numbers that the requirements leave open, so changing one is a data change, not a deployment. |
 | 4 | [`number_sequences`](#number_sequences) | Shared | Core | Collision-free counters: Student Numbers per enrollment year, and reference numbers for printed documents. |
@@ -21,27 +21,26 @@ How to read it: **Tier** is `Core` (a built screen or the mock already needs it)
 | 11 | [`emergency_contacts`](#emergency_contacts) | StudentRecords | Core | Guardians to call in an emergency. |
 | 12 | [`emergency_contact_verifications`](#emergency_contact_verifications) | StudentRecords | Spec | History of verifying a contact number with the class adviser or Registrar, and of re-flagging it when unreachable in an emergency (Module 2, Parent Contact Validation). |
 | 13 | [`student_record_reviews`](#student_record_reviews) | StudentRecords | Core | The Incomplete Records review queue: who flagged a record, from which import, who resolved it. |
-| 14 | [`qr_card_issuances`](#qr_card_issuances) | QrDigitalHealthId | Spec | A log of QR cards printed or reprinted per student (first issue, lost, damaged). |
-| 15 | [`inventory_items`](#inventory_items) | InventoryTracker | Core | Medicines and supplies with a maintained stock count. |
-| 16 | [`visits`](#visits) | ClinicVisits | Core | A routine clinic visit. |
-| 17 | [`excuse_letters`](#excuse_letters) | ClinicVisits | Core | One excuse letter per visit: a draft while Staff prepare it, then permanent once approved. |
-| 18 | [`triage_checks`](#triage_checks) | SmartTriage | Spec | Which checklist items were ticked during a visit ("save checklist completion with the visit record", Module 7). |
-| 19 | [`incidents`](#incidents) | EmergencyResponse | Core | An emergency incident, captured in two stages. |
-| 20 | [`incident_vital_readings`](#incident_vital_readings) | EmergencyResponse | Core | Timestamped vital-sign readings. |
-| 21 | [`hospital_referrals`](#hospital_referrals) | EmergencyResponse | Core | Hospital referral details for an incident (at most one per incident). |
-| 22 | [`parent_notification_attempts`](#parent_notification_attempts) | EmergencyResponse | Core | Every attempt to reach a parent/guardian for an incident, timestamped. |
-| 23 | [`incident_report_approvals`](#incident_report_approvals) | EmergencyResponse | Core | The nurse's sign-off on an incident report. |
-| 24 | [`follow_ups`](#follow_ups) | Shared (FollowUps) | Core | A return-for-monitoring instruction attached to a visit or an incident. |
-| 25 | [`pe_referrals`](#pe_referrals) | ClinicVisits | Core | A PE/Sports injury referral logged by Staff, with the nurse's assessment and disposition. |
-| 26 | [`treatment_item_lines`](#treatment_item_lines) | InventoryTracker | Core | "Medicines & supplies given": one row per item per visit or incident (ADR-018). |
-| 27 | [`inventory_transactions`](#inventory_transactions) | InventoryTracker | Core | Insert-only ledger of every stock movement. |
-| 28 | [`reports`](#reports) | ReportsGeneration | Core | A log of which report was requested, for what period, by whom. |
-| 29 | [`backup_logs`](#backup_logs) | BackupVerification | Core | One row per backup run, filled by ingesting the status file that the scheduled backup script writes (so a failed run is still recorded when the database itself is the problem). |
-| 30 | [`holidays`](#holidays) | Dashboard | Core | Nationwide Philippine holidays, read-only reference data filled by the monthly sync job. |
-| 31 | [`holiday_sync_runs`](#holiday_sync_runs) | Dashboard | Core | History of holiday sync attempts. |
-| 32 | [`calendar_events`](#calendar_events) | Dashboard | Core | School events that Staff maintain on the Dashboard calendar (ADR-019). |
-| 33 | [`issue_reports`](#issue_reports) | Shared (Feedback) | Core | "Report an issue" feedback from any signed-in role. |
-| 34 | [`audit_logs`](#audit_logs) | Shared (AuditLog) | Core | Append-only record of who did what and when (RA 10173 accountability). |
+| 14 | [`inventory_items`](#inventory_items) | InventoryTracker | Core | Medicines and supplies with a maintained stock count. |
+| 15 | [`visits`](#visits) | ClinicVisits | Core | A routine clinic visit. |
+| 16 | [`excuse_letters`](#excuse_letters) | ClinicVisits | Core | One excuse letter per visit: a draft while Staff prepare it, then permanent once approved. |
+| 17 | [`triage_checks`](#triage_checks) | SmartTriage | Spec | Which checklist items were ticked during a visit ("save checklist completion with the visit record", Module 7). |
+| 18 | [`incidents`](#incidents) | EmergencyResponse | Core | An emergency incident, captured in two stages. |
+| 19 | [`incident_vital_readings`](#incident_vital_readings) | EmergencyResponse | Core | Timestamped vital-sign readings. |
+| 20 | [`hospital_referrals`](#hospital_referrals) | EmergencyResponse | Core | Hospital referral details for an incident (at most one per incident). |
+| 21 | [`parent_notification_attempts`](#parent_notification_attempts) | EmergencyResponse | Core | Every attempt to reach a parent/guardian for an incident, timestamped. |
+| 22 | [`incident_report_approvals`](#incident_report_approvals) | EmergencyResponse | Core | The nurse's sign-off on an incident report. |
+| 23 | [`follow_ups`](#follow_ups) | Shared (FollowUps) | Core | A return-for-monitoring instruction attached to a visit or an incident. |
+| 24 | [`pe_referrals`](#pe_referrals) | ClinicVisits | Core | A PE/Sports injury referral logged by Staff, with the nurse's assessment and disposition. |
+| 25 | [`treatment_item_lines`](#treatment_item_lines) | InventoryTracker | Core | "Medicines & supplies given": one row per item per visit or incident (ADR-018). |
+| 26 | [`inventory_transactions`](#inventory_transactions) | InventoryTracker | Core | Insert-only ledger of every stock movement. |
+| 27 | [`reports`](#reports) | ReportsGeneration | Core | A log of which report was requested, for what period, by whom. |
+| 28 | [`backup_logs`](#backup_logs) | BackupVerification | Core | One row per backup run, filled by ingesting the status file that the scheduled backup script writes (so a failed run is still recorded when the database itself is the problem). |
+| 29 | [`holidays`](#holidays) | Dashboard | Core | Nationwide Philippine holidays, read-only reference data filled by the monthly sync job. |
+| 30 | [`holiday_sync_runs`](#holiday_sync_runs) | Dashboard | Core | History of holiday sync attempts. |
+| 31 | [`calendar_events`](#calendar_events) | Dashboard | Core | School events that Staff maintain on the Dashboard calendar (ADR-019). |
+| 32 | [`issue_reports`](#issue_reports) | Shared (Feedback) | Core | "Report an issue" feedback from any signed-in role. |
+| 33 | [`audit_logs`](#audit_logs) | Shared (AuditLog) | Core | Append-only record of who did what and when (RA 10173 accountability). |
 
 The Sanctum `personal_access_tokens` table is created by Sanctum's own migration and is not redefined here (set `expires_at` to 7 days, ADR-015). Laravel's `migrations` table is also standard.
 
@@ -49,7 +48,7 @@ The Sanctum `personal_access_tokens` table is created by Sanctum's own migration
 
 **Module:** UserManagement  |  **Tier:** Core
 
-Accounts for Staff, Admin/Principal and PE/Sports Instructor. Never hard-deleted: a leaver is deactivated so history keeps its author.
+Accounts for Staff and Admin/Principal. Never hard-deleted: a leaver is deactivated so history keeps its author.
 
 **Frontend:** `User` (id, name, username, role, lastLogin) + the mock-only `devAccounts` (password, mustChangePassword).
 
@@ -59,7 +58,7 @@ Accounts for Staff, Admin/Principal and PE/Sports Instructor. Never hard-deleted
 | `name` | `varchar(120)` | no |  |  |
 | `username` | `varchar(50)` | no |  | Case-insensitive unique (collation). Login looks up by username, so a duplicate could never sign in. Stays reserved after deactivation. |
 | `password_hash` | `varchar(255)` | no |  | bcrypt/argon hash from Laravel `Hash`. Never returned by any API. |
-| `role` | `varchar(12)` | no |  | `staff` / `admin` / `instructor`. A fourth value (`canteen`) is an additive CHECK change later. |
+| `role` | `varchar(12)` | no |  | `staff` / `admin`. PE/Sports Instructors have no account (ADR-029). A further value (`canteen`) is an additive CHECK change later. |
 | `is_head_nurse` | `tinyint(1)` | no | 0 | OPEN (D-04). Module 7 and Module 10 reserve some actions to the "Head Nurse" within Staff. Only meaningful when role = staff. |
 | `must_change_password` | `tinyint(1)` | no | 1 | Forces the Force Password Change screen after login. Default 1 for new accounts. |
 | `password_changed_at` | `datetime` | yes | NULL |  |
@@ -76,7 +75,7 @@ Accounts for Staff, Admin/Principal and PE/Sports Instructor. Never hard-deleted
 
 - `chk_users_head_nurse`: `is_head_nurse = 0 or role = 'staff'`
 - `chk_users_name_len`: `char_length(trim(name)) >= 1`
-- `chk_users_role`: `role in ('staff','admin','instructor')`
+- `chk_users_role`: `role in ('staff','admin')`
 - `chk_users_username_len`: `char_length(trim(username)) >= 3`
 
 ## password_histories
@@ -236,14 +235,14 @@ One row per registrar masterlist import, for traceability and for "which import 
 
 **Module:** StudentRecords  |  **Tier:** Core
 
-The student record. The Student Number is the public identifier (QR, lists, URLs); `id` is internal and never shown.
+The student record. The Student Number is the public identifier (lists, URLs); `id` is internal and never shown.
 
 **Frontend:** `Student` (id, studentNumber, fullName, gradeLevel, contactInfo, archived). `allergies`, `medicalConditions`, `emergencyContact` move to child tables; `recordComplete` is derived.
 
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
 | `id` **PK** | `bigint unsigned` | no |  |  |
-| `student_number` | `char(10)` | no |  | `YYYY-NNNNN`, unique, IMMUTABLE (the QR code encodes it). CHECK enforces the shape. Generated from `number_sequences`, never by `max()+1`. |
+| `student_number` | `char(10)` | no |  | `YYYY-NNNNN`, unique, IMMUTABLE. CHECK enforces the shape. Generated from `number_sequences`, never by `max()+1`. |
 | `full_name` | `varchar(150)` | no |  | Required and non-blank. Single field for now; splitting into last/first/middle waits for the registrar file format (D-15). Accent- and case-insensitive matching comes from the collation. |
 | `grade_level_id` | `bigint unsigned` | yes | NULL | Nullable on purpose: an imported record may lack it and is then flagged "incomplete". Never nullable for a completed record (rule in the app). |
 | `sex` | `varchar(6)` | yes | NULL | `female` or `male`, as recorded by the school. Required for a completed record (ADR-031); nullable during an incomplete import. |
@@ -383,30 +382,6 @@ The Incomplete Records review queue: who flagged a record, from which import, wh
 
 - `chk_reviews_resolved`: `resolved_at is null = (resolved_by_user_id is null)`
 - `chk_reviews_source`: `source in ('registrar_import','flagged_in_clinic')`
-
-## qr_card_issuances
-
-**Module:** QrDigitalHealthId  |  **Tier:** Spec
-
-A log of QR cards printed or reprinted per student (first issue, lost, damaged).
-
-**Frontend:** Not in the mock.
-
-| Column | Type | Null | Default | Notes |
-|---|---|---|---|---|
-| `id` **PK** | `bigint unsigned` | no |  |  |
-| `student_id` | `bigint unsigned` | no |  |  |
-| `reason` | `varchar(12)` | no |  | `first_issue` / `lost` / `damaged` / `other`. This does NOT invalidate older cards; see ERD decision D-02. |
-| `issued_by_user_id` | `bigint unsigned` | no |  |  |
-| `issued_at` | `datetime` | no | current_timestamp() |  |
-
-**Indexes:** `idx_qr_issuances_student` (`student_id`, `issued_at`)
-
-**Foreign keys:** `student_id` -> `students`(`id`) ON DELETE CASCADE; `issued_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
-
-**Checks:**
-
-- `chk_qr_reason`: `reason in ('first_issue','lost','damaged','other')`
 
 ## inventory_items
 
@@ -712,7 +687,8 @@ A PE/Sports injury referral logged by Staff, with the nurse's assessment and dis
 |---|---|---|---|---|
 | `id` **PK** | `bigint unsigned` | no |  |  |
 | `student_id` | `bigint unsigned` | no |  |  |
-| `referred_by_user_id` | `bigint unsigned` | no |  | The account recorded as the referrer (the mock defaults it to the logged-in user). |
+| `referred_by` | `varchar(120)` | no |  | The PE/Sports Instructor's name as Staff typed it; instructors have no account (ADR-029). |
+| `logged_by_user_id` | `bigint unsigned` | no |  | The Staff account that recorded the referral. |
 | `activity` | `varchar(150)` | no |  |  |
 | `injury_summary` | `varchar(500)` | no |  |  |
 | `clinical_assessment` | `varchar(500)` | no |  |  |
@@ -724,7 +700,7 @@ A PE/Sports injury referral logged by Staff, with the nurse's assessment and dis
 
 **Indexes:** `idx_pe_referrals_student` (`student_id`, `created_at`)
 
-**Foreign keys:** `incident_id`, `student_id` -> `incidents`(`id`, `student_id`) ON DELETE RESTRICT; `student_id` -> `students`(`id`) ON DELETE RESTRICT; `referred_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `visit_id`, `student_id` -> `visits`(`id`, `student_id`) ON DELETE RESTRICT
+**Foreign keys:** `incident_id`, `student_id` -> `incidents`(`id`, `student_id`) ON DELETE RESTRICT; `student_id` -> `students`(`id`) ON DELETE RESTRICT; `logged_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `visit_id`, `student_id` -> `visits`(`id`, `student_id`) ON DELETE RESTRICT
 
 **Checks:**
 
@@ -959,13 +935,13 @@ School events that Staff maintain on the Dashboard calendar (ADR-019).
 
 **Checks:**
 
-- `chk_issue_reports_role`: `reporter_role in ('staff','admin','instructor')`
+- `chk_issue_reports_role`: `reporter_role in ('staff','admin')`
 
 ## audit_logs
 
 **Module:** Shared (AuditLog)  |  **Tier:** Core
 
-Append-only record of who did what and when (RA 10173 accountability). Written for every login, logout, scan, submit, approve, create, update, delete and archive; reading the log is not logged (ADR-016).
+Append-only record of who did what and when (RA 10173 accountability). Written for every login, logout, submit, approve, create, update, delete and archive; reading the log is not logged (ADR-016).
 
 **Frontend:** `AuditLogEntry` (+ `summary`, ADR-017).
 
@@ -988,6 +964,6 @@ Append-only record of who did what and when (RA 10173 accountability). Written f
 
 **Checks:**
 
-- `chk_audit_action`: `action_type in ('login','logout','scan','submit','approve','create','update','delete','archive')`
+- `chk_audit_action`: `action_type in ('login','logout','submit','approve','create','update','delete','archive')`
 - `chk_audit_actor`: `actor_user_id is not null or actor_role is null`
-- `chk_audit_role`: `actor_role is null or actor_role in ('staff','admin','instructor')`
+- `chk_audit_role`: `actor_role is null or actor_role in ('staff','admin')`

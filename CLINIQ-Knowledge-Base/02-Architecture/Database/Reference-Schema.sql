@@ -40,7 +40,7 @@ CREATE TABLE users (
   updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_users_username (username),
-  CONSTRAINT chk_users_role CHECK (role IN ('staff','admin','instructor')),
+  CONSTRAINT chk_users_role CHECK (role IN ('staff','admin')),
   CONSTRAINT chk_users_head_nurse CHECK (is_head_nurse = 0 OR role = 'staff'),
   CONSTRAINT chk_users_username_len CHECK (CHAR_LENGTH(TRIM(username)) >= 3),
   CONSTRAINT chk_users_name_len CHECK (CHAR_LENGTH(TRIM(name)) >= 1)
@@ -232,19 +232,6 @@ CREATE TABLE student_record_reviews (
   CONSTRAINT fk_reviews_student FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE,
   CONSTRAINT fk_reviews_batch FOREIGN KEY (import_batch_id) REFERENCES student_import_batches (id),
   CONSTRAINT fk_reviews_user FOREIGN KEY (resolved_by_user_id) REFERENCES users (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE qr_card_issuances (
-  id                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  student_id         BIGINT UNSIGNED NOT NULL,
-  reason             VARCHAR(12)     NOT NULL,
-  issued_by_user_id  BIGINT UNSIGNED NOT NULL,
-  issued_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY idx_qr_issuances_student (student_id, issued_at),
-  CONSTRAINT chk_qr_reason CHECK (reason IN ('first_issue','lost','damaged','other')),
-  CONSTRAINT fk_qr_student FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE,
-  CONSTRAINT fk_qr_user FOREIGN KEY (issued_by_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------------
@@ -502,7 +489,8 @@ CREATE TABLE follow_ups (
 CREATE TABLE pe_referrals (
   id                   BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   student_id           BIGINT UNSIGNED NOT NULL,
-  referred_by_user_id  BIGINT UNSIGNED NOT NULL,
+  referred_by          VARCHAR(120)    NOT NULL,
+  logged_by_user_id    BIGINT UNSIGNED NOT NULL,
   activity             VARCHAR(150)    NOT NULL,
   injury_summary       VARCHAR(500)    NOT NULL,
   clinical_assessment  VARCHAR(500)    NOT NULL,
@@ -515,7 +503,7 @@ CREATE TABLE pe_referrals (
   KEY idx_pe_referrals_student (student_id, created_at),
   CONSTRAINT chk_pe_disposition CHECK (disposition IN ('returned_to_class','sent_home','referred_to_hospital')),
   CONSTRAINT fk_pe_student FOREIGN KEY (student_id) REFERENCES students (id),
-  CONSTRAINT fk_pe_user FOREIGN KEY (referred_by_user_id) REFERENCES users (id),
+  CONSTRAINT fk_pe_user FOREIGN KEY (logged_by_user_id) REFERENCES users (id),
   CONSTRAINT fk_pe_visit FOREIGN KEY (visit_id, student_id) REFERENCES visits (id, student_id),
   CONSTRAINT fk_pe_incident FOREIGN KEY (incident_id, student_id) REFERENCES incidents (id, student_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -675,7 +663,7 @@ CREATE TABLE issue_reports (
   created_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_issue_reports_created (created_at),
-  CONSTRAINT chk_issue_reports_role CHECK (reporter_role IN ('staff','admin','instructor')),
+  CONSTRAINT chk_issue_reports_role CHECK (reporter_role IN ('staff','admin')),
   CONSTRAINT fk_issue_reports_user FOREIGN KEY (reported_by_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -701,8 +689,8 @@ CREATE TABLE audit_logs (
   KEY idx_audit_target_time (target_type, occurred_at),
   KEY idx_audit_target (target_type, target_id),
   KEY idx_audit_subject (subject_student_number, occurred_at),
-  CONSTRAINT chk_audit_action CHECK (action_type IN ('login','logout','scan','submit','approve','create','update','delete','archive')),
-  CONSTRAINT chk_audit_role CHECK (actor_role IS NULL OR actor_role IN ('staff','admin','instructor')),
+  CONSTRAINT chk_audit_action CHECK (action_type IN ('login','logout','submit','approve','create','update','delete','archive')),
+  CONSTRAINT chk_audit_role CHECK (actor_role IS NULL OR actor_role IN ('staff','admin')),
   CONSTRAINT chk_audit_actor CHECK (actor_user_id IS NOT NULL OR actor_role IS NULL),
   CONSTRAINT fk_audit_actor FOREIGN KEY (actor_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
