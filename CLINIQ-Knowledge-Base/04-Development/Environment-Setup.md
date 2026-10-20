@@ -8,8 +8,6 @@
 | React init | `npm create vite@latest frontend -- --template react-ts` | Scaffolds frontend with TypeScript, via Vite |
 | Tailwind | `npm install tailwindcss` + config | Styling |
 | Sanctum | `composer require laravel/sanctum` | SPA authentication |
-| QR generation (backend) | `composer require endroid/qr-code` | Server-side QR generation |
-| QR scanning (frontend) | `npm install qr-scanner` | Camera-based scanning with a Safari/iOS-safe fallback; needs a small custom React wrapper component around it |
 | Charts | `npm install chart.js react-chartjs-2` | Dashboard charts |
 | MySQL | Configure Laravel `.env` against XAMPP's MySQL | Database connection |
 | Git | `git init` at the repo root | Version control from day one |

@@ -22,10 +22,10 @@ Built first, per the interface-construction-first methodology (ADR-006) — show
 ### Phase F0 — Environment, Design Foundation, Shared Components
 1. Resolve the two blocking decisions above.
 2. Run the actual Vite scaffold into the already-organized `frontend/` skeleton (`CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md` has the exact commands — still not executed as of this writing).
-3. Install confirmed dependencies: Tailwind, `qr-scanner`, `chart.js` + `react-chartjs-2`, Vitest + RTL, plus whatever Phase 0's two decisions resolved to.
+3. Install confirmed dependencies: Tailwind, `chart.js` + `react-chartjs-2`, Vitest + RTL, plus whatever Phase 0's two decisions resolved to.
 4. Encode the design tokens from `03-Design/Design-System.md` into Tailwind config / CSS custom properties — the sampled, contrast-verified colors (`brand-green #039935`, `brand-green-dark #035419`, `brand-yellow #EAEA09`, the semantic set), not placeholder values.
 5. Build the generic shared components in `src/components/` — Button (with the primary/secondary/cancel/destructive hierarchy already specified), Card, Badge (with the icon+color+label pattern, never color alone), Input, Modal — the actual design-system-level pieces every screen will reuse.
-6. Build `src/layouts/` — the role-aware App Shell/Nav (Staff sees everything, Admin sees only Reports+Dashboard, Instructor gets no shell at all) and the mobile layout wrapper used by the QR mobile flows.
+6. Build `src/layouts/` — the role-aware App Shell/Nav (Staff sees everything, Admin sees only Reports+Dashboard).
 
 **Definition of done:** a blank app shell renders, role-aware nav switches correctly with mock auth state, and every shared component from `components/` exists and matches the sampled color tokens — nothing screen-specific yet.
 
@@ -34,7 +34,7 @@ Build in this order — each establishes a pattern the next several phases lean 
 1. **Student Profile** (`features/student-records/`) — establishes the detail/read-record pattern every other detail view will follow.
 2. **New Visit Entry** (`features/clinic-visits/`) — establishes the core form pattern, including the dynamic Smart Triage panel and the inline Follow-Up prompt.
 3. **Incident Entry, two-stage** (`features/emergency-response/`) — establishes the urgency-styled, status-lifecycle pattern (Stage 1 fast-capture → Stage 2 complete-later badge).
-4. **QR Scan/Lookup Hub + Quick-Actions, mobile** (`features/qr-digital-health-id/mobile/` + `shared/`) — establishes the mobile-first pattern and the shared scanner wrapper every QR context uses.
+4. *(Built, then removed with the QR feature, ADR-027.)* The QR Scan/Lookup Hub reference screen.
 5. **Clinic Overview Dashboard** (`features/dashboard/`) — the most component-dense screen; built last in this phase specifically because it reuses stat cards, badges, and list-row patterns from the first four.
 
 **Definition of done:** all 5 screens work end-to-end against mock data, an accessibility pass (`.claude/skills` — `better-accessibility`, `claude-a11y-skill`) has been run against each, and — per ADR-006 — these are what actually get shown to the client for feedback before continuing.
@@ -43,17 +43,17 @@ Build in this order — each establishes a pattern the next several phases lean 
 Follow the mapping table already defined in `03-Design/Reference-Screens.md` (§5, "Extrapolating to the Rest of the Screens") rather than re-deriving patterns from scratch. Suggested module order, matching the WBS's sprint grouping:
 1. **Student Records** remainder — Student List (masterlist, full names per the display-privacy rule), Add/Edit Student, Incomplete Records Queue.
 2. **Clinic Visit Monitoring** remainder — Visit Log List (Student Number, not name — glanceable multi-student list), Visit Detail/Edit, Excuse Letter Generator (+ print layout), PE/Sports Referral Form.
-3. **QR Digital Health ID** remainder — Desktop quick-action hub (`features/qr-digital-health-id/desktop/`), QR Code Print View, Instructor's mobile lookup variant.
+3. *(Built, then removed with the QR feature, ADR-027.)* The rest of the QR Digital Health ID screens.
 4. **Emergency Response** remainder — Incident Log List (Student Number, status badge from the Phase F1 pattern), Parent Notification Outcome Logging, Incident Report View/Print.
 5. **Medicine & Supply Inventory Tracker** — Inventory List, Add/Edit Item, Dispense/Log Usage (the stock-flow mechanics from `Modules-and-Features` §8 — threshold check, independent low-stock/nearing-expiry badges).
 6. **Reports Generation** — Monthly/Incident/Health Summary views, all print-layout-first.
-7. **User Management** — User List, Add/Edit User & Role Assignment (Staff, Admin/Principal, PE/Sports Instructor).
+7. **User Management** — User List, Add/Edit User & Role Assignment (Staff, Admin/Principal).
 8. **Backup Verification Assistant** — status screen, guided recovery checklist.
 
 **Definition of done per module:** screens match their mapped reference pattern, the display-privacy rule is applied correctly (check against `.claude/skills/cliniq-display-privacy/`), and an `08-Logs/Agent-Sessions/` entry exists per the standard format.
 
 ### Phase F3 — Polish & Client Demo Prep
-Keyboard shortcuts (`04-Development/Keyboard-Shortcuts-and-Efficiency.md`) wired up for the highest-frequency actions (jump to New Visit, jump to student search, save-and-new). Full accessibility sweep (`interface-review` skill) across every screen, not just the 5 references. Responsive check on the QR mobile flows specifically — the rest of the app is desktop-primary by design, not by oversight.
+Keyboard shortcuts (`04-Development/Keyboard-Shortcuts-and-Efficiency.md`) wired up for the highest-frequency actions (jump to New Visit, jump to student search, save-and-new). Full accessibility sweep (`interface-review` skill) across every screen, not just the 5 references. Responsive check on the phone screens specifically — the rest of the app is desktop-primary by design, not by oversight.
 
 ---
 
@@ -70,7 +70,7 @@ Run the actual Laravel scaffold into `backend/` (commands in `Environment-Setup.
 See `04-Development/Backend-Readiness-Checklist.md` for the current pre-migration readiness checklist.
 
 ### Phase B2 — Auth & RBAC
-Sanctum SPA authentication. Three roles (Staff, Admin/Principal, PE/Sports Instructor) with the specific per-module permission matrix already fully documented in `01-Requirements/Features/Module-Overview.md`'s Access Summary table — this is a direct implementation target, not a design task. Consider a Spatie `laravel-permission`-based approach (flagged in `Skills-Setup.md`) given how closely CLINIQ's access model matches that package's shape. Session lifetime is **1 week until the token expires, with no idle timeout** (`06-Decisions/ADR-015`) — set the expiry accordingly (e.g., Sanctum's `expiration` setting for API tokens, or the session lifetime for SPA cookie auth; those are configured separately, so confirm which mechanism applies during this phase).
+Sanctum SPA authentication. Two roles (Staff, Admin/Principal; PE/Sports Instructors have no account, ADR-029) with the specific per-module permission matrix already fully documented in `01-Requirements/Features/Module-Overview.md`'s Access Summary table — this is a direct implementation target, not a design task. Consider a Spatie `laravel-permission`-based approach (flagged in `Skills-Setup.md`) given how closely CLINIQ's access model matches that package's shape. Session lifetime is **1 week until the token expires, with no idle timeout** (`06-Decisions/ADR-015`) — set the expiry accordingly (e.g., Sanctum's `expiration` setting for API tokens, or the session lifetime for SPA cookie auth; those are configured separately, so confirm which mechanism applies during this phase).
 
 ### Phase B3 — Audit Trail Infrastructure (Build Early, Not Late)
 Build this as reusable middleware/service/trait *before* the module APIs below, so each subsequent phase hooks into existing infrastructure instead of retrofitting logging afterward. Must capture: who, what action type, what target record, when — for every login, scan, submission, approval, and create/update/delete/archive, across every module (`Modules-and-Features`, "Audit Trail" section; `.claude/skills/cliniq-audit-trail/`).
@@ -81,8 +81,8 @@ CRUD, server-side Student Number generation (`YYYY-NNNNN`, sequence resets yearl
 ### Phase B5 — Clinic Visit Monitoring API
 Visit CRUD, Excuse Letter generation/approval workflow, Follow-Up Handling endpoints (shared with B7 — same feature, two entry points).
 
-### Phase B6 — QR Digital Health ID API
-QR code generation (`endroid/qr-code`) encoding the Student Number. Lookup-by-Student-Number endpoint. Scan-logging tied into the Phase B3 audit infrastructure. Instructor's read-only profile+history endpoint — read-only enforced server-side, not just hidden client-side.
+### Phase B6 — (Removed)
+The QR Digital Health ID API was removed with the feature (ADR-027). The phase number is kept so later phases keep theirs.
 
 ### Phase B7 — Emergency Response API
 Two-stage incident endpoints (Stage 1 minimal-fields save; Stage 2 completion). Hospital referral, parent-notification log (multi-attempt, timestamped). Follow-Up Handling endpoints (shared with B5).

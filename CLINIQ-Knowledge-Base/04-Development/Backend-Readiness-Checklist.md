@@ -41,7 +41,7 @@ The backend is a blank slate. A [proposed ERD and data dictionary](../02-Archite
   - record reviews
   - vitals (an open key/value shape, so decide which fields exist)
 - [ ] **Frontend-only data needs a real home.** `devAccounts` becomes the users table, which also needs `password_hash`, `must_change_password`, `failed_attempts`, and `locked_until`. None of these are in the `User` type today. The complaint types with Smart Triage steps are clinical content, so they need a table and a nurse's sign-off.
-- [ ] **Foreign-key decision.** The mock seed links records by Student Number, while the entity types use an internal id. Recommendation: a surrogate id for foreign keys, plus a unique, immutable Student Number (the QR code encodes it). This is a recommendation, not an approved decision; do not create or amend an ADR for it.
+- [ ] **Foreign-key decision.** The mock seed links records by Student Number, while the entity types use an internal id. Recommendation: a surrogate id for foreign keys, plus a unique, immutable Student Number. This is a recommendation, not an approved decision; do not create or amend an ADR for it.
 - [ ] **Student Number generator.** The `YYYY-NNNNN` sequence resets yearly (ADR-005). Recommendation: design it as a transactional counter table so two simultaneous saves can't collide; this is not an approved decision.
 - [ ] **API contract.** Turn the 64 mock functions into endpoint specs: URL, method, allowed role, request and response shape, error cases. Use one error format (for example 422 with field errors, plus a separate shape for business rejections such as "Medicines on a completed incident can't be changed"). This is the cheapest document to produce, because the code is already the draft.
 - [ ] **Sanctum mode.** Development-Phases B2 says to confirm which mechanism applies. ADR-015 requires a 7-day lifetime but explicitly leaves API-token versus SPA-cookie configuration to B2; `.env.example` currently contains SPA-cookie settings. Choose with project approval before implementation; this checklist does not create or amend an ADR.
@@ -62,7 +62,7 @@ The backend is a blank slate. A [proposed ERD and data dictionary](../02-Archite
 
 ## 4. Environment and deployment (not documented anywhere)
 
-- [ ] **HTTPS on the LAN.** Phones scanning QR codes need camera access, and browsers only allow that on a secure context (HTTPS or localhost). The knowledge base never mentions it. Over plain `http://192.168.x.x` the camera will likely be blocked, so plan a local certificate that phones trust. Test early with a real phone, since this can affect the whole QR module.
+- [ ] **HTTPS on the LAN.** No feature needs camera access since the QR feature was removed (ADR-027). Decide whether the LAN still needs a local certificate for its own sake.
 - [ ] **PHP version.** Check the XAMPP PHP version before picking Laravel (Laravel 11 needs PHP 8.2 or newer).
 - [ ] **Pinned versions** for XAMPP, PHP, MySQL, and Laravel, so every dev machine matches.
 - [ ] **Backup plan.** The `mysqldump` plus Task Scheduler design is not agreed with the client yet. Also decide how a backup run reports back to Laravel (a log row or a status file), since the Backup screen reads it.
@@ -75,7 +75,7 @@ The backend is a blank slate. A [proposed ERD and data dictionary](../02-Archite
 - [ ] Grade levels
 - [ ] Real complaint types (with the nurse's sign-off)
 - [ ] Medicine and supply list, with starting stock and expiry dates
-- [ ] Initial accounts (Staff, Admin, Instructors)
+- [ ] Initial accounts (Staff, Admin)
 - [ ] Registrar masterlist file format, with column names and a sample, so the import is built to match
 - [ ] Migration plan for the mock seed: keep it as the dev seeder, and keep separate real seed data for production
 
@@ -84,7 +84,7 @@ The backend is a blank slate. A [proposed ERD and data dictionary](../02-Archite
 ## 6. Integration process
 
 - **Switch one module at a time.** The 21 feature `api/` TypeScript files are the swap point. Add one HTTP client and a `VITE_USE_MOCK` flag so each module moves to the real backend independently, as ADR-006 intends.
-- **Tests.** Write Pest feature tests that port the mock's rules (the existing Vitest tests in `mock-db` are good cases to copy), plus one per role for the permission matrix, including that instructors are read-only on the server.
+- **Tests.** Write Pest feature tests that port the mock's rules (the existing Vitest tests in `mock-db` are good cases to copy), plus one per role for the permission matrix.
 - **Definition of done** for each backend phase: migration, endpoint, permission test, audit entry, and the frontend module switched over.
 
 ---
