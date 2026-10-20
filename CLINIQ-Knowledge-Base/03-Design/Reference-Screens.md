@@ -55,7 +55,7 @@ Design these five in full detail first. Everything else in the system should be 
 ---
 
 ### Reference 3 — Student Profile (Full Record View)
-*(Staff sees Edit/Archive actions; PE/Sports Instructor sees the identical layout read-only, no action buttons)*
+*(Staff sees Edit/Archive actions)*
 
 **Why this one:** the richest **detail/read** screen — the template for viewing any single record in depth (a visit, an incident, an inventory item, a follow-up).
 
@@ -70,23 +70,8 @@ Design these five in full detail first. Everything else in the system should be 
 
 ---
 
-### Reference 4 — QR Scan/Lookup Hub + Quick-Actions (Mobile)
-*(Staff and PE/Sports Instructor both use a version of this — the only screens in the system designed mobile-first)*
-
-**Why this one:** the only genuinely mobile-native pattern in CLINIQ, and it needs to work one-handed, in a hurry, possibly outdoors (PE field) or in a crowded hallway.
-
-**Layout — Staff version:**
-1. **Entry screen** — one large, unmistakable "Scan QR Code" button (camera icon) as the dominant element; a secondary "Enter Student Number manually" link/input below it for the fallback path
-2. **Post-identification — Quick-Actions** — student header (full name, since this is a deliberate single lookup), then a grid or stack of large, thumb-friendly action buttons: **Record Visit**, **Log Emergency**, **View Full Profile**, **Dispense Medicine**
-3. **Emergency button** — treated as visually distinct and more urgent than the others (a `warning`-or-stronger color treatment, not the calm brand green), and reachable even faster than the others if a scan just happened
-
-**Layout — Instructor version:**
-1. Same entry screen (scan or manual entry)
-2. Post-identification — a read-only profile card (allergies, conditions, emergency contact, injury/visit history) with **no buttons at all** — make the absence of actions visually obvious (no greyed-out buttons implying near-clickability), just a clean stop-here display
-
-**Components this exercises:** large touch-target buttons (bigger than the desktop button scale), camera/scanner UI, manual-entry fallback input, icon+label button grid, read-only info card, urgency-styled button variant.
-
-**States:** scanning in progress, scan failed/retry, student not found (routes to the manual-entry fallback).
+### Reference 4 — (Removed)
+The QR Scan/Lookup Hub reference screen was removed with the QR feature (ADR-027). The number is kept so Reference 5 keeps its number.
 
 ---
 
@@ -96,7 +81,7 @@ Design these five in full detail first. Everything else in the system should be 
 **Why this one:** the only screen in the system with an explicit incomplete/complete status lifecycle, and the one place urgency should visibly shape the design.
 
 **Layout — Stage 1 (fast capture):**
-1. **Student header** (from the QR/quick-action flow that led here)
+1. **Student header** (picked on the form)
 2. **Complaint field** and a **minimal vitals field group** (2–3 key fields only) — deliberately short
 3. **Save button** — styled with urgency in mind (bigger, higher-contrast, `warning`-adjacent treatment) since speed matters more than anything else on this screen
 4. **Post-save** — a clear "Needs completion" status badge/banner, not just a generic success toast

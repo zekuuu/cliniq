@@ -11,7 +11,7 @@ Give the agent this full list — it maps directly to the two module groups (bas
 ### Auth & Shell
 1. **Login** — username/password, role-aware redirect after login; the session lasts 1 week until the token expires, with no idle timeout
 2. **Force Password Change** — shown on first login (backend enforces this)
-3. **App Shell/Nav** — role-aware sidebar or nav; Staff sees all modules, Admin sees Dashboard, Calendar, Reports and Audit Log, Instructor sees only the mobile scan/lookup screen (no shell/nav needed for that one). The desktop header shows the signed-in user's name and role with a red, icon-only Log out control carrying an accessible label.
+3. **App Shell/Nav** — role-aware sidebar or nav; Staff sees all modules, Admin sees Dashboard, Calendar, Reports and Audit Log. The desktop header shows the signed-in user's name and role with a red, icon-only Log out control carrying an accessible label.
 
 ### Dashboard
 4. **Staff Dashboard** — today's visit count, low-stock alerts, expiring-medicine alerts, backup status widget, quick "New Visit" action. Delivered on the shared Clinic Overview (#31): Staff get a strip under the header with the "New Visit" action and a backup-status indicator (status + last-backup date) linking to #32
@@ -47,14 +47,8 @@ Give the agent this full list — it maps directly to the two module groups (bas
 21. **Health Summaries View**
 (All three need print/export-friendly layouts — this is a paper-replacement feature, so print CSS matters.)
 
-### QR Digital Health ID (enhancement) — computer (Staff) + mobile (Staff and PE/Sports Instructor)
-22. **QR Code Print View** — generates/prints a QR sticker per student, encoding their Student Number (Staff only, computer)
-23. **Scan/Lookup Hub (Staff, computer or mobile)** — two ways to identify a student: "Scan QR Code" (camera) or "Enter Student Number" (manual text fallback); once identified, shows the student's full name and details normally — this is a deliberate single-student lookup, not a glanceable list (see the display-privacy rule)
-24. **Student Quick-Actions (Staff)** — appears once a student is identified: **Record Visit** (→ #11, pre-filled), **Log Emergency** (→ #16, Stage 1, pre-filled), **View Full Profile** (→ #7), **Dispense Medicine** (→ #30, pre-linkable to the visit), **PE/Sports Referral** (→ #14, pre-filled — this is #14's entry point)
-25. **Emergency Button (Staff, mobile)** — separate, faster entry point than the quick-actions above; jumps straight to #16 (Stage 1) rather than routing through student identification first if a scan already happened
-26. **Instructor Scan/Lookup (PE/Sports Instructor, mobile only)** — scan or enter a Student Number; opens a **read-only** view of that student's full profile plus visit/incident history. No buttons for any action — this screen only displays data
-
-No separate login screen for Staff here — the computer and mobile Staff flows both run inside the existing Staff session. The Instructor flow does need its own login (Instructor role), since it's a different account type, but it's still a normal auth-gated screen, not a public/unauthenticated one — nothing in this system is reachable without logging in as something.
+### (Removed) Screens #22–26
+The QR screens (#22–24, #26) were removed with the QR feature (ADR-027), and the phone Emergency screen (#25) with the phone-only screens (ADR-033). Their numbers are kept so later screens keep theirs; Staff start an incident from Report Incident (#16).
 
 ### Smart Triage Quick-Reference (enhancement)
 27. Not a standalone page — a checklist panel/modal embedded in **New Visit Entry** (#11), triggered by the selected complaint type
@@ -72,13 +66,13 @@ No separate login screen for Staff here — the computer and mobile Staff flows 
 32. **Backup Status Screen** — last backup date/size/status, plus a plain-language guided recovery checklist (Staff-only, likely nurse-only)
 
 ### User Management
-33. **User List** — Staff only; Staff, Admin/Principal, and PE/Sports Instructor accounts
+33. **User List** — Staff only; Staff and Admin/Principal accounts (PE/Sports Instructors have no account, ADR-029)
 34. **Add/Edit User & Role Assignment**
 
 ### Audit Log Viewer
 35. **Audit Log** — Staff and Admin/Principal, view-only; filterable by date range, user, action type, and target/module (`ADR-016`); Student Number not name for student-related entries, per the display-privacy rule
 
 ### Sidebar Footer / Legal
-36. **Privacy Policy** — accessible to every role (Staff, Admin/Principal, PE/Sports Instructor), reached via a link in the sidebar footer; static content, no student data rendered on the page itself. Draft content: `09-References/Privacy-Policy.md`.
+36. **Privacy Policy** — accessible to every role (Staff, Admin/Principal), reached via a link in the sidebar footer; static content, no student data rendered on the page itself. Draft content: `09-References/Privacy-Policy.md`.
 
-**Total: ~37 screens/views** (accounting for the two-stage incident entry and the new Instructor and Emergency-button screens), several of which (Excuse Letter, Incident Report, Monthly Report, QR print) also need a distinct print layout — call that out to the agent explicitly since print CSS is easy to forget.
+**Total: ~32 screens/views** (accounting for the two-stage incident entry; the four QR screens and the phone Emergency screen were removed, ADR-027 and ADR-033), several of which (Excuse Letter, Incident Report, Monthly Report) also need a distinct print layout — call that out to the agent explicitly since print CSS is easy to forget.
