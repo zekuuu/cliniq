@@ -129,3 +129,11 @@ Inventory tracks each received batch rather than replacing one item's expiry dat
 ## 031 Student Sex and aggregate demographic Trends
 
 Student Sex is required as recorded by the school (Female or Male). It is available only in the single-student record and aggregate-only Trends; chart filters never change Overview totals or expose student names. The team must still choose a minimum safe group size before production reporting.
+
+## 033 Phone-only screens are removed, accounts move to the Admin/Principal, and QR is removed now (reversible)
+
+The phone Emergency screen and the phone-only navigation are removed, and the Admin/Principal (not Staff) manages accounts. QR is removed now with the others; it had been on hold until the client's answer on online hosting, so it is tagged first and can be restored if the client agrees to go online (ADR-027 unchanged). The last active Admin can never be disabled or demoted. Nothing is built yet.
+
+## 034 The Sports Report for the PE instructor
+
+The clinician (Staff only) builds a saved, reusable and editable list of students for a sports activity and prints a report with each student's full name, recent visits and incidents (default 90 days), a note she writes, and the student's conditions only if she ticks it. Saved lists hold only the list and notes, never a copy of medical content; every print is audited. Full names are an exception to the LRN-on-lists rule. What the nurse and Principal agree to release is still open. Nothing is built yet.
