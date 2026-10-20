@@ -18,7 +18,7 @@ export const CALENDAR_EVENT_TITLE_MAX = 60
 const FIELDS = {
   top: ['meta', 'config', 'users', 'students', 'visits', 'incidents', 'followUps', 'inventoryItems', 'reports', 'backupLogs', 'auditLog', 'frontendOnly'],
   config: ['_note', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'vitalsWarningRanges'],
-  users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture'],
+  users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture', 'deactivatedAt'],
   students: ['id', 'studentNumber', 'fullName', 'gradeLevel', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
   emergencyContact: ['name', 'relationship', 'phone', 'verified'],
   visits: ['id', 'studentNumber', 'dateTime', 'complaint', 'treatment', 'disposition', 'loggedByUserId', 'eventTag', 'itemsGiven', 'excuseLetterDraft', 'referredTo', 'temperatureC', 'timeOut', 'assistedBy', 'parentGuardian', 'remarks'],
@@ -150,7 +150,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   // Users.
   list('users').forEach((u, i) => {
     const w = `users[${i}] (${String(u.id)})`
-    checkFields(w, u, FIELDS.users, ['profilePicture'])
+    checkFields(w, u, FIELDS.users, ['profilePicture', 'deactivatedAt'])
     oneOf(`${w}.role`, u.role, ENUMS.role)
     relDateTime(`${w}.lastLogin`, u.lastLogin, true)
   })

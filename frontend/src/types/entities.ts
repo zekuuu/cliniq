@@ -62,6 +62,8 @@ export interface User {
   /** Optional staff-account avatar, stored as a resized data URL by the mock layer. Never a student image. */
   profilePicture?: string | null
   lastLogin: ISODateTime | null
+  /** Set when the Admin/Principal disables the account; it then can't sign in. Never deleted. */
+  deactivatedAt?: ISODateTime | null
 }
 
 export type Disposition = 'returned_to_class' | 'sent_home' | 'referred_to_hospital'

@@ -300,7 +300,7 @@ export async function authenticateMockUser(username: string, password: string): 
   const user = state.users.find((candidate) => candidate.username.toLowerCase() === normalized)
   const account = user && state.frontendOnly.devAccounts.find((candidate) => candidate.userId === user.id)
   const currentPassword = account ? fakePasswordHistory(state, user.id)[0] : null
-  if (!user || !account || currentPassword !== password) {
+  if (!user || !account || user.deactivatedAt || currentPassword !== password) {
     attempt.failures += 1
     if (attempt.failures >= 5) {
       attempt.failures = 0
@@ -391,6 +391,47 @@ export interface UserInput {
   username: string
   role: UserRole
   profilePicture?: string | null
+  /** Required for a new account; the person must change it at first sign-in. */
+  temporaryPassword?: string
+}
+
+/** Only the Admin/Principal manages accounts (ADR-033). */
+export class AccountPermissionError extends Error {
+  constructor() {
+    super('Only the Admin/Principal can manage accounts.')
+  }
+}
+
+/** The last active Admin/Principal can never be disabled or demoted (ADR-033). */
+export class LastAdminError extends Error {
+  constructor() {
+    super('This is the only active Admin/Principal account. Add or enable another Admin first.')
+  }
+}
+
+const MIN_PASSWORD_LENGTH = 8
+
+function requireAdmin(actor: SessionUser) {
+  if (actor.role !== 'admin') throw new AccountPermissionError()
+}
+
+function isLastActiveAdmin(state: DbState, user: User): boolean {
+  return (
+    user.role === 'admin' &&
+    !user.deactivatedAt &&
+    !state.users.some((u) => u.id !== user.id && u.role === 'admin' && !u.deactivatedAt)
+  )
+}
+
+/** Sets a temporary password that must be changed at the next sign-in (Force Password Change). */
+function setTemporaryPassword(state: DbState, userId: string, password: string) {
+  const trimmed = password.trim()
+  if (trimmed.length < MIN_PASSWORD_LENGTH) throw new Error(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`)
+  const account = state.frontendOnly.devAccounts.find((candidate) => candidate.userId === userId)
+  if (account) Object.assign(account, { password: trimmed, mustChangePassword: true })
+  else state.frontendOnly.devAccounts.push({ userId, password: trimmed, mustChangePassword: true })
+  passwordHistory.delete(userId)
+  changedPasswordUsers.delete(userId)
 }
 
 /**
@@ -405,11 +446,14 @@ export class DuplicateUsernameError extends Error {
 
 export function saveUser(input: UserInput, options: { userId?: string; actor?: SessionUser } = {}): Promise<User> {
   return write('save user', (s) => {
+    const actor = actorOr(options.actor)
+    requireAdmin(actor)
     const username = input.username.trim().toLowerCase()
     if (s.users.some((u) => u.id !== options.userId && u.username.toLowerCase() === username)) {
       throw new DuplicateUsernameError()
     }
     const existing = options.userId ? must(s.users.find((u) => u.id === options.userId), 'User') : null
+    if (existing && input.role !== 'admin' && isLastActiveAdmin(s, existing)) throw new LastAdminError()
     const next = {
       name: input.name.trim(),
       username: input.username.trim(),
@@ -424,9 +468,37 @@ export function saveUser(input: UserInput, options: { userId?: string; actor?: S
           ...next,
           lastLogin: null,
         }
-    if (!existing) s.users.push(user)
-    audit(s, actorOr(options.actor), existing ? 'update' : 'create', { type: 'user', id: user.id }, summary)
+    if (!existing) {
+      setTemporaryPassword(s, user.id, input.temporaryPassword ?? '')
+      s.users.push(user)
+    }
+    audit(s, actor, existing ? 'update' : 'create', { type: 'user', id: user.id }, summary)
     return user
+  })
+}
+
+/** Disables or re-enables an account. Disabled accounts stay listed and in the audit history. */
+export function setUserActive(userId: string, active: boolean, actor?: SessionUser): Promise<User> {
+  return write(active ? 'enable user' : 'disable user', (s) => {
+    const by = actorOr(actor)
+    requireAdmin(by)
+    const user = must(s.users.find((u) => u.id === userId), 'User')
+    if (!active && isLastActiveAdmin(s, user)) throw new LastAdminError()
+    if (active === !user.deactivatedAt) return user
+    user.deactivatedAt = active ? null : now(s)
+    audit(s, by, 'update', { type: 'user', id: user.id }, active ? 'Enabled account' : 'Disabled account')
+    return user
+  })
+}
+
+/** Gives the account a temporary password that must be changed at the next sign-in. No recovery flow. */
+export function resetUserPassword(userId: string, temporaryPassword: string, actor?: SessionUser): Promise<void> {
+  return write('reset password', (s) => {
+    const by = actorOr(actor)
+    requireAdmin(by)
+    const user = must(s.users.find((u) => u.id === userId), 'User')
+    setTemporaryPassword(s, user.id, temporaryPassword)
+    audit(s, by, 'update', { type: 'user', id: user.id }, 'Reset password')
   })
 }
 
