@@ -13,7 +13,7 @@ This policy covers CLINIQ, the clinic tracking and monitoring system used by Men
 
 ## 2. What information CLINIQ collects
 
-- **Student information:** name, Student Number, grade level, section, date of birth, gender, contact information, emergency contact details, allergies, and medical conditions.
+- **Student information:** name, LRN (Learner Reference Number), grade level, section, date of birth, gender, contact information, emergency contact details, allergies, and medical conditions.
 - **Clinic records:** visit records (date, complaint, treatment, outcome), incident/emergency records (including hospital referral and parent-notification details where applicable), and follow-up records.
 - **Inventory records:** medicine and supply stock levels and usage history. This does not identify students except where a specific dispensing is linked to a visit record.
 - **Account information:** name, username, and role, for every Staff and Admin/Principal account.
@@ -36,7 +36,7 @@ Access is role-based and limited to what each role needs:
 | **Admin/Principal** | View-only access to reports, the Clinic Overview Dashboard, and the audit log. No access to individual student records. |
 | **PE/Sports Instructor** | No account and no access to CLINIQ. An instructor asks the clinic, and the school clinician decides what health information to share. |
 
-No role can view information for a student they have not specifically looked up or that isn't relevant to their role. Multi-student list views (such as the visit log) display a Student Number rather than a name, so that information isn't identifiable to someone glancing at a shared screen.
+No role can view information for a student they have not specifically looked up or that isn't relevant to their role. Multi-student list views (such as the visit log) show only the last digits of the LRN rather than a name, so that information isn't identifiable to someone glancing at a shared screen.
 
 ## 5. How long CLINIQ keeps this information
 

@@ -16,7 +16,7 @@ CLINIQ is a clinic tracking and monitoring system for Mendez Christian Academy, 
 | **Admin/Principal** | Read-only: reports and the Clinic Overview Dashboard. Manages every account (ADR-033); no other edit access |
 | **PE/Sports Instructor** | No account and no access (ADR-029). An instructor asks the clinician, who decides what to share |
 
-**Display-privacy rule — affects how student names appear across the system:** a screen showing a **list of multiple students at once** (visit logs, incident logs, the dashboard's frequent-visitor section) shows the **Student Number**, not the name — these are the screens a bystander could glance at on a desktop monitor. A screen showing **one specific, deliberately-identified student** (the full profile, search results, the masterlist) shows the **full name** normally. Design both list rows and detail views with this in mind — a list row template should have no name field at all; a detail/card template should lead with the name prominently.
+**Display-privacy rule — affects how student names appear across the system:** a screen showing a **list of multiple students at once** (visit logs, incident logs, the dashboard's frequent-visitor section) shows the **masked LRN**, not the name — these are the screens a bystander could glance at on a desktop monitor. A screen showing **one specific, deliberately-identified student** (the full profile, search results, the masterlist) shows the **full name** normally. Design both list rows and detail views with this in mind — a list row template should have no name field at all; a detail/card template should lead with the name prominently.
 
 ## 3. Full Design System
 
@@ -103,11 +103,11 @@ Design these five in full detail first. Everything else in the system should be 
 1. **Header** — page title, current date, a date-range filter control
    - **Staff shortcuts (Staff only, directly under the header):** a quick **New Visit** action and a minimal **backup-status indicator** (status + last-backup date) that links to the full Backup screen. Both are navigation, not edits, so the Dashboard stays view-only. Admin/Principal doesn't see this strip, since that role can open neither destination.
 2. **Stat card row** — 3–4 cards: today's visit count, incident count, pending/incomplete records count, low-stock item count. Each: icon, large number, label, optional small trend indicator
-3. **Alerts section** — three compact list groups, each row using the list-row pattern (Student Number, not name, per the display-privacy rule):
-   - Due/upcoming follow-ups (student number, reason, due date, status badge)
-   - Frequent-visitor warnings (student number, visit count, `warning`-colored badge — labeled clearly as a warning, never styled to look like a diagnosis)
+3. **Alerts section** — three compact list groups, each row using the list-row pattern (masked LRN, not name, per the display-privacy rule):
+   - Due/upcoming follow-ups (masked LRN, reason, due date, status badge)
+   - Frequent-visitor warnings (masked LRN, visit count, `warning`-colored badge — labeled clearly as a warning, never styled to look like a diagnosis)
    - Low-stock / nearing-expiration inventory items (item name — not student-linked, no privacy concern here)
-   - **Excuse letters awaiting approval (Staff only, below the alert groups):** shown only while drafts exist. Each row shows the Student Number and links to its letter page. It is navigation only, so the Dashboard stays view-only and writes no audit entries. Admin/Principal doesn't see it, since that role can't open the letter page (ADR-011 amendment, October 07, 2026).
+   - **Excuse letters awaiting approval (Staff only, below the alert groups):** shown only while drafts exist. Each row shows the masked LRN and links to its letter page. It is navigation only, so the Dashboard stays view-only and writes no audit entries. Admin/Principal doesn't see it, since that role can't open the letter page (ADR-011 amendment, October 07, 2026).
 4. **Trends chart** — common complaints by week/month (bar or line chart), plus a symptom-clustering indicator (a simple highlighted marker on the chart, not a separate widget)
 5. **Calendar view** — toggle control for weekly / monthly / yearly, a calendar grid showing visit+incident count intensity per day (heatmap-style shading), and any free-text event tag Staff attached to a visit/incident shown as small text on the relevant day
 6. **Export/print button**
@@ -124,7 +124,7 @@ Design these five in full detail first. Everything else in the system should be 
 **Why this one:** the richest **form** screen, including a dynamic embedded panel and an inline prompt at the end — the pattern every other data-entry screen should follow.
 
 **Layout, top to bottom:**
-1. **Student header** — name, Student Number, grade level (picked on the form)
+1. **Student header** — name, masked LRN, grade level (picked on the form)
 2. **Complaint field** — dropdown or searchable select
 3. **Smart Triage panel** — appears dynamically the moment a complaint is selected: a titled checklist card ("Suggested first-aid steps for: [complaint]"), checkboxes, visually distinct from the surrounding form (e.g., `surface` background) so it reads as guidance, not a required field
 4. **Treatment field** — textarea
@@ -144,7 +144,7 @@ Design these five in full detail first. Everything else in the system should be 
 **Why this one:** the richest **detail/read** screen — the template for viewing any single record in depth (a visit, an incident, an inventory item, a follow-up).
 
 **Layout, top to bottom:**
-1. **Header** — full name (large), Student Number (smaller, secondary), grade level, an archived-status badge if applicable
+1. **Header** — full name (large), the full LRN (smaller, secondary; the profile is the one screen that shows it in full), grade level, an archived-status badge if applicable
 2. **Sectioned content** (tabs or stacked sections, designer's call, but pick one pattern and reuse it everywhere else this applies): Overview (demographics, emergency contact), Medical History (allergies and conditions as tag/chip components), Visit History (chronological list), Incident History (chronological list, including which are Stage 1/incomplete vs complete)
 3. **Actions** (Staff only) — Edit, Print, Archive. Archive should visually read as a lower-emphasis, non-destructive action (it's reversible and doesn't delete anything) — don't style it like a destructive button
 

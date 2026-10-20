@@ -120,7 +120,7 @@ A blank research trail was treated as "not present" rather than assumed. Where a
 
 **Full feature list:**
 
-- Comprehensive student health profile with quick lookup (student number/name)
+- Comprehensive student health profile with quick lookup (LRN/name)
 - Medical and health history documentation
 - Medication management
 - Treatment management
