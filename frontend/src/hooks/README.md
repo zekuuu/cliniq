@@ -5,6 +5,6 @@ Generic shared hooks not tied to one feature (e.g. auth state, session handling)
 - `useCancelNavigation` is the shared form Cancel; it asks before discarding unsaved input (`cliniq-modal-patterns`, ADR-021).
 - `useGoBack` is the history-back-or-fallback logic shared by `BackButton` and `useCancelNavigation`; `DRILL_THROUGH_STATE` and `useIsDrillThrough` mark a list opened by a drill-through link (`cliniq-back-navigation-patterns`, ADR-024).
 - `useAsyncData` loads a screen's data with loading, error, and refetch states (ADR-013).
-- `useIdentifiedStudent` holds which student an entry form is about (from `?student=` or picked on the form).
+- `useIdentifiedStudent` holds which student an entry form is about (picked on the form, or a reopened incident's student).
 - `useDateRangeEntryParams` reads a one-time `from`/`to` entry filter from the URL.
 - `usePrinting` reports when the browser is printing, so print-only documents mount only then (ADR-026, `cliniq-print-patterns`).
