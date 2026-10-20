@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { VisitLogListPage } from './VisitLogListPage'
 import { defaultVisitLogRange, fetchVisitLog } from './api/visitLogApi'
+import { lrnLabel, maskLrn } from '../../lib/lrn'
 
 describe('Visit Log', () => {
   it('links to New Visit from the page header', async () => {
@@ -46,7 +47,7 @@ describe('Visit Log', () => {
     expect(await screen.findByRole('button', { name: /Excuse letter/ })).toHaveTextContent('Pending approval')
     await waitFor(() => expect(screen.getAllByRole('row')).toHaveLength(Math.min(pending.length, 10) + 1))
     for (const row of pending.slice(0, 10)) {
-      expect(screen.getByRole('link', { name: `Review Letter for ${row.studentNumber}` })).toHaveAttribute('href', `/visits/${row.id}/excuse-letter`)
+      expect(screen.getByRole('link', { name: `Review Letter for ${lrnLabel(row.lrn)}` })).toHaveAttribute('href', `/visits/${row.id}/excuse-letter`)
     }
 
     await user.click(screen.getByRole('button', { name: /Excuse letter/ }))
@@ -114,10 +115,10 @@ describe('Visit Log', () => {
     renderWithRouter(<VisitLogListPage />)
 
     expect(await screen.findByRole('heading', { name: 'Visit Log' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'Student Number' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'LRN' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Disposition' })).toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: /full name/i })).not.toBeInTheDocument()
-    // ADR-010 (Option A): the complaint stays visible beside the Student Number; names never do.
+    // ADR-010 (Option A): the complaint stays visible beside the LRN; names never do.
     expect(screen.getByRole('columnheader', { name: /complaint/i })).toBeInTheDocument()
     const [newest] = await fetchVisitLog({ ...defaultVisitLogRange(), search: '', disposition: 'all' })
     expect(screen.getAllByText(newest.complaint).length).toBeGreaterThan(0)
@@ -126,7 +127,7 @@ describe('Visit Log', () => {
     expect(screen.queryByText('Paracetamol given')).not.toBeInTheDocument()
   })
 
-  it('searches visits by Student Number', async () => {
+  it('searches visits by LRN', async () => {
     const user = userEvent.setup()
     const range = defaultVisitLogRange()
     const [visit] = await fetchVisitLog({
@@ -137,10 +138,10 @@ describe('Visit Log', () => {
 
     renderWithRouter(<VisitLogListPage />)
     await screen.findByRole('heading', { name: 'Visit Log' })
-    await user.type(screen.getByLabelText('Search'), visit.studentNumber)
+    await user.type(screen.getByLabelText('Search'), visit.lrn)
 
     expect(await screen.findByText(/records? shown/)).toBeInTheDocument()
-    expect(screen.getAllByText(visit.studentNumber).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(maskLrn(visit.lrn)).length).toBeGreaterThan(0)
   })
 
   it('filters by disposition', async () => {
@@ -222,15 +223,15 @@ describe('Visit Log', () => {
     renderWithRouter(<VisitLogListPage />)
 
     await screen.findByRole('heading', { name: 'Visit Log' })
-    await user.click(screen.getByRole('button', { name: 'Sort by Student Number' }))
+    await user.click(screen.getByRole('button', { name: 'Sort by LRN' }))
     expect(
-      screen.getByRole('button', { name: /Sort by Student Number, currently ascending/i }),
+      screen.getByRole('button', { name: /Sort by LRN, currently ascending/i }),
     ).toBeInTheDocument()
     await user.click(
-      screen.getByRole('button', { name: /Sort by Student Number, currently ascending/i }),
+      screen.getByRole('button', { name: /Sort by LRN, currently ascending/i }),
     )
     expect(
-      screen.getByRole('button', { name: /Sort by Student Number, currently descending/i }),
+      screen.getByRole('button', { name: /Sort by LRN, currently descending/i }),
     ).toBeInTheDocument()
   })
 })
