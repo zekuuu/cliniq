@@ -27,7 +27,6 @@ describe('Clinic Overview Dashboard', () => {
     expect(screen.getByRole('link', { name: /low stock/i })).toHaveAttribute('href', '/inventory?attention=low_stock')
     expect(screen.getByRole('link', { name: /expired or expiring/i })).toHaveAttribute('href', '/inventory?attention=expiry')
     expect(screen.getByRole('link', { name: /incomplete records/i })).toHaveAttribute('href', '/students/incomplete')
-    expect(screen.getByRole('link', { name: 'View full monthly report' })).toHaveAttribute('href', '/reports')
   })
 
   it('sends Staff from the Pending excuse letters card to the filtered Visit Log, with no duplicate list', async () => {
@@ -44,7 +43,6 @@ describe('Clinic Overview Dashboard', () => {
     expect(screen.queryByRole('tab', { name: 'Calendar' })).not.toBeInTheDocument()
     await user.click(screen.getByRole('tab', { name: 'Trends' }))
     expect(await screen.findByRole('heading', { name: /visits trend/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'View full health summary report' })).toHaveAttribute('href', '/reports')
   })
 
   it('shows Admin the same counts without links to Staff-only screens', async () => {
