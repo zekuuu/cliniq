@@ -1,4 +1,5 @@
 # Changelog
+| Tuesday, October 20, 2026 — 16:51 PHT | Backup’s selected-sidebar warning now uses a dark-green glyph on the gold badge, matching the selected navigation row. Sidebar regression test (14) and typecheck passed. See `Agent-Sessions/2026-10-20-backup-warning-gold-green-glyph.md`. |
 | Tuesday, October 20, 2026 — 16:49 PHT | Backup’s selected-sidebar warning now uses a muted gold fill (`#c69214`) with a dark glyph; the inactive warning remains amber. Sidebar regression test (14) and typecheck passed. See `Agent-Sessions/2026-10-20-backup-warning-gold.md`. |
 | Tuesday, October 20, 2026 — 16:45 PHT | Backup’s selected-sidebar warning now uses a lighter amber fill and dark glyph instead of bright yellow, retaining contrast on the green selected row without a white inset. Sidebar regression test (14) and typecheck passed. See `Agent-Sessions/2026-10-20-backup-warning-light-amber.md`. |
 | Tuesday, October 20, 2026 — 16:43 PHT | Backup’s selected-sidebar warning gained a dedicated high-contrast active treatment; regression coverage now tests both inactive and selected states. See `Agent-Sessions/2026-10-20-backup-warning-selected-contrast.md`. |
