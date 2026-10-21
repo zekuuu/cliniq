@@ -90,9 +90,9 @@ Rendered images live in `Diagrams/` (PNG to view, SVG to zoom, `ERD-Overview.dot
 | `Diagrams/ERD-3.3-Visits.png` | Visits, excuse letters, triage, follow-ups, PE referrals |
 | `Diagrams/ERD-3.4-Emergency.png` | Incidents, vitals, referrals, call attempts, sign-off |
 | `Diagrams/ERD-3.5-Inventory.png` | Items, medicines given, stock ledger |
-| `Diagrams/ERD-3.6-Access-and-Operations.png` | Users, settings, calendar, reports, backups, audit |
+| `Diagrams/ERD-3.6-Access-and-Operations.png` | Users, settings, calendar, reports, Sports Reports, backups, audit |
 
-### 3.1 Overview (all 33 tables)
+### 3.1 Overview (all 35 tables)
 
 ```mermaid
 erDiagram
@@ -107,6 +107,7 @@ erDiagram
     students ||--o{ incidents : has
     students ||--o{ follow_ups : has
     students ||--o{ pe_referrals : has
+    students ||--o{ sports_report_students : "listed on"
     students |o--o{ inventory_transactions : "given to"
     complaint_types ||--o{ triage_steps : has
     complaint_types |o--o{ visits : "matched type"
@@ -131,6 +132,8 @@ erDiagram
     users ||--o{ password_histories : has
     users |o--o{ audit_logs : performs
     users ||--o{ reports : generates
+    users ||--o{ sports_reports : builds
+    sports_reports ||--o{ sports_report_students : lists
     users ||--o{ backup_logs : verifies
     users ||--o{ calendar_events : creates
     users ||--o{ issue_reports : files
@@ -478,6 +481,22 @@ erDiagram
         date period_to
         bigint generated_by_user_id FK
     }
+    sports_reports {
+        bigint id PK
+        varchar title "max 120"
+        varchar activity "optional"
+        varchar requested_by "instructor name, no account"
+        varchar look_back "30_days, 60_days, 90_days, school_year"
+        tinyint include_conditions "default 0"
+        datetime archived_at
+        bigint created_by_user_id FK
+    }
+    sports_report_students {
+        bigint id PK
+        bigint sports_report_id FK
+        bigint student_id FK
+        varchar note "max 500, optional"
+    }
     system_settings {
         varchar setting_key PK
         varchar setting_value
@@ -499,15 +518,19 @@ erDiagram
     users ||--o{ calendar_events : creates
     users ||--o{ backup_logs : verifies
     users ||--o{ reports : generates
+    users ||--o{ sports_reports : builds
+    sports_reports ||--o{ sports_report_students : lists
     users ||--o{ issue_reports : files
     users |o--o{ system_settings : edits
 ```
+
+`sports_report_students.student_id` points at `students` (section 3.2). A Sports Report (ADR-034) stores only the list, the clinician's notes and the two options; the visits and incidents it prints are read from `visits` and `incidents` when it is printed, never copied. Added Wednesday, October 21, 2026 — 07:19; not yet loaded into MariaDB (no database on the machine that made the change).
 
 ---
 
 ## 4. Table inventory
 
-33 tables. **Core** = a built screen or the mock already needs it; **Spec** = the requirements ask for it but the frontend contract does not carry it yet (build it in that module's phase). Worst-case rows are the stress assumptions used for the performance test, not forecasts.
+35 tables. **Core** = a built screen or the mock already needs it; **Spec** = the requirements ask for it but the frontend contract does not carry it yet (build it in that module's phase). Worst-case rows are the stress assumptions used for the performance test, not forecasts.
 
 | # | Table | Owning module | Tier | Worst-case rows |
 |---|---|---|---|---|
@@ -544,6 +567,8 @@ erDiagram
 | 31 | `calendar_events` | Dashboard | Core | thousands |
 | 32 | `issue_reports` | Shared (Feedback) | Core | hundreds |
 | 33 | `audit_logs` | Shared (AuditLog) | Core | 1,500,000 (about 390 MB with its indexes) |
+| 34 | `sports_reports` | ReportsGeneration | Core | hundreds |
+| 35 | `sports_report_students` | ReportsGeneration | Core | tens of thousands |
 
 **Module list (extends ADR-009).** `UserManagement`, `StudentRecords`, `ClinicVisits`, `EmergencyResponse`, `SmartTriage` *(missing from the backend README)*, `InventoryTracker`, `Dashboard`, `ReportsGeneration`, `BackupVerification`, `AuditLogViewer` *(missing; the read side of `Shared/AuditLog`)*, and `Shared` (`AuditLog`, `Settings`, `Sequences`, `FollowUps`, `Feedback`). That makes 10 modules plus `Shared` (the QR Digital Health ID module was removed, ADR-027), which also settles the 9 / 10 / 11 count mismatch between the backend README, the NFR doc and `Module-Overview.md`.
 
@@ -806,7 +831,7 @@ These are deliberate. Each needs a yes/no from the team, and a matching change i
 
 ## 13. Laravel implementation notes
 
-- **Migration order** (matches `Reference-Schema.sql`): `users`, `password_histories`, `system_settings`, `number_sequences`, `grade_levels`, `complaint_types`, `triage_steps`, `student_import_batches`, `students`, `student_health_entries`, `emergency_contacts`, `emergency_contact_verifications` (add its `incident_id` foreign key after `incidents` exists), `student_record_reviews`, `inventory_items`, `visits`, `excuse_letters`, `triage_checks`, `incidents`, `incident_vital_readings`, `hospital_referrals`, `parent_notification_attempts`, `incident_report_approvals`, `follow_ups`, `pe_referrals`, `treatment_item_lines`, `inventory_transactions`, `reports`, `backup_logs`, `holidays`, `holiday_sync_runs`, `calendar_events`, `issue_reports`, `audit_logs`. In `Reference-Schema.sql` the verification table is created after `incidents` to avoid the forward reference; in Laravel create it in that same slot.
+- **Migration order** (matches `Reference-Schema.sql`): `users`, `password_histories`, `system_settings`, `number_sequences`, `grade_levels`, `complaint_types`, `triage_steps`, `student_import_batches`, `students`, `student_health_entries`, `emergency_contacts`, `emergency_contact_verifications` (add its `incident_id` foreign key after `incidents` exists), `student_record_reviews`, `inventory_items`, `visits`, `excuse_letters`, `triage_checks`, `incidents`, `incident_vital_readings`, `hospital_referrals`, `parent_notification_attempts`, `incident_report_approvals`, `follow_ups`, `pe_referrals`, `treatment_item_lines`, `inventory_transactions`, `reports`, `sports_reports`, `sports_report_students`, `backup_logs`, `holidays`, `holiday_sync_runs`, `calendar_events`, `issue_reports`, `audit_logs`. In `Reference-Schema.sql` the verification table is created after `incidents` to avoid the forward reference; in Laravel create it in that same slot.
 - **One migration per module**, in that module's folder, loaded with `loadMigrationsFrom`, so the modular structure of ADR-009 reaches the database layer.
 - **CHECK constraints** have no fluent builder: add them with `DB::statement('ALTER TABLE ... ADD CONSTRAINT ... CHECK (...)')` in the same migration, copying from `Reference-Schema.sql`.
 - **Generated columns:** `->storedAs('...')`. **Composite foreign keys:** `$table->foreign(['visit_id','student_id'])->references(['id','student_id'])->on('visits')`.

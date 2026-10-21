@@ -41,6 +41,8 @@ How to read it: **Tier** is `Core` (a built screen or the mock already needs it)
 | 31 | [`calendar_events`](#calendar_events) | Dashboard | Core | School events that Staff maintain on the Dashboard calendar (ADR-019). |
 | 32 | [`issue_reports`](#issue_reports) | Shared (Feedback) | Core | "Report an issue" feedback from any signed-in role. |
 | 33 | [`audit_logs`](#audit_logs) | Shared (AuditLog) | Core | Append-only record of who did what and when (RA 10173 accountability). |
+| 34 | [`sports_reports`](#sports_reports) | ReportsGeneration | Core | A saved Sports Report for a PE or sports instructor (ADR-034). |
+| 35 | [`sports_report_students`](#sports_report_students) | ReportsGeneration | Core | The students on a Sports Report and the clinician's note for each. |
 
 The Sanctum `personal_access_tokens` table is created by Sanctum's own migration and is not redefined here (set `expires_at` to 7 days, ADR-015). Laravel's `migrations` table is also standard.
 
@@ -801,6 +803,56 @@ A log of which report was requested, for what period, by whom. The report conten
 
 - `chk_reports_period`: `period_to >= period_from`
 - `chk_reports_type`: `type in ('monthly','incident','health_summary')`
+
+## sports_reports
+
+**Module:** ReportsGeneration  |  **Tier:** Core
+
+A saved Sports Report (ADR-034): a list of students the clinician prints for a PE or sports instructor. Holds the list's details only; the visits and incidents are read when it is printed. Hand-written Wednesday, October 21, 2026 — 07:19 from `Reference-Schema.sql`; not yet loaded into MariaDB, so regenerate this section when the schema is next tested.
+
+**Frontend:** `SportsReport` (title, activity, requestedBy, window, includeConditions, archived).
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` **PK** | `bigint unsigned` | no |  |  |
+| `title` | `varchar(120)` | no |  | 1-120 characters. |
+| `activity` | `varchar(120)` | yes | NULL | For example "Palaro 2026, Boys Basketball". |
+| `requested_by` | `varchar(120)` | no |  | The instructor's name as typed; instructors have no account (ADR-029). |
+| `look_back` | `varchar(11)` | no | '90_days' | `30_days` / `60_days` / `90_days` / `school_year` (June 15 onward). |
+| `include_conditions` | `tinyint(1)` | no | 0 | Print recorded conditions and allergies. Off by default. |
+| `archived_at` | `datetime` | yes | NULL | Archived reports are hidden from the list by default; never deleted. |
+| `created_by_user_id` | `bigint unsigned` | no |  |  |
+| `created_at` | `datetime` | no | current_timestamp() |  |
+| `updated_at` | `datetime` | no | current_timestamp() |  |
+
+**Indexes:** `idx_sports_reports_updated` (`updated_at`)
+
+**Foreign keys:** `created_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
+
+**Checks:**
+
+- `chk_sports_reports_title`: `char_length(trim(title)) >= 1`
+- `chk_sports_reports_requested_by`: `char_length(trim(requested_by)) >= 1`
+- `chk_sports_reports_look_back`: `look_back in ('30_days','60_days','90_days','school_year')`
+
+## sports_report_students
+
+**Module:** ReportsGeneration  |  **Tier:** Core
+
+The students on a Sports Report and the clinician's optional note for each. Hand-written Wednesday, October 21, 2026 — 07:19; not yet loaded into MariaDB.
+
+**Frontend:** `SportsReport.students` (studentId, note).
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` **PK** | `bigint unsigned` | no |  |  |
+| `sports_report_id` | `bigint unsigned` | no |  |  |
+| `student_id` | `bigint unsigned` | no |  | An archived student stays on the list and is left out of the printout. |
+| `note` | `varchar(500)` | yes | NULL | Printed beside the student. Never a system-made "fit to play". |
+
+**Indexes:** `uq_sports_report_student` UNIQUE (`sports_report_id`, `student_id`), `idx_sports_report_students_student` (`student_id`)
+
+**Foreign keys:** `sports_report_id` -> `sports_reports`(`id`) ON DELETE CASCADE; `student_id` -> `students`(`id`) ON DELETE RESTRICT
 
 ## backup_logs
 
