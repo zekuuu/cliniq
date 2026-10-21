@@ -45,7 +45,8 @@ Give the agent this full list — it maps directly to the two module groups (bas
 19. **Monthly Report View/Generate**
 20. **Incident Report Archive**
 21. **Health Summaries View**
-(All three need print/export-friendly layouts — this is a paper-replacement feature, so print CSS matters.)
+21a. **Sports Reports** (ADR-034, Staff only; entry from Reports): the saved-reports list, the builder (title, activity, requested by, look-back window, conditions option, students by name or LRN search or a whole grade, a note per student), and the report view with its preview and A4 printout.
+(All of these need print/export-friendly layouts — this is a paper-replacement feature, so print CSS matters.)
 
 ### (Removed) Screens #22–26
 The QR screens (#22–24, #26) were removed with the QR feature (ADR-027), and the phone Emergency screen (#25) with the phone-only screens (ADR-033). Their numbers are kept so later screens keep theirs; Staff start an incident from Report Incident (#16).
@@ -75,4 +76,4 @@ The QR screens (#22–24, #26) were removed with the QR feature (ADR-027), and t
 ### Sidebar Footer / Legal
 36. **Privacy Policy** — accessible to every role (Staff, Admin/Principal), reached via a link in the sidebar footer; static content, no student data rendered on the page itself. Draft content: `09-References/Privacy-Policy.md`.
 
-**Total: ~32 screens/views** (accounting for the two-stage incident entry; the four QR screens and the phone Emergency screen were removed, ADR-027 and ADR-033), several of which (Excuse Letter, Incident Report, Monthly Report) also need a distinct print layout — call that out to the agent explicitly since print CSS is easy to forget.
+**Total: ~35 screens/views** (accounting for the two-stage incident entry; the four QR screens and the phone Emergency screen were removed, ADR-027 and ADR-033; the three Sports Report views were added, ADR-034), several of which (Excuse Letter, Incident Report, Monthly Report) also need a distinct print layout — call that out to the agent explicitly since print CSS is easy to forget.

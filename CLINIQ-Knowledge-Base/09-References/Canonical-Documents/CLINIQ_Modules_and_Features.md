@@ -170,6 +170,12 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - View health summary — *Staff, Admin/Principal*
 - Export health summary — *Staff, Admin/Principal*
 
+**Sports Reports (ADR-034)** — *Staff only; the Admin/Principal cannot open them*
+- Build a saved, reusable list of students for a PE or sports activity: title, activity, requested by (the instructor's name), look-back window (30, 60 or 90 days or the school year; default 90), "Include recorded conditions and allergies" (off by default) — *Staff*
+- Add students by name or LRN search or a whole grade level at once, with an optional note per student; shown by full name and grade level, a decided exception to the display-privacy rule — *Staff*
+- Edit, duplicate and archive a saved report — *Staff*
+- Print the report (A4): each student's visits and incidents in the window (date, what happened, outcome), the note, and conditions only if ticked; never notes, vitals, medicines, contacts or the LRN; signature lines for the clinician and the receiving instructor; every print audited — *Staff*
+
 ---
 
 ## Team-Proposed Enhancements
