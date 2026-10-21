@@ -37,6 +37,10 @@ The Incomplete Records queue (Screen #9) lists several students at once and stil
 
 Use the same test for a similar screen: a multi-student list may show names only when it carries **no medical or visit information at all**. The moment a row shows anything diagnostic, it takes the masked LRN.
 
+## Decided exception: the Sports Report shows full names (ADR-034)
+
+The Sports Report (Reports > Sports Reports, Staff only) lists several students by **full name and grade level**, and its printout carries their recent visits and incidents. This is a decided exception to the masked-LRN rule, because the PE or sports instructor who receives the printout has to recognise the students (ADR-034, Zean, Wednesday, October 21, 2026). It holds only inside that feature: the builder, its preview and its printout. The student picker in the builder still shows the masked LRN, the saved-reports list names reports (never students), and the Audit Trail names the report and a student count, never a student. Do not copy this exception to any other list, picker or printout. Built Wednesday, October 21, 2026 — 07:23.
+
 ## Where this has already been applied correctly
 
 Reference these as the working pattern: the Visit Log List, Incident Log List, Follow-Up List, Audit Log, and Dashboard alert lists (masked LRN, with the reason visible); the Student Profile, masterlist, and Incomplete Records queue (full name). See `CLINIQ-Knowledge-Base/01-Requirements/User-Roles-and-Permissions.md` for the full rule text.

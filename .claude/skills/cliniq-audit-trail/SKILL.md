@@ -11,7 +11,7 @@ Every one of the following action types must write an audit log entry, across ev
 - **Every form submission** — new visit, new incident, inventory dispense/restock, follow-up creation, etc.
 - **Every approval** — excuse letter sign-off, incident report sign-off
 - **Every create/update/delete/archive** action on any record
-- **Every Print / Save as PDF** of student or clinic health information — one entry with the signed-in user, real time, and document title. Use shared `beforeprint` handling so buttons and Ctrl+P both log exactly once.
+- **Every Print / Save as PDF** of student or clinic health information — one entry with the signed-in user, real time, and document title. Use shared `beforeprint` handling so buttons and Ctrl+P both log exactly once. A printout about a saved record may name that record instead (`PrintDocument`'s `auditRecord`, e.g. a Sports Report with "Printed for 12 students"): a count, never the students.
 
 ## What a log entry needs
 

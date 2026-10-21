@@ -59,7 +59,14 @@ Every printout has:
 - The screen's Print button stays inside a `print:hidden` block, and calls `window.print()`.
 - Existing printouts: `DashboardPrint` (Clinic Overview Report), `ReportsPrint` (Monthly Clinic
   Report, Incident Report Archive, Health Summary), and the print trees in `ExcuseLetterPage`,
-  `IncidentReportPage`, `StudentProfilePage`, and `AuditLogPage`.
+  `IncidentReportPage`, `StudentProfilePage`, and `AuditLogPage`, and `SportsReportPrint` (the Sports
+  Report, ADR-034).
+- **The Sports Report is the one printout with its own confidentiality line** (`confidentiality` prop:
+  "Confidential: for the PE/Sports Instructor named above. Do not post or share. Shows only what CLINIQ
+  recorded; this is not a medical clearance.") and full names (a decided exception, ADR-034). Its Print
+  button reads the visits and incidents again just before calling `window.print()`, so the paper is
+  current; the print tree itself still renders only what the screen holds. Its audit entry names the
+  report and the student count (`auditRecord` prop), not the title alone.
 
 ## Verification
 
