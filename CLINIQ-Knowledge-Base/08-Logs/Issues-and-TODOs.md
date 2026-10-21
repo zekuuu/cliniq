@@ -15,7 +15,7 @@
 
 ## Open work at a glance
 
-Open: FIX 19 · AUDIT 10 · DOC 26 · DECIDE 74 · LATER 17 | Notes: NOTE 52 · VERIFY 16 | Done: 204 (all in `Issues-Done-Archive.md`)
+Open: FIX 18 · AUDIT 10 · DOC 27 · DECIDE 75 · LATER 17 | Notes: NOTE 52 · VERIFY 17 | Done: 205 (all in `Issues-Done-Archive.md`)
 
 **Open `FIX` items:**
 
@@ -37,11 +37,10 @@ Open: FIX 19 · AUDIT 10 · DOC 26 · DECIDE 74 · LATER 17 | Notes: NOTE 52 · 
 - [ ] **Add "View full report" links from the Dashboard to Reports** (Settled without waiting for an answer)
 - [ ] **Add Body temperature, Time out and Assisted by to the Visit form** (The clinic's two logbooks)
 - [ ] **Make the incident readings optional and add the oximeter** (The clinic's two logbooks)
-- [ ] **Build the Sports Report (saved student lists printed for the PE instructor)** (The Sports Report for the PE instructor)
 
 - **AUDIT** (10): Free-text complaints and student lookup; Pending excuse letters on the Dashboard and profile; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep; Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026)
-- **DOC** (26): Issues-and-TODOs fix sweep; Groupmate system review; Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); README sync; Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; QR removal
-- **DECIDE** (74): Open decisions, waiting on someone outside the dev team; Open design questions; Known gaps; QR scan/lookup; Visit and incident entry; Open after the Group B fixes; Open product decisions from the mock-data layer; Free-text complaints and student lookup; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep; Groupmate system review; Dashboard view tabs (ADR-025); Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; Meeting with the clinician; Phone-only screens and account management; The Sports Report for the PE instructor; Phone-only screens and account management
+- **DOC** (27): Issues-and-TODOs fix sweep; Groupmate system review; Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); README sync; Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; QR removal; The Sports Report for the PE instructor
+- **DECIDE** (75): Open decisions, waiting on someone outside the dev team; Open design questions; Known gaps; QR scan/lookup; Visit and incident entry; Open after the Group B fixes; Open product decisions from the mock-data layer; Free-text complaints and student lookup; Optional visit notes and disposition-specific fields; Excuse letter excused period; Medicines & supplies given (ADR-018); Issues-and-TODOs fix sweep; Groupmate system review; Dashboard view tabs (ADR-025); Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; Meeting with the clinician; Phone-only screens and account management; The Sports Report for the PE instructor; Phone-only screens and account management
 - **LATER** (17): Known gaps; Reported UI/UX follow-ups; Medicines & supplies given (ADR-018); Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); README sync; Professor consultation and team meeting, October 16
 
 ---
@@ -112,7 +111,7 @@ Open: FIX 19 · AUDIT 10 · DOC 26 · DECIDE 74 · LATER 17 | Notes: NOTE 52 · 
 - Show the client both options: with integration (and a yearly cloud cost) and without
 - Ask the Principal about PE instructors, now that the team plans no direct access
 
-**Ours to decide (27)** — Product, design and code choices that need no outside answer, although some ask the clinician for input (named in the entry). Zean has the last word.
+**Ours to decide (28)** — Product, design and code choices that need no outside answer, although some ask the clinician for input (named in the entry). Zean has the last word.
 
 - Holiday source for the backend sync job
 - Additional backup layer beyond local + external drive
@@ -141,6 +140,7 @@ Open: FIX 19 · AUDIT 10 · DOC 26 · DECIDE 74 · LATER 17 | Notes: NOTE 52 · 
 - Inventory: a monthly sheet like the clinic's notebook
 - Should the Admin/Principal also get Backup, or does it stay with Staff?
 - What ends the session of an account the Admin disables?
+- Sports Report: confirm three assumptions made while building it
 
 ## Open decisions, waiting on someone outside the dev team
 
@@ -616,9 +616,14 @@ When you find or resolve something, add it here with a date and enough context t
 
 - **[NOTE]** **About this section** (logged Wednesday, October 21, 2026 — 00:28 PHT). Zean's answers on the PE instructor's printout, after a discussion: the clinician (Staff only) builds it; full names; recent injuries and incidents by default, with the student's conditions as a tick-box that is off by default; a look-back window of 90 days by default; saved, reusable and editable; a per-student note written by the clinician. In the same message Zean said to ignore the question of who asks the client about online hosting, and that only the Admin manages accounts (resolved). The decisions are in ADR-034; the build prompt is part 6 of `Prompt-Build-Removals-QR-LRN-Mobile-Instructor-UserMgmt.md`. Session: [2026-10-21-sports-report-and-account-answers](Agent-Sessions/2026-10-21-sports-report-and-account-answers.md)
 
-- [ ] **[FIX]** **Build the Sports Report (saved student lists printed for the PE instructor)** (logged Wednesday, October 21, 2026 — 00:28 PHT). Decided in ADR-034 and the resolved entry "What the PE Instructor's printout holds, and how the clinician builds it". The clinician builds a saved, reusable and editable Sports Report: a title, the activity, who requested it, the students (full name and grade; added one by one or a whole grade level at once), an optional note per student, a look-back window (30, 60, 90 days or the school year; default 90) and a tick-box "include recorded conditions" (off by default). The A4 printout (ADR-026) shows, per student, the visits and incidents in the window (date, what happened, outcome), the note and, if ticked, the conditions, with an "as of" time, a confidentiality line and signature lines for the clinician and the receiving instructor. Staff only; the Admin cannot open it. Saved lists store only the list and notes, never a copy of medical content. Creating, editing, archiving and printing are audited. It is part 6 of `Prompt-Build-Removals-QR-LRN-Mobile-Instructor-UserMgmt.md`, to be run after part 5 (LRN). Session: [2026-10-21-sports-report-and-account-answers](Agent-Sessions/2026-10-21-sports-report-and-account-answers.md)
 
 - [ ] **[DECIDE]** **Sports Report: all visits and incidents, or injuries only?** (logged Wednesday, October 21, 2026 — 00:28 PHT). The complaint on a visit is free text with suggestions, not a category, so the system cannot reliably pick out injuries; the first version prints every visit and incident in the window, which for some students will include routine complaints such as a headache or stomachache. Ask the clinician whether that is acceptable, or which complaints count as relevant to sports (for example sprain, wound, fall), so a filter or a tick per entry can be added. Also open from the same design: whether an entry older than the window should still print while its follow-up is open, and how an instructor hears of an injury that happened today, since a printout is a snapshot. Session: [2026-10-21-sports-report-and-account-answers](Agent-Sessions/2026-10-21-sports-report-and-account-answers.md)
+
+- [ ] **[DECIDE]** **Sports Report: confirm three assumptions made while building it** (logged Wednesday, October 21, 2026 — 07:26 PHT). (1) A student archived after being added stays on the saved list, is flagged in the builder, and is left out of the printout with a count ("Left out of this report: 1 archived student record"). (2) "The school year" window starts June 15 (the Principal's dates, "The school and its master list"), so between April 15 and June 14 it still covers the school year that just ended. (3) An incident's outcome on the printout reads "Referred to hospital" or "No hospital referral recorded", since an incident has no disposition like a visit. Zean to confirm or change. Session: [2026-10-21-sports-report](Agent-Sessions/2026-10-21-sports-report.md)
+
+- [ ] **[DOC]** **Canonical documents: add the Sports Report** (logged Wednesday, October 21, 2026 — 07:26 PHT). `CLINIQ_Modules_and_Features.md` now lists it under Reports Generation; the Frontend Context Brief (§5 entities: `SportsReport`), the Frontend Design Reference (screen list) and the Project Plan still do not mention it. For the document authors. Session: [2026-10-21-sports-report](Agent-Sessions/2026-10-21-sports-report.md)
+
+- **[VERIFY]** **The Sports Report tables were not loaded into a database** (logged Wednesday, October 21, 2026 — 07:26 PHT). `sports_reports` and `sports_report_students` were added to `Reference-Schema.sql`, `ERD.md` and `Data-Dictionary.md` by hand; the machine that made the change has no MariaDB, so they have not passed the constraint tests the rest of the schema passed, and the dictionary sections are hand-written. Load the schema and regenerate the dictionary before migrations. Session: [2026-10-21-sports-report](Agent-Sessions/2026-10-21-sports-report.md)
 
 ## QR removal — Wednesday, October 21, 2026 — 01:09 PHT
 
