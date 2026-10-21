@@ -33,7 +33,7 @@ const FIELDS = {
   reports: ['type', 'dateRange'],
   backupLogs: ['lastRun', 'fileSizeBytes', 'status', 'verifiedByUserId'],
   auditLog: ['userId', 'actionType', 'targetRecord', 'timestamp'],
-  frontendOnly: ['_note', 'devAccounts', 'visitComplaintTypes', 'incidentComplaintTypes', 'inventoryTransactions', 'recordReviews', 'excuseLetterApprovals', 'peReferrals', 'issueReports', 'calendarEvents'],
+  frontendOnly: ['_note', 'devAccounts', 'visitComplaintTypes', 'incidentComplaintTypes', 'inventoryTransactions', 'recordReviews', 'excuseLetterApprovals', 'peReferrals', 'issueReports', 'calendarEvents', 'sportsReports'],
 } as const
 
 /**
@@ -450,6 +450,28 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     userRef(`${w}.createdByUserId`, e.createdByUserId)
     relDateTime(`${w}.createdAt`, e.createdAt)
     relDateTime(`${w}.updatedAt`, e.updatedAt)
+  })
+  // Sports Reports (ADR-034): the list and notes only, never a copy of medical content.
+  const sportsReportIds = new Set<string>()
+  ;((fo.sportsReports ?? []) as Rec[]).forEach((r, i) => {
+    const w = `frontendOnly.sportsReports[${i}]`
+    checkFields(w, r, ['id', 'title', 'activity', 'requestedBy', 'window', 'includeConditions', 'students', 'archived', 'createdByUserId', 'createdAt', 'updatedAt'])
+    if (!/^sports-report-\d{4}$/.test(String(r.id))) fail(`${w}.id: "${String(r.id)}" should look like sports-report-0001`)
+    if (sportsReportIds.has(String(r.id))) fail(`${w}.id: duplicate "${String(r.id)}"`)
+    sportsReportIds.add(String(r.id))
+    if (!String(r.title ?? '').trim()) fail(`${w}.title: must not be empty`)
+    if (!String(r.requestedBy ?? '').trim()) fail(`${w}.requestedBy: must not be empty`)
+    oneOf(`${w}.window`, r.window, [30, 60, 90, 'school_year'])
+    const listed = new Set<string>()
+    ;((r.students ?? []) as Rec[]).forEach((s, j) => {
+      checkFields(`${w}.students[${j}]`, s, ['studentId', 'note'])
+      studentRef(`${w}.students[${j}].studentId`, s.studentId)
+      if (listed.has(String(s.studentId))) fail(`${w}.students[${j}].studentId: listed twice`)
+      listed.add(String(s.studentId))
+    })
+    userRef(`${w}.createdByUserId`, r.createdByUserId)
+    relDateTime(`${w}.createdAt`, r.createdAt)
+    relDateTime(`${w}.updatedAt`, r.updatedAt)
   })
 
   return problems

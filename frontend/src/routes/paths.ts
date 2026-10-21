@@ -38,6 +38,11 @@ export const paths = {
   inventoryDispense: '/inventory/dispense',
   followUps: '/follow-ups',
   reports: '/reports',
+  /** Sports Reports (ADR-034), Staff only. */
+  sportsReports: '/reports/sports',
+  sportsReportNew: '/reports/sports/new',
+  sportsReport: (reportId: string) => `/reports/sports/${seg(reportId)}`,
+  sportsReportEdit: (reportId: string) => `/reports/sports/${seg(reportId)}/edit`,
   auditLog: '/audit-log',
   privacyPolicy: '/privacy-policy',
   incidentNotifications: (incidentId?: string) =>

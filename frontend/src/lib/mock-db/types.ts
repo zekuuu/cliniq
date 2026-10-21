@@ -221,6 +221,30 @@ export interface CalendarEvent<D = ISODate, T = ISODateTime> {
   updatedAt: T
 }
 
+/** Look-back window of a Sports Report (ADR-034): the last 30, 60 or 90 days, or the school year so far. */
+export type SportsReportWindow = 30 | 60 | 90 | 'school_year'
+
+/**
+ * A saved Sports Report (ADR-034): a list of students the clinician builds for a PE or sports
+ * activity. It holds only the list and her notes, never a copy of medical content; the visits and
+ * incidents are read when it is printed. Staff only. PROVISIONAL pending the ERD.
+ */
+export interface SportsReport<T = ISODateTime> {
+  id: string
+  title: string
+  activity: string | null
+  /** The PE or sports instructor who asked for it, as typed (instructors have no account). */
+  requestedBy: string
+  window: SportsReportWindow
+  /** Print the students' recorded conditions and allergies. Off by default. */
+  includeConditions: boolean
+  students: Array<{ studentId: string; note: string | null }>
+  archived: boolean
+  createdByUserId: string
+  createdAt: T
+  updatedAt: T
+}
+
 export interface SeedFrontendOnly {
   _note: string
   devAccounts: DevAccount[]
@@ -232,6 +256,7 @@ export interface SeedFrontendOnly {
   peReferrals: Array<PeReferral<RelativeDateTime>>
   issueReports: Array<IssueReport<RelativeDateTime>>
   calendarEvents: Array<CalendarEvent<RelativeDate, RelativeDateTime>>
+  sportsReports: Array<SportsReport<RelativeDateTime>>
 }
 
 export interface MockDbSeed {
@@ -261,6 +286,7 @@ export interface FrontendOnlyState {
   peReferrals: PeReferral[]
   issueReports: IssueReport[]
   calendarEvents: CalendarEvent[]
+  sportsReports: SportsReport[]
 }
 
 /** Raw records only. `Student` here never carries `recordComplete`; selectors add it on read. */

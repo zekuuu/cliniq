@@ -26,6 +26,7 @@ export type MockCollection =
   | 'auditLog'
   | 'issueReports'
   | 'calendarEvents'
+  | 'sportsReports'
   | 'holidays'
 
 const DEFAULT_LATENCY_MS = 450

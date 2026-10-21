@@ -89,6 +89,9 @@ const FollowUpListPage = page(
   'FollowUpListPage',
 )
 const ReportsPage = page(() => import('../features/reports/ReportsPage'), 'ReportsPage')
+const SportsReportListPage = page(() => import('../features/reports/SportsReportListPage'), 'SportsReportListPage')
+const SportsReportPage = page(() => import('../features/reports/SportsReportPage'), 'SportsReportPage')
+const SportsReportFormPage = page(() => import('../features/reports/SportsReportFormPage'), 'SportsReportFormPage')
 const ParentNotificationPage = page(
   () => import('../features/emergency-response/ParentNotificationPage'),
   'ParentNotificationPage',
@@ -142,6 +145,14 @@ function IncidentNotificationRoute({ viewer }: Viewer) {
 function IncidentReportRoute({ viewer }: Viewer) {
   const { incidentId } = useParams()
   return <IncidentReportPage viewer={viewer} incidentId={incidentId} />
+}
+function SportsReportRoute({ viewer }: Viewer) {
+  const { reportId } = useParams()
+  return <SportsReportPage reportId={reportId} viewer={viewer} />
+}
+function SportsReportEditRoute({ viewer }: Viewer) {
+  const { reportId } = useParams()
+  return <SportsReportFormPage reportId={reportId} viewer={viewer} />
 }
 function UserFormRoute({ viewer }: Viewer) {
   const { userId } = useParams()
@@ -344,6 +355,35 @@ const APP_ROUTES: AppRoute[] = [
     roles: ['staff', 'admin'],
     nav: 'reports',
     render: (viewer) => <ReportsPage viewer={viewer} />,
+  },
+  // Sports Reports (ADR-034): the clinician's only; the Admin/Principal can't open them.
+  {
+    path: paths.sportsReports,
+    title: 'Sports Reports',
+    roles: ['staff'],
+    nav: 'reports',
+    render: (viewer) => <SportsReportListPage viewer={viewer} />,
+  },
+  {
+    path: paths.sportsReportNew,
+    title: 'New Sports Report',
+    roles: ['staff'],
+    nav: 'reports',
+    render: (viewer) => <SportsReportFormPage viewer={viewer} />,
+  },
+  {
+    path: '/reports/sports/:reportId',
+    title: 'Sports Report',
+    roles: ['staff'],
+    nav: 'reports',
+    render: (viewer) => <SportsReportRoute viewer={viewer} />,
+  },
+  {
+    path: '/reports/sports/:reportId/edit',
+    title: 'Edit Sports Report',
+    roles: ['staff'],
+    nav: 'reports',
+    render: (viewer) => <SportsReportEditRoute viewer={viewer} />,
   },
   {
     path: paths.auditLog,

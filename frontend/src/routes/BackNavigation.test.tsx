@@ -47,6 +47,7 @@ const SAMPLE: Record<string, string> = {
   visitId: 'visit-0157',
   incidentId: 'incident-0022',
   userId: 'user-staff-01',
+  reportId: 'sports-report-0001',
 }
 
 /** Walks the real route table: the `<Route>`s `AppRoutes` renders for this viewer. */

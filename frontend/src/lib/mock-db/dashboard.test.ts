@@ -113,6 +113,7 @@ function dataset(partial: Partial<DbState>): DbState {
       peReferrals: [],
       issueReports: [],
       calendarEvents: [],
+      sportsReports: [],
     },
     ...partial,
   }

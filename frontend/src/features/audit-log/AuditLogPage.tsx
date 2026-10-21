@@ -67,6 +67,7 @@ const targetLabels: Record<AuditTargetType, string> = {
   backup: 'Backup',
   'follow-up': 'Follow-up',
   'calendar-event': 'Calendar event',
+  'sports-report': 'Sports Report',
 }
 
 interface AuditLogFilters {

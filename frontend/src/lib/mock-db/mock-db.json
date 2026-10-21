@@ -5323,6 +5323,40 @@
           "time": "10:30"
         }
       }
+    ],
+    "sportsReports": [
+      {
+        "id": "sports-report-0001",
+        "title": "Intramurals volleyball tryouts",
+        "activity": "Intramurals 2026, Volleyball",
+        "requestedBy": "Coach Ramon Cruz",
+        "window": 90,
+        "includeConditions": false,
+        "students": [
+          {
+            "studentId": "student-0002",
+            "note": "Light drills only until the follow-up check."
+          },
+          {
+            "studentId": "student-0003",
+            "note": null
+          },
+          {
+            "studentId": "student-0044",
+            "note": null
+          }
+        ],
+        "archived": false,
+        "createdByUserId": "user-staff-01",
+        "createdAt": {
+          "daysAgo": 3,
+          "time": "10:05"
+        },
+        "updatedAt": {
+          "daysAgo": 3,
+          "time": "10:05"
+        }
+      }
     ]
   }
 }

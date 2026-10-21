@@ -26,7 +26,7 @@ import type {
   Visit,
 } from '../../types/entities'
 import { normalizeComplaint } from '../complaints'
-import { parseISODate, toISODate } from '../dates'
+import { addDays, parseISODate, toISODate } from '../dates'
 import type { CalendarDay, CalendarDayEvent, DashboardQuery, DashboardSummary, Holiday, HolidayFeed } from '../../types/dashboard'
 import holidayData from './holidays-ph.json'
 import type { FollowUpDueState } from '../../components/status/followUp'
@@ -65,6 +65,8 @@ import type {
   IssueReport,
   PeReferral,
   SeedStudent,
+  SportsReport,
+  SportsReportWindow,
   VitalsWarningRanges,
 } from './types'
 
@@ -99,6 +101,7 @@ function view(): DbState {
       ...s.frontendOnly,
       issueReports: isEmptied('issueReports') ? [] : s.frontendOnly.issueReports,
       calendarEvents: isEmptied('calendarEvents') ? [] : s.frontendOnly.calendarEvents,
+      sportsReports: isEmptied('sportsReports') ? [] : s.frontendOnly.sportsReports,
     },
   }
 }
@@ -220,10 +223,19 @@ export async function logoutMockSession(actor: SessionUser): Promise<void> {
   clearMockSession()
 }
 
+/** What a print's audit entry names when it is about a record rather than a document title. */
+export interface PrintAuditRecord {
+  type: string
+  id: string
+  /** Counts or field names only, never student values (ADR-017). */
+  summary?: string
+}
+
 /** Records one completed print request. The document title is display-safe audit metadata. */
-export function recordPrint(documentTitle: string, actor?: SessionUser): Promise<void> {
+export function recordPrint(documentTitle: string, actor?: SessionUser, record?: PrintAuditRecord): Promise<void> {
   return write('print document', (s) => {
-    audit(s, actorOr(actor), 'print', { type: 'print-document', id: documentTitle })
+    if (record) audit(s, actorOr(actor), 'print', { type: record.type, id: record.id }, record.summary)
+    else audit(s, actorOr(actor), 'print', { type: 'print-document', id: documentTitle })
   })
 }
 
@@ -1783,6 +1795,282 @@ export function deleteCalendarEvent(id: string, actor?: SessionUser): Promise<vo
     must(index >= 0 ? s.frontendOnly.calendarEvents[index] : undefined, 'Calendar event')
     s.frontendOnly.calendarEvents.splice(index, 1)
     audit(s, by, 'delete', { type: 'calendar-event', id })
+  })
+}
+
+// ---- Sports Reports (ADR-034; Staff only; PROVISIONAL pending the ERD) ----------------------
+
+export const SPORTS_REPORT_TEXT_MAX = 120
+export const SPORTS_REPORT_NOTE_MAX = 500
+export const SPORTS_REPORT_WINDOWS: SportsReportWindow[] = [30, 60, 90, 'school_year']
+/** The school year runs June 15 to April 14 (the Principal, October 2026; Issues-and-TODOs "The school and its master list"). */
+const SCHOOL_YEAR_START = '06-15'
+
+/** Sports Reports belong to the clinician (ADR-034): the Admin/Principal can't open them, and there is no instructor account. */
+export class SportsReportPermissionError extends Error {
+  constructor() {
+    super('Only the clinic staff can open Sports Reports.')
+  }
+}
+
+function requireStaff(actor: SessionUser) {
+  if (actor.role !== 'staff') throw new SportsReportPermissionError()
+}
+
+/** First day of the look-back window ending today: the last N days including today, or June 15 of the current school year. */
+export function sportsReportWindowStart(window: SportsReportWindow, today: ISODate): ISODate {
+  if (window !== 'school_year') return addDays(today, -(window - 1))
+  const year = Number(today.slice(0, 4))
+  return today.slice(5) >= SCHOOL_YEAR_START ? `${year}-${SCHOOL_YEAR_START}` : `${year - 1}-${SCHOOL_YEAR_START}`
+}
+
+export interface SportsReportInput {
+  title: string
+  activity: string
+  requestedBy: string
+  window: SportsReportWindow
+  includeConditions: boolean
+  students: Array<{ studentId: string; note: string }>
+}
+
+export type SportsReportErrors = Partial<Record<'title' | 'activity' | 'requestedBy' | 'window' | 'students', string>>
+
+/** Field messages for the builder; empty when the input is valid. The writes below enforce the same rules. */
+export function validateSportsReport(input: SportsReportInput): SportsReportErrors {
+  const errors: SportsReportErrors = {}
+  const title = input.title.trim()
+  const requestedBy = input.requestedBy.trim()
+  if (!title) errors.title = 'Enter a title for the report.'
+  else if (title.length > SPORTS_REPORT_TEXT_MAX) errors.title = `Keep the title to ${SPORTS_REPORT_TEXT_MAX} characters or fewer.`
+  if (input.activity.trim().length > SPORTS_REPORT_TEXT_MAX) errors.activity = `Keep the activity to ${SPORTS_REPORT_TEXT_MAX} characters or fewer.`
+  if (!requestedBy) errors.requestedBy = 'Enter the name of the instructor who asked for the report.'
+  else if (requestedBy.length > SPORTS_REPORT_TEXT_MAX) errors.requestedBy = `Keep the name to ${SPORTS_REPORT_TEXT_MAX} characters or fewer.`
+  if (!SPORTS_REPORT_WINDOWS.includes(input.window)) errors.window = 'Choose a look-back window.'
+  if (input.students.some((student) => student.note.trim().length > SPORTS_REPORT_NOTE_MAX))
+    errors.students = `Keep each note to ${SPORTS_REPORT_NOTE_MAX} characters or fewer.`
+  return errors
+}
+
+export class SportsReportValidationError extends Error {
+  readonly errors: SportsReportErrors
+  constructor(errors: SportsReportErrors) {
+    super(Object.values(errors).join(' '))
+    this.errors = errors
+  }
+}
+
+/** Only the list and the notes are kept (ADR-034): never a copy of anything from a student's record. */
+function cleanSportsReport(input: SportsReportInput): Pick<SportsReport, 'title' | 'activity' | 'requestedBy' | 'window' | 'includeConditions' | 'students'> {
+  const errors = validateSportsReport(input)
+  if (Object.keys(errors).length) throw new SportsReportValidationError(errors)
+  const seen = new Set<string>()
+  const students = input.students
+    .filter((student) => !seen.has(student.studentId) && seen.add(student.studentId))
+    .map((student) => ({ studentId: student.studentId, note: student.note.trim() || null }))
+  return {
+    title: input.title.trim(),
+    activity: input.activity.trim() || null,
+    requestedBy: input.requestedBy.trim(),
+    window: input.window,
+    includeConditions: input.includeConditions === true,
+    students,
+  }
+}
+
+export interface SportsReportSummary {
+  id: string
+  title: string
+  activity: string | null
+  requestedBy: string
+  studentCount: number
+  updatedAt: ISODateTime
+  archived: boolean
+}
+
+export function listSportsReports(actor?: SessionUser): Promise<SportsReportSummary[]> {
+  return read('sports reports', (s) => {
+    requireStaff(actorOr(actor))
+    return s.frontendOnly.sportsReports
+      .map(({ id, title, activity, requestedBy, students, updatedAt, archived }) => ({ id, title, activity, requestedBy, studentCount: students.length, updatedAt, archived }))
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+  })
+}
+
+/** A student on a report as the builder shows it: the name for recognition (ADR-034's exception), never medical fields. */
+export interface SportsReportStudentRow {
+  studentId: string
+  note: string | null
+  /** Null when the record is no longer in CLINIQ. */
+  fullName: string | null
+  gradeLevel: string | null
+  status: 'active' | 'archived' | 'missing'
+}
+
+export interface SportsReportDetail extends Omit<SportsReport, 'students'> {
+  students: SportsReportStudentRow[]
+}
+
+function sportsReportStudents(s: DbState, report: SportsReport): SportsReportStudentRow[] {
+  const students = studentsById(s)
+  return report.students.map(({ studentId, note }) => {
+    const student = students.get(studentId)
+    if (!student) return { studentId, note, fullName: null, gradeLevel: null, status: 'missing' as const }
+    return { studentId, note, fullName: student.fullName, gradeLevel: student.gradeLevel, status: student.archived ? ('archived' as const) : ('active' as const) }
+  })
+}
+
+export function getSportsReport(id: string, actor?: SessionUser): Promise<SportsReportDetail> {
+  return read('sports report', (s) => {
+    requireStaff(actorOr(actor))
+    const report = must(s.frontendOnly.sportsReports.find((r) => r.id === id), 'Sports Report')
+    return { ...report, students: sportsReportStudents(s, report) }
+  })
+}
+
+/** One visit or incident as the Sports Report prints it: never notes, vitals, medicines, contacts or letters. */
+export interface SportsReportEntry {
+  id: string
+  dateTime: ISODateTime
+  kind: 'Visit' | 'Incident'
+  /** The complaint as recorded. */
+  what: string
+  outcome: string
+}
+
+export interface SportsReportContentRow {
+  studentId: string
+  fullName: string
+  gradeLevel: string
+  /** Newest first. */
+  entries: SportsReportEntry[]
+  note: string | null
+  /** Only when the report includes conditions. */
+  conditions?: { medicalConditions: string[]; allergies: string[] }
+}
+
+export interface SportsReportContent {
+  report: Pick<SportsReport, 'id' | 'title' | 'activity' | 'requestedBy' | 'window' | 'includeConditions' | 'archived'>
+  from: ISODate
+  to: ISODate
+  asOf: ISODateTime
+  /** Active students, alphabetical by name. */
+  rows: SportsReportContentRow[]
+  /** Students on the list who are left out: archived, or no longer in CLINIQ. Counts only. */
+  leftOut: { archived: number; missing: number }
+}
+
+const SPORTS_REPORT_OUTCOMES: Record<Visit['disposition'], string> = {
+  returned_to_class: 'Returned to class',
+  sent_home: 'Sent home',
+  referred_to_hospital: 'Referred to hospital',
+}
+
+/**
+ * The report's content, computed from the visits and incidents at the moment it is asked for, so a
+ * reprint is current and nothing medical is ever stored with the report (ADR-034).
+ */
+export function getSportsReportContent(id: string, actor?: SessionUser): Promise<SportsReportContent> {
+  return read('sports report content', (s) => {
+    requireStaff(actorOr(actor))
+    const report = must(s.frontendOnly.sportsReports.find((r) => r.id === id), 'Sports Report')
+    const from = sportsReportWindowStart(report.window, s.today)
+    const to = s.today
+    const inWindow = (value: ISODateTime) => value.slice(0, 10) >= from && value.slice(0, 10) <= to
+    const students = studentsById(s)
+    const leftOut = { archived: 0, missing: 0 }
+    const rows: SportsReportContentRow[] = []
+    for (const { studentId, note } of report.students) {
+      const student = students.get(studentId)
+      if (!student) leftOut.missing += 1
+      else if (student.archived) leftOut.archived += 1
+      if (!student || student.archived) continue
+      const entries: SportsReportEntry[] = [
+        ...s.visits
+          .filter((v) => v.studentId === studentId && inWindow(v.dateTime))
+          .map((v) => ({ id: v.id, dateTime: v.dateTime, kind: 'Visit' as const, what: v.complaint, outcome: SPORTS_REPORT_OUTCOMES[v.disposition] })),
+        ...s.incidents
+          .filter((i) => i.studentId === studentId && inWindow(i.time))
+          .map((i) => ({ id: i.id, dateTime: i.time, kind: 'Incident' as const, what: i.complaint, outcome: i.hospitalReferral ? 'Referred to hospital' : 'No hospital referral recorded' })),
+      ].sort((a, b) => b.dateTime.localeCompare(a.dateTime))
+      rows.push({
+        studentId,
+        fullName: student.fullName,
+        gradeLevel: student.gradeLevel,
+        entries,
+        note,
+        ...(report.includeConditions ? { conditions: { medicalConditions: student.medicalConditions, allergies: student.allergies } } : {}),
+      })
+    }
+    rows.sort((a, b) => a.fullName.localeCompare(b.fullName))
+    const { title, activity, requestedBy, window, includeConditions, archived } = report
+    return { report: { id, title, activity, requestedBy, window, includeConditions, archived }, from, to, asOf: now(s), rows, leftOut }
+  })
+}
+
+export function createSportsReport(input: SportsReportInput, actor?: SessionUser): Promise<SportsReport> {
+  return write('add sports report', (s) => {
+    const by = actorOr(actor)
+    requireStaff(by)
+    const at = now(s)
+    const report: SportsReport = {
+      id: nextId('sports-report', s.frontendOnly.sportsReports),
+      ...cleanSportsReport(input),
+      archived: false,
+      createdByUserId: by.id,
+      createdAt: at,
+      updatedAt: at,
+    }
+    s.frontendOnly.sportsReports.push(report)
+    audit(s, by, 'create', { type: 'sports-report', id: report.id })
+    return report
+  })
+}
+
+export function updateSportsReport(id: string, input: SportsReportInput, actor?: SessionUser): Promise<SportsReport> {
+  return write('edit sports report', (s) => {
+    const by = actorOr(actor)
+    requireStaff(by)
+    const report = must(s.frontendOnly.sportsReports.find((r) => r.id === id), 'Sports Report')
+    const next = cleanSportsReport(input)
+    const summary = changedSummary(report, next)
+    Object.assign(report, next, { updatedAt: now(s) })
+    audit(s, by, 'update', { type: 'sports-report', id }, summary)
+    return report
+  })
+}
+
+/** A copy to reuse for the next event; the copy is a new, active report. */
+export function duplicateSportsReport(id: string, actor?: SessionUser): Promise<SportsReport> {
+  return write('duplicate sports report', (s) => {
+    const by = actorOr(actor)
+    requireStaff(by)
+    const source = must(s.frontendOnly.sportsReports.find((r) => r.id === id), 'Sports Report')
+    const at = now(s)
+    const copy: SportsReport = {
+      ...structuredClone(source),
+      id: nextId('sports-report', s.frontendOnly.sportsReports),
+      title: `Copy of ${source.title}`.slice(0, SPORTS_REPORT_TEXT_MAX),
+      archived: false,
+      createdByUserId: by.id,
+      createdAt: at,
+      updatedAt: at,
+    }
+    s.frontendOnly.sportsReports.push(copy)
+    audit(s, by, 'create', { type: 'sports-report', id: copy.id }, 'Duplicated from another Sports Report')
+    return copy
+  })
+}
+
+/** Archived reports are hidden from the list by default and can be restored; nothing is deleted. */
+export function setSportsReportArchived(id: string, archived: boolean, actor?: SessionUser): Promise<SportsReport> {
+  return write(archived ? 'archive sports report' : 'restore sports report', (s) => {
+    const by = actorOr(actor)
+    requireStaff(by)
+    const report = must(s.frontendOnly.sportsReports.find((r) => r.id === id), 'Sports Report')
+    Object.assign(report, { archived, updatedAt: now(s) })
+    if (archived) audit(s, by, 'archive', { type: 'sports-report', id })
+    else audit(s, by, 'update', { type: 'sports-report', id }, 'Restored from the archive')
+    return report
   })
 }
 

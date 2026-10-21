@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { usePrinting } from '../../hooks/usePrinting'
 import { cn } from '../../lib/cn'
 import { formatDateTime } from '../../lib/dates'
-import { getMockSessionUser, ROLE_LABELS, type SessionUser } from '../../lib/mock-db'
+import { getMockSessionUser, ROLE_LABELS, type PrintAuditRecord, type SessionUser } from '../../lib/mock-db'
 
 /*
  * Purpose-built printouts (ADR-026, `.claude/skills/cliniq-print-patterns`). A printout is its own
@@ -33,9 +33,9 @@ function cssString(text: string): string {
  * The footer lives in the page's bottom margin (CSS `@page` margin boxes), so it repeats on every page
  * without ever overlapping the content. The text depends on who prints and when, so it is generated here.
  */
-function footerCss(printedBy: string): string {
+function footerCss(printedBy: string, confidentiality: string): string {
   return `@page {
-  @bottom-left { content: ${cssString(`${printedBy}\n${CONFIDENTIALITY_LINE}`)}; white-space: pre-wrap; ${FOOTER_FONT} }
+  @bottom-left { content: ${cssString(`${printedBy}\n${confidentiality}`)}; white-space: pre-wrap; ${FOOTER_FONT} }
   @bottom-right { content: "Page " counter(page) " of " counter(pages); white-space: nowrap; text-align: right; ${FOOTER_FONT} }
 }`
 }
@@ -53,6 +53,10 @@ export interface PrintDocumentProps {
   /** Only for a table that can't be read in portrait (`@page landscape` in `index.css`). */
   landscape?: boolean
   viewer?: SessionUser
+  /** The footer's confidentiality line, when a document needs its own (the Sports Report). */
+  confidentiality?: string
+  /** Makes the print's audit entry name this record instead of the title (`usePrinting`). */
+  auditRecord?: PrintAuditRecord
 }
 
 export function PrintDocument({
@@ -61,8 +65,10 @@ export function PrintDocument({
   children,
   landscape = false,
   viewer = getMockSessionUser(),
+  confidentiality = CONFIDENTIALITY_LINE,
+  auditRecord,
 }: PrintDocumentProps) {
-  const printedAt = usePrinting(title, viewer)
+  const printedAt = usePrinting(title, viewer, auditRecord)
   if (!printedAt) return null
   return createPortal(
     <div
@@ -72,7 +78,7 @@ export function PrintDocument({
         landscape && '[page:landscape]',
       )}
     >
-      <style>{footerCss(printedByLine(printedAt, viewer))}</style>
+      <style>{footerCss(printedByLine(printedAt, viewer), confidentiality)}</style>
       <header className="flex items-center gap-[4mm] border-b-2 border-text-primary pb-[3mm]">
         <img src={LOGO_SRC} alt="" className="size-[15mm] shrink-0 object-contain" />
         <div className="min-w-0">

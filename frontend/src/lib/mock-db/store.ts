@@ -137,6 +137,7 @@ export function db(): DbState {
       state = migrated.state
       // A copy saved before calendar events existed has no collection for them.
       state.frontendOnly.calendarEvents ??= []
+      state.frontendOnly.sportsReports ??= []
       seedAuditLength = migrated.seedAuditLength
     } else {
       state = build()

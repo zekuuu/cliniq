@@ -24,6 +24,8 @@ export type {
   MockDbConfig,
   PeReferral,
   RecordReview,
+  SportsReport,
+  SportsReportWindow,
   VitalRange,
   VitalsWarningRanges,
 } from './types'

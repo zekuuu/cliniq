@@ -38,6 +38,7 @@ export const auditTargetTypes = [
   'backup',
   'follow-up',
   'calendar-event',
+  'sports-report',
 ] as const
 
 export type AuditTargetType = (typeof auditTargetTypes)[number]
@@ -112,6 +113,7 @@ const AUDIT_RECORD_KINDS: Record<string, string> = {
   backup: 'Backup',
   'issue-report': 'Issue report',
   'calendar-event': 'Calendar event',
+  'sports-report': 'Sports Report',
   'print-document': 'Printed document',
 }
 
@@ -144,6 +146,7 @@ function auditTargetIdentifier(state: DbState, target: NonNullable<AuditLogEntry
   }
   if (type === 'inventory') return { label: state.inventoryItems.find((item) => item.id === target.id)?.name ?? '' }
   if (type === 'user') return { label: state.users.find((user) => user.id === target.id)?.name ?? '' }
+  if (type === 'sports-report') return { label: state.frontendOnly.sportsReports.find((report) => report.id === target.id)?.title ?? '' }
   if (type === 'calendar-event') return { label: state.frontendOnly.calendarEvents.find((event) => event.id === target.id)?.title ?? '' }
   if (target.type === 'report') return { label: REPORT_NAMES[target.id] ?? '' }
   if (target.type === 'print-document') return { label: target.id }
