@@ -1,4 +1,5 @@
 import {
+  getIncidentComplaintTypes,
   getStudent,
   getVisitComplaintSuggestions,
   getVisitComplaintTypes,
@@ -16,9 +17,7 @@ import {
 import type { Disposition, ExcuseLetterDraft, FollowUp, Student, StudentSearchResult, Visit } from '../../../types/entities'
 
 export interface NewVisitContext {
-  /** `null` when the form was opened without an identified student; it then asks for the Student Number. */
-  student: Student | null
-  /** Complaint options + their Smart Triage checklists (mock-only content; see mock-db.json). */
+  /** Complaint options + their first-aid checklists (mock-only content; see mock-db.json). */
   complaintTypes: ComplaintType[]
   /** Complaint suggestions: predefined types plus complaints saved on visits, most used first. */
   complaintSuggestions: string[]
@@ -26,6 +25,8 @@ export interface NewVisitContext {
   items: InventoryItemView[]
   /** Placeholder sanity bounds for the non-blocking body temperature warning (nurse to confirm). */
   vitalsRanges: VitalsWarningRanges
+  /** The incident complaint list: a visit complaint on it gets the "Escalate to an incident?" hint (ADR-036). */
+  emergencyComplaints: string[]
 }
 
 export interface NewVisitInput extends Partial<VisitLogbookFields> {
@@ -39,6 +40,9 @@ export interface NewVisitInput extends Partial<VisitLogbookFields> {
   /** Sent home or referred, letter box ticked: the draft period and note. Not an approved letter. */
   excuseLetterDraft?: ExcuseLetterDraft | null
   referredTo?: string | null
+  /** "YYYY-MM-DDTHH:MM", only when Staff changed it from now (a late entry). */
+  dateTime?: string
+  lateEntryReason?: string | null
 }
 
 export interface NewVisitResult {
@@ -48,16 +52,16 @@ export interface NewVisitResult {
   belowZero: string[]
 }
 
-/** `studentNumber` is the route's `?student=` pre-selection; without one no student is attached. */
-export async function fetchNewVisitContext(studentNumber?: string): Promise<NewVisitContext> {
-  const [student, complaintTypes, complaintSuggestions, items, vitalsRanges] = await Promise.all([
-    studentNumber ? getStudent(studentNumber) : Promise.resolve(null),
+/** Everything New Visit needs before the student is picked on the form. */
+export async function fetchNewVisitContext(): Promise<NewVisitContext> {
+  const [complaintTypes, complaintSuggestions, items, vitalsRanges, emergencyComplaints] = await Promise.all([
     getVisitComplaintTypes(),
     getVisitComplaintSuggestions(),
     listInventory(),
     getVitalsWarningRanges(),
+    getIncidentComplaintTypes(),
   ])
-  return { student, complaintTypes, complaintSuggestions, items, vitalsRanges }
+  return { complaintTypes, complaintSuggestions, items, vitalsRanges, emergencyComplaints }
 }
 
 /** Fresh complaint suggestions after a save, so a newly typed complaint is offered next time. */
@@ -65,14 +69,14 @@ export function fetchComplaintSuggestions(): Promise<string[]> {
   return getVisitComplaintSuggestions()
 }
 
-/** The New Visit student search: Student Number prefix or name, active students, at most 8. */
+/** The New Visit student search: LRN prefix or name, active students, at most 8. */
 export function searchVisitStudents(query: string): Promise<StudentSearchResult[]> {
   return searchStudents(query)
 }
 
-/** Resolves the Student Number typed on the form when the student wasn't identified beforehand. */
-export function findVisitStudent(studentNumber: string): Promise<Student> {
-  return getStudent(studentNumber)
+/** Loads the picked student in full (allergies included). */
+export function findVisitStudent(studentId: string): Promise<Student> {
+  return getStudent(studentId)
 }
 
 /** Fresh stock figures after a save, so the picker shows what's left. */
@@ -100,6 +104,8 @@ export function submitNewVisit(input: NewVisitInput, user: SessionUser): Promise
       assistedBy: input.assistedBy,
       parentGuardian: input.parentGuardian,
       remarks: input.remarks,
+      dateTime: input.dateTime,
+      lateEntryReason: input.lateEntryReason,
     },
     user,
   )

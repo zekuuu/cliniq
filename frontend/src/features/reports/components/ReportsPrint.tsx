@@ -9,23 +9,19 @@ import {
 } from '../../../components'
 import { formatDateTime } from '../../../lib/dates'
 import { ROLE_LABELS, type ComplaintCount, type SessionUser } from '../../../lib/mock-db'
-import type { Disposition } from '../../../types/entities'
+import { DISPOSITION_LABELS } from '../../../lib/dispositions'
 import type { MonthlyReportData } from '../api/reportsApi'
+import { maskLrn } from '../../../lib/lrn'
 
 /*
  * Reports printouts (ADR-026): the tab on screen prints as its own formal document, with its own
- * title. Multi-student documents, so Student Numbers only and never names (ADR-004). Every figure is
+ * title. Multi-student documents, so masked LRNs only and never names (ADR-004, ADR-028). Every figure is
  * the screen's own report data for the month.
  */
 
 export type ReportView = 'monthly' | 'incidents' | 'health'
 type ArchiveRow = MonthlyReportData['incidents'][number]
 
-const DISPOSITION_LABELS: Record<Disposition, string> = {
-  returned_to_class: 'Returned to class',
-  sent_home: 'Sent home',
-  referred_to_hospital: 'Referred to hospital',
-}
 
 const share = (count: number, total: number) =>
   total ? `${Math.round((count / total) * 100)}%` : '—'
@@ -66,7 +62,7 @@ function IncidentTable({ rows }: { rows: ArchiveRow[] }) {
       rowKey={(row) => row.id}
       empty="No incidents were recorded this month."
       columns={[
-        { header: 'Student Number', width: '18%', cell: (row) => row.studentNumber },
+        { header: 'LRN', width: '18%', cell: (row) => maskLrn(row.lrn) },
         { header: 'Date and time', width: '26%', cell: (row) => formatDateTime(row.time) },
         { header: 'Complaint', cell: (row) => row.complaint },
         { header: 'Stage and status', width: '26%', cell: stageText },
@@ -101,8 +97,8 @@ export function ReportsPrint({
     return (
       <PrintDocument
         viewer={viewer}
-        title={`Incident Report Archive — ${month}`}
-        scope={`Incidents recorded in ${month}: ${data.incidents.length} ${data.incidents.length === 1 ? 'incident' : 'incidents'}, sorted by ${archiveOrder}. Students are identified by Student Number only.`}
+        title={`Incident register — ${month}`}
+        scope={`Incidents recorded in ${month}: ${data.incidents.length} ${data.incidents.length === 1 ? 'incident' : 'incidents'}, sorted by ${archiveOrder}. Students are identified by the last four digits of the LRN only.`}
       >
         <IncidentTable rows={archiveRows} />
       </PrintDocument>
@@ -112,7 +108,7 @@ export function ReportsPrint({
     return (
       <PrintDocument
         viewer={viewer}
-        title={`Health Summary — ${month}`}
+        title={`Complaint summary — ${month}`}
         scope={`Clinic visits per complaint in ${month}: ${totalVisits} ${totalVisits === 1 ? 'visit' : 'visits'} across ${data.complaintCounts.length} complaint ${data.complaintCounts.length === 1 ? 'type' : 'types'}.`}
       >
         <ComplaintBreakdown
@@ -141,7 +137,7 @@ export function ReportsPrint({
     <PrintDocument
       viewer={viewer}
       title={`Monthly Clinic Report — ${month}`}
-      scope={`Clinic visits, incidents, and follow-ups dated in ${month}, with ${previousMonth} beside the totals. Totals and Student Numbers only; no student is named.`}
+      scope={`Clinic visits, incidents, and follow-ups dated in ${month}, with ${previousMonth} beside the totals. Totals and masked LRNs only; no student is named.`}
     >
       <PrintSection title="Totals">
         <PrintTable
@@ -229,7 +225,7 @@ export function ReportsPrint({
         Prepared by {viewer.name}, {ROLE_LABELS[viewer.role]}.
       </p>
       <PrintSignatures
-        lines={[{ label: 'Prepared by (School nurse)' }, { label: 'Reviewed by (Principal)' }]}
+        lines={[{ label: `Prepared by (${ROLE_LABELS.staff})` }, { label: 'Reviewed by (Principal)' }]}
       />
     </PrintDocument>
   )

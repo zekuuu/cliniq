@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { getInventoryItem, getStudent, resetMockDb } from '../../lib/mock-db'
 import { renderWithRouter } from '../../test/renderWithRouter'
+import { pickDate } from '../../test/pickDate'
 import { selectOption } from '../../test/selectOption'
+import { pickStudent } from '../../test/pickStudent'
 import { InventoryDispensePage } from './InventoryDispensePage'
 import { InventoryFormPage } from './InventoryFormPage'
 import { InventoryListPage } from './InventoryListPage'
@@ -18,13 +20,14 @@ describe('Adjust Stock', () => {
   async function openAdjust(itemName: string) {
     const user = userEvent.setup()
     renderWithRouter(<InventoryListPage />)
-    await user.click(await screen.findByRole('button', { name: `Adjust Stock for ${itemName}` }))
+    // Panel review IV-1: Adjust Stock sits under the row's Manage menu.
+    await selectOption(user, await screen.findByRole('button', { name: new RegExp(`^Manage ${itemName}`) }), 'Adjust Stock')
     return { user, dialog: screen.getByRole('dialog', { name: `Adjust Stock: ${itemName}` }) }
   }
 
   it('requires a reason, and a note when the reason is Other', async () => {
     const { user, dialog } = await openAdjust('Gauze Pads')
-    await user.type(within(dialog).getByLabelText(/change/i), '-2')
+    await user.type(within(dialog).getByLabelText(/quantity to remove/i), '2')
     await user.click(within(dialog).getByRole('button', { name: 'Save Adjustment' }))
     expect(within(dialog).getByText('Choose a reason.')).toBeInTheDocument()
     await selectOption(user, within(dialog).getByLabelText(/^reason/i), 'Other')
@@ -35,7 +38,7 @@ describe('Adjust Stock', () => {
 
   it("can't take stock below 0", async () => {
     const { user, dialog } = await openAdjust('Gauze Pads')
-    await user.type(within(dialog).getByLabelText(/change/i), '-41')
+    await user.type(within(dialog).getByLabelText(/quantity to remove/i), '41')
     await selectOption(user, within(dialog).getByLabelText(/^reason/i), 'Damaged or spilled')
     await user.click(within(dialog).getByRole('button', { name: 'Save Adjustment' }))
     expect(within(dialog).getByText(/Stock can't go below 0/)).toBeInTheDocument()
@@ -63,9 +66,29 @@ describe('Restock and Edit Item', () => {
     await user.click(await screen.findByRole('button', { name: 'Restock Gauze Pads' }))
     const dialog = screen.getByRole('dialog', { name: 'Restock: Gauze Pads' })
     await user.type(within(dialog).getByLabelText(/quantity received/i), '10')
+    await pickDate(user, within(dialog).getByRole('button', { name: /expiration date/i }), '2027-10-22')
     await user.click(within(dialog).getByRole('button', { name: 'Save Restock' }))
     expect(await screen.findByText(/Gauze Pads restocked with 10 pieces/)).toBeInTheDocument()
     expect(await stock('item-0011')).toBe(50)
+  })
+
+  it('requires an expiry date unless the clinician explicitly confirms that the batch has none', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<InventoryListPage />)
+    await user.click(await screen.findByRole('button', { name: 'Restock Gauze Pads' }))
+    const dialog = screen.getByRole('dialog', { name: 'Restock: Gauze Pads' })
+    await user.type(within(dialog).getByLabelText(/quantity received/i), '10')
+    await user.click(within(dialog).getByRole('button', { name: 'Save Restock' }))
+
+    expect(within(dialog).getByText('Choose an expiration date, or confirm this batch has no expiration date.')).toBeInTheDocument()
+    expect(await stock('item-0011')).toBe(40)
+
+    await user.click(within(dialog).getByRole('checkbox', { name: /this batch has no expiration date/i }))
+    expect(within(dialog).getByRole('button', { name: /expiration date/i })).toBeDisabled()
+    await user.click(within(dialog).getByRole('button', { name: 'Save Restock' }))
+
+    expect(await screen.findByText(/Gauze Pads restocked with 10 pieces/)).toBeInTheDocument()
+    expect((await getInventoryItem('item-0011')).batches.at(-1)?.expirationDate).toBeNull()
   })
 
   it('shows stock and expiry as read-only when editing an existing item', async () => {
@@ -97,8 +120,11 @@ describe('Standalone Dispense', () => {
   })
 
   it("links to the student's visit today instead of recording twice; the notice names no student", async () => {
-    const student = await getStudent('2026-00005')
-    renderWithRouter(<InventoryDispensePage />, { route: `/inventory/dispense?student=${student.studentNumber}` })
+    const student = await getStudent('student-0015')
+    const user = userEvent.setup()
+    renderWithRouter(<InventoryDispensePage />, { route: '/inventory/dispense' })
+    await selectOption(user, await screen.findByLabelText(/^For/), 'A student')
+    await pickStudent(user, student.lrn)
     const notice = (await screen.findByText(/This student already has a visit today/)).closest('[role="status"]') as HTMLElement
     expect(within(notice).getByRole('link', { name: /Open today’s visit/ })).toHaveAttribute('href', '/visits/visit-0159')
     expect(within(notice).queryByText(new RegExp(student.fullName))).not.toBeInTheDocument()
@@ -111,7 +137,7 @@ describe('Standalone Dispense', () => {
     renderWithRouter(<InventoryDispensePage />, { route: '/inventory/dispense' })
     await selectOption(user, await screen.findByLabelText(/^For/), 'A student')
     await user.type(screen.getByRole('combobox', { name: /student/i }), 'Gian')
-    await user.click(await screen.findByRole('option', { name: /2026-00001.*Gian Quizon/ }))
+    await user.click(await screen.findByRole('option', { name: /LRN ending in 0001 Gian Quizon Kinder/ }))
     expect(screen.getByRole('button', { name: 'Change student (Gian Quizon)' })).toBeInTheDocument()
   })
 

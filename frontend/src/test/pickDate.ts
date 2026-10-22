@@ -4,7 +4,7 @@ import { formatLongDate, formatMonthYear } from '../lib/dates'
 
 async function openToYear(user: UserEvent, trigger: HTMLElement, year: number) {
   await user.click(trigger)
-  const dialog = screen.getByRole('dialog')
+  const dialog = screen.getByRole('dialog', { name: /^Choose / })
   // Zoom out to the year pages, then page until the target year is on screen.
   for (let i = 0; i < 2; i++) {
     const zoom = within(dialog).queryByRole('button', { name: /, choose (month|year)$/ })

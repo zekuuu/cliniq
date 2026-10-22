@@ -47,7 +47,8 @@ type ViewMode = 'chart' | 'table'
 const MAX_VISIBLE_TABLE_PERIODS = 12
 /** Hover point and tooltip glide time on the trend chart. */
 const HOVER_MS = 320
-const PERIOD_COLUMN_WIDTH = '5rem'
+const PERIOD_COLUMN_WIDTH_REM = 5
+const PERIOD_COLUMN_WIDTH = `${PERIOD_COLUMN_WIDTH_REM}rem`
 const TOTAL_COLUMN_WIDTH = '5rem'
 
 /**
@@ -239,12 +240,6 @@ function TrendLineChart({ trends, clusters }: { trends: Trends; clusters: Cluste
   )
 }
 
-function weekdayPeakText(label: string, count: number, peak: { date: string; count: number; annotations: string[] } | null) {
-  if (!peak) return `${label}: ${count} visits and incidents; no recorded day.`
-  const context = peak.annotations.length ? `; ${peak.annotations.join(', ')}` : ''
-  return `${label}: ${count} visits and incidents; busiest ${formatDate(peak.date)} (${peak.count})${context}.`
-}
-
 /** Monthly grouped bars make weekday patterns comparable without pretending adjacent dates are alike. */
 function WeekdayComparisonChart({ comparison }: { comparison: WeekdayComparison }) {
   const prefersReducedMotion = usePrefersReducedMotion()
@@ -317,28 +312,53 @@ function WeekdayComparisonChart({ comparison }: { comparison: WeekdayComparison 
   )
 }
 
-/** Keyboard-focusable text alternative; it gives the same peak context as the chart tooltip. */
+/** Keyboard-focusable text alternative; each month pairs its case count with its busiest date. */
 function WeekdayComparisonTable({ comparison }: { comparison: WeekdayComparison }) {
   return (
     <div className="overflow-x-auto scrollbar-thin">
-      <table className="w-full min-w-[34rem] text-sm" aria-label="Visits and incidents by weekday comparison">
+      <table className="w-full min-w-[44rem] table-fixed text-sm" aria-label="Visits and incidents by weekday comparison">
+        <colgroup>
+          <col className="w-[14%]" />
+          {/* Wide enough for "Visits and incidents" on two lines (panel review 5.1: say what is counted). */}
+          <col className="w-[13%]" />
+          <col className="w-[30%]" />
+          <col className="w-[13%]" />
+          <col className="w-[30%]" />
+        </colgroup>
         <thead className="border-b border-border text-left text-xs text-text-secondary">
           <tr>
-            <th scope="col" className="px-2 py-2 font-semibold">Weekday</th>
-            <th scope="col" className="px-2 py-2 text-right font-semibold">{comparison.currentLabel}</th>
-            <th scope="col" className="px-2 py-2 text-right font-semibold">{comparison.previousLabel}</th>
-            <th scope="col" className="px-2 py-2 font-semibold">Busiest dates / context</th>
+            <th scope="col" rowSpan={2} className="px-2 py-1.5 font-semibold">Weekday</th>
+            <th scope="colgroup" colSpan={2} className="border-l border-border bg-surface px-2 py-1.5 text-center font-semibold">{comparison.currentLabel}</th>
+            <th scope="colgroup" colSpan={2} className="border-l border-border bg-surface px-2 py-1.5 text-center font-semibold">{comparison.previousLabel}</th>
+          </tr>
+          <tr>
+            <th scope="col" className="border-l border-border px-2 py-1.5 text-right font-semibold">Visits and incidents</th>
+            <th scope="col" className="px-2 py-1.5 font-semibold">Busiest date &amp; context</th>
+            <th scope="col" className="border-l border-border px-2 py-1.5 text-right font-semibold">Visits and incidents</th>
+            <th scope="col" className="px-2 py-1.5 font-semibold">Busiest date &amp; context</th>
           </tr>
         </thead>
         <tbody>
           {comparison.rows.map((row) => (
             <tr key={row.label} tabIndex={0} className="border-b border-border last:border-0 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-green">
               <th scope="row" className="px-2 py-2 text-left font-semibold text-text-primary">{row.label}</th>
-              <td className="px-2 py-2 text-right tabular-nums">{row.current}</td>
-              <td className="px-2 py-2 text-right tabular-nums">{row.previous}</td>
+              <td className="border-l border-border px-2 py-2 text-right tabular-nums">{row.current}</td>
               <td className="px-2 py-2 text-xs text-text-secondary">
-                <span className="block">{weekdayPeakText(comparison.currentLabel, row.current, row.currentPeak)}</span>
-                <span className="block">{weekdayPeakText(comparison.previousLabel, row.previous, row.previousPeak)}</span>
+                {row.currentPeak ? (
+                  <>
+                    <span className="block font-semibold text-text-primary">{formatShortDate(row.currentPeak.date)} · {row.currentPeak.count} {row.currentPeak.count === 1 ? 'case' : 'cases'}</span>
+                    {row.currentPeak.annotations.length > 0 && <span className="block">{row.currentPeak.annotations.join(', ')}</span>}
+                  </>
+                ) : 'No recorded day'}
+              </td>
+              <td className="border-l border-border px-2 py-2 text-right tabular-nums">{row.previous}</td>
+              <td className="px-2 py-2 text-xs text-text-secondary">
+                {row.previousPeak ? (
+                  <>
+                    <span className="block font-semibold text-text-primary">{formatShortDate(row.previousPeak.date)} · {row.previousPeak.count} {row.previousPeak.count === 1 ? 'case' : 'cases'}</span>
+                    {row.previousPeak.annotations.length > 0 && <span className="block">{row.previousPeak.annotations.join(', ')}</span>}
+                  </>
+                ) : 'No recorded day'}
               </td>
             </tr>
           ))}
@@ -377,7 +397,11 @@ export function TrendTable({ trends }: { trends: Trends }) {
     totalRow.complaint.length,
     ...complaintRows.map((row) => row.complaint.length),
   )
-  const complaintColumnWidth = `${maxComplaintLength + 2}ch`
+  const complaintMinColumnWidth = `${maxComplaintLength + 2}ch`
+  const periodColumnsWidth = `${visibleBuckets.length * PERIOD_COLUMN_WIDTH_REM}rem`
+  // The Complaint column fills any spare width on short ranges, keeping Total flush to the right.
+  // At the minimum table width it resolves back to its content-calibrated minimum.
+  const complaintColumnWidth = `calc(100% - ${periodColumnsWidth} - ${TOTAL_COLUMN_WIDTH})`
   const visibleComplaintRows = complaintRows.filter(
     (row) => showAllComplaints || visibleBucketIndexes.some((index) => row.counts[index] > 0),
   )
@@ -424,9 +448,9 @@ export function TrendTable({ trends }: { trends: Trends }) {
       cell: (r) => <strong>{r.total}</strong>,
     },
   ]
-  // The table is as wide as its columns, so a long period window overflows into the scroller while
-  // fixed layout keeps every column at its calibrated width when rows are hidden or shown.
-  const tableMinWidth = `calc(${complaintColumnWidth} + ${visibleBuckets.length} * ${PERIOD_COLUMN_WIDTH} + ${TOTAL_COLUMN_WIDTH})`
+  // A long period window grows past this content-calibrated minimum and overflows into the scroller;
+  // fixed layout keeps every column stable when rows are hidden or shown.
+  const tableMinWidth = `calc(${complaintMinColumnWidth} + ${periodColumnsWidth} + ${TOTAL_COLUMN_WIDTH})`
   // Only Complaint and Total sort; period columns read in time order and aren't sortable.
   const sortedRows = sortTableRows(rows, sort, (row, key) =>
     key === 'complaint' ? row.complaint : row.total,
@@ -643,8 +667,13 @@ function percent(value: number) {
  * Filter toggles. Selected reads like a `SegmentedControl` chip (green ring, raised, heavier
  * weight), so the active filter is visible without relying on color alone.
  */
-const FILTER_BUTTON =
-  'cursor-pointer rounded-md border border-border px-3 py-2 text-left text-sm transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green aria-pressed:border-brand-green aria-pressed:bg-background aria-pressed:shadow-card aria-pressed:ring-1 aria-pressed:ring-brand-green motion-reduce:transition-none'
+const FILTER_BUTTON_BASE =
+  'cursor-pointer rounded-md border border-border text-left transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green aria-pressed:border-brand-green aria-pressed:bg-background aria-pressed:shadow-card aria-pressed:ring-1 aria-pressed:ring-brand-green motion-reduce:transition-none'
+const FILTER_BUTTON = `${FILTER_BUTTON_BASE} px-3 py-2 text-sm`
+
+// Grade filters have short labels and sit beneath a dense chart, so they use a compact grid without
+// changing the larger sex-filter controls alongside them.
+const GRADE_FILTER_BUTTON = `${FILTER_BUTTON_BASE} min-w-0 px-2 py-1.5 text-xs`
 
 function countsText(rows: DemographicAnalysis['sex']) {
   return rows.map((row) => `${row.label} ${row.count} (${percent(row.share)})`).join('; ')
@@ -668,15 +697,18 @@ function DemographicCharts({
     transitions: { active: { animation: { duration: prefersReducedMotion ? 0 : HOVER_MS, easing: 'easeInOutCubic' as const } } },
     tooltip: { enabled: false, external: (context: Parameters<typeof smoothTooltip>[0]) => smoothTooltip(context, HOVER_MS) },
   }
-  // The same two tokens as the weekday comparison; the buttons below carry the text labels.
-  const sexColors = [colorToken('brand-green-dark'), colorToken('text-secondary')]
+  // The visible Female/Male labels carry the meaning; these documented colors make the datasets
+  // readily distinguishable without reusing status colors.
+  const sexColors = demographics.sex.map((row) =>
+    colorToken(row.key === 'female' ? 'chart-female' : 'chart-male'),
+  )
   const tick = colorToken('text-secondary')
   return (
     <section aria-label="Demographic analysis" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       {/* On desktop the card stretches to the grade card beside it: a somewhat larger donut, with the
           leftover height shared above and below instead of one empty band under the buttons. */}
       <Card className="lg:flex lg:flex-col">
-        <CardHeader title="Visits by Sex" description="Visits and incidents in the selected period; aggregated only." icon={<Icon name="barChart" />} />
+        <CardHeader title="Visits and incidents by sex" description="Visits and incidents in the selected period; aggregated only." icon={<Icon name="barChart" />} />
         <CardBody className="flex flex-col gap-3 lg:flex-1 lg:justify-center">
           {/* Legend clicks would hide a segment while its count stays on the button below; filtering is the buttons' job. */}
           <div className="relative h-56 lg:h-72"><Doughnut data={{ labels: demographics.sex.map((row) => row.label), datasets: [{ data: demographics.sex.map((row) => row.count), backgroundColor: sexColors, borderColor: colorToken('background'), borderWidth: 2 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick } } } }} aria-label={`Visits and incidents by Sex: ${countsText(demographics.sex)}.`} role="img" /></div>
@@ -690,13 +722,13 @@ function DemographicCharts({
         </CardBody>
       </Card>
       <Card>
-        <CardHeader title="Visits by grade level" description="Visits and incidents in the selected period; aggregated only." icon={<Icon name="barChart" />} />
+        <CardHeader title="Visits and incidents by grade level" description="Visits and incidents in the selected period; aggregated only." icon={<Icon name="barChart" />} />
         <CardBody className="flex flex-col gap-3">
           {/* Stacked, so each bar's height is still the grade's total; incidents use the incident red. */}
           <div className="relative h-56"><Bar data={{ labels: demographics.gradeLevel.map((row) => row.label), datasets: [{ label: 'Visits', data: demographics.gradeLevel.map((row) => row.visits), backgroundColor: colorToken('brand-green-dark'), borderColor: colorToken('background'), borderWidth: 1 }, { label: 'Incidents', data: demographics.gradeLevel.map((row) => row.incidents), backgroundColor: colorToken('error'), borderColor: colorToken('background'), borderWidth: 1 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, interaction: { mode: 'index', axis: 'x', intersect: false }, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick, boxWidth: 14 } } }, scales: { x: { stacked: true, ticks: { color: tick } }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0, color: tick } } } }} aria-label={`Visits and incidents by grade level: ${splitText(demographics.gradeLevel)}.`} role="img" /></div>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
             {demographics.gradeLevel.map((row) => (
-              <button key={row.key} type="button" aria-pressed={filters.gradeLevel === row.key} onClick={() => onFiltersChange({ ...filters, gradeLevel: filters.gradeLevel === row.key ? null : row.key })} className={FILTER_BUTTON}>
+              <button key={row.key} type="button" aria-pressed={filters.gradeLevel === row.key} onClick={() => onFiltersChange({ ...filters, gradeLevel: filters.gradeLevel === row.key ? null : row.key })} className={GRADE_FILTER_BUTTON}>
                 <span className="font-semibold text-text-primary">{row.label}</span><span className="ml-1 text-text-secondary">{row.count} · {percent(row.share)}</span>
               </button>
             ))}
@@ -732,7 +764,7 @@ export function ComplaintTrendsSkeleton() {
   return (
     <div aria-hidden="true" className="flex flex-col gap-4">
       <div data-skeleton="demographics" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {['Visits by Sex', 'Visits by grade level'].map((title) => (
+        {['Visits and incidents by sex', 'Visits and incidents by grade level'].map((title) => (
           <div key={title} className={CARD_SURFACE}>
             <div className="flex items-start gap-2.5 px-5 pt-5 pb-3">
               <span className="mt-0.5 text-brand-green-dark">

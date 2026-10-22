@@ -14,6 +14,8 @@ export type ColorToken =
   | 'warning'
   | 'error'
   | 'info'
+  | 'chart-female'
+  | 'chart-male'
   | 'white'
 
 export function colorToken(name: ColorToken): string {

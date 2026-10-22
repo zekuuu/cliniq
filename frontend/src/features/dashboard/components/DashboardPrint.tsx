@@ -17,13 +17,14 @@ import type { DashboardSummary } from '../../../types/dashboard'
 import { dueText, expiryLabel } from '../lib/alerts'
 import { activityRows, overviewSentences, periodPhrase } from '../lib/printSummary'
 import { bucketName, findClusters } from '../lib/trends'
+import { maskLrn } from '../../../lib/lrn'
 
 const COMPLAINT_ROWS = 8
 
 /**
  * "Clinic Overview Report": the Dashboard's printout (ADR-026). A one-to-two-page summary of the chosen
  * Date range for the nurse and the Principal; the formal monthly document is the Reports printout.
- * Every figure comes from the summary the screen already shows. Multi-student, so Student Numbers only
+ * Every figure comes from the summary the screen already shows. Multi-student, so masked LRNs only
  * (ADR-004).
  */
 export function DashboardPrint({
@@ -117,7 +118,7 @@ export function DashboardPrint({
           rowKey={(row) => row.followUp.id}
           empty="No follow-ups are overdue or due soon."
           columns={[
-            { header: 'Student Number', width: '18%', cell: (row) => row.student.studentNumber },
+            { header: 'LRN', width: '18%', cell: (row) => maskLrn(row.student.lrn) },
             { header: 'Reason', cell: (row) => row.followUp.reason },
             { header: 'Due', width: '28%', cell: (row) => dueText(row) },
             { header: 'Status', width: '14%', cell: (row) => followUpDueMap[row.dueState].label },
@@ -135,7 +136,7 @@ export function DashboardPrint({
                   key={row.student.id}
                   className="break-inside-avoid border-b border-border py-[0.8mm] tabular-nums"
                 >
-                  {row.student.studentNumber} · {row.visitCount} visits
+                  {maskLrn(row.student.lrn)} · {row.visitCount} visits
                 </li>
               ))}
             </ul>
@@ -155,7 +156,7 @@ export function DashboardPrint({
               rowKey={(row) => row.visitId}
               empty="No excuse letters are awaiting approval."
               columns={[
-                { header: 'Student Number', width: '18%', cell: (row) => row.studentNumber },
+                { header: 'LRN', width: '18%', cell: (row) => maskLrn(row.lrn) },
                 {
                   header: 'Excused',
                   width: '36%',

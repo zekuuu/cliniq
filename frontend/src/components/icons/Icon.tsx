@@ -187,14 +187,6 @@ const paths = {
       <rect x="6" y="14" width="12" height="8" />
     </>
   ),
-  qrCode: (
-    <>
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <path d="M14 14h2v2h-2zM19 14h2M14 19h2M19 19h2v2h-2zM16 16h3v3" />
-    </>
-  ),
   refresh: (
     <>
       <path d="M21 12a9 9 0 0 1-15.5 6.2L3 16" />

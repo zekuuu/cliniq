@@ -1,8 +1,10 @@
 import { useState, type ReactNode } from 'react'
+import { Link, useSearchParams } from 'react-router'
 import {
   BackButton,
   Badge,
   Button,
+  buttonClassName,
   Card,
   CardBody,
   CardHeader,
@@ -10,9 +12,11 @@ import {
   ErrorState,
   Icon,
   Input,
+  Modal,
   PrintDocument,
   PrintFields,
   Skeleton,
+  Textarea,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
@@ -20,11 +24,16 @@ import { formatDate, formatDateRange, formatDateTime } from '../../lib/dates'
 import { getMockSessionUser, ROLE_LABELS, type SessionUser } from '../../lib/mock-db'
 import {
   approveExcuseLetter,
+  defaultBody,
   excusedPeriodError,
   fetchExcuseLetterContext,
+  issueReplacement,
   type ExcuseLetterContext,
   type ExcusedPeriod,
 } from './api/excuseLetterApi'
+import { maskLrn } from '../../lib/lrn'
+import { MaskedLrn } from '../../components/ui/MaskedLrn'
+import { ExcusedPeriodPresets } from './ExcusedPeriodPresets'
 
 function LetterSkeleton({ back }: { back: ReactNode }) {
   return (
@@ -88,12 +97,14 @@ function PrintableLetter({
         </p>
         <div className="whitespace-pre-line">{body}</div>
         {note.trim() && <p>Note for the teacher: {note.trim()}</p>}
-        <div className="mt-6">
+        <div className="mt-6 w-64 max-w-full border-t border-text-primary pt-1">
           <p className="font-semibold">{context.checkedBy}</p>
-          <p className="text-text-secondary">School Clinic Staff</p>
+          <p className="text-text-secondary">{ROLE_LABELS.staff}, School Clinic</p>
+          <p className="text-xs text-text-secondary">Signature over printed name</p>
         </div>
-        <div className="rounded-md border border-border bg-surface px-3 py-2 text-xs print:bg-transparent">
-          Student: {context.student.fullName} · {context.student.studentNumber}
+        {/* Internal record status: on screen only, never on paper (panel review EX-4). */}
+        <div className="rounded-md border border-border bg-surface px-3 py-2 text-xs print:hidden">
+          Student: {context.student.fullName} · LRN <MaskedLrn lrn={context.student.lrn} />
           <br />
           Clinic visit: {formatDateTime(context.visit.dateTime)}
           <br />
@@ -127,20 +138,28 @@ function ExcuseLetterPrint({
   approved: boolean
 }) {
   const { student, visit } = context
+  // A letter whose visit was entered in error is void, draft or approved (panel review D2); a letter
+  // replaced by a later one is superseded. Neither is valid, and the printout says so.
+  const voided = Boolean(visit.enteredInError)
+  const superseded = Boolean(context.approval?.superseded)
   const periodText = excusedPeriodError(period) ? 'Not set' : formatDateRange(period.excusedFrom, period.excusedUntil)
   return (
     <PrintDocument
       title="Clinic Excuse Letter"
       viewer={viewer}
-      scope={`For ${student.fullName} (${student.studentNumber}), ${student.gradeLevel}, after a clinic visit on ${formatDateTime(visit.dateTime)}.`}
+      scope={`For ${student.fullName} (LRN ${maskLrn(student.lrn)}), ${student.gradeLevel}, after a clinic visit on ${formatDateTime(visit.dateTime)}.`}
     >
-      {!approved && (
+      {(!approved || voided || superseded) && (
         <>
           <div aria-hidden="true" className="pointer-events-none fixed inset-0 flex items-center justify-center">
-            <span className="-rotate-30 text-[110pt] font-bold tracking-widest text-border">DRAFT</span>
+            <span className="-rotate-30 text-[110pt] font-bold tracking-widest text-border">{voided ? 'VOID' : superseded ? 'SUPERSEDED' : 'DRAFT'}</span>
           </div>
           <p className="relative mb-[5mm] border-2 border-text-primary px-[3mm] py-[2mm] text-[11pt] font-bold">
-            DRAFT, NOT APPROVED. This letter is not valid until the school clinic approves it.
+            {voided
+              ? 'VOID. The clinic visit was entered in error, so this letter is not valid.'
+              : superseded
+                ? 'SUPERSEDED. A later letter replaced this one, so this letter is not valid.'
+                : 'DRAFT, NOT APPROVED. This letter is not valid until the school clinic approves it.'}
           </p>
         </>
       )}
@@ -153,6 +172,7 @@ function ExcuseLetterPrint({
         <div className="mt-[14mm] w-[70mm] break-inside-avoid border-t border-text-primary pt-[1.5mm]">
           <p className="font-semibold">{context.checkedBy}</p>
           <p className="text-[10pt]">{ROLE_LABELS.staff}, School Clinic</p>
+          <p className="text-[9pt]">Signature over printed name</p>
         </div>
         <p className="text-[9.5pt]">
           Not a medical certificate. Hospital-issued certificates are outside CLINIQ scope.
@@ -162,16 +182,20 @@ function ExcuseLetterPrint({
         <p className="mb-[2mm] font-semibold">Reference</p>
         <PrintFields
           fields={[
-            { label: 'Student', value: `${student.fullName} · ${student.studentNumber}` },
+            { label: 'Student', value: `${student.fullName} · LRN ${maskLrn(student.lrn)}` },
             { label: 'Grade level', value: student.gradeLevel },
             { label: 'Clinic visit', value: formatDateTime(visit.dateTime) },
             {
               label: 'Status',
-              value: context.approval
-                ? `Approved ${formatDateTime(context.approval.approvedAt)}; stored in the student record`
-                : approved
-                  ? 'Approved; stored in the student record'
-                  : 'Draft, not approved, not stored',
+              value: voided
+                ? 'Void'
+                : superseded && context.approval?.superseded
+                  ? `Superseded ${formatDateTime(context.approval.superseded.at)}`
+                  : context.approval
+                  ? `Approved ${formatDateTime(context.approval.approvedAt)}`
+                  : approved
+                    ? 'Approved'
+                    : 'Draft, not approved',
             },
           ]}
         />
@@ -181,6 +205,7 @@ function ExcuseLetterPrint({
 }
 
 function ExcuseLetterEditor({
+  onReplaced,
   context,
   back,
   viewer,
@@ -188,15 +213,41 @@ function ExcuseLetterEditor({
   context: ExcuseLetterContext
   back: ReactNode
   viewer: SessionUser
+  /** Reloads the page after "Issue a replacement" opened a new draft. */
+  onReplaced: () => void
 }) {
   const [recipient, setRecipient] = useState(context.recipient)
-  const [body, setBody] = useState(context.body)
+  // The wording names the excused dates and follows them until Staff edit it (panel review EX-4).
+  const [editedBody, setBody] = useState<string | null>(null)
+  const [replacing, setReplacing] = useState(false)
+  const [replaceReason, setReplaceReason] = useState('')
+  const [replaceError, setReplaceError] = useState('')
+  const [replaceSaving, setReplaceSaving] = useState(false)
   const [period, setPeriod] = useState(context.period)
   const [note, setNote] = useState(context.note)
   const [checked, setChecked] = useState(Boolean(context.approval))
   const [approved, setApproved] = useState(Boolean(context.approval))
   const [saving, setSaving] = useState(false)
   const periodError = excusedPeriodError(period)
+  const voided = context.visit.enteredInError ?? null
+  // Opened from the student's record: a letter a later one replaced. Read-only.
+  const superseded = context.approval?.superseded ?? null
+  const body = editedBody ?? defaultBody(context.student, context.visit, period)
+
+  async function replace() {
+    if (!replaceReason.trim()) {
+      setReplaceError('Give the reason for the replacement.')
+      return
+    }
+    setReplaceSaving(true)
+    try {
+      await issueReplacement(context.visit.id, replaceReason)
+      setReplacing(false)
+      onReplaced()
+    } finally {
+      setReplaceSaving(false)
+    }
+  }
 
   async function approve() {
     setSaving(true)
@@ -218,22 +269,39 @@ function ExcuseLetterEditor({
               Excuse Letter
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
-              {context.student.fullName} · {context.student.studentNumber} · visit on{' '}
+              {context.student.fullName} · LRN <MaskedLrn lrn={context.student.lrn} /> · visit on{' '}
               {formatDateTime(context.visit.dateTime)}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" icon="printer" onClick={() => window.print()}>
-              Print
+              Print / Save as PDF
             </Button>
-            <Badge tone={approved ? 'success' : 'warning'} variant="soft">
-              {approved ? 'Approved' : 'Draft'}
+            {approved && !voided && !superseded && (
+              <Button variant="neutral" onClick={() => { setReplaceReason(''); setReplaceError(''); setReplacing(true) }}>
+                Issue a replacement
+              </Button>
+            )}
+            <Badge tone={voided ? 'error' : superseded ? 'neutral' : approved ? 'success' : 'warning'} variant="soft">
+              {voided ? 'Voided' : superseded ? 'Superseded' : approved ? 'Approved' : 'Draft'}
             </Badge>
           </div>
         </div>
       </Card>
 
-      {approved && (
+      {superseded && !voided && (
+        <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-surface px-4 py-3 text-sm font-semibold text-text-primary print:hidden">
+          Superseded {formatDateTime(superseded.at)}: {superseded.reason}. A later letter replaced this one; it is kept in the record and is not valid.
+          <Link to={paths.excuseLetter(context.visit.id)} className={buttonClassName({ size: 'sm' })}>
+            Open the current letter
+          </Link>
+        </div>
+      )}
+      {voided ? (
+        <div role="status" className="rounded-md border border-error bg-error/10 px-4 py-3 text-sm font-semibold text-text-primary print:hidden">
+          Voided: the visit was entered in error ({voided.reason}). This letter can't be approved, and it prints marked VOID.
+        </div>
+      ) : approved && !superseded && (
         <div
           role="status"
           className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary print:hidden"
@@ -262,7 +330,7 @@ function ExcuseLetterEditor({
                 required
                 value={period.excusedFrom}
                 onChange={(excusedFrom) => setPeriod((current) => ({ ...current, excusedFrom }))}
-                disabled={approved}
+                disabled={approved || Boolean(voided)}
               />
               <DatePicker
                 label="Excused until"
@@ -272,8 +340,15 @@ function ExcuseLetterEditor({
                 onChange={(excusedUntil) => setPeriod((current) => ({ ...current, excusedUntil }))}
                 error={periodError ?? undefined}
                 hint={approved ? 'Fixed once the letter is approved.' : undefined}
-                disabled={approved}
+                disabled={approved || Boolean(voided)}
               />
+              <div className="sm:col-span-2">
+                <ExcusedPeriodPresets
+                  from={period.excusedFrom}
+                  disabled={approved || Boolean(voided)}
+                  onPick={(excusedUntil) => setPeriod((current) => ({ ...current, excusedUntil }))}
+                />
+              </div>
             </div>
             <Input
               label="Note for the teacher"
@@ -281,7 +356,7 @@ function ExcuseLetterEditor({
               placeholder="Optional"
               onChange={(event) => setNote(event.target.value)}
               hint={approved ? 'Fixed once the letter is approved.' : undefined}
-              disabled={approved}
+              disabled={approved || Boolean(voided)}
             />
             <div className="flex flex-col gap-1">
               <label htmlFor="excuse-body" className="text-xs font-semibold text-text-primary">
@@ -303,7 +378,7 @@ function ExcuseLetterEditor({
               <input
                 type="checkbox"
                 checked={checked}
-                disabled={approved}
+                disabled={approved || Boolean(voided)}
                 onChange={(event) => setChecked(event.target.checked)}
                 className="mt-0.5 size-4 cursor-pointer accent-brand-green-dark disabled:cursor-not-allowed"
               />
@@ -313,7 +388,7 @@ function ExcuseLetterEditor({
               variant="primary"
               icon="checkCircle"
               loading={saving}
-              disabled={!checked || approved || Boolean(periodError)}
+              disabled={!checked || approved || Boolean(periodError) || Boolean(voided)}
               onClick={() => void approve()}
             >
               Approve and Store
@@ -341,6 +416,33 @@ function ExcuseLetterEditor({
           </CardBody>
         </Card>
       </div>
+      <Modal open={replacing} title="Issue a replacement letter?" onClose={() => setReplacing(false)}>
+        <p className="text-sm text-text-secondary">
+          The approved letter is kept and marked Superseded; it is no longer valid. A new draft with the same
+          period and note opens for you to correct and approve.
+        </p>
+        <Textarea
+          className="mt-4"
+          label="Reason"
+          required
+          rows={3}
+          maxLength={300}
+          value={replaceReason}
+          onChange={(value) => {
+            setReplaceReason(value)
+            setReplaceError('')
+          }}
+          error={replaceError}
+        />
+        <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <Button variant="neutral" data-autofocus onClick={() => setReplacing(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" loading={replaceSaving} onClick={() => void replace()}>
+            Issue a replacement
+          </Button>
+        </div>
+      </Modal>
       <ExcuseLetterPrint
         context={context}
         viewer={viewer}
@@ -361,8 +463,9 @@ export function ExcuseLetterPage({
   viewer?: SessionUser
   visitId?: string
 }) {
-  const { data, status, reload } = useAsyncData(`excuse-letter|${visitId ?? 'default'}`, () =>
-    fetchExcuseLetterContext(visitId),
+  const letterId = useSearchParams()[0].get('letter') ?? undefined
+  const { data, status, reload } = useAsyncData(`excuse-letter|${visitId ?? 'default'}|${letterId ?? ''}`, () =>
+    fetchExcuseLetterContext(visitId, letterId),
   )
 
   if (viewer.role !== 'staff') {
@@ -395,5 +498,6 @@ export function ExcuseLetterPage({
     )
   }
 
-  return <ExcuseLetterEditor context={data} back={back} viewer={viewer} />
+  // Keyed by the letter shown, so a replacement starts a fresh editor.
+  return <ExcuseLetterEditor key={data.approval?.id ?? 'draft'} context={data} back={back} viewer={viewer} onReplaced={reload} />
 }

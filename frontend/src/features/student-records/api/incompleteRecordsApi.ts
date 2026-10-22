@@ -9,7 +9,7 @@ import type { ISODate, ISODateTime } from '../../../types/entities'
 export interface IncompleteRecord {
   id: string
   studentId: string
-  studentNumber: string
+  lrn: string
   fullName: string
   gradeLevel: string
   missingFields: string[]
@@ -21,9 +21,9 @@ export interface IncompleteRecord {
 
 function toRecord(row: QueueRow): IncompleteRecord {
   return {
-    id: `incomplete-${row.student.studentNumber}`,
+    id: `incomplete-${row.student.id}`,
     studentId: row.student.id,
-    studentNumber: row.student.studentNumber,
+    lrn: row.student.lrn,
     fullName: row.student.fullName,
     gradeLevel: row.student.gradeLevel,
     missingFields: row.missingFields,

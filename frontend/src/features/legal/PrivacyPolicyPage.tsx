@@ -1,5 +1,5 @@
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
-import { homePathFor, paths } from '../../routes/paths'
+import { paths } from '../../routes/paths'
 import { BackButton, Card } from '../../components'
 
 const sectionHeadingClass = 'text-lg font-semibold leading-7 text-text-primary'
@@ -13,13 +13,9 @@ const listClass = 'mt-3 list-disc space-y-2 pl-6 leading-7'
 export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser | null }) {
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-6 pb-6 sm:px-8">
-      {/* Every role opens this page; Back falls back to a home screen that role can open. The
-          Instructor has no navigation menu here, so Back is their main way out. */}
+      {/* Every role opens this page; signed out, Back returns to Sign In. */}
       {viewer ? (
-        <BackButton
-          fallback={homePathFor(viewer.role)}
-          variant={viewer.role === 'instructor' ? 'prominent' : 'quiet'}
-        />
+        <BackButton fallback={paths.dashboard} />
       ) : (
         <BackButton to={paths.login} label="Back to Sign In" variant="prominent" />
       )}
@@ -45,7 +41,7 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             qualified to confirm it against the Data Privacy Act of 2012 (Republic Act No. 10173)
             and any policy Mendez Christian Academy already has.{' '}
             <strong>
-              The contact section below is a placeholder — MCA has not yet designated who handles
+              The contact section below is not final: MCA has not yet designated who handles
               privacy inquiries, and this document should not go live with that section unresolved.
             </strong>
           </p>
@@ -63,7 +59,7 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             <p className={paragraphClass}>
               This policy covers CLINIQ, the clinic tracking and monitoring system used by Mendez
               Christian Academy&apos;s clinic. It applies to the information CLINIQ holds about
-              students, and about the staff, administrators, and instructors who use the system.
+              students, and about the staff and administrators who use the system.
             </p>
           </section>
 
@@ -73,7 +69,7 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             </h2>
             <ul className={listClass}>
               <li>
-                <strong>Student information:</strong> name, Student Number, grade level, section,
+                <strong>Student information:</strong> name, LRN (Learner Reference Number), grade level, section,
                 date of birth, gender, contact information, emergency contact details, allergies,
                 and medical conditions.
               </li>
@@ -88,8 +84,8 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
                 linked to a visit record.
               </li>
               <li>
-                <strong>Account information:</strong> name, username, and role, for every Staff,
-                Admin/Principal, and PE/Sports Instructor account.
+                <strong>Account information:</strong> name, username, and role, for every Staff and
+                Admin/Principal account.
               </li>
               <li>
                 <strong>Audit records:</strong> who accessed or acted on a record, what action was
@@ -168,10 +164,8 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
                       <strong>PE/Sports Instructor</strong>
                     </th>
                     <td className="px-3 py-3">
-                      Read-only access to a student&apos;s profile and injury/visit history, only
-                      when that student&apos;s QR code is scanned — for immediate first-aid context
-                      during PE/sports activities. No access to any other student&apos;s
-                      information, and no access to reports, inventory, or other modules.
+                      No account and no access to CLINIQ. An instructor asks the clinic, and the
+                      school clinician decides what health information to share.
                     </td>
                   </tr>
                 </tbody>
@@ -181,7 +175,7 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             <p className={paragraphClass}>
               No role can view information for a student they have not specifically looked up or
               that isn&apos;t relevant to their role. Multi-student list views (such as the visit
-              log) display a Student Number rather than a name, so that information isn&apos;t
+              log) show only the last digits of the LRN rather than a name, so that information isn&apos;t
               identifiable to someone glancing at a shared screen.
             </p>
           </section>

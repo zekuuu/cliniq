@@ -3,25 +3,22 @@ import { BackButton, Badge, Button, Card, CardBody, CardHeader, EmergencyContact
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
 import { formatDateTime } from '../../lib/dates'
-import { formatItemGiven, incidentCareSummary } from '../../lib/itemsGiven'
-import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
+import { formatItemGiven, incidentCareSummary, incidentCompletionBlocker } from '../../lib/itemsGiven'
+import { getMockSessionUser, ROLE_LABELS, type SessionUser } from '../../lib/mock-db'
 import { READING_LABELS, readingText, takenReadings } from '../../lib/vitals'
-import type { ParentNotificationOutcome } from '../../types/entities'
 import { approveReport, fetchIncidentRecord, type IncidentRecord } from './api/incidentRecordApi'
-
-const OUTCOME_LABELS: Record<ParentNotificationOutcome, string> = {
-  reached: 'Reached',
-  not_reached: 'Not reached',
-  voicemail: 'Voicemail',
-  left_message: 'Left message',
-}
+import { maskLrn } from '../../lib/lrn'
+import { MaskedLrn } from '../../components/ui/MaskedLrn'
+import { calledContactText, OUTCOME_LABELS } from './notificationOutcomes'
+import { FromVisit } from './FromVisit'
+import { useConfirmItsYou } from '../../hooks/useConfirmItsYou'
 
 /**
  * The incident report on A4 (ADR-026): one student, deliberately opened, so the full name is correct
  * (ADR-004). Ends with signature lines; a Stage 1 record prints a "Not yet completed" notice.
  */
 function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewer: SessionUser }) {
-  const { incident, student, approved, trail } = record
+  const { incident, student, approved, trail, sourceVisit } = record
   const referral = incident.hospitalReferral
   const notes = String(incident.vitals.treatmentNotes ?? '').trim()
   const vitals = takenReadings(incident.vitals)
@@ -30,7 +27,7 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
     <PrintDocument
       title="Incident Report"
       viewer={viewer}
-      scope={`${student.fullName} (${student.studentNumber}), ${student.gradeLevel}. Incident recorded ${formatDateTime(incident.time)}.`}
+      scope={`${student.fullName} (LRN ${maskLrn(student.lrn)}), ${student.gradeLevel}. Incident recorded ${formatDateTime(incident.time)}.`}
     >
       {incident.stage === 1 && (
         <p className="mb-[4mm] border-2 border-text-primary px-[3mm] py-[2mm] text-[11pt] font-bold">
@@ -42,12 +39,13 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
           <PrintFields
             columns={3}
             fields={[
-              { label: 'Student', value: `${student.fullName} · ${student.studentNumber}` },
+              { label: 'Student', value: `${student.fullName} · LRN ${maskLrn(student.lrn)}` },
               { label: 'Grade level', value: student.gradeLevel },
               { label: 'Date and time', value: formatDateTime(incident.time) },
               { label: 'Complaint', value: incident.complaint },
               { label: 'Record status', value: incident.stage === 1 ? 'Stage 1, needs completion' : 'Stage 2, complete' },
               { label: 'Sign-off', value: approved ? 'Approved' : 'Pending sign-off' },
+              ...(incident.bodyPart ? [{ label: 'Body part affected', value: incident.bodyPart }] : []),
               ...(incident.generalNotes ? [{ label: 'Additional notes', value: incident.generalNotes, wide: true }] : []),
             ]}
           />
@@ -60,8 +58,9 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
           )}
         </PrintSection>
         <PrintSection title="Treatment">
+          {incident.noFurtherActionReason && <p className="mb-[2mm]">No treatment or notification: {incident.noFurtherActionReason}</p>}
           {!notes && !incident.itemsGiven.length ? (
-            <p>No treatment recorded.</p>
+            !incident.noFurtherActionReason && <p>No treatment recorded.</p>
           ) : (
             <>
               {notes && <p className="whitespace-pre-line">{notes}</p>}
@@ -78,6 +77,18 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
             </>
           )}
         </PrintSection>
+        {sourceVisit && (
+          <PrintSection title="From visit">
+            <p>Escalated from a clinic visit. Given at the visit (not repeated here):</p>
+            {sourceVisit.itemsGiven.length ? (
+              <ul className="list-disc pl-[5mm]">
+                {sourceVisit.itemsGiven.map((line) => <li key={line.itemId}>{formatItemGiven(line)}</li>)}
+              </ul>
+            ) : (
+              <p>Nothing recorded.</p>
+            )}
+          </PrintSection>
+        )}
         <PrintSection title="Hospital referral">
           {referral ? (
             <PrintFields
@@ -99,8 +110,9 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
             rowKey={(attempt, index) => `${attempt.timestamp}|${index}`}
             empty="No parent notification attempts were logged for this incident."
             columns={[
-              { header: 'Date and time', width: '45%', cell: (attempt) => formatDateTime(attempt.timestamp) },
-              { header: 'Outcome', cell: (attempt) => OUTCOME_LABELS[attempt.outcome] },
+              { header: 'Date and time', width: '28%', cell: (attempt) => formatDateTime(attempt.timestamp) },
+              { header: 'Outcome', width: '24%', cell: (attempt) => OUTCOME_LABELS[attempt.outcome] },
+              { header: 'Who was called', cell: (attempt) => calledContactText(attempt.calledContact) },
             ]}
           />
         </PrintSection>
@@ -116,7 +128,7 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
         </PrintSection>
       </div>
       <PrintSignatures
-        lines={[{ label: 'School nurse' }, { label: 'Parent or guardian informed' }, { label: 'Principal (if applicable)' }]}
+        lines={[{ label: ROLE_LABELS.staff }, { label: 'Parent or guardian informed' }, { label: 'Principal (if applicable)' }]}
       />
     </PrintDocument>
   )
@@ -141,6 +153,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
   const [justApproved, setJustApproved] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [approving, setApproving] = useState(false)
+  const { confirm, dialog: confirmDialog } = useConfirmItsYou(viewer)
 
   const back = <BackButton fallback={paths.incidents} />
   if (status === 'error') return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState title="Unable to load the incident report." onRetry={reload} /></div>
@@ -150,6 +163,9 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
   const { incident, student, options, approved } = data
   const referral = incident.hospitalReferral
   const hasTreatment = incidentCareSummary(incident) !== 'No treatment recorded'
+  // Panel review IN-3: an empty record can't be signed off.
+  // Only a completed (Stage 2) record can be signed off; then it also needs care, a call or a referral.
+  const approvalBlocker = approved ? null : incident.stage === 1 ? 'Complete Stage 2 before approving this report.' : incidentCompletionBlocker(incident)
 
   async function approve() {
     setApproving(true)
@@ -181,10 +197,14 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
           </div>
           <div className="flex flex-wrap justify-end gap-2">
             <Button variant="secondary" icon="printer" onClick={() => window.print()}>Print / Save as PDF</Button>
-            <Button variant="primary" onClick={() => setConfirming(true)} disabled={approved}>{approved ? 'Approved' : 'Approve Report'}</Button>
+            <Button variant="primary" onClick={() => setConfirming(true)} disabled={approved || approvalBlocker !== null} aria-describedby={approvalBlocker ? 'approve-report-blocker' : undefined}>{approved ? 'Approved' : 'Approve Report'}</Button>
           </div>
         </div>
-        {!approved && !hasTreatment && (
+        {approvalBlocker ? (
+          <p id="approve-report-blocker" role="status" className="mt-4 rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm font-semibold text-text-primary">
+            Can&apos;t be approved yet. {approvalBlocker}
+          </p>
+        ) : !approved && !hasTreatment && !incident.noFurtherActionReason && (
           <p role="status" className="mt-4 rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm font-semibold text-text-primary">
             No treatment recorded. Check this is correct before approving.
           </p>
@@ -210,9 +230,10 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
           </div>
 
           <dl className="grid gap-4 sm:grid-cols-2">
-            <Field label="Student"><span className="font-semibold">{student.fullName} · {student.studentNumber}</span></Field>
+            <Field label="Student"><span className="font-semibold">{student.fullName} · LRN <MaskedLrn lrn={student.lrn} /></span></Field>
             <Field label="Recorded">{formatDateTime(incident.time)}</Field>
             <Field label="Complaint">{incident.complaint}</Field>
+            {incident.bodyPart && <Field label="Body part affected">{incident.bodyPart}</Field>}
             <Field label="Sign-off">{approved ? 'Approved' : 'Pending sign-off'}</Field>
             {incident.generalNotes && (
               <Field label="Additional notes" className="sm:col-span-2">
@@ -237,9 +258,16 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
             )}
           </section>
 
+          {data.sourceVisit && <FromVisit visitId={data.sourceVisit.id} given={data.sourceVisit.itemsGiven} />}
+
           <section className="border-t border-border pt-4" aria-labelledby="report-treatment-title">
             <h2 id="report-treatment-title" className="text-sm font-semibold text-text-primary">Treatment</h2>
-            <p className="mt-2 text-sm text-text-primary">{incidentCareSummary(incident)}</p>
+            {incident.noFurtherActionReason && (
+              <p className="mt-2 text-sm text-text-primary">No treatment or notification: {incident.noFurtherActionReason}</p>
+            )}
+            {(hasTreatment || !incident.noFurtherActionReason) && (
+              <p className="mt-2 text-sm text-text-primary">{incidentCareSummary(incident)}</p>
+            )}
           </section>
 
           <section className="border-t border-border pt-4" aria-labelledby="report-referral-title">
@@ -261,7 +289,10 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
               <ol className="mt-3 divide-y divide-border rounded-md border border-border">
                 {incident.parentNotifications.map((attempt, index) => (
                   <li key={`${attempt.timestamp}-${index}`} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
-                    <span className="text-sm font-semibold text-text-primary">{OUTCOME_LABELS[attempt.outcome]}</span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-text-primary">{OUTCOME_LABELS[attempt.outcome]}</span>
+                      <span className="block text-xs text-text-secondary">Called: {calledContactText(attempt.calledContact)}</span>
+                    </span>
                     <span className="text-sm text-text-secondary">{formatDateTime(attempt.timestamp)}</span>
                   </li>
                 ))}
@@ -284,13 +315,15 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
         </CardBody>
       </Card>
 
+      {confirmDialog}
       <Modal open={confirming} title="Approve this incident report?" onClose={() => setConfirming(false)}>
         <p className="text-sm text-text-secondary">
-          Approving signs off the report for {student.studentNumber} ({incident.complaint}, {formatDateTime(incident.time)}) and records it in the audit log. It can't be un-approved from this screen.
+          Approving signs off the report for LRN <MaskedLrn lrn={student.lrn} /> ({incident.complaint}, {formatDateTime(incident.time)}) and records it in the audit log. It can't be un-approved from this screen.
         </p>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <Button variant="neutral" data-autofocus onClick={() => setConfirming(false)}>Cancel</Button>
-          <Button variant="primary" loading={approving} onClick={approve}>Approve Report</Button>
+          {/* Panel review AC-7: approving asks for the password first. */}
+          <Button variant="primary" loading={approving} onClick={() => { setConfirming(false); confirm('approve an incident report', approve) }}>Approve Report</Button>
         </div>
       </Modal>
       <IncidentReportPrint record={data} viewer={viewer} />

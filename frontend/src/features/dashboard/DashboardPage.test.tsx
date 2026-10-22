@@ -10,6 +10,13 @@ vi.mock('react-chartjs-2', () => {
 })
 
 describe('Clinic Overview Dashboard', () => {
+  it('opens with Today as its date range', async () => {
+    renderWithRouter(<DashboardPage />)
+
+    await screen.findByRole('region', { name: 'Summary counts' })
+    expect(screen.getByRole('button', { name: 'Date range' })).toHaveTextContent('Today')
+  })
+
   it('puts the requested operational totals before its lower-detail sections', async () => {
     renderWithRouter(<DashboardPage />)
     const summary = await screen.findByRole('region', { name: 'Summary counts' })
@@ -17,6 +24,8 @@ describe('Clinic Overview Dashboard', () => {
       expect(within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === label)).toBeInTheDocument()
     }
     expect(within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === 'Active students')).toHaveClass('text-brand-green-dark')
+    expect(within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === 'Pending excuse letters')).toHaveClass('text-warning')
+    expect(within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === 'Due & overdue follow-ups')).toHaveClass('text-warning')
     expect(screen.getByRole('heading', { name: /frequent-visitor warnings/i })).toBeInTheDocument()
   })
 

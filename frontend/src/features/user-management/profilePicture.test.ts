@@ -27,7 +27,7 @@ describe('mock user profile pictures', () => {
     const existing = await getUser('user-staff-01')
     await saveUser(
       { name: existing.name, username: existing.username, role: existing.role, profilePicture: picture },
-      { userId: 'user-staff-01' },
+      { userId: 'user-staff-01', actor: { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' } },
     )
 
     expect((await getUser('user-staff-01')).profilePicture).toBe(picture)

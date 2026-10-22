@@ -6,6 +6,7 @@ import { getExcuseLetterApproval, getRecordedAuditEntries, getVisit, resetMockDb
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { VisitDetailPage } from './VisitDetailPage'
 import { fetchVisitDetail } from './api/visitDetailApi'
+import { maskLrn } from '../../lib/lrn'
 
 const letterCard = () => screen.getByRole('region', { name: 'Excuse letter' })
 
@@ -18,7 +19,7 @@ describe('Visit Details', () => {
 
     expect(await screen.findByRole('heading', { name: 'Visit Details' })).toBeInTheDocument()
     expect(screen.getByText(detail.student.fullName)).toBeInTheDocument()
-    expect(screen.getAllByText(detail.student.studentNumber).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(maskLrn(detail.student.lrn)).length).toBeGreaterThan(0)
     expect(screen.getByText(detail.complaint)).toBeInTheDocument()
     expect(screen.getByText(detail.treatment)).toBeInTheDocument()
   })
@@ -135,7 +136,7 @@ describe('Visit Details: excuse letter and disposition fields', () => {
   })
 
   it('is Staff only: other roles see neither the visit nor its letter', async () => {
-    renderWithRouter(<VisitDetailPage visitId="visit-0139" viewer={{ id: 'usr-pe', name: 'PE Instructor', role: 'instructor' }} />)
+    renderWithRouter(<VisitDetailPage visitId="visit-0139" viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }} />)
     expect(screen.getByText('Staff access required.')).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Excuse letter' })).not.toBeInTheDocument()
   })
@@ -153,7 +154,7 @@ describe('Visit Details: excuse letter and disposition fields', () => {
     await user.click(screen.getByRole('radio', { name: 'Returned to class' }))
     expect(screen.queryByLabelText(/prepare an excuse letter/i)).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('radio', { name: 'Hospital referral' }))
+    await user.click(screen.getByRole('radio', { name: 'Referred to hospital' }))
     expect(screen.getByLabelText(/referred to/i)).toHaveValue('')
     expect(screen.getByLabelText(/prepare an excuse letter/i)).toBeChecked()
     expect(screen.getByLabelText('Note for the teacher')).toHaveValue('')

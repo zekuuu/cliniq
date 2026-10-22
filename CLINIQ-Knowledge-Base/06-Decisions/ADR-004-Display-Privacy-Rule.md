@@ -1,7 +1,7 @@
 # ADR-004: Screen-Context Display-Privacy Rule
 
 **Date:** First proposed September 19–20, 2026; corrected September 20, 2026
-**Status:** Accepted (corrected once after initial proposal). **Amended by ADR-027 and ADR-028 (decided Saturday, October 17, 2026 — 07:52, not built):** once the CLINIQ Student Number is dropped, multi-student lists show the **LRN** instead of the name, and single-student views still show the name; the rule is otherwise unchanged. Until it is built, the app and the `cliniq-display-privacy` skill still follow this ADR with the Student Number.
+**Status:** Accepted (corrected once after initial proposal). **Amended by ADR-027 and ADR-028 (decided Saturday, October 17, 2026 — 07:52, not built):** multi-student lists show the **masked LRN** instead of the name, and single-student views still show the name; the rule is otherwise unchanged. **Built Wednesday, October 21, 2026 — 07:00** ([2026-10-21-lrn-replaces-student-number](../08-Logs/Agent-Sessions/2026-10-21-lrn-replaces-student-number.md)): in force, with the LRN in place of the Student Number. The ADR-034 Sports Report is a decided exception (full names, Staff only), built Wednesday, October 21, 2026 — 07:23 ([2026-10-21-sports-report](../08-Logs/Agent-Sessions/2026-10-21-sports-report.md)); it applies to that feature only.
 
 ## Context
 Concern raised: could someone connect to the internet and access a QR-reachable screen? Follow-up clarification: the actual concern was a bystander glancing at a desktop screen showing a *pattern* across multiple students (e.g., a frequent-visitor list) and inferring something about a specific named student — not the QR scan result itself, which is a deliberate single-student lookup.

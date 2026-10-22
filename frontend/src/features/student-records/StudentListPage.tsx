@@ -19,6 +19,7 @@ import { paths } from '../../routes/paths'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { Student } from '../../types/entities'
 import { fetchGradeLevels, fetchStudentList } from './api/studentListApi'
+import { MaskedLrn } from '../../components/ui/MaskedLrn'
 
 function StudentListSkeleton({ back }: { back: ReactNode }) {
   return (
@@ -78,9 +79,9 @@ const baseColumns: Array<DataTableColumn<Student>> = [
   },
   {
     key: 'number',
-    header: 'Student Number',
+    header: 'LRN',
     width: '20%',
-    cell: (student) => student.studentNumber,
+    cell: (student) => <MaskedLrn lrn={student.lrn} />,
   },
   {
     key: 'grade',
@@ -112,7 +113,7 @@ const baseColumns: Array<DataTableColumn<Student>> = [
     align: 'right',
     cell: (student) => (
       <a
-        href={`/students/${encodeURIComponent(student.studentNumber)}`}
+        href={paths.studentProfile(student.id)}
         className="inline-flex min-h-8 cursor-pointer items-center justify-center rounded-md border border-border px-2.5 text-xs font-semibold text-brand-green-dark transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
       >
         View Profile
@@ -171,14 +172,14 @@ export function StudentListPage() {
   })
   const columns: Array<DataTableColumn<Student>> = baseColumns.map((column) => {
     if (column.key === 'name') return { ...column, sort: sortColumn('name', 'Full name') }
-    if (column.key === 'number') return { ...column, sort: sortColumn('number', 'Student Number') }
+    if (column.key === 'number') return { ...column, sort: sortColumn('number', 'LRN') }
     if (column.key === 'grade') return { ...column, sort: sortColumn('grade', 'Grade level') }
     if (column.key === 'status') return { ...column, sort: sortColumn('status', 'Record status') }
     return column
   })
   const sortedData = sortTableRows(data, sort, (student, key) => {
     if (key === 'name') return student.fullName
-    if (key === 'number') return student.studentNumber
+    if (key === 'number') return student.lrn
     if (key === 'grade') return student.gradeLevel
     return student.recordComplete ? (student.archived ? 'Complete Archived' : 'Complete') : 'Incomplete'
   })
@@ -189,7 +190,7 @@ export function StudentListPage() {
       <Card className="p-5">
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">Student List</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Search the masterlist by full name or Student Number. Medical details stay inside the
+          Search the masterlist by full name or LRN. Medical details stay inside the
           individual profile.
         </p>
       </Card>
@@ -207,7 +208,7 @@ export function StudentListPage() {
               ref={searchInputRef}
               label="Search"
               value={search}
-              placeholder="Name or Student Number"
+              placeholder="Name or LRN"
               onChange={(event) => setSearch(event.target.value)}
             />
             <GradeSelect value={gradeLevel} onChange={setGradeLevel} />

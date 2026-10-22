@@ -1,7 +1,8 @@
 import type { FollowUpDueState } from '../../components/status/followUp'
+import { contactInfoRequired } from '../students'
 import type { InventoryFlag } from '../../components/status/inventory'
 import { addDays, diffDays, formatDateTime, isWithin } from '../dates'
-import { STUDENT_SEARCH_MIN_LENGTH } from '../studentNumber'
+import { maskLrn, STUDENT_SEARCH_MIN_LENGTH } from '../lrn'
 import type {
   AuditActionType,
   AuditLogEntry,
@@ -38,6 +39,7 @@ export const auditTargetTypes = [
   'backup',
   'follow-up',
   'calendar-event',
+  'sports-report',
 ] as const
 
 export type AuditTargetType = (typeof auditTargetTypes)[number]
@@ -68,9 +70,10 @@ export interface AuditLogRow {
     /** Display word for the kind of record, e.g. "Incident" or "Excuse letter". */
     kind: string
     id: string
-    /** Short identifier shown beside the kind (Student Number, item or report name); may be empty. */
+    /** Short identifier shown beside the kind (masked LRN, item or report name); may be empty. */
     label: string
-    studentNumber?: string
+    /** Set for a student-related record: links to that student's profile (by internal id). */
+    studentId?: string
   } | null
 }
 
@@ -111,38 +114,49 @@ const AUDIT_RECORD_KINDS: Record<string, string> = {
   backup: 'Backup',
   'issue-report': 'Issue report',
   'calendar-event': 'Calendar event',
+  'sports-report': 'Sports Report',
   'print-document': 'Printed document',
 }
 
 const REPORT_NAMES: Record<string, string> = {
   monthly: 'Monthly report',
-  incident: 'Incident report archive',
-  health_summary: 'Health summary',
+  incident: 'Incident register',
+  health_summary: 'Complaint summary',
 }
 
 /**
- * A short, privacy-safe identifier for an audited record, shown beside its kind ("Visit · 2020-00009").
- * Internal ids (`visit-0001`) never reach the screen, and students appear only by Student Number.
+ * A short, privacy-safe identifier for an audited record, shown beside its kind ("Visit · ••••••••0009").
+ * Internal ids (`visit-0001`) never reach the screen, and students appear only by masked LRN (ADR-028).
  * A human-facing reference number is a backend-phase follow-up (Issues-and-TODOs.md).
  */
-function auditTargetIdentifier(state: DbState, target: NonNullable<AuditLogEntry['targetRecord']>, type: AuditTargetType): { label: string; studentNumber?: string } {
-  const students = studentsById(state)
+/**
+ * Built once per Audit Log read: with five years of records (about 12,000 entries, panel review 5.6)
+ * a per-entry `find` over visits made the screen take seconds.
+ */
+function auditLookups(state: DbState) {
+  const studentOf = (records: ReadonlyArray<{ id: string; studentId: string }>) => new Map(records.map((record) => [record.id, record.studentId]))
+  return { state, students: studentsById(state), visits: studentOf(state.visits), incidents: studentOf(state.incidents), followUps: studentOf(state.followUps) }
+}
+
+function auditTargetIdentifier(lookups: ReturnType<typeof auditLookups>, target: NonNullable<AuditLogEntry['targetRecord']>, type: AuditTargetType): { label: string; studentId?: string } {
+  const { state, students } = lookups
   const studentId =
     type === 'student'
       ? target.id
       : type === 'visit'
-        ? state.visits.find((item) => item.id === target.id)?.studentId
+        ? lookups.visits.get(target.id)
         : type === 'incident'
-          ? state.incidents.find((item) => item.id === target.id)?.studentId
+          ? lookups.incidents.get(target.id)
           : type === 'follow-up'
-            ? state.followUps.find((item) => item.id === target.id)?.studentId
+            ? lookups.followUps.get(target.id)
             : undefined
   if (studentId !== undefined) {
-    const studentNumber = students.get(studentId)?.studentNumber
-    return { label: studentNumber ?? '', studentNumber }
+    const student = students.get(studentId)
+    return student ? { label: maskLrn(student.lrn), studentId } : { label: '' }
   }
   if (type === 'inventory') return { label: state.inventoryItems.find((item) => item.id === target.id)?.name ?? '' }
   if (type === 'user') return { label: state.users.find((user) => user.id === target.id)?.name ?? '' }
+  if (type === 'sports-report') return { label: state.frontendOnly.sportsReports.find((report) => report.id === target.id)?.title ?? '' }
   if (type === 'calendar-event') return { label: state.frontendOnly.calendarEvents.find((event) => event.id === target.id)?.title ?? '' }
   if (target.type === 'report') return { label: REPORT_NAMES[target.id] ?? '' }
   if (target.type === 'print-document') return { label: target.id }
@@ -150,14 +164,15 @@ function auditTargetIdentifier(state: DbState, target: NonNullable<AuditLogEntry
   return { label: '' }
 }
 
-function auditTarget(state: DbState, target: NonNullable<AuditLogEntry['targetRecord']>): NonNullable<AuditLogRow['target']> {
+function auditTarget(lookups: ReturnType<typeof auditLookups>, target: NonNullable<AuditLogEntry['targetRecord']>): NonNullable<AuditLogRow['target']> {
   const type = auditTargetType(target)
-  return { type, recordType: target.type, kind: AUDIT_RECORD_KINDS[target.type] ?? 'Record', id: target.id, ...auditTargetIdentifier(state, target, type) }
+  return { type, recordType: target.type, kind: AUDIT_RECORD_KINDS[target.type] ?? 'Record', id: target.id, ...auditTargetIdentifier(lookups, target, type) }
 }
 
 /** Resolves audit actors and privacy-safe targets before a screen can render them. */
 export function auditLogList(state: DbState, query: AuditLogQuery): AuditLogList {
   const usersById = new Map(state.users.map((user) => [user.id, user]))
+  const lookups = auditLookups(state)
   const rows = state.auditLog
     .map((entry, index): AuditLogRow => ({
       id: `${entry.timestamp}|${entry.userId}|${entry.actionType}|${index}`,
@@ -168,7 +183,7 @@ export function auditLogList(state: DbState, query: AuditLogQuery): AuditLogList
       userRole: usersById.get(entry.userId)?.role ?? null,
       actionType: entry.actionType,
       ...(entry.summary ? { summary: entry.summary } : {}),
-      target: entry.targetRecord ? auditTarget(state, entry.targetRecord) : null,
+      target: entry.targetRecord ? auditTarget(lookups, entry.targetRecord) : null,
     }))
     .filter((row) => row.timestamp >= query.from && row.timestamp <= query.to)
     .filter((row) => !query.userId || row.userId === query.userId)
@@ -191,7 +206,7 @@ export function missingRequiredFields(student: SeedStudent): string[] {
   if (!student.fullName.trim()) missing.push('Full name')
   if (!student.gradeLevel.trim()) missing.push('Grade level')
   if (student.sex !== 'male' && student.sex !== 'female') missing.push('Sex')
-  if (!student.contactInfo.trim()) missing.push('Student contact information')
+  if (contactInfoRequired(student.gradeLevel) && !student.contactInfo.trim()) missing.push('Student contact information')
   if (!student.emergencyContacts.length) missing.push('Emergency contact')
   student.emergencyContacts.forEach((contact, index) => {
     const prefix = student.emergencyContacts.length === 1 ? 'Emergency contact' : `Emergency contact ${index + 1}`
@@ -207,17 +222,13 @@ export function toStudent(student: SeedStudent): Student {
   return { ...student, sex: student.sex ?? 'female', recordComplete: missingRequiredFields(student).length === 0 }
 }
 
-export function toListRef(student: Pick<Student, 'id' | 'studentNumber'>): StudentListRef {
-  // Only id + Student Number leave this function. The name is dropped on purpose (ADR-004).
-  return { id: student.id, studentNumber: student.studentNumber }
+export function toListRef(student: Pick<Student, 'id' | 'lrn'>): StudentListRef {
+  // Only id + LRN leave this function. The name is dropped on purpose (ADR-004).
+  return { id: student.id, lrn: student.lrn }
 }
 
 export function studentsById(state: DbState): Map<string, SeedStudent> {
   return new Map(state.students.map((s) => [s.id, s]))
-}
-
-export function studentByNumber(state: DbState, studentNumber: string): SeedStudent | undefined {
-  return state.students.find((s) => s.studentNumber === studentNumber)
 }
 
 export function activeStudents(state: DbState): SeedStudent[] {
@@ -225,21 +236,22 @@ export function activeStudents(state: DbState): SeedStudent[] {
 }
 
 /**
- * Active students whose Student Number starts with the query or whose name contains it, ignoring
- * case. The Student Number match ignores dashes, so "202600001" and "2026-00001" both find it. Number matches come first, then by name. Capped, so a search never reads as a roster.
+ * Active students whose LRN starts with the typed digits or whose name contains the query, ignoring
+ * case. Spaces and dashes in a typed LRN are ignored. LRN matches come first, then by name. Capped,
+ * so a search never reads as a roster (ADR-028).
  */
 export function searchStudents(state: DbState, query: string, limit = 8): StudentSearchResult[] {
   const q = query.trim().toLowerCase()
   if (q.length < STUDENT_SEARCH_MIN_LENGTH) return []
-  const digits = q.replace(/-/g, '')
-  // Only a query of digits and dashes can be a Student Number; "an-" stays a name search.
-  const numberQuery = /^[\d-]+$/.test(q) && digits.length > 0
+  const digits = q.replace(/[\s-]/g, '')
+  // Only a query of digits, spaces and dashes can be an LRN; "an-" stays a name search.
+  const lrnQuery = /^[\d\s-]+$/.test(q) && digits.length > 0
   return activeStudents(state)
-    .map((s) => ({ s, byNumber: numberQuery && s.studentNumber.replace(/-/g, '').startsWith(digits) }))
-    .filter(({ s, byNumber }) => byNumber || s.fullName.toLowerCase().includes(q))
-    .sort((a, b) => Number(b.byNumber) - Number(a.byNumber) || a.s.fullName.localeCompare(b.s.fullName))
+    .map((s) => ({ s, byLrn: lrnQuery && s.lrn.startsWith(digits) }))
+    .filter(({ s, byLrn }) => byLrn || s.fullName.toLowerCase().includes(q))
+    .sort((a, b) => Number(b.byLrn) - Number(a.byLrn) || a.s.fullName.localeCompare(b.s.fullName))
     .slice(0, limit)
-    .map(({ s }) => ({ id: s.id, studentNumber: s.studentNumber, fullName: s.fullName, gradeLevel: s.gradeLevel }))
+    .map(({ s }) => ({ id: s.id, lrn: s.lrn, fullName: s.fullName, gradeLevel: s.gradeLevel }))
 }
 
 /**
@@ -280,16 +292,6 @@ export function gradeLevels(state: DbState): string[] {
   return [...levels].sort(compareGradeLevels)
 }
 
-/** Next `YYYY-NNNNN` for the current year (ADR-005: system-generated at creation). */
-export function nextStudentNumber(state: DbState): string {
-  const year = state.today.slice(0, 4)
-  const max = state.students
-    .map((s) => s.studentNumber)
-    .filter((n) => n.startsWith(`${year}-`))
-    .reduce((m, n) => Math.max(m, Number(n.slice(5)) || 0), 0)
-  return `${year}-${String(max + 1).padStart(5, '0')}`
-}
-
 // ---- Incomplete Records Review Queue (#9) ---------------------------------------------------
 
 export interface IncompleteRecordRow {
@@ -305,10 +307,10 @@ export interface IncompleteRecordRow {
  * counts exactly these open rows, so the two screens can't disagree.
  */
 export function incompleteRecordQueue(state: DbState): IncompleteRecordRow[] {
-  const reviews = new Map(state.frontendOnly.recordReviews.map((r) => [r.studentNumber, r]))
+  const reviews = new Map(state.frontendOnly.recordReviews.map((r) => [r.studentId, r]))
   return activeStudents(state).flatMap((student) => {
     const missingFields = missingRequiredFields(student)
-    const review = reviews.get(student.studentNumber) ?? null
+    const review = reviews.get(student.id) ?? null
     const resolved = Boolean(review?.resolvedAt)
     if (!missingFields.length && !resolved) return []
     return [{ student: toStudent(student), missingFields, review, status: resolved ? 'resolved' : 'open' }]
@@ -337,7 +339,7 @@ export function frequentVisitors(state: DbState, range?: { from: ISODate; to: IS
   }
   const byId = studentsById(state)
   const counts = new Map<string, number>()
-  for (const v of state.visits)
+  for (const v of countedVisits(state))
     if (isWithin(dateOf(v.dateTime), from, to)) counts.set(v.studentId, (counts.get(v.studentId) ?? 0) + 1)
   return [...counts.entries()]
     .filter(([, n]) => n >= state.config.frequentVisitorMinVisits)
@@ -345,7 +347,7 @@ export function frequentVisitors(state: DbState, range?: { from: ISODate; to: IS
       const student = byId.get(id)
       return student ? [{ student: toListRef(student), visitCount }] : []
     })
-    .sort((a, b) => b.visitCount - a.visitCount || a.student.studentNumber.localeCompare(b.student.studentNumber))
+    .sort((a, b) => b.visitCount - a.visitCount || a.student.lrn.localeCompare(b.student.lrn))
 }
 
 // ---- Follow-ups ------------------------------------------------------------------------------
@@ -442,10 +444,27 @@ export function backupStatus(state: DbState): BackupStatus {
 
 // ---- Reports ---------------------------------------------------------------------------------
 
+/**
+ * Visits that count in totals, trends, the calendar and reports. A visit escalated to an incident is
+ * left out, so the event counts once, as the incident (ADR-036, D3). It stays in lists with a chip.
+ * Visits marked "Entered in error" are already gone from every read (`view()` in api.ts).
+ */
+export function countedVisits(state: DbState) {
+  return state.visits.filter((v) => !v.escalatedIncidentId)
+}
+
+/**
+ * Students in the clinic now: today's visits "Resting in clinic" with no Time out (panel review VS-1).
+ * Only today's, so a visit left without a Time out yesterday doesn't keep a student "in the clinic".
+ */
+export function inClinicNow(state: DbState) {
+  return state.visits.filter((v) => v.disposition === 'resting_in_clinic' && !v.timeOut && dateOf(v.dateTime) === state.today)
+}
+
 /** `month` is "YYYY-MM". */
 export function monthlyCounts(state: DbState, month: string) {
   return {
-    visits: state.visits.filter((v) => v.dateTime.startsWith(month)).length,
+    visits: countedVisits(state).filter((v) => v.dateTime.startsWith(month)).length,
     incidents: state.incidents.filter((i) => i.time.startsWith(month)).length,
     followUps: state.followUps.filter((f) => f.followUpDate.startsWith(month)).length,
   }

@@ -70,11 +70,11 @@ describe('BackButton', () => {
     renderAt(
       <>
         <BackButton fallback="/fallback" />
-        <BackButton to="/fixed" label="Back to QR lookup" variant="prominent" />
+        <BackButton to="/fixed" label="Back to Sign In" variant="prominent" />
       </>,
     )
     expect(screen.getByRole('button', { name: 'Back' })).toHaveClass('print:hidden')
-    expect(screen.getByRole('link', { name: 'Back to QR lookup' })).toHaveClass('print:hidden')
+    expect(screen.getByRole('link', { name: 'Back to Sign In' })).toHaveClass('print:hidden')
   })
 
   it('is reachable with Tab and operable with Enter', async () => {

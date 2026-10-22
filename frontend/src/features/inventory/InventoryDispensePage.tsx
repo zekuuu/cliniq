@@ -1,12 +1,12 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { Link } from 'react-router'
 import { BackButton, Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Input, InventoryItemPicker, Select, Skeleton, StudentPicker } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { formatDateTime } from '../../lib/dates'
 import { StockRuleError } from '../../lib/mock-db'
-import { isStudentNumber } from '../../lib/studentNumber'
+import { maskLrn } from '../../lib/lrn'
 import { paths } from '../../routes/paths'
 import type { StudentSearchResult } from '../../types/entities'
 import { dispenseInventoryItem, fetchInventory, findDispenseStudent, searchDispenseStudents } from './api/inventoryApi'
@@ -29,11 +29,9 @@ function DispenseSkeleton({ back }: { back: ReactNode }) {
  * dispensed, here or in the data layer.
  */
 export function InventoryDispensePage() {
-  const [search] = useSearchParams()
-  const preselected = search.get('student') ?? ''
   const { data: items, status, reload } = useAsyncData('dispense-items', () => fetchInventory({ search: '', category: '' }))
-  const [recipient, setRecipient] = useState<Recipient>(preselected ? 'student' : '')
-  const [studentNumber, setStudentNumber] = useState(preselected)
+  const [recipient, setRecipient] = useState<Recipient>('')
+  const [studentId, setStudentId] = useState('')
   const [picked, setPicked] = useState<StudentSearchResult | null>(null)
   const [itemId, setItemId] = useState('')
   const [quantity, setQuantity] = useState('1')
@@ -42,13 +40,13 @@ export function InventoryDispensePage() {
   const [saving, setSaving] = useState(false)
   const { cancel, discardDialog } = useCancelNavigation(
     paths.inventory,
-    !success && (itemId !== '' || quantity !== '1' || (!preselected && (recipient !== '' || studentNumber !== ''))),
+    !success && (itemId !== '' || quantity !== '1' || recipient !== '' || studentId !== ''),
   )
   const invalidRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(invalidRef)
-  const lookupNumber = recipient === 'student' && isStudentNumber(studentNumber) ? studentNumber : ''
-  const { data: lookup } = useAsyncData(`dispense-student|${lookupNumber}`, () =>
-    lookupNumber ? findDispenseStudent(lookupNumber).catch(() => null) : Promise.resolve(undefined),
+  const lookupId = recipient === 'student' ? studentId : ''
+  const { data: lookup } = useAsyncData(`dispense-student|${lookupId}`, () =>
+    lookupId ? findDispenseStudent(lookupId).catch(() => null) : Promise.resolve(undefined),
   )
 
   const back = <BackButton fallback={paths.inventory} />
@@ -64,8 +62,8 @@ export function InventoryDispensePage() {
     event.preventDefault()
     const next: typeof errors = {}
     if (!recipient) next.recipient = 'Choose who this is for.'
-    if (recipient === 'student' && !isStudentNumber(studentNumber)) next.student = 'Choose the student: type a Student Number or name, then pick from the list.'
-    else if (recipient === 'student' && lookup === null) next.student = 'No student has this Student Number. Check it and try again.'
+    if (recipient === 'student' && !studentId) next.student = 'Choose the student: type the LRN or name, then pick from the list.'
+    else if (recipient === 'student' && lookup === null) next.student = 'This student record could not be loaded. Search again.'
     if (!item) next.item = 'Choose an item.'
     if (!Number.isInteger(amount) || amount < 1) next.quantity = 'Enter a whole-number quantity of at least 1.'
     setErrors(next)
@@ -73,8 +71,8 @@ export function InventoryDispensePage() {
     if (Object.keys(next).length || !item) return
     setSaving(true)
     try {
-      const result = await dispenseInventoryItem(item.id, amount, recipient === 'student' ? studentNumber : undefined)
-      setSuccess(`${amount} ${result.item.unit} of ${result.item.name} recorded${recipient === 'student' ? ` for ${studentNumber}` : ' for general use'}. Remaining stock: ${result.remainingStock}.${result.belowZero ? ' Stock is now below zero; recount and restock.' : ''}`)
+      const result = await dispenseInventoryItem(item.id, amount, recipient === 'student' ? studentId : undefined)
+      setSuccess(`${amount} ${result.item.unit} of ${result.item.name} recorded${recipient === 'student' && picked ? ` for LRN ${maskLrn(picked.lrn)}` : ' for general use'}. Remaining stock: ${result.remainingStock}.${result.belowZero ? ' Stock is now below zero; recount and restock.' : ''}`)
       setItemId('')
       setQuantity('1')
       reload()
@@ -107,10 +105,10 @@ export function InventoryDispensePage() {
             <StudentPicker
               search={searchDispenseStudents}
               selected={picked ?? lookup?.student ?? null}
-              onSelect={(student) => { setPicked(student); setStudentNumber(student.studentNumber); clear('student') }}
-              onClear={() => { setPicked(null); setStudentNumber(''); clear('student') }}
+              onSelect={(student) => { setPicked(student); setStudentId(student.id); clear('student') }}
+              onClear={() => { setPicked(null); setStudentId(''); clear('student') }}
               error={errors.student}
-              hint="Type a Student Number or the student name, then pick the student who received it."
+              hint="Type the LRN or the student name, then pick the student who received it."
               addStudentHref={paths.studentNew}
             />
           )}

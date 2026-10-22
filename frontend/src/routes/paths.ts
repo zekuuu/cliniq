@@ -6,13 +6,7 @@
  * Kept free of page imports so any feature can import it without pulling in other screens'
  * lazily-loaded code.
  */
-import type { UserRole } from '../types/entities'
-
 const seg = encodeURIComponent
-
-function withStudent(path: string, studentNumber?: string): string {
-  return studentNumber ? `${path}?student=${seg(studentNumber)}` : path
-}
 
 export const paths = {
   login: '/login',
@@ -22,33 +16,35 @@ export const paths = {
   students: '/students',
   studentNew: '/students/new',
   incompleteRecords: '/students/incomplete',
-  studentProfile: (studentNumber: string) => `/students/${seg(studentNumber)}`,
-  studentEdit: (studentNumber: string) => `/students/${seg(studentNumber)}/edit`,
+  /** By the internal id: an LRN never goes in an address, history or logs (ADR-028). */
+  studentProfile: (studentId: string) => `/students/${seg(studentId)}`,
+  studentEdit: (studentId: string) => `/students/${seg(studentId)}/edit`,
   visits: '/visits',
   visitsWithPendingLetter: '/visits?letter=pending',
   visitsInRange: (from: string, to: string) => `/visits?from=${seg(from)}&to=${seg(to)}`,
   /** The Visits list opened on one day's custom range (the Dashboard calendar's "View visits"). */
   visitsOnDate: (date: string) => `/visits?from=${date}&to=${date}`,
-  /** `?student=` pre-selects the identified student (e.g. from a QR lookup). */
-  visitNew: (studentNumber?: string) => withStudent('/visits/new', studentNumber),
-  /** `?student=` pre-selects the identified student (the QR quick-action passes it). */
-  peReferral: (studentNumber?: string) => withStudent('/visits/pe-referral', studentNumber),
+  visitNew: '/visits/new',
+  peReferral: '/visits/pe-referral',
   visitDetail: (visitId: string) => `/visits/${seg(visitId)}`,
   excuseLetter: (visitId: string) => `/visits/${seg(visitId)}/excuse-letter`,
+  /** One stored letter, e.g. a superseded one, opened from the student's record. */
+  excuseLetterVersion: (visitId: string, letterId: string) => `/visits/${seg(visitId)}/excuse-letter?letter=${seg(letterId)}`,
   incidents: '/incidents',
   incidentsInRange: (from: string, to: string) => `/incidents?from=${seg(from)}&to=${seg(to)}`,
-  /** `?student=` pre-selects the identified student; the Emergency button opens it without one. */
-  incidentNew: (studentNumber?: string) => withStudent('/incidents/new', studentNumber),
+  incidentNew: '/incidents/new',
   /** Reopens a saved Stage-1 incident to complete Stage 2 (Screen #16b). */
   incidentComplete: (incidentId: string) => `/incidents/${seg(incidentId)}/complete`,
-  qrScan: '/qr/scan',
   inventory: '/inventory',
   inventoryNew: '/inventory/new',
-  inventoryDispense: (studentNumber?: string) => withStudent('/inventory/dispense', studentNumber),
+  inventoryDispense: '/inventory/dispense',
   followUps: '/follow-ups',
-  qrPrint: '/qr/print',
-  emergencyMobile: '/emergency/mobile',
   reports: '/reports',
+  /** Sports Reports (ADR-034), Staff only. */
+  sportsReports: '/reports/sports',
+  sportsReportNew: '/reports/sports/new',
+  sportsReport: (reportId: string) => `/reports/sports/${seg(reportId)}`,
+  sportsReportEdit: (reportId: string) => `/reports/sports/${seg(reportId)}/edit`,
   auditLog: '/audit-log',
   privacyPolicy: '/privacy-policy',
   incidentNotifications: (incidentId?: string) =>
@@ -63,7 +59,3 @@ export const paths = {
   backup: '/backup',
 } as const
 
-/** Where a role lands on `/`, when it opens a screen it can't use, and where Back falls back to. */
-export function homePathFor(role: UserRole): string {
-  return role === 'instructor' ? paths.qrScan : paths.dashboard
-}

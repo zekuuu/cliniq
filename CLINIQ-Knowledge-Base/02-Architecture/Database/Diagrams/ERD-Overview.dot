@@ -2,7 +2,7 @@ digraph ERD {
 rankdir=LR; compound=true; fontname="Helvetica"; nodesep=0.35; ranksep=1.3; splines=true;
 node [shape=box,style="rounded,filled",fontname="Helvetica",fontsize=11,margin="0.12,0.06"];
 edge [fontname="Helvetica",fontsize=8,color="#6b7280",arrowsize=0.7];
-labelloc=t; fontsize=18; label="CLINIQ database: all 34 tables (PROPOSED v1, NOT FINAL)\nclusters = owning backend module; dashed box = Spec table (not in the frontend contract yet); arrow = foreign key, pointing at the parent; same student = composite key that forces the record and its parent to be for the same student\n";
+labelloc=t; fontsize=18; label="CLINIQ database: all 35 tables (PROPOSED v1, NOT FINAL)\nclusters = owning backend module; dashed box = Spec table (not in the frontend contract yet); arrow = foreign key, pointing at the parent; same student = composite key that forces the record and its parent to be for the same student\n";
 subgraph cluster_0 { label="UserManagement"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
   users [fillcolor="#e8e3fb", style="rounded,filled"];
   password_histories [fillcolor="#e8e3fb", style="rounded,filled"];
@@ -28,9 +28,6 @@ subgraph cluster_3 { label="StudentRecords"; style="rounded,filled"; color="#9ca
   emergency_contact_verifications [fillcolor="#dcefe3", style="rounded,filled,dashed"];
   student_record_reviews [fillcolor="#dcefe3", style="rounded,filled"];
 }
-subgraph cluster_4 { label="QrDigitalHealthId"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
-  qr_card_issuances [fillcolor="#d9ecf7", style="rounded,filled,dashed"];
-}
 subgraph cluster_5 { label="ClinicVisits"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
   visits [fillcolor="#fff3c4", style="rounded,filled"];
   excuse_letters [fillcolor="#fff3c4", style="rounded,filled"];
@@ -50,6 +47,8 @@ subgraph cluster_7 { label="InventoryTracker"; style="rounded,filled"; color="#9
 }
 subgraph cluster_8 { label="ReportsGeneration"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
   reports [fillcolor="#e9e0d4", style="rounded,filled"];
+  sports_reports [fillcolor="#e9e0d4", style="rounded,filled"];
+  sports_report_students [fillcolor="#e9e0d4", style="rounded,filled"];
 }
 subgraph cluster_9 { label="BackupVerification"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
   backup_logs [fillcolor="#e9e0d4", style="rounded,filled"];
@@ -78,8 +77,9 @@ parent_notification_attempts -> emergency_contacts [label=""];
 parent_notification_attempts -> incidents [label=""];
 pe_referrals -> incidents [label="same student"];
 pe_referrals -> students [label=""];
+sports_report_students -> sports_reports [label=""];
+sports_report_students -> students [label=""];
 pe_referrals -> visits [label="same student"];
-qr_card_issuances -> students [label=""];
 students -> student_import_batches [label=""];
 students -> grade_levels [label=""];
 student_health_entries -> students [label=""];
@@ -93,6 +93,6 @@ triage_checks -> visits [label=""];
 triage_steps -> complaint_types [label=""];
 visits -> complaint_types [label=""];
 visits -> students [label=""];
-users_note [shape=note,style=filled,fillcolor="#ffffff",fontsize=9,label="Left out for readability:\nmost tables also point at users\n(created_by / logged_by /\napproved_by ...). 25 tables do."];
+users_note [shape=note,style=filled,fillcolor="#ffffff",fontsize=9,label="Left out for readability:\nmost tables also point at users\n(created_by / logged_by /\napproved_by ...). 26 tables do."];
 users_note -> users [style=dotted,arrowhead=none];
 }

@@ -13,7 +13,6 @@ import type {
   ParentNotificationAttempt,
   Report,
   Student,
-  StudentNumber,
   StudentSex,
   User,
   UserRole,
@@ -26,7 +25,7 @@ import type {
  * The seed is the §5 entity shapes from `types/entities.ts` with exactly three kinds of change:
  * 1. Dates are relative to "today" (`{ daysAgo }` / `{ daysFromNow }`, plus `time` for timestamps),
  *    so the seed never goes stale. The data layer resolves them.
- * 2. Records point at students by `studentNumber` (ADR-005), not the internal `id`.
+ * 2. Records point at students by the internal `studentId`; the LRN is only an attribute (ADR-028).
  * 3. Derived values are left out (`Student.recordComplete`, `Report.data`). Selectors compute them.
  * Everything else is the entity type itself, so a shape change in `types/entities.ts` breaks here.
  */
@@ -42,28 +41,18 @@ export type SeedUser = Replace<User, { lastLogin: RelativeDateTime | null }>
 /** Old mock JSON did not hold Sex; `resolveSeed` assigns a deterministic synthetic value on load. */
 export type SeedStudent = Omit<Student, 'recordComplete' | 'sex'> & { sex?: StudentSex }
 
-export type SeedVisit = Omit<
-  Replace<Visit, { dateTime: RelativeDateTime; excuseLetterDraft: ExcuseLetterDraft<RelativeDate> | null }>,
-  'studentId'
-> & {
-  studentNumber: StudentNumber
-}
+export type SeedVisit = Replace<Visit, { dateTime: RelativeDateTime; excuseLetterDraft: ExcuseLetterDraft<RelativeDate> | null }>
 
-export type SeedIncident = Omit<
-  Replace<
-    Incident,
-    {
-      time: RelativeDateTime
-      hospitalReferral: Replace<HospitalReferral, { departureTime: RelativeDateTime }> | null
-      parentNotifications: Array<Replace<ParentNotificationAttempt, { timestamp: RelativeDateTime }>>
-    }
-  >,
-  'studentId'
-> & { studentNumber: StudentNumber }
+export type SeedIncident = Replace<
+  Incident,
+  {
+    time: RelativeDateTime
+    hospitalReferral: Replace<HospitalReferral, { departureTime: RelativeDateTime }> | null
+    parentNotifications: Array<Replace<ParentNotificationAttempt, { timestamp: RelativeDateTime }>>
+  }
+>
 
-export type SeedFollowUp = Omit<Replace<FollowUp, { followUpDate: RelativeDate }>, 'studentId'> & {
-  studentNumber: StudentNumber
-}
+export type SeedFollowUp = Replace<FollowUp, { followUpDate: RelativeDate }>
 
 /**
  * The JSON seed predates batch tracking. It is deliberately accepted in its old one-stock/one-date
@@ -103,6 +92,13 @@ export interface MockDbConfig {
   /** How many top complaints the trend chart draws (the rest go in its table). */
   topComplaints: number
   /**
+   * Below this many records in the prior period, a stat card shows both counts ("4 vs 1") instead of a
+   * percentage, so one incident becoming four never reads "up 300%" (panel review DB-2, D4).
+   */
+  percentMinPriorCount: number
+  /** Hours after the last successful backup before the Dashboard warns that it is stale (panel review BK-2, D5). */
+  staleBackupHours: number
+  /**
    * Incident vitals outside these ranges get a "please check" warning that never blocks saving.
    * PLACEHOLDER sanity bounds, not clinical thresholds: the nurse sets the real ones.
    */
@@ -135,7 +131,7 @@ export interface DevAccount {
 
 export interface ComplaintType {
   label: string
-  /** Smart Triage checklist (#27). Empty = no checklist for this complaint. Guidance only. */
+  /** First-aid checklist (#27). Empty = no checklist for this complaint. Guidance only. */
   triageSteps: string[]
 }
 
@@ -162,7 +158,7 @@ export interface InventoryTransaction<D = ISODateTime> {
   quantity: number
   timestamp: D
   userId: string
-  studentNumber: StudentNumber | null
+  studentId: string | null
   visitId: string | null
   /** Set when the dispense was part of an incident's Stage 2. PROVISIONAL (ADR-018). */
   incidentId?: string
@@ -176,7 +172,7 @@ export interface InventoryTransaction<D = ISODateTime> {
 
 /** Registrar-import review tracking for the Incomplete Records queue (#9). */
 export interface RecordReview<D = ISODate, T = ISODateTime> {
-  studentNumber: StudentNumber
+  studentId: string
   importedAt: D
   importedBy: string
   resolvedByUserId: string | null
@@ -193,12 +189,20 @@ export interface ExcuseLetterApproval<T = ISODateTime, D = ISODate> {
   excusedUntil: D
   /** Note for the teacher, snapshotted at approval (provisional pending the ERD). */
   note: string | null
+  /** Set when the letter's visit was marked "Entered in error"; a voided letter is never valid. PROVISIONAL. */
+  voided?: { reason: string; at: ISODateTime; byUserId: string } | null
+  /**
+   * Set by "Issue a replacement" (panel review EX-3): this letter was replaced by a new one for the
+   * same visit and is kept, never valid again. PROVISIONAL.
+   */
+  superseded?: { reason: string; at: ISODateTime; byUserId: string } | null
 }
 
 export interface PeReferral<T = ISODateTime> {
   id: string
-  studentNumber: StudentNumber
-  referredByUserId: string
+  studentId: string
+  /** The PE/Sports Instructor's name as Staff typed it; instructors have no account (ADR-029). */
+  referredBy: string
   activity: string
   injurySummary: string
   clinicalAssessment: string
@@ -231,6 +235,30 @@ export interface CalendarEvent<D = ISODate, T = ISODateTime> {
   updatedAt: T
 }
 
+/** Look-back window of a Sports Report (ADR-034): the last 30, 60 or 90 days, or the school year so far. */
+export type SportsReportWindow = 30 | 60 | 90 | 'school_year'
+
+/**
+ * A saved Sports Report (ADR-034): a list of students the clinician builds for a PE or sports
+ * activity. It holds only the list and her notes, never a copy of medical content; the visits and
+ * incidents are read when it is printed. Staff only. PROVISIONAL pending the ERD.
+ */
+export interface SportsReport<T = ISODateTime> {
+  id: string
+  title: string
+  activity: string | null
+  /** The PE or sports instructor who asked for it, as typed (instructors have no account). */
+  requestedBy: string
+  window: SportsReportWindow
+  /** Print the students' recorded conditions and allergies. Off by default. */
+  includeConditions: boolean
+  students: Array<{ studentId: string; note: string | null }>
+  archived: boolean
+  createdByUserId: string
+  createdAt: T
+  updatedAt: T
+}
+
 export interface SeedFrontendOnly {
   _note: string
   devAccounts: DevAccount[]
@@ -242,6 +270,7 @@ export interface SeedFrontendOnly {
   peReferrals: Array<PeReferral<RelativeDateTime>>
   issueReports: Array<IssueReport<RelativeDateTime>>
   calendarEvents: Array<CalendarEvent<RelativeDate, RelativeDateTime>>
+  sportsReports: Array<SportsReport<RelativeDateTime>>
 }
 
 export interface MockDbSeed {
@@ -271,6 +300,7 @@ export interface FrontendOnlyState {
   peReferrals: PeReferral[]
   issueReports: IssueReport[]
   calendarEvents: CalendarEvent[]
+  sportsReports: SportsReport[]
 }
 
 /** Raw records only. `Student` here never carries `recordComplete`; selectors add it on read. */

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "00-Project-Core/Objectives.md",
+                "file": "02-Architecture/Database/Activity-Diagram.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Objectives"
+              "title": "Activity-Diagram"
             }
           }
         ]
@@ -189,8 +189,8 @@
   },
   "active": "87a2c052d8d9ff12",
   "lastOpenFiles": [
-    "README.md",
     "00-Project-Core/Objectives.md",
+    "README.md",
     "06-Decisions/ADR-010-Reason-Visibility-in-List-Rows.md",
     "06-Decisions/ADR-011-Dashboard-Scope-Clarifications.md",
     "08-Logs/Agent-Sessions/2026-09-26-clinic-overview-dashboard.md",

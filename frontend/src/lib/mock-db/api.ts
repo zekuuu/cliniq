@@ -1,3 +1,4 @@
+import { isLrn, normalizeLrn } from '../lrn'
 import type {
   AuditActionType,
   AuditLogEntry,
@@ -15,19 +16,21 @@ import type {
   ISODateTime,
   ItemGivenLine,
   ParentNotificationAttempt,
+  CalledContact,
   ParentNotificationOutcome,
   Report,
   ReportType,
   Student,
-  StudentNumber,
   StudentSearchResult,
   User,
   UserRole,
   Visit,
 } from '../../types/entities'
 import { normalizeComplaint } from '../complaints'
-import { parseISODate, toISODate } from '../dates'
-import type { CalendarDay, CalendarDayEvent, DashboardQuery, DashboardSummary, Holiday, HolidayFeed } from '../../types/dashboard'
+import { incidentCompletionBlocker } from '../itemsGiven'
+import { DISPOSITION_LABELS } from '../dispositions'
+import { addDays, parseISODate, toISODate } from '../dates'
+import type { BackupAlert, CalendarDay, CalendarDayEvent, DashboardQuery, DashboardSummary, Holiday, HolidayFeed } from '../../types/dashboard'
 import holidayData from './holidays-ph.json'
 import type { FollowUpDueState } from '../../components/status/followUp'
 import { buildCalendarDays, buildDashboardSummary } from './dashboard'
@@ -36,6 +39,7 @@ import {
   backupStatus,
   auditLogList,
   complaintSuggestions,
+  countedVisits,
   dateOf,
   followUpDueState,
   gradeLevels,
@@ -43,7 +47,6 @@ import {
   inventoryStatusFor,
   missingRequiredFields,
   monthlyCounts,
-  nextStudentNumber,
   searchStudents as searchStudentRecords,
   studentsById,
   toStudent,
@@ -66,6 +69,8 @@ import type {
   IssueReport,
   PeReferral,
   SeedStudent,
+  SportsReport,
+  SportsReportWindow,
   VitalsWarningRanges,
 } from './types'
 
@@ -82,14 +87,18 @@ import type {
 
 // ---- plumbing ------------------------------------------------------------------------------
 
-/** A read-only view of the store with any `?mock=empty` / `?mockEmpty=` collections emptied. */
-function view(): DbState {
+/**
+ * A read-only view of the store with any `?mock=empty` / `?mockEmpty=` collections emptied. Visits
+ * marked "Entered in error" are left out of every list, count and report (panel review part 2) unless
+ * `includeEnteredInError` is set: one deliberately opened visit, or the Visit Log's filter.
+ */
+function view(includeEnteredInError = false): DbState {
   const s = db()
   return {
     ...s,
     users: isEmptied('users') ? [] : s.users,
     students: isEmptied('students') ? [] : s.students,
-    visits: isEmptied('visits') ? [] : s.visits,
+    visits: isEmptied('visits') ? [] : includeEnteredInError ? s.visits : s.visits.filter((v) => !v.enteredInError),
     incidents: isEmptied('incidents') ? [] : s.incidents,
     followUps: isEmptied('followUps') ? [] : s.followUps,
     inventoryItems: isEmptied('inventoryItems') ? [] : s.inventoryItems,
@@ -100,13 +109,14 @@ function view(): DbState {
       ...s.frontendOnly,
       issueReports: isEmptied('issueReports') ? [] : s.frontendOnly.issueReports,
       calendarEvents: isEmptied('calendarEvents') ? [] : s.frontendOnly.calendarEvents,
+      sportsReports: isEmptied('sportsReports') ? [] : s.frontendOnly.sportsReports,
     },
   }
 }
 
-async function read<T>(label: string, select: (state: DbState) => T): Promise<T> {
+async function read<T>(label: string, select: (state: DbState) => T, includeEnteredInError = false): Promise<T> {
   await simulateRequest(label)
-  return structuredClone(select(view()))
+  return structuredClone(select(view(includeEnteredInError)))
 }
 
 /**
@@ -176,6 +186,7 @@ function audit(
 
 const FIELD_LABELS: Record<string, string> = {
   fullName: 'name',
+  lrn: 'LRN',
   gradeLevel: 'grade level',
   contactInfo: 'contact info',
   medicalConditions: 'medical conditions',
@@ -190,7 +201,7 @@ const FIELD_LABELS: Record<string, string> = {
   temperatureC: 'body temperature',
   timeOut: 'time out',
   assistedBy: 'assisted by',
-  parentGuardian: 'parent/guardian',
+  parentGuardian: 'parent or guardian',
   profilePicture: 'profile picture',
 }
 
@@ -220,10 +231,19 @@ export async function logoutMockSession(actor: SessionUser): Promise<void> {
   clearMockSession()
 }
 
+/** What a print's audit entry names when it is about a record rather than a document title. */
+export interface PrintAuditRecord {
+  type: string
+  id: string
+  /** Counts or field names only, never student values (ADR-017). */
+  summary?: string
+}
+
 /** Records one completed print request. The document title is display-safe audit metadata. */
-export function recordPrint(documentTitle: string, actor?: SessionUser): Promise<void> {
+export function recordPrint(documentTitle: string, actor?: SessionUser, record?: PrintAuditRecord): Promise<void> {
   return write('print document', (s) => {
-    audit(s, actorOr(actor), 'print', { type: 'print-document', id: documentTitle })
+    if (record) audit(s, actorOr(actor), 'print', { type: record.type, id: record.id }, record.summary)
+    else audit(s, actorOr(actor), 'print', { type: 'print-document', id: documentTitle })
   })
 }
 
@@ -280,6 +300,44 @@ function fakePasswordHistory(state: DbState, userId: string): string[] {
   return history
 }
 
+/** Audit entry for a lockout: 5 wrong passwords in a row, locked for 30 minutes. Never the passwords. */
+function logLockout(user: Pick<SessionUser, 'id' | 'name' | 'role'>, where: string): Promise<void> {
+  return write('lockout', (s) => {
+    audit(s, { id: user.id, name: user.name, role: user.role }, 'login', { type: 'user', id: user.id }, `Account locked for 30 minutes after 5 wrong passwords (${where})`)
+  })
+}
+
+/**
+ * "Confirm it's you" (panel review AC-7, ADR-037): the signed-in user's own password before a
+ * sensitive action. A wrong password counts toward the same lockout as sign-in (5 tries, 30 minutes).
+ * Every success is audit-logged with what it was for; the password is never stored or logged.
+ */
+export async function confirmMockPassword(userId: string, password: string, purpose: string): Promise<void> {
+  await simulateRequest('confirm password')
+  const state = view()
+  const user = must(state.users.find((candidate) => candidate.id === userId), 'User')
+  const attempt = attemptFor(user.username.toLowerCase())
+  if (attempt.lockedUntil && attempt.lockedUntil > Date.now()) throw new MockAuthError('locked', attempt.lockedUntil)
+  if (attempt.lockedUntil) {
+    attempt.failures = 0
+    attempt.lockedUntil = null
+  }
+  if (fakePasswordHistory(state, user.id)[0] !== password) {
+    attempt.failures += 1
+    if (attempt.failures >= 5) {
+      attempt.failures = 0
+      attempt.lockedUntil = Date.now() + 30 * 60 * 1000
+      await logLockout(user, '"Confirm it\'s you"')
+      throw new MockAuthError('locked', attempt.lockedUntil)
+    }
+    throw new MockAuthError('invalid_credentials')
+  }
+  attempt.failures = 0
+  await write('confirm password', (s) => {
+    audit(s, { id: user.id, name: user.name, role: user.role }, 'login', { type: 'user', id: user.id }, `Confirmed with password: ${purpose}`)
+  })
+}
+
 /**
  * Development stand-in for the future Sanctum login endpoint. It intentionally never returns a
  * password or token. Lockout and password history live in memory until the real backend exists.
@@ -300,11 +358,14 @@ export async function authenticateMockUser(username: string, password: string): 
   const user = state.users.find((candidate) => candidate.username.toLowerCase() === normalized)
   const account = user && state.frontendOnly.devAccounts.find((candidate) => candidate.userId === user.id)
   const currentPassword = account ? fakePasswordHistory(state, user.id)[0] : null
-  if (!user || !account || currentPassword !== password) {
+  if (!user || !account || user.deactivatedAt || currentPassword !== password) {
     attempt.failures += 1
     if (attempt.failures >= 5) {
       attempt.failures = 0
       attempt.lockedUntil = Date.now() + 30 * 60 * 1000
+      // A lockout is a security event, so it is logged against the account (Zean, Friday, October 23,
+      // 2026). An unknown username has no account to attribute it to; a single wrong password isn't logged.
+      if (user) await logLockout(user, 'sign-in')
       throw new MockAuthError('locked', attempt.lockedUntil)
     }
     throw new MockAuthError('invalid_credentials')
@@ -391,6 +452,47 @@ export interface UserInput {
   username: string
   role: UserRole
   profilePicture?: string | null
+  /** Required for a new account; the person must change it at first sign-in. */
+  temporaryPassword?: string
+}
+
+/** Only the Admin/Principal manages accounts (ADR-033). */
+export class AccountPermissionError extends Error {
+  constructor() {
+    super('Only the Admin/Principal can manage accounts.')
+  }
+}
+
+/** The last active Admin/Principal can never be disabled or demoted (ADR-033). */
+export class LastAdminError extends Error {
+  constructor() {
+    super('This is the only active Admin/Principal account. Add or enable another Admin first.')
+  }
+}
+
+const MIN_PASSWORD_LENGTH = 8
+
+function requireAdmin(actor: SessionUser) {
+  if (actor.role !== 'admin') throw new AccountPermissionError()
+}
+
+function isLastActiveAdmin(state: DbState, user: User): boolean {
+  return (
+    user.role === 'admin' &&
+    !user.deactivatedAt &&
+    !state.users.some((u) => u.id !== user.id && u.role === 'admin' && !u.deactivatedAt)
+  )
+}
+
+/** Sets a temporary password that must be changed at the next sign-in (Force Password Change). */
+function setTemporaryPassword(state: DbState, userId: string, password: string) {
+  const trimmed = password.trim()
+  if (trimmed.length < MIN_PASSWORD_LENGTH) throw new Error(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`)
+  const account = state.frontendOnly.devAccounts.find((candidate) => candidate.userId === userId)
+  if (account) Object.assign(account, { password: trimmed, mustChangePassword: true })
+  else state.frontendOnly.devAccounts.push({ userId, password: trimmed, mustChangePassword: true })
+  passwordHistory.delete(userId)
+  changedPasswordUsers.delete(userId)
 }
 
 /**
@@ -405,11 +507,14 @@ export class DuplicateUsernameError extends Error {
 
 export function saveUser(input: UserInput, options: { userId?: string; actor?: SessionUser } = {}): Promise<User> {
   return write('save user', (s) => {
+    const actor = actorOr(options.actor)
+    requireAdmin(actor)
     const username = input.username.trim().toLowerCase()
     if (s.users.some((u) => u.id !== options.userId && u.username.toLowerCase() === username)) {
       throw new DuplicateUsernameError()
     }
     const existing = options.userId ? must(s.users.find((u) => u.id === options.userId), 'User') : null
+    if (existing && input.role !== 'admin' && isLastActiveAdmin(s, existing)) throw new LastAdminError()
     const next = {
       name: input.name.trim(),
       username: input.username.trim(),
@@ -424,9 +529,37 @@ export function saveUser(input: UserInput, options: { userId?: string; actor?: S
           ...next,
           lastLogin: null,
         }
-    if (!existing) s.users.push(user)
-    audit(s, actorOr(options.actor), existing ? 'update' : 'create', { type: 'user', id: user.id }, summary)
+    if (!existing) {
+      setTemporaryPassword(s, user.id, input.temporaryPassword ?? '')
+      s.users.push(user)
+    }
+    audit(s, actor, existing ? 'update' : 'create', { type: 'user', id: user.id }, summary)
     return user
+  })
+}
+
+/** Disables or re-enables an account. Disabled accounts stay listed and in the audit history. */
+export function setUserActive(userId: string, active: boolean, actor?: SessionUser): Promise<User> {
+  return write(active ? 'enable user' : 'disable user', (s) => {
+    const by = actorOr(actor)
+    requireAdmin(by)
+    const user = must(s.users.find((u) => u.id === userId), 'User')
+    if (!active && isLastActiveAdmin(s, user)) throw new LastAdminError()
+    if (active === !user.deactivatedAt) return user
+    user.deactivatedAt = active ? null : now(s)
+    audit(s, by, 'update', { type: 'user', id: user.id }, active ? 'Enabled account' : 'Disabled account')
+    return user
+  })
+}
+
+/** Gives the account a temporary password that must be changed at the next sign-in. No recovery flow. */
+export function resetUserPassword(userId: string, temporaryPassword: string, actor?: SessionUser): Promise<void> {
+  return write('reset password', (s) => {
+    const by = actorOr(actor)
+    requireAdmin(by)
+    const user = must(s.users.find((u) => u.id === userId), 'User')
+    setTemporaryPassword(s, user.id, temporaryPassword)
+    audit(s, by, 'update', { type: 'user', id: user.id }, 'Reset password')
   })
 }
 
@@ -447,7 +580,7 @@ export function listStudents(query: StudentQuery = {}): Promise<Student[]> {
       .filter((st) => !query.gradeLevel || st.gradeLevel === query.gradeLevel)
       .filter(
         (st) =>
-          !search || st.fullName.toLowerCase().includes(search) || st.studentNumber.toLowerCase().includes(search),
+          !search || st.fullName.toLowerCase().includes(search) || (/^\d+$/.test(search) && st.lrn.startsWith(search)),
       )
       .sort((a, b) => a.fullName.localeCompare(b.fullName))
       .slice(0, query.limit ?? Infinity)
@@ -456,26 +589,21 @@ export function listStudents(query: StudentQuery = {}): Promise<Student[]> {
 }
 
 /**
- * Student lookup by Student Number prefix or name: active students only, nothing under 2
- * characters, at most `limit` results, no medical fields (see `searchStudents` in selectors.ts).
+ * Student lookup by name or LRN prefix: active students only, at most `limit` results, no medical
+ * fields (see `searchStudents` in selectors.ts).
  */
 export function searchStudents(query: string, limit = 8): Promise<StudentSearchResult[]> {
   return read('student search', (s) => searchStudentRecords(s, query, limit))
 }
 
-export function getStudent(studentNumber: StudentNumber): Promise<Student> {
-  return read('student', (s) =>
-    toStudent(must(s.students.find((st) => st.studentNumber === studentNumber), 'Student')),
-  )
-}
-
-export function getStudentById(id: string): Promise<Student> {
+/** By the internal id, which addresses carry; the LRN never goes in a URL (ADR-028). */
+export function getStudent(id: string): Promise<Student> {
   return read('student', (s) => toStudent(studentOf(s, id)))
 }
 
 /**
  * A default student for screens opened without one (demo convenience until real navigation always
- * supplies a Student Number): the first active, complete record, preferring one with history.
+ * supplies a student): the first active, complete record, preferring one with history.
  */
 export function getDemoStudent(options: { withHistory?: boolean } = {}): Promise<Student> {
   return read('demo student', (s) => {
@@ -506,20 +634,23 @@ export function getStudentHistory(studentId: string, limit = 8): Promise<Student
   }))
 }
 
-export function getNextStudentNumber(): Promise<StudentNumber> {
-  return read('next student number', nextStudentNumber)
-}
-
 export type StudentInput = Pick<
   Student,
-  'fullName' | 'gradeLevel' | 'sex' | 'contactInfo' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
+  'lrn' | 'fullName' | 'gradeLevel' | 'sex' | 'contactInfo' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
 >
 
 export interface DuplicateMatch {
   id: string
   fullName: string
-  studentNumber: StudentNumber
+  lrn: string
   gradeLevel: string
+}
+
+/** The LRN is unique; the message never names the other student (ADR-028). */
+export class DuplicateLrnError extends Error {
+  constructor() {
+    super('This LRN is already used by another student record.')
+  }
 }
 
 export type SaveStudentResult =
@@ -535,15 +666,19 @@ export function saveStudent(
   options: { studentId?: string; confirmDuplicate?: boolean; actor?: SessionUser } = {},
 ): Promise<SaveStudentResult> {
   return write('save student', (s): SaveStudentResult => {
+    const lrn = normalizeLrn(input.lrn)
+    if (!isLrn(lrn)) throw new Error('The LRN must be exactly 12 digits.')
+    if (s.students.some((st) => st.id !== options.studentId && st.lrn === lrn)) throw new DuplicateLrnError()
     const name = input.fullName.trim().toLowerCase()
     const matches = s.students
       .filter((st) => st.id !== options.studentId && !st.archived)
       .filter((st) => st.fullName.trim().toLowerCase() === name && st.gradeLevel === input.gradeLevel)
-      .map((st) => ({ id: st.id, fullName: st.fullName, studentNumber: st.studentNumber, gradeLevel: st.gradeLevel }))
+      .map((st) => ({ id: st.id, fullName: st.fullName, lrn: st.lrn, gradeLevel: st.gradeLevel }))
     if (!options.studentId && matches.length && !options.confirmDuplicate) return { status: 'duplicate', matches }
 
     const existing = options.studentId ? studentOf(s, options.studentId) : null
     const fields = {
+      lrn,
       fullName: input.fullName.trim(),
       gradeLevel: input.gradeLevel,
       sex: input.sex,
@@ -557,7 +692,7 @@ export function saveStudent(
     let record: SeedStudent
     if (existing) record = Object.assign(existing, fields)
     else {
-      record = { id: nextId('student', s.students), studentNumber: nextStudentNumber(s), archived: false, ...fields }
+      record = { id: nextId('student', s.students), archived: false, ...fields }
       s.students.push(record)
     }
     const action = existing ? 'update' : 'create'
@@ -565,9 +700,9 @@ export function saveStudent(
     audit(s, by, action, { type: 'student', id: record.id }, summary)
     // Completing a flagged record resolves it in the Incomplete Records queue, crediting whoever saved it.
     if (wasIncomplete && !missingRequiredFields(record).length) {
-      let review = s.frontendOnly.recordReviews.find((r) => r.studentNumber === record.studentNumber)
+      let review = s.frontendOnly.recordReviews.find((r) => r.studentId === record.id)
       if (!review) {
-        review = { studentNumber: record.studentNumber, importedAt: s.today, importedBy: 'Flagged in CLINIQ', resolvedByUserId: null, resolvedAt: null }
+        review = { studentId: record.id, importedAt: s.today, importedBy: 'Flagged in CLINIQ', resolvedByUserId: null, resolvedAt: null }
         s.frontendOnly.recordReviews.push(review)
       }
       review.resolvedByUserId = by.id
@@ -578,9 +713,9 @@ export function saveStudent(
 }
 
 /** Archive, never delete (data retention policy): hidden from active lists, kept for 5 years. */
-export function archiveStudent(studentNumber: StudentNumber, actor?: SessionUser): Promise<Student> {
+export function archiveStudent(studentId: string, actor?: SessionUser): Promise<Student> {
   return write('archive student', (s) => {
-    const record = must(s.students.find((st) => st.studentNumber === studentNumber), 'Student')
+    const record = studentOf(s, studentId)
     record.archived = true
     audit(s, actorOr(actor), 'archive', { type: 'student', id: record.id })
     return toStudent(record)
@@ -597,16 +732,24 @@ export function getIncompleteRecordQueue(): Promise<IncompleteRecord[]> {
 
 // ---- visits --------------------------------------------------------------------------------
 
-export function listVisits(range?: { from: ISODate; to: ISODate }): Promise<Visit[]> {
-  return read('visits', (s) =>
-    s.visits
-      .filter((v) => !range || (dateOf(v.dateTime) >= range.from && dateOf(v.dateTime) <= range.to))
-      .sort((a, b) => b.dateTime.localeCompare(a.dateTime)),
+/** Visits marked "Entered in error" are left out unless `includeEnteredInError` is set (the Visit Log's filter). */
+export function listVisits(
+  range?: { from: ISODate; to: ISODate },
+  options: { includeEnteredInError?: boolean } = {},
+): Promise<Visit[]> {
+  return read(
+    'visits',
+    (s) =>
+      s.visits
+        .filter((v) => !range || (dateOf(v.dateTime) >= range.from && dateOf(v.dateTime) <= range.to))
+        .sort((a, b) => b.dateTime.localeCompare(a.dateTime)),
+    options.includeEnteredInError,
   )
 }
 
+/** One deliberately opened visit, including one marked "Entered in error". */
 export function getVisit(id: string): Promise<Visit> {
-  return read('visit', (s) => must(s.visits.find((v) => v.id === id), 'Visit'))
+  return read('visit', (s) => must(s.visits.find((v) => v.id === id), 'Visit'), true)
 }
 
 /** The most recent visit by an active student (default for detail screens opened without an id). */
@@ -634,6 +777,27 @@ export interface RecordVisitInput extends Partial<VisitLogbookFields> {
   excuseLetterDraft?: ExcuseLetterDraft | null
   /** Referred to hospital only. */
   referredTo?: string | null
+  /**
+   * "YYYY-MM-DDTHH:MM" when the visit happened, if not now (a late entry, ADR-029). Never in the future.
+   * Omitted, the visit is dated when it is saved.
+   */
+  dateTime?: string
+  /** Optional reason for a late entry, such as "system was down". */
+  lateEntryReason?: string | null
+}
+
+/** A visit dated more than this many minutes before it is saved is a late entry (D1 of the panel-review prompt). */
+export const LATE_ENTRY_MINUTES = 30
+
+/** The visit's date and time from "YYYY-MM-DDTHH:MM", checked against now, and whether it is a late entry. */
+function visitTime(s: DbState, input: Pick<RecordVisitInput, 'dateTime' | 'lateEntryReason'>) {
+  const saved = now(s)
+  if (!input.dateTime) return { dateTime: saved, lateEntry: false, lateEntryReason: null }
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(input.dateTime)) throw new Error('Enter the visit date and time.')
+  const dateTime = `${input.dateTime}:00+08:00`
+  if (dateTime > saved) throw new Error("The visit date and time can't be in the future.")
+  const lateEntry = Date.parse(saved) - Date.parse(dateTime) > LATE_ENTRY_MINUTES * 60_000
+  return { dateTime, lateEntry, lateEntryReason: lateEntry ? input.lateEntryReason?.trim() || null : null }
 }
 
 /** The visit's optional logbook fields (body temperature, time out, assisted by, parent/guardian, remarks). */
@@ -672,7 +836,7 @@ function dispositionFields(
     if (disposition === 'returned_to_class') throw new Error('Only a Sent home or Referred visit has an excuse letter.')
     const invalid = excusedPeriodError(draft)
     if (invalid) throw new Error(invalid)
-    if (visitId && s.frontendOnly.excuseLetterApprovals.some((a) => a.visitId === visitId))
+    if (visitId && activeApproval(s, visitId))
       throw new Error('This visit already has an approved excuse letter. Its period is fixed.')
   }
   const referred = referredTo?.trim() || null
@@ -720,7 +884,7 @@ export function recordVisit(
     const itemLines = input.itemsGiven ?? []
     // Treatment notes and items given are both optional: a visit may record no treatment.
     const extra = dispositionFields(s, null, input.disposition, input.excuseLetterDraft ?? null, input.referredTo ?? null)
-    const dateTime = now(s)
+    const { dateTime, lateEntry, lateEntryReason } = visitTime(s, input)
     const visit: Visit = {
       id: nextId('visit', s.visits),
       studentId: input.studentId,
@@ -734,10 +898,12 @@ export function recordVisit(
       itemsGiven: [],
       ...extra,
       ...logbookFields(input, dateTime),
+      ...(lateEntry && { lateEntry, lateEntryReason }),
     }
     s.visits.push(visit)
-    audit(s, by, 'submit', { type: 'visit', id: visit.id })
-    const given = applyItemLines(s, by, { studentNumber: student.studentNumber, visitId: visit.id }, [], itemLines, 'dispense')
+    // The summary says "late entry", never the reason text (ADR-017).
+    audit(s, by, 'submit', { type: 'visit', id: visit.id }, lateEntry ? 'Late entry' : undefined)
+    const given = applyItemLines(s, by, { studentId: student.id, visitId: visit.id }, [], itemLines, 'dispense')
     visit.itemsGiven = given.lines
     const followUp = input.followUp
       ? createFollowUp(s, by, input.studentId, { type: 'visit', id: visit.id }, input.followUp)
@@ -749,6 +915,8 @@ export function recordVisit(
 export type VisitPatch = Pick<Visit, 'complaint' | 'treatment' | 'disposition' | 'eventTag'> & {
   /** The full new set of lines. Omitted, the lines stay as they are. */
   itemsGiven?: ItemLineInput[]
+  /** "YYYY-MM-DDTHH:MM" to correct when the visit happened; never in the future. Omitted, it stays. */
+  dateTime?: string
 } & Partial<Pick<Visit, 'excuseLetterDraft' | 'referredTo'> & VisitLogbookFields>
 
 /**
@@ -764,7 +932,14 @@ export function updateVisit(
   return write('update visit', (s) => {
     const by = actorOr(actor)
     const visit = must(s.visits.find((v) => v.id === id), 'Visit')
-    const { itemsGiven, excuseLetterDraft, referredTo, temperatureC, timeOut, assistedBy, parentGuardian, remarks, ...rest } = patch
+    if (visit.enteredInError) throw new Error('This visit was marked entered in error and can no longer be edited.')
+    const { itemsGiven, excuseLetterDraft, referredTo, temperatureC, timeOut, assistedBy, parentGuardian, remarks, dateTime: correctedTime, ...rest } = patch
+    // A corrected time is checked like a new visit's (never in the future); the audit names the field.
+    // Callers that pass the whole visit back send its saved timestamp; same minute means unchanged.
+    const dateTime =
+      correctedTime && correctedTime.slice(0, 16) !== visit.dateTime.slice(0, 16)
+        ? visitTime(s, { dateTime: correctedTime.slice(0, 16) }).dateTime
+        : visit.dateTime
     // Omitted disposition fields stay as they are; checked against the (possibly new) disposition.
     const extra = dispositionFields(s, id, rest.disposition, excuseLetterDraft === undefined ? visit.excuseLetterDraft : excuseLetterDraft, referredTo === undefined ? visit.referredTo : referredTo)
     // Same normalization as a new visit, so an edit can't reintroduce a spelling or case variant.
@@ -777,11 +952,11 @@ export function updateVisit(
         parentGuardian: parentGuardian === undefined ? visit.parentGuardian : parentGuardian,
         remarks: remarks === undefined ? visit.remarks : remarks,
       },
-      visit.dateTime,
+      dateTime,
     )
-    const fields = { ...rest, complaint: normalizeComplaint(rest.complaint, complaintSuggestions(s)), ...extra, ...logbook }
+    const fields = { ...rest, dateTime, complaint: normalizeComplaint(rest.complaint, complaintSuggestions(s)), ...extra, ...logbook }
     const given = itemsGiven
-      ? applyItemLines(s, by, { studentNumber: studentOf(s, visit.studentId).studentNumber, visitId: id }, visit.itemsGiven, itemsGiven, 'adjust')
+      ? applyItemLines(s, by, { studentId: visit.studentId, visitId: id }, visit.itemsGiven, itemsGiven, 'adjust')
       : { lines: visit.itemsGiven, belowZero: [] }
     const summary = changedSummary(visit, { ...fields, itemsGiven: given.lines })
     Object.assign(visit, fields, { itemsGiven: given.lines })
@@ -790,18 +965,86 @@ export function updateVisit(
   })
 }
 
+/**
+ * Marks a visit "Entered in error" (panel review VS-9, D2). The record is kept, never deleted: it leaves
+ * every list and count, its medicines go back to stock through the same `visit_edited` adjustment
+ * transactions an edit uses (ADR-018), and its excuse letter, draft or approved, is voided.
+ */
+export function markVisitEnteredInError(id: string, reason: string, actor?: SessionUser): Promise<Visit> {
+  return write('mark visit entered in error', (s) => {
+    const by = actorOr(actor)
+    const visit = must(s.visits.find((v) => v.id === id), 'Visit')
+    const why = reason.trim()
+    if (!why) throw new Error('Give the reason this visit was entered in error.')
+    if (visit.enteredInError) throw new Error('This visit is already marked entered in error.')
+    const marked = { reason: why, at: now(s), byUserId: by.id }
+    applyItemLines(s, by, { studentId: visit.studentId, visitId: id }, visit.itemsGiven, [], 'adjust')
+    visit.enteredInError = marked
+    // The reason stays on the record, not in the audit trail (ADR-017).
+    audit(s, by, 'update', { type: 'visit', id }, 'Marked entered in error')
+    const approval = activeApproval(s, id)
+    if (approval) {
+      approval.voided = marked
+      audit(s, by, 'update', { type: 'excuse-letter', id: approval.id }, 'Voided: visit entered in error')
+    } else if (visit.excuseLetterDraft) audit(s, by, 'update', { type: 'excuse-letter', id: `draft-${id}` }, 'Voided: visit entered in error')
+    // Its pending follow-ups are cancelled with the same reason (Zean, Thursday, October 22, 2026).
+    for (const followUp of s.followUps)
+      if (followUp.status === 'pending' && followUp.relatedRecord.type === 'visit' && followUp.relatedRecord.id === id) {
+        followUp.status = 'cancelled'
+        followUp.statusReason = `Visit entered in error: ${why}`
+        audit(s, by, 'update', { type: 'follow-up', id: followUp.id }, 'Marked cancelled: visit entered in error')
+      }
+    return visit
+  })
+}
+
 // ---- excuse letters & PE referrals (frontendOnly) ------------------------------------------
 
+/** The visit's current letter: approved (or voided), never one that a replacement superseded. */
+function activeApproval(s: DbState, visitId: string): ExcuseLetterApproval | undefined {
+  return s.frontendOnly.excuseLetterApprovals.find((a) => a.visitId === visitId && !a.superseded)
+}
+
 export function getExcuseLetterApproval(visitId: string): Promise<ExcuseLetterApproval | null> {
-  return read('excuse letter', (s) => s.frontendOnly.excuseLetterApprovals.find((a) => a.visitId === visitId) ?? null)
+  return read('excuse letter', (s) => activeApproval(s, visitId) ?? null, true)
+}
+
+/**
+ * One stored letter by its id, whatever its state (current, superseded, or voided with its visit), so
+ * an old letter can be opened and reprinted from the student's record, clearly marked not valid.
+ */
+export function getExcuseLetterById(letterId: string): Promise<ExcuseLetterApproval> {
+  return read('excuse letter by id', (s) => must(s.frontendOnly.excuseLetterApprovals.find((a) => a.id === letterId), 'Excuse letter'), true)
+}
+
+/**
+ * "Issue a replacement" (panel review EX-3): the approved letter of a still-valid visit is marked
+ * Superseded with a reason and kept; a new draft with the same period and note opens on the visit.
+ */
+export function issueReplacementExcuseLetter(visitId: string, reason: string, actor?: SessionUser): Promise<void> {
+  return write('issue replacement excuse letter', (s) => {
+    const by = actorOr(actor)
+    const visit = must(s.visits.find((v) => v.id === visitId), 'Visit')
+    const old = activeApproval(s, visitId)
+    const why = reason.trim()
+    if (!why) throw new Error('Give the reason for the replacement.')
+    if (!old) throw new Error('Only an approved letter can be replaced.')
+    if (old.voided || visit.enteredInError) throw new Error('A voided letter cannot be replaced.')
+    old.superseded = { reason: why, at: now(s), byUserId: by.id }
+    visit.excuseLetterDraft = { excusedFrom: old.excusedFrom, excusedUntil: old.excusedUntil, note: old.note }
+    audit(s, by, 'update', { type: 'excuse-letter', id: old.id }, 'Superseded; replacement draft opened')
+  })
 }
 
 export interface StudentExcuseLetter extends ExcusedPeriod {
   id: string
   visitId: string
   disposition: Disposition
-  /** `pending`: a draft saved with the visit, not yet approved. */
-  status: 'approved' | 'pending'
+  /**
+   * `pending`: a draft saved with the visit, not yet approved. `superseded`: replaced by a newer letter.
+   * `voided`: its visit was entered in error. Both stay in the record (panel review EX-3).
+   */
+  status: 'approved' | 'pending' | 'superseded' | 'voided'
 }
 
 /** A student's excuse letters, approved and pending, newest period first. */
@@ -810,7 +1053,7 @@ export function getStudentExcuseLetters(studentId: string): Promise<StudentExcus
     const approved = s.frontendOnly.excuseLetterApprovals.flatMap((a) => {
       const visit = s.visits.find((v) => v.id === a.visitId && v.studentId === studentId)
       return visit
-        ? [{ id: a.id, visitId: a.visitId, disposition: visit.disposition, excusedFrom: a.excusedFrom, excusedUntil: a.excusedUntil, status: 'approved' as const }]
+        ? [{ id: a.id, visitId: a.visitId, disposition: visit.disposition, excusedFrom: a.excusedFrom, excusedUntil: a.excusedUntil, status: a.superseded ? ('superseded' as const) : a.voided || visit.enteredInError ? ('voided' as const) : ('approved' as const) }]
         : []
     })
     // A visit never holds a draft once its letter is approved, so the two lists can't overlap.
@@ -826,8 +1069,8 @@ export function getStudentExcuseLetters(studentId: string): Promise<StudentExcus
 export interface PendingExcuseLetter extends ExcusedPeriod {
   visitId: string
   visitDateTime: ISODateTime
-  /** Multi-student list: the Student Number only, never the name (ADR-004). */
-  studentNumber: StudentNumber
+  /** Multi-student list: the LRN only (masked on screen), never the name (ADR-004, ADR-028). */
+  lrn: string
 }
 
 /** Every excuse-letter draft still awaiting approval, oldest visit first, for active students. */
@@ -837,7 +1080,7 @@ export function listPendingExcuseLetters(): Promise<PendingExcuseLetter[]> {
       .flatMap((v) => {
         const student = s.students.find((st) => st.id === v.studentId)
         return v.excuseLetterDraft && student && !student.archived
-          ? [{ visitId: v.id, visitDateTime: v.dateTime, studentNumber: student.studentNumber, excusedFrom: v.excuseLetterDraft.excusedFrom, excusedUntil: v.excuseLetterDraft.excusedUntil }]
+          ? [{ visitId: v.id, visitDateTime: v.dateTime, lrn: student.lrn, excusedFrom: v.excuseLetterDraft.excusedFrom, excusedUntil: v.excuseLetterDraft.excusedUntil }]
           : []
       })
       .sort((a, b) => a.visitDateTime.localeCompare(b.visitDateTime)),
@@ -868,13 +1111,14 @@ export function approveExcuseLetter(
   return write('approve excuse letter', (s) => {
     const by = actorOr(actor)
     const visit = must(s.visits.find((v) => v.id === visitId), 'Visit')
+    if (visit.enteredInError) throw new Error('This visit was entered in error, so its excuse letter is void.')
     const invalid = excusedPeriodError(period)
     if (invalid) throw new Error(invalid)
-    // Approved letters are permanent: the period is fixed once stored.
-    if (s.frontendOnly.excuseLetterApprovals.some((a) => a.visitId === visitId))
-      throw new Error('This excuse letter is already approved and stored.')
+    // Approved letters are permanent: the period is fixed once stored. A superseded one makes room for its replacement.
+    if (activeApproval(s, visitId)) throw new Error('This excuse letter is already approved and stored.')
+    const earlier = s.frontendOnly.excuseLetterApprovals.filter((a) => a.visitId === visitId).length
     const approval: ExcuseLetterApproval = {
-      id: `excuse-${visitId}`,
+      id: earlier ? `excuse-${visitId}-${earlier + 1}` : `excuse-${visitId}`,
       visitId,
       approvedByUserId: by.id,
       approvedAt: now(s),
@@ -889,18 +1133,15 @@ export function approveExcuseLetter(
   })
 }
 
-export type PeReferralInput = Omit<PeReferral, 'id' | 'referredByUserId' | 'createdAt'> & {
-  referredByUserId?: string
-}
+export type PeReferralInput = Omit<PeReferral, 'id' | 'createdAt'>
 
 export function submitPeReferral(input: PeReferralInput, actor?: SessionUser): Promise<PeReferral> {
   return write('submit PE referral', (s) => {
     const by = actorOr(actor)
-    must(s.students.find((st) => st.studentNumber === input.studentNumber), 'Student')
+    studentOf(s, input.studentId)
     const referral: PeReferral = {
       ...input,
       id: nextId('pe-referral', s.frontendOnly.peReferrals),
-      referredByUserId: input.referredByUserId ?? by.id,
       createdAt: now(s),
     }
     s.frontendOnly.peReferrals.push(referral)
@@ -931,6 +1172,10 @@ export interface StageOneInput {
   vitals: Incident['vitals']
   /** Optional; blank is saved as null. PROVISIONAL (Incident.generalNotes). */
   generalNotes?: string
+  /** When it happened, if not now: the escalated visit's time (ADR-036). ISO, never in the future. */
+  time?: ISODateTime
+  /** The saved visit being escalated (ADR-036); linked both ways. Omitted for the New Visit shortcut. */
+  sourceVisitId?: string
 }
 
 /** Stage 1 fast capture: saves with only the complaint plus whichever readings were taken (Activity Diagram 2). */
@@ -938,10 +1183,18 @@ export function saveIncidentStageOne(input: StageOneInput, actor?: SessionUser):
   return write('save incident stage 1', (s) => {
     const by = actorOr(actor)
     studentOf(s, input.studentId)
+    const saved = now(s)
+    if (input.time && input.time > saved) throw new Error("The incident time can't be in the future.")
+    const source = input.sourceVisitId ? must(s.visits.find((v) => v.id === input.sourceVisitId), 'Visit') : null
+    if (source) {
+      if (source.studentId !== input.studentId) throw new Error('The escalated visit belongs to another student.')
+      if (source.enteredInError) throw new Error('A visit entered in error cannot be escalated.')
+      if (source.escalatedIncidentId) throw new Error('This visit was already escalated to an incident.')
+    }
     const incident: Incident = {
       id: nextId('incident', s.incidents),
       studentId: input.studentId,
-      time: now(s),
+      time: input.time ?? saved,
       complaint: input.complaint,
       vitals: input.vitals,
       hospitalReferral: null,
@@ -950,8 +1203,13 @@ export function saveIncidentStageOne(input: StageOneInput, actor?: SessionUser):
       eventTag: null,
       itemsGiven: [],
       generalNotes: input.generalNotes?.trim() || null,
+      ...(source && { sourceVisitId: source.id }),
     }
     s.incidents.push(incident)
+    if (source) {
+      source.escalatedIncidentId = incident.id
+      audit(s, by, 'update', { type: 'visit', id: source.id }, 'Escalated to incident')
+    }
     // The summary names the optional field, never its value (ADR-017).
     audit(s, by, 'submit', { type: 'incident-stage-1', id: incident.id }, incident.generalNotes ? 'Included additional notes' : undefined)
     return incident
@@ -968,6 +1226,10 @@ export interface StageTwoInput {
   followUp: FollowUpInput | null
   /** Medicines and supplies given (ADR-018). Dispensed when Stage 2 is first completed. */
   itemsGiven?: ItemLineInput[]
+  /** Optional; blank is saved as null. PROVISIONAL (Incident.bodyPart). */
+  bodyPart?: string
+  /** The reason given with "Nothing further was needed or done"; blank is saved as null. PROVISIONAL. */
+  noFurtherActionReason?: string
 }
 
 /** Stage 2 completion: same record, now complete. Logged separately from Stage 1. */
@@ -979,6 +1241,16 @@ export function completeIncidentStageTwo(
     const by = actorOr(actor)
     const incident = must(s.incidents.find((i) => i.id === input.incidentId), 'Incident')
     const lines = input.itemsGiven ?? []
+    const noFurtherActionReason = input.noFurtherActionReason?.trim() || null
+    // An empty record can't be completed (panel review IN-3); checked before any stock moves.
+    const blocker = incidentCompletionBlocker({
+      vitals: input.vitals,
+      itemsGiven: incident.stage === 2 ? incident.itemsGiven : lines,
+      parentNotifications: [...incident.parentNotifications, ...input.newParentNotifications],
+      hospitalReferral: input.hospitalReferral,
+      noFurtherActionReason,
+    })
+    if (blocker) throw new Error(blocker)
     let belowZero: string[] = []
     // ponytail: medicines are fixed once Stage 2 is complete; changing them later needs an
     // incident-edit adjustment rule that hasn't been decided (Issues-and-TODOs).
@@ -988,8 +1260,7 @@ export function completeIncidentStageTwo(
       if (input.itemsGiven && !same(lines, incident.itemsGiven))
         throw new StockRuleError("Medicines on a completed incident can't be changed.")
     } else {
-      const studentNumber = studentOf(s, incident.studentId).studentNumber
-      const given = applyItemLines(s, by, { studentNumber, incidentId: incident.id }, [], lines, 'dispense')
+      const given = applyItemLines(s, by, { studentId: incident.studentId, incidentId: incident.id }, [], lines, 'dispense')
       incident.itemsGiven = given.lines
       belowZero = given.belowZero
     }
@@ -998,8 +1269,14 @@ export function completeIncidentStageTwo(
       vitals: input.vitals,
       hospitalReferral: input.hospitalReferral,
       stage: 2 as const,
+      bodyPart: input.bodyPart?.trim() || null,
+      noFurtherActionReason,
     })
-    audit(s, by, 'update', { type: 'incident-stage-2', id: incident.id }, 'Completed Stage 2 details')
+    // The summary names the optional fields, never their values (ADR-017).
+    const named = [incident.bodyPart && 'body part affected', noFurtherActionReason && 'nothing further was needed or done']
+      .filter(Boolean)
+      .join(' and ')
+    audit(s, by, 'update', { type: 'incident-stage-2', id: incident.id }, `Completed Stage 2 details${named ? `; included ${named}` : ''}`)
     for (const attempt of input.newParentNotifications) {
       incident.parentNotifications.push(attempt)
       audit(s, by, 'create', {
@@ -1018,10 +1295,11 @@ export function addParentNotification(
   incidentId: string,
   outcome: ParentNotificationOutcome,
   actor?: SessionUser,
+  calledContact: CalledContact | null = null,
 ): Promise<ParentNotificationAttempt> {
   return write('add parent notification', (s) => {
     const incident = must(s.incidents.find((i) => i.id === incidentId), 'Incident')
-    const attempt: ParentNotificationAttempt = { outcome, timestamp: now(s) }
+    const attempt: ParentNotificationAttempt = { outcome, timestamp: now(s), calledContact }
     incident.parentNotifications.push(attempt)
     audit(s, actorOr(actor), 'create', {
       type: 'parent-notification',
@@ -1071,14 +1349,18 @@ export function getIncidentTrail(incidentId: string): Promise<IncidentTrail> {
 
 export function approveIncidentReport(incidentId: string, actor?: SessionUser): Promise<void> {
   return write('approve incident report', (s) => {
-    must(s.incidents.find((i) => i.id === incidentId), 'Incident')
+    const incident = must(s.incidents.find((i) => i.id === incidentId), 'Incident')
+    // Only a completed (Stage 2) record is signed off (Zean, Thursday, October 22, 2026).
+    if (incident.stage === 1) throw new Error('Complete Stage 2 before approving this report.')
+    const blocker = incidentCompletionBlocker(incident)
+    if (blocker) throw new Error(blocker)
     audit(s, actorOr(actor), 'approve', { type: 'incident-report', id: incidentId })
   })
 }
 
 // ---- follow-ups ------------------------------------------------------------------------------
 
-export type FollowUpView = FollowUp & { studentNumber: StudentNumber; dueState: FollowUpDueState | null }
+export type FollowUpView = FollowUp & { lrn: string; dueState: FollowUpDueState | null }
 
 export function listFollowUps(query: { status?: FollowUpStatus | '' } = {}): Promise<FollowUpView[]> {
   return read('follow-ups', (s) => {
@@ -1088,19 +1370,33 @@ export function listFollowUps(query: { status?: FollowUpStatus | '' } = {}): Pro
       .sort((a, b) => a.followUpDate.localeCompare(b.followUpDate))
       .map((f) => ({
         ...f,
-        studentNumber: byId.get(f.studentId)?.studentNumber ?? 'Unknown student',
+        lrn: byId.get(f.studentId)?.lrn ?? '',
         dueState: followUpDueState(f, s.today),
       }))
   })
 }
 
-export function setFollowUpStatus(id: string, status: FollowUpStatus, actor?: SessionUser): Promise<FollowUp> {
+/** Missed and Cancelled need a reason (panel review FU-4); it stays on the follow-up, not in the audit trail. */
+export function setFollowUpStatus(id: string, status: FollowUpStatus, actor?: SessionUser, reason?: string): Promise<FollowUp> {
   return write('update follow-up', (s) => {
     const followUp = must(s.followUps.find((f) => f.id === id), 'Follow-up')
+    const why = reason?.trim() || null
+    if ((status === 'missed' || status === 'cancelled') && !why) throw new Error(`Give the reason this follow-up is ${status}.`)
     const summary = followUp.status === status ? undefined : `Marked ${status}`
     followUp.status = status
+    if (status === 'missed' || status === 'cancelled') followUp.statusReason = why
     audit(s, actorOr(actor), 'update', { type: 'follow-up', id }, summary)
     return followUp
+  })
+}
+
+/** "Set a new date" after Missed or Cancelled: a new pending follow-up for the same student, record and reason. */
+export function rescheduleFollowUp(id: string, followUpDate: ISODate, actor?: SessionUser): Promise<FollowUp> {
+  return write('reschedule follow-up', (s) => {
+    const old = must(s.followUps.find((f) => f.id === id), 'Follow-up')
+    if (old.status !== 'missed' && old.status !== 'cancelled') throw new Error('Only a missed or cancelled follow-up gets a new date.')
+    if (!followUpDate || followUpDate < s.today) throw new Error("The new date can't be in the past.")
+    return createFollowUp(s, actorOr(actor), old.studentId, old.relatedRecord, { followUpDate, reason: old.reason, notes: old.notes })
   })
 }
 
@@ -1154,6 +1450,8 @@ export function listInventoryHistory(itemId: string): Promise<InventoryHistoryRo
 export type InventoryInput = Omit<InventoryItem, 'id' | 'batches'> & {
   currentStock: number
   expirationDate: ISODate | null
+  /** New items only: the clinician's explicit "This item has no expiration date" (ADR-035, panel review IV-2). */
+  noExpirationConfirmed?: boolean
 }
 
 /**
@@ -1164,7 +1462,13 @@ export type InventoryInput = Omit<InventoryItem, 'id' | 'batches'> & {
 export function saveInventoryItem(input: InventoryInput, options: { itemId?: string; actor?: SessionUser } = {}): Promise<InventoryItem> {
   return write('save inventory item', (s) => {
     const existing = options.itemId ? must(s.inventoryItems.find((i) => i.id === options.itemId), 'Inventory item') : null
-    const { currentStock, expirationDate, ...fields } = input
+    const { currentStock, expirationDate, noExpirationConfirmed, ...fields } = input
+    // The first batch follows Restock's rule (ADR-035): a date, or an explicit "no expiration". A blank
+    // date alone is never read as "no expiration". An existing item's expiry changes only through Restock.
+    if (!existing && expirationDate === null && !noExpirationConfirmed)
+      throw new StockRuleError('Choose an expiration date, or confirm this item has no expiration date.')
+    if (!existing && expirationDate !== null && noExpirationConfirmed)
+      throw new StockRuleError('Choose either an expiration date or no expiration date for this item.')
     const summary = existing ? changedSummary(existing, fields) : undefined
     const item = existing
       ? Object.assign(existing, fields)
@@ -1189,15 +1493,15 @@ export interface DispenseResult {
 export function dispenseInventoryItem(
   itemId: string,
   quantity: number,
-  link: { studentNumber?: StudentNumber; visitId?: string } = {},
+  link: { studentId?: string; visitId?: string } = {},
   actor?: SessionUser,
 ): Promise<DispenseResult> {
   return write('dispense', (s) => {
     const by = actorOr(actor)
     const item = must(s.inventoryItems.find((i) => i.id === itemId), 'Inventory item')
     if (!Number.isInteger(quantity) || quantity < 1) throw new StockRuleError(QUANTITY_RULE)
-    if (link.studentNumber && !s.students.some((st) => st.studentNumber === link.studentNumber))
-      throw new StockRuleError('No student has this Student Number.')
+    if (link.studentId && !s.students.some((st) => st.id === link.studentId))
+      throw new StockRuleError('This student record was not found.')
     if (link.visitId && !s.visits.some((v) => v.id === link.visitId)) throw new StockRuleError('That visit no longer exists.')
     const batchAllocations = takeUsableBatches(s, item, quantity)
     const txn = {
@@ -1207,7 +1511,7 @@ export function dispenseInventoryItem(
       quantity,
       timestamp: now(s),
       userId: by.id,
-      studentNumber: link.studentNumber ?? null,
+      studentId: link.studentId ?? null,
       visitId: link.visitId ?? null,
       batchAllocations,
     }
@@ -1223,12 +1527,16 @@ export function restockInventoryItem(
   itemId: string,
   quantity: number,
   expirationDate: ISODate | null,
-  actor?: SessionUser,
+  options: { noExpirationConfirmed?: boolean; actor?: SessionUser } = {},
 ): Promise<InventoryItemView> {
   return write('restock', (s) => {
-    const by = actorOr(actor)
+    const by = actorOr(options.actor)
     const item = must(s.inventoryItems.find((i) => i.id === itemId), 'Inventory item')
     if (!Number.isInteger(quantity) || quantity < 1) throw new StockRuleError(QUANTITY_RULE)
+    if (expirationDate === null && !options.noExpirationConfirmed)
+      throw new StockRuleError('Choose an expiration date, or confirm this batch has no expiration date.')
+    if (expirationDate !== null && options.noExpirationConfirmed)
+      throw new StockRuleError('Choose either an expiration date or no expiration date for this batch.')
     const batch: InventoryBatch = {
       id: nextBatchId(item),
       quantity,
@@ -1238,7 +1546,7 @@ export function restockInventoryItem(
     item.batches.push(batch)
     const id = nextId('txn', s.frontendOnly.inventoryTransactions)
     s.frontendOnly.inventoryTransactions.push({
-      id, itemId, type: 'restock', quantity, timestamp: now(s), userId: by.id, studentNumber: null, visitId: null,
+      id, itemId, type: 'restock', quantity, timestamp: now(s), userId: by.id, studentId: null, visitId: null,
       batchAllocations: [{ batchId: batch.id, quantity }],
     })
     audit(s, by, 'submit', { type: 'inventory-restock', id })
@@ -1301,7 +1609,7 @@ export function adjustInventoryStock(itemId: string, input: StockAdjustmentInput
       quantity: change,
       timestamp: now(s),
       userId: by.id,
-      studentNumber: null,
+      studentId: null,
       visitId: null,
       reason: input.reason,
       note,
@@ -1384,7 +1692,7 @@ function splitAllocations(allocations: ReadonlyArray<InventoryBatchAllocation>, 
 
 /**
  * Moves a record's medicine lines from `before` to `next`. Every line is validated first; then each
- * changed item moves stock and gets one transaction and one audit entry, linked by Student Number
+ * changed item moves stock and gets one transaction and one audit entry, linked by LRN
  * and visit. A new record dispenses; an edit writes `visit_edited` adjustments instead of rewriting
  * history. The expired rule covers only added or increased quantity. New lines snapshot the item's
  * current name and unit; kept lines keep theirs. Returns the lines and the items now below zero.
@@ -1392,7 +1700,7 @@ function splitAllocations(allocations: ReadonlyArray<InventoryBatchAllocation>, 
 function applyItemLines(
   s: DbState,
   by: SessionUser,
-  link: { studentNumber: StudentNumber; visitId?: string; incidentId?: string },
+  link: { studentId: string; visitId?: string; incidentId?: string },
   before: ItemGivenLine[],
   next: ItemLineInput[],
   mode: 'dispense' | 'adjust',
@@ -1431,7 +1739,7 @@ function applyItemLines(
       itemId,
       timestamp: now(s),
       userId: by.id,
-      studentNumber: link.studentNumber,
+      studentId: link.studentId,
       visitId: link.visitId ?? null,
       ...(link.incidentId ? { incidentId: link.incidentId } : {}),
     }
@@ -1496,8 +1804,8 @@ export interface MonthlyReportData {
    * returned (`visit_edited` adjustments), from the recorded stock movements. Totals only, no students.
    */
   itemsGiven: Array<{ itemName: string; unit: string; quantity: number }>
-  /** Incident archive rows carry the Student Number only (multi-student list, ADR-004). */
-  incidents: Array<Incident & { studentNumber: StudentNumber }>
+  /** Incident archive rows carry the LRN only, masked when shown (multi-student list, ADR-004). */
+  incidents: Array<Incident & { lrn: string }>
   /** Visits per complaint, most frequent first (ties alphabetical, so the order is stable). */
   complaintCounts: ComplaintCount[]
 }
@@ -1535,9 +1843,9 @@ export function getMonthlyReport(month: string): Promise<MonthlyReportData> {
       month,
       counts: monthlyCounts(s, month),
       previousCounts: monthlyCounts(s, toISODate(new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 2, 1)).slice(0, 7)),
-      dispositions: (['returned_to_class', 'sent_home', 'referred_to_hospital'] as const).map((disposition) => ({
+      dispositions: (['returned_to_class', 'resting_in_clinic', 'sent_home', 'referred_to_hospital'] as const).map((disposition) => ({
         disposition,
-        count: s.visits.filter((v) => v.dateTime.startsWith(month) && v.disposition === disposition).length,
+        count: countedVisits(s).filter((v) => v.dateTime.startsWith(month) && v.disposition === disposition).length,
       })),
       followUpsByStatus: (['pending', 'completed', 'missed', 'cancelled'] as const).map((status) => ({
         status,
@@ -1547,8 +1855,8 @@ export function getMonthlyReport(month: string): Promise<MonthlyReportData> {
       incidents: s.incidents
         .filter((i) => i.time.startsWith(month))
         .sort((a, b) => b.time.localeCompare(a.time))
-        .map((i) => ({ ...i, studentNumber: byId.get(i.studentId)?.studentNumber ?? 'Unknown student' })),
-      complaintCounts: complaintCounts(s.visits.filter((v) => v.dateTime.startsWith(month))),
+        .map((i) => ({ ...i, lrn: byId.get(i.studentId)?.lrn ?? '' })),
+      complaintCounts: complaintCounts(countedVisits(s).filter((v) => v.dateTime.startsWith(month))),
     }
   })
 }
@@ -1562,7 +1870,7 @@ export function listReports(): Promise<Report[]> {
 
 function reportData(s: DbState, type: ReportType, range: { from: ISODate; to: ISODate }) {
   const inRange = (d: string) => d >= range.from && d <= range.to
-  const visits = s.visits.filter((v) => inRange(dateOf(v.dateTime)))
+  const visits = countedVisits(s).filter((v) => inRange(dateOf(v.dateTime)))
   const incidents = s.incidents.filter((i) => inRange(dateOf(i.time)))
   if (type === 'incident') return { incidents: incidents.length }
   if (type === 'health_summary') return { complaintCounts: complaintCounts(visits) }
@@ -1592,10 +1900,37 @@ export function verifyLatestBackup(actor?: SessionUser): Promise<BackupStatusVie
   })
 }
 
+/**
+ * "Back up now" (panel review BK-2). MOCK ONLY: it writes a successful backup record with a size close
+ * to the last one. The real job (copying the database to the external drive) belongs to the backend
+ * phase; until then this only records that a backup was asked for and "ran".
+ */
+export function recordBackupNow(actor?: SessionUser): Promise<BackupStatusView> {
+  return write('back up now', (s) => {
+    const by = actorOr(actor)
+    const lastOk = backupStatus(s).history.find((b) => b.status === 'ok')
+    const record = { lastRun: now(s), fileSizeBytes: Math.round((lastOk?.fileSizeBytes ?? 18_000_000) * 1.002), status: 'ok' as const, verifiedByUserId: null }
+    s.backupLogs.push(record)
+    audit(s, by, 'create', { type: 'backup', id: record.lastRun }, 'Backup started from the Backup page')
+    return { ...backupStatus(s), verifiedByName: null }
+  })
+}
+
 // ---- dashboard -----------------------------------------------------------------------------
 
 export function getDashboardSummary(query: DashboardQuery): Promise<DashboardSummary> {
-  return read('dashboard summary', (s) => buildDashboardSummary(s, query, new Date().toISOString()))
+  return read('dashboard summary', (s) => ({ ...buildDashboardSummary(s, query, new Date().toISOString()), backupAlert: backupAlertFor(s) }))
+}
+
+/** No successful backup, a failed latest run, or a last success older than `config.staleBackupHours` (BK-2, D5). */
+function backupAlertFor(s: DbState): BackupAlert | null {
+  const { latest, history } = backupStatus(s)
+  const lastSuccess = history.find((b) => b.status === 'ok') ?? null
+  const base = { lastSuccessAt: lastSuccess?.lastRun ?? null, staleAfterHours: s.config.staleBackupHours }
+  if (!lastSuccess) return { kind: 'never', ...base }
+  if (latest?.status === 'failed') return { kind: 'failed', ...base }
+  const hours = (Date.parse(now(s)) - Date.parse(lastSuccess.lastRun)) / 3_600_000
+  return hours > s.config.staleBackupHours ? { kind: 'stale', ...base } : null
 }
 
 export function getCalendarDays(from: ISODate, to: ISODate): Promise<CalendarDay[]> {
@@ -1716,23 +2051,275 @@ export function deleteCalendarEvent(id: string, actor?: SessionUser): Promise<vo
   })
 }
 
-// ---- QR lookup & audit ---------------------------------------------------------------------
+// ---- Sports Reports (ADR-034; Staff only; PROVISIONAL pending the ERD) ----------------------
 
-/** A QR scan (or manual Student Number entry) is itself audited: who looked up whom, when. */
-export function lookupStudentByScan(
-  studentNumber: StudentNumber,
-  actor?: SessionUser,
-): Promise<{ student: Student } & StudentHistory> {
-  return write('QR lookup', (s) => {
-    const student = must(view().students.find((st) => st.studentNumber === studentNumber), 'Student')
-    audit(s, actorOr(actor), 'scan', { type: 'student', id: student.id })
-    const history = (list: Array<{ studentId: string }>) => list.filter((r) => r.studentId === student.id)
-    const v = view()
-    return {
-      student: toStudent(student),
-      visits: (history(v.visits) as Visit[]).sort((a, b) => b.dateTime.localeCompare(a.dateTime)).slice(0, 4),
-      incidents: (history(v.incidents) as Incident[]).sort((a, b) => b.time.localeCompare(a.time)).slice(0, 4),
+export const SPORTS_REPORT_TEXT_MAX = 120
+export const SPORTS_REPORT_NOTE_MAX = 500
+export const SPORTS_REPORT_WINDOWS: SportsReportWindow[] = [30, 60, 90, 'school_year']
+/** The school year runs June 15 to April 14 (the Principal, October 2026; Issues-and-TODOs "The school and its master list"). */
+const SCHOOL_YEAR_START = '06-15'
+
+/** Sports Reports belong to the clinician (ADR-034): the Admin/Principal can't open them, and there is no instructor account. */
+export class SportsReportPermissionError extends Error {
+  constructor() {
+    super('Only the clinic staff can open Sports Reports.')
+  }
+}
+
+function requireStaff(actor: SessionUser) {
+  if (actor.role !== 'staff') throw new SportsReportPermissionError()
+}
+
+/** First day of the look-back window ending today: the last N days including today, or June 15 of the current school year. */
+export function sportsReportWindowStart(window: SportsReportWindow, today: ISODate): ISODate {
+  if (window !== 'school_year') return addDays(today, -(window - 1))
+  const year = Number(today.slice(0, 4))
+  return today.slice(5) >= SCHOOL_YEAR_START ? `${year}-${SCHOOL_YEAR_START}` : `${year - 1}-${SCHOOL_YEAR_START}`
+}
+
+export interface SportsReportInput {
+  title: string
+  activity: string
+  requestedBy: string
+  window: SportsReportWindow
+  includeConditions: boolean
+  students: Array<{ studentId: string; note: string }>
+}
+
+export type SportsReportErrors = Partial<Record<'title' | 'activity' | 'requestedBy' | 'window' | 'students', string>>
+
+/** Field messages for the builder; empty when the input is valid. The writes below enforce the same rules. */
+export function validateSportsReport(input: SportsReportInput): SportsReportErrors {
+  const errors: SportsReportErrors = {}
+  const title = input.title.trim()
+  const requestedBy = input.requestedBy.trim()
+  if (!title) errors.title = 'Enter a title for the report.'
+  else if (title.length > SPORTS_REPORT_TEXT_MAX) errors.title = `Keep the title to ${SPORTS_REPORT_TEXT_MAX} characters or fewer.`
+  if (input.activity.trim().length > SPORTS_REPORT_TEXT_MAX) errors.activity = `Keep the activity to ${SPORTS_REPORT_TEXT_MAX} characters or fewer.`
+  if (!requestedBy) errors.requestedBy = 'Enter the name of the instructor who asked for the report.'
+  else if (requestedBy.length > SPORTS_REPORT_TEXT_MAX) errors.requestedBy = `Keep the name to ${SPORTS_REPORT_TEXT_MAX} characters or fewer.`
+  if (!SPORTS_REPORT_WINDOWS.includes(input.window)) errors.window = 'Choose a look-back window.'
+  if (input.students.some((student) => student.note.trim().length > SPORTS_REPORT_NOTE_MAX))
+    errors.students = `Keep each note to ${SPORTS_REPORT_NOTE_MAX} characters or fewer.`
+  return errors
+}
+
+export class SportsReportValidationError extends Error {
+  readonly errors: SportsReportErrors
+  constructor(errors: SportsReportErrors) {
+    super(Object.values(errors).join(' '))
+    this.errors = errors
+  }
+}
+
+/** Only the list and the notes are kept (ADR-034): never a copy of anything from a student's record. */
+function cleanSportsReport(input: SportsReportInput): Pick<SportsReport, 'title' | 'activity' | 'requestedBy' | 'window' | 'includeConditions' | 'students'> {
+  const errors = validateSportsReport(input)
+  if (Object.keys(errors).length) throw new SportsReportValidationError(errors)
+  const seen = new Set<string>()
+  const students = input.students
+    .filter((student) => !seen.has(student.studentId) && seen.add(student.studentId))
+    .map((student) => ({ studentId: student.studentId, note: student.note.trim() || null }))
+  return {
+    title: input.title.trim(),
+    activity: input.activity.trim() || null,
+    requestedBy: input.requestedBy.trim(),
+    window: input.window,
+    includeConditions: input.includeConditions === true,
+    students,
+  }
+}
+
+export interface SportsReportSummary {
+  id: string
+  title: string
+  activity: string | null
+  requestedBy: string
+  studentCount: number
+  updatedAt: ISODateTime
+  archived: boolean
+}
+
+export function listSportsReports(actor?: SessionUser): Promise<SportsReportSummary[]> {
+  return read('sports reports', (s) => {
+    requireStaff(actorOr(actor))
+    return s.frontendOnly.sportsReports
+      .map(({ id, title, activity, requestedBy, students, updatedAt, archived }) => ({ id, title, activity, requestedBy, studentCount: students.length, updatedAt, archived }))
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+  })
+}
+
+/** A student on a report as the builder shows it: the name for recognition (ADR-034's exception), never medical fields. */
+export interface SportsReportStudentRow {
+  studentId: string
+  note: string | null
+  /** Null when the record is no longer in CLINIQ. */
+  fullName: string | null
+  gradeLevel: string | null
+  status: 'active' | 'archived' | 'missing'
+}
+
+export interface SportsReportDetail extends Omit<SportsReport, 'students'> {
+  students: SportsReportStudentRow[]
+}
+
+function sportsReportStudents(s: DbState, report: SportsReport): SportsReportStudentRow[] {
+  const students = studentsById(s)
+  return report.students.map(({ studentId, note }) => {
+    const student = students.get(studentId)
+    if (!student) return { studentId, note, fullName: null, gradeLevel: null, status: 'missing' as const }
+    return { studentId, note, fullName: student.fullName, gradeLevel: student.gradeLevel, status: student.archived ? ('archived' as const) : ('active' as const) }
+  })
+}
+
+export function getSportsReport(id: string, actor?: SessionUser): Promise<SportsReportDetail> {
+  return read('sports report', (s) => {
+    requireStaff(actorOr(actor))
+    const report = must(s.frontendOnly.sportsReports.find((r) => r.id === id), 'Sports Report')
+    return { ...report, students: sportsReportStudents(s, report) }
+  })
+}
+
+/** One visit or incident as the Sports Report prints it: never notes, vitals, medicines, contacts or letters. */
+export interface SportsReportEntry {
+  id: string
+  dateTime: ISODateTime
+  kind: 'Visit' | 'Incident'
+  /** The complaint as recorded. */
+  what: string
+  outcome: string
+}
+
+export interface SportsReportContentRow {
+  studentId: string
+  fullName: string
+  gradeLevel: string
+  /** Newest first. */
+  entries: SportsReportEntry[]
+  note: string | null
+  /** Only when the report includes conditions. */
+  conditions?: { medicalConditions: string[]; allergies: string[] }
+}
+
+export interface SportsReportContent {
+  report: Pick<SportsReport, 'id' | 'title' | 'activity' | 'requestedBy' | 'window' | 'includeConditions' | 'archived'>
+  from: ISODate
+  to: ISODate
+  asOf: ISODateTime
+  /** Active students, alphabetical by name. */
+  rows: SportsReportContentRow[]
+  /** Students on the list who are left out: archived, or no longer in CLINIQ. Counts only. */
+  leftOut: { archived: number; missing: number }
+}
+
+const SPORTS_REPORT_OUTCOMES = DISPOSITION_LABELS
+
+/**
+ * The report's content, computed from the visits and incidents at the moment it is asked for, so a
+ * reprint is current and nothing medical is ever stored with the report (ADR-034).
+ */
+export function getSportsReportContent(id: string, actor?: SessionUser): Promise<SportsReportContent> {
+  return read('sports report content', (s) => {
+    requireStaff(actorOr(actor))
+    const report = must(s.frontendOnly.sportsReports.find((r) => r.id === id), 'Sports Report')
+    const from = sportsReportWindowStart(report.window, s.today)
+    const to = s.today
+    const inWindow = (value: ISODateTime) => value.slice(0, 10) >= from && value.slice(0, 10) <= to
+    const students = studentsById(s)
+    const leftOut = { archived: 0, missing: 0 }
+    const rows: SportsReportContentRow[] = []
+    for (const { studentId, note } of report.students) {
+      const student = students.get(studentId)
+      if (!student) leftOut.missing += 1
+      else if (student.archived) leftOut.archived += 1
+      if (!student || student.archived) continue
+      const entries: SportsReportEntry[] = [
+        ...s.visits
+          .filter((v) => v.studentId === studentId && inWindow(v.dateTime))
+          .map((v) => ({ id: v.id, dateTime: v.dateTime, kind: 'Visit' as const, what: v.complaint, outcome: SPORTS_REPORT_OUTCOMES[v.disposition] })),
+        ...s.incidents
+          .filter((i) => i.studentId === studentId && inWindow(i.time))
+          .map((i) => ({ id: i.id, dateTime: i.time, kind: 'Incident' as const, what: i.complaint, outcome: i.hospitalReferral ? 'Referred to hospital' : 'No hospital referral recorded' })),
+      ].sort((a, b) => b.dateTime.localeCompare(a.dateTime))
+      rows.push({
+        studentId,
+        fullName: student.fullName,
+        gradeLevel: student.gradeLevel,
+        entries,
+        note,
+        ...(report.includeConditions ? { conditions: { medicalConditions: student.medicalConditions, allergies: student.allergies } } : {}),
+      })
     }
+    rows.sort((a, b) => a.fullName.localeCompare(b.fullName))
+    const { title, activity, requestedBy, window, includeConditions, archived } = report
+    return { report: { id, title, activity, requestedBy, window, includeConditions, archived }, from, to, asOf: now(s), rows, leftOut }
+  })
+}
+
+export function createSportsReport(input: SportsReportInput, actor?: SessionUser): Promise<SportsReport> {
+  return write('add sports report', (s) => {
+    const by = actorOr(actor)
+    requireStaff(by)
+    const at = now(s)
+    const report: SportsReport = {
+      id: nextId('sports-report', s.frontendOnly.sportsReports),
+      ...cleanSportsReport(input),
+      archived: false,
+      createdByUserId: by.id,
+      createdAt: at,
+      updatedAt: at,
+    }
+    s.frontendOnly.sportsReports.push(report)
+    audit(s, by, 'create', { type: 'sports-report', id: report.id })
+    return report
+  })
+}
+
+export function updateSportsReport(id: string, input: SportsReportInput, actor?: SessionUser): Promise<SportsReport> {
+  return write('edit sports report', (s) => {
+    const by = actorOr(actor)
+    requireStaff(by)
+    const report = must(s.frontendOnly.sportsReports.find((r) => r.id === id), 'Sports Report')
+    const next = cleanSportsReport(input)
+    const summary = changedSummary(report, next)
+    Object.assign(report, next, { updatedAt: now(s) })
+    audit(s, by, 'update', { type: 'sports-report', id }, summary)
+    return report
+  })
+}
+
+/** A copy to reuse for the next event; the copy is a new, active report. */
+export function duplicateSportsReport(id: string, actor?: SessionUser): Promise<SportsReport> {
+  return write('duplicate sports report', (s) => {
+    const by = actorOr(actor)
+    requireStaff(by)
+    const source = must(s.frontendOnly.sportsReports.find((r) => r.id === id), 'Sports Report')
+    const at = now(s)
+    const copy: SportsReport = {
+      ...structuredClone(source),
+      id: nextId('sports-report', s.frontendOnly.sportsReports),
+      title: `Copy of ${source.title}`.slice(0, SPORTS_REPORT_TEXT_MAX),
+      archived: false,
+      createdByUserId: by.id,
+      createdAt: at,
+      updatedAt: at,
+    }
+    s.frontendOnly.sportsReports.push(copy)
+    audit(s, by, 'create', { type: 'sports-report', id: copy.id }, 'Duplicated from another Sports Report')
+    return copy
+  })
+}
+
+/** Archived reports are hidden from the list by default and can be restored; nothing is deleted. */
+export function setSportsReportArchived(id: string, archived: boolean, actor?: SessionUser): Promise<SportsReport> {
+  return write(archived ? 'archive sports report' : 'restore sports report', (s) => {
+    const by = actorOr(actor)
+    requireStaff(by)
+    const report = must(s.frontendOnly.sportsReports.find((r) => r.id === id), 'Sports Report')
+    Object.assign(report, { archived, updatedAt: now(s) })
+    if (archived) audit(s, by, 'archive', { type: 'sports-report', id })
+    else audit(s, by, 'update', { type: 'sports-report', id }, 'Restored from the archive')
+    return report
   })
 }
 

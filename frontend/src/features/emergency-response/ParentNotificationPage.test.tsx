@@ -18,7 +18,7 @@ describe('Parent Notification Log', () => {
     renderWithRouter(<ParentNotificationPage incidentId="incident-0017" />)
 
     expect(await screen.findByText('Arnel Cabrera')).toBeInTheDocument()
-    expect(screen.getByText('Bea Cabrera')).toBeInTheDocument()
+    expect(screen.getByText('Beatriz Cabrera')).toBeInTheDocument()
     expect(screen.getByText('Primary')).toBeInTheDocument()
     expect(screen.getByText('Needs verification')).toBeInTheDocument()
     expect(getRecordedAuditEntries()).toEqual([])

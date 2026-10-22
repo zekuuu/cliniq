@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
@@ -16,7 +16,6 @@ vi.mock('react-chartjs-2', () => {
 
 const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
 const ADMIN: SessionUser = { id: 'usr-principal', name: 'Principal', role: 'admin' }
-const INSTRUCTOR: SessionUser = { id: 'usr-pe', name: 'PE Instructor', role: 'instructor' }
 
 function CurrentPath() {
   const location = useLocation()
@@ -65,15 +64,15 @@ describe('App routes', () => {
     expect(screen.getByTestId('path')).toHaveTextContent('/incidents')
   })
 
-  it('resolves the student from the /students/:studentNumber segment', async () => {
+  it('resolves the student from the /students/:studentId segment', async () => {
     const [student] = await listStudents()
-    renderAt(`/students/${student.studentNumber}`)
+    renderAt(`/students/${student.id}`)
 
     expect(await screen.findByRole('heading', { name: student.fullName })).toBeInTheDocument()
   })
 
-  it('shows an error, not a different student, for an unknown Student Number', async () => {
-    renderAt('/students/1999-99999')
+  it('shows an error, not a different student, for an unknown LRN', async () => {
+    renderAt('/students/student-9999')
 
     expect(await screen.findByText('Unable to load the student profile.')).toBeInTheDocument()
   })
@@ -126,7 +125,6 @@ describe('App routes', () => {
   it.each([
     ['Staff', STAFF],
     ['Admin/Principal', ADMIN],
-    ['PE/Sports Instructor', INSTRUCTOR],
   ] as const)('opens Privacy Policy for %s with the footer link available', async (_, user) => {
     renderAt('/privacy-policy', user)
 
@@ -145,19 +143,28 @@ describe('App routes', () => {
     expect(getRecordedAuditEntries()).toEqual([])
   })
 
-  it('does not allow the PE/Sports Instructor to open the audit log', async () => {
-    renderAt('/audit-log', INSTRUCTOR)
+  it.each(['/qr/scan', '/qr/print', '/emergency/mobile'])('shows Staff the not-found screen on the removed address %s', async (path) => {
+    renderAt(path)
 
-    expect(await screen.findByRole('heading', { name: 'Instructor Lookup' })).toBeInTheDocument()
-    expect(screen.getByTestId('path')).toHaveTextContent('/qr/scan')
+    expect(await screen.findByRole('heading', { name: 'Page Not Found' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /QR/ })).not.toBeInTheDocument()
   })
 
-  it('sends the PE/Sports Instructor to the read-only QR lookup, with no shell', async () => {
-    renderAt('/', INSTRUCTOR)
+  it.each(['/users', '/users/new', '/users/user-staff-01/edit'])('sends Staff from the Admin-only %s to the Dashboard (ADR-033)', async (path) => {
+    renderAt(path, STAFF)
 
-    expect(await screen.findByRole('heading', { name: 'Instructor Lookup' })).toBeInTheDocument()
-    expect(screen.getByTestId('path')).toHaveTextContent('/qr/scan')
-    expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.getByTestId('path')).toHaveTextContent(/^\/$/))
+    expect(screen.queryByRole('heading', { name: /User Management|Add User|Edit User/ })).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['/users', 'User Management'],
+    ['/users/new', 'Add User'],
+    ['/users/user-staff-01/edit', 'Edit User'],
+  ])('lets the Admin/Principal open %s', async (path, heading) => {
+    renderAt(path, ADMIN)
+
+    expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument()
   })
 
   it('shows a not-found screen for an unknown path', async () => {

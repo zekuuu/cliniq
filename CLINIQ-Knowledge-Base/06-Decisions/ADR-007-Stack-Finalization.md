@@ -2,6 +2,7 @@
 
 **Date:** September 25, 2026
 **Status:** Accepted
+**Note (Wednesday, October 21, 2026 — 01:09):** the QR feature this ADR mentions was removed (ADR-027, [2026-10-21-remove-qr-feature](../08-Logs/Agent-Sessions/2026-10-21-remove-qr-feature.md)); the rest of the decision stands.
 
 ## Context
 Several stack items had been proposed but left unconfirmed: authentication package, build tool, QR generation/scanning libraries, dev environment standardization, and a charting library. Rather than confirm the first plausible-looking option for each, current maintenance status and compatibility were actually researched.

@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import {
   BackButton,
   Badge,
@@ -26,7 +26,7 @@ import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { cn } from '../../lib/cn'
 import { cleanComplaint, normalizeComplaint } from '../../lib/complaints'
 import { addDays, todayISO } from '../../lib/dates'
-import { getMockSessionUser, StockRuleError, type ComplaintType, type InventoryItemView, type SessionUser } from '../../lib/mock-db'
+import { getMockSessionUser, LATE_ENTRY_MINUTES, StockRuleError, type ComplaintType, type InventoryItemView, type SessionUser } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
 import type { Disposition } from '../../types/entities'
 import {
@@ -38,6 +38,8 @@ import {
   submitNewVisit,
 } from './api/newVisitApi'
 import { ComplaintField } from './ComplaintField'
+import { MedicineInNotesHint } from './MedicineInNotesHint'
+import type { EscalationPrefill } from '../emergency-response/api/incidentEntryApi'
 import { DispositionFields } from './DispositionFields'
 import {
   dispositionErrors,
@@ -54,22 +56,20 @@ import {
   logbookPayload,
   type LogbookErrors,
 } from './logbookValues'
+import { maskLrn } from '../../lib/lrn'
+import { DISPOSITION_OPTIONS as dispositionOptions } from '../../lib/dispositions'
 
-/** Smart Triage's complaint type for what was typed: a case-insensitive match, or none. */
+/** The first-aid checklist's complaint type for what was typed: a case-insensitive match, or none. */
 function matchComplaintType(complaint: string, complaintTypes: ComplaintType[]): ComplaintType | undefined {
   const typed = cleanComplaint(complaint).toLowerCase()
   return typed ? complaintTypes.find((type) => type.label.toLowerCase() === typed) : undefined
 }
 
 
-const dispositionOptions = [
-  { value: 'returned_to_class', label: 'Returned to class' },
-  { value: 'sent_home', label: 'Sent home' },
-  { value: 'referred_to_hospital', label: 'Referred to hospital' },
-] satisfies Array<{ value: Disposition; label: string }>
 
 interface Errors extends DispositionErrors, LogbookErrors {
   complaint?: string
+  visitTime?: string
   itemsGiven?: string
   followUpDate?: string
   followUpReason?: string
@@ -201,18 +201,10 @@ function TriagePanel({
  * New Visit Entry (Screen #11 / Reference 2). Mutating saves call the mock audit helper now, and
  * will become real audit-log writes when the Laravel endpoints land.
  */
-export function NewVisitEntryPage({
-  viewer = getMockSessionUser(),
-  studentNumber,
-}: {
-  viewer?: SessionUser
-  studentNumber?: string
-}) {
+export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser }) {
   const today = todayISO()
-  const { data, status, reload } = useAsyncData(`new-visit|${studentNumber ?? 'unidentified'}`, () =>
-    fetchNewVisitContext(studentNumber),
-  )
-  const identified = useIdentifiedStudent(data?.student, findVisitStudent)
+  const { data, status, reload } = useAsyncData('new-visit', fetchNewVisitContext)
+  const identified = useIdentifiedStudent(null, findVisitStudent)
   const [complaint, setComplaint] = useState('')
   const [treatment, setTreatment] = useState('')
   const [disposition, setDisposition] = useState<Disposition>('returned_to_class')
@@ -224,6 +216,15 @@ export function NewVisitEntryPage({
   const [followUpNotes, setFollowUpNotes] = useState('')
   const [lines, setLines] = useState<ItemLineDraft[]>([])
   const [logbook, setLogbook] = useState(emptyLogbookValues)
+  // When the visit happened (panel review VS-8, ADR-029). Shown as now; sent only once Staff changes it,
+  // so a form left open for a while is still dated when it is saved.
+  const [visitDate, setVisitDate] = useState(today)
+  const [visitClock, setVisitClock] = useState(currentClock)
+  // When Staff last changed the date or time; lateness is measured from then (render stays pure).
+  const [editedAt, setEditedAt] = useState<number | null>(null)
+  const whenEdited = editedAt !== null
+  const [lateEntryReason, setLateEntryReason] = useState('')
+  const navigate = useNavigate()
   /** "Show more fields": closed on a new visit; opens by itself when one of its fields has an error. */
   const [moreOpen, setMoreOpen] = useState(false)
   const timeOutRef = useRef<HTMLInputElement>(null)
@@ -260,8 +261,28 @@ export function NewVisitEntryPage({
       triageSteps.length > 0 ||
       disposition !== lastSavedDisposition.current ||
       needsFollowUp ||
+      whenEdited ||
       filledLogbookCount(logbook) > 0,
   )
+  const minutesAgo = editedAt !== null && visitDate && visitClock ? (editedAt - new Date(`${visitDate}T${visitClock}`).getTime()) / 60_000 : 0
+  const isLateEntry = minutesAgo > LATE_ENTRY_MINUTES
+  // ADR-036: an emergency-type complaint gets a hint, never a block. The one-line Visit-versus-Incident
+  // rule waits for the nurse's wording (open DECIDE "Rule for Visit versus Incident"), so none is shown yet.
+  const looksLikeEmergency = Boolean(
+    data?.emergencyComplaints.some((type) => type.toLowerCase() === cleanComplaint(complaint).toLowerCase()),
+  )
+
+  /** Opens Incident Stage 1 with what is typed so far; nothing is saved here and no medicine is carried (ADR-036). */
+  function escalateToIncident() {
+    const temperature = Number(logbook.temperatureC)
+    const escalate: EscalationPrefill = {
+      studentId: identified.student?.id,
+      complaint: cleanComplaint(complaint),
+      time: whenEdited ? `${visitDate}T${visitClock}:00+08:00` : undefined,
+      temperatureC: logbook.temperatureC.trim() && Number.isFinite(temperature) ? temperature : null,
+    }
+    navigate(paths.incidentNew, { state: { escalate } })
+  }
 
   useEffect(() => {
     function saveAndNew() {
@@ -289,6 +310,8 @@ export function NewVisitEntryPage({
   function validate(): Errors {
     const next: Errors = {}
     if (!cleanComplaint(complaint)) next.complaint = 'Enter the complaint for this visit.'
+    if (whenEdited && (!visitDate || !visitClock)) next.visitTime = 'Enter the visit date and time.'
+    else if (minutesAgo < -1) next.visitTime = "The visit date and time can't be in the future."
     if (lines.some((line) => line.quantity < 1)) next.itemsGiven = 'Each quantity must be at least 1.'
     if (needsFollowUp) {
       if (!followUpDate) next.followUpDate = 'Choose a follow-up date.'
@@ -305,7 +328,7 @@ export function NewVisitEntryPage({
     event.preventDefault()
     if (!data) return
     const nextErrors = validate()
-    const studentOk = identified.validate('Choose the student: type a Student Number or name, then pick from the list.')
+    const studentOk = identified.validate('Choose the student: type the LRN or name, then pick from the list.')
     setErrors(nextErrors)
     if (nextErrors.timeOut) setMoreOpen(true)
     invalid.report(Object.keys(nextErrors).length + (studentOk ? 0 : 1))
@@ -332,6 +355,8 @@ export function NewVisitEntryPage({
           itemsGiven: lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity, instructions: line.instructions })),
           ...dispositionPayload(disposition, dispositionValues),
           ...logbookPayload(logbook),
+          ...(whenEdited && { dateTime: `${visitDate}T${visitClock}` }),
+          lateEntryReason: isLateEntry ? lateEntryReason : null,
         },
         viewer,
       )
@@ -358,6 +383,10 @@ export function NewVisitEntryPage({
       setFollowUpReason('')
       setFollowUpNotes('')
       setLogbook(emptyLogbookValues())
+      setVisitDate(todayISO())
+      setVisitClock(currentClock())
+      setEditedAt(null)
+      setLateEntryReason('')
       setMoreOpen(false)
       setErrors({})
       identified.reset()
@@ -404,8 +433,8 @@ export function NewVisitEntryPage({
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">New Visit</h1>
             <p className="mt-1 text-sm text-text-secondary">
               {identified.student
-                ? `${identified.student.fullName} · ${identified.student.studentNumber} · ${identified.student.gradeLevel}`
-                : 'Student not identified yet. Search by Student Number or name below.'}
+                ? `${identified.student.fullName} · LRN ${maskLrn(identified.student.lrn)} · ${identified.student.gradeLevel}`
+                : 'Student not identified yet.'}
             </p>
           </div>
           <Badge tone="info" variant="soft" icon="stethoscope">
@@ -458,25 +487,52 @@ export function NewVisitEntryPage({
             titleId="visit-form-title"
             title="Visit details"
             icon={<Icon name="stethoscope" />}
-            description={
-              data.student
-                ? 'Required fields are marked. The student is already identified from lookup/scan.'
-                : 'Required fields are marked. Search by Student Number or name to identify the student.'
-            }
+            description="Required fields are marked."
           />
           <CardBody className="flex flex-col gap-4">
-            {!data.student && (
-              <StudentPicker
-                search={searchVisitStudents}
-                selected={identified.student}
-                onClear={identified.reset}
-                onSelect={(student) => {
-                  setSaved(null)
-                  void identified.select(student.studentNumber)
+            <StudentPicker
+              search={searchVisitStudents}
+              selected={identified.student}
+              onClear={identified.reset}
+              onSelect={(student) => {
+                setSaved(null)
+                void identified.select(student.id)
+              }}
+              error={identified.error}
+              addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
+              autoFocus
+            />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <DatePicker
+                label="Visit date"
+                value={visitDate}
+                max={today}
+                onChange={(next) => {
+                  setVisitDate(next)
+                  setEditedAt(Date.now())
+                  setErrors((current) => ({ ...current, visitTime: undefined }))
                 }}
-                error={identified.error}
-                addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
-                autoFocus
+                error={errors.visitTime}
+              />
+              <Input
+                type="time"
+                label="Time"
+                value={visitClock}
+                hint="Now by default. Change it only for a visit entered afterwards."
+                onChange={(event) => {
+                  setVisitClock(event.target.value)
+                  setEditedAt(Date.now())
+                  setErrors((current) => ({ ...current, visitTime: undefined }))
+                }}
+              />
+            </div>
+            {isLateEntry && (
+              <Input
+                label="Reason for late entry (optional)"
+                value={lateEntryReason}
+                maxLength={200}
+                hint="For example: system was down, paper entry. Saved as a late entry either way."
+                onChange={(event) => setLateEntryReason(event.target.value)}
               />
             )}
             <ComplaintField
@@ -484,8 +540,18 @@ export function NewVisitEntryPage({
               onChange={updateComplaint}
               suggestions={suggestions}
               error={errors.complaint}
-              autoFocus={Boolean(data.student)}
             />
+            {looksLikeEmergency && (
+              <div role="note" className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm text-text-primary">
+                <span className="flex items-center gap-2">
+                  <Icon name="alertTriangle" size={16} className="shrink-0 text-warning" />
+                  This looks like an emergency. Escalate to an incident?
+                </span>
+                <Button size="sm" onClick={escalateToIncident}>
+                  Escalate to incident
+                </Button>
+              </div>
+            )}
             {cleanComplaint(complaint) ? (
               <TriagePanel
                 complaint={complaint}
@@ -496,8 +562,8 @@ export function NewVisitEntryPage({
             ) : (
               <EmptyState
                 icon="clipboardList"
-                title="Enter a complaint to show Smart Triage"
-                description="A first-aid checklist appears when the complaint matches a predefined type."
+                title="Enter a complaint to show the first-aid checklist"
+                description="The checklist appears when the complaint matches a predefined type."
                 className="rounded-md border border-border bg-surface"
               />
             )}
@@ -506,6 +572,15 @@ export function NewVisitEntryPage({
               hint="Optional. Care that isn't stock: rest, cold compress, wound cleaning, advice."
               value={treatment}
               onChange={setTreatment}
+            />
+            <MedicineInNotesHint
+              notes={treatment}
+              items={freshItems ?? data.items}
+              lines={lines}
+              onAdd={(line) => {
+                setLines((current) => [...current, line])
+                setSaved(null)
+              }}
             />
             <ItemsGivenField
               items={freshItems ?? data.items}
@@ -522,6 +597,8 @@ export function NewVisitEntryPage({
               <p className="mb-1 text-xs font-semibold text-text-primary">Disposition</p>
               <SegmentedControl
                 label="Disposition"
+                // Four options: two by two on a phone, one row from sm up (panel review VS-1 added Resting).
+                className="max-sm:grid max-sm:w-full max-sm:grid-cols-2"
                 value={disposition}
                 onChange={(next) => {
                   // Disposition-specific fields start fresh whenever the disposition changes.
@@ -616,6 +693,9 @@ export function NewVisitEntryPage({
               {!treatment.trim() && !lines.length && (
                 <p className="mr-auto text-xs text-text-secondary">No treatment recorded. You can still save.</p>
               )}
+              <Button type="button" variant="secondary" icon="alertTriangle" onClick={escalateToIncident}>
+                Escalate to incident
+              </Button>
               <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
               <Button type="submit" variant="primary" loading={saving}>
                 Save Visit

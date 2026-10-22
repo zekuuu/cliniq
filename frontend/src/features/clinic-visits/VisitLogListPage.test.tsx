@@ -6,6 +6,8 @@ import { describe, expect, it } from 'vitest'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { VisitLogListPage } from './VisitLogListPage'
 import { defaultVisitLogRange, fetchVisitLog } from './api/visitLogApi'
+import { lrnLabel, maskLrn } from '../../lib/lrn'
+import { rangeForPreset } from '../../lib/dateRange'
 
 describe('Visit Log', () => {
   it('links to New Visit from the page header', async () => {
@@ -18,13 +20,11 @@ describe('Visit Log', () => {
 
     await screen.findByRole('heading', { name: 'Visit Log' })
     expect(screen.getByRole('button', { name: /Excuse letter/ })).toHaveTextContent('All visits')
-    expect(
-      screen.queryAllByText('All visits').filter((element) => !element.classList.contains('invisible')),
-    ).toHaveLength(1)
+    expect(screen.getByRole('button', { name: 'Visit status All visits' })).toBeInTheDocument()
   })
 
   it('opens on the day given by ?from=&to= (the Dashboard calendar\'s View visits)', async () => {
-    const range = defaultVisitLogRange()
+    const range = rangeForPreset('all', defaultVisitLogRange().to)
     const [visit] = await fetchVisitLog({ ...range, search: '', disposition: 'all' })
     const day = visit.dateTime.slice(0, 10)
     renderWithRouter(<VisitLogListPage />, { route: `/visits?from=${day}&to=${day}` })
@@ -38,15 +38,16 @@ describe('Visit Log', () => {
 
   it('opens with ?letter=pending showing only visits whose letter awaits approval, each with Review Letter', async () => {
     const user = userEvent.setup()
-    const range = defaultVisitLogRange()
+    const range = rangeForPreset('all', defaultVisitLogRange().to)
     const pending = await fetchVisitLog({ ...range, search: '', disposition: 'all', letter: 'pending' })
     expect(pending.length).toBeGreaterThan(0)
     renderWithRouter(<VisitLogListPage />, { route: '/visits?letter=pending' })
 
     expect(await screen.findByRole('button', { name: /Excuse letter/ })).toHaveTextContent('Pending approval')
+    expect(screen.getByRole('button', { name: 'Date range' })).toHaveTextContent('All')
     await waitFor(() => expect(screen.getAllByRole('row')).toHaveLength(Math.min(pending.length, 10) + 1))
     for (const row of pending.slice(0, 10)) {
-      expect(screen.getByRole('link', { name: `Review Letter for ${row.studentNumber}` })).toHaveAttribute('href', `/visits/${row.id}/excuse-letter`)
+      expect(screen.getByRole('link', { name: `Review Letter for ${lrnLabel(row.lrn)}` })).toHaveAttribute('href', `/visits/${row.id}/excuse-letter`)
     }
 
     await user.click(screen.getByRole('button', { name: /Excuse letter/ }))
@@ -61,7 +62,7 @@ describe('Visit Log', () => {
   ])('falls back to All for %s (%s)', async (route) => {
     renderWithRouter(<VisitLogListPage />, { route })
 
-    expect(await screen.findByRole('button', { name: 'Date range' })).toHaveTextContent('All')
+    expect(await screen.findByRole('button', { name: 'Date range' })).toHaveTextContent('Today')
   })
 
   it('clears entry date params with replace navigation while preserving other parameters', async () => {
@@ -107,17 +108,17 @@ describe('Visit Log', () => {
 
     view.unmount()
     renderWithRouter(<VisitLogListPage />, { route: router.state.location.pathname })
-    expect(await screen.findByRole('button', { name: 'Date range' })).toHaveTextContent('All')
+    expect(await screen.findByRole('button', { name: 'Date range' })).toHaveTextContent('Today')
   })
 
   it('renders a privacy-safe multi-student visit list with the complaint visible (ADR-010)', async () => {
     renderWithRouter(<VisitLogListPage />)
 
     expect(await screen.findByRole('heading', { name: 'Visit Log' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'Student Number' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'LRN' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Disposition' })).toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: /full name/i })).not.toBeInTheDocument()
-    // ADR-010 (Option A): the complaint stays visible beside the Student Number; names never do.
+    // ADR-010 (Option A): the complaint stays visible beside the LRN; names never do.
     expect(screen.getByRole('columnheader', { name: /complaint/i })).toBeInTheDocument()
     const [newest] = await fetchVisitLog({ ...defaultVisitLogRange(), search: '', disposition: 'all' })
     expect(screen.getAllByText(newest.complaint).length).toBeGreaterThan(0)
@@ -126,7 +127,7 @@ describe('Visit Log', () => {
     expect(screen.queryByText('Paracetamol given')).not.toBeInTheDocument()
   })
 
-  it('searches visits by Student Number', async () => {
+  it('searches visits by LRN', async () => {
     const user = userEvent.setup()
     const range = defaultVisitLogRange()
     const [visit] = await fetchVisitLog({
@@ -137,10 +138,10 @@ describe('Visit Log', () => {
 
     renderWithRouter(<VisitLogListPage />)
     await screen.findByRole('heading', { name: 'Visit Log' })
-    await user.type(screen.getByLabelText('Search'), visit.studentNumber)
+    await user.type(screen.getByLabelText('Search'), visit.lrn)
 
     expect(await screen.findByText(/records? shown/)).toBeInTheDocument()
-    expect(screen.getAllByText(visit.studentNumber).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(maskLrn(visit.lrn)).length).toBeGreaterThan(0)
   })
 
   it('filters by disposition', async () => {
@@ -158,6 +159,22 @@ describe('Visit Log', () => {
     }
   })
 
+  it('puts supplementary visit filters in the Visit status dropdown', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<VisitLogListPage />)
+
+    await screen.findByRole('heading', { name: 'Visit Log' })
+    const statusFilters = screen.getByRole('button', { name: 'Visit status All visits' })
+    await user.click(statusFilters)
+    const inClinicNow = screen.getByRole('checkbox', { name: 'In clinic now only' })
+    const includeEnteredInError = screen.getByRole('checkbox', { name: 'Include entered in error' })
+
+    await user.click(inClinicNow)
+    expect(inClinicNow).toBeChecked()
+    expect(includeEnteredInError).not.toBeChecked()
+    expect(statusFilters).toHaveTextContent('1 selected')
+  })
+
   it('shows an empty state for a date range with no visits', async () => {
     const user = userEvent.setup()
     renderWithRouter(<VisitLogListPage />)
@@ -172,7 +189,7 @@ describe('Visit Log', () => {
     expect(await screen.findByText('No visits found')).toBeInTheDocument()
   })
 
-  it('offers the requested date-range presets and defaults to newest date and time first', async () => {
+  it('offers the requested date-range presets and defaults to Today with newest date and time first', async () => {
     const user = userEvent.setup()
     renderWithRouter(<VisitLogListPage />)
 
@@ -180,7 +197,7 @@ describe('Visit Log', () => {
     expect(
       screen.getByRole('button', { name: /Sort by Date and time, currently descending/i }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Date range' })).toHaveTextContent('All')
+    expect(screen.getByRole('button', { name: 'Date range' })).toHaveTextContent('Today')
 
     await user.click(screen.getByRole('button', { name: 'Date range' }))
     const options = screen.getAllByRole('option')
@@ -203,10 +220,10 @@ describe('Visit Log', () => {
     await screen.findByRole('heading', { name: 'Visit Log' })
     await user.click(screen.getByRole('button', { name: 'Date range' }))
     await user.click(screen.getByRole('option', { name: 'Custom range' }))
-    expect(screen.getByRole('button', { name: 'Date range' })).toHaveTextContent('All')
+    expect(screen.getByRole('button', { name: 'Date range' })).toHaveTextContent('Today')
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(screen.queryByRole('form', { name: 'Custom date range' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Date range' })).toHaveTextContent('All')
+    expect(screen.getByRole('button', { name: 'Date range' })).toHaveTextContent('Today')
 
     await user.click(screen.getByRole('button', { name: 'Date range' }))
     await user.click(screen.getByRole('option', { name: 'Custom range' }))
@@ -222,15 +239,15 @@ describe('Visit Log', () => {
     renderWithRouter(<VisitLogListPage />)
 
     await screen.findByRole('heading', { name: 'Visit Log' })
-    await user.click(screen.getByRole('button', { name: 'Sort by Student Number' }))
+    await user.click(screen.getByRole('button', { name: 'Sort by LRN' }))
     expect(
-      screen.getByRole('button', { name: /Sort by Student Number, currently ascending/i }),
+      screen.getByRole('button', { name: /Sort by LRN, currently ascending/i }),
     ).toBeInTheDocument()
     await user.click(
-      screen.getByRole('button', { name: /Sort by Student Number, currently ascending/i }),
+      screen.getByRole('button', { name: /Sort by LRN, currently ascending/i }),
     )
     expect(
-      screen.getByRole('button', { name: /Sort by Student Number, currently descending/i }),
+      screen.getByRole('button', { name: /Sort by LRN, currently descending/i }),
     ).toBeInTheDocument()
   })
 })

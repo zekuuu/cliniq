@@ -6,7 +6,7 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDate } from '../../lib/dates'
 import { adjustStock, fetchInventoryHistory, restockItem, type InventoryItemView } from './api/inventoryApi'
 
-type AdjustMode = 'change' | 'count'
+type AdjustMode = 'add' | 'remove' | 'count'
 
 const reasonOptions = STAFF_ADJUSTMENT_REASONS.map((reason) => ({ value: reason, label: ADJUSTMENT_REASON_LABELS[reason] }))
 
@@ -45,11 +45,12 @@ export function BatchDetailsModal({ item, onClose }: { item: InventoryItemView; 
 }
 
 /**
- * Adjust Stock (Staff, ADR-018): a +/- change or "set to counted quantity", with a required reason
- * (and a required note for Other). The result can't go below 0; the data layer enforces it too.
+ * Adjust Stock (Staff, ADR-018): Add or Remove a positive quantity (panel review IV-7: no typed minus
+ * sign), or "set to counted quantity", with a required reason (and a required note for Other). The
+ * result is shown before saving and can't go below 0; the data layer enforces it too.
  */
 export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryItemView; onClose: () => void; onSaved: (message: string) => void }) {
-  const [mode, setMode] = useState<AdjustMode>('change')
+  const [mode, setMode] = useState<AdjustMode>('remove')
   const [batchId, setBatchId] = useState(item.batches.find((batch) => batch.expirationDate && batch.expirationDate < new Date().toISOString().slice(0, 10))?.id ?? item.batches[0]?.id ?? '')
   const [amount, setAmount] = useState('')
   const [reason, setReason] = useState<StaffAdjustmentReason | ''>('')
@@ -61,13 +62,14 @@ export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryIt
 
   const batch = item.batches.find((candidate) => candidate.id === batchId)
   const parsed = amount.trim() === '' ? NaN : Number(amount)
-  const after = batch && Number.isInteger(parsed) ? (mode === 'count' ? parsed : batch.quantity + parsed) : null
+  const change = mode === 'remove' ? -parsed : parsed
+  const after = batch && Number.isInteger(parsed) ? (mode === 'count' ? parsed : batch.quantity + change) : null
 
   async function submit(event: FormEvent) {
     event.preventDefault()
     const next: typeof errors = {}
     if (mode === 'count' && !(Number.isInteger(parsed) && parsed >= 0)) next.amount = 'Enter the counted quantity as a whole number of 0 or more.'
-    if (mode === 'change' && !(Number.isInteger(parsed) && parsed !== 0)) next.amount = 'Enter a whole-number change other than 0, e.g. -5 or 10.'
+    if (mode !== 'count' && !(Number.isInteger(parsed) && parsed > 0)) next.amount = `Enter how many to ${mode}, a whole number of 1 or more.`
     if (!batch) next.amount = 'Choose a batch.'
     if (!next.amount && after !== null && after < 0) next.amount = `Stock can't go below 0. ${batch?.quantity ?? 0} ${item.unit} in this batch.`
     if (!next.amount && batch && mode === 'count' && parsed === batch.quantity) next.amount = 'That matches the selected batch; there is nothing to adjust.'
@@ -78,7 +80,7 @@ export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryIt
     if (Object.keys(next).length || !reason) return
     setSaving(true)
     try {
-      const updated = await adjustStock(item.id, { batchId, ...(mode === 'count' ? { countedQuantity: parsed } : { change: parsed }), reason, note })
+      const updated = await adjustStock(item.id, { batchId, ...(mode === 'count' ? { countedQuantity: parsed } : { change }), reason, note })
       onSaved(`${item.name} adjusted (${ADJUSTMENT_REASON_LABELS[reason]}). Usable stock is now ${updated.currentStock} ${item.unit}.`)
     } catch (caught) {
       if (!(caught instanceof StockRuleError)) throw caught
@@ -116,19 +118,20 @@ export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryIt
             setErrors({})
           }}
           options={[
-            { value: 'change', label: 'Change amount' },
+            { value: 'remove', label: 'Remove' },
+            { value: 'add', label: 'Add' },
             { value: 'count', label: 'Set to counted quantity' },
           ]}
         />
         <Input
           data-autofocus
-          label={mode === 'count' ? 'Counted quantity' : 'Change (+/-)'}
+          label={mode === 'count' ? 'Counted quantity' : mode === 'add' ? 'Quantity to add' : 'Quantity to remove'}
           required
           type="number"
           step="1"
-          min={mode === 'count' ? '0' : undefined}
+          min={mode === 'count' ? '0' : '1'}
           value={amount}
-          hint={after !== null && after >= 0 ? `Stock after: ${after} ${item.unit}` : mode === 'change' ? 'Use a minus sign to remove stock, e.g. -5.' : undefined}
+          hint={after !== null && after >= 0 ? `This batch after saving: ${after} ${item.unit} (now ${batch?.quantity ?? 0})` : `This batch now: ${batch?.quantity ?? 0} ${item.unit}`}
           error={errors.amount}
           onChange={(event) => {
             setAmount(event.target.value)
@@ -172,7 +175,8 @@ export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryIt
 export function RestockModal({ item, onClose, onSaved }: { item: InventoryItemView; onClose: () => void; onSaved: (message: string) => void }) {
   const [quantity, setQuantity] = useState('')
   const [expirationDate, setExpirationDate] = useState('')
-  const [error, setError] = useState('')
+  const [noExpirationConfirmed, setNoExpirationConfirmed] = useState(false)
+  const [errors, setErrors] = useState<{ quantity?: string; expirationDate?: string; save?: string }>({})
   const [saving, setSaving] = useState(false)
   const invalidRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(invalidRef)
@@ -180,18 +184,25 @@ export function RestockModal({ item, onClose, onSaved }: { item: InventoryItemVi
   async function submit(event: FormEvent) {
     event.preventDefault()
     const amount = Number(quantity)
+    const nextErrors: typeof errors = {}
     if (!quantity.trim() || !Number.isInteger(amount) || amount < 1) {
-      setError('Enter the quantity received as a whole number of at least 1.')
-      invalid.report(1)
+      nextErrors.quantity = 'Enter the quantity received as a whole number of at least 1.'
+    }
+    if (!noExpirationConfirmed && !expirationDate) {
+      nextErrors.expirationDate = 'Choose an expiration date, or confirm this batch has no expiration date.'
+    }
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors)
+      invalid.report(Object.keys(nextErrors).length)
       return
     }
     setSaving(true)
     try {
-      const updated = await restockItem(item.id, amount, expirationDate)
+      const updated = await restockItem(item.id, amount, { expirationDate, noExpirationConfirmed })
       onSaved(`${item.name} restocked with ${amount} ${item.unit}. Stock is now ${updated.currentStock} ${item.unit}.`)
     } catch (caught) {
       if (!(caught instanceof StockRuleError)) throw caught
-      setError(caught.message)
+      setErrors({ save: caught.message })
     } finally {
       setSaving(false)
     }
@@ -219,18 +230,41 @@ export function RestockModal({ item, onClose, onSaved }: { item: InventoryItemVi
           min="1"
           step="1"
           value={quantity}
-          error={error}
+          error={errors.quantity}
           onChange={(event) => {
             setQuantity(event.target.value)
-            setError('')
+            setErrors((current) => ({ ...current, quantity: undefined, save: undefined }))
           }}
         />
         <DatePicker
           label="Expiration date"
           value={expirationDate}
-          hint="This is the new batch's date. Leave it blank only for items that do not expire."
-          onChange={setExpirationDate}
+          required={!noExpirationConfirmed}
+          disabled={noExpirationConfirmed}
+          hint={noExpirationConfirmed ? 'Recorded as no expiration date for this batch.' : "This is the new batch's date."}
+          error={errors.expirationDate}
+          onChange={(next) => {
+            setExpirationDate(next)
+            setErrors((current) => ({ ...current, expirationDate: undefined, save: undefined }))
+          }}
         />
+        <label className="flex cursor-pointer items-start gap-2 rounded-md border border-border bg-surface px-3 py-2.5 text-sm text-text-primary transition-colors hover:bg-background motion-reduce:transition-none">
+          <input
+            type="checkbox"
+            checked={noExpirationConfirmed}
+            onChange={(event) => {
+              setNoExpirationConfirmed(event.target.checked)
+              if (event.target.checked) setExpirationDate('')
+              setErrors((current) => ({ ...current, expirationDate: undefined, save: undefined }))
+            }}
+            className="mt-0.5 size-4 cursor-pointer accent-brand-green-dark"
+          />
+          <span>
+            <span className="block font-semibold">This batch has no expiration date</span>
+            <span className="mt-0.5 block text-xs text-text-secondary">Select only for items with no manufacturer expiration date.</span>
+          </span>
+        </label>
+        {errors.save && <p role="alert" className="text-sm font-semibold text-error">{errors.save}</p>}
         <FormActions onCancel={onClose} saving={saving} label="Save Restock" />
       </form>
     </Modal>

@@ -8,19 +8,19 @@ The team chose React, TypeScript, Tailwind CSS, and Laravel instead of plain web
 
 ## 002 QR lookup as a Staff quick-action
 
-QR lookup was made part of the Staff workflow instead of creating a separate QR-only account type. After identifying a student, Staff can move straight to recording a visit, emergency, or profile view.
+QR lookup was made part of the Staff workflow instead of creating a separate QR-only account type. After identifying a student, Staff can move straight to recording a visit, emergency, or profile view. Replaced by 027: QR was removed from the app on Wednesday, October 21, 2026.
 
 ## 003 PE and Sports Instructor access
 
-PE and Sports Instructors are included now, with mobile-only read access to a student's full profile and visit or incident history. They cannot change records, and each view is recorded so access remains accountable.
+PE and Sports Instructors are included now, with mobile-only read access to a student's full profile and visit or incident history. They cannot change records, and each view is recorded so access remains accountable. Replaced by 029: the Instructor role was removed from the app on Wednesday, October 21, 2026.
 
 ## 004 Privacy on shared screens
 
-Lists and dashboard areas that show several students use Student Numbers instead of names, reducing what a passer-by can learn at a glance. A deliberate one-student lookup, such as a QR result or profile, shows the student's name normally.
+Lists and dashboard areas that show several students use the masked LRN (its last four digits) instead of names, reducing what a passer-by can learn at a glance. A deliberate one-student lookup, such as a profile, shows the student's name normally.
 
 ## 005 Student Number format
 
-Each student receives a system-made number in the form YYYY-NNNNN, based on the enrollment year and a sequence number. It is easy to type, avoids confusing letters, and is used for QR codes and lookups.
+Each student receives a system-made number in the form YYYY-NNNNN, based on the enrollment year and a sequence number. It is easy to type, avoids confusing letters, and is used for lookups. Replaced by the LRN on Wednesday, October 21, 2026 (see 028).
 
 ## 006 Interface-first work
 
@@ -28,11 +28,11 @@ The team will show usable screens with sample data before finishing the supporti
 
 ## 007 Chosen technology tools
 
-The team selected dependable tools that fit the school's low-cost, low-spec environment, including Vite, Laravel Sanctum, XAMPP, QR tools that work on iPhones, and lightweight charts. The choices favor long-term support and practical use over newer-looking options that could fail or add weight.
+The team selected dependable tools that fit the school's low-cost, low-spec environment, including Vite, Laravel Sanctum, XAMPP, QR tools that work on iPhones (removed with QR, see 027), and lightweight charts. The choices favor long-term support and practical use over newer-looking options that could fail or add weight.
 
 ## 008 Organizing the user-facing app
 
-The user-facing app is grouped by clinic feature so everything for one area stays together. QR work is split into desktop, mobile, and shared parts because those experiences differ, while the scanner itself is reused.
+The user-facing app is grouped by clinic feature so everything for one area stays together. QR work was split into desktop, mobile, and shared parts; that folder was removed with QR (see 027).
 
 ## 009 Organizing the server side
 
@@ -40,7 +40,7 @@ The server side follows the same feature-based organization as the user-facing a
 
 ## 010 What list rows may show
 
-Multi-student lists may show a visit reason, complaint, or description beside the Student Number. Keeping names out is considered enough protection for a casual glance while still giving the nurse useful context.
+Multi-student lists may show a visit reason, complaint, or description beside the masked LRN. Keeping names out is considered enough protection for a casual glance while still giving the nurse useful context.
 
 ## 011 Dashboard scope
 
@@ -68,7 +68,7 @@ Every role stays signed in for up to one week, then must sign in again; there is
 
 ## 016 Audit Log Viewer
 
-Staff and Admin can review a read-only history of important actions, filter it, and print or export it when needed. PE and Sports Instructors cannot open it, and nobody can change or delete its entries.
+Staff and Admin can review a read-only history of important actions, filter it, and print or export it when needed. Nobody can change or delete its entries.
 
 ## 017 Audit entry summary and actor role
 
@@ -92,11 +92,11 @@ The calendar now shows nationwide Philippine holidays as gray "Holiday" chips, s
 
 ## 022 Phones get a navigation menu
 
-*Agent-decided, pending team review.* On a phone or small tablet, the sidebar is replaced by an "Open navigation" button in the top bar. It lists the same pages the sidebar shows for that role, plus Privacy Policy and Report an Issue. A PE/Sports Instructor, who has no sidebar pages, sees no menu button instead of an empty menu.
+*Agent-decided, pending team review.* On a phone or small tablet, the sidebar is replaced by an "Open navigation" button in the top bar. It lists the same pages the sidebar shows for that role, plus Privacy Policy and Report an Issue.
 
 ## 023 QR lookup is for phones only
 
-The clinic workstation has no QR scanner, so QR Lookup is gone from the desktop sidebar and the Alt + Q shortcut, and the desktop scan hub was removed. Staff and PE/Sports Instructors scan with a phone camera from the phone menu. Printing QR stickers stays on the workstation.
+The clinic workstation has no QR scanner, so QR Lookup is gone from the desktop sidebar and the Alt + Q shortcut, and the desktop scan hub was removed. Staff and PE/Sports Instructors scan with a phone camera from the phone menu. Printing QR stickers stays on the workstation. Replaced by 027: QR was removed from the app on Wednesday, October 21, 2026.
 
 ## 024 Every screen you can get stuck on has a Back button
 
@@ -112,15 +112,15 @@ Printing no longer copies the screen. Every printout is an A4 document with the 
 
 ## 027 We are dropping the QR feature and the Student Number
 
-The team decided to drop the QR feature (printed QR stickers, the phone scan screen) and the Student Number CLINIQ made up for each student. At first the plan was to identify students mostly by name with the LRN as a helper; the team's meeting the same evening chose the LRN instead (see 028). CLINIQ stays independent and takes nothing from the school's existing ID card system, which belongs to another company. This is only recorded for now: the app still has both until the team asks for them to be removed. The open questions were taken up in 028 and 029. QR may come back as a future idea.
+The team decided to drop the QR feature (printed QR stickers, the phone scan screen) and the Student Number CLINIQ made up for each student. At first the plan was to identify students mostly by name with the LRN as a helper; the team's meeting the same evening chose the LRN instead (see 028). CLINIQ stays independent and takes nothing from the school's existing ID card system, which belongs to another company. QR was removed from the app on Wednesday, October 21, 2026 (tagged first, so it can be restored); the Student Number was replaced by the LRN on Wednesday, October 21, 2026 (028). The open questions were taken up in 028 and 029. QR may come back as a future idea.
 
 ## 028 The LRN is how we identify students
 
-With the QR code and our own Student Number gone, the team chose the LRN (the Learner Reference Number) as the one unique number for each student. Lists with many students show the LRN instead of the name, as the Student Number did before, so a screen left open does not show who visited the clinic. A student can be found by name and section, birthday or LRN. Still to settle: whether the LRN is shown in full or partly hidden (it is a government-issued number, so it reveals more than our old one), what to do when it is missing or mistyped, and the school's confirmation that every student has one. Nothing is built yet.
+With the QR code and our own Student Number gone, the team chose the LRN (the Learner Reference Number) as the one unique number for each student. Lists with many students show the LRN instead of the name, as the Student Number did before, so a screen left open does not show who visited the clinic. A student can be found by name and section, birthday or LRN. Built on Wednesday, October 21, 2026, with the defaults Zean confirmed: the LRN is 12 digits, required and unique; lists, pickers, printouts and the Audit Trail show only its last four digits, and only the student's own profile and edit form show it in full; a wrong LRN can be corrected and the change is recorded without the numbers; addresses never contain it. Students are found by name or LRN. Still to settle: the school's confirmation that every student, transferees included, has an LRN.
 
 ## 029 No direct access for PE instructors, and the Principal signs in at the clinic computer
 
-Because CLINIQ runs locally, the PE instructor gets no account: they ask the clinician, who prints the health information and recent incidents of the chosen students. The Principal keeps an account but signs in on the clinic computer to see the Dashboard and the printable report; reaching it from his own office is only a future option if the school connects his Wi-Fi network to the clinic's or goes online (his office has Wi-Fi, but it is a different network from the clinic's). In an emergency, help the student first, use paper, and enter the record afterwards. The client has not yet been asked who provides the computer or whether the school will go online, so this may change. Nothing is built yet.
+Because CLINIQ runs locally, the PE instructor gets no account: they ask the clinician, who prints the health information and recent incidents of the chosen students. The Principal keeps an account but signs in on the clinic computer to see the Dashboard and the printable report; reaching it from his own office is only a future option if the school connects his Wi-Fi network to the clinic's or goes online (his office has Wi-Fi, but it is a different network from the clinic's). In an emergency, help the student first, use paper, and enter the record afterwards. The client has not yet been asked who provides the computer or whether the school will go online, so this may change. The Instructor role and its accounts were removed from the app on Wednesday, October 21, 2026; the Sports Report (034) was built the same day.
 
 ## 030 Inventory batches and explicit expired-stock disposal
 
@@ -132,8 +132,20 @@ Student Sex is required as recorded by the school (Female or Male). It is availa
 
 ## 033 Phone-only screens are removed, accounts move to the Admin/Principal, and QR is removed now (reversible)
 
-The phone Emergency screen and the phone-only navigation are removed, and the Admin/Principal (not Staff) manages accounts. QR is removed now with the others; it had been on hold until the client's answer on online hosting, so it is tagged first and can be restored if the client agrees to go online (ADR-027 unchanged). The last active Admin can never be disabled or demoted. Nothing is built yet.
+The phone Emergency screen and the phone-only navigation are removed, and the Admin/Principal (not Staff) manages accounts. QR is removed now with the others; it had been on hold until the client's answer on online hosting, so it is tagged first and can be restored if the client agrees to go online (ADR-027 unchanged). The last active Admin can never be disabled or demoted. All three are built (Wednesday, October 21, 2026).
 
 ## 034 The Sports Report for the PE instructor
 
-The clinician (Staff only) builds a saved, reusable and editable list of students for a sports activity and prints a report with each student's full name, recent visits and incidents (default 90 days), a note she writes, and the student's conditions only if she ticks it. Saved lists hold only the list and notes, never a copy of medical content; every print is audited. Full names are an exception to the LRN-on-lists rule. What the nurse and Principal agree to release is still open. Nothing is built yet.
+The clinician (Staff only) builds a saved, reusable and editable list of students for a sports activity and prints a report with each student's full name, recent visits and incidents (default 90 days), a note she writes, and the student's conditions only if she ticks it. Saved lists hold only the list and notes, never a copy of medical content; every print is audited. Full names are an exception to the LRN-on-lists rule. What the nurse and Principal agree to release is still open. Built Wednesday, October 21, 2026, under Reports (Staff only).
+
+## 035 Restock requires an expiry decision
+
+Every newly restocked batch needs an expiration date unless the clinician explicitly confirms that it has no manufacturer expiration date. A blank date alone cannot be saved as no expiration, preventing an accidental omission from bypassing expiry checks. The rule is enforced in the Restock dialog and inventory write layer; the future Inventory API must enforce the same one-of choice.
+
+## 036 Visits and incidents stay separate, with an "Escalate to incident" button
+
+Two forms stay, matching the clinic's two logbooks. A visit can be escalated to an incident from Visit Details or from the New Visit form, carrying the student, complaint, time and temperature; the visit is kept, linked, and its medicines are not copied, so stock is deducted once, and the event counts once, as the incident. Emergency-type complaints on a visit show a hint, not a block. The nurse's rule for what counts as an emergency is still open. Decided Thursday, October 22, 2026; not built yet.
+
+## 037 Backup and the Audit Log for both roles, 10-year audit retention, password re-entry
+
+The Principal and the clinician can both see the Audit Log and Backup (the review's advice to hide them from the clinician is declined and its risk accepted). The audit log is kept 10 years (Zean's answer; the school has not confirmed it). The Backup page gets "Back up now" and the Dashboard warns when the last good backup is over 48 hours old. A "Confirm it's you" password re-entry guards archiving a student, disabling or enabling an account, resetting a password, changing a role and approving an incident report. Decided Thursday, October 22, 2026; not built yet.

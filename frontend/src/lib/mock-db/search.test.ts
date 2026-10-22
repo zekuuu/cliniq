@@ -14,10 +14,10 @@ describe('student search', () => {
     expect(one.length).toBeLessThanOrEqual(8)
   })
 
-  it('matches a Student Number prefix or a name substring, case-insensitively, at most 8', async () => {
-    expect((await searchStudents('2026-00001')).map((s) => s.fullName)).toEqual(['Gian Quizon'])
-    expect((await searchStudents('202600001')).map((s) => s.fullName)).toEqual(['Gian Quizon'])
-    expect((await searchStudents('20260')).every((s) => s.studentNumber.startsWith('2026-0'))).toBe(true)
+  it('matches an LRN prefix or a name substring, case-insensitively, at most 8 (ADR-028)', async () => {
+    expect((await searchStudents('000000260001')).map((s) => s.fullName)).toEqual(['Gian Quizon'])
+    expect((await searchStudents('0000-0026-0001')).map((s) => s.fullName)).toEqual(['Gian Quizon'])
+    expect((await searchStudents('00000026')).every((s) => s.lrn.startsWith('00000026'))).toBe(true)
     const byName = await searchStudents('QUIZON')
     expect(byName.length).toBeGreaterThanOrEqual(2)
     expect(byName.every((s) => s.fullName.includes('Quizon'))).toBe(true)
@@ -26,8 +26,8 @@ describe('student search', () => {
 
   it('returns active students only, with no medical fields', async () => {
     expect(await searchStudents('Hannah Umali')).toEqual([])
-    const [first] = await searchStudents('2026-00001')
-    expect(Object.keys(first).sort()).toEqual(['fullName', 'gradeLevel', 'id', 'studentNumber'])
+    const [first] = await searchStudents('000000260001')
+    expect(Object.keys(first).sort()).toEqual(['fullName', 'gradeLevel', 'id', 'lrn'])
   })
 })
 
@@ -43,7 +43,7 @@ describe('complaint suggestions', () => {
 
   it('adds a saved free-text complaint and never splits a known one by case', async () => {
     const actor = getMockSessionUser()
-    const [student] = await searchStudents('2026-00001')
+    const [student] = await searchStudents('000000260001')
     const base = { studentId: student.id, treatment: 'Rested', disposition: 'returned_to_class' as const, followUp: null }
     const saved = await recordVisit({ ...base, complaint: '  headache ' }, actor)
     expect(saved.visit.complaint).toBe('Headache')

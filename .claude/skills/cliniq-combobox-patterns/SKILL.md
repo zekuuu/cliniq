@@ -1,6 +1,6 @@
 ---
 name: cliniq-combobox-patterns
-description: Apply when building or changing a CLINIQ text field with a suggestion list (a combobox), such as a student lookup by Student Number or name (StudentPicker). Keeps every combobox on the one shared, keyboard-usable primitive in the shared dropdown look.
+description: Apply when building or changing a CLINIQ text field with a suggestion list (a combobox), such as a student lookup by LRN or name (StudentPicker). Keeps every combobox on the one shared, keyboard-usable primitive in the shared dropdown look.
 ---
 
 # CLINIQ Combobox Patterns
@@ -23,15 +23,15 @@ Use this with `cliniq-dropdown-patterns` (the panel and option look), `cliniq-in
 - The select lists Other plus at most 8 ranked suggestions. Suggestions are predefined visit complaint types plus complaints already saved on visits, ranked by use count, then most recent. The pool comes from a data-layer selector (`complaintSuggestions`, ADR-014), never stored data.
 - On save the text is normalized (`frontend/src/lib/complaints.ts`): trimmed, repeated spaces collapsed, 60 characters max. Text that matches a suggestion case-insensitively is stored in that suggestion's spelling. Whitespace-only is invalid. The data layer applies the same normalization on create (`recordVisit`) and on edit (`updateVisit`).
 - Helper text says complaint only, no names.
-- Smart Triage triggers on a case-insensitive match to a predefined type. Free text with no match shows no checklist.
+- The first-aid checklist triggers on a case-insensitive match to a predefined type. Free text with no match shows no checklist.
 
 ## Student lookup (`StudentPicker`)
 
-- `frontend/src/components/forms/StudentPicker.tsx`: a Combobox without free text. It matches a Student Number prefix or a name substring, case-insensitively, for active students only. Results appear from the first character typed; nothing is listed on an empty field or on focus, and at most 8 results show, so it never reads as a roster. The placeholder is "YYYY-NNNNN or student name".
-- Each result shows the Student Number, full name, and grade, so similar names can be told apart. It's a deliberate single lookup, so full names are correct (`cliniq-display-privacy`).
-- The query is never reformatted. A query of digits (and dashes) matches Student Numbers with the dashes ignored on both sides, so "202600001" and "2026-00001" both find 2026-00001. Anything with a letter is a name search.
-- A complete Student Number, with or without its dash, highlights its match, so typing it and pressing Enter still works.
+- `frontend/src/components/forms/StudentPicker.tsx`: a Combobox without free text. It matches an LRN prefix or a name substring, case-insensitively, for active students only. Results appear from the first character typed; nothing is listed on an empty field or on focus, and at most 8 results show, so it never reads as a roster. The placeholder is "YYYY-NNNNN or student name".
+- Each result shows the masked LRN, full name, and grade, so similar names can be told apart (ADR-028). It's a deliberate single lookup, so full names are correct (`cliniq-display-privacy`).
+- The query is never reformatted. A query of digits (spaces and dashes allowed) matches the start of the full LRN even though the list shows it masked. Anything with a letter is a name search.
+- A complete 12-digit LRN highlights its match, so typing it and pressing Enter still works.
 - No match: say so under the field. Pass `addStudentHref` only to roles that can add a student (Staff).
 - Search goes through the feature's `api/` function (ADR-013), so the real backend can replace it. Results carry no medical fields (`StudentSearchResult`).
-- After a pick, the form shows the chosen student (name, number, grade) with a Change action that brings the search back, focused. Pass `selected` and `onClear` to get this from `StudentPicker` itself; don't rebuild it on the page. A `?student=` deep link skips the picker entirely.
-- Every field that identifies a student uses it: New Visit, Incident Stage 1, PE/Sports Referral, Dispense, and the QR hubs' manual fallback (mobile and desktop). On QR, picking a student runs the lookup at once, and the field is optional (`required={false}`, label ends "(optional)"). There is no separate typed Student Number field any more.
+- After a pick, the form shows the chosen student (name, number, grade) with a Change action that brings the search back, focused. Pass `selected` and `onClear` to get this from `StudentPicker` itself; don't rebuild it on the page.
+- Every field that identifies a student uses it: New Visit, Incident Stage 1, PE/Sports Referral, and Dispense. There is no separate typed identifier field.

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { STUDENT_SEARCH_MIN_LENGTH } from '../../lib/studentNumber'
+import { isLrn, normalizeLrn, STUDENT_SEARCH_MIN_LENGTH } from '../../lib/lrn'
+import { MaskedLrn } from '../ui/MaskedLrn'
 import type { StudentSearchResult } from '../../types/entities'
 import { Button } from '../ui/Button'
 import { Combobox } from '../ui/Combobox'
@@ -8,13 +9,14 @@ import { ListItemLink } from '../ui/ListItemLink'
 
 /**
  * Student lookup for an entry form that opened without an identified student
- * (cliniq-combobox-patterns): type a Student Number or a name, then pick. A Combobox without free
+ * (cliniq-combobox-patterns): type an LRN or a name, then pick. A Combobox without free
  * text. Results appear from the first character typed, and the search returns at most 8 active
- * students, so it never reads as a roster. Each result shows the Student Number, full name, and grade: a
+ * students, so it never reads as a roster. Each result shows the masked LRN, full name, and grade: a
  * deliberate single lookup, where the full name is correct (cliniq-display-privacy).
  *
- * The query is left as typed. A Student Number matches with or without its dash ("202600001"
- * finds 2026-00001), and a complete one highlights its match, so typing it and pressing Enter works.
+ * The query is left as typed. Typed LRN digits match the start of the full LRN even though the list
+ * shows it masked; spaces and dashes are ignored, and a complete 12-digit LRN highlights its match, so
+ * typing it and pressing Enter works (ADR-028).
  * `search` is the feature's own `api/` function (ADR-013), so the backend can replace it.
  *
  * Pass `selected` and `onClear` to show the picked student in place of the field, with a Change action
@@ -24,7 +26,7 @@ export function StudentPicker({
   search,
   onSelect,
   label = 'Student',
-  hint = 'Type a Student Number or the student name, then pick the student.',
+  hint = 'Type the LRN or the student name, then pick the student.',
   required = true,
   error,
   addStudentHref,
@@ -67,7 +69,7 @@ export function StudentPicker({
             <span className="font-semibold">{selected.fullName}</span>
             <span className="text-text-secondary">
               {' · '}
-              <span className="tabular-nums">{selected.studentNumber}</span>
+              <span className="tabular-nums"><MaskedLrn lrn={selected.lrn} /></span>
               {' · '}
               {selected.gradeLevel}
             </span>
@@ -98,11 +100,12 @@ export function StudentPicker({
         onValueChange={setQuery}
         options={results}
         optionKey={(student) => student.id}
-        optionLabel={(student) => `${student.studentNumber} ${student.fullName}`}
+        optionLabel={(student) => `${student.fullName}, LRN ending in ${student.lrn.slice(-4)}`}
         renderOption={(student) => (
           <span className="flex w-full items-baseline gap-3">
-            <span className="tabular-nums text-text-secondary">{student.studentNumber}</span>
-            <span className="font-semibold">{student.fullName}</span>
+            {/* The spaces between the parts are what a screen reader pauses on; flex hides them visually. */}
+            <span className="tabular-nums text-text-secondary"><MaskedLrn lrn={student.lrn} /></span>{' '}
+            <span className="font-semibold">{student.fullName}</span>{' '}
             <span className="ml-auto pl-3 text-xs text-text-secondary">{student.gradeLevel}</span>
           </span>
         )}
@@ -111,14 +114,14 @@ export function StudentPicker({
           onSelect(student)
         }}
         allowFreeText={false}
-        // A full 9-digit Student Number, dash or not: Enter picks its match.
-        autoHighlight={/^\d{4}-?\d{5}$/.test(trimmed)}
+        // A complete 12-digit LRN, spaces or dashes allowed: Enter picks its match.
+        autoHighlight={isLrn(normalizeLrn(trimmed)) && /^[\d\s-]+$/.test(trimmed)}
         openOnFocus={false}
         loading={loading}
         loadError={failed ? "Couldn't search students. Keep typing to try again." : undefined}
         // "No match" is said below the field instead, where the Add-student link can be reached.
         noMatchesText={null}
-        placeholder="YYYY-NNNNN or student name"
+        placeholder="LRN or student name"
         hint={hint}
         error={error}
         autoFocus={autoFocus || focusSearch}

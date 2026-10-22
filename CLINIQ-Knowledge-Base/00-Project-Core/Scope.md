@@ -16,7 +16,7 @@ Kept in sync with the canonical Project Plan, Section 1.4. If you edit one, edit
 - Clinic Visit Monitoring (daily logging, complaints, treatment, excuse letters, PE/Sports referrals)
 - Emergency Response (incident logging, hospital referral tracking, parent-notification outcome logging)
 - Reports Generation (monthly reports, incident reports, health summaries)
-- The five team-proposed enhancements described in Section 5.3: QR Digital Health ID, Smart Triage quick-reference, Medicine & Supply Inventory Tracker, Clinic Overview Dashboard, and Backup Verification Assistant
+- The team-proposed enhancements described in Section 5.3: First-aid checklist quick-reference, Medicine & Supply Inventory Tracker, Clinic Overview Dashboard, and Backup Verification Assistant
 - Deployment on the school's existing single workstation via XAMPP over the employee-tier intranet
 - RA 10173 (Data Privacy Act of 2012)–aligned data handling, audit logging, and daily backups
 - Staff training and a User Acceptance Testing (UAT) phase at the client site
@@ -25,7 +25,8 @@ Kept in sync with the canonical Project Plan, Section 1.4. If you edit one, edit
 - Remote or off-campus access, and hosting the system on a remote server/cloud instance instead of the local LAN. The React + Laravel architecture is deliberately API-driven so this move is a deployment change later, not a rewrite — but it stays out of scope for this semester's rollout, which remains LAN-only on the client's existing workstation.
 - A parent/guardian self-service web or mobile portal
 - Automated SMS or push-notification gateways (parents continue to be contacted by phone, as scoped in the Technical Documentation)
-- Direct external QR access for canteen staff (checking food allergies before serving). PE/Sports Instructor read-only access is now in scope as of the September 19, 2026 team meeting (Section 5.3) — canteen staff access remains designed and documented (see the Modules & Features companion document) but deferred to a later phase
+- Direct external access for canteen staff (checking food allergies before serving) — designed and documented (see the Modules & Features companion document) but deferred to a later phase
+- Direct access for PE/Sports Instructors: removed (ADR-029). An instructor asks the clinician, who decides what to share
 - A fuller, separately-managed school-events calendar (with its own add/edit interface for academic events, sports, performances, assemblies, and field trips). The current phase keeps this lightweight — a free-text event tag on visit/incident entries — because who would maintain a fuller calendar is a genuine open question: Staff doing it adds workload to the role this project is already trying to lighten, while giving Admin/Principal write access would be their first write permission in the system. Left for a future decision rather than guessed at now
 - RFID, barcode, or biometric hardware
 - Billing, insurance, or Medicaid-style billing modules

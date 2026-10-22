@@ -5,7 +5,7 @@ Every CLINIQ screen reads and writes data through this folder during the fronten
 `CLINIQ-Knowledge-Base/06-Decisions/ADR-014-Central-Mock-Data-Layer.md`.
 
 > **Synthetic data only.** This repository is public, and these are minors' health records under
-> RA 10173. Every name, Student Number, phone number, allergy, and condition in `mock-db.json` is
+> RA 10173. Every name, LRN, phone number, allergy, and condition in `mock-db.json` is
 > invented. Never paste a real Mendez Christian Academy student or staff member into it. The
 > integrity test checks that the notice in `meta` is still there and that dev passwords are
 > obviously fake.
@@ -14,7 +14,7 @@ Every CLINIQ screen reads and writes data through this folder during the fronten
 
 ```
 mock-db.json        raw records only (hand-edited, never written at runtime)
-  └─ seed.ts        the ONLY importer of the JSON; resolves relative dates + Student Number refs
+  └─ seed.ts        the ONLY importer of the JSON; resolves relative dates
      └─ store.ts    in-memory copy + every write since; injectable "today"; reset; persistence
         ├─ selectors.ts / dashboard.ts   every derived value (counts, flags, due states…)
         └─ api.ts   async reads/writes, audit logging, latency + preview switches
@@ -36,9 +36,15 @@ is the file that becomes HTTP calls. Nothing above it has to change.
    lower its `currentStock`. To make a record incomplete, blank its `contactInfo` or set
    `emergencyContacts` to an empty array. The integrity test names the field if you store a derived value.
 2. **Dates are relative.** Use `{ "daysAgo": 3 }` or `{ "daysFromNow": 11 }`. Timestamps add
-   `"time": "HH:MM"` (Philippine time). Absolute dates are rejected because they go stale.
-3. **Reference by key.** Visits, incidents, follow-ups, and reviews point at a student by
-   `studentNumber` (`YYYY-NNNNN`, ADR-005). Follow-ups point at an existing visit or incident *of
+   `"time": "HH:MM"` (Philippine time). Absolute dates are rejected because they go stale. Past clinic
+   activity (visits, incidents, letters, transactions, audit rows, follow-ups) resolves to a school day:
+   a Saturday or Sunday moves back to the Friday before (`toSchoolDay` in `relativeDates.ts`), so no
+   weekday changes the picture. Today is never moved; backups and calendar events keep their days.
+   Two visits never share a minute, and care notes never name a medicine the visit's lines lack
+   (`countsAndSeed.test.ts` checks all three).
+3. **Reference by key.** Visits, incidents, follow-ups, reviews and stock transactions point at a
+   student by its internal `studentId`. Each student has a unique 12-digit `lrn`, clearly synthetic
+   (`000000` + enrolment year + sequence; ADR-028). Follow-ups point at an existing visit or incident *of
    the same student*. Users are referenced by `id`. Complaints must come from
    `frontendOnly.visitComplaintTypes` / `incidentComplaintTypes`.
 4. **Keep ids readable and unique:** `student-0053`, `visit-0160`, `item-0015`, `user-staff-02`.
@@ -76,11 +82,21 @@ Add to any URL (see `devToggles.ts`):
 | `?mockReset=1` | throw away every write and reload from the JSON |
 
 In the browser console (dev builds): `cliniqMockDb.reset()`, `cliniqMockDb.setToday('2026-12-01')`,
-`cliniqMockDb.setPersistence(true)`, `cliniqMockDb.snapshot()`.
+`cliniqMockDb.setPersistence(true)`, `cliniqMockDb.snapshot()`, `cliniqMockDb.load(state)`.
+
+**Load check at the school's scale:** `frontend/scripts/generate-load-data.mjs` (dev only, never bundled)
+grows a snapshot to about 600 students and five years of visits, incidents and stock movements. The
+result (about 7 MB) is too large for localStorage, so load it with `cliniqMockDb.load(...)` and move
+between screens without reloading.
+
+A copy saved in localStorage before a field changed shape is migrated when it loads
+(`migratePersistedState` in `store.ts`): inventory batches, a missing Sex, and the parent-notification
+outcomes renamed in panel review part 1 (`voicemail` and `left_message` become `left_message_or_voicemail`,
+`not_reached` becomes `no_answer`). The old values appear only there and in its test.
 
 ## Dev accounts
 
-One account per role, plus `demo.pe2`, which has `mustChangePassword: true` for the Force Password
+One account per role, plus `demo.new` (a second School Clinician), which has `mustChangePassword: true` for the Force Password
 Change screen (#2). Passwords are in `frontendOnly.devAccounts` and are deliberately fake
 (`demo-…` / `dev-only-…`). The mock session (`session.ts`) exists only after a successful Login with one of
 these accounts. It lasts one week, like the planned Sanctum token, and Log out ends it.
@@ -89,14 +105,13 @@ these accounts. It lasts one week, like the planned Sanctum token, and Log out e
 |---|---|---|---|
 | School Clinician | `demo.nurse` | `demo-nurse` | No |
 | Admin / Principal | `demo.principal` | `demo-admin` | No |
-| PE/Sports Instructor | `demo.pe` | `demo-pe` | No |
-| PE/Sports Instructor (password-change scenario) | `demo.pe2` | `demo-change` | Yes |
+| School Clinician (password-change scenario) | `demo.new` | `demo-change` | Yes |
 
 These are synthetic development fixtures only, not production credentials. The Login screen displays
 these accounts for local demo purposes. There is no URL role override and no default account: every
 screen redirects to Login until someone signs in (ADR-002, security clarification), so each audited
 action is attributable to a real sign-in. Force Password Change is exercised by signing in as
-`demo.pe2`; that account gets no session until its password is changed.
+`demo.new`; that account gets no session until its password is changed.
 
 ## Writing a new screen
 

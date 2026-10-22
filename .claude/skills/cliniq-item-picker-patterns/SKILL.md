@@ -23,7 +23,7 @@ Use this with `cliniq-dropdown-patterns` (the panel look), `cliniq-input-pattern
 - Picking an item already on a line **adds one to that line**; it never creates a duplicate. Picks and removals are announced through a polite status region.
 - A quantity above current stock **warns but never blocks** ("Only 12 tablets in stock. Saving takes stock below zero; recount and restock."). On an edit form, available stock counts what the saved record already took.
 - An expired item already on a saved record can be kept or lowered, not raised: its `+` is disabled.
-- Show the student's **recorded allergies** next to the picker, for awareness only. Nothing is matched automatically (there's no ingredient data). Before a student is identified, say they'll appear once identified; a form with a typed Student Number looks the student up as soon as the number is complete.
+- Show the student's **recorded allergies** next to the picker, for awareness only. Nothing is matched automatically (there's no ingredient data). Before a student is identified, say they'll appear once identified; picking the student loads them at once.
 - Saved lines are displayed with `formatItemGiven` from `frontend/src/lib/itemsGiven.ts`: "Paracetamol 500mg × 2 tablets (1 tablet every 6 hours)", from the line's own name/unit snapshot. History lists use `visitCareSummary`.
 
 ## Where it's used

@@ -17,7 +17,7 @@ describe('PrivacyPolicyPage', () => {
       screen.getByRole('heading', { name: '11. Changes to this policy', level: 2 }),
     ).toBeInTheDocument()
     expect(screen.getByRole('table')).toBeInTheDocument()
-    expect(screen.getByRole('row', { name: /PE\/Sports Instructor/ })).toBeInTheDocument()
+    expect(screen.getByRole('row', { name: /PE\/Sports Instructor.*No account and no access/ })).toBeInTheDocument()
     expect(
       screen.getByText(
         '[TBD — Mendez Christian Academy has not yet designated a contact for privacy inquiries or complaints. Do not publish this policy with this section unresolved.]',

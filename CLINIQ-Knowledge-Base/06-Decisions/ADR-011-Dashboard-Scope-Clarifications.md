@@ -2,6 +2,7 @@
 
 **Date:** Saturday, September 26, 2026 — 20:43
 **Status:** Accepted — amended by ADR-032 (Sunday, October 18, 2026 — 13:17 PHT)
+**Note (Wednesday, October 21, 2026 — 07:00):** the CLINIQ Student Number this ADR mentions was replaced by the LRN (ADR-028, [2026-10-21-lrn-replaces-student-number](../08-Logs/Agent-Sessions/2026-10-21-lrn-replaces-student-number.md)); lists show it masked. The rest of the decision stands.
 
 ## Context
 Building the Clinic Overview Dashboard (Screen Inventory #31) turned up two places where the canonical documents disagree:

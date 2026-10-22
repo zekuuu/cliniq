@@ -1,7 +1,7 @@
 # ADR-023: QR Lookup Is Mobile-Only
 
 **Date:** Wednesday, October 14, 2026 — 22:25
-**Status:** Superseded by ADR-027 (decided Friday, October 16, 2026 — 18:54; not built yet, so the app still behaves as described here). Earlier: accepted (requested by Zean, project team).
+**Status:** Superseded by ADR-027 (decided Friday, October 16, 2026 — 18:54). **QR removal built Wednesday, October 21, 2026 — 01:09** ([2026-10-21-remove-qr-feature](../08-Logs/Agent-Sessions/2026-10-21-remove-qr-feature.md)); restore from git tag `pre-qr-removal` if the client later agrees to online hosting. Earlier: accepted (requested by Zean, project team).
 
 ## Context
 The clinic workstation has no QR scanner hardware. The desktop sidebar's "QR Lookup" entry and the

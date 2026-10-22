@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { formatDate } from '../../lib/dates'
-import { Link, useSearchParams } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import {
   BackButton,
   Badge,
@@ -72,16 +72,24 @@ const baseColumns: Array<DataTableColumn<InventoryItemView>> = [
   { key: 'stock', header: 'Stock', align: 'right', cell: stockCell },
   { key: 'expiry', header: 'Next usable expiry', cell: (item) => (item.expirationDate ? formatDate(item.expirationDate) : 'No expiration') },
   { key: 'status', header: 'Status', width: '11.5rem', cell: stockBadges },
-  { key: 'actions', header: 'Actions', width: '16.5rem', cell: () => null },
+  { key: 'actions', header: 'Actions', width: '15rem', cell: () => null },
 ]
 
 type StockAction = { kind: 'adjust' | 'restock' | 'batches'; item: InventoryItemView }
 
+const MANAGE_OPTIONS = [
+  { value: 'adjust', label: 'Adjust Stock' },
+  { value: 'batches', label: 'Batches' },
+  { value: 'edit', label: 'Edit' },
+]
+
 export function InventoryListPage() {
   const [searchParams] = useSearchParams()
   const attention = searchParams.get('attention')
+  const navigate = useNavigate()
   const [filters, setFilters] = useState<InventoryFilters>(() => ({
-    search: '',
+    // `?search=` (Add Item's duplicate warning) applies only on arrival.
+    search: searchParams.get('search') ?? '',
     category: '',
     hasExpiredStock: false,
     attention: attention === 'low_stock' || attention === 'expiry' ? attention : '',
@@ -110,11 +118,23 @@ export function InventoryListPage() {
       return {
         ...column,
         cell: (item: InventoryItemView) => (
-          <div className="flex flex-wrap gap-1.5">
+          // Panel review IV-1: Restock is the one visible action; the rest sit under Manage (one row select,
+          // cliniq-dropdown-patterns), the same actions and dialogs as before.
+          <div className="flex flex-wrap items-center gap-1.5">
             <Button size="sm" variant="secondary" aria-label={`Restock ${item.name}`} onClick={() => setAction({ kind: 'restock', item })}>Restock</Button>
-            <Button size="sm" variant="secondary" aria-label={`Adjust Stock for ${item.name}`} onClick={() => setAction({ kind: 'adjust', item })}>Adjust Stock</Button>
-            <Button size="sm" variant="secondary" aria-label={`View batches for ${item.name}`} onClick={() => setAction({ kind: 'batches', item })}>Batches</Button>
-            <Link className={buttonClassName({ variant: 'secondary', size: 'sm' })} aria-label={`Edit ${item.name}`} to={`${paths.inventoryNew}?item=${encodeURIComponent(item.id)}`}>Edit</Link>
+            <Select
+              className="w-32"
+              size="sm"
+              hideLabel
+              label={`Manage ${item.name}`}
+              value=""
+              placeholder="Manage"
+              options={MANAGE_OPTIONS}
+              onChange={(value) => {
+                if (value === 'edit') navigate(`${paths.inventoryNew}?item=${encodeURIComponent(item.id)}`)
+                else if (value === 'adjust' || value === 'batches') setAction({ kind: value, item })
+              }}
+            />
           </div>
         ),
       }
@@ -133,6 +153,7 @@ export function InventoryListPage() {
       <Card className="p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">Inventory</h1><p className="mt-1 text-sm text-text-secondary">Track medicine and supplies, expiration dates, and low-stock thresholds.</p></div><Link className={buttonClassName({ variant: 'primary' })} to={paths.inventoryNew}><Icon name="package" />Add Item</Link></div></Card>
       <Card aria-labelledby="inventory-list-title"><CardHeader titleId="inventory-list-title" title="Medicine and supplies" description={`${data.length} item${data.length === 1 ? '' : 's'} shown`} icon={<Icon name="package" />} /><CardBody className="flex flex-col gap-4">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_14rem_14rem_auto] md:items-end"><Input label="Search" value={filters.search} placeholder="Item name" onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} /><Select label="Category" value={filters.category} options={[{ value: 'medicine', label: 'Medicine' }, { value: 'supply', label: 'Supply' }]} placeholder="All categories" clearable onChange={(value) => setFilters((current) => ({ ...current, category: value as InventoryFilters['category'] }))} /><Select label="Attention" value={filters.attention ?? ''} options={[{ value: 'low_stock', label: 'Low stock' }, { value: 'expiry', label: 'Expired or expiring' }, { value: 'has_expired', label: 'Has expired stock' }]} placeholder="All stock" clearable onChange={(value) => setFilters((current) => ({ ...current, attention: value === 'low_stock' || value === 'expiry' ? value : '', hasExpiredStock: value === 'has_expired' }))} /><Button variant="secondary" onClick={() => setFilters({ search: '', category: '', hasExpiredStock: false, attention: '' })}>Clear Filters</Button></div>
+        <p className="text-sm text-text-secondary">Restock when new stock arrives. Adjust Stock to correct a count.</p>
         {message && <p role="status" className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary">{message}</p>}
         <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>{data.length ? <DataTable caption="Inventory items" columns={columns} rows={sortedData} rowKey={(item) => item.id} fixedLayout minTableWidth="62.5rem" /> : <EmptyState icon="package" title="No inventory items found" description="Try a different search or category." />}</div>
       </CardBody></Card>

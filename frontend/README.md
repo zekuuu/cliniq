@@ -8,4 +8,4 @@ Login is a standalone auth composition: a full-height white left panel (HealWare
 
 React + TypeScript + Vite frontend. Feature-based structure under `src/features/` — see `CLINIQ-Knowledge-Base/06-Decisions/ADR-008-Frontend-Folder-Structure.md` for the full reasoning, and `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md` for the actual build process an agent follows when adding real screens here.
 
-Each feature folder (`src/features/<module>/`) has its own `README.md` explaining what belongs there — start with `src/features/qr-digital-health-id/README.md` for the most structurally distinct example (its printing/scanning/shared split).
+Each feature folder (`src/features/<module>/`) has its own `README.md` explaining what belongs there.

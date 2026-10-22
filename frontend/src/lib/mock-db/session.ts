@@ -5,7 +5,7 @@ import { db } from './store'
  * MOCK SESSION: stands in for Sanctum auth until Phase B2 lands.
  *
  * A session exists only after a successful Login (`startMockSession`). Every route requires one, so
- * each audited action — including every QR scan — is attributable to the account that signed in
+ * each audited action is attributable to the account that signed in
  * (ADR-002, security clarification). There is deliberately no URL parameter or role picker that
  * creates a session. Like the planned Sanctum token, it lasts one week with no idle timeout
  * (Module 1), and Log out ends it.
@@ -106,5 +106,4 @@ export function clearMockSession(): void {
 export const ROLE_LABELS: Record<UserRole, string> = {
   staff: 'School Clinician',
   admin: 'Admin / Principal',
-  instructor: 'PE/Sports Instructor',
 }

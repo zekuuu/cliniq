@@ -14,7 +14,7 @@ import type {
  * the Phase B9 aggregation endpoint is expected to return. Every row is built from the shared
  * entities in `types/entities.ts`, so it lines up with Frontend Context Brief §5.
  *
- * Privacy by type: every student reference here is a `StudentListRef` (id + Student Number only).
+ * Privacy by type: every student reference here is a `StudentListRef` (id + LRN only).
  * A dashboard component can't render a name because it never receives one (ADR-004).
  */
 
@@ -54,6 +54,10 @@ export interface DashboardCounts {
   pendingRecords: number
   lowStockItems: number
   activeStudents: number
+  /** Today's visits marked "Resting in clinic" with no Time out yet (panel review VS-1). Current state, not the range. */
+  inClinicNow: number
+  /** Every incident still at Stage 1, whatever the range: one of the Overview tab's urgent items (DB-4). */
+  incidentsAwaitingStage2: number
 }
 
 export interface DueFollowUpRow {
@@ -152,9 +156,23 @@ export interface DashboardSummary {
   frequentVisitors: FrequentVisitorRow[]
   /** Minimum visit count that raised the flag. Shown to the nurse so the warning is explainable. */
   frequentVisitorMinVisits: number
+  /** Config: the smallest prior-period count that gets a percentage on a stat card (D4). */
+  percentMinPriorCount: number
+  /**
+   * Set when the backup needs attention (panel review BK-2): no successful backup yet, the latest run
+   * failed, or the last successful one is older than `config.staleBackupHours`. Both roles see it.
+   */
+  backupAlert: BackupAlert | null
   inventoryAlerts: InventoryAlertRow[]
   complaintTrends: ComplaintTrends
   demographics: DemographicAnalysis
+}
+
+export interface BackupAlert {
+  kind: 'never' | 'failed' | 'stale'
+  /** When the last successful backup ran, if ever. */
+  lastSuccessAt: ISODateTime | null
+  staleAfterHours: number
 }
 
 /** A Staff-maintained school event, as the calendar shows it (ADR-019). */

@@ -11,7 +11,7 @@ Kept in sync with the canonical Project Plan, Section 1.3. If you edit one, edit
 **Specific Objectives:**
 
 1. Digitize student health record encoding and clinic visit logging so that average per-visit documentation time is reduced by at least 50% compared to the current manual/Excel process.
-2. Implement a QR-based student lookup that clinic staff can scan using a device they already own over the school's employee Wi-Fi, jumping straight into recording a visit or logging an emergency in under 10 seconds, without requiring the purchase of new scanning hardware.
+2. *(Removed — ADR-027.)* The QR-based student lookup was dropped; Staff identify a student by LRN or name on each form. The number is kept so later objectives keep their numbers.
 3. Reduce documentation errors linked to manual re-entry (SWOT Threat: human error) by enforcing system-level validation — duplicate detection, mandatory fields, and standardized first-aid checklists — across all clinic-visit and incident records.
 4. Automate the generation of monthly health summaries and incident reports, eliminating the manual Excel compilation currently done by the School Head Nurse.
 5. Provide School Administration a self-service clinic overview dashboard — visit/incident counts, pending records, recurring complaints, unusual symptom clustering, frequent-visitor warnings, and a calendar view of visit volume — directly addressing the SWOT threat of "data inconsistency and incomplete decision-making."

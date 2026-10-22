@@ -1,6 +1,6 @@
 ---
 name: cliniq-print-patterns
-description: Apply when adding or changing any CLINIQ Print / Save as PDF, or any screen whose output is meant for paper (reports, letters, record sheets, logs, stickers). Keeps every printout a purpose-built A4 document with a letterhead, a scope line, and a printed-by footer, built on the shared print components, never the screen with its buttons hidden.
+description: Apply when adding or changing any CLINIQ Print / Save as PDF, or any screen whose output is meant for paper (reports, letters, record sheets, logs). Keeps every printout a purpose-built A4 document with a letterhead, a scope line, and a printed-by footer, built on the shared print components, never the screen with its buttons hidden.
 ---
 
 # CLINIQ Print Patterns
@@ -43,8 +43,9 @@ Every printout has:
   screen's figure because it comes from the same data function. If a figure isn't in the data, it
   doesn't print; log it as `LATER`.
 - Never print an internal record id (`visit-0001`) and never invent a reference number (backend
-  `LATER`). A printout that lists several students shows Student Numbers only; a printout about one
-  deliberately opened student may show the full name (ADR-004).
+  `LATER`). A printout that lists several students shows masked LRNs only; a printout about one
+  deliberately opened student may show the full name. Every printout shows the LRN masked (ADR-004,
+  ADR-028).
 - A draft or unapproved record must not look official on paper (the excuse letter's DRAFT mark).
 
 ## Where it lives
@@ -57,9 +58,15 @@ Every printout has:
   screen and never duplicates screen text in tests. Pass the screen's loaded data as props.
 - The screen's Print button stays inside a `print:hidden` block, and calls `window.print()`.
 - Existing printouts: `DashboardPrint` (Clinic Overview Report), `ReportsPrint` (Monthly Clinic
-  Report, Incident Report Archive, Health Summary), and the print trees in `ExcuseLetterPage`,
-  `IncidentReportPage`, `StudentProfilePage`, `AuditLogPage`, and `QrPrintPage` (no footer: the
-  sticker sheet is cut up).
+  Report, Incident register, Complaint summary), and the print trees in `ExcuseLetterPage`,
+  `IncidentReportPage`, `StudentProfilePage`, and `AuditLogPage`, and `SportsReportPrint` (the Sports
+  Report, ADR-034).
+- **The Sports Report is the one printout with its own confidentiality line** (`confidentiality` prop:
+  "Confidential: for the PE/Sports Instructor named above. Do not post or share. Shows only what CLINIQ
+  recorded; this is not a medical clearance.") and full names (a decided exception, ADR-034). Its Print
+  button reads the visits and incidents again just before calling `window.print()`, so the paper is
+  current; the print tree itself still renders only what the screen holds. Its audit entry names the
+  report and the student count (`auditRecord` prop), not the title alone.
 
 ## Verification
 

@@ -13,15 +13,16 @@ import { describeRange, type DateRange } from '../../../lib/dateRange'
 import { paths } from '../../../routes/paths'
 import type { DashboardSummary } from '../../../types/dashboard'
 import { dueText, expiryLabel } from '../lib/alerts'
+import { MaskedLrn } from '../../../components/ui/MaskedLrn'
 
 /*
  * The three alert groups (Reference 1, item 3). All three are read-only: no resolve or complete
  * actions here, for Staff or Admin (Module 9: the dashboard is view-only). Follow-up status
  * changes happen on the Follow-Up List (#18c).
  *
- * Display-privacy (ADR-004): multi-student lists show the Student Number, never the name. The
+ * Display-privacy (ADR-004, ADR-028): multi-student lists show the masked LRN, never the name. The
  * row data can't carry a name (see `StudentListRef`). Showing the follow-up reason next to the
- * Student Number follows ADR-010.
+ * LRN follows ADR-010.
  */
 
 /** Titles + icons shared by the loaded lists and their skeletons. */
@@ -75,7 +76,7 @@ export function FollowUpsAlert({
       {rows.map((row) => (
         <ListRow
           key={row.followUp.id}
-          primary={canNavigate ? <ListItemLink to={paths.studentProfile(row.student.studentNumber)}>{row.student.studentNumber}</ListItemLink> : row.student.studentNumber}
+          primary={canNavigate ? <ListItemLink to={paths.studentProfile(row.student.id)}><MaskedLrn lrn={row.student.lrn} /></ListItemLink> : <MaskedLrn lrn={row.student.lrn} />}
           secondary={row.followUp.reason}
           meta={<time dateTime={row.followUp.followUpDate}>{dueText(row)}</time>}
           trailing={<StatusBadge status={row.dueState} map={followUpDueMap} />}
@@ -111,7 +112,7 @@ export function FrequentVisitorsAlert({
       {rows.map((row) => (
         <ListRow
           key={row.student.id}
-          primary={canNavigate ? <ListItemLink to={paths.studentProfile(row.student.studentNumber)}>{row.student.studentNumber}</ListItemLink> : row.student.studentNumber}
+          primary={canNavigate ? <ListItemLink to={paths.studentProfile(row.student.id)}><MaskedLrn lrn={row.student.lrn} /></ListItemLink> : <MaskedLrn lrn={row.student.lrn} />}
           secondary={`${row.visitCount} visits`}
           trailing={<StatusBadge status="frequent_visits" map={frequentVisitorMap} />}
         />

@@ -17,6 +17,7 @@ import {
   FrequentVisitorsAlert,
 } from './components/AlertLists'
 import { AttentionChips } from './components/AttentionChips'
+import { urgentCount } from './lib/urgentCount'
 import { ComplaintTrends, ComplaintTrendsSkeleton } from './components/ComplaintTrends'
 import { DashboardPrint } from './components/DashboardPrint'
 import { DashboardHeader } from './components/DashboardHeader'
@@ -52,8 +53,8 @@ function parseSex(value: string | null): StudentSex | null {
  */
 export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser }) {
   const today = todayISO()
-  // A summary view opens on the current month; operational logs keep the All default.
-  const [range, setRange] = useState<DateRange>(() => rangeForPreset('thisMonth', today))
+  // A summary view opens on today's activity; operational logs keep the All default.
+  const [range, setRange] = useState<DateRange>(() => rangeForPreset('today', today))
   const [searchParams, setSearchParams] = useSearchParams()
   const view = parseDashboardView(searchParams.get('view'))
   const demographicFilters = { sex: parseSex(searchParams.get('sex')), gradeLevel: searchParams.get('grade') || null }
@@ -141,10 +142,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
     )
   }
 
-  // The overview tab flags actionable follow-ups, inventory attention, and incomplete records.
-  const alertCount = data
-    ? data.dueFollowUps.length + data.inventoryAlerts.length + data.counts.pendingRecords
-    : 0
+  const alertCount = data ? urgentCount(data) : 0
 
   return (
     // Block flow in print: in a flex column, a card pushed to the next page by break-inside-avoid
@@ -206,7 +204,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                       <Icon name="alertTriangle" size={12} />
                       {alertCount}
                     </span>
-                    <span className="sr-only">{`, ${alertCount} ${alertCount === 1 ? 'alert' : 'alerts'}`}</span>
+                    <span className="sr-only">{`, ${alertCount} urgent ${alertCount === 1 ? 'item' : 'items'}`}</span>
                   </>
                 ) : undefined,
               panel: summaryPanel(

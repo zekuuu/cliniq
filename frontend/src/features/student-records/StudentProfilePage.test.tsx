@@ -10,7 +10,7 @@ describe('Student Profile', () => {
     renderWithRouter(<StudentProfilePage />)
 
     expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(/\w+ \w+/)
-    expect(screen.getAllByText(/\d{4}-\d{5}/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/^\d{12}$/).length).toBeGreaterThan(0)
     expect(screen.getByRole('heading', { name: 'Overview' })).toBeInTheDocument()
     expect(screen.getByText('Sex')).toBeInTheDocument()
     expect(screen.getByText(/Female|Male/)).toBeInTheDocument()
@@ -25,33 +25,24 @@ describe('Student Profile', () => {
 
     expect(await screen.findByRole('link', { name: 'Edit' })).toHaveAttribute(
       'href',
-      expect.stringMatching(/^\/students\/\d{4}-\d{5}\/edit$/),
+      expect.stringMatching(/^\/students\/student-\d{4}\/edit$/),
     )
-    screen.getByRole('button', { name: 'Print' }).click()
+    screen.getByRole('button', { name: 'Print / Save as PDF' }).click()
     expect(print).toHaveBeenCalledOnce()
     expect(screen.getByRole('button', { name: 'Archive' })).toBeInTheDocument()
   })
 
   it('lists every emergency contact with primary and verification states', async () => {
-    renderWithRouter(<StudentProfilePage studentNumber="2023-00002" />)
+    renderWithRouter(<StudentProfilePage studentId="student-0012" />)
 
     expect(await screen.findByText('Arnel Cabrera')).toBeInTheDocument()
-    expect(screen.getByText('Bea Cabrera')).toBeInTheDocument()
+    expect(screen.getByText('Beatriz Cabrera')).toBeInTheDocument()
     expect(screen.getByText('Primary')).toBeInTheDocument()
     expect(screen.getByText('Needs verification')).toBeInTheDocument()
   })
 
-  it('removes action buttons for PE/Sports Instructor read-only view', async () => {
-    renderWithRouter(<StudentProfilePage viewer={{ id: 'usr-pe', name: 'PE Instructor', role: 'instructor' }} />)
-
-    expect(await screen.findByText(/read-only profile view/i)).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Print' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument()
-  })
-
   it("lists Staff the student's excused periods with a link to each visit", async () => {
-    renderWithRouter(<StudentProfilePage studentNumber="2021-00002" />)
+    renderWithRouter(<StudentProfilePage studentId="student-0022" />)
 
     expect(await screen.findByRole('heading', { name: 'Excuse Letters' })).toBeInTheDocument()
     const today = getMockToday()
@@ -61,20 +52,20 @@ describe('Student Profile', () => {
     expect(screen.getByRole('link', { name: 'View visit' })).toHaveAttribute('href', '/visits/visit-0139')
   })
 
-  it('keeps excuse letters off the PE/Sports Instructor view', async () => {
+  it('keeps excuse letters off a non-Staff view', async () => {
     renderWithRouter(
       <StudentProfilePage
-        studentNumber="2021-00002"
-        viewer={{ id: 'usr-pe', name: 'PE Instructor', role: 'instructor' }}
+        studentId="student-0022"
+        viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }}
       />,
     )
 
-    await screen.findByText(/read-only profile view/i)
+    await screen.findByRole('heading', { level: 1 })
     expect(screen.queryByRole('heading', { name: 'Excuse Letters' })).not.toBeInTheDocument()
   })
 
   it('lists a pending draft with a link to review its letter', async () => {
-    renderWithRouter(<StudentProfilePage studentNumber="2021-00005" />)
+    renderWithRouter(<StudentProfilePage studentId="student-0041" />)
 
     expect(await screen.findByRole('heading', { name: 'Excuse Letters' })).toBeInTheDocument()
     expect(screen.getByText('Pending approval')).toBeInTheDocument()

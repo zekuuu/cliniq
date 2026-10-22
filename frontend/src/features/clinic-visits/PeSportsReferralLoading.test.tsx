@@ -11,7 +11,7 @@ vi.mock('./api/peReferralApi', () => ({
 
 describe('PE/Sports Injury Referral Form: first-load skeleton', () => {
   it('announces loading and shows shaped placeholders', () => {
-    const { container } = renderWithRouter(<PeSportsReferralPage studentNumber="2026-00001" />)
+    const { container } = renderWithRouter(<PeSportsReferralPage />)
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading PE/Sports referral...')
 

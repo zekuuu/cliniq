@@ -18,8 +18,6 @@ XAMPP is the shared local setup for the school and development computers. During
 
 ## Supporting tools
 
-The server uses endroid/qr-code to create QR codes. The browser uses qr-scanner to read them because it has a fallback reader for phones whose browsers do not support the newer built-in scanning feature, including iPhones.
-
 Dashboard charts use Chart.js through react-chartjs-2 because it is lighter on the school's 4 GB workstation than the alternative considered. Automated checks use Pest for the server side and Vitest with React Testing Library for the user-facing screens.
 
 The same arrangement can later move from the local network to a remote host because the browser app already talks to the server through a defined service boundary. That move would change where the system is hosted, not require rebuilding its overall structure.

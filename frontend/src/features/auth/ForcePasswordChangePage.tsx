@@ -5,6 +5,7 @@ import { BrandLogo } from '../../layouts/Sidebar'
 import { LoginBackdrop } from './LoginBackdrop'
 import { changeMockPassword, getPendingPasswordChangeUser, getUser, type SessionUser } from '../../lib/mock-db'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useCapsLock } from '../../hooks/useCapsLock'
 import { paths } from '../../routes/paths'
 
 /**
@@ -26,6 +27,7 @@ function ForcePasswordChangeForm({ userId, onComplete }: { userId: string; onCom
   const [confirmation, setConfirmation] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const capsLock = useCapsLock()
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -37,7 +39,7 @@ function ForcePasswordChangeForm({ userId, onComplete }: { userId: string; onCom
       await changeMockPassword(userId, nextPassword)
       const user = account ?? (await getUser(userId))
       onComplete({ id: user.id, name: user.name, role: user.role })
-      navigate(user.role === 'instructor' ? paths.qrScan : paths.dashboard, { replace: true })
+      navigate(paths.dashboard, { replace: true })
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to update the password.')
     } finally {
@@ -59,8 +61,8 @@ function ForcePasswordChangeForm({ userId, onComplete }: { userId: string; onCom
           <p className="mt-1 text-sm text-text-secondary">Set a new password before opening CLINIQ for the first time.</p>
         </header>
         <form className="mt-6 flex flex-col gap-4" onSubmit={submit} noValidate>
-          <Input label="New password" type="password" autoComplete="new-password" hint="Use at least 8 characters. Your last 5 passwords cannot be reused." value={nextPassword} onChange={(event) => setNextPassword(event.target.value)} required />
-          <Input label="Confirm new password" type="password" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} required />
+          <Input label="New password" type="password" autoComplete="new-password" hint={capsLock.hint ?? 'Use at least 8 characters. Your last 5 passwords cannot be reused.'} {...capsLock.handlers} value={nextPassword} onChange={(event) => setNextPassword(event.target.value)} required />
+          <Input label="Confirm new password" type="password" autoComplete="new-password" hint={capsLock.hint} {...capsLock.handlers} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} required />
           {error && <p role="alert" className="text-sm font-semibold text-error">{error}</p>}
           <div className="mt-2 flex flex-wrap justify-end gap-2">
             <Button type="submit" variant="primary" loading={saving}>Save Password</Button>

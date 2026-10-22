@@ -7,9 +7,10 @@ import { getMockSessionUser, getRecordedAuditEntries, resetMockDb } from '../../
 import { IncompleteRecordsQueuePage } from './IncompleteRecordsQueuePage'
 import { StudentFormPage } from './StudentFormPage'
 import { fetchIncompleteRecords } from './api/incompleteRecordsApi'
+import { lrnLabel, maskLrn } from '../../lib/lrn'
 
 function EditRoute() {
-  return <StudentFormPage studentNumber={useParams().studentNumber} />
+  return <StudentFormPage studentId={useParams().studentId} />
 }
 
 describe('Incomplete Records', () => {
@@ -29,17 +30,17 @@ describe('Incomplete Records', () => {
     expect(screen.queryByText('Asthma')).not.toBeInTheDocument()
   })
 
-  it('searches by Student Number', async () => {
+  it('searches by LRN', async () => {
     const user = userEvent.setup()
     const [record] = await fetchIncompleteRecords()
     renderWithRouter(<IncompleteRecordsQueuePage />)
 
     await screen.findByRole('heading', { name: 'Incomplete Records' })
-    await user.type(screen.getByLabelText('Search'), record.studentNumber)
+    await user.type(screen.getByLabelText('Search'), record.lrn)
 
     expect(await screen.findByText('1 record shown')).toBeInTheDocument()
     expect(screen.getByRole('rowheader', { name: new RegExp(record.fullName) })).toBeInTheDocument()
-    expect(screen.getByText(record.studentNumber)).toBeInTheDocument()
+    expect(screen.getByText(maskLrn(record.lrn))).toBeInTheDocument()
   })
 
   it('offers Edit Record on every row instead of a Mark Reviewed shortcut', async () => {
@@ -48,9 +49,9 @@ describe('Incomplete Records', () => {
     await screen.findByRole('heading', { name: 'Incomplete Records' })
     expect(screen.queryByRole('button', { name: /Mark Reviewed/ })).not.toBeInTheDocument()
     const [record] = await fetchIncompleteRecords()
-    expect(screen.getByRole('link', { name: `Edit Record for ${record.studentNumber}` })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: `Edit Record for ${record.fullName}` })).toHaveAttribute(
       'href',
-      `/students/${record.studentNumber}/edit`,
+      `/students/${record.studentId}/edit`,
     )
   })
 
@@ -63,13 +64,13 @@ describe('Incomplete Records', () => {
     const router = createMemoryRouter(
       [
         { path: '/students/incomplete', element: <IncompleteRecordsQueuePage /> },
-        { path: '/students/:studentNumber/edit', element: <EditRoute /> },
+        { path: '/students/:studentId/edit', element: <EditRoute /> },
       ],
       { initialEntries: ['/students/incomplete'] },
     )
     render(<RouterProvider router={router} />)
 
-    await user.click(await screen.findByRole('link', { name: `Edit Record for ${record.studentNumber}` }))
+    await user.click(await screen.findByRole('link', { name: `Edit Record for ${record.fullName}` }))
     await screen.findByRole('heading', { name: 'Edit Student' })
     for (const [label, value] of [
       ['Student contact information', '09171234567'],
@@ -86,7 +87,7 @@ describe('Incomplete Records', () => {
     expect(router.state.location.pathname).toBe('/students/incomplete')
     expect(router.state.historyAction).toBe('POP')
     await user.click(screen.getByRole('radio', { name: 'Resolved' }))
-    const row = await screen.findByRole('row', { name: new RegExp(record.studentNumber) })
+    const row = await screen.findByRole('row', { name: new RegExp(lrnLabel(record.lrn)) })
     expect(within(row).getByText('Resolved')).toBeInTheDocument()
     expect(within(row).getByText(new RegExp(getMockSessionUser().name))).toBeInTheDocument()
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['update'])

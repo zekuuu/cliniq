@@ -10,9 +10,9 @@ import { AuditLogPage } from './audit-log/AuditLogPage'
 import { ExcuseLetterPage } from './clinic-visits/ExcuseLetterPage'
 import { DashboardPage } from './dashboard/DashboardPage'
 import { IncidentReportPage } from './emergency-response/IncidentReportPage'
-import { QrPrintPage } from './qr-digital-health-id/desktop/QrPrintPage'
 import { ReportsPage } from './reports/ReportsPage'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
+import { maskLrn } from '../lib/lrn'
 
 vi.mock('react-chartjs-2', () => ({ Bar: () => null, Line: () => null }))
 
@@ -42,18 +42,16 @@ afterEach(() => {
   })
 })
 
-function expectDocument(doc: HTMLElement, title: string | RegExp, { footer = true } = {}) {
+function expectDocument(doc: HTMLElement, title: string | RegExp) {
   // Rendered outside the app root, so print CSS can hide the screen entirely.
   expect(doc.parentElement).toBe(document.body)
   expect(doc).toHaveTextContent('Mendez Christian Academy — School Clinic')
   expect(within(doc).getByRole('heading', { level: 1 })).toHaveTextContent(title)
   expect(doc.querySelector('[data-print-scope]')?.textContent?.trim()).toBeTruthy()
   const css = doc.querySelector('style')?.textContent ?? ''
-  if (footer) {
-    expect(css).toContain('Printed ')
-    expect(css).toContain(CONFIDENTIALITY_LINE)
-    expect(css).toContain('counter(pages)')
-  } else expect(css).toBe('')
+  expect(css).toContain('Printed ')
+  expect(css).toContain(CONFIDENTIALITY_LINE)
+  expect(css).toContain('counter(pages)')
 }
 
 async function expectNoNamesOrIds(doc: HTMLElement) {
@@ -74,10 +72,10 @@ describe('purpose-built printouts', () => {
     expect(document.body.querySelector('[data-print-document]')).toBeNull()
   })
 
-  it('Dashboard: a Clinic Overview Report with the screen’s figures, Student Numbers only', async () => {
+  it('Dashboard: a Clinic Overview Report with the screen’s figures, masked LRNs only', async () => {
     renderWithRouter(<DashboardPage viewer={STAFF} />)
     await screen.findByRole('heading', { name: /due & upcoming follow-ups/i })
-    expectScreenControlHidden('Print overview')
+    expectScreenControlHidden('Print / Save as PDF')
     const summary = await getDashboardSummary({ range: rangeForPreset('thisMonth', todayISO()) })
     const doc = print()
     expectDocument(doc, 'Clinic Overview Report')
@@ -93,7 +91,7 @@ describe('purpose-built printouts', () => {
       summary.counts.activeStudents,
     ])
       expect(figures).toContain(String(value))
-    for (const row of summary.dueFollowUps) expect(doc).toHaveTextContent(row.student.studentNumber)
+    for (const row of summary.dueFollowUps) expect(doc).toHaveTextContent(maskLrn(row.student.lrn))
     expect(doc).toHaveTextContent('Excuse letters awaiting approval')
     await expectNoNamesOrIds(doc)
   })
@@ -128,18 +126,18 @@ describe('purpose-built printouts', () => {
       window.dispatchEvent(new Event('afterprint'))
     })
 
-    await user.click(screen.getByRole('tab', { name: 'Incident Archive' }))
+    await user.click(screen.getByRole('tab', { name: 'Incident register' }))
     doc = print()
-    expectDocument(doc, /^Incident Report Archive — /)
+    expectDocument(doc, /^Incident register — /)
     expect(within(doc).getAllByRole('row')).toHaveLength(report.incidents.length + 1)
     await expectNoNamesOrIds(doc)
     act(() => {
       window.dispatchEvent(new Event('afterprint'))
     })
 
-    await user.click(screen.getByRole('tab', { name: 'Health Summaries' }))
+    await user.click(screen.getByRole('tab', { name: 'Complaint summary' }))
     doc = print()
-    expectDocument(doc, /^Health Summary — /)
+    expectDocument(doc, /^Complaint summary — /)
     expect(doc).toHaveTextContent('Aggregated counts only')
     await expectNoNamesOrIds(doc)
   })
@@ -147,12 +145,12 @@ describe('purpose-built printouts', () => {
   it('Excuse Letter: a draft prints with a DRAFT mark and a reference block without ids', async () => {
     renderWithRouter(<ExcuseLetterPage viewer={STAFF} visitId="visit-0151" />)
     await screen.findByRole('heading', { name: 'Excuse Letter' })
-    expectScreenControlHidden('Print')
+    expectScreenControlHidden('Print / Save as PDF')
     const doc = print()
     expectDocument(doc, 'Clinic Excuse Letter')
     expect(doc).toHaveTextContent('DRAFT, NOT APPROVED')
     expect(doc).toHaveTextContent('Not a medical certificate')
-    expect(doc).toHaveTextContent('2021-00005')
+    expect(doc).toHaveTextContent('••••••••0041')
     expect(doc.textContent).not.toMatch(/visit-\d+/)
   })
 
@@ -161,7 +159,10 @@ describe('purpose-built printouts', () => {
     await screen.findByRole('heading', { name: 'Excuse Letter' })
     const doc = print()
     expect(doc).not.toHaveTextContent('DRAFT')
-    expect(doc).toHaveTextContent(/Approved .*stored in the student record/)
+    expect(doc).toHaveTextContent(/Approved \w{3} \d{1,2}, \d{4}/)
+    // Panel review EX-4: a signature line, and no internal storage wording on paper.
+    expect(doc).toHaveTextContent('Signature over printed name')
+    expect(doc).not.toHaveTextContent('stored in the student record')
   })
 
   it('Incident Report: a Stage 1 record prints a “Not yet completed” notice and signature lines', async () => {
@@ -177,9 +178,9 @@ describe('purpose-built printouts', () => {
   })
 
   it('Student Profile: a Student Health Record with every visit, not just the screen’s eight', async () => {
-    renderWithRouter(<StudentProfilePage viewer={STAFF} studentNumber="2022-00001" />)
+    renderWithRouter(<StudentProfilePage viewer={STAFF} studentId="student-0004" />)
     await screen.findByRole('heading', { name: 'Visit History' })
-    expectScreenControlHidden('Print')
+    expectScreenControlHidden('Print / Save as PDF')
     const doc = print()
     expectDocument(doc, 'Student Health Record')
     const visits = within(doc).getByRole('table', { name: 'Clinic visits' })
@@ -205,16 +206,6 @@ describe('purpose-built printouts', () => {
       `${rows.length} entries. Filters: all dates; all users; all actions; all targets`,
     )
     expect(within(doc).getAllByRole('row')).toHaveLength(rows.length + 1)
-    await expectNoNamesOrIds(doc)
-  })
-
-  it('QR sticker: the QR and the Student Number only, no footer', async () => {
-    renderWithRouter(<QrPrintPage />)
-    await screen.findByRole('heading', { name: 'Print QR Health IDs' })
-    expectScreenControlHidden('Print Sticker')
-    const doc = print()
-    expectDocument(doc, 'QR Health ID Sticker', { footer: false })
-    expect(within(doc).getByRole('img', { name: /^QR code for \d{4}-\d{5}$/ })).toBeInTheDocument()
     await expectNoNamesOrIds(doc)
   })
 

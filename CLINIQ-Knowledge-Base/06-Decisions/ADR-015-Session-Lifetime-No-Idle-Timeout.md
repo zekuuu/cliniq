@@ -2,6 +2,7 @@
 
 **Date:** Monday, September 28, 2026 — actual time not available (no system clock access in this environment)
 **Status:** Accepted
+**Note (Wednesday, October 21, 2026 — 01:47):** the PE/Sports Instructor role, the phone-only screens and the `?student=` parameter this ADR may mention were removed (ADR-029, ADR-033, [2026-10-21-remove-phone-screens-and-instructor](../08-Logs/Agent-Sessions/2026-10-21-remove-phone-screens-and-instructor.md)); the rest of the decision stands.
 
 **Numbering note:** this record was first written as ADR-010, which collided with the already-used ADR-010 record for reason visibility in list rows. It was renumbered ADR-015 on Monday, September 28, 2026 — 22:29 PHT. The obsolete duplicate has now been removed.
 

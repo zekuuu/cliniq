@@ -1,4 +1,4 @@
-import { addDays } from '../dates'
+import { addDays, parseISODate } from '../dates'
 import type { ISODate, ISODateTime } from '../../types/entities'
 import type { RelativeDate, RelativeDateTime } from './types'
 
@@ -14,6 +14,26 @@ export function resolveDate(value: RelativeDate, today: ISODate): ISODate {
 /** Seed times are Philippine time (UTC+8), the clinic's only timezone. */
 export function resolveDateTime(value: RelativeDateTime, today: ISODate): ISODateTime {
   return `${resolveDate(value, today)}T${value.time}:00+08:00`
+}
+
+/**
+ * Clinic activity happens on school days (panel review 5.3): a resolved date in the past that falls on a
+ * Saturday or Sunday moves back to the Friday before. Today is never moved, nor is the future. The
+ * mapping never reverses order, so linked dates (a visit and its letter, an incident and its calls) keep
+ * their sequence. Backups and calendar events keep their own days.
+ */
+export function toSchoolDay(date: ISODate, today: ISODate): ISODate {
+  if (date >= today) return date
+  const weekday = parseISODate(date).getDay()
+  return weekday === 6 ? addDays(date, -1) : weekday === 0 ? addDays(date, -2) : date
+}
+
+export function resolveSchoolDate(value: RelativeDate, today: ISODate): ISODate {
+  return toSchoolDay(resolveDate(value, today), today)
+}
+
+export function resolveSchoolDateTime(value: RelativeDateTime, today: ISODate): ISODateTime {
+  return `${resolveSchoolDate(value, today)}T${value.time}:00+08:00`
 }
 
 export function isRelativeDate(value: unknown): value is RelativeDate {

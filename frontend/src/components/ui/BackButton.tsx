@@ -20,7 +20,7 @@ type BackTarget =
  * - `prominent` is for shell-free phone screens, where Back is the main way out.
  * - `drillThroughOnly` renders it only when a drill-through link opened the screen (top-level lists).
  *
- * The visible text is the accessible name, so it never names a student or a Student Number.
+ * The visible text is the accessible name, so it never names a student or an LRN.
  */
 export function BackButton({
   variant = 'quiet',

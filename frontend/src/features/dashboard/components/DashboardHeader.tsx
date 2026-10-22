@@ -62,7 +62,7 @@ export function DashboardHeader({
       <div className="ml-auto flex flex-wrap items-center justify-end gap-2 print:hidden">
         <DateRangePicker value={range} onChange={onRangeChange} today={today} compact />
         <Button variant="secondary" icon="printer" onClick={onPrint}>
-          Print overview
+          Print / Save as PDF
         </Button>
       </div>
     </header>

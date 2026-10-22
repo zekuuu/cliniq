@@ -62,8 +62,6 @@ Every feature in this project — down to individual UI decisions like *which sc
 **📊 Operational Tools**
 - Medicine & supply inventory with auto-decrementing stock and expiry tracking
 - Clinic Overview Dashboard — Overview, Trends, and Calendar views: alerts, complaint trends, and a visit-activity calendar
-- QR lookup by phone camera (the clinic computer prints the QR stickers) tied into every workflow
-- Role-scoped read-only access for PE/Sports Instructors
 - Automated backup verification with a guided recovery checklist
 
 </td>
@@ -83,14 +81,12 @@ Every feature in this project — down to individual UI decisions like *which sc
 | ⚙️ Backend | Laravel (PHP) | Batteries-included framework, small-team-friendly |
 | 🔐 Auth | Laravel Sanctum | SPA-specific token/cookie auth, not generic session auth |
 | 🗄️ Database | MySQL | |
-| 📷 QR Generation | [`endroid/qr-code`](https://github.com/endroid/qr-code) | Actively maintained (the more obvious pick was abandoned since 2021) |
-| 📱 QR Scanning | [`qr-scanner`](https://github.com/nimiq/qr-scanner) | Falls back gracefully on browsers without native barcode APIs — works on iPhone, not just Android |
 | 📈 Charts | Chart.js + `react-chartjs-2` | Smaller bundle, Canvas rendering — matters on a 4GB RAM workstation |
 | 🧪 Testing | Pest (backend) · Vitest + RTL (frontend) | |
 | 🏠 Local Dev | XAMPP, standardized across every machine | Matches the client's actual production environment |
 | ☁️ Deployment | Local LAN today → remote/cloud is a documented future phase | API-driven architecture supports the move without a rewrite |
 
-Every choice above was researched, not assumed — see [`ADR-007`](./CLINIQ-Knowledge-Base/06-Decisions/ADR-007-Stack-Finalization.md) for the full reasoning, including why the *more obvious-looking* QR scanning library was rejected.
+Every choice above was researched, not assumed — see [`ADR-007`](./CLINIQ-Knowledge-Base/06-Decisions/ADR-007-Stack-Finalization.md) for the full reasoning.
 
 <br/>
 
@@ -107,10 +103,6 @@ CLINIQ/
 │
 ├── 🎨 frontend/                 → React + TypeScript + Vite
 │   └── src/features/            → one folder per module, feature-based structure
-│       └── qr-digital-health-id/
-│           ├── desktop/         → QR sticker printing only (no scanning on the computer, ADR-023)
-│           ├── mobile/          → Staff phone scan/lookup + PE/Sports Instructor lookup
-│           └── shared/          → the one camera-scanning implementation, used by mobile/
 │
 ├── ⚙️ backend/                  → Laravel API (not scaffolded yet)
 │   └── app/Modules/             → planned: one folder per module, mirroring the frontend directly
@@ -154,7 +146,7 @@ npm run build      # type-check and production build
 
 First-time Windows setup, step by step: [`setup-step.md`](./setup-step.md). Sign-in accounts for the mock data: [`frontend/src/lib/mock-db/README.md`](./frontend/src/lib/mock-db/README.md).
 
-The backend (Laravel, Sanctum, `endroid/qr-code`, XAMPP's MySQL) is not set up yet; its planned steps, including *why* each choice was made: [`CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md`](./CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md)
+The backend (Laravel, Sanctum, XAMPP's MySQL) is not set up yet; its planned steps, including *why* each choice was made: [`CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md`](./CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md)
 
 <br/>
 

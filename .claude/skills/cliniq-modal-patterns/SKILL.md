@@ -16,7 +16,7 @@ Use this with `cliniq-interactive-states` whenever an action might need a confir
 
 ## What the dialog says and does
 
-- Name the record it affects (Student Number, what, and when) and state plainly that it can't be undone from this screen.
+- Name the record it affects (the student, what, and when) and state plainly that it can't be undone from this screen.
 - Button labels are Title Case. The confirming button repeats the action ("Archive Record", "Mark as Missed"), and the safe choice is "Cancel" or names what is kept ("Keep Pending").
 - Reserve the red `destructive` button for deletion. Archive, approve, and status changes use `primary` or `secondary`.
 

@@ -11,7 +11,7 @@ vi.mock('./api/newVisitApi', () => ({
 
 describe('New Visit Entry: first-load skeleton', () => {
   it('announces loading and shows shaped placeholders', () => {
-    const { container } = renderWithRouter(<NewVisitEntryPage studentNumber="2026-00001" />)
+    const { container } = renderWithRouter(<NewVisitEntryPage />)
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading visit form…')
 

@@ -13,7 +13,7 @@ import { InventoryFormPage } from './inventory/InventoryFormPage'
 import { StudentFormPage } from './student-records/StudentFormPage'
 import { UserFormPage } from './user-management/UserFormPage'
 
-const STUDENT = '2026-00001'
+const STUDENT = 'student-0001'
 
 /** Opens the form as the first screen (no history), so Cancel must use its fallback route. */
 function renderForm(form: ReactElement, fallback: string, entries = ['/form']) {
@@ -50,18 +50,18 @@ describe('Cancel on entry and edit forms', () => {
   beforeEach(() => resetMockDb())
 
   it('goes back to the previous screen when there is history', async () => {
-    renderForm(<NewVisitEntryPage studentNumber={STUDENT} />, '/visits', ['/previous', '/form'])
+    renderForm(<NewVisitEntryPage />, '/visits', ['/previous', '/form'])
     await cancelWithInput()
     expect(screen.getByText('Previous screen')).toBeInTheDocument()
   })
 
   it.each([
-    ['New Visit', <NewVisitEntryPage studentNumber={STUDENT} />, '/visits'],
-    ['Incident Stage 1', <IncidentEntryPage studentNumber={STUDENT} />, '/incidents'],
+    ['New Visit', <NewVisitEntryPage />, '/visits'],
+    ['Incident Stage 1', <IncidentEntryPage />, '/incidents'],
     ['Incident Stage 2', <IncidentEntryPage incidentId="incident-0022" />, '/incidents'],
     ['Add Student', <StudentFormPage />, '/students'],
-    ['Edit Student', <StudentFormPage studentNumber={STUDENT} />, `/students/${STUDENT}`],
-    ['PE/Sports Referral', <PeSportsReferralPage studentNumber={STUDENT} />, '/visits'],
+    ['Edit Student', <StudentFormPage studentId={STUDENT} />, `/students/${STUDENT}`],
+    ['PE/Sports Referral', <PeSportsReferralPage />, '/visits'],
     ['Add Inventory Item', <InventoryFormPage />, '/inventory'],
     ['Dispense', <InventoryDispensePage />, '/inventory'],
     ['User form', <UserFormPage />, '/users'],
@@ -87,23 +87,23 @@ describe('Cancel with unsaved changes asks first', () => {
   beforeEach(() => resetMockDb())
 
   it.each([
-    ['New Visit', <NewVisitEntryPage studentNumber={STUDENT} />, '/visits', /complaint/i],
+    ['New Visit', <NewVisitEntryPage />, '/visits', /complaint/i],
     [
       'Incident Stage 1',
-      <IncidentEntryPage studentNumber={STUDENT} />,
+      <IncidentEntryPage />,
       '/incidents',
       /additional notes/i,
     ],
     ['Add Student', <StudentFormPage />, '/students', /full name/i],
     [
       'Edit Student',
-      <StudentFormPage studentNumber={STUDENT} />,
+      <StudentFormPage studentId={STUDENT} />,
       `/students/${STUDENT}`,
       /full name/i,
     ],
     [
       'PE/Sports Referral',
-      <PeSportsReferralPage studentNumber={STUDENT} />,
+      <PeSportsReferralPage />,
       '/visits',
       /activity/i,
     ],

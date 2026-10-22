@@ -2,6 +2,9 @@
 
 **Date:** Sunday, September 27, 2026 — 10:01
 **Status:** Accepted
+**Note (Wednesday, October 21, 2026 — 01:09):** the QR feature this ADR mentions was removed (ADR-027, [2026-10-21-remove-qr-feature](../08-Logs/Agent-Sessions/2026-10-21-remove-qr-feature.md)); the rest of the decision stands.
+**Note (Wednesday, October 21, 2026 — 01:47):** the PE/Sports Instructor role, the phone-only screens and the `?student=` parameter this ADR may mention were removed (ADR-029, ADR-033, [2026-10-21-remove-phone-screens-and-instructor](../08-Logs/Agent-Sessions/2026-10-21-remove-phone-screens-and-instructor.md)); the rest of the decision stands.
+**Note (Wednesday, October 21, 2026 — 07:00):** the CLINIQ Student Number this ADR mentions was replaced by the LRN (ADR-028, [2026-10-21-lrn-replaces-student-number](../08-Logs/Agent-Sessions/2026-10-21-lrn-replaces-student-number.md)); lists show it masked. The rest of the decision stands.
 
 ## Context
 `Development-Phases.md` §0 flagged the routing library as a blocking decision that no canonical document had made. In the meantime, Phase F1/F2 screens were built behind a temporary `?screen=X` switch in `App.tsx`, the sidebar pointed at `#main-content`, and every screen shipped in one bundle (the build warned it exceeded 500 kB). The owner first confirmed the URL shape (Sunday, September 27, 2026 — 09:50), then approved React Router and asked for it to be wired into every built screen.

@@ -2,11 +2,12 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { ComplaintTrends, ComplaintTrendsSkeleton, TrendTable } from './ComplaintTrends'
+import { colorToken } from '../../../lib/tokens'
 import type { ComplaintTrends as ComplaintTrendsData, TrendBucket } from '../../../types/dashboard'
 
 interface LineProps {
   'aria-label'?: string
-  data?: { datasets?: Array<{ pointHoverRadius?: number | number[] }> }
+  data?: { datasets?: Array<{ pointHoverRadius?: number | number[]; backgroundColor?: string | string[] }> }
   options?: {
     animation?: false | { duration?: number; easing?: string }
     animations?: false | { radius?: { duration?: number; easing?: string } }
@@ -36,6 +37,7 @@ interface LineProps {
 
 const lineMock = vi.hoisted(() => ({ props: undefined as unknown }))
 const barMock = vi.hoisted(() => ({ props: undefined as unknown }))
+const doughnutMock = vi.hoisted(() => ({ props: undefined as unknown }))
 
 vi.mock('react-chartjs-2', () => ({
   Line: (props: LineProps) => {
@@ -46,7 +48,10 @@ vi.mock('react-chartjs-2', () => ({
     barMock.props = props
     return <div role="img" aria-label={props['aria-label']} />
   },
-  Doughnut: (props: LineProps) => <div role="img" aria-label={props['aria-label']} />,
+  Doughnut: (props: LineProps) => {
+    doughnutMock.props = props
+    return <div role="img" aria-label={props['aria-label']} />
+  },
 }))
 
 const buckets: TrendBucket[] = Array.from({ length: 14 }, (_, index) => {
@@ -108,7 +113,10 @@ describe('TrendTable', () => {
     await user.click(screen.getByRole('radio', { name: 'Table' }))
     const table = screen.getByRole('table', { name: /weekday comparison/i })
     expect(within(table).getByRole('row', { name: /Friday.*Foundation Day/i })).toHaveAttribute('tabindex', '0')
-    expect(within(table).getByText(/busiest Oct 30, 2026/i)).toBeInTheDocument()
+    expect(table).toHaveClass('table-fixed')
+    expect(within(table).getByRole('columnheader', { name: 'October 2026' })).toBeInTheDocument()
+    expect(within(table).getAllByRole('columnheader', { name: 'Busiest date & context' })).toHaveLength(2)
+    expect(within(table).getByText(/Oct 30.*5 cases/i)).toBeInTheDocument()
   })
 
   it('keeps the weekday tooltip to the two counts and one busiest-day line', () => {
@@ -159,13 +167,41 @@ describe('TrendTable', () => {
     expect(screen.getByRole('button', { name: /^Female/ })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: /^Female/ }).className).toContain('aria-pressed:ring-brand-green')
     expect(screen.getByRole('img', { name: /by Sex: Female 2 \(50%\); Male 2 \(50%\)/ })).toBeInTheDocument()
+    expect((doughnutMock.props as LineProps).data?.datasets?.[0]?.backgroundColor).toEqual([
+      colorToken('chart-female'),
+      colorToken('chart-male'),
+    ])
+  })
+
+  it('lays out grade filters in a compact four-column desktop grid', () => {
+    render(
+      <ComplaintTrends
+        trends={trends}
+        demographics={{
+          sex: [],
+          gradeLevel: [
+            { key: 'Grade 1', label: 'Grade 1', count: 1, visits: 1, incidents: 0, share: 0.25 },
+            { key: 'Grade 2', label: 'Grade 2', count: 1, visits: 1, incidents: 0, share: 0.25 },
+            { key: 'Grade 3', label: 'Grade 3', count: 1, visits: 1, incidents: 0, share: 0.25 },
+            { key: 'Grade 4', label: 'Grade 4', count: 1, visits: 1, incidents: 0, share: 0.25 },
+          ],
+        }}
+        filters={{ sex: null, gradeLevel: null }}
+        onFiltersChange={() => {}}
+      />,
+    )
+
+    const firstGrade = screen.getByRole('button', { name: /Grade 1.*1.*25%/ })
+    expect(firstGrade.className).toContain('px-2')
+    expect(firstGrade.className).toContain('py-1.5')
+    expect(firstGrade.parentElement).toHaveClass('grid', 'lg:grid-cols-4')
   })
 
   it('shapes the loading skeleton like the demographic cards above the trend row', () => {
     const { container } = render(<ComplaintTrendsSkeleton />)
     const demographics = container.querySelector('[data-skeleton="demographics"]')
-    expect(demographics?.textContent).toContain('Visits by Sex')
-    expect(demographics?.textContent).toContain('Visits by grade level')
+    expect(demographics?.textContent).toContain('Visits and incidents by sex')
+    expect(demographics?.textContent).toContain('Visits and incidents by grade level')
     expect(demographics?.compareDocumentPosition(container.querySelector('[data-skeleton="complaint-trends"]')!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
   })
 
@@ -351,7 +387,7 @@ describe('TrendTable', () => {
     ).toBeInTheDocument()
     expect(screen.getAllByRole('row')[1]).toHaveTextContent('All visits & incidents')
     expect(screen.getByRole('columnheader', { name: 'Complaint' })).toHaveClass('sticky', 'left-0')
-    expect(table.querySelector('col')).toHaveAttribute('style', 'width: 24ch;')
+    expect(table.querySelector('col')).toHaveAttribute('style', 'width: calc(100% - 65rem);')
     expect(screen.getByRole('columnheader', { name: 'Total' })).toHaveClass('sticky', 'right-0')
     expect(table.querySelector('thead')).not.toHaveTextContent('Week of')
   })

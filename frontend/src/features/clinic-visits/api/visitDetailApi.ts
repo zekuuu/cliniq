@@ -2,11 +2,12 @@ import {
   getExcuseLetterApproval,
   getLatestVisit,
   getVisitComplaintSuggestions,
-  getStudentById,
+  getStudent,
   getUser,
   getVisit,
   getVitalsWarningRanges,
   listInventory,
+  markVisitEnteredInError,
   updateVisit,
   type ExcuseLetterApproval,
   type InventoryItemView,
@@ -16,7 +17,7 @@ import {
   type VitalsWarningRanges,
 } from '../../../lib/mock-db'
 import { normalizeComplaint } from '../../../lib/complaints'
-import type { Disposition, ExcuseLetterDraft, ISODateTime, ItemGivenLine, Student } from '../../../types/entities'
+import type { Disposition, EnteredInError, ExcuseLetterDraft, ISODateTime, ItemGivenLine, Student } from '../../../types/entities'
 import {
   emptyDispositionValues,
   dispositionPayload,
@@ -45,9 +46,19 @@ export interface VisitDetail extends VisitLogbookFields {
   complaintSuggestions: string[]
   /** Placeholder sanity bounds for the non-blocking body temperature warning (nurse to confirm). */
   vitalsRanges: VitalsWarningRanges
+  /** Panel review part 2 (ADR-036). */
+  lateEntry: boolean
+  lateEntryReason: string | null
+  enteredInError: EnteredInError | null
+  /** Who marked it, for the banner. */
+  enteredInErrorBy: string | null
+  escalatedIncidentId: string | null
 }
 
 export interface VisitDetailValues extends DispositionValues, LogbookValues {
+  /** When the visit happened, editable to correct a wrong time (never in the future). */
+  visitDate: string
+  visitClock: string
   complaint: string
   treatment: string
   disposition: Disposition
@@ -63,6 +74,8 @@ export function valuesFromVisit(visit: VisitDetail): VisitDetailValues {
     ...(draft && { excusedFrom: draft.excusedFrom, excusedUntil: draft.excusedUntil, letterNote: draft.note ?? '' }),
     referredTo: visit.referredTo ?? '',
     ...logbookValuesFrom(visit),
+    visitDate: visit.dateTime.slice(0, 10),
+    visitClock: visit.dateTime.slice(11, 16),
     complaint: visit.complaint,
     treatment: visit.treatment,
     disposition: visit.disposition,
@@ -73,13 +86,15 @@ export function valuesFromVisit(visit: VisitDetail): VisitDetailValues {
 /** `visitId` comes from the `/visits/:visitId` route; omitted, the latest active visit is used. */
 export async function fetchVisitDetail(visitId?: string): Promise<VisitDetail> {
   const visit = visitId ? await getVisit(visitId) : await getLatestVisit()
-  const [student, loggedBy, items, approval, complaintSuggestions, vitalsRanges] = await Promise.all([
-    getStudentById(visit.studentId),
-    getUser(visit.loggedByUserId).then((user) => user.name, () => 'Unknown user'),
+  const userName = (id: string) => getUser(id).then((user) => user.name, () => 'Unknown user')
+  const [student, loggedBy, items, approval, complaintSuggestions, vitalsRanges, enteredInErrorBy] = await Promise.all([
+    getStudent(visit.studentId),
+    userName(visit.loggedByUserId),
     listInventory(),
     getExcuseLetterApproval(visit.id),
     getVisitComplaintSuggestions(),
     getVitalsWarningRanges(),
+    visit.enteredInError ? userName(visit.enteredInError.byUserId) : null,
   ])
   return {
     id: visit.id,
@@ -102,7 +117,18 @@ export async function fetchVisitDetail(visitId?: string): Promise<VisitDetail> {
     items,
     complaintSuggestions,
     vitalsRanges,
+    lateEntry: Boolean(visit.lateEntry),
+    lateEntryReason: visit.lateEntryReason ?? null,
+    enteredInError: visit.enteredInError ?? null,
+    enteredInErrorBy,
+    escalatedIncidentId: visit.escalatedIncidentId ?? null,
   }
+}
+
+/** "Entered in error" (D2): kept, hidden from lists and counts, stock returned, letter voided. Reloads the visit. */
+export async function markEnteredInError(visitId: string, reason: string, actor?: SessionUser): Promise<VisitDetail> {
+  await markVisitEnteredInError(visitId, reason, actor)
+  return fetchVisitDetail(visitId)
 }
 
 /**
@@ -124,6 +150,8 @@ export async function updateVisitDetail(
       disposition: values.disposition,
       eventTag: values.eventTag.trim() || null,
       itemsGiven,
+      // Sent only when changed, so an unchanged visit keeps its exact saved time.
+      ...(`${values.visitDate}T${values.visitClock}` !== visit.dateTime.slice(0, 16) && { dateTime: `${values.visitDate}T${values.visitClock}` }),
       ...logbookPayload(values),
       // An approved letter's period is fixed: the edit sends "Referred to" only, never a draft.
       ...(visit.approval

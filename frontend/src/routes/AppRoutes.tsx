@@ -1,11 +1,11 @@
 import { lazy, Suspense, useEffect, type ComponentType, type ReactNode } from 'react'
-import { Navigate, Route, Routes, useLocation, useParams, useSearchParams } from 'react-router'
+import { Navigate, Route, Routes, useLocation, useParams } from 'react-router'
 import { AppShell } from '../layouts/AppShell'
 import type { NavKey } from '../layouts/navigation'
 import type { SessionUser } from '../lib/mock-db'
 import type { UserRole } from '../types/entities'
 import { NotFoundPage } from './NotFoundPage'
-import { homePathFor, paths } from './paths'
+import { paths } from './paths'
 import { Card, Skeleton } from '../components'
 import { LoginPage } from '../features/auth/LoginPage'
 import { ForcePasswordChangePage } from '../features/auth/ForcePasswordChangePage'
@@ -18,9 +18,7 @@ import { ForcePasswordChangePage } from '../features/auth/ForcePasswordChangePag
  * - Role access is declared on the route (`roles`) and enforced by one guard, so "who can open
  *   what" is readable in this file alone. Screens still keep their own role checks as a second
  *   layer, since the backend will enforce roles independently anyway.
- * - `shell: false` screens (the QR mobile flow) render without the desktop sidebar, and the
- *   PE/Sports Instructor normally never gets the shell; the shared legal page explicitly opts
- *   into it so its sidebar footer link is available to every role.
+ * - Every screen renders inside the App Shell (sidebar, header with Log out).
  */
 
 /** Lazily loads a named page export as its own chunk. */
@@ -74,10 +72,6 @@ const IncidentLogListPage = page(
   () => import('../features/emergency-response/IncidentLogListPage'),
   'IncidentLogListPage',
 )
-const QrMobileHubPage = page(
-  () => import('../features/qr-digital-health-id/mobile/QrMobileHubPage'),
-  'QrMobileHubPage',
-)
 const InventoryListPage = page(
   () => import('../features/inventory/InventoryListPage'),
   'InventoryListPage',
@@ -94,15 +88,10 @@ const FollowUpListPage = page(
   () => import('../features/emergency-response/FollowUpListPage'),
   'FollowUpListPage',
 )
-const QrPrintPage = page(
-  () => import('../features/qr-digital-health-id/desktop/QrPrintPage'),
-  'QrPrintPage',
-)
-const EmergencyMobilePage = page(
-  () => import('../features/emergency-response/EmergencyMobilePage'),
-  'EmergencyMobilePage',
-)
 const ReportsPage = page(() => import('../features/reports/ReportsPage'), 'ReportsPage')
+const SportsReportListPage = page(() => import('../features/reports/SportsReportListPage'), 'SportsReportListPage')
+const SportsReportPage = page(() => import('../features/reports/SportsReportPage'), 'SportsReportPage')
+const SportsReportFormPage = page(() => import('../features/reports/SportsReportFormPage'), 'SportsReportFormPage')
 const ParentNotificationPage = page(
   () => import('../features/emergency-response/ParentNotificationPage'),
   'ParentNotificationPage',
@@ -126,28 +115,13 @@ const PrivacyPolicyPage = page(
 type Viewer = { viewer: SessionUser }
 
 function StudentProfileRoute({ viewer }: Viewer) {
-  const { studentNumber } = useParams()
-  return <StudentProfilePage viewer={viewer} studentNumber={studentNumber} />
+  const { studentId } = useParams()
+  return <StudentProfilePage viewer={viewer} studentId={studentId} />
 }
 
 function StudentEditRoute({ viewer }: Viewer) {
-  const { studentNumber } = useParams()
-  return <StudentFormPage viewer={viewer} studentNumber={studentNumber} />
-}
-
-function PeReferralRoute({ viewer }: Viewer) {
-  const [search] = useSearchParams()
-  return <PeSportsReferralPage viewer={viewer} studentNumber={search.get('student') ?? undefined} />
-}
-
-function NewVisitRoute({ viewer }: Viewer) {
-  const [search] = useSearchParams()
-  return <NewVisitEntryPage viewer={viewer} studentNumber={search.get('student') ?? undefined} />
-}
-
-function IncidentEntryRoute({ viewer }: Viewer) {
-  const [search] = useSearchParams()
-  return <IncidentEntryPage viewer={viewer} studentNumber={search.get('student') ?? undefined} />
+  const { studentId } = useParams()
+  return <StudentFormPage viewer={viewer} studentId={studentId} />
 }
 
 function IncidentCompleteRoute({ viewer }: Viewer) {
@@ -172,13 +146,21 @@ function IncidentReportRoute({ viewer }: Viewer) {
   const { incidentId } = useParams()
   return <IncidentReportPage viewer={viewer} incidentId={incidentId} />
 }
-function UserFormRoute() {
+function SportsReportRoute({ viewer }: Viewer) {
+  const { reportId } = useParams()
+  return <SportsReportPage reportId={reportId} viewer={viewer} />
+}
+function SportsReportEditRoute({ viewer }: Viewer) {
+  const { reportId } = useParams()
+  return <SportsReportFormPage reportId={reportId} viewer={viewer} />
+}
+function UserFormRoute({ viewer }: Viewer) {
   const { userId } = useParams()
-  return <UserFormPage userId={userId} />
+  return <UserFormPage userId={userId} viewer={viewer} />
 }
 /**
  * Every app route requires a signed-in account (ADR-002, security clarification). Without one the
- * visitor goes to Login, which returns them here afterwards — so a QR scan can only happen after Login.
+ * visitor goes to Login, which returns them here afterwards.
  */
 function RequireLogin() {
   const location = useLocation()
@@ -194,11 +176,7 @@ interface AppRoute {
   roles: UserRole[]
   /** Sidebar item highlighted while this screen is open. */
   nav: NavKey | null
-  shell: boolean
-  /** The privacy page is the one shell destination available to the Instructor role. */
-  instructorShell?: boolean
-  /** `onLogout` is for shell-free screens, which have no shell header to sign out from. */
-  render: (viewer: SessionUser, onLogout: () => void) => ReactNode
+  render: (viewer: SessionUser) => ReactNode
 }
 
 function PageTitle({ children, title }: { children: ReactNode; title: string }) {
@@ -215,7 +193,6 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Clinic Overview',
     roles: ['staff', 'admin'],
     nav: 'dashboard',
-    shell: true,
     render: (viewer) => <DashboardPage viewer={viewer} />,
   },
   {
@@ -223,7 +200,6 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Clinic Calendar',
     roles: ['staff', 'admin'],
     nav: 'calendar',
-    shell: true,
     render: (viewer) => <CalendarPage viewer={viewer} />,
   },
   {
@@ -231,7 +207,6 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Student List',
     roles: ['staff'],
     nav: 'students',
-    shell: true,
     render: () => <StudentListPage />,
   },
   {
@@ -239,7 +214,6 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Add Student',
     roles: ['staff'],
     nav: 'students',
-    shell: true,
     render: (viewer) => <StudentFormPage viewer={viewer} />,
   },
   {
@@ -247,24 +221,20 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Incomplete Records',
     roles: ['staff'],
     nav: 'students',
-    shell: true,
     render: (viewer) => <IncompleteRecordsQueuePage viewer={viewer} />,
   },
   {
-    // Instructors reach this read-only from a QR lookup; the page hides every record action.
-    path: '/students/:studentNumber',
+    path: '/students/:studentId',
     title: 'Student Profile',
-    roles: ['staff', 'instructor'],
+    roles: ['staff'],
     nav: 'students',
-    shell: true,
     render: (viewer) => <StudentProfileRoute viewer={viewer} />,
   },
   {
-    path: '/students/:studentNumber/edit',
+    path: '/students/:studentId/edit',
     title: 'Edit Student',
     roles: ['staff'],
     nav: 'students',
-    shell: true,
     render: (viewer) => <StudentEditRoute viewer={viewer} />,
   },
   {
@@ -272,7 +242,6 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Visit Log',
     roles: ['staff'],
     nav: 'visits',
-    shell: true,
     render: () => <VisitLogListPage />,
   },
   {
@@ -280,23 +249,20 @@ const APP_ROUTES: AppRoute[] = [
     title: 'New Visit',
     roles: ['staff'],
     nav: 'visits',
-    shell: true,
-    render: (viewer) => <NewVisitRoute viewer={viewer} />,
+    render: (viewer) => <NewVisitEntryPage viewer={viewer} />,
   },
   {
     path: '/visits/pe-referral',
     title: 'PE/Sports Referrals',
     roles: ['staff'],
     nav: 'visits',
-    shell: true,
-    render: (viewer) => <PeReferralRoute viewer={viewer} />,
+    render: (viewer) => <PeSportsReferralPage viewer={viewer} />,
   },
   {
     path: '/visits/:visitId',
     title: 'Visit Details',
     roles: ['staff'],
     nav: 'visits',
-    shell: true,
     render: (viewer) => <VisitDetailRoute viewer={viewer} />,
   },
   {
@@ -304,7 +270,6 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Excuse Letter',
     roles: ['staff'],
     nav: 'visits',
-    shell: true,
     render: (viewer) => <ExcuseLetterRoute viewer={viewer} />,
   },
   {
@@ -312,7 +277,6 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Incident Log',
     roles: ['staff'],
     nav: 'incidents',
-    shell: true,
     render: () => <IncidentLogListPage />,
   },
   {
@@ -320,15 +284,13 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Report Incident',
     roles: ['staff'],
     nav: 'incidents',
-    shell: true,
-    render: (viewer) => <IncidentEntryRoute viewer={viewer} />,
+    render: (viewer) => <IncidentEntryPage viewer={viewer} />,
   },
   {
     path: '/incidents/:incidentId/complete',
     title: 'Complete Incident',
     roles: ['staff'],
     nav: 'incidents',
-    shell: true,
     render: (viewer) => <IncidentCompleteRoute viewer={viewer} />,
   },
   {
@@ -336,7 +298,6 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Parent Notifications',
     roles: ['staff'],
     nav: 'incidents',
-    shell: true,
     render: (viewer) => <IncidentNotificationRoute viewer={viewer} />,
   },
   {
@@ -344,7 +305,6 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Parent Notifications',
     roles: ['staff'],
     nav: 'incidents',
-    shell: true,
     render: (viewer) => <IncidentNotificationRoute viewer={viewer} />,
   },
   {
@@ -352,7 +312,6 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Incident Report',
     roles: ['staff'],
     nav: 'incidents',
-    shell: true,
     render: (viewer) => <IncidentReportRoute viewer={viewer} />,
   },
   {
@@ -360,7 +319,6 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Incident Report',
     roles: ['staff'],
     nav: 'incidents',
-    shell: true,
     render: (viewer) => <IncidentReportRoute viewer={viewer} />,
   },
   {
@@ -368,7 +326,6 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Inventory',
     roles: ['staff'],
     nav: 'inventory',
-    shell: true,
     render: () => <InventoryListPage />,
   },
   {
@@ -376,7 +333,6 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Add Inventory Item',
     roles: ['staff'],
     nav: 'inventory',
-    shell: true,
     render: () => <InventoryFormPage />,
   },
   {
@@ -384,7 +340,6 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Dispense Item',
     roles: ['staff'],
     nav: 'inventory',
-    shell: true,
     render: () => <InventoryDispensePage />,
   },
   {
@@ -392,88 +347,85 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Follow-Ups',
     roles: ['staff'],
     nav: 'followUps',
-    shell: true,
     render: () => <FollowUpListPage />,
-  },
-  {
-    path: paths.qrScan,
-    title: 'QR Lookup',
-    roles: ['staff', 'instructor'],
-    nav: 'qrLookup',
-    shell: false,
-    render: (viewer, onLogout) => <QrMobileHubPage viewer={viewer} onLogout={onLogout} />,
-  },
-  {
-    path: paths.qrPrint,
-    title: 'Print QR Health IDs',
-    roles: ['staff'],
-    nav: 'qrLookup',
-    shell: true,
-    render: () => <QrPrintPage />,
-  },
-  {
-    path: paths.emergencyMobile,
-    title: 'Emergency Response',
-    roles: ['staff'],
-    nav: 'incidents',
-    shell: false,
-    render: () => <EmergencyMobilePage />,
   },
   {
     path: paths.reports,
     title: 'Reports',
     roles: ['staff', 'admin'],
     nav: 'reports',
-    shell: true,
     render: (viewer) => <ReportsPage viewer={viewer} />,
+  },
+  // Sports Reports (ADR-034): the clinician's only; the Admin/Principal can't open them.
+  {
+    path: paths.sportsReports,
+    title: 'Sports Reports',
+    roles: ['staff'],
+    nav: 'reports',
+    render: (viewer) => <SportsReportListPage viewer={viewer} />,
+  },
+  {
+    path: paths.sportsReportNew,
+    title: 'New Sports Report',
+    roles: ['staff'],
+    nav: 'reports',
+    render: (viewer) => <SportsReportFormPage viewer={viewer} />,
+  },
+  {
+    path: '/reports/sports/:reportId',
+    title: 'Sports Report',
+    roles: ['staff'],
+    nav: 'reports',
+    render: (viewer) => <SportsReportRoute viewer={viewer} />,
+  },
+  {
+    path: '/reports/sports/:reportId/edit',
+    title: 'Edit Sports Report',
+    roles: ['staff'],
+    nav: 'reports',
+    render: (viewer) => <SportsReportEditRoute viewer={viewer} />,
   },
   {
     path: paths.auditLog,
     title: 'Audit Log',
     roles: ['staff', 'admin'],
     nav: 'auditLog',
-    shell: true,
     render: (viewer) => <AuditLogPage viewer={viewer} />,
   },
   {
     path: paths.privacyPolicy,
     title: 'Privacy Policy',
-    roles: ['staff', 'admin', 'instructor'],
+    roles: ['staff', 'admin'],
     nav: null,
-    shell: true,
-    instructorShell: true,
     render: (viewer) => <PrivacyPolicyPage viewer={viewer} />,
   },
   {
     path: paths.users,
     title: 'User Accounts',
-    roles: ['staff'],
+    roles: ['admin'],
     nav: 'accounts',
-    shell: true,
-    render: () => <UserListPage />,
+    render: (viewer) => <UserListPage viewer={viewer} />,
   },
   {
     path: paths.userNew,
     title: 'Add User',
-    roles: ['staff'],
+    roles: ['admin'],
     nav: 'accounts',
-    shell: true,
-    render: () => <UserFormPage />,
+    render: (viewer) => <UserFormPage viewer={viewer} />,
   },
   {
     path: '/users/:userId/edit',
     title: 'Edit User',
-    roles: ['staff'],
+    roles: ['admin'],
     nav: 'accounts',
-    shell: true,
-    render: () => <UserFormRoute />,
+    render: (viewer) => <UserFormRoute viewer={viewer} />,
   },
   {
     path: paths.backup,
     title: 'Backup',
-    roles: ['staff'],
+    // ADR-037: the Admin/Principal gets Backup too, with the same abilities as Staff.
+    roles: ['staff', 'admin'],
     nav: 'backup',
-    shell: true,
     render: () => <BackupStatusPage />,
   },
 ]
@@ -499,17 +451,7 @@ function RouteLoading() {
   )
 }
 
-function withShell(
-  user: SessionUser,
-  nav: NavKey | null,
-  content: ReactNode,
-  onLogout: () => void,
-  allowInstructorShell = false,
-) {
-  // Instructor has no shell, so the read-only profile needs its own main landmark.
-  if (user.role === 'instructor' && !allowInstructorShell) {
-    return <main id="main-content">{content}</main>
-  }
+function withShell(user: SessionUser, nav: NavKey | null, content: ReactNode, onLogout: () => void) {
   return (
     <AppShell user={user} active={nav} onLogout={onLogout}>
       {content}
@@ -565,7 +507,7 @@ export function AppRoutes({
         const allowed = route.roles.includes(user.role)
         const content = (
           <PageTitle title={route.title}>
-            <Suspense fallback={<RouteLoading />}>{route.render(user, onLogout)}</Suspense>
+            <Suspense fallback={<RouteLoading />}>{route.render(user)}</Suspense>
           </PageTitle>
         )
         return (
@@ -574,11 +516,9 @@ export function AppRoutes({
             path={route.path}
             element={
               !allowed ? (
-                <Navigate to={homePathFor(user.role)} replace />
-              ) : route.shell ? (
-                withShell(user, route.nav, content, onLogout, route.instructorShell)
+                <Navigate to={paths.dashboard} replace />
               ) : (
-                content
+                withShell(user, route.nav, content, onLogout)
               )
             }
           />
@@ -592,7 +532,7 @@ export function AppRoutes({
               user,
               null,
               <PageTitle title="Page Not Found">
-                <NotFoundPage home={homePathFor(user.role)} />
+                <NotFoundPage home={paths.dashboard} />
               </PageTitle>,
               onLogout,
             )

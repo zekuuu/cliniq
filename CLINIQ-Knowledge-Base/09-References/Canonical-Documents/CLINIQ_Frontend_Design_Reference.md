@@ -6,17 +6,17 @@ This is a companion to `CLINIQ_Frontend_Context_Brief.md` (the fuller technical/
 
 ## 1. Project Context
 
-CLINIQ is a clinic tracking and monitoring system for Mendez Christian Academy, a private school in Cavite, Philippines, serving 900+ students with a single school nurse and one shared workstation. Users are not technical — the design has to be immediately understandable to someone who has never used a professional web app, without looking childish or oversimplified. Most screens run on one desktop workstation; a few (the QR scan flows) run on personal mobile phones over the school Wi-Fi.
+CLINIQ is a clinic tracking and monitoring system for Mendez Christian Academy, a private school in Cavite, Philippines, serving 900+ students with a single school nurse and one shared workstation. Users are not technical — the design has to be immediately understandable to someone who has never used a professional web app, without looking childish or oversimplified. Most screens run on one desktop workstation; every screen keeps a usable layout at phone width.
 
 ## 2. User Roles & Permissions
 
 | Role | Can do |
 |---|---|
-| **Staff** (nurse/clinic assistant) | Full read/write on everything — students, visits, incidents, inventory; generates reports; manages accounts; uses the QR hub on computer and mobile |
-| **Admin/Principal** | Read-only: reports and the Clinic Overview Dashboard. No edit access anywhere |
-| **PE/Sports Instructor** | Mobile-only, read-only: scans or types a Student Number to view a student's full profile and visit/incident history. No buttons, no editing |
+| **Staff** (nurse/clinic assistant) | Full read/write on everything — students, visits, incidents, inventory; generates reports; manages accounts |
+| **Admin/Principal** | Read-only: reports and the Clinic Overview Dashboard. Manages every account (ADR-033); no other edit access |
+| **PE/Sports Instructor** | No account and no access (ADR-029). An instructor asks the clinician, who decides what to share |
 
-**Display-privacy rule — affects how student names appear across the system:** a screen showing a **list of multiple students at once** (visit logs, incident logs, the dashboard's frequent-visitor section) shows the **Student Number**, not the name — these are the screens a bystander could glance at on a desktop monitor. A screen showing **one specific, deliberately-identified student** (a QR scan result, the full profile, search results, the masterlist) shows the **full name** normally. Design both list rows and detail views with this in mind — a list row template should have no name field at all; a detail/card template should lead with the name prominently.
+**Display-privacy rule — affects how student names appear across the system:** a screen showing a **list of multiple students at once** (visit logs, incident logs, the dashboard's frequent-visitor section) shows the **masked LRN**, not the name — these are the screens a bystander could glance at on a desktop monitor. A screen showing **one specific, deliberately-identified student** (the full profile, search results, the masterlist) shows the **full name** normally. Design both list rows and detail views with this in mind — a list row template should have no name field at all; a detail/card template should lead with the name prominently.
 
 ## 3. Full Design System
 
@@ -80,7 +80,7 @@ Readable text, adequate contrast, clear labels, obviously-interactive elements, 
 ### Feedback & System States
 Every screen needs defined looks for: loading, saving, success, error, warning, empty data, disabled, hover, focus, completed action. Messages concise and actionable — "Unable to save changes. Please check the required fields," never a raw technical error.
 
-**Loading = skeleton screens, every page, not spinners, not blank.** Gray placeholder shapes matching the final layout, shown while data is in flight. Makes a load feel faster on the 4GB RAM target hardware, and reassures non-technical staff who'd otherwise read a blank screen as "did it freeze?" Applies to every list, table, card grid, and detail view — including a form pre-filling from a QR scan, which skeletons the fields being populated rather than sitting blank. A button's own save-in-progress spinner is separate and narrower — it doesn't need a full-page skeleton.
+**Loading = skeleton screens, every page, not spinners, not blank.** Gray placeholder shapes matching the final layout, shown while data is in flight. Makes a load feel faster on the 4GB RAM target hardware, and reassures non-technical staff who'd otherwise read a blank screen as "did it freeze?" Applies to every list, table, card grid, and detail view — including a form pre-filling from a search result, which skeletons the fields being populated rather than sitting blank. A button's own save-in-progress spinner is separate and narrower — it doesn't need a full-page skeleton.
 
 ### Modals & Confirmation
 Only for real value — don't interrupt for harmless, reversible actions. For destructive/irreversible actions: explain what will happen, visually distinguish the destructive option, make cancellation obvious, never let destructive and safe actions look visually identical.
@@ -103,11 +103,11 @@ Design these five in full detail first. Everything else in the system should be 
 1. **Header** — page title, current date, a date-range filter control
    - **Staff shortcuts (Staff only, directly under the header):** a quick **New Visit** action and a minimal **backup-status indicator** (status + last-backup date) that links to the full Backup screen. Both are navigation, not edits, so the Dashboard stays view-only. Admin/Principal doesn't see this strip, since that role can open neither destination.
 2. **Stat card row** — 3–4 cards: today's visit count, incident count, pending/incomplete records count, low-stock item count. Each: icon, large number, label, optional small trend indicator
-3. **Alerts section** — three compact list groups, each row using the list-row pattern (Student Number, not name, per the display-privacy rule):
-   - Due/upcoming follow-ups (student number, reason, due date, status badge)
-   - Frequent-visitor warnings (student number, visit count, `warning`-colored badge — labeled clearly as a warning, never styled to look like a diagnosis)
+3. **Alerts section** — three compact list groups, each row using the list-row pattern (masked LRN, not name, per the display-privacy rule):
+   - Due/upcoming follow-ups (masked LRN, reason, due date, status badge)
+   - Frequent-visitor warnings (masked LRN, visit count, `warning`-colored badge — labeled clearly as a warning, never styled to look like a diagnosis)
    - Low-stock / nearing-expiration inventory items (item name — not student-linked, no privacy concern here)
-   - **Excuse letters awaiting approval (Staff only, below the alert groups):** shown only while drafts exist. Each row shows the Student Number and links to its letter page. It is navigation only, so the Dashboard stays view-only and writes no audit entries. Admin/Principal doesn't see it, since that role can't open the letter page (ADR-011 amendment, October 07, 2026).
+   - **Excuse letters awaiting approval (Staff only, below the alert groups):** shown only while drafts exist. Each row shows the masked LRN and links to its letter page. It is navigation only, so the Dashboard stays view-only and writes no audit entries. Admin/Principal doesn't see it, since that role can't open the letter page (ADR-011 amendment, October 07, 2026).
 4. **Trends chart** — common complaints by week/month (bar or line chart), plus a symptom-clustering indicator (a simple highlighted marker on the chart, not a separate widget)
 5. **Calendar view** — toggle control for weekly / monthly / yearly, a calendar grid showing visit+incident count intensity per day (heatmap-style shading), and any free-text event tag Staff attached to a visit/incident shown as small text on the relevant day
 6. **Export/print button**
@@ -124,9 +124,9 @@ Design these five in full detail first. Everything else in the system should be 
 **Why this one:** the richest **form** screen, including a dynamic embedded panel and an inline prompt at the end — the pattern every other data-entry screen should follow.
 
 **Layout, top to bottom:**
-1. **Student header** — name, Student Number, grade level (already identified via search, scan, or manual entry before reaching this screen)
+1. **Student header** — name, masked LRN, grade level (picked on the form)
 2. **Complaint field** — dropdown or searchable select
-3. **Smart Triage panel** — appears dynamically the moment a complaint is selected: a titled checklist card ("Suggested first-aid steps for: [complaint]"), checkboxes, visually distinct from the surrounding form (e.g., `surface` background) so it reads as guidance, not a required field
+3. **First-aid checklist panel** — appears dynamically the moment a complaint is selected: a titled checklist card ("Suggested first-aid steps for: [complaint]"), checkboxes, visually distinct from the surrounding form (e.g., `surface` background) so it reads as guidance, not a required field
 4. **Treatment field** — textarea
 5. **Disposition** — segmented control or radio group: Returned to class / Sent home / Referred to hospital
 6. **Follow-up prompt** — a collapsed/inline section at the bottom: "Does this student need a follow-up?" toggle; expanding it reveals a date picker, reason field, and optional notes — this should feel like a natural continuation of the same form, not a popup interruption
@@ -139,12 +139,12 @@ Design these five in full detail first. Everything else in the system should be 
 ---
 
 ### Reference 3 — Student Profile (Full Record View)
-*(Staff sees Edit/Archive actions; PE/Sports Instructor sees the identical layout read-only, no action buttons)*
+*(Staff sees Edit/Archive actions)*
 
 **Why this one:** the richest **detail/read** screen — the template for viewing any single record in depth (a visit, an incident, an inventory item, a follow-up).
 
 **Layout, top to bottom:**
-1. **Header** — full name (large), Student Number (smaller, secondary), grade level, an archived-status badge if applicable
+1. **Header** — full name (large), the full LRN (smaller, secondary; the profile is the one screen that shows it in full), grade level, an archived-status badge if applicable
 2. **Sectioned content** (tabs or stacked sections, designer's call, but pick one pattern and reuse it everywhere else this applies): Overview (demographics, emergency contact), Medical History (allergies and conditions as tag/chip components), Visit History (chronological list), Incident History (chronological list, including which are Stage 1/incomplete vs complete)
 3. **Actions** (Staff only) — Edit, Print, Archive. Archive should visually read as a lower-emphasis, non-destructive action (it's reversible and doesn't delete anything) — don't style it like a destructive button
 
@@ -154,23 +154,8 @@ Design these five in full detail first. Everything else in the system should be 
 
 ---
 
-### Reference 4 — QR Scan/Lookup Hub + Quick-Actions (Mobile)
-*(Staff and PE/Sports Instructor both use a version of this — the only screens in the system designed mobile-first)*
-
-**Why this one:** the only genuinely mobile-native pattern in CLINIQ, and it needs to work one-handed, in a hurry, possibly outdoors (PE field) or in a crowded hallway.
-
-**Layout — Staff version:**
-1. **Entry screen** — one large, unmistakable "Scan QR Code" button (camera icon) as the dominant element; a secondary "Enter Student Number manually" link/input below it for the fallback path
-2. **Post-identification — Quick-Actions** — student header (full name, since this is a deliberate single lookup), then a grid or stack of large, thumb-friendly action buttons: **Record Visit**, **Log Emergency**, **View Full Profile**, **Dispense Medicine**
-3. **Emergency button** — treated as visually distinct and more urgent than the others (a `warning`-or-stronger color treatment, not the calm brand green), and reachable even faster than the others if a scan just happened
-
-**Layout — Instructor version:**
-1. Same entry screen (scan or manual entry)
-2. Post-identification — a read-only profile card (allergies, conditions, emergency contact, injury/visit history) with **no buttons at all** — make the absence of actions visually obvious (no greyed-out buttons implying near-clickability), just a clean stop-here display
-
-**Components this exercises:** large touch-target buttons (bigger than the desktop button scale), camera/scanner UI, manual-entry fallback input, icon+label button grid, read-only info card, urgency-styled button variant.
-
-**States:** scanning in progress, scan failed/retry, student not found (routes to the manual-entry fallback).
+### Reference 4 — (Removed)
+The QR Scan/Lookup Hub reference screen was removed with the QR feature (ADR-027). The number is kept so Reference 5 keeps its number.
 
 ---
 
@@ -180,7 +165,7 @@ Design these five in full detail first. Everything else in the system should be 
 **Why this one:** the only screen in the system with an explicit incomplete/complete status lifecycle, and the one place urgency should visibly shape the design.
 
 **Layout — Stage 1 (fast capture):**
-1. **Student header** (from the QR/quick-action flow that led here)
+1. **Student header** (picked on the form)
 2. **Complaint field** and a **minimal vitals field group** (2–3 key fields only) — deliberately short
 3. **Save button** — styled with urgency in mind (bigger, higher-contrast, `warning`-adjacent treatment) since speed matters more than anything else on this screen
 4. **Post-save** — a clear "Needs completion" status badge/banner, not just a generic success toast
@@ -188,7 +173,7 @@ Design these five in full detail first. Everything else in the system should be 
 **Layout — Stage 2 (complete later, same record reopened):**
 1. Stage 1 fields shown filled-in (editable or read-only, designer's call), status badge now showing "In progress"
 2. **Additional fields unlocked:** full vitals, treatment notes, hospital referral group (destination, transport mode, departure time)
-3. **Parent Notification log** — a repeatable list of attempts, each with an outcome (Reached / Not Reached / Voicemail / Left Message) and a timestamp — this is a multi-attempt log pattern, not a single field
+3. **Parent Notification log** — a repeatable list of attempts, each with an outcome (Reached / No answer / Left message or voicemail / Wrong number), who was called, and a timestamp — this is a multi-attempt log pattern, not a single field
 4. Status badge changes to "Complete" once saved with all required fields present
 
 **Components this exercises:** urgency-styled primary button, stage/status badge (three states: Needs completion → In progress → Complete), multi-attempt log list, timestamped entries, hospital-referral field group.
@@ -205,7 +190,7 @@ Design these five in full detail first. Everything else in the system should be 
 | Any other detail/single-record view (Inventory Item Detail, Incident Detail, Visit Detail, Follow-Up Detail) | **Reference 3** (Student Profile) |
 | Any other list view (Visit Log List, Incident Log List, Follow-Up List, Inventory List, User List) | The list-row + status-badge pattern from **Reference 1**'s alerts section |
 | Login, Force Password Change | Simplest form treatment from **Reference 2**, no dynamic panels needed |
-| Reports (Monthly, Incident, Health Summary) and print layouts | **Reference 3**'s sectioned-content pattern, adapted for print (no action buttons, no interactive elements) |
+| Reports (Monthly, Incident register, Complaint summary) and print layouts | **Reference 3**'s sectioned-content pattern, adapted for print (no action buttons, no interactive elements) |
 | Backup Status screen | **Reference 5**'s status-badge concept (backup status is also a lifecycle: last run → verified → needs attention) |
 
 ## 6. Full Screen Inventory

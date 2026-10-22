@@ -12,7 +12,6 @@ app/
 │   ├── StudentRecords/{Controllers,Models,Requests,Services}/
 │   ├── ClinicVisits/
 │   ├── EmergencyResponse/
-│   ├── QrDigitalHealthId/
 │   ├── InventoryTracker/
 │   ├── Dashboard/
 │   ├── ReportsGeneration/

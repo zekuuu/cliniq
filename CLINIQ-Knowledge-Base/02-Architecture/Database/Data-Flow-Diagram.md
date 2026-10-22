@@ -1,6 +1,6 @@
 # Data Flow Diagram
 
-**Status: first draft, built from already-documented requirements.** External entities come directly from the Project Plan's External Interfaces table (§2.1); processes map directly to the 10 modules already fully specified in Modules & Features. Not waiting on an external SRS — this is that artifact's first draft.
+**Status: first draft, built from already-documented requirements.** External entities come directly from the Project Plan's External Interfaces table (§2.1); processes map directly to the modules already fully specified in Modules & Features (Module 6 was removed, ADR-027). Not waiting on an external SRS — this is that artifact's first draft.
 
 ## Level 0 — Context Diagram
 
@@ -10,7 +10,6 @@ The whole system as one process, showing everything that crosses its boundary.
 flowchart TD
     STAFF["👤 Staff<br/>(Nurse/Clinic Assistant)"]
     ADMIN["👤 Admin/Principal"]
-    INSTRUCTOR["👤 PE/Sports Instructor"]
     REGISTRAR["🏫 Registrar's Office"]
     PARENT["👨‍👩‍👧 Parent/Guardian"]
     IT["🛠️ Outsourced IT Provider"]
@@ -18,12 +17,10 @@ flowchart TD
     CLINIQ(("CLINIQ<br/>System"))
 
     REGISTRAR -->|student roster data| CLINIQ
-    STAFF -->|visit/incident/inventory records, QR scans| CLINIQ
+    STAFF -->|visit/incident/inventory records| CLINIQ
     CLINIQ -->|student records, dashboards, reports| STAFF
     ADMIN -->|report requests| CLINIQ
     CLINIQ -->|reports, dashboard summary| ADMIN
-    INSTRUCTOR -->|QR scan / student number| CLINIQ
-    CLINIQ -->|read-only student profile + injury history| INSTRUCTOR
     STAFF -->|phone call, outside the system| PARENT
     STAFF -->|logs notification outcome| CLINIQ
     CLINIQ -->|backup status| IT
@@ -40,7 +37,6 @@ Breaking the single CLINIQ process into its constituent modules and data stores.
 flowchart TD
     STAFF["👤 Staff"]
     ADMIN["👤 Admin/Principal"]
-    INSTRUCTOR["👤 PE/Sports Instructor"]
     REGISTRAR["🏫 Registrar's Office"]
 
     P1(("1.0<br/>User<br/>Management"))
@@ -48,7 +44,6 @@ flowchart TD
     P3(("3.0<br/>Clinic Visit<br/>Monitoring"))
     P4(("4.0<br/>Emergency<br/>Response"))
     P5(("5.0<br/>Reports<br/>Generation"))
-    P6(("6.0<br/>QR Digital<br/>Health ID"))
     P7(("7.0<br/>Smart<br/>Triage"))
     P8(("8.0<br/>Inventory<br/>Tracker"))
     P9(("9.0<br/>Clinic Overview<br/>Dashboard"))
@@ -79,12 +74,6 @@ flowchart TD
     P4 <-->|incident records| DS4
     DS5 <-.->|follow-up prompt| P4
 
-    STAFF -->|scan/lookup| P6
-    INSTRUCTOR -->|scan/lookup, read-only| P6
-    P6 -->|identifies student for| P3
-    P6 -->|identifies student for| P4
-    P6 -->|reads| DS2
-
     STAFF -->|dispense/restock| P8
     P8 <-->|stock levels| DS6
 
@@ -108,12 +97,11 @@ flowchart TD
     P2 -.->|logs every action| DS7
     P3 -.->|logs every action| DS7
     P4 -.->|logs every action| DS7
-    P6 -.->|logs every scan| DS7
 ```
 
 Dotted lines into `D7: Audit Log` represent the cross-cutting requirement that every module writes to it — not a data flow specific to any one process (Modules & Features, "Audit Trail" section; `.claude/skills/cliniq-audit-trail/`).
 
 ## Notes
 
-- Smart Triage (7.0) has no data store of its own — it's a stateless lookup (complaint type → checklist content) surfaced inside Visit Monitoring, not a persisted record, matching how it's described in Modules & Features ("not a standalone page — a checklist panel embedded in New Visit Entry").
+- First-aid checklist (7.0) has no data store of its own — it's a stateless lookup (complaint type → checklist content) surfaced inside Visit Monitoring, not a persisted record, matching how it's described in Modules & Features ("not a standalone page — a checklist panel embedded in New Visit Entry").
 - Follow-Up (D5) is drawn as shared between Visit Monitoring and Emergency Response, since a follow-up can originate from either — matches the "same feature, two entry points" note already established.

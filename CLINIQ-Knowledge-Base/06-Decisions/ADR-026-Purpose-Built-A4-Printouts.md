@@ -2,6 +2,8 @@
 
 **Date:** Thursday, October 15, 2026 — 23:02
 **Status:** Accepted (requested by Zean, project team; details agent-decided)
+**Note (Wednesday, October 21, 2026 — 01:09):** the QR feature this ADR mentions was removed (ADR-027, [2026-10-21-remove-qr-feature](../08-Logs/Agent-Sessions/2026-10-21-remove-qr-feature.md)); the rest of the decision stands.
+**Note (Wednesday, October 21, 2026 — 07:00):** the CLINIQ Student Number this ADR mentions was replaced by the LRN (ADR-028, [2026-10-21-lrn-replaces-student-number](../08-Logs/Agent-Sessions/2026-10-21-lrn-replaces-student-number.md)); lists show it masked. The rest of the decision stands.
 
 ## Context
 Seven screens have a Print / Save as PDF action: the Clinic Overview Dashboard, Reports, the Excuse
@@ -46,6 +48,8 @@ The Monthly Report's interim contents: totals with the previous month beside the
 share), dispositions, follow-ups by status, medicines and supplies given (dispenses minus visit-edit
 returns, by item), the incident list, a prepared-by line, and signature lines. "What belongs in the
 Monthly Report?" stays open for the nurse and the school.
+
+**Added Wednesday, October 21, 2026 — 07:23:** the **Sports Report** (ADR-034, [2026-10-21-sports-report](../08-Logs/Agent-Sessions/2026-10-21-sports-report.md)) is a further document on the same components: full names (a decided exception), its own confidentiality line for the PE/Sports Instructor, signature lines for the clinician and the instructor, and the content read again at the moment of printing.
 
 This supersedes ADR-025's "Print prints everything, whichever view is open": the Dashboard now prints
 the Clinic Overview Report whichever view is open.

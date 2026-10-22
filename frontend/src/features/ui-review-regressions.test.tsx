@@ -3,25 +3,15 @@ import { useState } from 'react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// jsdom has no Web Worker, which the real scanner needs. A camera that fails to start is exactly the
-// case under test here ("Camera scan is unavailable").
-vi.mock('qr-scanner', () => ({
-  default: class {
-    start() {
-      return Promise.reject(new Error('Camera unavailable in tests'))
-    }
-    stop() {}
-    destroy() {}
-  },
-}))
-
 // jsdom has no canvas. Replace the chart with a stub that keeps its accessible label.
 vi.mock('react-chartjs-2', () => {
   const Stub = (props: { 'aria-label'?: string }) => <div role="img" aria-label={props['aria-label']} />
   return { Bar: Stub, Line: Stub }
 })
 import { renderWithRouter } from '../test/renderWithRouter'
-import { db } from '../lib/mock-db/store'
+import { confirmItsYou } from '../test/confirmItsYou'
+import { selectOption } from '../test/selectOption'
+import { incidentCompletionBlocker } from '../lib/itemsGiven'
 import { getGradeLevels, getRecordedAuditEntries, getStudent, listIncidents, listVisits, resetMockDb } from '../lib/mock-db'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
 import { IncidentReportPage } from './emergency-response/IncidentReportPage'
@@ -32,7 +22,6 @@ import { AuditLogPage } from './audit-log/AuditLogPage'
 import { BackupStatusPage } from './backup/BackupStatusPage'
 import { DashboardPage } from './dashboard/DashboardPage'
 import { useAsyncData } from '../hooks/useAsyncData'
-import { QrMobileHubPage } from './qr-digital-health-id/mobile/QrMobileHubPage'
 import { Button, Modal } from '../components'
 import { AppShell } from '../layouts/AppShell'
 
@@ -45,22 +34,25 @@ describe('UI/UX review regressions', () => {
 
   it('archives a student only after a confirmation step, then shows the archived badge', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<StudentProfilePage studentNumber="2026-00001" />)
+    renderWithRouter(<StudentProfilePage studentId="student-0001" />)
 
     await user.click(await screen.findByRole('button', { name: 'Archive' }))
     const dialog = screen.getByRole('dialog', { name: 'Archive this student record?' })
     expect(getRecordedAuditEntries()).toEqual([])
 
     await user.click(within(dialog).getByRole('button', { name: 'Archive Record' }))
+    // Panel review AC-7: archiving asks for the password; the confirmation is audited too.
+    await confirmItsYou(user)
     expect(await screen.findByText('Archived')).toBeInTheDocument()
-    expect((await getStudent('2026-00001')).archived).toBe(true)
-    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['archive'])
+    expect((await getStudent('student-0001')).archived).toBe(true)
+    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['login', 'archive'])
     expect(screen.queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument()
   })
 
   it('labels incident vitals in plain language and confirms report approval', async () => {
     const user = userEvent.setup()
-    const [incident] = await listIncidents()
+    // Panel review IN-3: only a record with care, a notification or a referral can be approved.
+    const incident = (await listIncidents()).find((item) => !incidentCompletionBlocker(item))!
     renderWithRouter(<IncidentReportPage incidentId={incident.id} />)
 
     await screen.findByRole('heading', { name: 'Incident Report' })
@@ -79,8 +71,10 @@ describe('UI/UX review regressions', () => {
     const dialog = screen.getByRole('dialog', { name: 'Approve this incident report?' })
     expect(getRecordedAuditEntries()).toEqual([])
     await user.click(within(dialog).getByRole('button', { name: 'Approve Report' }))
+    // Panel review AC-7: approving asks for the password; the confirmation is audited too.
+    await confirmItsYou(user)
     expect(await screen.findByText('Report approved and logged.')).toBeInTheDocument()
-    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['approve'])
+    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['login', 'approve'])
 
     // Signed off: it can't be approved again, and only it is marked approved in the picker.
     expect(screen.getByRole('button', { name: 'Approved' })).toBeDisabled()
@@ -109,7 +103,7 @@ describe('UI/UX review regressions', () => {
     expect(screen.getByText(`Showing 1–10 of ${total} visits`)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Next' }))
     expect(screen.getByText(`Showing 11–20 of ${total} visits`)).toBeInTheDocument()
-    await user.type(screen.getByLabelText('Search'), '2026')
+    await user.type(screen.getByLabelText('Search'), '00000026')
     expect(await screen.findByText(/^Showing 1–/)).toBeInTheDocument()
   })
 })
@@ -160,11 +154,14 @@ describe('UI/UX review follow-up fixes', () => {
 
   it('rejects a username another account already uses, case-insensitively', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<UserFormPage />)
+    renderWithRouter(<UserFormPage viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }} />)
 
     await screen.findByRole('heading', { level: 1, name: 'Add User' })
     await user.type(screen.getByLabelText(/full name/i), 'Test Person')
     await user.type(screen.getByLabelText(/username/i), 'Demo.Nurse')
+    await user.type(screen.getByLabelText(/temporary password/i), 'temp-pass-123')
+    // Panel review AC-4: no role is pre-selected.
+    await selectOption(user, screen.getByLabelText(/^role/i), 'School Clinician')
     await user.click(screen.getByRole('button', { name: 'Create User' }))
 
     expect(await screen.findByText('Another account already uses this username. Choose a different one.')).toBeInTheDocument()
@@ -188,21 +185,6 @@ describe('UI/UX review follow-up fixes', () => {
     await act(async () => resolveSecond('second'))
     expect(result.current.data).toBe('second')
     expect(result.current.isRefetching).toBe(false)
-  })
-
-  it('clears a previous "Student not found" message when a camera scan starts', async () => {
-    const user = userEvent.setup()
-    renderWithRouter(<QrMobileHubPage />)
-
-    // The student leaves the records between the search and the pick, so the lookup can't find them.
-    await user.type(screen.getByRole('combobox', { name: /student number or student name/i }), '202600001')
-    await screen.findByRole('option', { name: /2026-00001/ })
-    db().students = db().students.filter((student) => student.studentNumber !== '2026-00001')
-    await user.keyboard('{Enter}')
-    expect(await screen.findByText('Student not found.')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Scan QR Code' }))
-    expect(screen.queryByText('Student not found.')).not.toBeInTheDocument()
   })
 
   it('does not expose sidebar nav groups as landmark regions', () => {
@@ -238,7 +220,7 @@ describe('UI/UX review Group B decisions', () => {
     expect(screen.queryByRole('link', { name: 'New Visit' })).not.toBeInTheDocument()
   })
 
-  it('asks for the Student Number on New Visit instead of using a default student', async () => {
+  it('asks for the LRN on New Visit instead of using a default student', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
 
@@ -250,13 +232,13 @@ describe('UI/UX review Group B decisions', () => {
     expect(screen.getByText(/choose the student/i)).toBeInTheDocument()
     expect(getRecordedAuditEntries()).toEqual([])
 
-    await user.type(screen.getByRole('combobox', { name: /student/i }), '2026-00001')
-    await screen.findByRole('option', { name: /2026-00001/ })
+    await user.type(screen.getByRole('combobox', { name: /student/i }), '000000260001')
+    await screen.findByRole('option', { name: /LRN ending in 0001/ })
     await user.keyboard('{Enter}')
     await screen.findByRole('button', { name: /change student/i })
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
     expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
-    const student = await getStudent('2026-00001')
+    const student = await getStudent('student-0001')
     const visits = await listVisits()
     expect(visits.some((visit) => visit.studentId === student.id && visit.treatment === 'Rested in clinic.')).toBe(true)
     // Ready for the next student: the field is back and empty.
@@ -283,7 +265,7 @@ describe('UI/UX review Group B decisions', () => {
     renderWithRouter(<AuditLogPage viewer={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} />)
 
     const table = await screen.findByRole('table', { name: 'Filtered audit log' })
-    expect(table.textContent).not.toMatch(/\b(visit|incident|item|student|user|followup)-(staff-|admin-|instructor-)?\d{2,4}\b/)
-    expect(table.textContent).toMatch(/(Visit|Incident)\d{4}-\d{5}/)
+    expect(table.textContent).not.toMatch(/\b(visit|incident|item|student|user|followup)-(staff-|admin-)?\d{2,4}\b/)
+    expect(table.textContent).toMatch(/(Visit|Incident)•{8}\d{4}/)
   })
 })

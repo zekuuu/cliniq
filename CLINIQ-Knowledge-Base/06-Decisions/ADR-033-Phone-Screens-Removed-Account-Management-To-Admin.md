@@ -1,7 +1,8 @@
 # ADR-033: Phone-Only Screens Are Removed, Account Management Moves to the Admin/Principal, and the QR Removal Goes Ahead (Reversible)
 
 **Date:** Tuesday, October 20, 2026 — 23:25
-**Status:** Accepted (requested by Zean; recorded only: **nothing is built or removed yet**). **Amended Tuesday, October 20, 2026 — 23:36:** Zean decided to remove QR now with the others; the earlier hold on the QR removal is kept only as a note (item 3).
+**Status:** Accepted (requested by Zean). The QR removal (item 3) is built (Wednesday, October 21, 2026 — 01:09, [2026-10-21-remove-qr-feature](../08-Logs/Agent-Sessions/2026-10-21-remove-qr-feature.md)); the phone-only screens (item 1) were removed Wednesday, October 21, 2026 — 01:47 ([2026-10-21-remove-phone-screens-and-instructor](../08-Logs/Agent-Sessions/2026-10-21-remove-phone-screens-and-instructor.md)); the account-management move (item 2) was built Wednesday, October 21, 2026 — 06:35 ([2026-10-21-account-management-to-admin](../08-Logs/Agent-Sessions/2026-10-21-account-management-to-admin.md)). All three items are built. **Amended Tuesday, October 20, 2026 — 23:36:** Zean decided to remove QR now with the others; the earlier hold on the QR removal is kept only as a note (item 3).
+**Note (Thursday, October 22, 2026 — 15:51):** the open question "whether the Admin also gets Backup" is decided: yes, the Admin gets Backup with the same abilities as Staff (ADR-037, Zean, Thursday, October 22, 2026 — 15:44). Not built yet.
 
 ## Context
 ADR-027 dropped the QR feature and the CLINIQ Student Number, ADR-028 made the LRN the identifier, and ADR-029 removed the PE/Sports Instructor's direct access and settled that CLINIQ runs locally, with the Principal signing in at the clinic computer. Two things were left open: what happens to the phone-only pieces (the phone Emergency screen and the phone menu entry), and who manages accounts. Today the Users routes are Staff-only, so the nurse manages accounts, and the Admin sidebar has only Overview and Reporting.
@@ -14,7 +15,7 @@ Zean, Tuesday, October 20, 2026 — 23:23: asked for one prompt that removes the
 3. **The QR removal goes ahead now, with a note that it was on hold.** It had been held until the client was confirmed not to agree to online hosting (QR needs phones to reach the system, which a local-only deployment cannot do). Zean decided to remove it now, together with the others. It is **reversible**: the last commit that still has QR is tagged before the deletion, so if the client later agrees to online hosting QR can be restored from the tag. ADR-027 is unchanged.
 4. The other removals (Student Number to LRN, the PE Instructor role, the phone-only screens) are not on hold.
 
-**Not decided here** (open `DECIDE` entries): whether the Admin also gets Backup; who manages accounts when the Admin is absent or has left, and how a replacement Admin is made; the LRN display, format and key rules (still open, see ADR-028).
+**Not decided here** (open `DECIDE` entries): whether the Admin also gets Backup (decided later: yes, ADR-037); who manages accounts when the Admin is absent or has left, and how a replacement Admin is made; the LRN display, format and key rules (still open, see ADR-028).
 
 ## Alternatives Considered
 - **Keep account management with Staff** (today). Rejected by Zean's request: the Principal is the one who should decide who has access.

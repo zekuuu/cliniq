@@ -58,7 +58,7 @@ export function LogbookFields({
             onChange={(event) => set('assistedBy', event.target.value)}
           />
           <Input
-            label="Parent/Guardian"
+            label="Parent or guardian"
             value={values.parentGuardian}
             onChange={(event) => set('parentGuardian', event.target.value)}
           />

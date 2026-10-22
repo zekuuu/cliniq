@@ -6,33 +6,34 @@ import type { MockDbSeed } from './types'
  * Run by `integrity.test.ts`, and by the store on load so a bad hand-edit fails loudly.
  *
  * Checks: exact field sets per record (catches typos AND stored derived values), readable unique
- * ids, Student Number format/uniqueness (ADR-005), every cross-record reference, enum values, and
+ * ids, LRN format/uniqueness (ADR-028), every cross-record reference, enum values, and
  * relative-date syntax. No validation library on purpose (ADR-014): plain functions + Vitest.
  */
 
-export const STUDENT_NUMBER = /^\d{4}-\d{5}$/
+/** The LRN: exactly 12 digits, kept as text (ADR-028). */
+export const LRN_PATTERN = /^\d{12}$/
 
 /** Longest calendar event title, so a chip stays readable (ADR-019). */
 export const CALENDAR_EVENT_TITLE_MAX = 60
 
 const FIELDS = {
   top: ['meta', 'config', 'users', 'students', 'visits', 'incidents', 'followUps', 'inventoryItems', 'reports', 'backupLogs', 'auditLog', 'frontendOnly'],
-  config: ['_note', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'vitalsWarningRanges'],
-  users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture'],
-  students: ['id', 'studentNumber', 'fullName', 'gradeLevel', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
+  config: ['_note', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges'],
+  users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture', 'deactivatedAt'],
+  students: ['id', 'lrn', 'fullName', 'gradeLevel', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
   emergencyContact: ['name', 'relationship', 'phone', 'verified'],
-  visits: ['id', 'studentNumber', 'dateTime', 'complaint', 'treatment', 'disposition', 'loggedByUserId', 'eventTag', 'itemsGiven', 'excuseLetterDraft', 'referredTo', 'temperatureC', 'timeOut', 'assistedBy', 'parentGuardian', 'remarks'],
+  visits: ['id', 'studentId', 'dateTime', 'complaint', 'treatment', 'disposition', 'loggedByUserId', 'eventTag', 'itemsGiven', 'excuseLetterDraft', 'referredTo', 'temperatureC', 'timeOut', 'assistedBy', 'parentGuardian', 'remarks'],
   excuseLetterDraft: ['excusedFrom', 'excusedUntil', 'note'],
   itemGivenLine: ['itemId', 'itemName', 'unit', 'quantity', 'instructions'],
-  incidents: ['id', 'studentNumber', 'time', 'complaint', 'vitals', 'hospitalReferral', 'parentNotifications', 'stage', 'eventTag', 'itemsGiven'],
+  incidents: ['id', 'studentId', 'time', 'complaint', 'vitals', 'hospitalReferral', 'parentNotifications', 'stage', 'eventTag', 'itemsGiven'],
   hospitalReferral: ['destination', 'transportMode', 'departureTime'],
   parentNotification: ['outcome', 'timestamp'],
-  followUps: ['id', 'studentNumber', 'relatedRecord', 'followUpDate', 'reason', 'status', 'notes', 'createdByUserId'],
+  followUps: ['id', 'studentId', 'relatedRecord', 'followUpDate', 'reason', 'status', 'notes', 'createdByUserId'],
   inventoryItems: ['id', 'name', 'category', 'currentStock', 'unit', 'expirationDate', 'lowStockThreshold'],
   reports: ['type', 'dateRange'],
   backupLogs: ['lastRun', 'fileSizeBytes', 'status', 'verifiedByUserId'],
   auditLog: ['userId', 'actionType', 'targetRecord', 'timestamp'],
-  frontendOnly: ['_note', 'devAccounts', 'visitComplaintTypes', 'incidentComplaintTypes', 'inventoryTransactions', 'recordReviews', 'excuseLetterApprovals', 'peReferrals', 'issueReports', 'calendarEvents'],
+  frontendOnly: ['_note', 'devAccounts', 'visitComplaintTypes', 'incidentComplaintTypes', 'inventoryTransactions', 'recordReviews', 'excuseLetterApprovals', 'peReferrals', 'issueReports', 'calendarEvents', 'sportsReports'],
 } as const
 
 /**
@@ -48,23 +49,23 @@ const DERIVED_FIELDS = new Set([
 ])
 
 const ENUMS = {
-  role: ['staff', 'admin', 'instructor'],
-  disposition: ['returned_to_class', 'sent_home', 'referred_to_hospital'],
+  role: ['staff', 'admin'],
+  disposition: ['returned_to_class', 'sent_home', 'referred_to_hospital', 'resting_in_clinic'],
   stage: [1, 2],
   followUpStatus: ['pending', 'completed', 'missed', 'cancelled'],
   relatedType: ['visit', 'incident'],
   category: ['medicine', 'supply'],
   reportType: ['monthly', 'incident', 'health_summary'],
   backupStatus: ['ok', 'failed'],
-  actionType: ['login', 'logout', 'scan', 'submit', 'approve', 'create', 'update', 'delete', 'archive', 'print'],
-  outcome: ['reached', 'not_reached', 'voicemail', 'left_message'],
+  actionType: ['login', 'logout', 'submit', 'approve', 'create', 'update', 'delete', 'archive', 'print'],
+  outcome: ['reached', 'no_answer', 'left_message_or_voicemail', 'wrong_number'],
   sex: ['male', 'female'],
   transactionType: ['dispense', 'restock', 'adjustment'],
   adjustmentReason: ['visit_edited', 'expired_disposed', 'damaged_spilled', 'miscount_correction', 'other'],
 } as const
 
 const ID_PATTERNS: Record<string, RegExp> = {
-  users: /^user-(staff|admin|instructor)-\d{2}$/,
+  users: /^user-(staff|admin)-\d{2}$/,
   students: /^student-\d{4}$/,
   visits: /^visit-\d{4}$/,
   incidents: /^incident-\d{4}$/,
@@ -150,7 +151,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   // Users.
   list('users').forEach((u, i) => {
     const w = `users[${i}] (${String(u.id)})`
-    checkFields(w, u, FIELDS.users, ['profilePicture'])
+    checkFields(w, u, FIELDS.users, ['profilePicture', 'deactivatedAt'])
     oneOf(`${w}.role`, u.role, ENUMS.role)
     relDateTime(`${w}.lastLogin`, u.lastLogin, true)
   })
@@ -160,16 +161,17 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   if (new Set(usernames).size !== usernames.length) fail('users: duplicate username')
 
   // Students.
-  const numbers = new Set<string>()
+  const studentIds = new Set<string>()
+  const lrns = new Set<string>()
   list('students').forEach((st, i) => {
     const w = `students[${i}] (${String(st.id)})`
     // Pre-Part 3B seed exports omit Sex; `resolveSeed` supplies a clearly synthetic migration value.
     checkFields(w, st, FIELDS.students, ['sex'])
-    const number = String(st.studentNumber)
-    if (!STUDENT_NUMBER.test(number)) fail(`${w}.studentNumber: "${number}" isn't YYYY-NNNNN (ADR-005)`)
-    else if (Number(number.slice(5)) === 0) fail(`${w}.studentNumber: sequence 00000 is invalid`)
-    if (numbers.has(number)) fail(`${w}.studentNumber: duplicate "${number}"`)
-    numbers.add(number)
+    const lrn = String(st.lrn)
+    if (!LRN_PATTERN.test(lrn)) fail(`${w}.lrn: "${lrn}" isn't 12 digits (ADR-028)`)
+    if (lrns.has(lrn)) fail(`${w}.lrn: duplicate "${lrn}"`)
+    lrns.add(lrn)
+    studentIds.add(String(st.id))
     if (!Array.isArray(st.allergies) || !Array.isArray(st.medicalConditions))
       fail(`${w}: allergies and medicalConditions must be arrays`)
     if (!Array.isArray(st.emergencyContacts)) fail(`${w}.emergencyContacts: must be an array`)
@@ -177,9 +179,9 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     if (typeof st.archived !== 'boolean') fail(`${w}.archived: must be true or false`)
     if (st.sex !== undefined) oneOf(`${w}.sex`, st.sex, ENUMS.sex)
   })
-  const studentRef = (where: string, number: unknown, nullable = false) => {
-    if (nullable && number === null) return
-    if (!numbers.has(String(number))) fail(`${where}: Student Number "${String(number)}" doesn't exist`)
+  const studentRef = (where: string, id: unknown, nullable = false) => {
+    if (nullable && id === null) return
+    if (!studentIds.has(String(id))) fail(`${where}: student "${String(id)}" doesn't exist`)
   }
 
   // Complaint vocabularies (frontendOnly) that visit/incident complaints must come from.
@@ -218,14 +220,14 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   list('visits').forEach((v, i) => {
     const w = `visits[${i}] (${String(v.id)})`
     checkFields(w, v, FIELDS.visits)
-    studentRef(`${w}.studentNumber`, v.studentNumber)
+    studentRef(`${w}.studentId`, v.studentId)
     relDateTime(`${w}.dateTime`, v.dateTime)
     oneOf(`${w}.disposition`, v.disposition, ENUMS.disposition)
     userRef(`${w}.loggedByUserId`, v.loggedByUserId)
     if (userRole.has(String(v.loggedByUserId)) && userRole.get(String(v.loggedByUserId)) !== 'staff')
       fail(`${w}.loggedByUserId: only Staff log visits`)
     if (!visitComplaints.has(String(v.complaint))) fail(`${w}.complaint: "${String(v.complaint)}" isn't in frontendOnly.visitComplaintTypes`)
-    visitStudent.set(String(v.id), String(v.studentNumber))
+    visitStudent.set(String(v.id), String(v.studentId))
     if (v.excuseLetterDraft !== null) draftVisits.add(String(v.id))
     // Treatment notes and items given are both optional (a visit may record no treatment).
     checkLines(w, v)
@@ -256,7 +258,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   list('incidents').forEach((inc, i) => {
     const w = `incidents[${i}] (${String(inc.id)})`
     checkFields(w, inc, FIELDS.incidents)
-    studentRef(`${w}.studentNumber`, inc.studentNumber)
+    studentRef(`${w}.studentId`, inc.studentId)
     relDateTime(`${w}.time`, inc.time)
     oneOf(`${w}.stage`, inc.stage, ENUMS.stage)
     if (!incidentComplaints.has(String(inc.complaint))) fail(`${w}.complaint: "${String(inc.complaint)}" isn't in frontendOnly.incidentComplaintTypes`)
@@ -275,7 +277,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
       oneOf(`${w}.parentNotifications[${k}].outcome`, n.outcome, ENUMS.outcome)
       relDateTime(`${w}.parentNotifications[${k}].timestamp`, n.timestamp)
     })
-    incidentStudent.set(String(inc.id), String(inc.studentNumber))
+    incidentStudent.set(String(inc.id), String(inc.studentId))
     if (checkLines(w, inc) && inc.stage === 1) fail(`${w}.itemsGiven: Stage 1 stays fast; medicines are recorded at Stage 2`)
   })
 
@@ -283,7 +285,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   list('followUps').forEach((f, i) => {
     const w = `followUps[${i}] (${String(f.id)})`
     checkFields(w, f, FIELDS.followUps)
-    studentRef(`${w}.studentNumber`, f.studentNumber)
+    studentRef(`${w}.studentId`, f.studentId)
     relDate(`${w}.followUpDate`, f.followUpDate)
     oneOf(`${w}.status`, f.status, ENUMS.followUpStatus)
     userRef(`${w}.createdByUserId`, f.createdByUserId)
@@ -293,8 +295,8 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     const owners = related.type === 'incident' ? incidentStudent : visitStudent
     const owner = owners.get(String(related.id))
     if (!owner) fail(`${w}.relatedRecord: ${String(related.type)} "${String(related.id)}" doesn't exist`)
-    else if (owner !== f.studentNumber)
-      fail(`${w}: student ${String(f.studentNumber)} doesn't match its ${String(related.type)}'s student ${owner}`)
+    else if (owner !== f.studentId)
+      fail(`${w}: student ${String(f.studentId)} doesn't match its ${String(related.type)}'s student ${owner}`)
   })
 
   // Inventory.
@@ -353,7 +355,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     if (!ids.inventoryItems?.has(String(t.itemId))) fail(`${w}.itemId: "${String(t.itemId)}" doesn't exist`)
     oneOf(`${w}.type`, t.type, ENUMS.transactionType)
     userRef(`${w}.userId`, t.userId)
-    studentRef(`${w}.studentNumber`, t.studentNumber, true)
+    studentRef(`${w}.studentId`, t.studentId, true)
     const linked: Array<[string, Map<string, string>, unknown]> = [
       ['visit', visitStudent, t.visitId],
       ['incident', incidentStudent, t.incidentId ?? null],
@@ -362,21 +364,21 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
       if (id === null) continue
       const owner = owners.get(String(id))
       if (!owner) fail(`${w}.${kind}Id: "${String(id)}" doesn't exist`)
-      else if (t.studentNumber !== owner) fail(`${w}.studentNumber: must match ${kind} ${String(id)}'s student ${owner}`)
+      else if (t.studentId !== owner) fail(`${w}.studentId: must match ${kind} ${String(id)}'s student ${owner}`)
     }
     if (t.visitId !== null && t.incidentId != null) fail(`${w}: links both a visit and an incident`)
     relDateTime(`${w}.timestamp`, t.timestamp)
     const quantity = t.quantity as number
     if (t.type === 'adjustment') {
-      checkFields(w, t, ['id', 'itemId', 'type', 'quantity', 'timestamp', 'userId', 'studentNumber', 'visitId', 'reason', 'note'])
+      checkFields(w, t, ['id', 'itemId', 'type', 'quantity', 'timestamp', 'userId', 'studentId', 'visitId', 'reason', 'note'])
       oneOf(`${w}.reason`, t.reason, ENUMS.adjustmentReason)
       if (!Number.isInteger(quantity) || quantity === 0) fail(`${w}.quantity: an adjustment is a whole number other than 0`)
       if (t.reason === 'other' && !String(t.note ?? '').trim()) fail(`${w}.note: required when the reason is "other"`)
       if ((t.reason === 'visit_edited') !== (t.visitId !== null)) fail(`${w}: a "visit_edited" adjustment, and only that, links a visit`)
     } else {
-      checkFields(w, t, ['id', 'itemId', 'type', 'quantity', 'timestamp', 'userId', 'studentNumber', 'visitId'], ['incidentId'])
+      checkFields(w, t, ['id', 'itemId', 'type', 'quantity', 'timestamp', 'userId', 'studentId', 'visitId'], ['incidentId'])
       if (!Number.isInteger(quantity) || quantity < 1) fail(`${w}.quantity: must be a whole number ≥ 1`)
-      if (t.type === 'restock' && (t.studentNumber !== null || t.visitId !== null || t.incidentId != null))
+      if (t.type === 'restock' && (t.studentId !== null || t.visitId !== null || t.incidentId != null))
         fail(`${w}: a restock links no student, visit, or incident`)
     }
     const recordId = t.visitId ?? t.incidentId ?? null
@@ -396,7 +398,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   }
   ;((fo.recordReviews ?? []) as Rec[]).forEach((r, i) => {
     const w = `frontendOnly.recordReviews[${i}]`
-    studentRef(`${w}.studentNumber`, r.studentNumber)
+    studentRef(`${w}.studentId`, r.studentId)
     relDate(`${w}.importedAt`, r.importedAt)
     userRef(`${w}.resolvedByUserId`, r.resolvedByUserId, true)
     relDateTime(`${w}.resolvedAt`, r.resolvedAt, true)
@@ -415,8 +417,8 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   })
   ;((fo.peReferrals ?? []) as Rec[]).forEach((p, i) => {
     const w = `frontendOnly.peReferrals[${i}]`
-    studentRef(`${w}.studentNumber`, p.studentNumber)
-    userRef(`${w}.referredByUserId`, p.referredByUserId)
+    studentRef(`${w}.studentId`, p.studentId)
+    if (typeof p.referredBy !== 'string' || !p.referredBy.trim()) fail(`${w}.referredBy: must be the referrer's name`)
     oneOf(`${w}.disposition`, p.disposition, ENUMS.disposition)
     relDateTime(`${w}.createdAt`, p.createdAt)
   })
@@ -448,6 +450,28 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     userRef(`${w}.createdByUserId`, e.createdByUserId)
     relDateTime(`${w}.createdAt`, e.createdAt)
     relDateTime(`${w}.updatedAt`, e.updatedAt)
+  })
+  // Sports Reports (ADR-034): the list and notes only, never a copy of medical content.
+  const sportsReportIds = new Set<string>()
+  ;((fo.sportsReports ?? []) as Rec[]).forEach((r, i) => {
+    const w = `frontendOnly.sportsReports[${i}]`
+    checkFields(w, r, ['id', 'title', 'activity', 'requestedBy', 'window', 'includeConditions', 'students', 'archived', 'createdByUserId', 'createdAt', 'updatedAt'])
+    if (!/^sports-report-\d{4}$/.test(String(r.id))) fail(`${w}.id: "${String(r.id)}" should look like sports-report-0001`)
+    if (sportsReportIds.has(String(r.id))) fail(`${w}.id: duplicate "${String(r.id)}"`)
+    sportsReportIds.add(String(r.id))
+    if (!String(r.title ?? '').trim()) fail(`${w}.title: must not be empty`)
+    if (!String(r.requestedBy ?? '').trim()) fail(`${w}.requestedBy: must not be empty`)
+    oneOf(`${w}.window`, r.window, [30, 60, 90, 'school_year'])
+    const listed = new Set<string>()
+    ;((r.students ?? []) as Rec[]).forEach((s, j) => {
+      checkFields(`${w}.students[${j}]`, s, ['studentId', 'note'])
+      studentRef(`${w}.students[${j}].studentId`, s.studentId)
+      if (listed.has(String(s.studentId))) fail(`${w}.students[${j}].studentId: listed twice`)
+      listed.add(String(s.studentId))
+    })
+    userRef(`${w}.createdByUserId`, r.createdByUserId)
+    relDateTime(`${w}.createdAt`, r.createdAt)
+    relDateTime(`${w}.updatedAt`, r.updatedAt)
   })
 
   return problems

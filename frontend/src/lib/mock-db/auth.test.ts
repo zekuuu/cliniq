@@ -36,14 +36,14 @@ describe('frontend-first authentication boundary', () => {
   })
 
   it('requires the first-login account to choose a new password', async () => {
-    const result = await authenticateMockUser('demo.pe2', 'demo-change')
+    const result = await authenticateMockUser('demo.new', 'demo-change')
     expect(result.mustChangePassword).toBe(true)
 
     await expect(changeMockPassword(result.user.id, 'short')).rejects.toThrow('at least 8')
     await expect(changeMockPassword(result.user.id, 'demo-change')).rejects.toThrow('not used recently')
     await changeMockPassword(result.user.id, 'new-demo-password-4')
 
-    const nextLogin = await authenticateMockUser('demo.pe2', 'new-demo-password-4')
+    const nextLogin = await authenticateMockUser('demo.new', 'new-demo-password-4')
     expect(nextLogin.mustChangePassword).toBe(false)
   })
 
