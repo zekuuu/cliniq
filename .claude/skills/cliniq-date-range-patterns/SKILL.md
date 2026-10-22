@@ -12,7 +12,7 @@ Use this with `cliniq-dropdown-patterns` and `cliniq-interactive-states` wheneve
 - Reuse `frontend/src/components/ui/DateRangePicker.tsx`; do not build a second date-range menu or separate From/To filter pattern.
 - Configure the presets with All first, followed by Today, This week, This month, and Custom range. Use `presetLabels` when the underlying seven-day preset needs the user-facing label “This week”.
 - Start every date-range filter on All, so opening a screen does not hide historical records behind an arbitrary time window.
-- Exception: the Clinic Overview Dashboard is a summary view, not a record list, and opens on This month (user request, Friday, October 2, 2026 — 01:30). All stays available as its first preset.
+- Exception: the Clinic Overview Dashboard is a summary view, not a record list, and opens on Today (user request, Thursday, October 22, 2026 — 14:25 PHT). All stays available as its first preset.
 - The trigger is the same 40px control on every screen. Pass `fullWidth` when the picker sits in a grid of equal-width filters, so it fills its cell like the selects beside it.
 
 ## Custom range

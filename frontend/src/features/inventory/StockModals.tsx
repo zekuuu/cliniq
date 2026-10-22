@@ -172,7 +172,8 @@ export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryIt
 export function RestockModal({ item, onClose, onSaved }: { item: InventoryItemView; onClose: () => void; onSaved: (message: string) => void }) {
   const [quantity, setQuantity] = useState('')
   const [expirationDate, setExpirationDate] = useState('')
-  const [error, setError] = useState('')
+  const [noExpirationConfirmed, setNoExpirationConfirmed] = useState(false)
+  const [errors, setErrors] = useState<{ quantity?: string; expirationDate?: string; save?: string }>({})
   const [saving, setSaving] = useState(false)
   const invalidRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(invalidRef)
@@ -180,18 +181,25 @@ export function RestockModal({ item, onClose, onSaved }: { item: InventoryItemVi
   async function submit(event: FormEvent) {
     event.preventDefault()
     const amount = Number(quantity)
+    const nextErrors: typeof errors = {}
     if (!quantity.trim() || !Number.isInteger(amount) || amount < 1) {
-      setError('Enter the quantity received as a whole number of at least 1.')
-      invalid.report(1)
+      nextErrors.quantity = 'Enter the quantity received as a whole number of at least 1.'
+    }
+    if (!noExpirationConfirmed && !expirationDate) {
+      nextErrors.expirationDate = 'Choose an expiration date, or confirm this batch has no expiration date.'
+    }
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors)
+      invalid.report(Object.keys(nextErrors).length)
       return
     }
     setSaving(true)
     try {
-      const updated = await restockItem(item.id, amount, expirationDate)
+      const updated = await restockItem(item.id, amount, { expirationDate, noExpirationConfirmed })
       onSaved(`${item.name} restocked with ${amount} ${item.unit}. Stock is now ${updated.currentStock} ${item.unit}.`)
     } catch (caught) {
       if (!(caught instanceof StockRuleError)) throw caught
-      setError(caught.message)
+      setErrors({ save: caught.message })
     } finally {
       setSaving(false)
     }
@@ -219,18 +227,41 @@ export function RestockModal({ item, onClose, onSaved }: { item: InventoryItemVi
           min="1"
           step="1"
           value={quantity}
-          error={error}
+          error={errors.quantity}
           onChange={(event) => {
             setQuantity(event.target.value)
-            setError('')
+            setErrors((current) => ({ ...current, quantity: undefined, save: undefined }))
           }}
         />
         <DatePicker
           label="Expiration date"
           value={expirationDate}
-          hint="This is the new batch's date. Leave it blank only for items that do not expire."
-          onChange={setExpirationDate}
+          required={!noExpirationConfirmed}
+          disabled={noExpirationConfirmed}
+          hint={noExpirationConfirmed ? 'Recorded as no expiration date for this batch.' : "This is the new batch's date."}
+          error={errors.expirationDate}
+          onChange={(next) => {
+            setExpirationDate(next)
+            setErrors((current) => ({ ...current, expirationDate: undefined, save: undefined }))
+          }}
         />
+        <label className="flex cursor-pointer items-start gap-2 rounded-md border border-border bg-surface px-3 py-2.5 text-sm text-text-primary transition-colors hover:bg-background motion-reduce:transition-none">
+          <input
+            type="checkbox"
+            checked={noExpirationConfirmed}
+            onChange={(event) => {
+              setNoExpirationConfirmed(event.target.checked)
+              if (event.target.checked) setExpirationDate('')
+              setErrors((current) => ({ ...current, expirationDate: undefined, save: undefined }))
+            }}
+            className="mt-0.5 size-4 cursor-pointer accent-brand-green-dark"
+          />
+          <span>
+            <span className="block font-semibold">This batch has no expiration date</span>
+            <span className="mt-0.5 block text-xs text-text-secondary">Select only for items with no manufacturer expiration date.</span>
+          </span>
+        </label>
+        {errors.save && <p role="alert" className="text-sm font-semibold text-error">{errors.save}</p>}
         <FormActions onCancel={onClose} saving={saving} label="Save Restock" />
       </form>
     </Modal>

@@ -55,7 +55,7 @@ The QR screens (#22–24, #26) were removed with the QR feature (ADR-027), and t
 27. Not a standalone page — a checklist panel/modal embedded in **New Visit Entry** (#11), triggered by the selected complaint type
 
 ### Medicine & Supply Inventory Tracker (enhancement)
-28. **Inventory List** — items, current stock, expiration dates, low-stock/expiring flags. Row actions: **Restock** (modal: quantity received + expiration date), **Adjust Stock** (modal: +/- change or set to counted quantity, required reason, optional note, never below 0), **Edit** (ADR-018)
+28. **Inventory List** — items, current stock, expiration dates, low-stock/expiring flags. Row actions: **Restock** (modal: quantity received + required expiration date, or an explicit no-expiration confirmation), **Adjust Stock** (modal: +/- change or set to counted quantity, required reason, optional note, never below 0), **Edit** (ADR-018)
 29. **Add/Edit Inventory Item** — on Edit, current stock and expiration date are read-only (they change only through Dispense/Restock/Adjust Stock)
 30. **Dispense/Log Usage** — for non-visit use; must name a student or choose "Not for a student (general use)"; shows a notice linking to the student's visit today when one exists; expired items can't be picked (ADR-018)
 

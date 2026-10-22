@@ -40,6 +40,9 @@
   --color-warning-light: #ed8b00;
   --color-error: #d32f2f;
   --color-info: #1976d2;
+  /* Demographic-chart datasets: Female and Male. Labels remain visible; color is supplementary. */
+  --color-chart-female: #c74375;
+  --color-chart-male: #3d7cbc;
 
   --font-sans:
     'Inter Variable', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;

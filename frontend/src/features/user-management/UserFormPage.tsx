@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { BackButton, Button, Card, CardBody, CardHeader, ErrorState, Icon, Input, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
@@ -58,8 +58,10 @@ function UserForm({
   const [username, setUsername] = useState(initial?.username ?? '')
   const [role, setRole] = useState<UserRole>(initial?.role ?? 'staff')
   const [profilePicture, setProfilePicture] = useState<string | null>(initial?.profilePicture ?? null)
+  const [pictureName, setPictureName] = useState(initial?.profilePicture ? 'Current profile picture' : '')
   const [pictureError, setPictureError] = useState<string>()
   const [preparingPicture, setPreparingPicture] = useState(false)
+  const [pendingPictureName, setPendingPictureName] = useState('')
   const [saved, setSaved] = useState(false)
   // What the form last matched in storage: the loaded account, then each saved version.
   const [baseline, setBaseline] = useState({ name: initial?.name ?? '', username: initial?.username ?? '', role: initial?.role ?? 'staff', profilePicture: initial?.profilePicture ?? null })
@@ -70,6 +72,8 @@ function UserForm({
   const [temporaryPassword, setTemporaryPassword] = useState('')
   const [errors, setErrors] = useState<{ name?: string; username?: string; role?: string; temporaryPassword?: string }>({})
   const invalidRef = useRef<HTMLFormElement>(null)
+  const pictureInputRef = useRef<HTMLInputElement>(null)
+  const pictureHintId = useId()
   const invalid = useFocusFirstInvalid(invalidRef)
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -157,20 +161,29 @@ function UserForm({
                 onChange={(event) => setTemporaryPassword(event.target.value)}
               />
             )}
-            <div className="flex flex-col gap-2 rounded-md border border-border bg-surface p-3">
+            <section aria-labelledby="profile-picture-title" className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4">
               <div className="flex items-center gap-3">
-                <UserAvatar name={name || 'New user'} picture={profilePicture} className="size-12 text-sm" />
-                <div>
-                  <p className="text-sm font-semibold text-text-primary">Profile picture</p>
-                  <p className="text-xs text-text-secondary">Optional. JPEG, PNG, or WebP; maximum 2 MB. Stored as a 256 px square in this mock only.</p>
+                <UserAvatar name={name || 'New user'} picture={profilePicture} className="size-16 text-lg" />
+                <div className="min-w-0">
+                  <h2 id="profile-picture-title" className="text-sm font-semibold text-text-primary">Profile picture</h2>
+                  <p id={pictureHintId} className="mt-0.5 text-xs text-text-secondary">Optional. JPEG, PNG, or WebP; maximum 2 MB. It is center-cropped to a 256 px square in this mock only.</p>
+                  <p role="status" className="mt-1 text-xs font-semibold text-text-primary">
+                    {preparingPicture
+                      ? `Preparing ${pendingPictureName}…`
+                      : profilePicture
+                        ? `${pictureName || 'Picture'} ready to save.`
+                        : 'No picture selected.'}
+                  </p>
                 </div>
               </div>
-              <Input
-                label="Upload profile picture"
+              <input
+                ref={pictureInputRef}
+                className="sr-only"
                 type="file"
+                aria-label="Choose profile picture"
+                aria-describedby={pictureHintId}
                 accept={PROFILE_PICTURE_ACCEPT}
                 disabled={preparingPicture}
-                error={pictureError}
                 onChange={(event) => {
                   const file = event.currentTarget.files?.[0]
                   event.currentTarget.value = ''
@@ -181,19 +194,32 @@ function UserForm({
                     return
                   }
                   setPictureError(undefined)
+                  setPendingPictureName(file.name)
                   setPreparingPicture(true)
                   void resizeProfilePicture(file)
-                    .then(setProfilePicture)
+                    .then((picture) => {
+                      setProfilePicture(picture)
+                      setPictureName(file.name)
+                    })
                     .catch((cause: unknown) => setPictureError(cause instanceof Error ? cause.message : 'The image could not be prepared.'))
-                    .finally(() => setPreparingPicture(false))
+                    .finally(() => {
+                      setPendingPictureName('')
+                      setPreparingPicture(false)
+                    })
                 }}
               />
-              {profilePicture && (
-                <Button type="button" size="sm" variant="neutral" className="self-start" onClick={() => setProfilePicture(null)}>
-                  Remove picture
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" size="sm" variant="secondary" loading={preparingPicture} onClick={() => pictureInputRef.current?.click()}>
+                  {profilePicture ? 'Replace picture' : 'Choose picture'}
                 </Button>
-              )}
-            </div>
+                {profilePicture && (
+                  <Button type="button" size="sm" variant="neutral" onClick={() => { setProfilePicture(null); setPictureName('') }}>
+                    Remove picture
+                  </Button>
+                )}
+              </div>
+              {pictureError && <p role="alert" className="text-sm font-semibold text-error">{pictureError}</p>}
+            </section>
             <div className="flex flex-wrap justify-end gap-2">
               <Button variant="neutral" onClick={cancel}>
                 Cancel

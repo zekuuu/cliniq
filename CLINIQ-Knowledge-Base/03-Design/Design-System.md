@@ -63,6 +63,8 @@ Restrained, cohesive palette. Prioritize strong text/background contrast, consis
 | `error` / `destructive` | `#D32F2F` | Incidents, expired or critically low stock, overdue/missed work, delete/irreversible actions, and validation errors | 4.98:1 — passes | Outside the brand palette entirely — unambiguous |
 | `info` | `#1976D2` | Completed, closed, resolved, and neutral informational states | 4.60:1 — passes | The one cool hue in the palette, reserved for completion and informational context |
 
+**Demographic-chart colors:** The Visits by Sex chart uses `chart-female` pink (`#C74375`) for Female and `chart-male` blue (`#3D7CBC`) for Male. These are dataset colors, not status colors; the chart legend and filters retain the written labels, so color is supplementary.
+
 **Status mapping (Sunday, October 18, 2026 — 17:26 PHT):** use `error` red for incidents, expired or low stock, and overdue/critical states; `success` green for active, verified, approved, or go states; `warning` yellow for pending, in-progress, due-soon, and review-needed states; `info` blue for completed, closed, resolved, and informational states; and `neutral` gray for archived, inactive, and no-state labels. Use the soft variant for statuses inside cards and rows. Icons and text labels remain required; color never carries the meaning alone.
 
 **Contrast rules, stated plainly:**

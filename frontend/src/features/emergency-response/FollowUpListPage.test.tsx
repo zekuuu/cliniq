@@ -23,6 +23,19 @@ describe('FollowUpListPage', () => {
     return user
   }
 
+  it('sorts follow-ups by status ascending by default', async () => {
+    await renderList()
+
+    expect(screen.getByRole('button', { name: 'Sort by Status, currently ascending' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Status' })).toHaveAttribute('aria-sort', 'ascending')
+
+    const statuses = screen
+      .getAllByRole('row')
+      .slice(1)
+      .map((row) => within(row).getAllByRole('cell')[2].textContent)
+    expect(statuses).toEqual([...statuses].sort())
+  })
+
   it('uses the linked LRN and records completion as an audited update, with no extra step', async () => {
     const user = await renderList()
     const pendingBefore = screen.getAllByRole('button', { name: /update status for/i }).length

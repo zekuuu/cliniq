@@ -137,3 +137,7 @@ The phone Emergency screen and the phone-only navigation are removed, and the Ad
 ## 034 The Sports Report for the PE instructor
 
 The clinician (Staff only) builds a saved, reusable and editable list of students for a sports activity and prints a report with each student's full name, recent visits and incidents (default 90 days), a note she writes, and the student's conditions only if she ticks it. Saved lists hold only the list and notes, never a copy of medical content; every print is audited. Full names are an exception to the LRN-on-lists rule. What the nurse and Principal agree to release is still open. Built Wednesday, October 21, 2026, under Reports (Staff only).
+
+## 035 Restock requires an expiry decision
+
+Every newly restocked batch needs an expiration date unless the clinician explicitly confirms that it has no manufacturer expiration date. A blank date alone cannot be saved as no expiration, preventing an accidental omission from bypassing expiry checks. The rule is enforced in the Restock dialog and inventory write layer; the future Inventory API must enforce the same one-of choice.

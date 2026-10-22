@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { getInventoryItem, getStudent, resetMockDb } from '../../lib/mock-db'
 import { renderWithRouter } from '../../test/renderWithRouter'
+import { pickDate } from '../../test/pickDate'
 import { selectOption } from '../../test/selectOption'
 import { pickStudent } from '../../test/pickStudent'
 import { InventoryDispensePage } from './InventoryDispensePage'
@@ -64,9 +65,29 @@ describe('Restock and Edit Item', () => {
     await user.click(await screen.findByRole('button', { name: 'Restock Gauze Pads' }))
     const dialog = screen.getByRole('dialog', { name: 'Restock: Gauze Pads' })
     await user.type(within(dialog).getByLabelText(/quantity received/i), '10')
+    await pickDate(user, within(dialog).getByRole('button', { name: /expiration date/i }), '2027-10-22')
     await user.click(within(dialog).getByRole('button', { name: 'Save Restock' }))
     expect(await screen.findByText(/Gauze Pads restocked with 10 pieces/)).toBeInTheDocument()
     expect(await stock('item-0011')).toBe(50)
+  })
+
+  it('requires an expiry date unless the clinician explicitly confirms that the batch has none', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<InventoryListPage />)
+    await user.click(await screen.findByRole('button', { name: 'Restock Gauze Pads' }))
+    const dialog = screen.getByRole('dialog', { name: 'Restock: Gauze Pads' })
+    await user.type(within(dialog).getByLabelText(/quantity received/i), '10')
+    await user.click(within(dialog).getByRole('button', { name: 'Save Restock' }))
+
+    expect(within(dialog).getByText('Choose an expiration date, or confirm this batch has no expiration date.')).toBeInTheDocument()
+    expect(await stock('item-0011')).toBe(40)
+
+    await user.click(within(dialog).getByRole('checkbox', { name: /this batch has no expiration date/i }))
+    expect(within(dialog).getByRole('button', { name: /expiration date/i })).toBeDisabled()
+    await user.click(within(dialog).getByRole('button', { name: 'Save Restock' }))
+
+    expect(await screen.findByText(/Gauze Pads restocked with 10 pieces/)).toBeInTheDocument()
+    expect((await getInventoryItem('item-0011')).batches.at(-1)?.expirationDate).toBeNull()
   })
 
   it('shows stock and expiry as read-only when editing an existing item', async () => {

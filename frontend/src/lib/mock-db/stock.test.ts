@@ -114,6 +114,17 @@ describe('recording a visit with medicines and supplies', () => {
     expect(after.batches.find((batch) => batch.expirationDate !== null && batch.expirationDate < '2026-10-17')?.quantity).toBe(25)
   })
 
+  it('requires explicit confirmation before adding a batch with no expiration date', async () => {
+    await expect(restockInventoryItem(GAUZE, 10, null)).rejects.toThrow(
+      'Choose an expiration date, or confirm this batch has no expiration date.',
+    )
+    expect(await stock(GAUZE)).toBe(40)
+
+    await expect(restockInventoryItem(GAUZE, 10, null, { noExpirationConfirmed: true })).resolves.toMatchObject({
+      currentStock: 50,
+    })
+  })
+
   it('keeps the name and unit snapshot after the item is renamed', async () => {
     const { visit } = await newVisit([{ itemId: PARACETAMOL, quantity: 1 }])
     const item = await getInventoryItem(PARACETAMOL)

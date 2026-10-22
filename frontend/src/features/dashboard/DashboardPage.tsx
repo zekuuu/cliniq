@@ -52,8 +52,8 @@ function parseSex(value: string | null): StudentSex | null {
  */
 export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser }) {
   const today = todayISO()
-  // A summary view opens on the current month; operational logs keep the All default.
-  const [range, setRange] = useState<DateRange>(() => rangeForPreset('thisMonth', today))
+  // A summary view opens on today's activity; operational logs keep the All default.
+  const [range, setRange] = useState<DateRange>(() => rangeForPreset('today', today))
   const [searchParams, setSearchParams] = useSearchParams()
   const view = parseDashboardView(searchParams.get('view'))
   const demographicFilters = { sex: parseSex(searchParams.get('sex')), gradeLevel: searchParams.get('grade') || null }

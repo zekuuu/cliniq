@@ -71,7 +71,7 @@ export function FollowUpListPage() {
   const [statusFilter, setStatusFilter] = useState<'' | FollowUpStatus>('')
   const [statusOverrides, setStatusOverrides] = useState<Record<string, FollowUpStatus>>({})
   const [confirming, setConfirming] = useState<null | { item: FollowUpRow; status: 'missed' | 'cancelled' }>(null)
-  const [sort, setSort] = useState<TableSortState<FollowUpSortKey>>({ key: 'due', direction: 'descending' })
+  const [sort, setSort] = useState<TableSortState<FollowUpSortKey>>({ key: 'status', direction: 'ascending' })
   const { data, status, reload } = useAsyncData(statusFilter, () => fetchFollowUps(statusFilter))
   // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
   const back = <BackButton fallback={paths.dashboard} drillThroughOnly />

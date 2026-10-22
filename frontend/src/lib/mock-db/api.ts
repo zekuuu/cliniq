@@ -1305,12 +1305,16 @@ export function restockInventoryItem(
   itemId: string,
   quantity: number,
   expirationDate: ISODate | null,
-  actor?: SessionUser,
+  options: { noExpirationConfirmed?: boolean; actor?: SessionUser } = {},
 ): Promise<InventoryItemView> {
   return write('restock', (s) => {
-    const by = actorOr(actor)
+    const by = actorOr(options.actor)
     const item = must(s.inventoryItems.find((i) => i.id === itemId), 'Inventory item')
     if (!Number.isInteger(quantity) || quantity < 1) throw new StockRuleError(QUANTITY_RULE)
+    if (expirationDate === null && !options.noExpirationConfirmed)
+      throw new StockRuleError('Choose an expiration date, or confirm this batch has no expiration date.')
+    if (expirationDate !== null && options.noExpirationConfirmed)
+      throw new StockRuleError('Choose either an expiration date or no expiration date for this batch.')
     const batch: InventoryBatch = {
       id: nextBatchId(item),
       quantity,

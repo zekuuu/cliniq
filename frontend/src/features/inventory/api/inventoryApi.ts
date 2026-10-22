@@ -45,6 +45,12 @@ export interface InventoryFormContext {
   item: InventoryItemView | null
 }
 
+export interface RestockValues {
+  expirationDate: string
+  /** A clinician's explicit confirmation; an empty date alone is never treated as this choice. */
+  noExpirationConfirmed: boolean
+}
+
 export function fetchInventory(filters: InventoryFilters): Promise<InventoryItemView[]> {
   return listInventory(filters)
 }
@@ -89,9 +95,12 @@ export function adjustStock(itemId: string, input: StockAdjustmentInput, actor?:
   return adjustInLayer(itemId, input, actor)
 }
 
-/** Restock: adds the quantity received and confirms the expiration date (the only way it changes). */
-export function restockItem(itemId: string, quantity: number, expirationDate: string, actor?: SessionUser): Promise<InventoryItemView> {
-  return restockInLayer(itemId, quantity, expirationDate || null, actor)
+/** Restock: adds the quantity received and requires either its expiry date or an explicit no-expiry confirmation. */
+export function restockItem(itemId: string, quantity: number, values: RestockValues, actor?: SessionUser): Promise<InventoryItemView> {
+  return restockInLayer(itemId, quantity, values.expirationDate || null, {
+    noExpirationConfirmed: values.noExpirationConfirmed,
+    actor,
+  })
 }
 
 /** The student a standalone dispense is for, plus any visit they already have today. */
