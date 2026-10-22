@@ -39,10 +39,31 @@ export interface InventoryFormValues {
   unit: string
   expirationDate: string
   lowStockThreshold: string
+  /** Add Item only (ADR-035): an explicit confirmation; an empty date alone is never this choice. */
+  noExpirationConfirmed: boolean
 }
 
 export interface InventoryFormContext {
   item: InventoryItemView | null
+  /** Every item, for the duplicate-name warning and the unit suggestions (panel review IV-3). */
+  items: InventoryItemView[]
+}
+
+/** "Paracetamol 500mg Tablets " and "paracetamol 500 mg tablet" compare equal: case, spacing and a trailing "s" are ignored. */
+function sameText(a: string, b: string) {
+  const norm = (value: string) => value.toLowerCase().replace(/\s+/g, '').replace(/s$/, '')
+  return norm(a) === norm(b)
+}
+
+/** An existing item with the same name and unit, if any (never the item being edited). A warning only. */
+export function findDuplicateItem(items: InventoryItemView[], name: string, unit: string, exceptId?: string): InventoryItemView | null {
+  if (!name.trim() || !unit.trim()) return null
+  return items.find((item) => item.id !== exceptId && sameText(item.name, name) && sameText(item.unit, unit)) ?? null
+}
+
+/** The units already in use, for the free-text unit field's suggestions (D9). */
+export function unitSuggestions(items: InventoryItemView[]): string[] {
+  return [...new Set(items.map((item) => item.unit.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
 }
 
 export interface RestockValues {
@@ -60,7 +81,8 @@ export function fetchInventoryHistory(itemId: string): Promise<InventoryHistoryR
 }
 
 export async function fetchInventoryForm(itemId?: string): Promise<InventoryFormContext> {
-  return { item: itemId ? await getInventoryItem(itemId) : null }
+  const [item, items] = await Promise.all([itemId ? getInventoryItem(itemId) : null, listInventory()])
+  return { item, items }
 }
 
 export function saveInventoryItem(
@@ -75,6 +97,7 @@ export function saveInventoryItem(
       unit: values.unit.trim(),
       expirationDate: values.expirationDate || null,
       lowStockThreshold: Number(values.lowStockThreshold),
+      noExpirationConfirmed: values.noExpirationConfirmed,
     },
     options,
   )

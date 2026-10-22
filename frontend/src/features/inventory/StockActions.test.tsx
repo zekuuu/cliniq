@@ -20,13 +20,14 @@ describe('Adjust Stock', () => {
   async function openAdjust(itemName: string) {
     const user = userEvent.setup()
     renderWithRouter(<InventoryListPage />)
-    await user.click(await screen.findByRole('button', { name: `Adjust Stock for ${itemName}` }))
+    // Panel review IV-1: Adjust Stock sits under the row's Manage menu.
+    await selectOption(user, await screen.findByRole('button', { name: new RegExp(`^Manage ${itemName}`) }), 'Adjust Stock')
     return { user, dialog: screen.getByRole('dialog', { name: `Adjust Stock: ${itemName}` }) }
   }
 
   it('requires a reason, and a note when the reason is Other', async () => {
     const { user, dialog } = await openAdjust('Gauze Pads')
-    await user.type(within(dialog).getByLabelText(/change/i), '-2')
+    await user.type(within(dialog).getByLabelText(/quantity to remove/i), '2')
     await user.click(within(dialog).getByRole('button', { name: 'Save Adjustment' }))
     expect(within(dialog).getByText('Choose a reason.')).toBeInTheDocument()
     await selectOption(user, within(dialog).getByLabelText(/^reason/i), 'Other')
@@ -37,7 +38,7 @@ describe('Adjust Stock', () => {
 
   it("can't take stock below 0", async () => {
     const { user, dialog } = await openAdjust('Gauze Pads')
-    await user.type(within(dialog).getByLabelText(/change/i), '-41')
+    await user.type(within(dialog).getByLabelText(/quantity to remove/i), '41')
     await selectOption(user, within(dialog).getByLabelText(/^reason/i), 'Damaged or spilled')
     await user.click(within(dialog).getByRole('button', { name: 'Save Adjustment' }))
     expect(within(dialog).getByText(/Stock can't go below 0/)).toBeInTheDocument()

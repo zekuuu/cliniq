@@ -6,7 +6,7 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDate } from '../../lib/dates'
 import { adjustStock, fetchInventoryHistory, restockItem, type InventoryItemView } from './api/inventoryApi'
 
-type AdjustMode = 'change' | 'count'
+type AdjustMode = 'add' | 'remove' | 'count'
 
 const reasonOptions = STAFF_ADJUSTMENT_REASONS.map((reason) => ({ value: reason, label: ADJUSTMENT_REASON_LABELS[reason] }))
 
@@ -45,11 +45,12 @@ export function BatchDetailsModal({ item, onClose }: { item: InventoryItemView; 
 }
 
 /**
- * Adjust Stock (Staff, ADR-018): a +/- change or "set to counted quantity", with a required reason
- * (and a required note for Other). The result can't go below 0; the data layer enforces it too.
+ * Adjust Stock (Staff, ADR-018): Add or Remove a positive quantity (panel review IV-7: no typed minus
+ * sign), or "set to counted quantity", with a required reason (and a required note for Other). The
+ * result is shown before saving and can't go below 0; the data layer enforces it too.
  */
 export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryItemView; onClose: () => void; onSaved: (message: string) => void }) {
-  const [mode, setMode] = useState<AdjustMode>('change')
+  const [mode, setMode] = useState<AdjustMode>('remove')
   const [batchId, setBatchId] = useState(item.batches.find((batch) => batch.expirationDate && batch.expirationDate < new Date().toISOString().slice(0, 10))?.id ?? item.batches[0]?.id ?? '')
   const [amount, setAmount] = useState('')
   const [reason, setReason] = useState<StaffAdjustmentReason | ''>('')
@@ -61,13 +62,14 @@ export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryIt
 
   const batch = item.batches.find((candidate) => candidate.id === batchId)
   const parsed = amount.trim() === '' ? NaN : Number(amount)
-  const after = batch && Number.isInteger(parsed) ? (mode === 'count' ? parsed : batch.quantity + parsed) : null
+  const change = mode === 'remove' ? -parsed : parsed
+  const after = batch && Number.isInteger(parsed) ? (mode === 'count' ? parsed : batch.quantity + change) : null
 
   async function submit(event: FormEvent) {
     event.preventDefault()
     const next: typeof errors = {}
     if (mode === 'count' && !(Number.isInteger(parsed) && parsed >= 0)) next.amount = 'Enter the counted quantity as a whole number of 0 or more.'
-    if (mode === 'change' && !(Number.isInteger(parsed) && parsed !== 0)) next.amount = 'Enter a whole-number change other than 0, e.g. -5 or 10.'
+    if (mode !== 'count' && !(Number.isInteger(parsed) && parsed > 0)) next.amount = `Enter how many to ${mode}, a whole number of 1 or more.`
     if (!batch) next.amount = 'Choose a batch.'
     if (!next.amount && after !== null && after < 0) next.amount = `Stock can't go below 0. ${batch?.quantity ?? 0} ${item.unit} in this batch.`
     if (!next.amount && batch && mode === 'count' && parsed === batch.quantity) next.amount = 'That matches the selected batch; there is nothing to adjust.'
@@ -78,7 +80,7 @@ export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryIt
     if (Object.keys(next).length || !reason) return
     setSaving(true)
     try {
-      const updated = await adjustStock(item.id, { batchId, ...(mode === 'count' ? { countedQuantity: parsed } : { change: parsed }), reason, note })
+      const updated = await adjustStock(item.id, { batchId, ...(mode === 'count' ? { countedQuantity: parsed } : { change }), reason, note })
       onSaved(`${item.name} adjusted (${ADJUSTMENT_REASON_LABELS[reason]}). Usable stock is now ${updated.currentStock} ${item.unit}.`)
     } catch (caught) {
       if (!(caught instanceof StockRuleError)) throw caught
@@ -116,19 +118,20 @@ export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryIt
             setErrors({})
           }}
           options={[
-            { value: 'change', label: 'Change amount' },
+            { value: 'remove', label: 'Remove' },
+            { value: 'add', label: 'Add' },
             { value: 'count', label: 'Set to counted quantity' },
           ]}
         />
         <Input
           data-autofocus
-          label={mode === 'count' ? 'Counted quantity' : 'Change (+/-)'}
+          label={mode === 'count' ? 'Counted quantity' : mode === 'add' ? 'Quantity to add' : 'Quantity to remove'}
           required
           type="number"
           step="1"
-          min={mode === 'count' ? '0' : undefined}
+          min={mode === 'count' ? '0' : '1'}
           value={amount}
-          hint={after !== null && after >= 0 ? `Stock after: ${after} ${item.unit}` : mode === 'change' ? 'Use a minus sign to remove stock, e.g. -5.' : undefined}
+          hint={after !== null && after >= 0 ? `This batch after saving: ${after} ${item.unit} (now ${batch?.quantity ?? 0})` : `This batch now: ${batch?.quantity ?? 0} ${item.unit}`}
           error={errors.amount}
           onChange={(event) => {
             setAmount(event.target.value)
