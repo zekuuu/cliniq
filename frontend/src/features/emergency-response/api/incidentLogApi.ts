@@ -24,7 +24,7 @@ export interface IncidentLogRow {
 }
 
 export function defaultIncidentLogRange(today = todayISO()): { from: ISODate; to: ISODate } {
-  return rangeForPreset('all', today)
+  return rangeForPreset('today', today)
 }
 
 export async function fetchIncidentLog(query: IncidentLogQuery): Promise<IncidentLogRow[]> {

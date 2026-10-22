@@ -5,12 +5,13 @@ import {
   getIncident,
   getIncidentTrail,
   getStudent,
+  getVisit,
   listApprovedIncidentReportIds,
   listIncidents,
   type IncidentTrail,
   type SessionUser,
 } from '../../../lib/mock-db'
-import type { Incident, ParentNotificationOutcome, Student } from '../../../types/entities'
+import type { CalledContact, Incident, ItemGivenLine, ParentNotificationOutcome, Student } from '../../../types/entities'
 
 /**
  * One incident, deliberately opened (Incident Report #18, Parent Notification #17): full name is
@@ -28,6 +29,8 @@ export interface IncidentRecord {
    * record that is already signed. The open record is included even when it is already approved.
    */
   options: Array<{ value: string; label: string }>
+  /** The visit this incident was escalated from (ADR-036), with what was given there. */
+  sourceVisit: { id: string; itemsGiven: ItemGivenLine[] } | null
 }
 
 /** `null` when there is nothing to show: no incidents, or (opened without an id) none pending sign-off. */
@@ -37,13 +40,18 @@ export async function fetchIncidentRecord(incidentId?: string): Promise<Incident
   const pending = incidents.filter((item) => !approved.has(item.id))
   const incident = incidentId ? await getIncident(incidentId) : pending[0]
   if (!incident) return null
-  const [student, trail] = await Promise.all([getStudent(incident.studentId), getIncidentTrail(incident.id)])
+  const [student, trail, source] = await Promise.all([
+    getStudent(incident.studentId),
+    getIncidentTrail(incident.id),
+    incident.sourceVisitId ? getVisit(incident.sourceVisitId) : null,
+  ])
   const listed = approved.has(incident.id) ? [incident, ...pending] : pending
   return {
     incident,
     student,
     approved: approved.has(incident.id),
     trail,
+    sourceVisit: source && { id: source.id, itemsGiven: source.itemsGiven },
     options: listed.map((item) => ({
       value: item.id,
       label: `${formatDateTime(item.time)} · ${item.complaint}${approved.has(item.id) ? ' (approved)' : ''}`,
@@ -59,6 +67,7 @@ export async function logParentNotification(
   incidentId: string,
   outcome: ParentNotificationOutcome,
   actor?: SessionUser,
+  calledContact: CalledContact | null = null,
 ) {
-  return addParentNotification(incidentId, outcome, actor)
+  return addParentNotification(incidentId, outcome, actor, calledContact)
 }
