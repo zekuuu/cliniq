@@ -248,7 +248,7 @@ describe('App Shell / Navigation', () => {
     )
   })
 
-  it('limits Admin/Principal navigation to Dashboard, Calendar, Reports, Audit Log, and Accounts (ADR-033)', () => {
+  it('limits Admin/Principal navigation to Dashboard, Calendar, Reports, Audit Log, Accounts and Backup (ADR-033, ADR-037)', () => {
     const groups = navGroupsFor('admin')
     expect(groups.flatMap((group) => group.items.map((item) => item.key))).toEqual([
       'dashboard',
@@ -256,6 +256,7 @@ describe('App Shell / Navigation', () => {
       'reports',
       'auditLog',
       'accounts',
+      'backup',
     ])
   })
 

@@ -9,6 +9,9 @@ vi.mock('react-chartjs-2', () => {
   return { Bar: Stub, Line: Stub }
 })
 import { renderWithRouter } from '../test/renderWithRouter'
+import { confirmItsYou } from '../test/confirmItsYou'
+import { selectOption } from '../test/selectOption'
+import { incidentCompletionBlocker } from '../lib/itemsGiven'
 import { getGradeLevels, getRecordedAuditEntries, getStudent, listIncidents, listVisits, resetMockDb } from '../lib/mock-db'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
 import { IncidentReportPage } from './emergency-response/IncidentReportPage'
@@ -38,15 +41,18 @@ describe('UI/UX review regressions', () => {
     expect(getRecordedAuditEntries()).toEqual([])
 
     await user.click(within(dialog).getByRole('button', { name: 'Archive Record' }))
+    // Panel review AC-7: archiving asks for the password; the confirmation is audited too.
+    await confirmItsYou(user)
     expect(await screen.findByText('Archived')).toBeInTheDocument()
     expect((await getStudent('student-0001')).archived).toBe(true)
-    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['archive'])
+    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['login', 'archive'])
     expect(screen.queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument()
   })
 
   it('labels incident vitals in plain language and confirms report approval', async () => {
     const user = userEvent.setup()
-    const [incident] = await listIncidents()
+    // Panel review IN-3: only a record with care, a notification or a referral can be approved.
+    const incident = (await listIncidents()).find((item) => !incidentCompletionBlocker(item))!
     renderWithRouter(<IncidentReportPage incidentId={incident.id} />)
 
     await screen.findByRole('heading', { name: 'Incident Report' })
@@ -65,8 +71,10 @@ describe('UI/UX review regressions', () => {
     const dialog = screen.getByRole('dialog', { name: 'Approve this incident report?' })
     expect(getRecordedAuditEntries()).toEqual([])
     await user.click(within(dialog).getByRole('button', { name: 'Approve Report' }))
+    // Panel review AC-7: approving asks for the password; the confirmation is audited too.
+    await confirmItsYou(user)
     expect(await screen.findByText('Report approved and logged.')).toBeInTheDocument()
-    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['approve'])
+    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['login', 'approve'])
 
     // Signed off: it can't be approved again, and only it is marked approved in the picker.
     expect(screen.getByRole('button', { name: 'Approved' })).toBeDisabled()
@@ -152,6 +160,8 @@ describe('UI/UX review follow-up fixes', () => {
     await user.type(screen.getByLabelText(/full name/i), 'Test Person')
     await user.type(screen.getByLabelText(/username/i), 'Demo.Nurse')
     await user.type(screen.getByLabelText(/temporary password/i), 'temp-pass-123')
+    // Panel review AC-4: no role is pre-selected.
+    await selectOption(user, screen.getByLabelText(/^role/i), 'School Clinician')
     await user.click(screen.getByRole('button', { name: 'Create User' }))
 
     expect(await screen.findByText('Another account already uses this username. Choose a different one.')).toBeInTheDocument()
