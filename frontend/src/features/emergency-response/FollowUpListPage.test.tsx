@@ -23,17 +23,17 @@ describe('FollowUpListPage', () => {
     return user
   }
 
-  it('sorts follow-ups by status ascending by default', async () => {
+  it('sorts follow-ups by status descending by default', async () => {
     await renderList()
 
-    expect(screen.getByRole('button', { name: 'Sort by Status, currently ascending' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'Status' })).toHaveAttribute('aria-sort', 'ascending')
+    expect(screen.getByRole('button', { name: 'Sort by Status, currently descending' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Status' })).toHaveAttribute('aria-sort', 'descending')
 
     const statuses = screen
       .getAllByRole('row')
       .slice(1)
       .map((row) => within(row).getAllByRole('cell')[2].textContent)
-    expect(statuses).toEqual([...statuses].sort())
+    expect(statuses).toEqual([...statuses].sort().reverse())
   })
 
   it('uses the linked LRN and records completion as an audited update, with no extra step', async () => {
@@ -65,10 +65,18 @@ describe('FollowUpListPage', () => {
     expect(await listFollowUps({ status: 'pending' })).toHaveLength(pendingBefore)
 
     await selectOption(user, screen.getAllByRole('button', { name: /update status for/i })[0], option)
-    await user.click(within(screen.getByRole('dialog', { name: title })).getByRole('button', { name: confirmLabel }))
+    const confirm = screen.getByRole('dialog', { name: title })
+    // Panel review FU-4: a reason is required.
+    await user.click(within(confirm).getByRole('button', { name: confirmLabel }))
+    expect(within(confirm).getByText('Give the reason.')).toBeInTheDocument()
+    expect(getRecordedAuditEntries()).toEqual([])
+    await user.type(within(confirm).getByRole('textbox', { name: /reason/i }), 'Parent asked to reschedule')
+    await user.click(within(confirm).getByRole('button', { name: confirmLabel }))
+    // Then "Set a new date" is offered; declining it creates nothing.
+    await user.click(within(await screen.findByRole('dialog', { name: 'Set a new date?' })).getByRole('button', { name: 'Not now' }))
     expect(getRecordedAuditEntries()).toEqual([followUpUpdate])
     expect(await listFollowUps({ status: status as 'missed' | 'cancelled' })).toEqual(
-      expect.arrayContaining([expect.objectContaining({ status })]),
+      expect.arrayContaining([expect.objectContaining({ status, statusReason: 'Parent asked to reschedule' })]),
     )
     expect(await listFollowUps({ status: 'pending' })).toHaveLength(pendingBefore - 1)
   })

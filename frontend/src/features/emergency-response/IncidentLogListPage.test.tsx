@@ -19,6 +19,12 @@ describe('Incident Log', () => {
     expect(screen.queryByText('All incidents')).not.toBeInTheDocument()
   })
 
+  it('opens on Today while retaining the full date-range menu', async () => {
+    renderWithRouter(<IncidentLogListPage />)
+
+    expect(await screen.findByRole('button', { name: 'Date range' })).toHaveTextContent('Today')
+  })
+
   it('renders a privacy-safe multi-student incident list with completion statuses', async () => {
     renderWithRouter(<IncidentLogListPage />)
 
