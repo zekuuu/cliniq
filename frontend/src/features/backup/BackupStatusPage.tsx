@@ -3,7 +3,7 @@ import { Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDateTime } from '../../lib/dates'
 import { getMockSessionUser } from '../../lib/mock-db'
-import { fetchBackupStatus, verifyBackup, type BackupStatusView } from './api/backupApi'
+import { backUpNow, fetchBackupStatus, verifyBackup, type BackupStatusView } from './api/backupApi'
 
 function formatSize(bytes: number): string {
     return bytes >= 1_048_576 ? `${(bytes / 1_048_576).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`
@@ -34,6 +34,24 @@ export function BackupStatusPage() {
     const [updated, setUpdated] = useState<BackupStatusView | null>(null)
     const [saving, setSaving] = useState(false)
     const [confirming, setConfirming] = useState(false)
+    const [backingUp, setBackingUp] = useState(false)
+    const [backedUp, setBackedUp] = useState(false)
+
+    // Panel review BK-2: either role can start a backup here.
+    async function runBackup() {
+        setBackingUp(true)
+        try {
+            setUpdated(await backUpNow(viewer))
+            setBackedUp(true)
+        } finally {
+            setBackingUp(false)
+        }
+    }
+    const backUpNowButton = (
+        <Button variant="secondary" icon="refresh" loading={backingUp} onClick={() => void runBackup()}>
+            Back up now
+        </Button>
+    )
 
     if (status === 'error')
         return (
@@ -59,8 +77,9 @@ export function BackupStatusPage() {
                 <EmptyState
                     icon="shieldPlus"
                     title="No backups recorded yet"
-                    description="The first scheduled backup will appear here once it has run."
+                    description="The first scheduled backup will appear here once it has run, or start one now."
                 />
+                <div className="mt-4 flex justify-center">{backUpNowButton}</div>
             </div>
         )
     const verified = Boolean(latest.verifiedByUserId)
@@ -69,6 +88,7 @@ export function BackupStatusPage() {
         setSaving(true)
         try {
             setUpdated(await verifyBackup(viewer))
+            setBackedUp(false)
             setConfirming(false)
         } finally {
             setSaving(false)
@@ -131,11 +151,30 @@ export function BackupStatusPage() {
                             <li>Confirm the backup file exists on the designated external drive.</li>
                             <li>Check that the file size is plausible compared with the previous backup.</li>
                             <li>
-                                Record the verification, then notify the School Head Nurse if anything is missing.
+                                Record the verification, then notify the School Clinician if anything is missing.
                             </li>
                         </ol>
                     </section>
-                    <div className="flex justify-end">
+                    <section aria-labelledby="backup-history-title">
+                        <h2 id="backup-history-title" className="text-sm font-semibold text-text-primary">Recent runs</h2>
+                        <ol className="mt-2 divide-y divide-border rounded-md border border-border">
+                            {current.history.slice(0, 5).map((run) => (
+                                <li key={run.lastRun} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
+                                    <span className="text-text-primary">{formatDateTime(run.lastRun)}</span>
+                                    <span className={run.status === 'failed' ? 'font-semibold text-error' : 'text-text-secondary'}>
+                                        {run.status === 'failed' ? 'Failed' : `Completed · ${formatSize(run.fileSizeBytes)}${run.verifiedByUserId ? ' · verified' : ''}`}
+                                    </span>
+                                </li>
+                            ))}
+                        </ol>
+                    </section>
+                    {backedUp && (
+                        <p role="status" className="rounded-md border border-success bg-success/10 px-3 py-2 text-sm font-semibold text-text-primary">
+                            Backup recorded. Check the file on the external drive, then mark it verified.
+                        </p>
+                    )}
+                    <div className="flex flex-wrap justify-end gap-2">
+                        {backUpNowButton}
                         <Button
                             variant="primary"
                             onClick={() => setConfirming(true)}
@@ -164,7 +203,7 @@ export function BackupStatusPage() {
                             </Button>
                         </div>
                     </Modal>
-                    {updated && (
+                    {updated && !backedUp && (
                         <p
                             role="status"
                             className="rounded-md border border-success bg-success/10 px-3 py-2 text-sm font-semibold text-text-primary"

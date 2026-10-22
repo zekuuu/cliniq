@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { formatTime } from '../../lib/dates'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { Button, Input, Modal } from '../../components'
+import { useCapsLock } from '../../hooks/useCapsLock'
 import { authenticateMockUser, beginPasswordChange, MockAuthError, type SessionUser } from '../../lib/mock-db'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { APP_VERSION } from '../../config/appVersion'
@@ -23,7 +24,7 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [forgotOpen, setForgotOpen] = useState(false)
-  const [capsLock, setCapsLock] = useState(false)
+  const capsLock = useCapsLock()
   const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({})
   const formRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(formRef)
@@ -82,7 +83,7 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
             <form ref={formRef} className="mt-6 flex w-full flex-col gap-4" onSubmit={submit} noValidate>
               <p role="status" className="sr-only">{invalid.announcement}</p>
               <Input label="Username" icon="user" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} error={fieldErrors.username} required />
-              <Input label="Password" icon="lock" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} onKeyDown={(event) => setCapsLock(event.getModifierState('CapsLock'))} onKeyUp={(event) => setCapsLock(event.getModifierState('CapsLock'))} onBlur={() => setCapsLock(false)} hint={capsLock ? 'Caps Lock is on.' : undefined} error={fieldErrors.password} required />
+              <Input label="Password" icon="lock" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} {...capsLock.handlers} hint={capsLock.hint} error={fieldErrors.password} required />
               {/* Help only: no reset flow until the team decides the recovery method (Issues-and-TODOs, "Forgot password" DECIDE). */}
               <button
                 type="button"

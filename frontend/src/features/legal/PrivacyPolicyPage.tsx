@@ -41,7 +41,7 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             qualified to confirm it against the Data Privacy Act of 2012 (Republic Act No. 10173)
             and any policy Mendez Christian Academy already has.{' '}
             <strong>
-              The contact section below is a placeholder — MCA has not yet designated who handles
+              The contact section below is not final: MCA has not yet designated who handles
               privacy inquiries, and this document should not go live with that section unresolved.
             </strong>
           </p>
