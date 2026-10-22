@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { formatDate } from '../../lib/dates'
+import { addDays, formatDate, todayISO } from '../../lib/dates'
 import {
   BackButton,
   Badge,
@@ -10,7 +10,9 @@ import {
   EmptyState,
   ErrorState,
   Icon,
+  DatePicker,
   Modal,
+  Textarea,
   Select,
   Skeleton,
   DataTable,
@@ -21,7 +23,7 @@ import { paths } from '../../routes/paths'
 import { getMockSessionUser } from '../../lib/mock-db'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { FollowUpStatus } from '../../types/entities'
-import { fetchFollowUps, updateFollowUpStatus, type FollowUpRow } from './api/followUpApi'
+import { fetchFollowUps, setNewFollowUpDate, updateFollowUpStatus, type FollowUpRow } from './api/followUpApi'
 import { MaskedLrn } from '../../components/ui/MaskedLrn'
 import { lrnLabel } from '../../lib/lrn'
 
@@ -71,7 +73,13 @@ export function FollowUpListPage() {
   const [statusFilter, setStatusFilter] = useState<'' | FollowUpStatus>('')
   const [statusOverrides, setStatusOverrides] = useState<Record<string, FollowUpStatus>>({})
   const [confirming, setConfirming] = useState<null | { item: FollowUpRow; status: 'missed' | 'cancelled' }>(null)
-  const [sort, setSort] = useState<TableSortState<FollowUpSortKey>>({ key: 'status', direction: 'ascending' })
+  // Panel review FU-4: Missed and Cancelled need a reason, then offer "Set a new date".
+  const [reason, setReason] = useState('')
+  const [reasonError, setReasonError] = useState('')
+  const [rescheduling, setRescheduling] = useState<null | FollowUpRow>(null)
+  const [newDate, setNewDate] = useState('')
+  const [scheduling, setScheduling] = useState(false)
+  const [sort, setSort] = useState<TableSortState<FollowUpSortKey>>({ key: 'status', direction: 'descending' })
   const { data, status, reload } = useAsyncData(statusFilter, () => fetchFollowUps(statusFilter))
   // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
   const back = <BackButton fallback={paths.dashboard} drillThroughOnly />
@@ -103,17 +111,45 @@ export function FollowUpListPage() {
     if (key === 'due') return item.followUpDate
     return item.status
   })
-  async function applyStatus(item: FollowUpRow, next: FollowUpStatus) {
+  async function applyStatus(item: FollowUpRow, next: FollowUpStatus, why?: string) {
     // Optimistic: the row flips immediately; the data layer writes the status and its audit entry.
     setStatusOverrides((current) => ({ ...current, [item.id]: next }))
     setConfirming(null)
-    await updateFollowUpStatus(item.id, next, getMockSessionUser())
+    await updateFollowUpStatus(item.id, next, getMockSessionUser(), why)
+    if (next === 'missed' || next === 'cancelled') {
+      reload()
+      setNewDate(addDays(todayISO(), 1))
+      setRescheduling(item)
+    }
+  }
+  function confirmClosing() {
+    if (!confirming) return
+    if (!reason.trim()) {
+      setReasonError('Give the reason.')
+      return
+    }
+    void applyStatus(confirming.item, confirming.status, reason)
+  }
+  async function scheduleNewDate() {
+    if (!rescheduling || !newDate) return
+    setScheduling(true)
+    try {
+      await setNewFollowUpDate(rescheduling.id, newDate, getMockSessionUser())
+      setRescheduling(null)
+      reload()
+    } finally {
+      setScheduling(false)
+    }
   }
   function chooseStatus(item: FollowUpRow, next: string) {
     // Completed is the expected outcome and applies at once. Missed and Cancelled close the
     // follow-up without the student being seen, so they ask first.
     if (next === 'completed') void applyStatus(item, 'completed')
-    else if (next === 'missed' || next === 'cancelled') setConfirming({ item, status: next })
+    else if (next === 'missed' || next === 'cancelled') {
+      setReason('')
+      setReasonError('')
+      setConfirming({ item, status: next })
+    }
   }
   const columns: Array<DataTableColumn<FollowUpRow>> = [
     {
@@ -125,7 +161,17 @@ export function FollowUpListPage() {
     },
     { key: 'reason', header: 'Reason', sort: sortColumn('reason', 'Reason'), cell: (item) => item.reason },
     { key: 'due', header: 'Due date', sort: sortColumn('due', 'Due date'), cell: (item) => formatDate(item.followUpDate) },
-    { key: 'status', header: 'Status', sort: sortColumn('status', 'Status'), cell: (item) => statusBadge(item.status) },
+    {
+      key: 'status',
+      header: 'Status',
+      sort: sortColumn('status', 'Status'),
+      cell: (item) => (
+        <div>
+          {statusBadge(item.status)}
+          {item.statusReason && <p className="mt-1 text-xs text-text-secondary">Reason: {item.statusReason}</p>}
+        </div>
+      ),
+    },
     {
       key: 'actions',
       header: 'Actions',
@@ -212,12 +258,43 @@ export function FollowUpListPage() {
                 : 'This follow-up is no longer needed.'}{' '}
               It can't be changed back from this screen.
             </p>
+            <Textarea
+              className="mt-4"
+              label="Reason"
+              required
+              rows={2}
+              maxLength={300}
+              value={reason}
+              onChange={(value) => {
+                setReason(value)
+                setReasonError('')
+              }}
+              error={reasonError}
+            />
             <div className="mt-5 flex flex-wrap justify-end gap-2">
               <Button variant="neutral" data-autofocus onClick={() => setConfirming(null)}>
                 Keep Pending
               </Button>
-              <Button variant="primary" onClick={() => void applyStatus(confirming.item, confirming.status)}>
+              <Button variant="primary" onClick={confirmClosing}>
                 {confirming.status === 'missed' ? 'Mark as Missed' : 'Cancel Follow-Up'}
+              </Button>
+            </div>
+          </>
+        )}
+      </Modal>
+      <Modal open={rescheduling !== null} title="Set a new date?" onClose={() => setRescheduling(null)}>
+        {rescheduling && (
+          <>
+            <p className="text-sm text-text-secondary">
+              Creates a new pending follow-up for <MaskedLrn lrn={rescheduling.lrn} /> with the same reason ({rescheduling.reason}).
+            </p>
+            <DatePicker className="mt-4" label="New follow-up date" required value={newDate} min={todayISO()} onChange={setNewDate} />
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <Button variant="neutral" data-autofocus onClick={() => setRescheduling(null)}>
+                Not now
+              </Button>
+              <Button variant="primary" loading={scheduling} disabled={!newDate} onClick={() => void scheduleNewDate()}>
+                Set new date
               </Button>
             </div>
           </>

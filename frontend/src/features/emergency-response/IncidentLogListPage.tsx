@@ -70,7 +70,7 @@ const baseColumns: Array<DataTableColumn<IncidentLogRow>> = [
 ]
 
 export function IncidentLogListPage() {
-  const defaultRange: DateRange = { preset: 'all', ...defaultIncidentLogRange() }
+  const defaultRange: DateRange = { preset: 'today', ...defaultIncidentLogRange() }
   const { initialRange, clearDateParams } = useDateRangeEntryParams(defaultRange)
   const [range, setRange] = useState<DateRange>(initialRange)
   const [search, setSearch] = useState('')

@@ -1,10 +1,12 @@
 import { useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
+import { useLocation, useSearchParams } from 'react-router'
 import {
   BackButton,
   Button,
   Card,
   CardBody,
   CardHeader,
+  Combobox,
   DatePicker,
   EmptyState,
   ErrorState,
@@ -28,7 +30,7 @@ import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { paths } from '../../routes/paths'
 import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { addDays, todayISO } from '../../lib/dates'
-import { draftsFrom, formatItemGiven } from '../../lib/itemsGiven'
+import { draftsFrom, formatItemGiven, incidentCompletionBlocker } from '../../lib/itemsGiven'
 import { readingText, takenReadings, type ReadingKey, type ReadingValues } from '../../lib/vitals'
 import {
   getMockSessionUser,
@@ -36,16 +38,29 @@ import {
   type SessionUser,
   type VitalsWarningRanges,
 } from '../../lib/mock-db'
-import type { HospitalReferral, Incident, ParentNotificationOutcome } from '../../types/entities'
+import type { CalledContact, HospitalReferral, Incident, ParentNotificationOutcome } from '../../types/entities'
 import {
   completeStageTwoIncident,
   fetchIncidentEntryContext,
   findIncidentStudent,
   searchIncidentStudents,
   saveStageOneIncident,
+  type EscalationPrefill,
   type IncidentEntryContext,
 } from './api/incidentEntryApi'
 import { maskLrn } from '../../lib/lrn'
+import { CalledContactField } from './CalledContactField'
+import {
+  calledContactText,
+  OUTCOME_LABELS,
+  PARENT_NOTIFICATION_OUTCOMES,
+  initialCalledDraft,
+  resolveCalledContact,
+  type CalledContactDraft,
+  type CalledContactErrors,
+} from './notificationOutcomes'
+import { StudentAlertCard } from './StudentAlertCard'
+import { FromVisit } from './FromVisit'
 
 type ScreenStage = 'stage1' | 'stage2'
 type IncidentStatus = 'needs_completion' | 'in_progress' | 'complete'
@@ -61,21 +76,17 @@ const incidentStatusMap = {
   complete: { label: 'Complete', tone: 'info', icon: 'checkCircle', variant: 'soft' },
 } satisfies StatusMap<IncidentStatus>
 
-const notificationOutcomes = [
-  { value: 'reached', label: 'Reached' },
-  { value: 'not_reached', label: 'Not reached' },
-  { value: 'voicemail', label: 'Voicemail' },
-  { value: 'left_message', label: 'Left message' },
-] satisfies Array<{ value: ParentNotificationOutcome; label: string }>
+/** Suggestions only; any text is accepted (D11). */
+const BODY_PART_SUGGESTIONS = ['Head', 'Face', 'Neck', 'Chest', 'Abdomen', 'Back', 'Arm', 'Hand', 'Leg', 'Foot']
 
-interface Errors {
+interface Errors extends CalledContactErrors {
   complaint?: string
   oxygenSaturationPct?: string
   itemsGiven?: string
   referralDestination?: string
   departureClock?: string
-  notificationDetail?: string
   followUpReason?: string
+  noFurtherActionReason?: string
 }
 
 function IncidentSkeleton({ back }: { back: ReactNode }) {
@@ -235,9 +246,13 @@ export function IncidentEntryPage({
   /** Reopens this saved incident at Stage 2 (Screen #16b). */
   incidentId?: string
 }) {
+  // "Escalate to incident" (ADR-036): `?fromVisit=` from Visit Details, or what New Visit typed, in router state.
+  const [searchParams] = useSearchParams()
+  const fromVisit = searchParams.get('fromVisit') ?? undefined
+  const prefill = (useLocation().state as { escalate?: EscalationPrefill } | null)?.escalate
   const { data, status, reload } = useAsyncData(
-    `incident-entry|${incidentId ?? ''}`,
-    () => fetchIncidentEntryContext(incidentId),
+    `incident-entry|${incidentId ?? ''}|${fromVisit ?? ''}|${prefill ? JSON.stringify(prefill) : ''}`,
+    () => fetchIncidentEntryContext(incidentId, incidentId ? undefined : { visitId: fromVisit, prefill }),
   )
 
   const back = <BackButton fallback={paths.incidents} />
@@ -284,17 +299,36 @@ function savedReadings(incident: Incident | null): ReadingValues {
   }
 }
 
+/**
+ * What an escalated visit carries into Stage 1 (ADR-036): the complaint when it is on the incident list,
+ * otherwise it goes into Additional notes so nothing typed is lost; and the temperature.
+ */
+function escalationStart(data: IncidentEntryContext) {
+  const escalation = data.escalation
+  if (!escalation) return { complaint: '', temperatureC: '', notes: '' }
+  const typed = escalation.complaint.trim()
+  const match = data.complaintTypes.find((type) => type.toLowerCase() === typed.toLowerCase())
+  return {
+    complaint: match ?? '',
+    temperatureC: escalation.temperatureC === null ? '' : String(escalation.temperatureC),
+    notes: match || !typed ? '' : `Visit complaint: ${typed}`,
+  }
+}
+
 function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: IncidentEntryContext }) {
   const today = todayISO()
   const existing = data.incident
+  const start = escalationStart(data)
   const identified = useIdentifiedStudent(data.student, findIncidentStudent)
   const student = identified.student
   const [stage, setStage] = useState<ScreenStage>(existing ? 'stage2' : 'stage1')
   const [incident, setIncident] = useState<Incident | null>(existing)
   const [completed, setCompleted] = useState(existing?.stage === 2)
-  const [complaint, setComplaint] = useState(existing?.complaint ?? '')
-  const [readings, setReadings] = useState<ReadingValues>(() => savedReadings(existing))
-  const [generalNotes, setGeneralNotes] = useState(existing?.generalNotes ?? '')
+  const [complaint, setComplaint] = useState(existing?.complaint ?? start.complaint)
+  const [readings, setReadings] = useState<ReadingValues>(() =>
+    existing ? savedReadings(existing) : { ...savedReadings(null), temperatureC: start.temperatureC },
+  )
+  const [generalNotes, setGeneralNotes] = useState(existing?.generalNotes ?? start.notes)
   const [treatmentNotes, setTreatmentNotes] = useState(vital(existing, 'treatmentNotes'))
   const [referToHospital, setReferToHospital] = useState(false)
   const [referralDestination, setReferralDestination] = useState('')
@@ -303,9 +337,15 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const [departureClock, setDepartureClock] = useState('')
   const [notificationOutcome, setNotificationOutcome] = useState<ParentNotificationOutcome>('reached')
   const [notificationDetail, setNotificationDetail] = useState('')
+  // null means the default: the primary contact of the student picked so far, or "Other" when none.
+  const [calledDraftEdit, setCalledDraft] = useState<CalledContactDraft | null>(null)
+  const calledDraft = calledDraftEdit ?? initialCalledDraft(student?.emergencyContacts ?? [])
   const [notifications, setNotifications] = useState<
-    Array<{ outcome: ParentNotificationOutcome; timestamp: string; detail: string }>
+    Array<{ outcome: ParentNotificationOutcome; timestamp: string; detail: string; calledContact: CalledContact }>
   >([])
+  const [bodyPart, setBodyPart] = useState(existing?.bodyPart ?? '')
+  const [nothingFurther, setNothingFurther] = useState(Boolean(existing?.noFurtherActionReason))
+  const [noFurtherActionReason, setNoFurtherActionReason] = useState(existing?.noFurtherActionReason ?? '')
   const [needsFollowUp, setNeedsFollowUp] = useState(false)
   const [followUpDate, setFollowUpDate] = useState(addDays(today, 1))
   const [followUpReason, setFollowUpReason] = useState('')
@@ -321,7 +361,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const readingsChanged = (from: Incident | null) =>
     Object.entries(savedReadings(from)).some(([key, value]) => readings[key as ReadingKey] !== value)
   // Stage 1 typed but not saved, or Stage 2 changed from the saved incident but not completed.
-  const stageOneDirty = !incident && (complaint !== '' || readingsChanged(null) || generalNotes.trim() !== '')
+  const stageOneDirty = !incident && (complaint !== '' || readingsChanged(null) || generalNotes.trim() !== '' || Boolean(data.escalation))
   const stageTwoDirty =
     incident !== null &&
     !completed &&
@@ -330,6 +370,8 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       referToHospital ||
       notifications.length > 0 ||
       notificationDetail.trim() !== '' ||
+      bodyPart !== (incident.bodyPart ?? '') ||
+      nothingFurther !== Boolean(incident.noFurtherActionReason) ||
       needsFollowUp ||
       lines.length !== incident.itemsGiven.length)
   const { cancel, discardDialog } = useCancelNavigation(paths.incidents, stageOneDirty || stageTwoDirty)
@@ -338,6 +380,17 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
     setReadings((current) => ({ ...current, [key]: value }))
     if (key === 'oxygenSaturationPct') setErrors((current) => ({ ...current, oxygenSaturationPct: undefined }))
   }
+
+  // Panel review IN-3: completing needs care, a notification, a referral, or the explicit tick.
+  const careBlocker = incident
+    ? incidentCompletionBlocker({
+        vitals: { treatmentNotes },
+        itemsGiven: completed ? incident.itemsGiven : lines,
+        parentNotifications: [...incident.parentNotifications, ...notifications],
+        hospitalReferral: referToHospital || incident.hospitalReferral,
+      })
+    : null
+  const completeBlocked = careBlocker !== null && !nothingFurther
 
   const statusValue: IncidentStatus = completed ? 'complete' : incident ? 'in_progress' : 'needs_completion'
 
@@ -355,7 +408,15 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       const target = await identified.resolve()
       if (!target) return
       const saved = await saveStageOneIncident(
-        { studentId: target.id, complaint, readings, generalNotes },
+        {
+          studentId: target.id,
+          complaint,
+          readings,
+          generalNotes,
+          time: data.escalation?.time,
+          // Linked only to a saved visit of the same student (the data layer checks).
+          sourceVisitId: data.escalation?.visitId && data.escalation.studentId === target.id ? data.escalation.visitId : undefined,
+        },
         viewer,
       )
       setIncident(saved)
@@ -366,23 +427,25 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   }
 
   function addNotification() {
-    if (!notificationDetail.trim()) {
-      setErrors((current) => ({
-        ...current,
-        notificationDetail: 'Add a short note for this notification attempt.',
-      }))
-      return
-    }
+    const called = resolveCalledContact(calledDraft, student?.emergencyContacts ?? [])
+    setErrors((current) => ({
+      ...current,
+      calledName: called.errors?.calledName,
+      calledPhone: called.errors?.calledPhone,
+    }))
+    if (!called.contact) return
+    const calledContact = called.contact
     setNotifications((current) => [
       ...current,
       {
         outcome: notificationOutcome,
         timestamp: new Date().toISOString(),
         detail: notificationDetail.trim(),
+        calledContact,
       },
     ])
     setNotificationDetail('')
-    setErrors((current) => ({ ...current, notificationDetail: undefined }))
+    setCalledDraft(null)
   }
 
   function validateStageTwo(): Errors {
@@ -396,12 +459,14 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
     }
     if (needsFollowUp && !followUpReason.trim()) next.followUpReason = 'Enter the follow-up reason.'
     if (lines.some((line) => line.quantity < 1)) next.itemsGiven = 'Each quantity must be at least 1.'
+    if (careBlocker && nothingFurther && !noFurtherActionReason.trim())
+      next.noFurtherActionReason = 'Write one line on why nothing further was needed.'
     return next
   }
 
   async function onStageTwoSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!incident || !student) return
+    if (!incident || !student || completeBlocked) return
     const nextErrors = validateStageTwo()
     setErrors(nextErrors)
     invalid.report(Object.keys(nextErrors).length)
@@ -430,7 +495,11 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
           parentNotifications: notifications.map((item) => ({
             outcome: item.outcome,
             timestamp: item.timestamp,
+            calledContact: item.calledContact,
           })),
+          bodyPart,
+          // Kept only while nothing else on the record answers the rule; adding care makes it moot.
+          noFurtherActionReason: careBlocker && nothingFurther ? noFurtherActionReason : '',
           followUp: needsFollowUp
             ? {
                 followUpDate,
@@ -515,6 +584,12 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
               description="Capture only the essentials now. Stage 2 can be completed after the immediate situation is handled."
             />
             <CardBody className="flex flex-col gap-4">
+              {data.escalation && (
+                <p role="status" className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary">
+                  Escalated from {data.escalation.visitId ? 'a saved visit' : 'the New Visit form'}: the student, complaint, time and
+                  temperature are carried over. Medicines given at the visit stay on the visit.
+                </p>
+              )}
               {!data.student && (
                 <StudentPicker
                   search={searchIncidentStudents}
@@ -526,6 +601,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                   addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
                 />
               )}
+              {student && <StudentAlertCard student={student} />}
               <Select
                 label="Complaint"
                 required
@@ -593,6 +669,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                       </p>
                     )}
                   </div>
+                  {incident.sourceVisitId && <FromVisit visitId={incident.sourceVisitId} given={data.sourceVisit?.itemsGiven ?? []} />}
                   <ReadingsFields
                     values={readings}
                     onChange={setReading}
@@ -605,6 +682,19 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     onChange={(value) => {
                       setTreatmentNotes(value)
                     }}
+                  />
+                  <Combobox
+                    label="Body part affected (optional)"
+                    value={bodyPart}
+                    onValueChange={setBodyPart}
+                    options={BODY_PART_SUGGESTIONS}
+                    optionKey={(option) => option}
+                    optionLabel={(option) => option}
+                    allowFreeText
+                    openOnFocus
+                    noMatchesText={null}
+                    maxLength={60}
+                    className="sm:max-w-sm"
                   />
                   {completed && incident && !treatmentNotes.trim() && !incident.itemsGiven.length && (
                     <p className="text-sm text-text-secondary">No treatment recorded</p>
@@ -648,13 +738,13 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                         className="mt-0.5 size-4 cursor-pointer accent-brand-green-dark"
                       />
                       <span className="text-sm font-semibold text-text-primary">
-                        Referred to hospital or clinic
+                        Referred to hospital
                       </span>
                     </label>
                     {referToHospital && (
                       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <Input
-                          label="Destination"
+                          label="Destination (hospital or clinic)"
                           value={referralDestination}
                           required
                           onChange={(event) => {
@@ -694,12 +784,24 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                       Parent notification log
                     </legend>
                     <div className="mb-3">
-                      <p className="mb-1 text-xs font-semibold text-text-primary">Outcome</p>
-                      <SegmentedControl
-                        label="Notification outcome"
+                      {/* A select, as on the Parent Notification page: the four labels don't fit side by side on a phone. */}
+                      <Select
+                        label="Outcome"
+                        className="sm:max-w-sm"
                         value={notificationOutcome}
-                        onChange={setNotificationOutcome}
-                        options={notificationOutcomes}
+                        onChange={(value) => setNotificationOutcome(value as ParentNotificationOutcome)}
+                        options={PARENT_NOTIFICATION_OUTCOMES}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <CalledContactField
+                        contacts={student?.emergencyContacts ?? []}
+                        draft={calledDraft}
+                        onChange={(next) => {
+                          setCalledDraft(next)
+                          setErrors((current) => ({ ...current, calledName: undefined, calledPhone: undefined }))
+                        }}
+                        errors={errors}
                       />
                     </div>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
@@ -707,7 +809,6 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                         label="Attempt note"
                         value={notificationDetail}
                         onChange={(event) => setNotificationDetail(event.target.value)}
-                        error={errors.notificationDetail}
                       />
                       <Button
                         type="button"
@@ -723,8 +824,8 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                         {notifications.map((item, index) => (
                           <ListRow
                             key={`${item.timestamp}-${index}`}
-                            primary={notificationOutcomes.find((o) => o.value === item.outcome)?.label}
-                            secondary={item.detail}
+                            primary={OUTCOME_LABELS[item.outcome]}
+                            secondary={[calledContactText(item.calledContact), item.detail].filter(Boolean).join(' · ')}
                             meta={item.timestamp.slice(11, 16)}
                           />
                         ))}
@@ -779,12 +880,56 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     )}
                   </fieldset>
 
-                  <div className="flex flex-wrap justify-end gap-2 pt-2">
-                    {!treatmentNotes.trim() && !lines.length && !completed && (
-                      <p className="mr-auto text-xs text-text-secondary">No treatment recorded. You can still save.</p>
+                  {careBlocker && (
+                    <div className="rounded-md border border-border p-4">
+                      <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
+                        <input
+                          type="checkbox"
+                          checked={nothingFurther}
+                          onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                            setNothingFurther(event.target.checked)
+                            setErrors((current) => ({ ...current, noFurtherActionReason: undefined }))
+                          }}
+                          className="mt-0.5 size-4 cursor-pointer accent-brand-green-dark"
+                        />
+                        <span>
+                          <span className="block text-sm font-semibold text-text-primary">Nothing further was needed or done</span>
+                          <span className="block text-xs text-text-secondary">
+                            Only when there was no treatment, medicine, parent call or referral. It is printed on the report.
+                          </span>
+                        </span>
+                      </label>
+                      {nothingFurther && (
+                        <Input
+                          className="mt-3"
+                          label="Reason"
+                          required
+                          maxLength={200}
+                          value={noFurtherActionReason}
+                          onChange={(event) => {
+                            setNoFurtherActionReason(event.target.value)
+                            setErrors((current) => ({ ...current, noFurtherActionReason: undefined }))
+                          }}
+                          error={errors.noFurtherActionReason}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+                    {completeBlocked && (
+                      <p id="complete-incident-blocker" className="mr-auto text-xs text-text-secondary">
+                        {careBlocker}
+                      </p>
                     )}
                     <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
-                    <Button type="submit" variant="primary" loading={savingStageTwo}>
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      loading={savingStageTwo}
+                      disabled={completeBlocked}
+                      aria-describedby={completeBlocked ? 'complete-incident-blocker' : undefined}
+                    >
                       Complete Incident
                     </Button>
                   </div>
