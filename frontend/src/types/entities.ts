@@ -65,7 +65,18 @@ export interface User {
   deactivatedAt?: ISODateTime | null
 }
 
-export type Disposition = 'returned_to_class' | 'sent_home' | 'referred_to_hospital'
+/**
+ * `resting_in_clinic` (panel review VS-1): kept in the clinic for observation. With no Time out on a
+ * visit dated today, the student is "in the clinic now". PROVISIONAL, pending the ERD.
+ */
+export type Disposition = 'returned_to_class' | 'sent_home' | 'referred_to_hospital' | 'resting_in_clinic'
+
+/** Who marked a record "Entered in error", when and why. The record is kept, never deleted. PROVISIONAL, pending the ERD. */
+export interface EnteredInError {
+  reason: string
+  at: ISODateTime
+  byUserId: string
+}
 
 export interface Visit {
   id: string
@@ -101,6 +112,17 @@ export interface Visit {
   parentGuardian: string | null
   /** Free-text notes, "can be anything"; separate from `treatment`. */
   remarks: string | null
+  /*
+   * Panel review part 2. All optional and absent on older records. PROVISIONAL, pending the ERD.
+   */
+  /** True when the visit's date and time was set more than 30 minutes before it was saved (ADR-029: entered afterwards). */
+  lateEntry?: boolean
+  /** Optional reason given for a late entry, such as "system was down". */
+  lateEntryReason?: string | null
+  /** Set when the visit was marked "Entered in error": hidden from lists and counts, stock returned, letter voided. */
+  enteredInError?: EnteredInError | null
+  /** The incident this visit was escalated to (ADR-036). The event then counts once, as the incident. */
+  escalatedIncidentId?: string | null
 }
 
 /** Excuse-letter values entered on a visit before approval. PROVISIONAL, pending the ERD. */
@@ -128,11 +150,26 @@ export interface ItemGivenLine {
   batchAllocations?: InventoryBatchAllocation[]
 }
 
-export type ParentNotificationOutcome = 'reached' | 'not_reached' | 'voicemail' | 'left_message'
+/** Panel review IN-6 (D6): one list. Older saved values are migrated in `lib/mock-db/store.ts`. */
+export type ParentNotificationOutcome = 'reached' | 'no_answer' | 'left_message_or_voicemail' | 'wrong_number'
+
+/**
+ * Who was called on one attempt: a snapshot of the student's emergency contact at the time, or a
+ * person typed in as "Other". The ERD keeps `contact_id` plus `phone_dialed`; the mock layer has no
+ * contact ids, so it keeps the snapshot. PROVISIONAL, pending the ERD.
+ */
+export interface CalledContact {
+  name: string
+  relationship: string | null
+  phone: string
+  source: 'emergency_contact' | 'other'
+}
 
 export interface ParentNotificationAttempt {
   outcome: ParentNotificationOutcome
   timestamp: ISODateTime
+  /** Absent on attempts saved before the field existed. PROVISIONAL, pending the ERD. */
+  calledContact?: CalledContact | null
 }
 
 export interface HospitalReferral {
@@ -167,6 +204,16 @@ export interface Incident {
    * records saved before the field existed. PROVISIONAL, pending the ERD.
    */
   generalNotes?: string | null
+  /** The visit this incident was escalated from (ADR-036). Absent on other incidents. PROVISIONAL, pending the ERD. */
+  sourceVisitId?: string | null
+  /** Optional free text with suggestions, Stage 2 only (D11). Absent on older records. PROVISIONAL, pending the ERD. */
+  bodyPart?: string | null
+  /**
+   * Set only when the nurse ticked "Nothing further was needed or done": the one-line reason that lets
+   * an incident with no treatment, medicine, notification or referral be completed and approved
+   * (panel review IN-3). PROVISIONAL, pending the ERD.
+   */
+  noFurtherActionReason?: string | null
 }
 
 export type FollowUpStatus = 'pending' | 'completed' | 'missed' | 'cancelled'
@@ -180,6 +227,8 @@ export interface FollowUp {
   status: FollowUpStatus
   notes: string | null
   createdByUserId: string
+  /** Required when the status became Missed or Cancelled (panel review FU-4). Absent on older records. PROVISIONAL, pending the ERD. */
+  statusReason?: string | null
 }
 
 export type InventoryCategory = 'medicine' | 'supply'

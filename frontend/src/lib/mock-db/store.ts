@@ -56,7 +56,7 @@ function clearSaved() {
   }
 }
 
-interface Saved {
+export interface Saved {
   state: DbState
   seedAuditLength: number
 }
@@ -71,8 +71,8 @@ function loadSaved(): Saved | null {
   }
 }
 
-/** Migrates persisted mock state without losing legacy inventory or newly-required Sex data. */
-function migratePersistedState(saved: Saved): Saved {
+/** Migrates persisted mock state without losing legacy inventory or newly-required Sex data. Exported for its test. */
+export function migratePersistedState(saved: Saved): Saved {
   for (const item of saved.state.inventoryItems as unknown as Array<Record<string, unknown>>) {
     if (Array.isArray(item.batches)) continue
     const currentStock = typeof item.currentStock === 'number' ? item.currentStock : 0
@@ -85,6 +85,16 @@ function migratePersistedState(saved: Saved): Saved {
     if (student.sex === 'male' || student.sex === 'female') continue
     student.sex = index % 2 === 0 ? 'female' : 'male'
   }
+  // Panel review IN-6 (D6): the outcome list was reworded. These old values exist only here, so a
+  // browser that saved them before the change reads the new ones.
+  const renamedOutcomes: Record<string, string> = {
+    not_reached: 'no_answer',
+    voicemail: 'left_message_or_voicemail',
+    left_message: 'left_message_or_voicemail',
+  }
+  for (const incident of saved.state.incidents)
+    for (const attempt of incident.parentNotifications as Array<{ outcome: string }>)
+      attempt.outcome = renamedOutcomes[attempt.outcome] ?? attempt.outcome
   return saved
 }
 
@@ -172,5 +182,7 @@ if (import.meta.env.DEV && typeof window !== 'undefined') {
     setToday: setMockToday,
     setPersistence: setMockPersistence,
     snapshot: () => structuredClone(db()),
+    // Replaces the in-memory store, e.g. with `scripts/generate-load-data.mjs` output for a load check.
+    load: (next: DbState) => restoreDb(next),
   }
 }

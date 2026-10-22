@@ -17,10 +17,12 @@ import type {
 import holidayData from './holidays-ph.json'
 import {
   compareGradeLevels,
+  countedVisits,
   dateOf,
   dueFollowUps,
   followUpDueState,
   frequentVisitors,
+  inClinicNow,
   inventoryStatusFor,
   lowStockCount,
   pendingRecordCount,
@@ -43,11 +45,13 @@ export function buildDashboardSummary(
 ): DashboardSummary {
   const { today, config } = state
   const { from, to } = query.range
-  const visitsInRange = state.visits.filter((v) => isWithin(dateOf(v.dateTime), from, to))
+  // An escalated visit counts once, as its incident (ADR-036).
+  const counted = countedVisits(state)
+  const visitsInRange = counted.filter((v) => isWithin(dateOf(v.dateTime), from, to))
   const incidentsInRange = state.incidents.filter((i) => isWithin(dateOf(i.time), from, to))
   const students = studentsById(state)
   const trendEvents = [
-    ...state.visits.flatMap((v) => {
+    ...counted.flatMap((v) => {
       const student = students.get(v.studentId)
       return student ? [{ date: dateOf(v.dateTime), hour: hourOf(v.dateTime), complaint: v.complaint, eventTag: v.eventTag, sex: student.sex ?? 'female', gradeLevel: student.gradeLevel, kind: 'visit' as const }] : []
     }),
@@ -78,10 +82,12 @@ export function buildDashboardSummary(
       pendingRecords: pendingRecordCount(state),
       lowStockItems: lowStockCount(state),
       activeStudents: state.students.filter((s) => !s.archived).length,
+      inClinicNow: inClinicNow(state).length,
+      incidentsAwaitingStage2: state.incidents.filter((i) => i.stage === 1).length,
     },
     previousCounts: comparable
       ? {
-          visits: state.visits.filter((v) => isWithin(dateOf(v.dateTime), prev.from, prev.to)).length,
+          visits: counted.filter((v) => isWithin(dateOf(v.dateTime), prev.from, prev.to)).length,
           incidents: state.incidents.filter((i) => isWithin(dateOf(i.time), prev.from, prev.to)).length,
         }
       : null,
@@ -89,6 +95,9 @@ export function buildDashboardSummary(
     upcomingWindowDays: config.upcomingFollowUpDays,
     frequentVisitors: frequentVisitors(state, { from, to }),
     frequentVisitorMinVisits: config.frequentVisitorMinVisits,
+    percentMinPriorCount: config.percentMinPriorCount,
+    // Filled in by `getDashboardSummary`, which owns the store's clock (api.ts `backupAlertFor`).
+    backupAlert: null,
     inventoryAlerts: buildInventoryAlerts(state),
     complaintTrends: buildComplaintTrends(filteredTrendEvents, query.range, config, state.frontendOnly.calendarEvents),
     demographics: buildDemographicAnalysis(inRangeEvents, query),
@@ -418,7 +427,7 @@ export function buildCalendarDays(state: DbState, from: ISODate, to: ISODate): C
   const addTag = (day: CalendarDay, tag: string | null) => {
     if (tag && !day.eventTags.includes(tag)) day.eventTags.push(tag)
   }
-  for (const v of state.visits) {
+  for (const v of countedVisits(state)) {
     const day = days.get(dateOf(v.dateTime))
     if (!day) continue
     day.visits += 1

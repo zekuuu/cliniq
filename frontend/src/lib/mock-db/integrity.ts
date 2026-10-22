@@ -18,7 +18,7 @@ export const CALENDAR_EVENT_TITLE_MAX = 60
 
 const FIELDS = {
   top: ['meta', 'config', 'users', 'students', 'visits', 'incidents', 'followUps', 'inventoryItems', 'reports', 'backupLogs', 'auditLog', 'frontendOnly'],
-  config: ['_note', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'vitalsWarningRanges'],
+  config: ['_note', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges'],
   users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture', 'deactivatedAt'],
   students: ['id', 'lrn', 'fullName', 'gradeLevel', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
   emergencyContact: ['name', 'relationship', 'phone', 'verified'],
@@ -50,7 +50,7 @@ const DERIVED_FIELDS = new Set([
 
 const ENUMS = {
   role: ['staff', 'admin'],
-  disposition: ['returned_to_class', 'sent_home', 'referred_to_hospital'],
+  disposition: ['returned_to_class', 'sent_home', 'referred_to_hospital', 'resting_in_clinic'],
   stage: [1, 2],
   followUpStatus: ['pending', 'completed', 'missed', 'cancelled'],
   relatedType: ['visit', 'incident'],
@@ -58,7 +58,7 @@ const ENUMS = {
   reportType: ['monthly', 'incident', 'health_summary'],
   backupStatus: ['ok', 'failed'],
   actionType: ['login', 'logout', 'submit', 'approve', 'create', 'update', 'delete', 'archive', 'print'],
-  outcome: ['reached', 'not_reached', 'voicemail', 'left_message'],
+  outcome: ['reached', 'no_answer', 'left_message_or_voicemail', 'wrong_number'],
   sex: ['male', 'female'],
   transactionType: ['dispense', 'restock', 'adjustment'],
   adjustmentReason: ['visit_edited', 'expired_disposed', 'damaged_spilled', 'miscount_correction', 'other'],

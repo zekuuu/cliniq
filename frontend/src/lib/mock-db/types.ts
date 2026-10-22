@@ -92,6 +92,13 @@ export interface MockDbConfig {
   /** How many top complaints the trend chart draws (the rest go in its table). */
   topComplaints: number
   /**
+   * Below this many records in the prior period, a stat card shows both counts ("4 vs 1") instead of a
+   * percentage, so one incident becoming four never reads "up 300%" (panel review DB-2, D4).
+   */
+  percentMinPriorCount: number
+  /** Hours after the last successful backup before the Dashboard warns that it is stale (panel review BK-2, D5). */
+  staleBackupHours: number
+  /**
    * Incident vitals outside these ranges get a "please check" warning that never blocks saving.
    * PLACEHOLDER sanity bounds, not clinical thresholds: the nurse sets the real ones.
    */
@@ -124,7 +131,7 @@ export interface DevAccount {
 
 export interface ComplaintType {
   label: string
-  /** Smart Triage checklist (#27). Empty = no checklist for this complaint. Guidance only. */
+  /** First-aid checklist (#27). Empty = no checklist for this complaint. Guidance only. */
   triageSteps: string[]
 }
 
@@ -182,6 +189,13 @@ export interface ExcuseLetterApproval<T = ISODateTime, D = ISODate> {
   excusedUntil: D
   /** Note for the teacher, snapshotted at approval (provisional pending the ERD). */
   note: string | null
+  /** Set when the letter's visit was marked "Entered in error"; a voided letter is never valid. PROVISIONAL. */
+  voided?: { reason: string; at: ISODateTime; byUserId: string } | null
+  /**
+   * Set by "Issue a replacement" (panel review EX-3): this letter was replaced by a new one for the
+   * same visit and is kept, never valid again. PROVISIONAL.
+   */
+  superseded?: { reason: string; at: ISODateTime; byUserId: string } | null
 }
 
 export interface PeReferral<T = ISODateTime> {

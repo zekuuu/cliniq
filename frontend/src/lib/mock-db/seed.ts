@@ -1,6 +1,6 @@
 import rawSeed from './mock-db.json'
 import type { ISODate } from '../../types/entities'
-import { resolveDate, resolveDateTime } from './relativeDates'
+import { resolveDate, resolveDateTime, resolveSchoolDate, resolveSchoolDateTime } from './relativeDates'
 import type { DbState, MockDbSeed } from './types'
 
 /**
@@ -34,7 +34,10 @@ const shapeChecked: Widen<MockDbSeed> = rawSeed
 
 export const seed = shapeChecked as unknown as MockDbSeed
 
-/** Resolves every relative date into the in-memory store. */
+/**
+ * Resolves every relative date into the in-memory store. Clinic activity lands on school days
+ * (`resolveSchoolDate`); backups, inventory expiry and calendar events keep their real days.
+ */
 export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
   const config = { ...source.config }
   delete config._note
@@ -45,7 +48,7 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
     config,
     users: source.users.map((u) => ({
       ...u,
-      lastLogin: u.lastLogin ? resolveDateTime(u.lastLogin, today) : null,
+      lastLogin: u.lastLogin ? resolveSchoolDateTime(u.lastLogin, today) : null,
     })),
     // Seed records written before Part 3B have no Sex value. This deterministic alternating value
     // is explicitly synthetic and keeps every loaded mock record valid until real master-list data
@@ -56,32 +59,32 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
     })),
     visits: source.visits.map((v) => ({
       ...v,
-      dateTime: resolveDateTime(v.dateTime, today),
+      dateTime: resolveSchoolDateTime(v.dateTime, today),
       excuseLetterDraft: v.excuseLetterDraft
         ? {
             ...v.excuseLetterDraft,
-            excusedFrom: resolveDate(v.excuseLetterDraft.excusedFrom, today),
-            excusedUntil: resolveDate(v.excuseLetterDraft.excusedUntil, today),
+            excusedFrom: resolveSchoolDate(v.excuseLetterDraft.excusedFrom, today),
+            excusedUntil: resolveSchoolDate(v.excuseLetterDraft.excusedUntil, today),
           }
         : null,
     })),
     incidents: source.incidents.map((i) => ({
       ...i,
-      time: resolveDateTime(i.time, today),
+      time: resolveSchoolDateTime(i.time, today),
       hospitalReferral: i.hospitalReferral
         ? {
             ...i.hospitalReferral,
-            departureTime: resolveDateTime(i.hospitalReferral.departureTime, today),
+            departureTime: resolveSchoolDateTime(i.hospitalReferral.departureTime, today),
           }
         : null,
       parentNotifications: i.parentNotifications.map((n) => ({
         ...n,
-        timestamp: resolveDateTime(n.timestamp, today),
+        timestamp: resolveSchoolDateTime(n.timestamp, today),
       })),
     })),
     followUps: source.followUps.map((f) => ({
       ...f,
-      followUpDate: resolveDate(f.followUpDate, today),
+      followUpDate: resolveSchoolDate(f.followUpDate, today),
     })),
     inventoryItems: source.inventoryItems.map(({ currentStock, expirationDate, ...item }) => ({
       ...item,
@@ -97,27 +100,27 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
       dateRange: { from: resolveDate(r.dateRange.from, today), to: resolveDate(r.dateRange.to, today) },
     })),
     backupLogs: source.backupLogs.map((b) => ({ ...b, lastRun: resolveDateTime(b.lastRun, today) })),
-    auditLog: source.auditLog.map((a) => ({ ...a, timestamp: resolveDateTime(a.timestamp, today) })),
+    auditLog: source.auditLog.map((a) => ({ ...a, timestamp: resolveSchoolDateTime(a.timestamp, today) })),
     frontendOnly: {
       devAccounts: fo.devAccounts,
       visitComplaintTypes: fo.visitComplaintTypes,
       incidentComplaintTypes: fo.incidentComplaintTypes,
       inventoryTransactions: fo.inventoryTransactions.map((t) => ({
         ...t,
-        timestamp: resolveDateTime(t.timestamp, today),
+        timestamp: resolveSchoolDateTime(t.timestamp, today),
       })),
       recordReviews: fo.recordReviews.map((r) => ({
         ...r,
-        importedAt: resolveDate(r.importedAt, today),
-        resolvedAt: r.resolvedAt ? resolveDateTime(r.resolvedAt, today) : null,
+        importedAt: resolveSchoolDate(r.importedAt, today),
+        resolvedAt: r.resolvedAt ? resolveSchoolDateTime(r.resolvedAt, today) : null,
       })),
       excuseLetterApprovals: fo.excuseLetterApprovals.map((a) => ({
         ...a,
-        approvedAt: resolveDateTime(a.approvedAt, today),
-        excusedFrom: resolveDate(a.excusedFrom, today),
-        excusedUntil: resolveDate(a.excusedUntil, today),
+        approvedAt: resolveSchoolDateTime(a.approvedAt, today),
+        excusedFrom: resolveSchoolDate(a.excusedFrom, today),
+        excusedUntil: resolveSchoolDate(a.excusedUntil, today),
       })),
-      peReferrals: fo.peReferrals.map((p) => ({ ...p, createdAt: resolveDateTime(p.createdAt, today) })),
+      peReferrals: fo.peReferrals.map((p) => ({ ...p, createdAt: resolveSchoolDateTime(p.createdAt, today) })),
       issueReports: fo.issueReports.map((r) => ({ ...r, createdAt: resolveDateTime(r.createdAt, today) })),
       calendarEvents: fo.calendarEvents.map((e) => ({
         ...e,

@@ -36,7 +36,12 @@ is the file that becomes HTTP calls. Nothing above it has to change.
    lower its `currentStock`. To make a record incomplete, blank its `contactInfo` or set
    `emergencyContacts` to an empty array. The integrity test names the field if you store a derived value.
 2. **Dates are relative.** Use `{ "daysAgo": 3 }` or `{ "daysFromNow": 11 }`. Timestamps add
-   `"time": "HH:MM"` (Philippine time). Absolute dates are rejected because they go stale.
+   `"time": "HH:MM"` (Philippine time). Absolute dates are rejected because they go stale. Past clinic
+   activity (visits, incidents, letters, transactions, audit rows, follow-ups) resolves to a school day:
+   a Saturday or Sunday moves back to the Friday before (`toSchoolDay` in `relativeDates.ts`), so no
+   weekday changes the picture. Today is never moved; backups and calendar events keep their days.
+   Two visits never share a minute, and care notes never name a medicine the visit's lines lack
+   (`countsAndSeed.test.ts` checks all three).
 3. **Reference by key.** Visits, incidents, follow-ups, reviews and stock transactions point at a
    student by its internal `studentId`. Each student has a unique 12-digit `lrn`, clearly synthetic
    (`000000` + enrolment year + sequence; ADR-028). Follow-ups point at an existing visit or incident *of
@@ -77,7 +82,17 @@ Add to any URL (see `devToggles.ts`):
 | `?mockReset=1` | throw away every write and reload from the JSON |
 
 In the browser console (dev builds): `cliniqMockDb.reset()`, `cliniqMockDb.setToday('2026-12-01')`,
-`cliniqMockDb.setPersistence(true)`, `cliniqMockDb.snapshot()`.
+`cliniqMockDb.setPersistence(true)`, `cliniqMockDb.snapshot()`, `cliniqMockDb.load(state)`.
+
+**Load check at the school's scale:** `frontend/scripts/generate-load-data.mjs` (dev only, never bundled)
+grows a snapshot to about 600 students and five years of visits, incidents and stock movements. The
+result (about 7 MB) is too large for localStorage, so load it with `cliniqMockDb.load(...)` and move
+between screens without reloading.
+
+A copy saved in localStorage before a field changed shape is migrated when it loads
+(`migratePersistedState` in `store.ts`): inventory batches, a missing Sex, and the parent-notification
+outcomes renamed in panel review part 1 (`voicemail` and `left_message` become `left_message_or_voicemail`,
+`not_reached` becomes `no_answer`). The old values appear only there and in its test.
 
 ## Dev accounts
 
