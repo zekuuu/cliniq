@@ -221,7 +221,7 @@ describe('Sports Report screens', () => {
     )
     expect(await screen.findByRole('heading', { name: 'Reports', level: 1 }, { timeout: 5000 })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Sports Reports' })).not.toBeInTheDocument()
-    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Monthly Report', 'Incident Archive', 'Health Summaries'])
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Monthly Report', 'Incident register', 'Complaint summary'])
     admin.unmount()
     render(
       <MemoryRouter initialEntries={['/reports']}>

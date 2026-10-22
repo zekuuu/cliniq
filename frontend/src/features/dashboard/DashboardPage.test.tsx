@@ -24,6 +24,8 @@ describe('Clinic Overview Dashboard', () => {
       expect(within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === label)).toBeInTheDocument()
     }
     expect(within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === 'Active students')).toHaveClass('text-brand-green-dark')
+    expect(within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === 'Pending excuse letters')).toHaveClass('text-warning')
+    expect(within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === 'Due & overdue follow-ups')).toHaveClass('text-warning')
     expect(screen.getByRole('heading', { name: /frequent-visitor warnings/i })).toBeInTheDocument()
   })
 

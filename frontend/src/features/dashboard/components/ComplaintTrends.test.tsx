@@ -200,8 +200,8 @@ describe('TrendTable', () => {
   it('shapes the loading skeleton like the demographic cards above the trend row', () => {
     const { container } = render(<ComplaintTrendsSkeleton />)
     const demographics = container.querySelector('[data-skeleton="demographics"]')
-    expect(demographics?.textContent).toContain('Visits by Sex')
-    expect(demographics?.textContent).toContain('Visits by grade level')
+    expect(demographics?.textContent).toContain('Visits and incidents by sex')
+    expect(demographics?.textContent).toContain('Visits and incidents by grade level')
     expect(demographics?.compareDocumentPosition(container.querySelector('[data-skeleton="complaint-trends"]')!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
   })
 
