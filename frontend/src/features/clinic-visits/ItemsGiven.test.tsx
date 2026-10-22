@@ -89,7 +89,7 @@ describe('New Visit: medicines and supplies given', () => {
     renderWithRouter(<NewVisitEntryPage />)
     await pickStudent(user, student.lrn)
     await screen.findByRole('heading', { name: 'New Visit' })
-    expect(screen.getByRole('note', { name: 'Recorded allergies' })).toHaveTextContent('Allergies: Peanuts')
+    expect(screen.getByRole('note', { name: 'Allergies' })).toHaveTextContent('Allergies: Peanuts')
   })
 })
 

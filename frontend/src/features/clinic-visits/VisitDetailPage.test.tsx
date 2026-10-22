@@ -154,7 +154,7 @@ describe('Visit Details: excuse letter and disposition fields', () => {
     await user.click(screen.getByRole('radio', { name: 'Returned to class' }))
     expect(screen.queryByLabelText(/prepare an excuse letter/i)).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('radio', { name: 'Hospital referral' }))
+    await user.click(screen.getByRole('radio', { name: 'Referred to hospital' }))
     expect(screen.getByLabelText(/referred to/i)).toHaveValue('')
     expect(screen.getByLabelText(/prepare an excuse letter/i)).toBeChecked()
     expect(screen.getByLabelText('Note for the teacher')).toHaveValue('')

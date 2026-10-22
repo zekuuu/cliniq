@@ -36,7 +36,7 @@ describe('New Visit', () => {
     expect(await screen.findByRole('combobox', { name: /student/i })).toHaveFocus()
   })
 
-  it('shows the identified student and reveals Smart Triage for a case-insensitive complaint match', async () => {
+  it('shows the identified student and reveals the first-aid checklist for a case-insensitive complaint match', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
     await pickStudent(user, '000000260001')

@@ -33,7 +33,7 @@ describe('Excuse Letter', () => {
     renderWithRouter(<ExcuseLetterPage />)
 
     await screen.findByRole('heading', { name: 'Excuse Letter' })
-    await user.click(screen.getByRole('button', { name: 'Print' }))
+    await user.click(screen.getByRole('button', { name: 'Print / Save as PDF' }))
 
     expect(print).toHaveBeenCalledOnce()
   })

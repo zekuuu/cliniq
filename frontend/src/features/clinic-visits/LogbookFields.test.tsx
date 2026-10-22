@@ -95,7 +95,7 @@ describe('Visit logbook fields ("Show more fields")', () => {
     await user.type(screen.getByLabelText('Body temperature (°C)'), '37.8')
     setTimeOut('23:59')
     await user.type(screen.getByLabelText('Assisted by'), '  Ms. Reyes ')
-    await user.type(screen.getByLabelText('Parent/Guardian'), 'Maria Santos')
+    await user.type(screen.getByLabelText('Parent or guardian'), 'Maria Santos')
     await user.type(screen.getByLabelText('Remarks'), 'Picked up by mother')
     await user.click(moreButton())
     expect(moreButton()).toHaveAccessibleName('Show more fields (5 filled)')
