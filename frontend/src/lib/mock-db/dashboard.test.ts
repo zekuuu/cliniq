@@ -25,6 +25,8 @@ const CONFIG: MockDbConfig = {
   clusterMinCount: 8,
   clusterRatio: 2,
   topComplaints: 5,
+  percentMinPriorCount: 5,
+  staleBackupHours: 48,
   vitalsWarningRanges: { temperatureC: { min: 30, max: 43 }, pulseBpm: { min: 30, max: 250 }, oxygenSaturationPct: null, feverFromC: 37 },
 }
 

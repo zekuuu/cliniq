@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   adjustInventoryStock,
   completeIncidentStageTwo,
+  getIncident,
   saveIncidentStageOne,
   getInventoryItem,
   getMonthlyReport,
@@ -250,7 +251,24 @@ describe('Edit Item', () => {
 describe('incident Stage 2', () => {
   beforeEach(() => resetMockDb())
 
-  it('accepts no treatment notes and no medicine lines', async () => {
+  it('refuses an empty Stage 2: no notes, medicine, notification, referral or reason (panel review IN-3)', async () => {
+    const student = await getStudent('student-0001')
+    const stageOne = await saveIncidentStageOne({ studentId: student.id, complaint: 'Fall injury', vitals: { temperatureC: 36.8 } })
+    await expect(
+      completeIncidentStageTwo({
+        incidentId: stageOne.id,
+        complaint: 'Fall injury',
+        vitals: { temperatureC: 36.8, treatmentNotes: '' },
+        hospitalReferral: null,
+        newParentNotifications: [],
+        followUp: null,
+        itemsGiven: [],
+      }),
+    ).rejects.toThrow(/nothing further was needed or done/i)
+    expect((await getIncident(stageOne.id)).stage).toBe(1)
+  })
+
+  it('accepts no treatment notes and no medicine lines when nothing further was needed', async () => {
     const student = await getStudent('student-0001')
     const stageOne = await saveIncidentStageOne({ studentId: student.id, complaint: 'Fall injury', vitals: { temperatureC: 36.8 } })
 
@@ -262,9 +280,10 @@ describe('incident Stage 2', () => {
       newParentNotifications: [],
       followUp: null,
       itemsGiven: [],
+      noFurtherActionReason: 'Observed only',
     })
 
-    expect(incident).toMatchObject({ stage: 2, itemsGiven: [], vitals: { treatmentNotes: '' } })
+    expect(incident).toMatchObject({ stage: 2, itemsGiven: [], vitals: { treatmentNotes: '' }, noFurtherActionReason: 'Observed only' })
   })
 
   it('dispenses its lines with transactions that reference the incident, and fixes them once complete', async () => {
