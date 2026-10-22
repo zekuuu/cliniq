@@ -4,6 +4,7 @@ import { formatDateRange } from '../../lib/dates'
 import type { ExcusedPeriod } from '../../lib/mock-db'
 import type { Disposition } from '../../types/entities'
 import { hasExcuseLetter, type DispositionErrors, type DispositionValues } from './dispositionValues'
+import { ExcusedPeriodPresets } from './ExcusedPeriodPresets'
 
 /**
  * Progressive disclosure under Disposition: nothing for Returned to class; the excuse-letter
@@ -81,6 +82,9 @@ export function DispositionFields({
               onChange={(value) => set('excusedUntil', value)}
               error={errors.excusedUntil}
             />
+            <div className="sm:col-span-2">
+              <ExcusedPeriodPresets from={values.excusedFrom} onPick={(until) => set('excusedUntil', until)} />
+            </div>
             <div className="sm:col-span-2">
               <Input
                 label="Note for the teacher"

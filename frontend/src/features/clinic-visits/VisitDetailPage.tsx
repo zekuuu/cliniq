@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import {
   BackButton,
   Badge,
@@ -8,58 +8,46 @@ import {
   Card,
   CardBody,
   CardHeader,
+  DatePicker,
   ErrorState,
   Icon,
   Input,
   ItemsGivenField,
+  Modal,
   SegmentedControl,
+  Textarea,
   Skeleton,
   type ItemLineDraft,
-  type BadgeTone,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { cn } from '../../lib/cn'
 import { cleanComplaint } from '../../lib/complaints'
-import { formatDateRange, formatDateTime } from '../../lib/dates'
+import { formatDateRange, formatDateTime, todayISO } from '../../lib/dates'
 import { draftsFrom, formatItemGiven } from '../../lib/itemsGiven'
 import { formatDecimal } from '../../lib/numbers'
 import { getMockSessionUser, StockRuleError, type SessionUser } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
 import type { Disposition } from '../../types/entities'
 import { ComplaintField } from './ComplaintField'
+import { MedicineInNotesHint } from './MedicineInNotesHint'
 import { DispositionFields } from './DispositionFields'
 import { dispositionErrors, emptyDispositionValues, type DispositionErrors } from './dispositionValues'
 import { LogbookFields } from './LogbookFields'
-import { filledLogbookCount, formatClock, logbookErrors, type LogbookErrors, type LogbookValues } from './logbookValues'
+import { currentClock, filledLogbookCount, formatClock, logbookErrors, type LogbookErrors, type LogbookValues } from './logbookValues'
 import {
   fetchVisitDetail,
+  markEnteredInError,
   updateVisitDetail,
   valuesFromVisit,
   type VisitDetail,
   type VisitDetailValues,
 } from './api/visitDetailApi'
 import { MaskedLrn } from '../../components/ui/MaskedLrn'
-
-const dispositionOptions = [
-  { value: 'returned_to_class', label: 'Returned to class' },
-  { value: 'sent_home', label: 'Sent home' },
-  { value: 'referred_to_hospital', label: 'Hospital referral' },
-] satisfies Array<{ value: Disposition; label: string }>
-
-const dispositionLabel: Record<Disposition, string> = {
-  returned_to_class: 'Returned to class',
-  sent_home: 'Sent home',
-  referred_to_hospital: 'Referred to hospital',
-}
-
-const dispositionTone: Record<Disposition, BadgeTone> = {
-  returned_to_class: 'success',
-  sent_home: 'warning',
-  referred_to_hospital: 'error',
-}
+import { DISPOSITION_LABELS as dispositionLabel, DISPOSITION_OPTIONS as dispositionOptions, DISPOSITION_TONES as dispositionTone } from '../../lib/dispositions'
 
 interface Errors extends DispositionErrors, LogbookErrors {
+  visitTime?: string
   complaint?: string
   itemsGiven?: string
 }
@@ -155,6 +143,28 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
   /** "Show more fields": opens by itself when the visit already has a value in it, or an error sits in it. */
   const [moreOpen, setMoreOpen] = useState(false)
   const timeOutRef = useRef<HTMLInputElement>(null)
+  const navigate = useNavigate()
+  // "Entered in error" (panel review VS-9, D2): a confirmation with a required reason.
+  const [markingError, setMarkingError] = useState(false)
+  const [errorReason, setErrorReason] = useState('')
+  const [errorReasonMessage, setErrorReasonMessage] = useState('')
+  const [markingSaving, setMarkingSaving] = useState(false)
+  const locked = Boolean(visit.enteredInError)
+
+  async function confirmEnteredInError() {
+    if (!errorReason.trim()) {
+      setErrorReasonMessage('Give the reason this visit was entered in error.')
+      return
+    }
+    setMarkingSaving(true)
+    try {
+      setVisit(await markEnteredInError(visit.id, errorReason))
+      setMarkingError(false)
+      setSaved(null)
+    } finally {
+      setMarkingSaving(false)
+    }
+  }
 
   function startEdit() {
     setMoreOpen(filledLogbookCount(valuesFromVisit(visit)) > 0)
@@ -177,11 +187,13 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
   function validate(): Errors {
     const next: Errors = {}
     if (!cleanComplaint(values.complaint)) next.complaint = 'Enter the visit complaint.'
+    if (!values.visitDate || !values.visitClock) next.visitTime = 'Enter the visit date and time.'
+    else if (`${values.visitDate}T${values.visitClock}` > `${todayISO()}T${currentClock()}`) next.visitTime = "The visit date and time can't be in the future."
     if (lines.some((line) => line.quantity < 1)) next.itemsGiven = 'Each quantity must be at least 1.'
     return {
       ...next,
       ...dispositionErrors(values.disposition, values, Boolean(visit.approval)),
-      ...logbookErrors(values, visit.dateTime.slice(11, 16), timeOutRef.current?.validity.badInput),
+      ...logbookErrors(values, values.visitClock || visit.dateTime.slice(11, 16), timeOutRef.current?.validity.badInput),
     }
   }
 
@@ -240,14 +252,43 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
             <Badge tone="info" variant="soft" icon="calendarClock">
               {formatDateTime(visit.dateTime)}
             </Badge>
-            {!editing && (
-              <Button variant="secondary" icon="fileText" onClick={startEdit}>
-                Edit
-              </Button>
+            {!editing && !locked && (
+              <>
+                <Button variant="secondary" icon="fileText" onClick={startEdit}>
+                  Edit
+                </Button>
+                {!visit.escalatedIncidentId && (
+                  <Button variant="secondary" icon="alertTriangle" onClick={() => navigate(`${paths.incidentNew}?fromVisit=${encodeURIComponent(visit.id)}`)}>
+                    Escalate to incident
+                  </Button>
+                )}
+                <Button variant="neutral" onClick={() => { setErrorReason(''); setErrorReasonMessage(''); setMarkingError(true) }}>
+                  Entered in error
+                </Button>
+              </>
             )}
           </div>
         </div>
       </Card>
+
+      {visit.enteredInError && (
+        <div role="status" className="rounded-md border border-error bg-error/10 px-4 py-3 text-sm text-text-primary">
+          <p className="font-semibold">Entered in error. This visit is kept but left out of lists, counts and reports.</p>
+          <p className="mt-1">
+            Reason: {visit.enteredInError.reason}. Marked by {visit.enteredInErrorBy ?? 'Unknown user'}, {formatDateTime(visit.enteredInError.at)}.
+            Its medicines went back to stock and its excuse letter is void. It can no longer be edited.
+          </p>
+        </div>
+      )}
+
+      {visit.escalatedIncidentId && (
+        <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning bg-warning/10 px-4 py-3 text-sm font-semibold text-text-primary">
+          Escalated to incident. The event counts once, as the incident.
+          <Link to={paths.incidentReport(visit.escalatedIncidentId)} className={buttonClassName({ size: 'sm' })}>
+            Open the incident
+          </Link>
+        </div>
+      )}
 
       {saved && (
         <div
@@ -295,6 +336,14 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                 {visit.eventTag || 'No event tag'}
               </p>
             </div>
+            {visit.lateEntry && (
+              <div className="sm:col-span-2">
+                <p className="text-xs font-semibold text-text-secondary">Entered late</p>
+                <p className="text-sm font-semibold text-text-primary">
+                  Recorded more than 30 minutes after the visit time.{visit.lateEntryReason ? ` Reason: ${visit.lateEntryReason}` : ' No reason given.'}
+                </p>
+              </div>
+            )}
           </CardBody>
         </Card>
 
@@ -320,6 +369,28 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                 <p role="status" className="sr-only">
                   {invalid.announcement}
                 </p>
+                {/* Correcting when the visit happened (Zean, Thursday, October 22, 2026); audited as "date and time". */}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <DatePicker
+                    label="Visit date"
+                    value={values.visitDate}
+                    max={todayISO()}
+                    onChange={(next) => {
+                      setField('visitDate', next)
+                      setErrors((current) => ({ ...current, visitTime: undefined }))
+                    }}
+                    error={errors.visitTime}
+                  />
+                  <Input
+                    type="time"
+                    label="Time"
+                    value={values.visitClock}
+                    onChange={(event) => {
+                      setField('visitClock', event.target.value)
+                      setErrors((current) => ({ ...current, visitTime: undefined }))
+                    }}
+                  />
+                </div>
                 <ComplaintField
                   value={values.complaint}
                   onChange={(value) => setField('complaint', value)}
@@ -332,6 +403,15 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                   hint="Optional. Care that isn't stock: rest, cold compress, wound cleaning, advice."
                   value={values.treatment}
                   onChange={(value) => setField('treatment', value)}
+                />
+                <MedicineInNotesHint
+                  notes={values.treatment}
+                  items={visit.items}
+                  lines={lines}
+                  onAdd={(line) => {
+                    setLines((current) => [...current, line])
+                    setSaved(null)
+                  }}
                 />
                 <ItemsGivenField
                   items={visit.items}
@@ -349,6 +429,8 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                   <p className="mb-1 text-xs font-semibold text-text-primary">Disposition</p>
                   <SegmentedControl
                     label="Disposition"
+                    // Four options: two by two on a phone, one row from sm up (panel review VS-1 added Resting).
+                    className="max-sm:grid max-sm:w-full max-sm:grid-cols-2"
                     value={values.disposition}
                     onChange={setDisposition}
                     options={dispositionOptions}
@@ -458,7 +540,7 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                 )}
                 {visit.parentGuardian && (
                   <section>
-                    <h2 className="text-sm font-bold text-text-primary">Parent/Guardian</h2>
+                    <h2 className="text-sm font-bold text-text-primary">Parent or guardian</h2>
                     <p className="mt-1 text-sm text-text-primary">{visit.parentGuardian}</p>
                   </section>
                 )}
@@ -475,6 +557,34 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
 
         <ExcuseLetterCard visit={visit} />
       </div>
+
+      <Modal open={markingError} title="Mark this visit as entered in error?" onClose={() => setMarkingError(false)}>
+        <p className="text-sm text-text-secondary">
+          Nothing is deleted. The visit leaves every list and count, its medicines go back to stock, and its
+          excuse letter is voided. It can't be edited afterwards, and this can't be undone from this screen.
+        </p>
+        <Textarea
+          className="mt-4"
+          label="Reason"
+          required
+          rows={3}
+          maxLength={300}
+          value={errorReason}
+          onChange={(value) => {
+            setErrorReason(value)
+            setErrorReasonMessage('')
+          }}
+          error={errorReasonMessage}
+        />
+        <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <Button variant="neutral" data-autofocus onClick={() => setMarkingError(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" loading={markingSaving} onClick={confirmEnteredInError}>
+            Mark entered in error
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }
@@ -486,7 +596,9 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
  */
 function ExcuseLetterCard({ visit }: { visit: VisitDetail }) {
   const letter = visit.approval ?? visit.excuseLetterDraft
-  const status = visit.approval ? 'Approved' : visit.excuseLetterDraft ? 'Pending approval' : 'Not prepared'
+  // A letter whose visit was entered in error is void, draft or approved (D2).
+  const voided = Boolean(visit.enteredInError && letter)
+  const status = voided ? 'Voided' : visit.approval ? 'Approved' : visit.excuseLetterDraft ? 'Pending approval' : 'Not prepared'
   return (
     <Card aria-labelledby="visit-excuse-letter-title">
       <CardHeader
@@ -494,7 +606,7 @@ function ExcuseLetterCard({ visit }: { visit: VisitDetail }) {
         title="Excuse letter"
         icon={<Icon name="fileText" />}
         actions={
-          <Badge tone={visit.approval ? 'success' : visit.excuseLetterDraft ? 'warning' : 'neutral'} variant="soft">
+          <Badge tone={voided ? 'error' : visit.approval ? 'success' : visit.excuseLetterDraft ? 'warning' : 'neutral'} variant="soft">
             {status}
           </Badge>
         }
@@ -518,11 +630,15 @@ function ExcuseLetterCard({ visit }: { visit: VisitDetail }) {
         ) : (
           <p className="text-sm text-text-secondary">No excuse letter has been prepared for this visit.</p>
         )}
-        <div>
-          <Link to={paths.excuseLetter(visit.id)} className={buttonClassName({ size: 'sm' })}>
-            {visit.approval ? 'View excuse letter' : visit.excuseLetterDraft ? 'Review excuse letter' : 'Prepare excuse letter'}
-          </Link>
-        </div>
+        {voided ? (
+          <p className="text-sm text-text-secondary">Voided because the visit was entered in error. It is not a valid excuse letter.</p>
+        ) : !visit.enteredInError && (
+          <div>
+            <Link to={paths.excuseLetter(visit.id)} className={buttonClassName({ size: 'sm' })}>
+              {visit.approval ? 'View excuse letter' : visit.excuseLetterDraft ? 'Review excuse letter' : 'Prepare excuse letter'}
+            </Link>
+          </div>
+        )}
       </CardBody>
     </Card>
   )

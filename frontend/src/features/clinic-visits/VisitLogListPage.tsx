@@ -12,18 +12,18 @@ import {
   ErrorState,
   Icon,
   Input,
+  MultiSelect,
   Pagination,
   SegmentedControl,
   Select,
   Skeleton,
-  type BadgeTone,
   type DataTableColumn,
 } from '../../components'
 import { Link, useSearchParams } from 'react-router'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useDateRangeEntryParams } from '../../hooks/useDateRangeEntryParams'
 import { formatDateTime } from '../../lib/dates'
-import type { DateRange } from '../../lib/dateRange'
+import { rangeForPreset, type DateRange } from '../../lib/dateRange'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import { paths } from '../../routes/paths'
 import type { Disposition } from '../../types/entities'
@@ -34,6 +34,7 @@ import {
 } from './api/visitLogApi'
 import { MaskedLrn } from '../../components/ui/MaskedLrn'
 import { lrnLabel } from '../../lib/lrn'
+import { DISPOSITION_LABELS, DISPOSITION_TONES } from '../../lib/dispositions'
 
 type DispositionFilter = Disposition | 'all'
 type LetterFilter = 'pending' | ''
@@ -46,13 +47,10 @@ const dispositionOptions = [
   { value: 'returned_to_class', label: 'Returned' },
   { value: 'sent_home', label: 'Sent home' },
   { value: 'referred_to_hospital', label: 'Hospital' },
+  { value: 'resting_in_clinic', label: 'Resting' },
 ] satisfies Array<{ value: DispositionFilter; label: string }>
 
-const dispositionMeta: Record<Disposition, { label: string; tone: BadgeTone }> = {
-  returned_to_class: { label: 'Returned to class', tone: 'success' },
-  sent_home: { label: 'Sent home', tone: 'warning' },
-  referred_to_hospital: { label: 'Referred to hospital', tone: 'error' },
-}
+const dispositionMeta = (disposition: Disposition) => ({ label: DISPOSITION_LABELS[disposition], tone: DISPOSITION_TONES[disposition] })
 
 function VisitLogSkeleton({ back }: { back: ReactNode }) {
   return (
@@ -82,21 +80,33 @@ function VisitLogSkeleton({ back }: { back: ReactNode }) {
 }
 
 export function VisitLogListPage() {
-  const defaultRange: DateRange = { preset: 'all', ...defaultVisitLogRange() }
+  const todayRange: DateRange = { preset: 'today', ...defaultVisitLogRange() }
+  // `?letter=pending` comes from the Dashboard count and must include outstanding letters from
+  // earlier days; date deep links still take precedence in useDateRangeEntryParams.
+  const [searchParams] = useSearchParams()
+  const defaultRange = searchParams.get('letter') === 'pending'
+    ? rangeForPreset('all', todayRange.to)
+    : todayRange
   const { initialRange, clearDateParams } = useDateRangeEntryParams(defaultRange)
   // `?from=&to=` (e.g. the Dashboard calendar's "View visits") applies only on arrival.
   const [range, setRange] = useState<DateRange>(initialRange)
   const [search, setSearch] = useState('')
   const [disposition, setDisposition] = useState<DispositionFilter>('all')
   // `?letter=pending` (the Dashboard's "Pending excuse letters" card) applies only on arrival.
-  const [searchParams] = useSearchParams()
   const [letter, setLetter] = useState<LetterFilter>(searchParams.get('letter') === 'pending' ? 'pending' : '')
+  // `?inClinic=1` (the Dashboard's "In clinic now" chip) applies only on arrival.
+  const [inClinicNow, setInClinicNow] = useState(searchParams.get('inClinic') === '1')
+  const [includeEnteredInError, setIncludeEnteredInError] = useState(false)
+  const visitStatusFilters = [
+    ...(inClinicNow ? ['in-clinic-now'] : []),
+    ...(includeEnteredInError ? ['include-entered-in-error'] : []),
+  ]
   const [sort, setSort] = useState<TableSortState<VisitLogSortKey>>({ key: 'dateTime', direction: 'descending' })
   const [page, setPage] = useState(1)
 
   const { data, status, isRefetching, reload } = useAsyncData(
-    `${range.from}|${range.to}|${search}|${disposition}|${letter}`,
-    () => fetchVisitLog({ from: range.from, to: range.to, search, disposition, letter }),
+    `${range.from}|${range.to}|${search}|${disposition}|${letter}|${inClinicNow}|${includeEnteredInError}`,
+    () => fetchVisitLog({ from: range.from, to: range.to, search, disposition, letter, inClinicNow, includeEnteredInError }),
   )
 
   // Filters reset to the first page in the same event, so a narrower result never lands on an
@@ -116,6 +126,11 @@ export function VisitLogListPage() {
   }
   function changeLetter(next: string) {
     setLetter(next === 'pending' ? 'pending' : '')
+    setPage(1)
+  }
+  function changeVisitStatus(next: string[]) {
+    setInClinicNow(next.includes('in-clinic-now'))
+    setIncludeEnteredInError(next.includes('include-entered-in-error'))
     setPage(1)
   }
 
@@ -155,7 +170,7 @@ export function VisitLogListPage() {
       case 'record':
         return row.complaint
       case 'disposition':
-        return dispositionMeta[row.disposition].label
+        return dispositionMeta(row.disposition).label
     }
   })
 
@@ -196,6 +211,13 @@ export function VisitLogListPage() {
         <div>
           <p>{row.complaint}</p>
           {row.eventTag && <p className="text-xs text-text-secondary">{row.eventTag}</p>}
+          {(row.inClinicNow || row.escalated || row.enteredInError) && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {row.inClinicNow && <Badge tone="info" variant="soft">In clinic now</Badge>}
+              {row.escalated && <Badge tone="warning" variant="soft">Escalated</Badge>}
+              {row.enteredInError && <Badge tone="error" variant="soft">Entered in error</Badge>}
+            </div>
+          )}
         </div>
       ),
     },
@@ -204,8 +226,8 @@ export function VisitLogListPage() {
       header: 'Disposition',
       sort: sortColumn('disposition', 'Disposition'),
       cell: (row) => (
-        <Badge tone={dispositionMeta[row.disposition].tone} variant="soft">
-          {dispositionMeta[row.disposition].label}
+        <Badge tone={dispositionMeta(row.disposition).tone} variant="soft">
+          {dispositionMeta(row.disposition).label}
         </Badge>
       ),
     },
@@ -287,6 +309,17 @@ export function VisitLogListPage() {
               clearable
               onChange={changeLetter}
               className="w-48"
+            />
+            <MultiSelect
+              label="Visit status"
+              values={visitStatusFilters}
+              options={[
+                { value: 'in-clinic-now', label: 'In clinic now only' },
+                { value: 'include-entered-in-error', label: 'Include entered in error' },
+              ]}
+              allLabel="All visits"
+              onChange={changeVisitStatus}
+              className="w-56"
             />
             <DateRangePicker
               value={range}

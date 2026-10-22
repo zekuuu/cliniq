@@ -81,9 +81,9 @@ export function ItemsGivenField({
 
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,14rem)] sm:items-start">
         <InventoryItemPicker items={items} onPick={pick} />
-        <div role="note" aria-label="Recorded allergies" className="rounded-md border border-border px-3 py-2 text-xs text-text-secondary sm:mt-5">
+        <div role="note" aria-label="Allergies" className="rounded-md border border-border px-3 py-2 text-xs text-text-secondary sm:mt-5">
           {allergies === null ? (
-            'Recorded allergies appear here once the student is identified.'
+            'Allergies appear here once the student is identified.'
           ) : allergies.length ? (
             <>
               <span className="flex items-center gap-1 font-semibold text-warning">
@@ -93,7 +93,8 @@ export function ItemsGivenField({
               <span className="mt-0.5 block">Check before giving medicine. Items aren’t matched to allergies.</span>
             </>
           ) : (
-            'No recorded allergies.'
+            // "None recorded", not "No allergies": an empty list can also mean nobody asked (open DECIDE).
+            'Allergies: None recorded.'
           )}
         </div>
       </div>
