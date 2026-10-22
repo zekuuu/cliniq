@@ -23,6 +23,7 @@ import { getMockSessionUser, ROLE_LABELS, type SessionUser } from '../../lib/moc
 import { paths } from '../../routes/paths'
 import type { User } from '../../types/entities'
 import { changeUserStatus, fetchUsers, LastAdminError, resetPassword } from './api/userApi'
+import { useConfirmItsYou } from '../../hooks/useConfirmItsYou'
 import { UserAvatar } from './UserAvatar'
 
 type UserSortKey = 'name' | 'username' | 'role' | 'status' | 'lastLogin'
@@ -90,6 +91,8 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
   const [sort, setSort] = useState<TableSortState<UserSortKey>>({ key: 'lastLogin', direction: 'descending' })
   const [notice, setNotice] = useState<{ tone: 'success' | 'error'; text: string } | null>(null)
   const [resetFor, setResetFor] = useState<User | null>(null)
+  // Panel review AC-7: enabling, disabling and resetting a password ask for the Admin's password first.
+  const { confirm, dialog: confirmDialog } = useConfirmItsYou(viewer)
 
   async function toggleStatus(user: User) {
     const enable = Boolean(user.deactivatedAt)
@@ -138,10 +141,10 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
         <Link className={buttonClassName({ variant: 'secondary', size: 'sm' })} to={paths.userEdit(user.id)}>
           Edit
         </Link>
-        <Button size="sm" variant="neutral" onClick={() => void toggleStatus(user)} aria-label={`${user.deactivatedAt ? 'Enable' : 'Disable'} ${user.name}`}>
+        <Button size="sm" variant="neutral" onClick={() => confirm(user.deactivatedAt ? 'enable an account' : 'disable an account', () => toggleStatus(user))} aria-label={`${user.deactivatedAt ? 'Enable' : 'Disable'} ${user.name}`}>
           {user.deactivatedAt ? 'Enable' : 'Disable'}
         </Button>
-        <Button size="sm" variant="neutral" onClick={() => setResetFor(user)} aria-label={`Reset password for ${user.name}`}>
+        <Button size="sm" variant="neutral" onClick={() => confirm('reset a password', () => setResetFor(user))} aria-label={`Reset password for ${user.name}`}>
           Reset Password
         </Button>
       </span>
@@ -178,6 +181,7 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
           {notice.text}
         </p>
       )}
+      {confirmDialog}
       <ResetPasswordDialog
         user={resetFor}
         viewer={viewer}

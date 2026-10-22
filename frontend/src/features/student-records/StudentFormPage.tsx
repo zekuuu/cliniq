@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { contactInfoRequired } from '../../lib/students'
 import { useLocation, useNavigate } from 'react-router'
 import {
   BackButton,
@@ -145,7 +146,7 @@ function validate(values: StudentFormValues): StudentFormErrors {
   if (!values.fullName.trim()) errors.fullName = 'Enter the student full name.'
   if (!values.gradeLevel) errors.gradeLevel = 'Select the grade level.'
   if (!values.sex) errors.sex = 'Select the sex recorded by the school.'
-  if (!values.contactInfo.trim()) errors.contactInfo = 'Enter the student contact information.'
+  if (contactInfoRequired(values.gradeLevel) && !values.contactInfo.trim()) errors.contactInfo = 'Enter the student contact information.'
   values.emergencyContacts.forEach((contact, index) => {
     const started = index === 0 || [contact.name, contact.relationship, contact.phone].some((value) => value.trim())
     if (!started) return
@@ -386,7 +387,8 @@ function StudentFormEditor({
               />
               <Input
                 label="Student contact information"
-                required
+                required={contactInfoRequired(values.gradeLevel)}
+                hint={contactInfoRequired(values.gradeLevel) ? undefined : 'Optional for Kinder. The emergency contacts below are still required.'}
                 value={values.contactInfo}
                 error={errors.contactInfo}
                 onChange={(event) => setField('contactInfo', event.target.value)}

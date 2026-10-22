@@ -2,6 +2,7 @@ import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { BackButton, Button, Card, CardBody, CardHeader, ErrorState, Icon, Input, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
+import { useConfirmItsYou } from '../../hooks/useConfirmItsYou'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
@@ -56,7 +57,8 @@ function UserForm({
 }) {
   const [name, setName] = useState(initial?.name ?? '')
   const [username, setUsername] = useState(initial?.username ?? '')
-  const [role, setRole] = useState<UserRole>(initial?.role ?? 'staff')
+  // Panel review AC-4: a new account starts with no role, so the smallest one is chosen on purpose.
+  const [role, setRole] = useState<UserRole | ''>(initial?.role ?? '')
   const [profilePicture, setProfilePicture] = useState<string | null>(initial?.profilePicture ?? null)
   const [pictureName, setPictureName] = useState(initial?.profilePicture ? 'Current profile picture' : '')
   const [pictureError, setPictureError] = useState<string>()
@@ -64,7 +66,7 @@ function UserForm({
   const [pendingPictureName, setPendingPictureName] = useState('')
   const [saved, setSaved] = useState(false)
   // What the form last matched in storage: the loaded account, then each saved version.
-  const [baseline, setBaseline] = useState({ name: initial?.name ?? '', username: initial?.username ?? '', role: initial?.role ?? 'staff', profilePicture: initial?.profilePicture ?? null })
+  const [baseline, setBaseline] = useState({ name: initial?.name ?? '', username: initial?.username ?? '', role: initial?.role ?? '', profilePicture: initial?.profilePicture ?? null })
   const { cancel, discardDialog } = useCancelNavigation(
     paths.users,
     name !== baseline.name || username !== baseline.username || role !== baseline.role || profilePicture !== baseline.profilePicture,
@@ -75,20 +77,28 @@ function UserForm({
   const pictureInputRef = useRef<HTMLInputElement>(null)
   const pictureHintId = useId()
   const invalid = useFocusFirstInvalid(invalidRef)
+  const { confirm, dialog: confirmDialog } = useConfirmItsYou(viewer)
   async function submit(event: FormEvent) {
     event.preventDefault()
     const nextErrors = {
       name: name.trim() ? undefined : "Enter the person's full name.",
       username: username.trim() ? undefined : 'Enter a username for this account.',
       temporaryPassword: userId || temporaryPassword.trim().length >= 8 ? undefined : 'Set a temporary password of at least 8 characters.',
+      role: role ? undefined : 'Choose a role.',
     }
     setErrors(nextErrors)
-    invalid.report([nextErrors.name, nextErrors.username, nextErrors.temporaryPassword].filter(Boolean).length)
+    invalid.report([nextErrors.name, nextErrors.username, nextErrors.role, nextErrors.temporaryPassword].filter(Boolean).length)
     setSaved(false)
-    if (nextErrors.name || nextErrors.username || nextErrors.temporaryPassword) return
+    if (nextErrors.name || nextErrors.username || nextErrors.role || nextErrors.temporaryPassword || !role) return
+    // Changing an existing account's role asks for the Admin's password first (panel review AC-7).
+    if (userId && role !== baseline.role) confirm('change a role', () => save(role))
+    else await save(role)
+  }
+
+  async function save(chosenRole: UserRole) {
     try {
       await submitUser(
-        { name, username, role, profilePicture, temporaryPassword: userId ? undefined : temporaryPassword },
+        { name, username, role: chosenRole, profilePicture, temporaryPassword: userId ? undefined : temporaryPassword },
         { userId, actor: viewer },
       )
     } catch (cause) {
@@ -109,6 +119,7 @@ function UserForm({
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {discardDialog}
+      {confirmDialog}
       <BackButton onBack={cancel} />
       <Card className="p-5">
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">
@@ -142,12 +153,17 @@ function UserForm({
             <Select
               label="Role"
               value={role}
+              required
+              placeholder="Select a role"
               options={[
                 { value: 'staff', label: 'School Clinician' },
                 { value: 'admin', label: 'Admin / Principal' },
               ]}
               error={errors.role}
-              onChange={(value) => setRole(value as UserRole)}
+              onChange={(value) => {
+                setRole(value as UserRole)
+                setErrors((current) => ({ ...current, role: undefined }))
+              }}
             />
             {!userId && (
               <Input
@@ -166,7 +182,7 @@ function UserForm({
                 <UserAvatar name={name || 'New user'} picture={profilePicture} className="size-16 text-lg" />
                 <div className="min-w-0">
                   <h2 id="profile-picture-title" className="text-sm font-semibold text-text-primary">Profile picture</h2>
-                  <p id={pictureHintId} className="mt-0.5 text-xs text-text-secondary">Optional. JPEG, PNG, or WebP; maximum 2 MB. It is center-cropped to a 256 px square in this mock only.</p>
+                  <p id={pictureHintId} className="mt-0.5 text-xs text-text-secondary">Optional. JPEG, PNG, or WebP; maximum 2 MB. It is center-cropped to a square.</p>
                   <p role="status" className="mt-1 text-xs font-semibold text-text-primary">
                     {preparingPicture
                       ? `Preparing ${pendingPictureName}…`

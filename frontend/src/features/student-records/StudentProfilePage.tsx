@@ -24,10 +24,12 @@ import {
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useConfirmItsYou } from '../../hooks/useConfirmItsYou'
 import { formatDateRange, formatDateTime } from '../../lib/dates'
 import { incidentCareSummary, visitCareSummary } from '../../lib/itemsGiven'
 import { getMockSessionUser, type SessionUser, type StudentExcuseLetter } from '../../lib/mock-db'
-import type { Disposition, Incident, Student, Visit } from '../../types/entities'
+import type { Incident, Student, Visit } from '../../types/entities'
+import { DISPOSITION_LABELS as dispositionLabel, DISPOSITION_TONES as dispositionTone } from '../../lib/dispositions'
 import { paths } from '../../routes/paths'
 import { archiveStudentRecord, fetchStudentProfile, type StudentProfileData } from './api/studentProfileApi'
 import { maskLrn } from '../../lib/lrn'
@@ -40,17 +42,14 @@ const incidentStageMap = {
 /** The screen lists the most recent records; the printout lists them all. */
 const HISTORY_ON_SCREEN = 8
 
-const dispositionLabel: Record<Disposition, string> = {
-  returned_to_class: 'Returned to class',
-  sent_home: 'Sent home',
-  referred_to_hospital: 'Referred to hospital',
+/** Every letter stays in the record, including replaced and voided ones (panel review EX-3). */
+const LETTER_STATUS: Record<StudentExcuseLetter['status'], string> = {
+  pending: 'Pending approval',
+  approved: 'Approved',
+  superseded: 'Superseded',
+  voided: 'Voided',
 }
 
-const dispositionTone: Record<Disposition, 'success' | 'warning' | 'error'> = {
-  returned_to_class: 'success',
-  sent_home: 'warning',
-  referred_to_hospital: 'error',
-}
 
 function tagList(items: string[], empty: string) {
   if (!items.length) return <p className="text-sm text-text-secondary">{empty}</p>
@@ -110,6 +109,7 @@ function ProfileHeader({
   onArchived: () => void
 }) {
   const staffCanAct = viewer.role === 'staff'
+  const { confirm, dialog: confirmDialog } = useConfirmItsYou(viewer)
   const [confirmingArchive, setConfirmingArchive] = useState(false)
   const [archiving, setArchiving] = useState(false)
 
@@ -148,7 +148,7 @@ function ProfileHeader({
               Edit
             </Link>
             <Button variant="secondary" icon="printer" onClick={() => window.print()}>
-              Print
+              Print / Save as PDF
             </Button>
             {!student.archived && (
               <Button variant="neutral" onClick={() => setConfirmingArchive(true)}>
@@ -158,6 +158,7 @@ function ProfileHeader({
           </div>
         )}
       </div>
+      {confirmDialog}
       <Modal
         open={confirmingArchive}
         title="Archive this student record?"
@@ -171,12 +172,47 @@ function ProfileHeader({
           <Button variant="neutral" data-autofocus onClick={() => setConfirmingArchive(false)}>
             Cancel
           </Button>
-          <Button variant="secondary" loading={archiving} onClick={archive}>
+          {/* Panel review AC-7: archiving asks for the password first. */}
+          <Button
+            variant="secondary"
+            loading={archiving}
+            onClick={() => {
+              setConfirmingArchive(false)
+              confirm('archive a student record', archive)
+            }}
+          >
             Archive Record
           </Button>
         </div>
       </Modal>
     </Card>
+  )
+}
+
+/**
+ * Panel review ST-9: what matters in an emergency, at the top of the profile. Shown only when something
+ * is recorded; nothing extra appears otherwise (an empty list still can't mean "none known").
+ */
+function AllergyBanner({ student }: { student: Student }) {
+  if (!student.allergies.length && !student.medicalConditions.length) return null
+  return (
+    <section aria-label="Allergies and medical conditions" className="flex items-start gap-2 rounded-md border border-warning bg-warning/10 px-4 py-3 text-sm text-text-primary">
+      <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning" />
+      <div className="flex flex-col gap-0.5">
+        {student.allergies.length > 0 && (
+          <p>
+            <span className="font-semibold">Allergies: </span>
+            {student.allergies.join(', ')}
+          </p>
+        )}
+        {student.medicalConditions.length > 0 && (
+          <p>
+            <span className="font-semibold">Medical conditions: </span>
+            {student.medicalConditions.join(', ')}
+          </p>
+        )}
+      </div>
+    </section>
   )
 }
 
@@ -227,10 +263,10 @@ function MedicalHistoryCard({ student }: { student: Student }) {
       <CardBody className="flex flex-col gap-4">
         <section aria-labelledby="allergies-heading">
           <h3 id="allergies-heading" className="text-sm font-semibold text-text-primary">
-            Allergies and restrictions
+            Allergies
           </h3>
           <div className="mt-2">
-            {tagList(student.allergies, 'No allergies or food restrictions recorded.')}
+            {tagList(student.allergies, 'None recorded.')}
           </div>
         </section>
         <section aria-labelledby="conditions-heading">
@@ -304,9 +340,22 @@ function ExcuseLettersCard({ letters }: { letters: StudentExcuseLetter[] }) {
                     </Link>
                   </div>
                 ) : (
-                  <Link to={paths.visitDetail(letter.visitId)} className={buttonClassName({ size: 'sm' })}>
-                    View visit
-                  </Link>
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {letter.status !== 'approved' && (
+                      <Badge tone={letter.status === 'voided' ? 'error' : 'neutral'} variant="soft">
+                        {LETTER_STATUS[letter.status]}
+                      </Badge>
+                    )}
+                    {/* A stored letter (superseded or voided) opens on its own, marked not valid. */}
+                    {letter.status !== 'approved' && !letter.id.startsWith('draft-') && (
+                      <Link to={paths.excuseLetterVersion(letter.visitId, letter.id)} className={buttonClassName({ size: 'sm' })}>
+                        View letter
+                      </Link>
+                    )}
+                    <Link to={paths.visitDetail(letter.visitId)} className={buttonClassName({ size: 'sm' })}>
+                      View visit
+                    </Link>
+                  </div>
                 )
               }
             />
@@ -395,7 +444,7 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
       <PrintSection title="Medical history">
         <PrintFields
           fields={[
-            { label: 'Allergies and restrictions', value: student.allergies.join(', ') || 'None recorded' },
+            { label: 'Allergies', value: student.allergies.join(', ') || 'None recorded' },
             { label: 'Conditions', value: student.medicalConditions.join(', ') || 'None recorded' },
           ]}
         />
@@ -442,7 +491,7 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
             columns={[
               { header: 'Excused period', cell: (letter) => formatDateRange(letter.excusedFrom, letter.excusedUntil) },
               { header: 'Disposition', width: '30%', cell: (letter) => dispositionLabel[letter.disposition] },
-              { header: 'Status', width: '24%', cell: (letter) => (letter.status === 'pending' ? 'Pending approval' : 'Approved') },
+              { header: 'Status', width: '24%', cell: (letter) => LETTER_STATUS[letter.status] },
             ]}
           />
         </PrintSection>
@@ -493,6 +542,7 @@ export function StudentProfilePage({
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {back}
       <ProfileHeader student={data.student} viewer={viewer} onArchived={reload} />
+      <AllergyBanner student={data.student} />
       {savedMessage && (
         <div
           role="status"
