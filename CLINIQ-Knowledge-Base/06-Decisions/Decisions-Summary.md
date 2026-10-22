@@ -141,3 +141,11 @@ The clinician (Staff only) builds a saved, reusable and editable list of student
 ## 035 Restock requires an expiry decision
 
 Every newly restocked batch needs an expiration date unless the clinician explicitly confirms that it has no manufacturer expiration date. A blank date alone cannot be saved as no expiration, preventing an accidental omission from bypassing expiry checks. The rule is enforced in the Restock dialog and inventory write layer; the future Inventory API must enforce the same one-of choice.
+
+## 036 Visits and incidents stay separate, with an "Escalate to incident" button
+
+Two forms stay, matching the clinic's two logbooks. A visit can be escalated to an incident from Visit Details or from the New Visit form, carrying the student, complaint, time and temperature; the visit is kept, linked, and its medicines are not copied, so stock is deducted once, and the event counts once, as the incident. Emergency-type complaints on a visit show a hint, not a block. The nurse's rule for what counts as an emergency is still open. Decided Thursday, October 22, 2026; not built yet.
+
+## 037 Backup and the Audit Log for both roles, 10-year audit retention, password re-entry
+
+The Principal and the clinician can both see the Audit Log and Backup (the review's advice to hide them from the clinician is declined and its risk accepted). The audit log is kept 10 years (Zean's answer; the school has not confirmed it). The Backup page gets "Back up now" and the Dashboard warns when the last good backup is over 48 hours old. A "Confirm it's you" password re-entry guards archiving a student, disabling or enabling an account, resetting a password, changing a role and approving an incident report. Decided Thursday, October 22, 2026; not built yet.
