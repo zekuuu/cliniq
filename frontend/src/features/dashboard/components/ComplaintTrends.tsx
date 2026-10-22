@@ -319,10 +319,11 @@ function WeekdayComparisonTable({ comparison }: { comparison: WeekdayComparison 
       <table className="w-full min-w-[44rem] table-fixed text-sm" aria-label="Visits and incidents by weekday comparison">
         <colgroup>
           <col className="w-[14%]" />
-          <col className="w-[9%]" />
-          <col className="w-[34%]" />
-          <col className="w-[9%]" />
-          <col className="w-[34%]" />
+          {/* Wide enough for "Visits and incidents" on two lines (panel review 5.1: say what is counted). */}
+          <col className="w-[13%]" />
+          <col className="w-[30%]" />
+          <col className="w-[13%]" />
+          <col className="w-[30%]" />
         </colgroup>
         <thead className="border-b border-border text-left text-xs text-text-secondary">
           <tr>
@@ -331,9 +332,9 @@ function WeekdayComparisonTable({ comparison }: { comparison: WeekdayComparison 
             <th scope="colgroup" colSpan={2} className="border-l border-border bg-surface px-2 py-1.5 text-center font-semibold">{comparison.previousLabel}</th>
           </tr>
           <tr>
-            <th scope="col" className="border-l border-border px-2 py-1.5 text-right font-semibold">Cases</th>
+            <th scope="col" className="border-l border-border px-2 py-1.5 text-right font-semibold">Visits and incidents</th>
             <th scope="col" className="px-2 py-1.5 font-semibold">Busiest date &amp; context</th>
-            <th scope="col" className="border-l border-border px-2 py-1.5 text-right font-semibold">Cases</th>
+            <th scope="col" className="border-l border-border px-2 py-1.5 text-right font-semibold">Visits and incidents</th>
             <th scope="col" className="px-2 py-1.5 font-semibold">Busiest date &amp; context</th>
           </tr>
         </thead>
@@ -707,7 +708,7 @@ function DemographicCharts({
       {/* On desktop the card stretches to the grade card beside it: a somewhat larger donut, with the
           leftover height shared above and below instead of one empty band under the buttons. */}
       <Card className="lg:flex lg:flex-col">
-        <CardHeader title="Visits by Sex" description="Visits and incidents in the selected period; aggregated only." icon={<Icon name="barChart" />} />
+        <CardHeader title="Visits and incidents by sex" description="Visits and incidents in the selected period; aggregated only." icon={<Icon name="barChart" />} />
         <CardBody className="flex flex-col gap-3 lg:flex-1 lg:justify-center">
           {/* Legend clicks would hide a segment while its count stays on the button below; filtering is the buttons' job. */}
           <div className="relative h-56 lg:h-72"><Doughnut data={{ labels: demographics.sex.map((row) => row.label), datasets: [{ data: demographics.sex.map((row) => row.count), backgroundColor: sexColors, borderColor: colorToken('background'), borderWidth: 2 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick } } } }} aria-label={`Visits and incidents by Sex: ${countsText(demographics.sex)}.`} role="img" /></div>
@@ -721,7 +722,7 @@ function DemographicCharts({
         </CardBody>
       </Card>
       <Card>
-        <CardHeader title="Visits by grade level" description="Visits and incidents in the selected period; aggregated only." icon={<Icon name="barChart" />} />
+        <CardHeader title="Visits and incidents by grade level" description="Visits and incidents in the selected period; aggregated only." icon={<Icon name="barChart" />} />
         <CardBody className="flex flex-col gap-3">
           {/* Stacked, so each bar's height is still the grade's total; incidents use the incident red. */}
           <div className="relative h-56"><Bar data={{ labels: demographics.gradeLevel.map((row) => row.label), datasets: [{ label: 'Visits', data: demographics.gradeLevel.map((row) => row.visits), backgroundColor: colorToken('brand-green-dark'), borderColor: colorToken('background'), borderWidth: 1 }, { label: 'Incidents', data: demographics.gradeLevel.map((row) => row.incidents), backgroundColor: colorToken('error'), borderColor: colorToken('background'), borderWidth: 1 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, interaction: { mode: 'index', axis: 'x', intersect: false }, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick, boxWidth: 14 } } }, scales: { x: { stacked: true, ticks: { color: tick } }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0, color: tick } } } }} aria-label={`Visits and incidents by grade level: ${splitText(demographics.gradeLevel)}.`} role="img" /></div>
@@ -763,7 +764,7 @@ export function ComplaintTrendsSkeleton() {
   return (
     <div aria-hidden="true" className="flex flex-col gap-4">
       <div data-skeleton="demographics" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {['Visits by Sex', 'Visits by grade level'].map((title) => (
+        {['Visits and incidents by sex', 'Visits and incidents by grade level'].map((title) => (
           <div key={title} className={CARD_SURFACE}>
             <div className="flex items-start gap-2.5 px-5 pt-5 pb-3">
               <span className="mt-0.5 text-brand-green-dark">

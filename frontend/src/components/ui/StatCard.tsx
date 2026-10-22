@@ -8,6 +8,8 @@ export interface StatTrend {
   direction: 'up' | 'down' | 'flat'
   /** e.g. "12% vs prior 30 days". The direction word is added for screen readers automatically. */
   text: string
+  /** Read by screen readers after `text`, e.g. the two counts behind a percentage. */
+  detail?: string
 }
 
 export type StatTone = 'brand' | 'error' | 'warning' | 'neutral'
@@ -115,6 +117,7 @@ export function StatCard({
             {/* The arrow is visual only; its direction is spelled out for screen readers. */}
             <span className="sr-only">{trendWord[trend.direction]} </span>
             {trend.text}
+            {trend.detail && <span className="sr-only"> ({trend.detail})</span>}
           </p>
         ) : (
           scope && <p className="text-xs text-text-secondary">{scope}</p>

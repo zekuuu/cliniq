@@ -11,7 +11,7 @@ import { sortTableRows, toggleTableSort, type TableSortState } from '../../../li
 import type { ComplaintCount } from '../../../lib/mock-db'
 
 /*
- * Health Summaries (Screen Inventory #21): clinic visits per complaint for the report month.
+ * Complaint summary (Screen Inventory #21, formerly Health Summaries): clinic visits per complaint for the report month.
  * - Chart by default: one-series horizontal bars sorted by count, which suits comparing sizes across
  *   categories with long labels. One hue (brand-green-dark), since color carries no identity here.
  *   There's deliberately no chart-type picker: the data decides the form.
@@ -119,7 +119,7 @@ export function HealthSummary({ rows }: { rows: ComplaintCount[] }) {
       <EmptyState
         icon="barChart"
         title="No clinic visits recorded this month"
-        description="Choose a different report month to see a health summary."
+        description="Choose a different report month to see a complaint summary."
       />
     )
   }
@@ -144,7 +144,7 @@ export function HealthSummary({ rows }: { rows: ComplaintCount[] }) {
           <span className="font-semibold">{rows[0].complaint}</span> ({rows[0].count}).
         </p>
         <SegmentedControl
-          label="Show health summary as"
+          label="Show complaint summary as"
           value={view}
           onChange={setView}
           className="print:hidden"
@@ -168,7 +168,7 @@ export function HealthSummary({ rows }: { rows: ComplaintCount[] }) {
 
       <div data-table="health-summary" className={cn(view === 'chart' && 'hidden print:block')}>
         <DataTable
-          caption="Health summary by complaint"
+          caption="Complaint summary by complaint"
           columns={columns}
           rows={sortedRows}
           rowKey={(r) => r.complaint}

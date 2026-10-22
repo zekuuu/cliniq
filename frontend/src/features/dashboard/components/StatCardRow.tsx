@@ -4,9 +4,9 @@ import {
   TitleLink,
   type IconName,
   type StatTone,
-  type StatTrend,
 } from '../../../components'
-import { rangeLengthDays, type DateRange } from '../../../lib/dateRange'
+import type { DateRange } from '../../../lib/dateRange'
+import { trendFor } from '../lib/statTrend'
 import { paths } from '../../../routes/paths'
 import type { DashboardSummary } from '../../../types/dashboard'
 
@@ -32,19 +32,6 @@ export function StatCardRowSkeleton() {
   )
 }
 
-function trendFor(current: number, previous: number, range: DateRange): StatTrend {
-  const days = rangeLengthDays(range)
-  const period = days === 1 ? 'prior day' : `prior ${days} days`
-  if (previous === 0) {
-    return current === 0
-      ? { direction: 'flat', text: `No change vs ${period}` }
-      : { direction: 'up', text: `Up from 0 (${period})` }
-  }
-  const pct = Math.round(((current - previous) / previous) * 100)
-  if (pct === 0) return { direction: 'flat', text: `No change vs ${period}` }
-  return { direction: pct > 0 ? 'up' : 'down', text: `${Math.abs(pct)}% vs ${period}` }
-}
-
 /** The Dashboard's first scan: care activity, active students, pending letters, and follow-ups. */
 export function StatCardRow({
   summary,
@@ -63,11 +50,11 @@ export function StatCardRow({
   const cards = [
     {
       key: 'visits',
-      card: <StatCard icon={CARDS.visits.icon} label={CARDS.visits.label} tone={CARDS.visits.tone} value={counts.visits} trend={previousCounts ? trendFor(counts.visits, previousCounts.visits, range) : undefined} scope={previousCounts ? undefined : noComparison} labelAction={canNavigate ? <TitleLink to={paths.visitsInRange(range.from, range.to)}>{CARDS.visits.label}</TitleLink> : undefined} />,
+      card: <StatCard icon={CARDS.visits.icon} label={CARDS.visits.label} tone={CARDS.visits.tone} value={counts.visits} trend={previousCounts ? trendFor(counts.visits, previousCounts.visits, range, summary.percentMinPriorCount) : undefined} scope={previousCounts ? undefined : noComparison} footnote="Visits only; incidents are counted separately" labelAction={canNavigate ? <TitleLink to={paths.visitsInRange(range.from, range.to)}>{CARDS.visits.label}</TitleLink> : undefined} />,
     },
     {
       key: 'incidents',
-      card: <StatCard icon={CARDS.incidents.icon} label={CARDS.incidents.label} tone={CARDS.incidents.tone} value={counts.incidents} trend={previousCounts ? trendFor(counts.incidents, previousCounts.incidents, range) : undefined} scope={previousCounts ? undefined : noComparison} footnote={counts.incidentsAtStage1 > 0 ? `${counts.incidentsAtStage1} still at Stage 1` : undefined} labelAction={canNavigate ? <TitleLink to={paths.incidentsInRange(range.from, range.to)}>{CARDS.incidents.label}</TitleLink> : undefined} />,
+      card: <StatCard icon={CARDS.incidents.icon} label={CARDS.incidents.label} tone={CARDS.incidents.tone} value={counts.incidents} trend={previousCounts ? trendFor(counts.incidents, previousCounts.incidents, range, summary.percentMinPriorCount) : undefined} scope={previousCounts ? undefined : noComparison} footnote={counts.incidentsAtStage1 > 0 ? `${counts.incidentsAtStage1} still at Stage 1` : undefined} labelAction={canNavigate ? <TitleLink to={paths.incidentsInRange(range.from, range.to)}>{CARDS.incidents.label}</TitleLink> : undefined} />,
     },
     {
       key: 'students',
@@ -79,7 +66,7 @@ export function StatCardRow({
     },
     {
       key: 'follow-ups',
-      card: <StatCard icon={CARDS.followUps.icon} label={CARDS.followUps.label} tone={overdue ? 'error' : CARDS.followUps.tone} value={summary.dueFollowUps.length} scope={overdue ? `${overdue} overdue` : 'None overdue'} labelAction={canNavigate ? <TitleLink to={paths.followUps}>{CARDS.followUps.label}</TitleLink> : undefined} />,
+      card: <StatCard icon={CARDS.followUps.icon} label={CARDS.followUps.label} tone={CARDS.followUps.tone} value={summary.dueFollowUps.length} scope={overdue ? `${overdue} overdue` : 'None overdue'} labelAction={canNavigate ? <TitleLink to={paths.followUps}>{CARDS.followUps.label}</TitleLink> : undefined} />,
     },
   ]
 
