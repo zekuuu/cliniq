@@ -58,7 +58,7 @@ Every printout has:
   screen and never duplicates screen text in tests. Pass the screen's loaded data as props.
 - The screen's Print button stays inside a `print:hidden` block, and calls `window.print()`.
 - Existing printouts: `DashboardPrint` (Clinic Overview Report), `ReportsPrint` (Monthly Clinic
-  Report, Incident Report Archive, Health Summary), and the print trees in `ExcuseLetterPage`,
+  Report, Incident register, Complaint summary), and the print trees in `ExcuseLetterPage`,
   `IncidentReportPage`, `StudentProfilePage`, and `AuditLogPage`, and `SportsReportPrint` (the Sports
   Report, ADR-034).
 - **The Sports Report is the one printout with its own confidentiality line** (`confidentiality` prop:

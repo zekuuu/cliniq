@@ -23,7 +23,7 @@ Use this with `cliniq-dropdown-patterns` (the panel and option look), `cliniq-in
 - The select lists Other plus at most 8 ranked suggestions. Suggestions are predefined visit complaint types plus complaints already saved on visits, ranked by use count, then most recent. The pool comes from a data-layer selector (`complaintSuggestions`, ADR-014), never stored data.
 - On save the text is normalized (`frontend/src/lib/complaints.ts`): trimmed, repeated spaces collapsed, 60 characters max. Text that matches a suggestion case-insensitively is stored in that suggestion's spelling. Whitespace-only is invalid. The data layer applies the same normalization on create (`recordVisit`) and on edit (`updateVisit`).
 - Helper text says complaint only, no names.
-- Smart Triage triggers on a case-insensitive match to a predefined type. Free text with no match shows no checklist.
+- The first-aid checklist triggers on a case-insensitive match to a predefined type. Free text with no match shows no checklist.
 
 ## Student lookup (`StudentPicker`)
 
