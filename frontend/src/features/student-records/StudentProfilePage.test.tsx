@@ -27,7 +27,7 @@ describe('Student Profile', () => {
       'href',
       expect.stringMatching(/^\/students\/student-\d{4}\/edit$/),
     )
-    screen.getByRole('button', { name: 'Print' }).click()
+    screen.getByRole('button', { name: 'Print / Save as PDF' }).click()
     expect(print).toHaveBeenCalledOnce()
     expect(screen.getByRole('button', { name: 'Archive' })).toBeInTheDocument()
   })
@@ -36,7 +36,7 @@ describe('Student Profile', () => {
     renderWithRouter(<StudentProfilePage studentId="student-0012" />)
 
     expect(await screen.findByText('Arnel Cabrera')).toBeInTheDocument()
-    expect(screen.getByText('Bea Cabrera')).toBeInTheDocument()
+    expect(screen.getByText('Beatriz Cabrera')).toBeInTheDocument()
     expect(screen.getByText('Primary')).toBeInTheDocument()
     expect(screen.getByText('Needs verification')).toBeInTheDocument()
   })
