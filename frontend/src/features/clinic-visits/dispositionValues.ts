@@ -19,7 +19,8 @@ export function emptyDispositionValues(fromDate: string): DispositionValues {
   return { prepareLetter: true, excusedFrom: fromDate, excusedUntil: '', letterNote: '', referredTo: '' }
 }
 
-export const hasExcuseLetter = (disposition: Disposition) => disposition !== 'returned_to_class'
+/** Only a student who left (sent home or referred) gets an excuse letter; resting in the clinic does not. */
+export const hasExcuseLetter = (disposition: Disposition) => disposition === 'sent_home' || disposition === 'referred_to_hospital'
 
 /** Validates only what is visible for this disposition. */
 export function dispositionErrors(disposition: Disposition, values: DispositionValues, lettersLocked = false): DispositionErrors {

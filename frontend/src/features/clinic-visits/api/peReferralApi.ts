@@ -22,7 +22,7 @@ export interface PeReferralValues {
 
 /**
  * PLACEHOLDER WORDING. The three clinical defaults are neutral starter text for the nurse to edit,
- * not findings. No requirement specifies them; the School Head Nurse should confirm or replace them
+ * not findings. No requirement specifies them; the School Clinician should confirm or replace them
  * (tracked in Issues-and-TODOs.md).
  */
 const CLINICAL_DEFAULTS = {
