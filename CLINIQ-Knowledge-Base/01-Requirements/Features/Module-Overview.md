@@ -45,7 +45,8 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - Enforce minimum 8-character password length
 
 **Role-Based Access** *(Admin/Principal only)*
-- Assign role (Staff / Admin-Principal)
+- Assign role (Staff / Admin-Principal). Add Account starts with **no role selected** ("Select a role", required), so the smallest role needed is chosen on purpose (panel review AC-4)
+- **"Confirm it's you"** (ADR-037, panel review AC-7): the signed-in user's own password is asked again before archiving a student record, disabling or enabling an account, resetting a password, changing a role, and approving an incident report (default list D7). A wrong password changes nothing and counts toward the sign-in lockout; each confirmation is audit-logged ("Confirmed with password: …"). Ordinary work never asks. Password fields show a "Caps Lock is on." hint (Login, Force Password Change, this dialog)
 - Edit role assignment
 - View permissions per role
 
@@ -56,7 +57,8 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - Record the required **Sex** recorded by the school (Female or Male). Show it on the deliberate single-student profile and Student Health Record; audit changes by field name only, never the value.
 - Record the student's LRN (Learner Reference Number, ADR-028), entered by Staff from the school records: exactly 12 digits, kept as text so leading zeros survive, required and unique (a repeat shows "This LRN is already used by another student record" without naming that student); spaces and dashes are removed when typed or pasted; a wrong LRN is corrected in Edit Student and audited as "Updated LRN" with neither value. Lists, pickers, printouts and the Audit Trail show it masked to the last four digits (`••••••••1234`, read as "LRN ending in 1234"); only the Student Profile and the edit form show it in full; addresses carry the internal id, never the LRN
 - Edit student record — *Staff*
-- View student profile/detail — *Staff*
+- The student's own contact number is required except for **Kinder**, where it is optional; the emergency contacts stay required for every grade, and a Kinder record isn't "incomplete" for lacking it (panel review ST-3, D8)
+- View student profile/detail — *Staff*. When allergies or medical conditions are recorded, a compact banner at the top of the profile lists them; otherwise nothing extra shows (panel review ST-9)
 - View list of all students (masterlist, shown with full names) — *Staff*
 - Search/filter students (name, grade level, status, or LRN) — *Staff*
 - Archive/deactivate a student record (e.g., transferred or graduated) — *Staff*. Archived records are **not deleted** — they stay in the system for historical/audit continuity but are filtered out of default active-student lists, search results, and dropdowns unless a Staff member explicitly chooses to include archived records
@@ -93,13 +95,16 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 
 **Daily Visit Logging**
 - Add new visit entry. A visit opened without an identified student finds one by LRN or student name (results appear from the first character typed, at most 8 active students, each shown with masked LRN, full name, and grade). Incident Stage 1, PE/Sports Referral, and Dispense use the same search.
-- Edit visit entry
+- Edit visit entry, including correcting its date and time (never in the future; audited as "Updated date and time")
 - View visit detail (full name shown — a deliberately opened single record)
 - View list of visits (filterable by date) — shows **masked LRN**, not full name, per the display-privacy rule, since this rolling multi-student list is the kind of screen a bystander could glance at
 - Search visits by student
+- **Visit date and time** (panel review part 2, Thursday, October 22, 2026): defaults to now and is editable, never in the future. A visit dated more than 30 minutes before it is saved is a **late entry** (ADR-029: records are often entered afterwards): an optional "Reason for late entry" appears, and the visit detail and the audit entry say "Entered late"
+- **Entered in error**: a visit recorded by mistake is never deleted. "Entered in error" on Visit Details asks for a required reason; the visit then leaves every list, count and report (the Visit Log's "Include entered in error" shows it), its medicines go back to stock through the same "visit edited" adjustments, its excuse letter (draft or approved) is voided, its pending follow-ups are cancelled with the same reason, and it can't be edited afterwards. Audit-logged
+- **Escalate to incident** (ADR-036): on Visit Details, and as a shortcut on New Visit (nothing saved). It opens Incident Stage 1 with the student, complaint, the visit's time and the temperature. A saved visit and its incident are linked both ways; the visit is kept with an "Escalated" chip, its medicines stay on the visit (shown on the incident as "Given at the visit", never copied), and the event counts once, as the incident, in visit totals, the calendar, the Dashboard and reports. An emergency-type complaint on a visit (one on the incident complaint list) shows a non-blocking "This looks like an emergency. Escalate to an incident?" hint. The one-line Visit-versus-Incident rule waits for the clinician's wording
 
 **Complaint Monitoring**
-- Record complaint/symptom for the visit: free text with suggestions (the predefined complaint types plus complaints already recorded, most used first). "Other (type your own)" is always the first option; it clears and focuses the free-text field and is never stored as a complaint. Text matching a suggestion is stored in that suggestion's spelling, so counts don't split by capitalization. Smart Triage's checklist appears when the complaint matches a predefined type. Editing a visit uses the same field and the same normalization
+- Record complaint/symptom for the visit: free text with suggestions (the predefined complaint types plus complaints already recorded, most used first). "Other (type your own)" is always the first option; it clears and focuses the free-text field and is never stored as a complaint. Text matching a suggestion is stored in that suggestion's spelling, so counts don't split by capitalization. The first-aid checklist appears when the complaint matches a predefined type. Editing a visit uses the same field and the same normalization
 - View a student's complaint history
 
 **Treatment Recording** *(two parts — ADR-018, Wednesday, October 07, 2026 — 10:43 PHT)*
@@ -109,13 +114,17 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - Saving dispenses every line from inventory in the same atomic save (one dispense transaction per line, linked to the student and visit); expired items can't be given, nearing-expiry items warn, quantities above stock warn but are allowed
 - Edit treatment record: changing a saved visit's lines writes stock adjustments linked to the visit (reason "visit edited") — a removed or lowered line returns stock, an added or raised one takes more; past transactions are never rewritten
 - Medicines given show on the visit detail and in the student's visit history, e.g. "Paracetamol 500mg × 2 tablets (1 tablet every 6 hours)"
-- Visits can't be deleted or voided (edit only), so there is no "remove all lines" path
+- When Treatment notes name a stocked item (whole word, without its strength, names under 4 letters ignored), a non-blocking hint offers to add it under Medicines & supplies given so stock stays correct (panel review VS-4)
+- Visits are never deleted. A mistaken visit is marked "Entered in error" (above), which returns its stock and voids its letter; there is no "remove all lines" path
 
 **Excuse Letter Issuance**
 - Generate an excuse letter from a visit record
 - Route for nurse check and approval
 - Once approved, store it in the student's record as a permanent, printable document
 - Print excuse letter
+- The letter's wording names the dates it excuses ("is excused from <from> to <until>", or "on <date>" for one day) and follows the excused period until Staff edit the text; it stays non-diagnostic ("Not a medical certificate", "for school attendance documentation only"). The printout has a signature line ("Signature over printed name") under the clinician's name and no internal storage wording; the on-screen "Storage status" box is hidden when printing (panel review part 3, Thursday, October 22, 2026)
+- Quick "Excused until" buttons beside the dates: **Today only**, **+1 day**, **+2 days** (counted from "Excused from"; nothing pre-selected; dates stay editable)
+- **Issue a replacement** (approved letter of a still-valid visit, e.g. the fever lasted longer): asks for a reason, marks the old letter **Superseded** (kept, never valid again) and opens a new draft with the same period and note. A letter whose visit was entered in error shows **Voided**, can't be approved, and prints marked VOID. Every letter, including superseded and voided ones, stays in the student's record. A superseded or voided letter opens on its own from the student's record ("View letter"): read-only, marked Superseded or Voided with the reason, with a link to the current letter, and its printout is stamped SUPERSEDED or VOID (decided Friday, October 23, 2026)
 - Excused periods ("Excused from" / "Excused until") are recorded so teachers and the registrar can cross-check attendance, and there is no attendance integration.
 - On the visit form (new or edit), fields follow the disposition: none for Returned to class; for Sent home, an "Excuse letter" section ("Prepare an excuse letter", on by default; Excused from, default today; Excused until, required while ticked; optional note for the teacher); for Referred to hospital, the same section plus an optional "Referred to (hospital or clinic)". Fields clear when the disposition changes and are validated only while shown. Saving stores these as a draft with the visit, not an approved letter; "Review excuse letter" opens the letter prefilled, and approval moves the period and note onto the letter and clears the draft. Once a letter is approved, editing the visit (even to another disposition) never changes or removes it, and the form says so
 - Drafts awaiting approval are findable without remembering the visit: the Student Profile's Staff-only Excuse Letters card lists them with a "Pending approval" badge and a "Review letter" link, and the Dashboard shows Staff an "Excuse letters awaiting approval" list (masked LRN, excused period, visit time; oldest first), shown only while drafts exist
@@ -125,7 +134,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 **PE/Sports Injury Referral Logging**
 - Log a referral submitted by a PE instructor
 - Record clinical assessment
-- Record disposition (returned to class / sent home / referred to hospital)
+- Record disposition (returned to class / resting in clinic / sent home / referred to hospital). **Resting in clinic** (panel review VS-1) is a student kept for observation; today's resting visits with no Time out are "in the clinic now" and show as a Dashboard chip that opens the filtered Visit Log. Only Sent home and Referred get an excuse letter. The default stays Returned to class (open `DECIDE`)
 - Escalate to Emergency Response if hospital referral is needed
 
 **Follow-Up Handling** — for cases where a student is told to return for monitoring or reassessment (e.g., "return tomorrow for monitoring"). Can originate from a visit here or from an incident in Emergency Response.
@@ -135,12 +144,13 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - View list of all follow-ups (filterable by status)
 - View due/upcoming follow-ups — surfaced on the Clinic Overview Dashboard (Module 9), computed fresh each time the page loads by comparing today's date to the follow-up date, not a background or push-based alert (the system has no external SMS/push service — see Module 9 and the Out of Scope notes)
 - Mark a follow-up Completed, Missed, or Cancelled
+- Missed and Cancelled ask for a confirmation **and a required reason**, kept on the follow-up and shown in the list; afterwards "Set a new date" offers to create a new pending follow-up for the same student, record and reason (panel review FU-4). Audit-logged
 
 ### 4. Emergency Response — *Access: Staff only*
 
 **Incident Recording — two-stage flow**
-- **Stage 1 (fast capture):** open a prefilled emergency form (student picked on the form), complete only the essential field (the complaint) plus whichever readings the case needs (temperature, pulse, blood pressure, oximeter; none is required, "don't force all 4 if not relevant to the case"), and save immediately — speed matters more than completeness in the first moment. An optional Additional notes field is offered but never required; when filled, the notes show in Stage 2's Stage 1 summary and on the Incident Report
-- **Stage 2 (complete later):** return to the same incident record to fill in remaining details (any further readings, still all optional, and referral specifics) once the immediate situation is handled. Treatment notes and medicines/supplies given are both optional; when neither is recorded, views show “No treatment recorded,” and the Incident Report gives Staff a non-blocking check-before-approving notice
+- **Stage 1 (fast capture):** open a prefilled emergency form (student picked on the form), complete only the essential field (the complaint) plus whichever readings the case needs (temperature, pulse, blood pressure, oximeter; none is required, "don't force all 4 if not relevant to the case"), and save immediately — speed matters more than completeness in the first moment. An optional Additional notes field is offered but never required; when filled, the notes show in Stage 2's Stage 1 summary and on the Incident Report. Once the student is picked, a read-only card shows the student's allergies, medical conditions and emergency contacts (an empty list reads “None recorded”, never “No allergies”); it adds no input
+- **Stage 2 (complete later):** return to the same incident record to fill in remaining details (any further readings, still all optional, and referral specifics) once the immediate situation is handled. Treatment notes and medicines/supplies given are both optional; when neither is recorded, views show “No treatment recorded.” An optional **Body part affected** (free text with suggestions) is recorded at Stage 2 and printed on the report when filled. The record can be **completed and approved** only when it has at least one of treatment notes, a medicine line, a parent notification attempt or a hospital referral; otherwise the nurse ticks “Nothing further was needed or done” and writes a one-line reason, printed on the report as “No treatment or notification: <reason>”. No reading is ever required (panel review part 1, Thursday, October 22, 2026)
 - Edit incident entry
 - View incident detail (full name shown — a deliberately opened single record)
 - View list of incidents, including which are still in Stage 1 (incomplete) vs fully completed — shows **masked LRN**, not full name, per the display-privacy rule
@@ -152,7 +162,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 
 **Parent/Guardian Notification**
 - Log a notification attempt
-- Record outcome (Reached / Not Reached / Voicemail / Left Message)
+- Record outcome (Reached / No answer / Left message or voicemail / Wrong number) and **who was called**: one of the student's emergency contacts, or “Other” with a typed name and number
 - Timestamp every attempt, tied to the incident record
 - Flag for re-verification if the contact is unreachable
 - View full notification history for an incident
@@ -168,13 +178,14 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 
 **Incident Reports**
 - Generate incident report from an incident record — *Staff*
-- Route for nurse review and sign-off — *Staff*
+- Route for nurse review and sign-off — *Staff*. Only a completed (Stage 2) record can be approved
 - Print incident report — *Staff, Admin/Principal*
+- The month's **Incident register** (renamed from "Incident Report Archive", panel review RP-4: it holds unfinished incidents, so it isn't an archive) lists every incident of the month by masked LRN; for Staff each row opens its report, or "Complete Stage 2" for a Stage 1 record
 
-**Health Summaries**
-- Generate aggregated health summary — *Staff*
-- View health summary — *Staff, Admin/Principal*
-- Export health summary — *Staff, Admin/Principal*
+**Complaint summary** (renamed from "Health Summaries", panel review RP-7: it holds complaint counts only)
+- Generate aggregated complaint summary — *Staff*
+- View complaint summary — *Staff, Admin/Principal*
+- Export complaint summary — *Staff, Admin/Principal*
 
 **Sports Reports (ADR-034)** — *Staff only; the Admin/Principal cannot open them*
 - Build a saved, reusable list of students for a PE or sports activity: title, activity, requested by (the instructor's name), look-back window (30, 60 or 90 days or the school year; default 90), "Include recorded conditions and allergies" (off by default) — *Staff*
@@ -189,7 +200,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 ### 6. (Removed) — the QR Digital Health ID module was removed from the app (ADR-027)
 Staff identify a student through Students search or each form's student picker. Module numbers 7–11 are kept unchanged so existing references stay valid.
 
-### 7. Smart Triage Quick-Reference — *Access: Staff only*
+### 7. First-aid Checklist Quick-Reference — *Access: Staff only*
 
 **Complaint-Based Checklist Prompts**
 - Select a complaint type during visit entry
@@ -209,6 +220,7 @@ Staff identify a student through Students search or each form's student picker. 
 
 **Inventory Item Management**
 - Add inventory item
+- On Add Item the first batch follows Restock's rule (ADR-035, panel review IV-2): an expiration date, or an explicit "This item has no expiration date" confirmation; a blank date alone can't be saved (also enforced in the data layer). A non-blocking warning appears when the name and unit match an existing item (case, spacing and a trailing "s" ignored: "Paracetamol 500mg tablet already exists. Restock it instead?", with a link); the unit is free text with suggestions from the units already used (panel review IV-3)
 - Edit inventory item
 - Delete/archive inventory item
 - View inventory list
@@ -220,7 +232,7 @@ Staff identify a student through Students search or each form's student picker. 
 - Inventory is held in received batches (quantity, expiration date, received date). The list derives usable non-expired stock, expired stock, and total on hand; low stock uses usable stock only. Expired quantities remain visible until explicitly disposed, and the list filters to items with expired stock.
 - Expired batches can't be dispensed (rejected by the data layer, not just the UI); items with no expiration date are always dispensable. Dispensing uses the earliest-expiry usable batch first and records the allocation so visit edits return stock to its original batch.
 - Restock/add stock (row action: quantity received + the **new batch's** required expiration date, or an explicit **no expiration date** confirmation; adds a batch; logs the restock). It never overwrites earlier batches; the dialog warns when expired stock remains. Edit Item no longer edits stock or expiry.
-- **Adjust Stock** (Staff, row action): choose a batch, then a +/- change or "set to counted quantity", with a required reason (Expired - disposed / Damaged or spilled / Miscount correction / Other with a required note). The selected batch cannot go below 0. Writes an adjustment transaction and audit entry; a disposal remains in batch movement history.
+- **Adjust Stock** (Staff, under the row's **Manage** menu with Batches and Edit; Restock stays the one visible row action, with the help line "Restock when new stock arrives. Adjust Stock to correct a count.", panel review IV-1): choose a batch, then **Add** or **Remove** a positive quantity (no typed minus sign; the batch's resulting stock shows before saving, panel review IV-7) or "set to counted quantity", with a required reason (Expired - disposed / Damaged or spilled / Miscount correction / Other with a required note). The selected batch cannot go below 0. Writes an adjustment transaction and audit entry; a disposal remains in batch movement history.
 - View inventory usage history/log — not built yet; when built, it shows the masked LRN, never the name
 
 **Alerts & Thresholds**
@@ -238,6 +250,7 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 - View common-complaint aggregation by week/month
 - View aggregate-only Sex and grade-level Trend counts. Selecting either dimension filters only the Trend charts and complaint/weekday statistics; no student name appears and the Overview totals stay unfiltered. A production minimum-group-size rule remains open.
 - View symptom-clustering alerts (possible outbreak early warning)
+- Every total says what it counts (panel review DB-8): the Clinic visits figure is visits only, the sex and grade-level charts and the calendar count visits and incidents, and a visit escalated to an incident counts once, as the incident (ADR-036). A stat card's change against the prior period shows both counts ("4 vs 1 in the prior 22 days") when the prior count is under `config.percentMinPriorCount` (5), and a percentage from there up (DB-2). The number on the Overview tab counts urgent items only: expired stock, overdue follow-ups and incidents awaiting Stage 2 (DB-4); low stock, expiring soon, incomplete records and frequent visitors keep their own chips
 - View frequent-visitor flags, shown by **masked LRN** per the display-privacy rule, not full name — **a warning only**, never a diagnosis or suggested action; it exists to help the nurse decide what to do next, not to decide for her
 - **Due/upcoming follow-ups** (Module 3/4's Follow-Up Handling) — this is the system's internal reminder mechanism, since there's no external SMS/push service; computed fresh on page load by comparing today's date to each follow-up's date, not a background alert
 - **Calendar view** of visit and incident counts, toggleable weekly / monthly / yearly, for spotting patterns at a glance (e.g., a calendar-style heatmap of how many visits happened each day). It also surfaces any free-text event tag Staff applied when logging a visit or incident (e.g., "MCA Dance Program") on the relevant day, so clinic activity can be read in context
@@ -246,11 +259,13 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 - Filter any of the above by custom date range
 - Export/print the dashboard view
 
-### 10. Backup Verification Assistant — *Access: Staff only (specifically the School Head Nurse)*
+### 10. Backup Verification Assistant — *Access: Staff and Admin/Principal (ADR-037; the same abilities for both)*
 - View backup status (last backup date, file size, status)
 - Trigger a manual backup-status check
 - View the guided recovery checklist
 - Mark a backup as verified (nurse confirmation)
+- **Back up now** (panel review part 6): starts a backup from the Backup page, either role. In the frontend phase it records a successful run in the mock data; the real copy to the external drive is backend-phase work. Audit-logged
+- **Stale-backup alert** for both roles: a Dashboard chip "Last backup was more than 48 hours ago" (`config.staleBackupHours`), "The latest backup failed" or "No successful backup yet", linking to Backup; it also counts in the Overview tab's urgent number
 - View backup history/log
 - **Open item:** a backup layer beyond the local workstation and the external USB/network-folder copy is still being evaluated by the team as of this writing — see "Recommendations for Future Consideration" below. Nothing about the current mysqldump-based backup changes because of this; it's an addition still being decided, not a redesign
 
@@ -287,10 +302,10 @@ This satisfies RA 10173 (Data Privacy Act) alignment and is the mechanism that m
 | 3. Clinic Visit Monitoring | Full | — |
 | 4. Emergency Response | Full | — |
 | 5. Reports Generation | Full | View/print only |
-| 7. Smart Triage Quick-Reference | Full | — |
+| 7. First-aid Checklist Quick-Reference | Full | — |
 | 8. Medicine & Supply Inventory Tracker | Full | — |
 | 9. Clinic Overview Dashboard | View | View |
-| 10. Backup Verification Assistant | Full | — |
+| 10. Backup Verification Assistant | Full | Full (ADR-037) |
 | 11. Audit Log Viewer | View | View |
 
 PE/Sports Instructors have no account (ADR-029).

@@ -103,5 +103,5 @@ Dotted lines into `D7: Audit Log` represent the cross-cutting requirement that e
 
 ## Notes
 
-- Smart Triage (7.0) has no data store of its own — it's a stateless lookup (complaint type → checklist content) surfaced inside Visit Monitoring, not a persisted record, matching how it's described in Modules & Features ("not a standalone page — a checklist panel embedded in New Visit Entry").
+- First-aid checklist (7.0) has no data store of its own — it's a stateless lookup (complaint type → checklist content) surfaced inside Visit Monitoring, not a persisted record, matching how it's described in Modules & Features ("not a standalone page — a checklist panel embedded in New Visit Entry").
 - Follow-Up (D5) is drawn as shared between Visit Monitoring and Emergency Response, since a follow-up can originate from either — matches the "same feature, two entry points" note already established.

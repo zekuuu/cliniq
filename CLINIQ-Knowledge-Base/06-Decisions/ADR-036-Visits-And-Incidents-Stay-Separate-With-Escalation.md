@@ -1,7 +1,7 @@
 # ADR-036: Visits and incidents stay separate forms, and a visit can be escalated to an incident
 
 **Date:** Thursday, October 22, 2026 — 15:51 PHT
-**Status:** Accepted (Zean, Thursday, October 22, 2026 — 15:44, "yes possible"). Not built yet: part 2 of `Prompt-Build-Panel-Review-Fixes-Oct22.md`. The nurse's own rule for what counts as an emergency is still open (see the `DECIDE` "Rule for Visit versus Incident").
+**Status:** Accepted (Zean, Thursday, October 22, 2026 — 15:44, "yes possible"). **Built** Thursday, October 22, 2026 (part 2 of `Prompt-Build-Panel-Review-Fixes-Oct22.md`; session [2026-10-22-panel-review-part-2-visit-logic](../08-Logs/Agent-Sessions/2026-10-22-panel-review-part-2-visit-logic.md)). The nurse's own rule for what counts as an emergency is still open (see the `DECIDE` "Rule for Visit versus Incident").
 
 ## Context
 The panel-style review (VS-7) found that Visit complaints and Incident types overlap (Fainting, Asthma attack, Severe allergic reaction, Fall injury), so one event can be logged twice or in the wrong place, and an event that starts as a routine visit and turns serious means retyping everything. It suggested either one form or an "Escalate to incident" button. The clinic keeps two logbooks on paper (Daily Visits, and the Emergency Logbook), with different columns. Zean asked which was best and where the button belongs.

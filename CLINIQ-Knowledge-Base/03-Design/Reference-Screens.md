@@ -42,7 +42,7 @@ Design these five in full detail first. Everything else in the system should be 
 **Layout, top to bottom:**
 1. **Student header** — name, masked LRN, grade level (already identified via search, scan, or manual entry before reaching this screen)
 2. **Complaint field** — dropdown or searchable select
-3. **Smart Triage panel** — appears dynamically the moment a complaint is selected: a titled checklist card ("Suggested first-aid steps for: [complaint]"), checkboxes, visually distinct from the surrounding form (e.g., `surface` background) so it reads as guidance, not a required field
+3. **First-aid checklist panel** — appears dynamically the moment a complaint is selected: a titled checklist card ("Suggested first-aid steps for: [complaint]"), checkboxes, visually distinct from the surrounding form (e.g., `surface` background) so it reads as guidance, not a required field
 4. **Treatment field** — textarea
 5. **Disposition** — segmented control or radio group: Returned to class / Sent home / Referred to hospital
 6. **Follow-up prompt** — a collapsed/inline section at the bottom: "Does this student need a follow-up?" toggle; expanding it reveals a date picker, reason field, and optional notes — this should feel like a natural continuation of the same form, not a popup interruption
@@ -89,7 +89,7 @@ The QR Scan/Lookup Hub reference screen was removed with the QR feature (ADR-027
 **Layout — Stage 2 (complete later, same record reopened):**
 1. Stage 1 fields shown filled-in (editable or read-only, designer's call), status badge now showing "In progress"
 2. **Additional fields unlocked:** full vitals, treatment notes, hospital referral group (destination, transport mode, departure time)
-3. **Parent Notification log** — a repeatable list of attempts, each with an outcome (Reached / Not Reached / Voicemail / Left Message) and a timestamp — this is a multi-attempt log pattern, not a single field
+3. **Parent Notification log** — a repeatable list of attempts, each with an outcome (Reached / No answer / Left message or voicemail / Wrong number), who was called, and a timestamp — this is a multi-attempt log pattern, not a single field
 4. Status badge changes to "Complete" once saved with all required fields present
 
 **Components this exercises:** urgency-styled primary button, stage/status badge (three states: Needs completion → In progress → Complete), multi-attempt log list, timestamped entries, hospital-referral field group.
@@ -106,6 +106,6 @@ The QR Scan/Lookup Hub reference screen was removed with the QR feature (ADR-027
 | Any other detail/single-record view (Inventory Item Detail, Incident Detail, Visit Detail, Follow-Up Detail) | **Reference 3** (Student Profile) |
 | Any other list view (Visit Log List, Incident Log List, Follow-Up List, Inventory List, User List) | The list-row + status-badge pattern from **Reference 1**'s alerts section |
 | Login, Force Password Change | Simplest form treatment from **Reference 2**, no dynamic panels needed |
-| Reports (Monthly, Incident, Health Summary) and print layouts | **Reference 3**'s sectioned-content pattern, adapted for print (no action buttons, no interactive elements) |
+| Reports (Monthly, Incident register, Complaint summary) and print layouts | **Reference 3**'s sectioned-content pattern, adapted for print (no action buttons, no interactive elements) |
 | Backup Status screen | **Reference 5**'s status-badge concept (backup status is also a lifecycle: last run → verified → needs attention) |
 

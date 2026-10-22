@@ -16,7 +16,7 @@ Kept in sync with the canonical Project Plan, Section 1.4. If you edit one, edit
 - Clinic Visit Monitoring (daily logging, complaints, treatment, excuse letters, PE/Sports referrals)
 - Emergency Response (incident logging, hospital referral tracking, parent-notification outcome logging)
 - Reports Generation (monthly reports, incident reports, health summaries)
-- The team-proposed enhancements described in Section 5.3: Smart Triage quick-reference, Medicine & Supply Inventory Tracker, Clinic Overview Dashboard, and Backup Verification Assistant
+- The team-proposed enhancements described in Section 5.3: First-aid checklist quick-reference, Medicine & Supply Inventory Tracker, Clinic Overview Dashboard, and Backup Verification Assistant
 - Deployment on the school's existing single workstation via XAMPP over the employee-tier intranet
 - RA 10173 (Data Privacy Act of 2012)–aligned data handling, audit logging, and daily backups
 - Staff training and a User Acceptance Testing (UAT) phase at the client site

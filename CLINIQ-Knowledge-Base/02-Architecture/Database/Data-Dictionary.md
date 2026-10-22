@@ -248,7 +248,7 @@ The student record. The LRN identifies the student to people (masked on lists, A
 | `full_name` | `varchar(150)` | no |  | Required and non-blank. Single field for now; splitting into last/first/middle waits for the registrar file format (D-15). Accent- and case-insensitive matching comes from the collation. |
 | `grade_level_id` | `bigint unsigned` | yes | NULL | Nullable on purpose: an imported record may lack it and is then flagged "incomplete". Never nullable for a completed record (rule in the app). |
 | `sex` | `varchar(6)` | yes | NULL | `female` or `male`, as recorded by the school. Required for a completed record (ADR-031); nullable during an incomplete import. |
-| `contact_number` | `varchar(60)` | yes | NULL | Nullable for the same reason. "Student contact information" in the requirements. |
+| `contact_number` | `varchar(60)` | yes | NULL | Nullable for the same reason. "Student contact information" in the requirements. Required by the service for every grade except Kinder (panel review part 7, D8). |
 | `health_reviewed_at` | `datetime` | yes | NULL | OPEN (D-03). Lets "no allergies recorded" mean "asked and none" instead of "never asked". Unused until the team decides. |
 | `health_reviewed_by_user_id` | `bigint unsigned` | yes | NULL |  |
 | `archived_at` | `datetime` | yes | NULL | Non-null = archived (hidden from default lists). Starts the 5-year retention clock. |
@@ -430,9 +430,15 @@ A routine clinic visit. Cannot be deleted or voided anywhere in the product (edi
 | `complaint` | `varchar(150)` | no |  | Free text, stored in a known suggestion's spelling. Case-insensitive collation also keeps GROUP BY from splitting "Headache" / "headache". |
 | `complaint_type_id` | `bigint unsigned` | yes | NULL | Set when the text matches a predefined type (drives the triage checklist). Nullable. |
 | `treatment_notes` | `text` | yes | NULL | Optional. Care that isn't stock. |
-| `disposition` | `varchar(22)` | no |  |  |
+| `disposition` | `varchar(22)` | no |  | `returned_to_class`, `resting_in_clinic` (panel review part 2, PROVISIONAL), `sent_home`, `referred_to_hospital`. |
 | `referred_to` | `varchar(150)` | yes | NULL | Only when disposition = referred_to_hospital (CHECK). |
 | `event_tag` | `varchar(80)` | yes | NULL | Free text such as "Intramurals". Deliberately not a managed list. |
+| `late_entry` | `tinyint(1)` | no | 0 | PROVISIONAL (panel review part 2). Set when `visited_at` is more than 30 minutes before `created_at`. |
+| `late_entry_reason` | `varchar(200)` | yes | NULL | PROVISIONAL. Optional reason for a late entry. |
+| `entered_in_error_at` | `datetime` | yes | NULL | PROVISIONAL. Set by "Entered in error"; the row is kept and excluded from lists, counts and reports. |
+| `entered_in_error_by_user_id` | `bigint unsigned` | yes | NULL | PROVISIONAL. |
+| `entered_in_error_reason` | `varchar(300)` | yes | NULL | PROVISIONAL. Required with `entered_in_error_at`. |
+| `escalated_incident_id` | `bigint unsigned` | yes | NULL | PROVISIONAL (ADR-036). The incident this visit was escalated to; the event then counts once, as the incident. |
 | `logged_by_user_id` | `bigint unsigned` | no |  |  |
 | `updated_by_user_id` | `bigint unsigned` | yes | NULL | Last editor, for the audit summary and conflict messages. |
 | `created_at` | `datetime` | no | current_timestamp() |  |
@@ -445,7 +451,7 @@ A routine clinic visit. Cannot be deleted or voided anywhere in the product (edi
 **Checks:**
 
 - `chk_visits_complaint`: `char_length(trim(complaint)) >= 1`
-- `chk_visits_disposition`: `disposition in ('returned_to_class','sent_home','referred_to_hospital')`
+- `chk_visits_disposition`: `disposition in ('returned_to_class','resting_in_clinic','sent_home','referred_to_hospital')`
 - `chk_visits_referred_to`: `referred_to is null or disposition = 'referred_to_hospital'`
 
 ## excuse_letters
@@ -460,7 +466,7 @@ One excuse letter per visit: a draft while Staff prepare it, then permanent once
 |---|---|---|---|---|
 | `id` **PK** | `bigint unsigned` | no |  |  |
 | `visit_id` | `bigint unsigned` | no |  |  |
-| `status` | `varchar(8)` | no | draft | `draft` or `approved`. The CHECK ties every approval field to `approved`. |
+| `status` | `varchar(10)` | no | draft | `draft`, `approved`, `voided` (PROVISIONAL, panel review part 2: the visit was entered in error) or `superseded` (PROVISIONAL, panel review part 3: replaced by a newer letter for the same visit, with a reason). Voided and superseded letters are kept and never valid. One visit can then have several letters, only one of them not superseded. The CHECK ties every approval field to `approved` or `voided`. |
 | `excused_from` | `date` | no |  |  |
 | `excused_until` | `date` | no |  |  |
 | `teacher_note` | `varchar(500)` | yes | NULL | Optional note printed for the teacher. 500-character cap is a proposal. |
@@ -509,7 +515,7 @@ Which checklist items were ticked during a visit ("save checklist completion wit
 
 An emergency incident, captured in two stages. Stage 1 is the fast save; Stage 2 completes the same row.
 
-**Frontend:** `Incident`. `vitals` -> `incident_vital_readings`; `hospitalReferral` -> `hospital_referrals`; `parentNotifications` -> `parent_notification_attempts`; treatmentNotes (inside the mock's `vitals`) -> `treatment_notes`.
+**Frontend:** `Incident`. `vitals` -> `incident_vital_readings`; `hospitalReferral` -> `hospital_referrals`; `parentNotifications` -> `parent_notification_attempts`; treatmentNotes (inside the mock's `vitals`) -> `treatment_notes`; `bodyPart` -> `body_part`; `noFurtherActionReason` -> `no_further_action_reason` (both PROVISIONAL, panel review part 1).
 
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
@@ -519,6 +525,9 @@ An emergency incident, captured in two stages. Stage 1 is the fast save; Stage 2
 | `complaint` | `varchar(150)` | no |  |  |
 | `stage` | `tinyint` | no | 1 | 1 = fast capture, 2 = complete. CHECK: stage 2 requires `completed_at` and `completed_by_user_id`. |
 | `treatment_notes` | `text` | yes | NULL | Optional. In the mock this text hides inside the vitals object. |
+| `body_part` | `varchar(60)` | yes | NULL | PROVISIONAL (panel review part 1). Optional free text with suggestions, Stage 2 only. |
+| `source_visit_id` | `bigint unsigned` | yes | NULL | PROVISIONAL (ADR-036). The visit this incident was escalated from. |
+| `no_further_action_reason` | `varchar(200)` | yes | NULL | PROVISIONAL (panel review part 1). Set only when "Nothing further was needed or done" is ticked; completing and approving need it, treatment notes, a treatment item line, a notification attempt or a referral. |
 | `event_tag` | `varchar(80)` | yes | NULL |  |
 | `created_by_user_id` | `bigint unsigned` | no |  |  |
 | `completed_by_user_id` | `bigint unsigned` | yes | NULL |  |
@@ -600,7 +609,7 @@ Hospital referral details for an incident (at most one per incident).
 
 Every attempt to reach a parent/guardian for an incident, timestamped.
 
-**Frontend:** `ParentNotificationAttempt` (outcome, timestamp).
+**Frontend:** `ParentNotificationAttempt` (outcome, timestamp, calledContact). The mock keeps `calledContact` as a snapshot (name, relationship, phone, source `emergency_contact` or `other`) because it has no contact ids; here it maps to `contact_id` plus `phone_dialed`, and an "Other" person needs a name column (PROVISIONAL, not yet in this table).
 
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
@@ -608,7 +617,7 @@ Every attempt to reach a parent/guardian for an incident, timestamped.
 | `incident_id` | `bigint unsigned` | no |  |  |
 | `contact_id` | `bigint unsigned` | yes | NULL | Which guardian was called (nullable). |
 | `phone_dialed` | `varchar(30)` | yes | NULL | Snapshot of the number, in case the contact is edited later. |
-| `outcome` | `varchar(12)` | no |  | `reached` / `not_reached` / `voicemail` / `left_message`. |
+| `outcome` | `varchar(30)` | no |  | `reached` / `no_answer` / `left_message_or_voicemail` / `wrong_number` (D6, panel review part 1). |
 | `attempted_at` | `datetime` | no |  |  |
 | `logged_by_user_id` | `bigint unsigned` | no |  |  |
 | `note` | `varchar(255)` | yes | NULL |  |
@@ -620,7 +629,7 @@ Every attempt to reach a parent/guardian for an incident, timestamped.
 
 **Checks:**
 
-- `chk_notifications_outcome`: `outcome in ('reached','not_reached','voicemail','left_message')`
+- `chk_notifications_outcome`: `outcome in ('reached','no_answer','left_message_or_voicemail','wrong_number')`
 
 ## incident_report_approvals
 
@@ -664,6 +673,7 @@ A return-for-monitoring instruction attached to a visit or an incident. One feat
 | `status` | `varchar(10)` | no | pending | `pending` -> `completed` / `missed` / `cancelled`. "Overdue" and "due today" are derived from date + status, never stored. |
 | `status_updated_at` | `datetime` | yes | NULL | When the status last changed, and by whom. |
 | `status_updated_by_user_id` | `bigint unsigned` | yes | NULL |  |
+| `status_reason` | `varchar(300)` | yes | NULL | PROVISIONAL (panel review part 3). Required when the status becomes `missed` or `cancelled`. |
 | `created_by_user_id` | `bigint unsigned` | no |  |  |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
@@ -993,7 +1003,7 @@ School events that Staff maintain on the Dashboard calendar (ADR-019).
 
 **Module:** Shared (AuditLog)  |  **Tier:** Core
 
-Append-only record of who did what and when (RA 10173 accountability). Written for every login, logout, submit, approve, create, update, delete and archive; reading the log is not logged (ADR-016).
+Append-only record of who did what and when (RA 10173 accountability). **Kept 10 years** (ADR-037; provisional until the school confirms). Written for every login, logout, submit, approve, create, update, delete and archive; reading the log is not logged (ADR-016).
 
 **Frontend:** `AuditLogEntry` (+ `summary`, ADR-017).
 

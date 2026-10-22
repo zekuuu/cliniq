@@ -69,7 +69,7 @@ Important fact worth stating early: **XAMPP ships MariaDB, not MySQL.** `Environ
 
 **Ownership**
 
-- **M-1.** Each table is owned by one backend module (ADR-009). Other modules read through that module's service, never by querying its tables directly. The mapping is in the dictionary. This extends the ADR-009 list with the two modules it is missing (Smart Triage, Audit Log Viewer) and a `Shared` area.
+- **M-1.** Each table is owned by one backend module (ADR-009). Other modules read through that module's service, never by querying its tables directly. The mapping is in the dictionary. This extends the ADR-009 list with the two modules it is missing (First-aid checklist, formerly named in ADR-009 as Smart Triage; Audit Log Viewer) and a `Shared` area.
 
 ---
 
@@ -240,11 +240,14 @@ erDiagram
         varchar disposition
         varchar referred_to
         varchar event_tag
+        tinyint late_entry "PROVISIONAL"
+        datetime entered_in_error_at "PROVISIONAL, row kept"
+        bigint escalated_incident_id FK "PROVISIONAL, ADR-036"
     }
     excuse_letters {
         bigint id PK
-        bigint visit_id FK "unique: one per visit"
-        varchar status "draft, approved"
+        bigint visit_id FK "one active letter per visit; superseded ones kept (PROVISIONAL)"
+        varchar status "draft, approved, voided, superseded"
         date excused_from
         date excused_until
         varchar reference_no UK
@@ -304,6 +307,9 @@ erDiagram
         varchar complaint
         tinyint stage "1 fast capture, 2 complete"
         text treatment_notes "optional"
+        varchar body_part "optional, PROVISIONAL"
+        bigint source_visit_id FK "PROVISIONAL, ADR-036"
+        varchar no_further_action_reason "PROVISIONAL"
         datetime completed_at "required when stage 2"
     }
     incident_vital_readings {
@@ -328,7 +334,7 @@ erDiagram
         bigint id PK
         bigint incident_id FK
         bigint contact_id FK
-        varchar outcome "reached, not_reached, voicemail, left_message"
+        varchar outcome "reached, no_answer, left_message_or_voicemail, wrong_number"
         datetime attempted_at
     }
     incident_report_approvals {
@@ -611,7 +617,7 @@ erDiagram
 
 ## 7. Retention and the purge procedure
 
-Policy (from `Data-Retention-Policy.md`): archived students are kept up to 5 years, then deleted. The audit trail has a shorter, separate retention (the number is still open, D-09).
+Policy (from `Data-Retention-Policy.md`): archived students are kept up to 5 years, then deleted. The audit trail has its own retention: **10 years** (ADR-037, provisional until the school's privacy officer confirms; D-09). No purge may delete audit rows younger than that.
 
 A nightly or monthly `retention:purge` command (disabled until the team turns it on) does this in **one transaction per student**, in this order, and writes one `audit_logs` row per student with `actor_user_id = NULL` and only the internal student id:
 
@@ -657,7 +663,7 @@ Each row is a real situation and where the design handles it. "DB" = enforced by
 | Same masterlist file imported twice | `source_file_sha256` is unique, so the second apply is refused (DB). |
 | Student has no allergies vs. was never asked | `health_reviewed_at` can tell the two apart once decided (D-03). |
 | Several guardians | Many `emergency_contacts`, exactly one primary (DB, tested). The API shows the primary until the UI needs more. |
-| Guardian unreachable during an emergency | A `not_reached` attempt row, plus a `unverified` verification event linked to the incident; `is_verified` flips to 0 (App). |
+| Guardian unreachable during an emergency | A `no_answer` attempt row, plus a `unverified` verification event linked to the incident; `is_verified` flips to 0 (App). |
 | Student archived while follow-ups or letters are pending | Rows stay; dashboards and pending lists hide archived students, as the mock does (App). |
 | Grade promotion at year end | Update `grade_level_id`; an optional history table is described in section 12 (waiting on the client's answer). |
 | Search by allergy to find students with a restriction | `idx_health_kind (kind, label)` (DB). |

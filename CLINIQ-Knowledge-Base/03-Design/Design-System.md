@@ -156,7 +156,7 @@ Where a requirement doesn't specify behavior, use established usability judgment
 
 ## 6. Key Interaction Flows Worth Getting Right
 
-- **New Visit → Smart Triage:** selecting a complaint (e.g. "fainting") surfaces a standardized checklist inline, not a separate page — it should feel like part of filling the form, not an interruption.
+- **New Visit → First-aid checklist:** selecting a complaint (e.g. "fainting") surfaces a standardized checklist inline, not a separate page — it should feel like part of filling the form, not an interruption.
 - **Duplicate detection:** on saving a new student, if name+grade level matches an existing record, block save and show a confirmation modal rather than silently creating a duplicate.
 - **Operational attention:** low-stock, expired-or-expiring, and incomplete-record counts use compact count chips on the Dashboard Overview. For Staff they link to the filtered destination; for Admin they are static counts. The Overview tab badge carries follow-up, inventory, and incomplete-record attention across Dashboard views (ADR-032).
 - **Report Incident → Stage 1 save:** starting an incident should reach a savable form in as few steps as possible — only the complaint is required; the readings are optional (take what the case needs). Saving Stage 1 must succeed even if Stage 2 fields are empty; don't validate the full form up front or you defeat the point of the two-stage design.

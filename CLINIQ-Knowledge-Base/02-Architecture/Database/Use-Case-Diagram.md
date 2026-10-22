@@ -15,7 +15,7 @@ flowchart LR
         UC3(["Log Clinic Visits"])
         UC4(["Log Emergencies<br/>(two-stage)"])
         UC5(["Generate Reports"])
-        UC7(["View Smart Triage<br/>Checklist"])
+        UC7(["View First-aid checklist<br/>Checklist"])
         UC8(["Manage Inventory"])
         UC9(["View Clinic<br/>Overview Dashboard"])
         UC10(["Verify Backups"])
@@ -36,7 +36,7 @@ flowchart LR
 | Log in / log out | User Management |
 | Add/edit/archive student records | Student Records |
 | Resolve incomplete-record queue entries | Student Records |
-| Log a clinic visit, with Smart Triage checklist | Clinic Visit Monitoring |
+| Log a clinic visit, with First-aid checklist checklist | Clinic Visit Monitoring |
 | Generate/approve excuse letters | Clinic Visit Monitoring |
 | Log PE/Sports injury referrals | Clinic Visit Monitoring |
 | Record an emergency incident (Stage 1: fast-capture) | Emergency Response |

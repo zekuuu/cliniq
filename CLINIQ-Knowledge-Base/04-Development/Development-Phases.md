@@ -32,7 +32,7 @@ Built first, per the interface-construction-first methodology (ADR-006) — show
 ### Phase F1 — The 5 Reference Screens (Build These Carefully; Everything After Reuses Them)
 Build in this order — each establishes a pattern the next several phases lean on. Full detail for each: `03-Design/Reference-Screens.md`.
 1. **Student Profile** (`features/student-records/`) — establishes the detail/read-record pattern every other detail view will follow.
-2. **New Visit Entry** (`features/clinic-visits/`) — establishes the core form pattern, including the dynamic Smart Triage panel and the inline Follow-Up prompt.
+2. **New Visit Entry** (`features/clinic-visits/`) — establishes the core form pattern, including the dynamic first-aid checklist panel and the inline Follow-Up prompt.
 3. **Incident Entry, two-stage** (`features/emergency-response/`) — establishes the urgency-styled, status-lifecycle pattern (Stage 1 fast-capture → Stage 2 complete-later badge).
 4. *(Built, then removed with the QR feature, ADR-027.)* The QR Scan/Lookup Hub reference screen.
 5. **Clinic Overview Dashboard** (`features/dashboard/`) — the most component-dense screen; built last in this phase specifically because it reuses stat cards, badges, and list-row patterns from the first four.
@@ -46,7 +46,7 @@ Follow the mapping table already defined in `03-Design/Reference-Screens.md` (§
 3. *(Built, then removed with the QR feature, ADR-027.)* The rest of the QR Digital Health ID screens.
 4. **Emergency Response** remainder — Incident Log List (masked LRN, status badge from the Phase F1 pattern), Parent Notification Outcome Logging, Incident Report View/Print.
 5. **Medicine & Supply Inventory Tracker** — Inventory List, Add/Edit Item, Dispense/Log Usage (the stock-flow mechanics from `Modules-and-Features` §8 — threshold check, independent low-stock/nearing-expiry badges).
-6. **Reports Generation** — Monthly/Incident/Health Summary views, all print-layout-first.
+6. **Reports Generation** — Monthly / Incident register / Complaint summary views, all print-layout-first.
 7. **User Management** — User List, Add/Edit User & Role Assignment (Staff, Admin/Principal).
 8. **Backup Verification Assistant** — status screen, guided recovery checklist.
 

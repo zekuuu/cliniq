@@ -1,7 +1,7 @@
 # ADR-035: Restock expiry requires an explicit no-expiration confirmation
 
 **Date:** Thursday, October 22, 2026 — 15:01 PHT
-**Status:** Accepted
+**Status:** Accepted. Extended to Add Item (the item's first batch) on Thursday, October 22, 2026 by panel review part 5 (IV-2, D10); session [2026-10-22-panel-review-part-5-inventory](../08-Logs/Agent-Sessions/2026-10-22-panel-review-part-5-inventory.md)
 
 ## Context
 
