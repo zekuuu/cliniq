@@ -423,7 +423,8 @@ const APP_ROUTES: AppRoute[] = [
   {
     path: paths.backup,
     title: 'Backup',
-    roles: ['staff'],
+    // ADR-037: the Admin/Principal gets Backup too, with the same abilities as Staff.
+    roles: ['staff', 'admin'],
     nav: 'backup',
     render: () => <BackupStatusPage />,
   },

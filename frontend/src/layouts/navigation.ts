@@ -56,7 +56,7 @@ export function navGroupsFor(role: UserRole): NavGroup[] {
     return [
       { label: 'Overview', items: [ALL.dashboard, ALL.calendar] },
       { label: 'Reporting', items: [ALL.reports, ALL.auditLog] },
-      { label: 'Administration', items: [ALL.accounts] },
+      { label: 'Administration', items: [ALL.accounts, ALL.backup] },
     ]
   }
   return [
