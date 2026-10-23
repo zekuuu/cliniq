@@ -223,6 +223,16 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
   // When Staff last changed the date or time; lateness is measured from then (render stays pure).
   const [editedAt, setEditedAt] = useState<number | null>(null)
   const whenEdited = editedAt !== null
+  // Until Staff changes them, the date and time follow the clock instead of freezing at page open.
+  useEffect(() => {
+    if (whenEdited) return
+    const timer = window.setInterval(() => {
+      const now = new Date()
+      setVisitDate(todayISO(now))
+      setVisitClock(currentClock(now))
+    }, 1000)
+    return () => window.clearInterval(timer)
+  }, [whenEdited])
   const [lateEntryReason, setLateEntryReason] = useState('')
   const navigate = useNavigate()
   /** "Show more fields": closed on a new visit; opens by itself when one of its fields has an error. */

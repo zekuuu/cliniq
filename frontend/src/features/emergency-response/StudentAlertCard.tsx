@@ -18,18 +18,19 @@ function Chips({ items }: { items: string[] }) {
   )
 }
 
-function Row({ label, children }: { label: string; children: ReactNode }) {
+/** Label above its value, so each fact reads as one block instead of a label/value run-on. */
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid grid-cols-1 gap-1 sm:grid-cols-[8.5rem_minmax(0,1fr)] sm:gap-3">
-      <dt className="text-xs font-semibold text-text-secondary sm:pt-0.5">{label}</dt>
-      <dd className="min-w-0 text-sm text-text-primary">{children}</dd>
+    <div className="min-w-0">
+      <dt className="text-xs font-semibold text-text-secondary">{label}</dt>
+      <dd className="mt-1 text-sm text-text-primary">{children}</dd>
     </div>
   )
 }
 
 /**
  * Read-only safety facts for the student in Stage 1 (panel review IN-1): allergies, conditions and
- * emergency contacts in their saved order, the first being the primary. It adds no input, so fast
+ * emergency contacts in their saved order. It adds no input, so fast
  * capture stays fast. A single-student screen, so the full name is shown elsewhere on the form (ADR-004).
  */
 export function StudentAlertCard({ student }: { student: Student }) {
@@ -39,38 +40,31 @@ export function StudentAlertCard({ student }: { student: Student }) {
         <Icon name="alertTriangle" size={16} className="text-warning" />
         Check before treating
       </h2>
-      <dl className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
-        <Row label="Allergies">
+      <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-3">
+        <Field label="Allergies">
           <Chips items={student.allergies} />
-        </Row>
-        <Row label="Medical conditions">
+        </Field>
+        <Field label="Medical conditions">
           <Chips items={student.medicalConditions} />
-        </Row>
-      </dl>
-      <dl className="mt-2">
-        <Row label="Emergency contacts">
+        </Field>
+        <Field label="Emergency contacts">
           {student.emergencyContacts.length ? (
-            <ol className="flex flex-col gap-0.5">
+            <ol className="flex flex-col gap-2">
               {student.emergencyContacts.map((contact, index) => (
-                <li key={`${contact.name}-${contact.phone}-${index}`} className="flex flex-wrap items-center gap-x-2">
-                  <span className="font-semibold">{contact.name}</span>
-                  <span className="text-text-secondary">{contact.relationship}</span>
-                  <span className="tabular-nums">
+                <li key={`${contact.name}-${contact.phone}-${index}`}>
+                  <span className="block font-semibold">{contact.name}</span>
+                  <span className="block text-text-secondary">{contact.relationship}</span>
+                  <span className="block tabular-nums">
                     <span className="sr-only">Phone: </span>
                     {contact.phone}
                   </span>
-                  {index === 0 && (
-                    <Badge tone="info" variant="soft">
-                      Primary
-                    </Badge>
-                  )}
                 </li>
               ))}
             </ol>
           ) : (
             <span className="text-text-secondary">None recorded</span>
           )}
-        </Row>
+        </Field>
       </dl>
     </section>
   )

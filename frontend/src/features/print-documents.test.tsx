@@ -150,7 +150,7 @@ describe('purpose-built printouts', () => {
     expectDocument(doc, 'Clinic Excuse Letter')
     expect(doc).toHaveTextContent('DRAFT, NOT APPROVED')
     expect(doc).toHaveTextContent('Not a medical certificate')
-    expect(doc).toHaveTextContent('••••••••0041')
+    expect(doc).toHaveTextContent('●●●●●●●●0041')
     expect(doc.textContent).not.toMatch(/visit-\d+/)
   })
 

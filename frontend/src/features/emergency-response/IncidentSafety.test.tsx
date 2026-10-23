@@ -51,7 +51,7 @@ describe('Stage 1 alert card (IN-1)', () => {
     const card = await screen.findByRole('region', { name: 'Check before treating' })
     const rows = within(card).getAllByRole('listitem').filter((row) => row.textContent?.includes('0900-111-'))
     expect(rows.map((row) => row.textContent)).toEqual([
-      expect.stringMatching(/^Arnel Cabrera.*0900-111-2011.*Primary$/),
+      expect.stringMatching(/^Arnel Cabrera.*0900-111-2011$/),
       expect.stringMatching(/^Beatriz Cabrera.*0900-111-2111$/),
     ])
     // Empty allergies and conditions read "None recorded", never "No allergies".
