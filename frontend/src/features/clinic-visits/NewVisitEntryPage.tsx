@@ -699,17 +699,20 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
               timeOutRef={timeOutRef}
             />
 
-            <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+            {/* The note gets its own line so the actions stay together instead of Save wrapping alone. */}
+            <div className="flex flex-col gap-2 pt-2">
               {!treatment.trim() && !lines.length && (
-                <p className="mr-auto text-xs text-text-secondary">No treatment recorded. You can still save.</p>
+                <p className="text-xs text-text-secondary">No treatment recorded. You can still save.</p>
               )}
-              <Button type="button" variant="secondary" icon="alertTriangle" onClick={escalateToIncident}>
-                Escalate to incident
-              </Button>
-              <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
-              <Button type="submit" variant="primary" loading={saving}>
-                Save Visit
-              </Button>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <Button type="button" variant="secondary" icon="alertTriangle" onClick={escalateToIncident}>
+                  Escalate to incident
+                </Button>
+                <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
+                <Button type="submit" variant="primary" loading={saving}>
+                  Save Visit
+                </Button>
+              </div>
             </div>
           </CardBody>
         </Card>
