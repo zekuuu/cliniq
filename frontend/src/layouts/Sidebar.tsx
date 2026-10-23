@@ -1,6 +1,7 @@
+import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router'
 import { Icon } from '../components'
-import { fetchBackupStatus } from '../features/backup/api/backupApi'
+import { BACKUP_CHANGED_EVENT, fetchBackupStatus } from '../features/backup/api/backupApi'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { cn } from '../lib/cn'
 import { navGroupsFor, type NavKey } from './navigation'
@@ -54,9 +55,13 @@ export function Sidebar({
   onReportIssue,
   user,
 }: SidebarProps) {
-  const { data: backup } = useAsyncData('sidebar-backup-status', () =>
+  const { data: backup, reload: reloadBackup } = useAsyncData('sidebar-backup-status', () =>
     user.role === 'staff' ? fetchBackupStatus() : Promise.resolve(null),
   )
+  useEffect(() => {
+    window.addEventListener(BACKUP_CHANGED_EVENT, reloadBackup)
+    return () => window.removeEventListener(BACKUP_CHANGED_EVENT, reloadBackup)
+  }, [reloadBackup])
   const backupNeedsAttention = Boolean(
     backup && (!backup.latest || backup.latest.status === 'failed' || backup.needsVerification),
   )

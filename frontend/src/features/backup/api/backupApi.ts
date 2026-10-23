@@ -6,16 +6,25 @@ import { getBackupStatus, recordBackupNow, verifyLatestBackup, type BackupStatus
  */
 export type { BackupStatusView }
 
+/** Fired after a backup is recorded or verified, so the sidebar's warning badge refreshes. */
+export const BACKUP_CHANGED_EVENT = 'cliniq:backup-changed'
+
+async function announce(change: Promise<BackupStatusView>): Promise<BackupStatusView> {
+  const status = await change
+  window.dispatchEvent(new CustomEvent(BACKUP_CHANGED_EVENT))
+  return status
+}
+
 export function fetchBackupStatus(): Promise<BackupStatusView> {
   return getBackupStatus()
 }
 
 /** Recording a verification is an audited update. */
 export function verifyBackup(actor?: SessionUser): Promise<BackupStatusView> {
-  return verifyLatestBackup(actor)
+  return announce(verifyLatestBackup(actor))
 }
 
 /** "Back up now". In the mock layer it records a successful run; the real job is backend-phase work. */
 export function backUpNow(actor?: SessionUser): Promise<BackupStatusView> {
-  return recordBackupNow(actor)
+  return announce(recordBackupNow(actor))
 }
