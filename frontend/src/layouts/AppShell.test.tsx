@@ -3,6 +3,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { getRecordedAuditEntries } from '../lib/mock-db'
+import { verifyBackup } from '../features/backup/api/backupApi'
 import { AppShell } from './AppShell'
 import { navGroupsFor } from './navigation'
 
@@ -103,6 +104,24 @@ describe('App Shell / Navigation', () => {
     expect(screen.getByRole('link', { name: /backup.*needs attention/i })).toHaveAttribute(
       'href',
       '/backup',
+    )
+  })
+
+  it('clears the Backup warning once the latest backup is verified', async () => {
+    renderWithRouter(
+      <AppShell
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        active="backup"
+        onLogout={() => {}}
+      >
+        <div>Screen</div>
+      </AppShell>,
+    )
+
+    await screen.findByRole('img', { name: 'Backup needs attention' })
+    await verifyBackup({ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' })
+    await waitFor(() =>
+      expect(screen.queryByRole('img', { name: 'Backup needs attention' })).not.toBeInTheDocument(),
     )
   })
 

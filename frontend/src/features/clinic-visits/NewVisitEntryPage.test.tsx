@@ -1,6 +1,6 @@
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { addDays, formatDate, todayISO } from '../../lib/dates'
 import { getExcuseLetterApproval, getRecordedAuditEntries, getVisit, resetMockDb } from '../../lib/mock-db'
 import { pickDate } from '../../test/pickDate'
@@ -30,10 +30,33 @@ function getSavedVisit() {
 describe('New Visit', () => {
   beforeEach(() => resetMockDb())
 
+  it('keeps the default visit time on the clock until Staff changes it', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })
+    try {
+      vi.setSystemTime(new Date(2026, 9, 23, 9, 0, 30))
+      renderWithRouter(<NewVisitEntryPage />)
+      const time = await screen.findByLabelText('Time')
+      expect(time).toHaveValue('09:00')
+
+      act(() => vi.advanceTimersByTime(60_000))
+      expect(time).toHaveValue('09:01')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('focuses student lookup first when the visit has no identified student', async () => {
     renderWithRouter(<NewVisitEntryPage />)
 
     expect(await screen.findByRole('combobox', { name: /student/i })).toHaveFocus()
+  })
+
+  it('omits the redundant Staff form header badge', async () => {
+    renderWithRouter(<NewVisitEntryPage />)
+
+    await screen.findByRole('heading', { name: 'New Visit' })
+
+    expect(screen.queryByText('Staff form')).not.toBeInTheDocument()
   })
 
   it('shows the identified student and reveals the first-aid checklist for a case-insensitive complaint match', async () => {
@@ -42,7 +65,7 @@ describe('New Visit', () => {
     await pickStudent(user, '000000260001')
 
     expect(await screen.findByRole('heading', { name: 'New Visit' })).toBeInTheDocument()
-    expect(screen.getAllByText('••••••••0001').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('●●●●●●●●0001').length).toBeGreaterThan(0)
     expect(screen.queryByRole('combobox', { name: /student/i })).not.toBeInTheDocument()
     await selectComplaint(user, 'Fever')
     expect(screen.getByRole('heading', { name: /suggested first-aid steps for: Fever/i })).toBeInTheDocument()
@@ -166,7 +189,7 @@ describe('New Visit student lookup', () => {
     await user.click(option)
 
     const changeButton = await screen.findByRole('button', { name: /change student \(Gian Quizon\)/i })
-    expect(within(changeButton.parentElement!).getByText('••••••••0001')).toBeInTheDocument()
+    expect(within(changeButton.parentElement!).getByText('●●●●●●●●0001')).toBeInTheDocument()
     await user.click(changeButton)
     expect(screen.getByRole('combobox', { name: /student/i })).toHaveFocus()
   })

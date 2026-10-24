@@ -239,6 +239,8 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
       {/* While editing, Back is the in-page Cancel: it returns to the read view, never saves. */}
       <BackButton {...(editing ? { onBack: cancelEdit } : { fallback: paths.visits })} />
       <Card className="p-5">
+        {/* The date keeps the top-right corner; the actions get their own row so a long set of
+            buttons wraps among themselves instead of pushing the date below the title. */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">
@@ -248,27 +250,25 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
               {visit.student.fullName} · LRN <MaskedLrn lrn={visit.student.lrn} /> · {visit.student.gradeLevel}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Badge tone="info" variant="soft" icon="calendarClock">
-              {formatDateTime(visit.dateTime)}
-            </Badge>
-            {!editing && !locked && (
-              <>
-                <Button variant="secondary" icon="fileText" onClick={startEdit}>
-                  Edit
-                </Button>
-                {!visit.escalatedIncidentId && (
-                  <Button variant="secondary" icon="alertTriangle" onClick={() => navigate(`${paths.incidentNew}?fromVisit=${encodeURIComponent(visit.id)}`)}>
-                    Escalate to incident
-                  </Button>
-                )}
-                <Button variant="neutral" onClick={() => { setErrorReason(''); setErrorReasonMessage(''); setMarkingError(true) }}>
-                  Entered in error
-                </Button>
-              </>
-            )}
-          </div>
+          <Badge tone="info" variant="soft" icon="calendarClock">
+            {formatDateTime(visit.dateTime)}
+          </Badge>
         </div>
+        {!editing && !locked && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button variant="secondary" icon="fileText" onClick={startEdit}>
+              Edit
+            </Button>
+            {!visit.escalatedIncidentId && (
+              <Button variant="secondary" icon="alertTriangle" onClick={() => navigate(`${paths.incidentNew}?fromVisit=${encodeURIComponent(visit.id)}`)}>
+                Escalate to incident
+              </Button>
+            )}
+            <Button variant="neutral" onClick={() => { setErrorReason(''); setErrorReasonMessage(''); setMarkingError(true) }}>
+              Entered in error
+            </Button>
+          </div>
+        )}
       </Card>
 
       {visit.enteredInError && (

@@ -21,9 +21,13 @@ export function AttentionChips({ summary, canNavigate }: { summary: DashboardSum
   const expiredOrExpiring = summary.inventoryAlerts.filter((row) => row.flags.some((flag) => flag !== 'low_stock')).length
   return (
     <section aria-label="More items needing attention" className="flex flex-wrap gap-2">
+      <CountChip label="incomplete records" count={summary.counts.pendingRecords} to={paths.incompleteRecords} canNavigate={canNavigate} />
+      {/* Panel review VS-1: today's "Resting in clinic" visits with no Time out. The list shows masked LRNs (ADR-004). */}
+      {summary.counts.inClinicNow > 0 && (
+        <CountChip label="in clinic now" count={summary.counts.inClinicNow} to={`${paths.visits}?inClinic=1`} canNavigate={canNavigate} />
+      )}
       <CountChip label="low stock" count={summary.counts.lowStockItems} to={`${paths.inventory}?attention=low_stock`} canNavigate={canNavigate} />
       <CountChip label="expired or expiring" count={expiredOrExpiring} to={`${paths.inventory}?attention=expiry`} canNavigate={canNavigate} />
-      <CountChip label="incomplete records" count={summary.counts.pendingRecords} to={paths.incompleteRecords} canNavigate={canNavigate} />
       {/* Panel review BK-2: both roles. */}
       {summary.backupAlert && (
         <CountChipText
@@ -37,10 +41,6 @@ export function AttentionChips({ summary, canNavigate }: { summary: DashboardSum
                 : `Last backup was more than ${summary.backupAlert.staleAfterHours} hours ago`
           }
         />
-      )}
-      {/* Panel review VS-1: today's "Resting in clinic" visits with no Time out. The list shows masked LRNs (ADR-004). */}
-      {summary.counts.inClinicNow > 0 && (
-        <CountChip label="in clinic now" count={summary.counts.inClinicNow} to={`${paths.visits}?inClinic=1`} canNavigate={canNavigate} />
       )}
     </section>
   )

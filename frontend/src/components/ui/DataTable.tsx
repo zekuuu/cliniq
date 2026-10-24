@@ -79,7 +79,9 @@ export function DataTable<Row>({
       className={cn(
         // -mx-1 px-1: 4px inside the scroller for the focus ring of a cell flush with its edge;
         // scroll-px-1.5 keeps that room (plus sub-pixel slack) when focus scrolls a cell into view.
-        'relative -mx-1 scroll-px-1.5 overflow-x-auto px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green',
+        // Pinned columns skip it: they stick inside that padding, leaving a gap scrolled cells show through.
+        'relative scroll-px-1.5 overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green',
+        !(stickyFirstColumn || stickyLastColumn) && '-mx-1 px-1',
         className,
       )}
     >

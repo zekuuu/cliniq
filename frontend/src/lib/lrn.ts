@@ -16,9 +16,12 @@ export function isLrn(value: string): boolean {
   return LRN.test(value)
 }
 
-/** The masked LRN shown on multi-student screens, printouts and the Audit Trail: `••••••••1234`. */
+/**
+ * The masked LRN shown on multi-student screens, printouts and the Audit Trail: `●●●●●●●●1234`.
+ * U+25CF, not the bullet `•`: Inter draws small bullets at uneven sizes at 1x, so the mask looked ragged.
+ */
 export function maskLrn(lrn: string): string {
-  return `••••••••${lrn.slice(-4)}`
+  return `●●●●●●●●${lrn.slice(-4)}`
 }
 
 /** What a screen reader says for a masked LRN. */

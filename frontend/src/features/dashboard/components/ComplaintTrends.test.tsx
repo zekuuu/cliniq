@@ -13,7 +13,7 @@ interface LineProps {
     animations?: false | { radius?: { duration?: number; easing?: string } }
     transitions?: { active?: { animation?: { duration?: number; easing?: string } } }
     interaction?: { mode?: string; axis?: string; intersect?: boolean }
-    scales?: { y?: { ticks?: { stepSize?: number; maxTicksLimit?: number } } }
+    scales?: { x?: { grid?: { drawTicks?: boolean } }; y?: { ticks?: { stepSize?: number; maxTicksLimit?: number } }; yRight?: { display?: boolean; position?: string; grid?: { drawOnChartArea?: boolean; drawTicks?: boolean }; border?: { display?: boolean; color?: string }; ticks?: { display?: boolean } } }
     plugins?: {
       tooltip?: {
         enabled?: boolean
@@ -253,8 +253,29 @@ describe('TrendTable', () => {
     expect(screen.getByRole('img', { name: /by Sex/i })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /by grade level: Grade 5 3 visits, 1 incident\./i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Female.*3.*75%/i })).toBeInTheDocument()
+    expect(document.querySelector('[data-chart-right-boundary]')).not.toBeInTheDocument()
+    expect((barMock.props as LineProps).options?.scales?.x?.grid?.drawTicks).toBe(false)
     await user.click(screen.getByRole('button', { name: /Male.*1.*25%/i }))
     expect(onFiltersChange).toHaveBeenCalledWith({ sex: 'male', gradeLevel: null })
+  })
+
+  it('draws a right plot boundary without ticks extending beyond the baseline', () => {
+    render(
+      <ComplaintTrends
+        trends={trends}
+        demographics={{ sex: [], gradeLevel: [] }}
+        filters={{ sex: null, gradeLevel: null }}
+        onFiltersChange={() => {}}
+      />,
+    )
+
+    expect((barMock.props as LineProps).options?.scales?.yRight).toMatchObject({
+      display: true,
+      position: 'right',
+      grid: { drawOnChartArea: false, drawTicks: false },
+      border: { display: true, color: colorToken('border') },
+      ticks: { display: false },
+    })
   })
 
   it('uses smooth chart transitions and a slower, eased hover glide', () => {

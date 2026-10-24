@@ -8,6 +8,7 @@ export type ColorToken =
   | 'brand-green-light'
   | 'text-primary'
   | 'text-secondary'
+  | 'text-muted'
   | 'border'
   | 'surface'
   | 'background'

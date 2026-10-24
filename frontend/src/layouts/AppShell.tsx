@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { AppFooter, Icon } from '../components'
 import { Modal } from '../components'
@@ -25,6 +25,25 @@ export interface AppShellProps {
   active: NavKey | null
   children: ReactNode
   onLogout: () => void
+}
+
+/** The workstation's date and time, on its own so only this text re-renders every second. */
+function LiveClock() {
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+  return (
+    <time
+      dateTime={now.toISOString()}
+      className="hidden text-sm font-semibold whitespace-nowrap text-text-secondary tabular-nums sm:block"
+    >
+      {now.toLocaleDateString('en-PH', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
+      {' · '}
+      {now.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
+    </time>
+  )
 }
 
 export function AppShell({ user, active, children, onLogout }: AppShellProps) {
@@ -90,6 +109,7 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
             )}
             <BrandLogo compact />
           </div>
+          <LiveClock />
           <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-2.5">
             {/* Keyboard help belongs to the desktop workstation; it has no use on a touch screen. */}
             <button

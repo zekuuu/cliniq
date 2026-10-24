@@ -101,6 +101,8 @@ export function MultiSelect({
         <div
           role="dialog"
           aria-labelledby={`${id}-label`}
+          // Clicking a row's text focuses the panel, not <main>, so the Tab-out blur above stays shut.
+          tabIndex={-1}
           onKeyDown={(event) => {
             if (event.key === 'Escape') {
               setOpen(false)

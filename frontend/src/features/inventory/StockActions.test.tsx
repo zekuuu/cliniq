@@ -57,6 +57,21 @@ describe('Adjust Stock', () => {
   })
 })
 
+describe('Inventory page headings', () => {
+  beforeEach(() => resetMockDb())
+
+  it('omits passive mode and stock-action badges', async () => {
+    renderWithRouter(<InventoryFormPage />, { route: '/inventory/new' })
+    await screen.findByRole('heading', { name: 'Add Inventory Item' })
+    expect(screen.queryByText('New item')).not.toBeInTheDocument()
+    expect(screen.queryByText('Editing')).not.toBeInTheDocument()
+
+    renderWithRouter(<InventoryDispensePage />, { route: '/inventory/dispense' })
+    await screen.findByRole('heading', { name: 'Dispense Medicine or Supply' })
+    expect(screen.queryByText('Stock action')).not.toBeInTheDocument()
+  })
+})
+
 describe('Restock and Edit Item', () => {
   beforeEach(() => resetMockDb())
 

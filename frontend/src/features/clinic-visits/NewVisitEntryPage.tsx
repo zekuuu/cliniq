@@ -2,7 +2,6 @@ import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent, t
 import { Link, useNavigate } from 'react-router'
 import {
   BackButton,
-  Badge,
   Button,
   buttonClassName,
   Card,
@@ -223,6 +222,16 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
   // When Staff last changed the date or time; lateness is measured from then (render stays pure).
   const [editedAt, setEditedAt] = useState<number | null>(null)
   const whenEdited = editedAt !== null
+  // Until Staff changes them, the date and time follow the clock instead of freezing at page open.
+  useEffect(() => {
+    if (whenEdited) return
+    const timer = window.setInterval(() => {
+      const now = new Date()
+      setVisitDate(todayISO(now))
+      setVisitClock(currentClock(now))
+    }, 1000)
+    return () => window.clearInterval(timer)
+  }, [whenEdited])
   const [lateEntryReason, setLateEntryReason] = useState('')
   const navigate = useNavigate()
   /** "Show more fields": closed on a new visit; opens by itself when one of its fields has an error. */
@@ -437,9 +446,6 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 : 'Student not identified yet.'}
             </p>
           </div>
-          <Badge tone="info" variant="soft" icon="stethoscope">
-            Staff form
-          </Badge>
         </div>
       </Card>
 
@@ -689,17 +695,20 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
               timeOutRef={timeOutRef}
             />
 
-            <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+            {/* The note gets its own line so the actions stay together instead of Save wrapping alone. */}
+            <div className="flex flex-col gap-2 pt-2">
               {!treatment.trim() && !lines.length && (
-                <p className="mr-auto text-xs text-text-secondary">No treatment recorded. You can still save.</p>
+                <p className="text-xs text-text-secondary">No treatment recorded. You can still save.</p>
               )}
-              <Button type="button" variant="secondary" icon="alertTriangle" onClick={escalateToIncident}>
-                Escalate to incident
-              </Button>
-              <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
-              <Button type="submit" variant="primary" loading={saving}>
-                Save Visit
-              </Button>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <Button type="button" variant="secondary" icon="alertTriangle" onClick={escalateToIncident}>
+                  Escalate to incident
+                </Button>
+                <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
+                <Button type="submit" variant="primary" loading={saving}>
+                  Save Visit
+                </Button>
+              </div>
             </div>
           </CardBody>
         </Card>
