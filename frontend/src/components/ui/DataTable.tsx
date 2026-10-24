@@ -111,10 +111,10 @@ export function DataTable<Row>({
                   col.align === 'right' ? 'text-right' : 'text-left',
                   stickyFirstColumn &&
                     columnIndex === 0 &&
-                    'sticky left-0 z-20 border-r border-border bg-background',
+                    'sticky left-0 z-20 border-r border-border bg-background shadow-[-4px_0_0_var(--color-background)]',
                   stickyLastColumn &&
                     columnIndex === columns.length - 1 &&
-                    'sticky right-0 z-20 border-l border-border bg-background',
+                    'sticky right-0 z-20 border-l border-border bg-background shadow-[4px_0_0_var(--color-background)]',
                 )}
               >
                 {col.sort ? (
@@ -159,10 +159,10 @@ export function DataTable<Row>({
                       col.align === 'right' ? 'text-right' : 'text-left',
                       stickyFirstColumn &&
                         columnIndex === 0 &&
-                        'sticky left-0 z-10 border-r border-border bg-background',
+                        'sticky left-0 z-10 border-r border-border bg-background shadow-[-4px_0_0_var(--color-background)]',
                       stickyLastColumn &&
                         columnIndex === columns.length - 1 &&
-                        'sticky right-0 z-10 border-l border-border bg-background',
+                        'sticky right-0 z-10 border-l border-border bg-background shadow-[4px_0_0_var(--color-background)]',
                     )}
                   >
                     {col.cell(row)}
