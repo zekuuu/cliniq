@@ -309,9 +309,6 @@ function StudentFormEditor({
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-bold tracking-tight text-text-primary">{title}</h1>
-              <Badge tone={mode === 'edit' ? 'info' : 'success'} variant="soft">
-                {mode === 'edit' ? 'Editing existing' : 'New record'}
-              </Badge>
             </div>
             <p className="mt-1 text-sm text-text-secondary">{description}</p>
           </div>
@@ -329,9 +326,7 @@ function StudentFormEditor({
             description={`${requiredCount} required field${requiredCount === 1 ? '' : 's'} remaining`}
             icon={<Icon name="userCog" />}
             actions={
-              <Badge tone={isRefetching ? 'warning' : 'neutral'} variant="soft">
-                {isRefetching ? 'Refreshing' : 'Staff only'}
-              </Badge>
+              isRefetching ? <Badge tone="warning" variant="soft">Refreshing</Badge> : undefined
             }
           />
           <CardBody className="flex flex-col gap-5">
