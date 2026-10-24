@@ -2,7 +2,6 @@ import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent, t
 import { Link, useNavigate } from 'react-router'
 import {
   BackButton,
-  Badge,
   Button,
   buttonClassName,
   Card,
@@ -447,9 +446,6 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 : 'Student not identified yet.'}
             </p>
           </div>
-          <Badge tone="info" variant="soft" icon="stethoscope">
-            Staff form
-          </Badge>
         </div>
       </Card>
 

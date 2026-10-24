@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { BackButton, Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Input, InventoryItemPicker, Select, Skeleton, StudentPicker } from '../../components'
+import { BackButton, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Input, InventoryItemPicker, Select, Skeleton, StudentPicker } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
@@ -94,7 +94,7 @@ export function InventoryDispensePage() {
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {discardDialog}
       <BackButton onBack={cancel} />
-      <Card className="p-5"><div className="flex items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">Dispense Medicine or Supply</h1><p className="mt-1 text-sm text-text-secondary">For use outside a clinic visit. Medicine given during a visit belongs on that visit.</p></div><Badge tone="warning" variant="soft" icon="package">Stock action</Badge></div></Card>
+      <Card className="p-5"><div className="flex items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">Dispense Medicine or Supply</h1><p className="mt-1 text-sm text-text-secondary">For use outside a clinic visit. Medicine given during a visit belongs on that visit.</p></div></div></Card>
       <Card aria-labelledby="dispense-title"><CardHeader titleId="dispense-title" title="Dispensation details" icon={<Icon name="package" />} /><CardBody>
         <form ref={invalidRef} noValidate className="flex flex-col gap-4" onSubmit={submit}>
           <p role="status" className="sr-only">

@@ -51,6 +51,14 @@ describe('New Visit', () => {
     expect(await screen.findByRole('combobox', { name: /student/i })).toHaveFocus()
   })
 
+  it('omits the redundant Staff form header badge', async () => {
+    renderWithRouter(<NewVisitEntryPage />)
+
+    await screen.findByRole('heading', { name: 'New Visit' })
+
+    expect(screen.queryByText('Staff form')).not.toBeInTheDocument()
+  })
+
   it('shows the identified student and reveals the first-aid checklist for a case-insensitive complaint match', async () => {
     const user = userEvent.setup()
     renderWithRouter(<NewVisitEntryPage />)
