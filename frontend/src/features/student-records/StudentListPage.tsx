@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Link } from 'react-router'
 import {
   BackButton,
   Badge,
+  buttonClassName,
   Card,
   CardBody,
   CardHeader,
@@ -188,11 +190,19 @@ export function StudentListPage() {
     <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {back}
       <Card className="p-5">
-        <h1 className="text-2xl font-bold tracking-tight text-text-primary">Student List</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          Search the masterlist by full name or LRN. Medical details stay inside the
-          individual profile.
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-text-primary">Student List</h1>
+            <p className="mt-1 text-sm text-text-secondary">
+              Search the masterlist by full name or LRN. Medical details stay inside the
+              individual profile.
+            </p>
+          </div>
+          <Link className={buttonClassName({ variant: 'primary' })} to={paths.studentNew}>
+            <Icon name="plus" />
+            Add Student
+          </Link>
+        </div>
       </Card>
 
       <Card aria-labelledby="student-list-title">

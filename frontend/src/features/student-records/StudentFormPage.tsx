@@ -365,7 +365,6 @@ function StudentFormEditor({
               <Select
                 label="Grade level"
                 required
-                size="sm"
                 value={values.gradeLevel}
                 placeholder="Select grade level"
                 options={data.gradeLevels.map((grade) => ({ value: grade, label: grade }))}
@@ -375,7 +374,6 @@ function StudentFormEditor({
               <Select
                 label="Sex"
                 required
-                size="sm"
                 value={values.sex}
                 placeholder="Select sex"
                 options={[

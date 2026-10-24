@@ -38,6 +38,15 @@ describe('Student Form', () => {
     expect(screen.queryByLabelText(/student number/i)).not.toBeInTheDocument()
   })
 
+  it('uses standard-height dropdowns beside the student information inputs', async () => {
+    renderWithRouter(<StudentFormPage />)
+
+    await screen.findByRole('heading', { name: 'Add Student' })
+
+    expect(screen.getByLabelText(/grade level/i)).toHaveClass('h-10')
+    expect(screen.getByLabelText(/^sex/i)).toHaveClass('h-10')
+  })
+
   it('keeps only digits in the LRN and requires exactly 12', async () => {
     const user = userEvent.setup()
     renderWithRouter(<StudentFormPage />)
