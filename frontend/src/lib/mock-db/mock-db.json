@@ -8,6 +8,7 @@
   },
   "config": {
     "_note": "OPEN PRODUCT DECISIONS: none of these values is defined in the requirements. They are carried over from the Dashboard mock so screens have something to show. See ADR-014.",
+    "showFrequentVisitors": true,
     "frequentVisitorMinVisits": 3,
     "frequentVisitorWindowDays": 30,
     "upcomingFollowUpDays": 7,
@@ -4608,7 +4609,8 @@
       "currentStock": 12,
       "unit": "tablets",
       "expirationDate": { "daysFromNow": 210 },
-      "lowStockThreshold": 50
+      "lowStockThreshold": 50,
+      "brand": null
     },
     {
       "id": "item-0002",
@@ -4617,7 +4619,8 @@
       "currentStock": 80,
       "unit": "capsules",
       "expirationDate": { "daysFromNow": 18 },
-      "lowStockThreshold": 30
+      "lowStockThreshold": 30,
+      "brand": null
     },
     {
       "id": "item-0003",
@@ -4626,7 +4629,8 @@
       "currentStock": 9,
       "unit": "tablets",
       "expirationDate": { "daysFromNow": 11 },
-      "lowStockThreshold": 20
+      "lowStockThreshold": 20,
+      "brand": null
     },
     {
       "id": "item-0004",
@@ -4635,7 +4639,8 @@
       "currentStock": 25,
       "unit": "sachets",
       "expirationDate": { "daysAgo": 4 },
-      "lowStockThreshold": 10
+      "lowStockThreshold": 10,
+      "brand": null
     },
     {
       "id": "item-0005",
@@ -4644,7 +4649,8 @@
       "currentStock": 30,
       "unit": "capsules",
       "expirationDate": { "daysFromNow": 95 },
-      "lowStockThreshold": 10
+      "lowStockThreshold": 10,
+      "brand": null
     },
     {
       "id": "item-0006",
@@ -4653,7 +4659,8 @@
       "currentStock": 14,
       "unit": "nebules",
       "expirationDate": { "daysFromNow": 160 },
-      "lowStockThreshold": 6
+      "lowStockThreshold": 6,
+      "brand": null
     },
     {
       "id": "item-0007",
@@ -4662,7 +4669,8 @@
       "currentStock": 40,
       "unit": "tablets",
       "expirationDate": { "daysFromNow": 320 },
-      "lowStockThreshold": 15
+      "lowStockThreshold": 15,
+      "brand": null
     },
     {
       "id": "item-0008",
@@ -4671,7 +4679,8 @@
       "currentStock": 3,
       "unit": "bottles",
       "expirationDate": { "daysFromNow": 400 },
-      "lowStockThreshold": 5
+      "lowStockThreshold": 5,
+      "brand": null
     },
     {
       "id": "item-0009",
@@ -4680,7 +4689,8 @@
       "currentStock": 6,
       "unit": "bottles",
       "expirationDate": { "daysFromNow": 300 },
-      "lowStockThreshold": 4
+      "lowStockThreshold": 4,
+      "brand": null
     },
     {
       "id": "item-0010",
@@ -4689,7 +4699,8 @@
       "currentStock": 150,
       "unit": "pieces",
       "expirationDate": null,
-      "lowStockThreshold": 50
+      "lowStockThreshold": 50,
+      "brand": null
     },
     {
       "id": "item-0011",
@@ -4698,7 +4709,8 @@
       "currentStock": 40,
       "unit": "pieces",
       "expirationDate": null,
-      "lowStockThreshold": 25
+      "lowStockThreshold": 25,
+      "brand": null
     },
     {
       "id": "item-0012",
@@ -4707,7 +4719,8 @@
       "currentStock": 2,
       "unit": "packs",
       "expirationDate": null,
-      "lowStockThreshold": 3
+      "lowStockThreshold": 3,
+      "brand": null
     },
     {
       "id": "item-0013",
@@ -4716,7 +4729,8 @@
       "currentStock": 18,
       "unit": "packs",
       "expirationDate": { "daysFromNow": 540 },
-      "lowStockThreshold": 8
+      "lowStockThreshold": 8,
+      "brand": null
     },
     {
       "id": "item-0014",
@@ -4725,7 +4739,8 @@
       "currentStock": 90,
       "unit": "pairs",
       "expirationDate": { "daysFromNow": 700 },
-      "lowStockThreshold": 40
+      "lowStockThreshold": 40,
+      "brand": null
     }
   ],
   "reports": [

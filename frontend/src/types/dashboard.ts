@@ -156,6 +156,8 @@ export interface DashboardSummary {
   frequentVisitors: FrequentVisitorRow[]
   /** Minimum visit count that raised the flag. Shown to the nurse so the warning is explainable. */
   frequentVisitorMinVisits: number
+  /** Config switch: the Frequent-visitor panel and print section are hidden while `false` (on by default). */
+  showFrequentVisitors: boolean
   /** Config: the smallest prior-period count that gets a percentage on a stat card (D4). */
   percentMinPriorCount: number
   /**

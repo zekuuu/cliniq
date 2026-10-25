@@ -16,6 +16,7 @@ export type SessionUser = Pick<User, 'id' | 'name' | 'role'>
 
 const SESSION_KEY = 'cliniq.session'
 const PENDING_PASSWORD_KEY = 'cliniq.pendingPasswordChange'
+const VIEWED_RECORDS_KEY = 'cliniq.viewedRecords'
 const SESSION_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000
 
 interface StoredSession {
@@ -69,6 +70,7 @@ export function getAuthenticatedUser(): SessionUser | null {
 export function startMockSession(user: SessionUser): void {
   const session: StoredSession = { userId: user.id, expiresAt: Date.now() + SESSION_LIFETIME_MS }
   storage()?.removeItem(PENDING_PASSWORD_KEY)
+  storage()?.removeItem(VIEWED_RECORDS_KEY)
   storage()?.setItem(SESSION_KEY, JSON.stringify(session))
 }
 
@@ -101,6 +103,24 @@ export function getMockSessionUser(): SessionUser {
 export function clearMockSession(): void {
   storage()?.removeItem(SESSION_KEY)
   storage()?.removeItem(PENDING_PASSWORD_KEY)
+  storage()?.removeItem(VIEWED_RECORDS_KEY)
+}
+
+/**
+ * `true` the first time `key` is seen in this sign-in session, `false` after that, so a refresh does
+ * not log the same view again (ADR-038 item 4). Login and Log out start a fresh set.
+ */
+export function firstViewThisSession(key: string): boolean {
+  const store = storage()
+  let seen: string[]
+  try {
+    seen = JSON.parse(store?.getItem(VIEWED_RECORDS_KEY) ?? '[]') as string[]
+  } catch {
+    seen = []
+  }
+  if (seen.includes(key)) return false
+  store?.setItem(VIEWED_RECORDS_KEY, JSON.stringify([...seen, key]))
+  return true
 }
 
 export const ROLE_LABELS: Record<UserRole, string> = {

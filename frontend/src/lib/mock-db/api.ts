@@ -56,7 +56,7 @@ import {
   type IncompleteRecordRow,
   type InventoryStatus,
 } from './selectors'
-import { clearMockSession, getMockSessionUser, type SessionUser } from './session'
+import { clearMockSession, firstViewThisSession, getMockSessionUser, type SessionUser } from './session'
 import { commit, db, restoreDb } from './store'
 import { CALENDAR_EVENT_TITLE_MAX } from './integrity'
 import type {
@@ -203,6 +203,7 @@ const FIELD_LABELS: Record<string, string> = {
   assistedBy: 'assisted by',
   parentGuardian: 'parent or guardian',
   profilePicture: 'profile picture',
+  brand: 'generic or branded',
 }
 
 /** "Updated allergies and grade level" — names the changed fields for the audit summary, never their values. */
@@ -244,6 +245,17 @@ export function recordPrint(documentTitle: string, actor?: SessionUser, record?:
   return write('print document', (s) => {
     if (record) audit(s, actorOr(actor), 'print', { type: record.type, id: record.id }, record.summary)
     else audit(s, actorOr(actor), 'print', { type: 'print-document', id: documentTitle })
+  })
+}
+
+/**
+ * ADR-038 item 4: the Admin opening a student profile or an incident report is logged (who, what,
+ * when), once per record per sign-in session. Staff views are not logged (open DECIDE).
+ */
+export async function recordAdminView(target: { type: 'student' | 'incident'; id: string }, actor: SessionUser): Promise<void> {
+  if (actor.role !== 'admin' || !firstViewThisSession(`${actor.id}|${target.type}|${target.id}`)) return
+  await write('record view', (s) => {
+    audit(s, actor, 'view', target, target.type === 'student' ? 'Opened student profile' : 'Opened incident report')
   })
 }
 
@@ -653,6 +665,22 @@ export class DuplicateLrnError extends Error {
   }
 }
 
+/** The LRN is the student's identifier: set on create, never changed afterwards (ADR-028, Sir Rey). */
+export class LrnLockedError extends Error {
+  constructor() {
+    super("The LRN is the student's identifier and can't be changed.")
+  }
+}
+
+/** A name correction is allowed, but needs a reason of at least 3 characters (Sir Rey, October 25, 2026). */
+export class NameCorrectionReasonError extends Error {
+  constructor() {
+    super('Enter a reason for the name correction (at least 3 characters).')
+  }
+}
+
+export const NAME_CORRECTION_REASON_MIN = 3
+
 export type SaveStudentResult =
   | { status: 'duplicate'; matches: DuplicateMatch[] }
   | { status: 'saved'; student: Student; action: 'create' | 'update' }
@@ -660,14 +688,21 @@ export type SaveStudentResult =
 /**
  * Create or update a student. On create, a name + grade-level match against an active record blocks
  * the save until `confirmDuplicate` is passed (Frontend Context Brief §6, duplicate detection).
+ * On update the LRN can't change, and a changed name needs `nameCorrectionReason`; the audit entry
+ * records that the name was corrected and why, never the old or new name.
  */
 export function saveStudent(
   input: StudentInput,
-  options: { studentId?: string; confirmDuplicate?: boolean; actor?: SessionUser } = {},
+  options: { studentId?: string; confirmDuplicate?: boolean; actor?: SessionUser; nameCorrectionReason?: string } = {},
 ): Promise<SaveStudentResult> {
   return write('save student', (s): SaveStudentResult => {
     const lrn = normalizeLrn(input.lrn)
     if (!isLrn(lrn)) throw new Error('The LRN must be exactly 12 digits.')
+    const current = options.studentId ? studentOf(s, options.studentId) : null
+    if (current && current.lrn !== lrn) throw new LrnLockedError()
+    const nameChanged = current !== null && current.fullName !== input.fullName.trim()
+    const reason = options.nameCorrectionReason?.trim() ?? ''
+    if (nameChanged && reason.length < NAME_CORRECTION_REASON_MIN) throw new NameCorrectionReasonError()
     if (s.students.some((st) => st.id !== options.studentId && st.lrn === lrn)) throw new DuplicateLrnError()
     const name = input.fullName.trim().toLowerCase()
     const matches = s.students
@@ -687,7 +722,8 @@ export function saveStudent(
       medicalConditions: input.medicalConditions,
       emergencyContacts: input.emergencyContacts,
     }
-    const summary = existing ? changedSummary(existing, fields) : undefined
+    const changed = existing ? changedSummary(existing, fields) : undefined
+    const summary = nameChanged ? `${changed}. Name corrected; reason: ${reason}` : changed
     const wasIncomplete = existing ? missingRequiredFields(existing).length > 0 : false
     let record: SeedStudent
     if (existing) record = Object.assign(existing, fields)

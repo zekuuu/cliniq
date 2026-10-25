@@ -18,7 +18,7 @@ export const CALENDAR_EVENT_TITLE_MAX = 60
 
 const FIELDS = {
   top: ['meta', 'config', 'users', 'students', 'visits', 'incidents', 'followUps', 'inventoryItems', 'reports', 'backupLogs', 'auditLog', 'frontendOnly'],
-  config: ['_note', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges'],
+  config: ['_note', 'showFrequentVisitors', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges'],
   users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture', 'deactivatedAt'],
   students: ['id', 'lrn', 'fullName', 'gradeLevel', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
   emergencyContact: ['name', 'relationship', 'phone', 'verified'],
@@ -29,7 +29,7 @@ const FIELDS = {
   hospitalReferral: ['destination', 'transportMode', 'departureTime'],
   parentNotification: ['outcome', 'timestamp'],
   followUps: ['id', 'studentId', 'relatedRecord', 'followUpDate', 'reason', 'status', 'notes', 'createdByUserId'],
-  inventoryItems: ['id', 'name', 'category', 'currentStock', 'unit', 'expirationDate', 'lowStockThreshold'],
+  inventoryItems: ['id', 'name', 'category', 'currentStock', 'unit', 'expirationDate', 'lowStockThreshold', 'brand'],
   reports: ['type', 'dateRange'],
   backupLogs: ['lastRun', 'fileSizeBytes', 'status', 'verifiedByUserId'],
   auditLog: ['userId', 'actionType', 'targetRecord', 'timestamp'],
@@ -57,7 +57,7 @@ const ENUMS = {
   category: ['medicine', 'supply'],
   reportType: ['monthly', 'incident', 'health_summary'],
   backupStatus: ['ok', 'failed'],
-  actionType: ['login', 'logout', 'submit', 'approve', 'create', 'update', 'delete', 'archive', 'print'],
+  actionType: ['login', 'logout', 'submit', 'approve', 'create', 'update', 'delete', 'archive', 'print', 'view'],
   outcome: ['reached', 'no_answer', 'left_message_or_voicemail', 'wrong_number'],
   sex: ['male', 'female'],
   transactionType: ['dispense', 'restock', 'adjustment'],
@@ -126,6 +126,8 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
         if (!(typeof min === 'number' && typeof max === 'number' && min > 0 && min < max))
           fail(`config.vitalsWarningRanges.${vital}: needs positive numbers with min < max`)
       }
+    } else if (key === 'showFrequentVisitors') {
+      if (typeof value !== 'boolean') fail('config.showFrequentVisitors: must be true or false')
     } else if (!key.startsWith('_') && !(typeof value === 'number' && value > 0)) fail(`config.${key}: must be a positive number`)
   }
   if (!/synthetic/i.test(String((s.meta as Rec | undefined)?.notice ?? '')))
@@ -304,6 +306,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     const w = `inventoryItems[${i}] (${String(item.id)})`
     checkFields(w, item, FIELDS.inventoryItems)
     oneOf(`${w}.category`, item.category, ENUMS.category)
+    if (item.brand !== undefined && item.brand !== null) oneOf(`${w}.brand`, item.brand, ['generic', 'branded'])
     if (!Number.isInteger(item.currentStock)) fail(`${w}.currentStock: must be a whole number`)
     // Below zero happens only at runtime, through the warn-only dispense path (Module 8).
     else if ((item.currentStock as number) < 0) fail(`${w}.currentStock: the seed can't start below 0`)

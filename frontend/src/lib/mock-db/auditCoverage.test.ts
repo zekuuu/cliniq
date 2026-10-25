@@ -97,7 +97,7 @@ describe('every audited event is written (AU-1)', () => {
     const input = { ...student, lrn: '000000269991', fullName: 'Audit Pupil', emergencyContacts: student.emergencyContacts }
     const created = await saveStudent(input, { actor: STAFF, confirmDuplicate: true })
     if (created.status !== 'saved') throw new Error('not saved')
-    await saveStudent({ ...input, fullName: 'Audit Pupil B' }, { studentId: created.student.id, actor: STAFF })
+    await saveStudent({ ...input, fullName: 'Audit Pupil B' }, { studentId: created.student.id, actor: STAFF, nameCorrectionReason: 'Typo in the surname' })
     await archiveStudent(created.student.id, STAFF)
     expect(entries().map(([action, type]) => [action, type])).toEqual([
       ['create', 'student'],

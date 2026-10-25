@@ -95,6 +95,7 @@ export function buildDashboardSummary(
     upcomingWindowDays: config.upcomingFollowUpDays,
     frequentVisitors: frequentVisitors(state, { from, to }),
     frequentVisitorMinVisits: config.frequentVisitorMinVisits,
+    showFrequentVisitors: config.showFrequentVisitors,
     percentMinPriorCount: config.percentMinPriorCount,
     // Filled in by `getDashboardSummary`, which owns the store's clock (api.ts `backupAlertFor`).
     backupAlert: null,

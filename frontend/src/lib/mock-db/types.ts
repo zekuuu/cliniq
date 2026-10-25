@@ -77,6 +77,12 @@ export type SeedAuditLogEntry = Replace<AuditLogEntry, { timestamp: RelativeDate
  * were carried over from the Dashboard mock. See ADR-014.
  */
 export interface MockDbConfig {
+  /**
+   * Shows the Frequent-visitor panel on the Dashboard and its section in the Clinic Overview Report.
+   * On; the panel lists the five students with the most visits until "Show all" (Zean, October 25,
+   * 2026, after Sir Mina and Sir Rey called the Dashboard crowded). Set false to hide it.
+   */
+  showFrequentVisitors: boolean
   /** Visits within the window that raise the frequent-visitor warning. */
   frequentVisitorMinVisits: number
   /** Default window when a caller doesn't pass a date range (the Dashboard passes its own). */

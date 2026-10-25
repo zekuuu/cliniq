@@ -18,6 +18,7 @@ const TODAY = '2026-09-26'
 
 // Pinned here so these rule tests don't move when someone tunes `config` in mock-db.json.
 const CONFIG: MockDbConfig = {
+  showFrequentVisitors: true,
   frequentVisitorMinVisits: 3,
   frequentVisitorWindowDays: 30,
   upcomingFollowUpDays: 7,

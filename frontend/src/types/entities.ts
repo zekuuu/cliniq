@@ -246,6 +246,10 @@ export interface InventoryBatchAllocation {
   quantity: number
 }
 
+export type ItemBrand = 'generic' | 'branded'
+
+export const ITEM_BRAND_LABELS: Record<ItemBrand, string> = { generic: 'Generic', branded: 'Branded' }
+
 export interface InventoryItem {
   id: string
   name: string
@@ -254,6 +258,11 @@ export interface InventoryItem {
   /** Raw stock is held per received batch. Totals are derived by the data layer. */
   batches: InventoryBatch[]
   lowStockThreshold: number
+  /**
+   * PROVISIONAL (pending the ERD): generic or branded (Sir Rey, October 25, 2026; a student who wants
+   * branded pays for it). Optional: missing or `null` reads "Not specified".
+   */
+  brand?: ItemBrand | null
   /** @deprecated Derived on `InventoryItemView`; retained only for transition compatibility. */
   currentStock?: number
   /** @deprecated Derived on `InventoryItemView`; retained only for transition compatibility. */
@@ -276,8 +285,12 @@ export interface BackupLog {
   verifiedByUserId: string | null
 }
 
+/**
+ * `view` (PROVISIONAL, pending the ERD): the Admin opened a student profile or an incident report
+ * (ADR-038 item 4). Written once per record per sign-in session; the clinician's own views are not logged.
+ */
 export type AuditActionType =
-  'login' | 'logout' | 'submit' | 'approve' | 'create' | 'update' | 'delete' | 'archive' | 'print'
+  'login' | 'logout' | 'submit' | 'approve' | 'create' | 'update' | 'delete' | 'archive' | 'print' | 'view'
 
 export interface AuditLogEntry {
   userId: string

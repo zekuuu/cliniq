@@ -95,6 +95,12 @@ export function migratePersistedState(saved: Saved): Saved {
   for (const incident of saved.state.incidents)
     for (const attempt of incident.parentNotifications as Array<{ outcome: string }>)
       attempt.outcome = renamedOutcomes[attempt.outcome] ?? attempt.outcome
+  // October 25, 2026: items saved before the generic/branded tag read "Not specified".
+  for (const item of saved.state.inventoryItems as unknown as Array<Record<string, unknown>>)
+    if (item.brand !== 'generic' && item.brand !== 'branded') item.brand = null
+  // October 25, 2026: the Frequent-visitor switch; on (the panel lists the top five, Zean).
+  const config = saved.state.config as unknown as Record<string, unknown>
+  if (typeof config.showFrequentVisitors !== 'boolean') config.showFrequentVisitors = true
   return saved
 }
 

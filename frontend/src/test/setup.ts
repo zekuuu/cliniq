@@ -6,6 +6,8 @@ import { afterEach } from 'vitest'
 // file can still `vi.mock('.../mock-db.json')` before anything loads the real seed.
 afterEach(async () => {
   window.sessionStorage.clear()
+  // The Admin's once-per-session record views (ADR-038 item 4).
+  window.localStorage.removeItem('cliniq.viewedRecords')
   window.history.replaceState({}, '', '/')
   const { resetMockDb, setMockToday } = await import('../lib/mock-db')
   setMockToday(null)

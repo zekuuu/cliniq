@@ -51,7 +51,7 @@ is the file that becomes HTTP calls. Nothing above it has to change.
 5. **Shapes follow Frontend Context Brief §5** (`src/types/entities.ts`). This isn't a database
    design; the [ERD](../../../../CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md) is a proposed draft, not final or approved. Anything a screen needs that §5 doesn't define lives under
    `frontendOnly` and is labelled mock-only. Don't add new top-level entities.
-6. **Thresholds live in `config`.** They're open product decisions, not requirements (ADR-014).
+6. **Thresholds live in `config`.** They're open product decisions, not requirements (ADR-014). `showFrequentVisitors` (true/false, true) shows the Dashboard's Frequent-visitor panel, which lists the top five until "Show all"; false hides it. Each inventory item has an optional `brand` (`"generic"`, `"branded"`, or `null` for Not specified, PROVISIONAL); a browser that saved state before these existed is migrated in `store.ts` (`migratePersistedState`).
 7. Run the checks:
 
    ```bash
