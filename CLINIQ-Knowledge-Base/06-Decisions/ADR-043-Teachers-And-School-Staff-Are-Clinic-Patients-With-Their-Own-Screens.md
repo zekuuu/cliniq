@@ -1,0 +1,35 @@
+# ADR-043: Teachers and school staff are clinic patients, with their own Staff screens
+
+**Date:** Monday, October 26, 2026 — 02:59 PHT
+**Status:** Accepted (Zean, Monday, October 26, 2026 — 02:56 PHT). On Monday, October 26, 2026 — 03:07 PHT Zean approved the defaults below and said the clinician's answer is yes, staff belong in the clinic. Not built yet; wanted before the presentation on Tuesday, October 27, 2026.
+
+## Context
+The clinic is built around students: every visit, incident, follow-up and medicine given points at a student. Two sources say teachers and staff use the clinic too. The professor (Friday, October 16): a clinic serves all staff, not only students, for example the utility workers who need Biogesic. At the clinician meeting (Tuesday, October 20) the answer heard to "is a sick teacher also recorded?" was "Lahat" (everyone), from a recording that is only about 65% recoverable; the clinician also showed a record for a staff member or teacher. The Principal's earlier note was that everyone who enters is logged, without saying whose log. Until now this was an open `DECIDE`. At 03:07 Zean said the clinician's answer is yes, staff belong in the clinic (his report, not the recording), and that the team needs it for the presentation on Tuesday, October 27, 2026.
+
+Zean decided on Monday, October 26, 2026 — 02:56 PHT. He first said staff should be like student records but without allergies and conditions, then changed it in the same conversation: a department or role field is wanted, and allergies and conditions are included "if it's appropriate". The staff list goes in its own screen under the sidebar group for patient care, not inside the Student List.
+
+## Decision
+1. **Teachers, non-teaching staff and utility workers can be patients.** In documents and code they are called **personnel**, because "Staff" already names the clinician role (`UserRole` `staff`, "Staff only" screens, ids such as `user-staff-01`). On screen the item is labelled **Staff**.
+2. **Own screens, not a tab on Students.** Staff List, Staff Profile and Staff Form (add, edit, archive), reached from a new **Staff** item in the sidebar. The sidebar group "Student Care" is renamed **Patient Care** (Students, Staff, Visits, Incidents, Follow-Ups). The Student List stays as it is: its LRN, grade, section, yearly list and incomplete-records queue do not apply to adults.
+3. **A personnel record has:** full name; type (teacher, non-teaching staff, utility worker; the list is provisional); department or role (optional text, with suggestions); contact number; one or more emergency contacts (the same shape as a student's); **allergies and medical conditions** (both optional, with the same "No known allergies / conditions" choice as students); a system-assigned **Staff No.** (provisional, see below); and an archived flag (records are never deleted). No LRN, no grade or section, no sex, and no incomplete-records status.
+4. **Visits, incidents, follow-ups and medicine given can be about a student or a staff member, exactly one of the two.** In the mock data the record keeps `studentId` (now allowed to be empty) and gains `personnelId`, and the integrity check rejects a record with both or neither. The backend would do the same with two nullable foreign keys and a check constraint, not one untyped "patient id". Medicine given to staff is backed by a stock transaction like any other, and the allergy alert at the medicine picker works for staff who have allergies recorded.
+5. **One picker for the person.** Entry forms search students and staff in one box; each result carries a Student or Staff label. Nothing else about fast capture changes.
+6. **Display privacy holds (ADR-004).** Lists that show more than one person show the masked LRN for a student and the **Staff No.** for a staff member, never a name. A single person's screen (the profile, Visit Details, Incident Report) shows the name.
+7. **What does not apply to staff:** the excuse letter (a staff member who is sent home gets a visit with the disposition and no letter), the PE referral and the Sports Report, the incomplete-records queue, the yearly student list and rollover, and the Registrar import. An incident for a staff member records the notification as a call to the **emergency contact**, with the same outcomes as today (reached, no answer, left a message or voicemail, wrong number), not to a "parent or guardian".
+8. **Dashboard and reports count everyone and show the split** ("Students" and "Staff"). The Trends charts by sex and by grade level, the Frequent-visitor panel and the Sports Report stay about students and say so.
+9. **Access: the School Clinician only.** The Admin gets no staff screen. The Admin's read-only Incident Log (ADR-038) leaves out incidents of staff until the Principal and the school decide otherwise.
+10. **Every staff profile open, edit, archive and medicine given is audit-logged,** under a new audit target "Staff", the same way students are.
+11. **Defaults approved (Zean, Monday, October 26, 2026 — 03:07 PHT):** the names (personnel in code and documents, Staff on screen, route `/staff`, ids `personnel-0001`), a system-assigned Staff No. like `STF-0007`, the three starting types (teacher, non-teaching staff, utility worker), no sex field, an emergency-contact call in place of the parent call, and no Admin access to staff profiles or staff incidents. The real list of staff groups and whether the school has its own employee number are still to be asked.
+
+## Alternatives Considered
+- **A "Staff" tab on the Student List.** Rejected: it would carry columns and filters that mean nothing for adults.
+- **One combined People list with a type column.** Rejected for the screens (different fields, different rules). Whether the backend keeps one table or two is left open for the ERD.
+- **Staff names only, with no allergies or conditions.** What Claude first suggested as the smaller change. Zean chose the fuller record, which also lets the allergy alert work for staff.
+- **A polymorphic patient reference (a type column plus an id).** Rejected for the backend: it cannot be a real foreign key.
+
+## Consequences
+- **Privacy:** a teacher's allergies and conditions are health information about an adult, and they are sensitive personal information under RA 10173. Staff need to know and agree before their health data is kept, and the school's privacy notice must mention staff. The Privacy Policy screen gets provisional wording until the school's privacy officer answers (open `DECIDE`).
+- `mock-db/README.md` says "don't add new top-level entities"; this ADR is the exception for `personnel`.
+- A large share of the code reads `studentId` (about 30 files). The build starts with the data layer so that the compiler finds each place that needs a staff case.
+- The ERD and the Data Dictionary are not edited by this ADR: the team still has to choose how the database represents the two kinds of patient (open `DECIDE` and `DOC`).
+- Session: [2026-10-26-staff-as-patients-decision-and-build-prompt](../08-Logs/Agent-Sessions/2026-10-26-staff-as-patients-decision-and-build-prompt.md)

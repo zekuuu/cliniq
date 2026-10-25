@@ -169,3 +169,8 @@ The "Confirm it's you" password dialog from ADR-037 item 5 is removed from every
 ### ADR-042: The Admin can add, edit and delete calendar events
 
 On the Calendar screen the Admin opens any day and manages its events like Staff (Zean, Sunday, October 25, 2026 — 23:55 PHT). The "View visits" link stays Staff-only. Amends ADR-019.
+
+### ADR-043: Teachers and school staff are clinic patients, with their own Staff screens
+
+Teachers, non-teaching staff and utility workers (called personnel in documents and code, because "Staff" is the clinician role) can be patients (Zean, Monday, October 26, 2026 — 02:56 PHT). They get their own Staff List, Profile and Form under a sidebar group renamed Patient Care. A record has name, type, department or role, contact, emergency contacts, allergies and conditions, and a system-assigned Staff No.; no LRN, grade or sex. Visits, incidents, follow-ups and medicine given are about a student or a staff member, exactly one. Lists show the Staff No., not the name. No excuse letter, PE referral or Sports Report for staff. The School Clinician only; the Admin does not see staff. Zean approved the defaults and reported the clinician's yes on Monday, October 26, 2026 — 03:07 PHT. Not built yet; wanted for the presentation on October 27. [ADR-043](ADR-043-Teachers-And-School-Staff-Are-Clinic-Patients-With-Their-Own-Screens.md)
+
