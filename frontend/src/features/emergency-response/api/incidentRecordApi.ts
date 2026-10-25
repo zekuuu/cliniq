@@ -4,7 +4,7 @@ import {
   approveIncidentReport,
   getIncident,
   getIncidentTrail,
-  getStudent,
+  getPatient,
   getVisit,
   listApprovedIncidentReportIds,
   listIncidents,
@@ -12,7 +12,8 @@ import {
   type IncidentTrail,
   type SessionUser,
 } from '../../../lib/mock-db'
-import type { CalledContact, Incident, ItemGivenLine, ParentNotificationOutcome, Student } from '../../../types/entities'
+import type { CalledContact, Incident, ItemGivenLine, ParentNotificationOutcome } from '../../../types/entities'
+import type { Patient } from '../../../lib/patients'
 
 /**
  * One incident, deliberately opened (Incident Report #18, Parent Notification #17): full name is
@@ -20,7 +21,8 @@ import type { CalledContact, Incident, ItemGivenLine, ParentNotificationOutcome,
  */
 export interface IncidentRecord {
   incident: Incident
-  student: Student
+  /** A student or a staff member (ADR-043). */
+  student: Patient
   /** True once this incident's report has been signed off. */
   approved: boolean
   /** Who recorded, completed, and signed it off, for the printed report. */
@@ -36,13 +38,13 @@ export interface IncidentRecord {
 
 /** `null` when there is nothing to show: no incidents, or (opened without an id) none pending sign-off. */
 export async function fetchIncidentRecord(incidentId?: string, viewer?: SessionUser): Promise<IncidentRecord | null> {
-  const [incidents, approvedIds] = await Promise.all([listIncidents(), listApprovedIncidentReportIds()])
+  const [incidents, approvedIds] = await Promise.all([listIncidents(undefined, viewer), listApprovedIncidentReportIds()])
   const approved = new Set(approvedIds)
   const pending = incidents.filter((item) => !approved.has(item.id))
-  const incident = incidentId ? await getIncident(incidentId) : pending[0]
+  const incident = incidentId ? await getIncident(incidentId, viewer) : pending[0]
   if (!incident) return null
   const [student, trail, source] = await Promise.all([
-    getStudent(incident.studentId),
+    getPatient(incident),
     getIncidentTrail(incident.id),
     incident.sourceVisitId ? getVisit(incident.sourceVisitId) : null,
   ])

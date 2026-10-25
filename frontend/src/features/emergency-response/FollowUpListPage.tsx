@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { usePatientFilter } from '../../hooks/usePatientFilter'
 import { addDays, formatDate, todayISO } from '../../lib/dates'
 import {
   BackButton,
@@ -24,8 +25,8 @@ import { getMockSessionUser } from '../../lib/mock-db'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { FollowUpStatus } from '../../types/entities'
 import { fetchFollowUps, setNewFollowUpDate, updateFollowUpStatus, type FollowUpRow } from './api/followUpApi'
-import { MaskedLrn } from '../../components/ui/MaskedLrn'
-import { lrnLabel } from '../../lib/lrn'
+import { PatientFilterSelect, PatientNumber } from '../../components'
+import { matchesPatientFilter, patientNumberLabel } from '../../lib/patients'
 
 function FollowUpSkeleton({ back }: { back: ReactNode }) {
   return (
@@ -81,6 +82,7 @@ export function FollowUpListPage() {
   const [scheduling, setScheduling] = useState(false)
   const [sort, setSort] = useState<TableSortState<FollowUpSortKey>>({ key: 'status', direction: 'descending' })
   const { data, status, reload } = useAsyncData(statusFilter, () => fetchFollowUps(statusFilter))
+  const [patientFilter, setPatientFilter] = usePatientFilter()
   // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
   const back = <BackButton fallback={paths.dashboard} drillThroughOnly />
   if (status === 'error')
@@ -99,14 +101,16 @@ export function FollowUpListPage() {
         <FollowUpSkeleton back={back} />
       </>
     )
-  const rows = data.map((item) => ({ ...item, status: statusOverrides[item.id] ?? item.status }))
+  const rows = data
+    .filter((item) => matchesPatientFilter(item.patient.kind, patientFilter))
+    .map((item) => ({ ...item, status: statusOverrides[item.id] ?? item.status }))
   const sortColumn = (key: FollowUpSortKey, label: string) => ({
     label,
     direction: sort.key === key ? sort.direction : undefined,
     onSort: () => setSort((current) => toggleTableSort(current, key)),
   })
   const sortedRows = sortTableRows(rows, sort, (item, key) => {
-    if (key === 'student') return item.lrn
+    if (key === 'student') return `${item.patient.kind}|${item.patient.number}`
     if (key === 'reason') return item.reason
     if (key === 'due') return item.followUpDate
     return item.status
@@ -154,11 +158,11 @@ export function FollowUpListPage() {
   const columns: Array<DataTableColumn<FollowUpRow>> = [
     {
       key: 'student',
-      header: 'LRN',
-      width: '9rem',
+      header: 'LRN or Staff No.',
+      width: '11rem',
       rowHeader: true,
-      sort: sortColumn('student', 'LRN'),
-      cell: (item) => <MaskedLrn lrn={item.lrn} />,
+      sort: sortColumn('student', 'LRN or Staff No.'),
+      cell: (item) => <PatientNumber patient={item.patient} />,
     },
     { key: 'reason', header: 'Reason', sort: sortColumn('reason', 'Reason'), cell: (item) => item.reason },
     { key: 'due', header: 'Due date', width: '8.5rem', sort: sortColumn('due', 'Due date'), cell: (item) => formatDate(item.followUpDate) },
@@ -184,7 +188,7 @@ export function FollowUpListPage() {
             className="w-44"
             size="sm"
             hideLabel
-            label={`Update status for ${lrnLabel(item.lrn)}, ${item.reason}`}
+            label={`Update status for ${patientNumberLabel(item.patient)}, ${item.reason}`}
             value=""
             placeholder="Update status"
             options={OUTCOME_OPTIONS}
@@ -201,7 +205,7 @@ export function FollowUpListPage() {
       <Card className="p-5">
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">Follow-Ups</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Review upcoming care tasks and close the loop on student follow-up plans.
+          Review upcoming care tasks and close the loop on student and staff follow-up plans.
         </p>
       </Card>
       <Card aria-labelledby="follow-up-list-title">
@@ -211,6 +215,8 @@ export function FollowUpListPage() {
           description={`${rows.length} task${rows.length === 1 ? '' : 's'} shown`}
           icon={<Icon name="calendarClock" />}
           actions={
+            <div className="flex flex-wrap items-center gap-3">
+            <PatientFilterSelect value={patientFilter} onChange={setPatientFilter} />
             <Select
               className="w-full sm:w-auto"
               label="Status"
@@ -226,6 +232,7 @@ export function FollowUpListPage() {
               clearable
               onChange={(value) => setStatusFilter(value as '' | FollowUpStatus)}
             />
+            </div>
           }
         />
         <CardBody>
@@ -255,7 +262,7 @@ export function FollowUpListPage() {
         {confirming && (
           <>
             <p className="text-sm text-text-secondary">
-              <MaskedLrn lrn={confirming.item.lrn} /> · {confirming.item.reason} · due {formatDate(confirming.item.followUpDate)}.{' '}
+              <PatientNumber patient={confirming.item.patient} chip={false} /> · {confirming.item.reason} · due {formatDate(confirming.item.followUpDate)}.{' '}
               {confirming.status === 'missed'
                 ? 'The student did not return for this follow-up.'
                 : 'This follow-up is no longer needed.'}{' '}
@@ -289,7 +296,7 @@ export function FollowUpListPage() {
         {rescheduling && (
           <>
             <p className="text-sm text-text-secondary">
-              Creates a new pending follow-up for <MaskedLrn lrn={rescheduling.lrn} /> with the same reason ({rescheduling.reason}).
+              Creates a new pending follow-up for <PatientNumber patient={rescheduling.patient} chip={false} /> with the same reason ({rescheduling.reason}).
             </p>
             <DatePicker className="mt-4" label="New follow-up date" required value={newDate} min={todayISO()} onChange={setNewDate} />
             <div className="mt-5 flex flex-wrap justify-end gap-2">

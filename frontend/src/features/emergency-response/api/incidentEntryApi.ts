@@ -2,12 +2,12 @@ import {
   completeIncidentStageTwo,
   getIncident,
   getIncidentComplaintTypes,
-  getStudent,
+  getPatient,
   getVisit,
   getVitalsWarningRanges,
   listInventory,
   saveIncidentStageOne,
-  searchStudents,
+  searchPatients,
   type InventoryItemView,
   type ItemLineInput,
   type SessionUser,
@@ -19,17 +19,18 @@ import type {
   Incident,
   ParentNotificationAttempt,
   ItemGivenLine,
-  Student,
-  StudentSearchResult,
+  PatientRef,
+  PatientSearchResult,
 } from '../../../types/entities'
+import type { Patient } from '../../../lib/patients'
 import { storedReadings, type ReadingValues } from '../../../lib/vitals'
 
 export interface IncidentEntryContext {
   /**
-   * `null` when the Emergency button opened Stage 1 before anyone identified the student; Stage 1
-   * then asks for the student instead of silently attaching a default student.
+   * The patient, a student or a staff member (ADR-043). `null` when the Emergency button opened
+   * Stage 1 before anyone identified them; Stage 1 then asks instead of attaching a default patient.
    */
-  student: Student | null
+  student: Patient | null
   /** Incident complaint options (mock-only vocabulary; see mock-db.json). */
   complaintTypes: string[]
   /** Set when an existing incident is reopened to complete Stage 2 (Screen #16b). */
@@ -48,17 +49,15 @@ export interface IncidentEntryContext {
 }
 
 /** What "Escalate to incident" carries from a visit (ADR-036). Never its medicines. */
-export interface EscalationPrefill {
+export interface EscalationPrefill extends Partial<PatientRef> {
   visitId?: string
-  studentId?: string
   complaint: string
   /** ISO time the visit happened. */
   time?: string
   temperatureC: number | null
 }
 
-export interface StageOneIncidentInput {
-  studentId: string
+export interface StageOneIncidentInput extends PatientRef {
   complaint: string
   /** All optional; only the readings taken are saved. */
   readings: ReadingValues
@@ -70,7 +69,6 @@ export interface StageOneIncidentInput {
 
 export interface StageTwoIncidentInput {
   incidentId: string
-  studentId: string
   complaint: string
   /** All optional; only the readings taken are saved. */
   readings: ReadingValues
@@ -93,7 +91,7 @@ export interface StageTwoIncidentInput {
  */
 export async function fetchIncidentEntryContext(
   incidentId?: string,
-  escalate?: { visitId?: string; prefill?: EscalationPrefill },
+  escalate?: { visitId?: string; prefill?: EscalationPrefill; staffId?: string },
 ): Promise<IncidentEntryContext> {
   const complaintTypes = getIncidentComplaintTypes()
   const items = listInventory()
@@ -101,7 +99,7 @@ export async function fetchIncidentEntryContext(
   if (incidentId) {
     const incident = await getIncident(incidentId)
     const [student, types, source] = await Promise.all([
-      getStudent(incident.studentId),
+      getPatient(incident),
       complaintTypes,
       incident.sourceVisitId ? getVisit(incident.sourceVisitId) : null,
     ])
@@ -112,16 +110,18 @@ export async function fetchIncidentEntryContext(
   let sourceVisit: IncidentEntryContext['sourceVisit'] = null
   if (escalate?.visitId) {
     const visit = await getVisit(escalate.visitId)
-    escalation = { visitId: visit.id, studentId: visit.studentId, complaint: visit.complaint, time: visit.dateTime, temperatureC: visit.temperatureC }
+    escalation = { visitId: visit.id, studentId: visit.studentId, personnelId: visit.personnelId, complaint: visit.complaint, time: visit.dateTime, temperatureC: visit.temperatureC }
     sourceVisit = { id: visit.id, itemsGiven: visit.itemsGiven }
   }
-  const student = escalation?.studentId ? await getStudent(escalation.studentId) : null
+  // The Staff Profile's "Record an incident" opens with the staff member chosen (`?staff=`, D8).
+  const ref = escalate?.staffId ? { studentId: null, personnelId: escalate.staffId } : escalation
+  const student = ref?.studentId || ref?.personnelId ? await getPatient({ studentId: ref.studentId ?? null, personnelId: ref.personnelId ?? null }) : null
   return { student, complaintTypes: await complaintTypes, incident: null, items: await items, vitalsRanges, escalation, sourceVisit }
 }
 
-/** Loads the picked student in full. */
-export function findIncidentStudent(studentId: string): Promise<Student> {
-  return getStudent(studentId)
+/** Loads the picked patient in full. */
+export function findIncidentPatient(ref: PatientRef): Promise<Patient> {
+  return getPatient(ref)
 }
 
 /** Stage 1 needs only the complaint, plus whichever readings were taken; the layer logs it as its own event. */
@@ -129,6 +129,7 @@ export function saveStageOneIncident(input: StageOneIncidentInput, user: Session
   return saveIncidentStageOne(
     {
       studentId: input.studentId,
+      personnelId: input.personnelId,
       complaint: input.complaint,
       vitals: storedReadings(input.readings),
       generalNotes: input.generalNotes,
@@ -159,7 +160,7 @@ export function completeStageTwoIncident(
   )
 }
 
-/** Incident Stage 1 student search: LRN prefix or name, active students, at most 8. */
-export function searchIncidentStudents(query: string): Promise<StudentSearchResult[]> {
-  return searchStudents(query)
+/** Incident Stage 1 patient search (ADR-043): students and staff in one box, at most 8, labelled. */
+export function searchIncidentPatients(query: string): Promise<PatientSearchResult[]> {
+  return searchPatients(query)
 }

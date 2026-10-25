@@ -29,11 +29,11 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /**
- * Read-only safety facts for the student in Stage 1 (panel review IN-1): allergies, conditions and
+ * Read-only safety facts for the student or staff member (ADR-043) in Stage 1 (panel review IN-1): allergies, conditions and
  * emergency contacts in their saved order. It adds no input, so fast
  * capture stays fast. A single-student screen, so the full name is shown elsewhere on the form (ADR-004).
  */
-export function StudentAlertCard({ student }: { student: Student }) {
+export function StudentAlertCard({ student }: { student: Pick<Student, 'allergies' | 'medicalConditions' | 'emergencyContacts'> }) {
   return (
     <section aria-labelledby="student-alert-title" className="rounded-md border border-warning bg-warning/10 p-3">
       <h2 id="student-alert-title" className="flex items-center gap-1.5 text-sm font-semibold text-text-primary">

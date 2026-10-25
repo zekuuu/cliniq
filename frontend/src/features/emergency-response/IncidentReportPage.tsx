@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { capitalize, contactNoun, NOTIFIED_PARTY, PATIENT_KIND_LABELS, patientGroup, patientIdText } from '../../lib/patients'
 import { BackButton, Badge, Button, Card, CardBody, CardHeader, EmergencyContactList, ErrorState, Icon, Modal, PrintDocument, PrintFields, PrintButton, PrintNote, PrintSection, PrintSignatures, PrintTable, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
@@ -24,7 +25,7 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
     <PrintDocument
       title="Incident Report"
       viewer={viewer}
-      scope={`${student.fullName} (LRN ${student.lrn}), ${student.gradeLevel}. Incident recorded ${formatDateTime(incident.time)}.`}
+      scope={`${student.fullName} (${patientIdText(student)}), ${patientGroup(student).value}. Incident recorded ${formatDateTime(incident.time)}.`}
     >
       {incident.stage === 1 && (
         <p className="mb-[4mm] border-2 border-text-primary px-[3mm] py-[2mm] text-[11pt] font-bold">
@@ -36,8 +37,8 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
           <PrintFields
             columns={3}
             fields={[
-              { label: 'Student', value: `${student.fullName} · LRN ${student.lrn}` },
-              { label: 'Grade level', value: student.gradeLevel },
+              { label: PATIENT_KIND_LABELS[student.kind], value: `${student.fullName} · ${patientIdText(student)}` },
+              patientGroup(student),
               { label: 'Date and time', value: formatDateTime(incident.time) },
               { label: 'Complaint', value: incident.complaint },
               { label: 'Record status', value: incident.stage === 1 ? 'Stage 1, needs completion' : 'Stage 2, complete' },
@@ -100,12 +101,12 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
             <p>No hospital referral was recorded for this incident.</p>
           )}
         </PrintSection>
-        <PrintSection title="Parent or guardian notification">
+        <PrintSection title={`${capitalize(contactNoun(student.kind))} notification`}>
           <PrintTable
-            caption="Parent notification attempts"
+            caption={`${NOTIFIED_PARTY[student.kind]} notification attempts`}
             rows={incident.parentNotifications}
             rowKey={(attempt, index) => `${attempt.timestamp}|${index}`}
-            empty="No parent notification attempts were logged for this incident."
+            empty={`No ${contactNoun(student.kind)} notification attempts were logged for this incident.`}
             columns={[
               { header: 'Date and time', width: '28%', cell: (attempt) => formatDateTime(attempt.timestamp) },
               { header: 'Outcome', width: '24%', cell: (attempt) => OUTCOME_LABELS[attempt.outcome] },
@@ -125,7 +126,7 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
         </PrintSection>
       </div>
       <PrintSignatures
-        lines={[{ label: ROLE_LABELS.staff }, { label: 'Parent or guardian informed' }, { label: 'Principal (if applicable)' }]}
+        lines={[{ label: ROLE_LABELS.staff }, { label: `${capitalize(contactNoun(student.kind))} informed` }, { label: 'Principal (if applicable)' }]}
       />
     </PrintDocument>
   )
@@ -227,7 +228,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
           </div>
 
           <dl className="grid gap-4 sm:grid-cols-2">
-            <Field label="Student"><span className="font-semibold">{student.fullName} · LRN {student.lrn}</span></Field>
+            <Field label={PATIENT_KIND_LABELS[student.kind]}><span className="font-semibold">{student.fullName} · {patientIdText(student)}</span></Field>
             <Field label="Recorded">{formatDateTime(incident.time)}</Field>
             <Field label="Complaint">{incident.complaint}</Field>
             {incident.bodyPart && <Field label="Body part affected">{incident.bodyPart}</Field>}
@@ -281,7 +282,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
           </section>
 
           <section className="border-t border-border pt-4" aria-labelledby="report-notifications-title">
-            <h2 id="report-notifications-title" className="text-sm font-semibold text-text-primary">Parent notification attempts</h2>
+            <h2 id="report-notifications-title" className="text-sm font-semibold text-text-primary">{NOTIFIED_PARTY[student.kind]} notification attempts</h2>
             {incident.parentNotifications.length ? (
               <ol className="mt-3 divide-y divide-border rounded-md border border-border">
                 {incident.parentNotifications.map((attempt, index) => (
@@ -295,7 +296,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
                 ))}
               </ol>
             ) : (
-              <p className="mt-2 text-sm text-text-secondary">No parent notification attempts were logged for this incident.</p>
+              <p className="mt-2 text-sm text-text-secondary">No {contactNoun(student.kind)} notification attempts were logged for this incident.</p>
             )}
           </section>
 
@@ -314,7 +315,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
 
       <Modal open={confirming} title="Approve this incident report?" onClose={() => setConfirming(false)}>
         <p className="text-sm text-text-secondary">
-          Approving signs off the report for {student.fullName}, LRN {student.lrn} ({incident.complaint}, {formatDateTime(incident.time)}) and records it in the audit log. It can't be un-approved from this screen.
+          Approving signs off the report for {student.fullName}, {patientIdText(student)} ({incident.complaint}, {formatDateTime(incident.time)}) and records it in the audit log. It can't be un-approved from this screen.
         </p>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <Button variant="neutral" data-autofocus onClick={() => setConfirming(false)}>Cancel</Button>

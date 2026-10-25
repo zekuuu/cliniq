@@ -1,4 +1,5 @@
 import { useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
+import { cleanComplaint, COMPLAINT_MAX_LENGTH } from '../../lib/complaints'
 import { useLocation, useSearchParams } from 'react-router'
 import {
   BackButton,
@@ -19,7 +20,8 @@ import {
   Select,
   Skeleton,
   StatusBadge,
-  StudentPicker,
+  PatientPicker,
+  SelectWithOther,
   VitalsWarning,
   type ItemLineDraft,
   type StatusMap,
@@ -42,8 +44,8 @@ import type { CalledContact, HospitalReferral, Incident, ParentNotificationOutco
 import {
   completeStageTwoIncident,
   fetchIncidentEntryContext,
-  findIncidentStudent,
-  searchIncidentStudents,
+  findIncidentPatient,
+  searchIncidentPatients,
   saveStageOneIncident,
   type EscalationPrefill,
   type IncidentEntryContext,
@@ -59,6 +61,8 @@ import {
   type CalledContactErrors,
 } from './notificationOutcomes'
 import { StudentAlertCard } from './StudentAlertCard'
+import { contactNoun, patientLine, patientRefOf, type Patient } from '../../lib/patients'
+import type { PatientRef } from '../../types/entities'
 import { FromVisit } from './FromVisit'
 
 type ScreenStage = 'stage1' | 'stage2'
@@ -163,7 +167,7 @@ function readingErrors(readings: ReadingValues): Errors {
 
 function validateStageOne(complaint: string, readings: ReadingValues): Errors {
   const next = readingErrors(readings)
-  if (!complaint) next.complaint = 'Select the emergency complaint.'
+  if (!cleanComplaint(complaint)) next.complaint = 'Select the emergency complaint.'
   return next
 }
 
@@ -248,10 +252,11 @@ export function IncidentEntryPage({
   // "Escalate to incident" (ADR-036): `?fromVisit=` from Visit Details, or what New Visit typed, in router state.
   const [searchParams] = useSearchParams()
   const fromVisit = searchParams.get('fromVisit') ?? undefined
+  const staffId = searchParams.get('staff') ?? undefined
   const prefill = (useLocation().state as { escalate?: EscalationPrefill } | null)?.escalate
   const { data, status, reload } = useAsyncData(
-    `incident-entry|${incidentId ?? ''}|${fromVisit ?? ''}|${prefill ? JSON.stringify(prefill) : ''}`,
-    () => fetchIncidentEntryContext(incidentId, incidentId ? undefined : { visitId: fromVisit, prefill }),
+    `incident-entry|${incidentId ?? ''}|${fromVisit ?? ''}|${staffId ?? ''}|${prefill ? JSON.stringify(prefill) : ''}`,
+    () => fetchIncidentEntryContext(incidentId, incidentId ? undefined : { visitId: fromVisit, prefill, staffId }),
   )
 
   const back = <BackButton fallback={paths.incidents} />
@@ -318,7 +323,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const today = todayISO()
   const existing = data.incident
   const start = escalationStart(data)
-  const identified = useIdentifiedStudent(data.student, findIncidentStudent)
+  const identified = useIdentifiedStudent<Patient, PatientRef>(data.student, findIncidentPatient)
   const student = identified.student
   const [stage, setStage] = useState<ScreenStage>(existing ? 'stage2' : 'stage1')
   const [incident, setIncident] = useState<Incident | null>(existing)
@@ -408,13 +413,14 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       if (!target) return
       const saved = await saveStageOneIncident(
         {
-          studentId: target.id,
-          complaint,
+          ...patientRefOf(target),
+          complaint: cleanComplaint(complaint),
           readings,
           generalNotes,
           time: data.escalation?.time,
-          // Linked only to a saved visit of the same student (the data layer checks).
-          sourceVisitId: data.escalation?.visitId && data.escalation.studentId === target.id ? data.escalation.visitId : undefined,
+          // Linked only to a saved visit of the same patient (the data layer checks).
+          sourceVisitId:
+            data.escalation?.visitId && (data.escalation.studentId ?? data.escalation.personnelId) === target.id ? data.escalation.visitId : undefined,
         },
         viewer,
       )
@@ -486,8 +492,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       const result = await completeStageTwoIncident(
         {
           incidentId: incident.id,
-          studentId: student.id,
-          complaint,
+          complaint: cleanComplaint(complaint),
           readings,
           treatmentNotes,
           hospitalReferral,
@@ -534,8 +539,8 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
               {student
-                ? `${student.fullName} · LRN ${student.lrn} · ${student.gradeLevel}`
-                : 'Student not identified yet. Search by LRN or name in Stage 1.'}
+                ? `${student.fullName} · ${patientLine(student)}`
+                : 'Student or staff member not identified yet. Search by LRN, Staff No. or name in Stage 1.'}
             </p>
           </div>
           <StatusBadge status={statusValue} map={incidentStatusMap} />
@@ -585,24 +590,26 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
             <CardBody className="flex flex-col gap-4">
               {data.escalation && (
                 <p role="status" className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary">
-                  Escalated from {data.escalation.visitId ? 'a saved visit' : 'the New Visit form'}: the student, complaint, time and
+                  Escalated from {data.escalation.visitId ? 'a saved visit' : 'the New Visit form'}: the patient, complaint, time and
                   temperature are carried over. Medicines given at the visit stay on the visit.
                 </p>
               )}
               {!data.student && (
-                <StudentPicker
-                  search={searchIncidentStudents}
+                <PatientPicker
+                  search={searchIncidentPatients}
                   selected={identified.student}
                   onClear={identified.reset}
-                  onSelect={(picked) => void identified.select(picked.id)}
+                  onSelect={(picked) => void identified.select(patientRefOf(picked))}
                   error={identified.error}
-                  hint="No student was identified before this emergency. Type the LRN or the student name, then pick the student."
+                  hint="No one was identified before this emergency. Type an LRN, a Staff No. or a name, then pick the student or staff member."
                   addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
+                  addStaffHref={viewer.role === 'staff' ? paths.staffNew : undefined}
                 />
               )}
               {student && <StudentAlertCard student={student} />}
-              <Select
+              <SelectWithOther
                 label="Complaint"
+                otherLabel="Specify other complaint"
                 required
                 value={complaint}
                 placeholder="Select complaint"
@@ -610,7 +617,9 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                   setComplaint(value)
                   setErrors((current) => ({ ...current, complaint: undefined }))
                 }}
-                options={data.complaintTypes.map((type) => ({ value: type, label: type }))}
+                options={data.complaintTypes}
+                maxLength={COMPLAINT_MAX_LENGTH}
+                hint="The complaint or symptom only. Don't include names."
                 error={errors.complaint}
               />
               <ReadingsFields
@@ -645,7 +654,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
               titleId="stage-two-title"
               title="Stage 2 completion"
               icon={<Icon name="clipboardList" />}
-              description="Complete the same incident record with any further readings, treatment notes, referral details, and parent notification attempts."
+              description={`Complete the same incident record with any further readings, treatment notes, referral details, and ${contactNoun(student?.kind ?? 'student')} notification attempts.`}
             />
             <CardBody className="flex flex-col gap-4">
               {!incident ? (
@@ -780,7 +789,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
 
                   <fieldset className="rounded-md border border-border p-4">
                     <legend className="px-1 text-sm font-semibold text-text-primary">
-                      Parent notification log
+                      {student?.kind === 'personnel' ? 'Emergency contact notification log' : 'Parent notification log'}
                     </legend>
                     <div className="mb-3">
                       {/* A select, as on the Parent Notification page: the four labels don't fit side by side on a phone. */}

@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { patientIdText } from '../../lib/patients'
 import { formatDateTime } from '../../lib/dates'
 import { BackButton, Badge, Button, Card, CardBody, CardHeader, EmergencyContactList, EmptyState, ErrorState, Icon, Input, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
@@ -14,7 +15,7 @@ function NotificationSkeleton({ back }: { back: ReactNode }) {
 }
 
 export function ParentNotificationPage({ viewer = getMockSessionUser(), incidentId }: { viewer?: SessionUser; incidentId?: string }) {
-  const { data, status, reload } = useAsyncData(`parent-notification|${incidentId ?? 'default'}`, () => fetchIncidentRecord(incidentId))
+  const { data, status, reload } = useAsyncData(`parent-notification|${incidentId ?? 'default'}`, () => fetchIncidentRecord(incidentId, viewer))
   const [outcome, setOutcome] = useState<ParentNotificationOutcome>('reached')
   const [note, setNote] = useState('')
   // The §5 attempt shape is outcome + timestamp only, so a typed note is shown for this session but
@@ -49,11 +50,11 @@ export function ParentNotificationPage({ viewer = getMockSessionUser(), incident
   const attempts = incident.parentNotifications
   return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
     {back}
-    <Card className="p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">Parent Notification Log</h1><p className="mt-1 text-sm text-text-secondary">{student.fullName} · LRN {student.lrn} · {incident.complaint}</p></div><Badge tone={incident.stage === 1 ? 'warning' : 'info'} variant="soft">{incident.stage === 1 ? 'Needs completion' : 'Complete'}</Badge></div></Card>
+    <Card className="p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">{student.kind === 'student' ? 'Parent Notification Log' : 'Emergency Contact Notification Log'}</h1><p className="mt-1 text-sm text-text-secondary">{student.fullName} · {patientIdText(student)} · {incident.complaint}</p></div><Badge tone={incident.stage === 1 ? 'warning' : 'info'} variant="soft">{incident.stage === 1 ? 'Needs completion' : 'Complete'}</Badge></div></Card>
     <Card aria-labelledby="notification-title"><CardHeader titleId="notification-title" title="Record a notification attempt" icon={<Icon name="activity" />} description="Keep every attempt tied to this incident with its real timestamp." /><CardBody className="flex flex-col gap-4">
       <div className="rounded-md border border-border bg-surface p-3" aria-label="Emergency contact details">
         <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Emergency contact</p>
-        <EmergencyContactList contacts={student.emergencyContacts} emptyMessage="No emergency contact is recorded for this student." />
+        <EmergencyContactList contacts={student.emergencyContacts} emptyMessage={`No emergency contact is recorded for this ${student.kind === 'student' ? 'student' : 'staff member'}.`} />
       </div>
       <CalledContactField contacts={student.emergencyContacts} draft={draft} onChange={(next) => { setCalledDraft(next); setCalledErrors({}) }} errors={calledErrors} />
       <div className="grid gap-3 sm:grid-cols-[14rem_minmax(0,1fr)_auto] sm:items-end"><Select label="Outcome" value={outcome} options={PARENT_NOTIFICATION_OUTCOMES}onChange={(value) => setOutcome(value as ParentNotificationOutcome)} /><Input label="Attempt note" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Optional context" /><Button variant="primary" onClick={addAttempt} loading={saving}>Add Attempt</Button></div>
