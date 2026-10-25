@@ -13,7 +13,7 @@ describe('Force Password Change', () => {
 
     expect(await screen.findByRole('heading', { name: 'Change Your Password' })).toBeInTheDocument()
     expect(screen.getByTestId('login-backdrop')).toBeInTheDocument()
-    expect(screen.getByAltText('Healware logo')).toBeInTheDocument()
+    expect(screen.getByAltText('Mendez Christian Academy logo')).toBeInTheDocument()
     expect(screen.getByText('CLINIQ')).toBeInTheDocument()
   })
 })

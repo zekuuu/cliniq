@@ -13,28 +13,19 @@ function navGroupId(label: string): string {
   return `nav-group-${label.toLowerCase().replace(/\s+/g, '-')}`
 }
 
-export function BrandLogo({
-  compact = false,
-  showAttribution = false,
-}: {
-  compact?: boolean
-  showAttribution?: boolean
-}) {
+export function BrandLogo({ compact = false }: { compact?: boolean }) {
   return (
     <span className="flex items-center gap-2.5">
       <img
-        src="/Healware_Logo.png"
-        alt="Healware logo"
-        className="size-9 shrink-0 object-contain"
+        src="/MCA_Logo.png"
+        alt="Mendez Christian Academy logo"
+        className={cn('shrink-0 object-contain', compact ? 'size-9' : 'size-11')}
       />
       <span className={cn('flex flex-col leading-tight', compact && 'max-sm:hidden')}>
         <span className="text-xl font-bold tracking-tight text-brand-green-dark">CLINIQ</span>
         <span className="text-xs leading-tight font-medium tracking-tight whitespace-nowrap text-text-secondary">
           Mendez Christian Academy
         </span>
-        {showAttribution && (
-          <span className="text-xs text-text-secondary">Powered by HealWare™</span>
-        )}
       </span>
     </span>
   )
@@ -96,7 +87,7 @@ export function Sidebar({
               aria-hidden="true"
               className="absolute inset-0 flex items-center justify-center transition-[opacity,transform] duration-200 ease-out group-hover:scale-75 group-hover:opacity-0 group-focus-visible:scale-75 group-focus-visible:opacity-0 motion-reduce:transition-none"
             >
-              <img src="/Healware_Logo.png" alt="" className="size-9 object-contain" />
+              <img src="/MCA_Logo.png" alt="" className="size-10 object-contain" />
             </span>
             <span
               aria-hidden="true"
@@ -107,7 +98,7 @@ export function Sidebar({
           </button>
         ) : (
           <>
-            <BrandLogo showAttribution />
+            <BrandLogo />
             <button
               type="button"
               aria-label="Collapse sidebar"
@@ -216,6 +207,12 @@ export function Sidebar({
       </nav>
 
       <div className={cn('mt-auto w-full pt-3', collapsed ? 'flex flex-col items-center' : '')}>
+        {!collapsed && (
+          <p className="mb-1 flex items-center gap-1 px-1 text-xs text-text-secondary">
+            <img src="/Healware_Logo.png" alt="" className="size-4 shrink-0 object-contain" />
+            Powered by HealWare™
+          </p>
+        )}
         <div
           className={cn(
             'flex items-center',

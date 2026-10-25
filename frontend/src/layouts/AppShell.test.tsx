@@ -64,11 +64,10 @@ describe('App Shell / Navigation', () => {
     expect(screen.getByText('v0.1.0')).toBeInTheDocument()
     expect(screen.getByText('Powered by HealWare™')).toBeInTheDocument()
     expect(screen.getByText(/all rights reserved/i)).toBeInTheDocument()
-    expect(screen.getByAltText('Mendez Christian Academy logo')).toHaveAttribute('src', '/MCA_Logo.png')
-    expect(screen.getAllByAltText('Healware logo')).toHaveLength(2)
+    expect(screen.getByAltText('HealWare logo')).toHaveAttribute('src', '/Healware_Logo.png')
     screen
-      .getAllByAltText('Healware logo')
-      .forEach((logo) => expect(logo).toHaveAttribute('src', '/Healware_Logo.png'))
+      .getAllByAltText('Mendez Christian Academy logo')
+      .forEach((logo) => expect(logo).toHaveAttribute('src', '/MCA_Logo.png'))
   })
 
   it('puts an icon-only red logout action beside the signed-in user', () => {

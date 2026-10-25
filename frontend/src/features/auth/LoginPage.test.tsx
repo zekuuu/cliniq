@@ -25,7 +25,7 @@ describe('LoginPage', () => {
     expect(screen.queryByText(/assigned clinic account/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/clinic account/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/all rights reserved/i)).not.toBeInTheDocument()
-    expect(screen.queryByAltText('Mendez Christian Academy logo')).not.toBeInTheDocument()
+    expect(screen.getByAltText('Mendez Christian Academy logo')).toHaveAttribute('src', '/MCA_Logo.png')
   })
 
   it('focuses the first invalid field after a failed submit', async () => {
@@ -83,7 +83,10 @@ describe('LoginPage', () => {
     renderLogin()
     expect(screen.queryByText(/Authorized clinic personnel/)).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute('href', '/privacy-policy')
-    expect(screen.getByText('Powered by HealWare™')).toBeInTheDocument()
+    const attribution = screen.getByText('Powered by HealWare™')
+    expect(attribution.querySelector('img')).toHaveAttribute('src', '/Healware_Logo.png')
+    // Attribution comes first, then the Privacy Policy link.
+    expect(attribution.compareDocumentPosition(screen.getByRole('link', { name: 'Privacy Policy' }))).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(screen.getByText(/^v\d/)).toBeInTheDocument()
   })
 

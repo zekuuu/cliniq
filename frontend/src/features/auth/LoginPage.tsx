@@ -70,9 +70,8 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
     <main data-login-page className="relative isolate flex min-h-dvh flex-col-reverse md:h-dvh md:flex-row">
       <div className="flex flex-1 flex-col bg-background px-4 py-8 md:w-[26rem] md:flex-none md:overflow-y-auto md:px-12 lg:w-[28rem] lg:px-16">
         <div className="mx-auto flex w-full max-w-[20rem] flex-1 flex-col">
-          {/* The logo file has ~9% transparent padding; the negative margin puts its visible edge on the content edge. */}
-          <div className="-ml-[0.3125rem] flex items-center gap-0.5">
-            <img src="/Healware_Logo.png" alt="Healware logo" className="size-14 shrink-0 object-contain" />
+          <div className="flex items-center gap-3">
+            <img src="/MCA_Logo.png" alt="Mendez Christian Academy logo" className="size-14 shrink-0 object-contain" />
             <span className="flex flex-col gap-1">
               <span className="text-[1.75rem] leading-none font-bold tracking-tight whitespace-nowrap text-brand-green-dark">CLINIQ</span>
               <span className="text-sm leading-tight font-medium whitespace-nowrap text-text-secondary">Mendez Christian Academy</span>
@@ -98,9 +97,12 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
             </form>
           </div>
           <p className="flex flex-wrap items-center gap-x-2 text-xs text-text-secondary">
-            <Link to={paths.privacyPolicy} className="cursor-pointer font-semibold text-brand-green-dark underline-offset-2 hover:underline">Privacy Policy</Link>
+            <span className="flex items-center gap-1">
+              <img src="/Healware_Logo.png" alt="" className="size-5 shrink-0 object-contain" />
+              Powered by HealWare™
+            </span>
             <span aria-hidden="true">·</span>
-            <span>Powered by HealWare™</span>
+            <Link to={paths.privacyPolicy} className="cursor-pointer font-semibold text-brand-green-dark underline-offset-2 hover:underline">Privacy Policy</Link>
             <span aria-hidden="true">·</span>
             <span>v{APP_VERSION}</span>
           </p>

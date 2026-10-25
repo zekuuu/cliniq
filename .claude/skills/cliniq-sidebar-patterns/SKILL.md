@@ -7,9 +7,10 @@ description: Apply when building or changing CLINIQ's shared application sidebar
 
 ## Brand lockup
 
-- Use `/Healware_Logo.png` as the system mark in both the expanded `BrandLogo` and collapsed sidebar state. It must match the browser favicon asset declared in `frontend/index.html`.
-- In the expanded sidebar, show `CLINIQ`, `Mendez Christian Academy` at 12px (`text-xs`), then `Powered by HealWare™` as a compact third line. Keep the collapse control vertically centered alongside that brand stack, not on a separate row, with clear space from the brand text: the expanded sidebar is `17rem` wide (`AppShell.tsx` grid column), because at `16rem` the collapse button touched "Academy" (2px). The attribution is readable text: `text-xs` (12px, the Design-System floor) in `text-text-secondary` (about 6.2:1 on white), never the muted token.
-- In the collapsed state, show only the Healware mark: no colored tile, outer outline, box, or shadow around it.
+- Use `/MCA_Logo.png` (the school seal) as the mark in both the expanded `BrandLogo` and collapsed sidebar state: 44px (`size-11`) expanded, 40px (`size-10`) collapsed, 36px in the compact top-bar lockup. The browser favicon in `frontend/index.html` stays `/Healware_Logo.png` (the system's mark).
+- In the expanded sidebar, the header shows only `CLINIQ` over `Mendez Christian Academy` at 12px (`text-xs`), so it does not look crowded. Keep the collapse control vertically centered alongside that brand stack, not on a separate row, with clear space from the brand text: the expanded sidebar is `17rem` wide (`AppShell.tsx` grid column), because at `16rem` the collapse button touched "Academy" (2px).
+- `Powered by HealWare™` lives in the sidebar footer, on its own line above the footer links, with a 16px Healware mark on its left (decorative, `alt=""`). Expanded only. It is readable text: `text-xs` (12px, the Design-System floor) in `text-text-secondary` (about 6.2:1 on white), never the muted token.
+- In the collapsed state, show only the MCA seal: no colored tile, outer outline, box, or shadow around it.
 
 ## Implementation boundary
 
