@@ -44,6 +44,9 @@ const StudentProfilePage = page(
   () => import('../features/student-records/StudentProfilePage'),
   'StudentProfilePage',
 )
+const StaffListPage = page(() => import('../features/staff-records/StaffListPage'), 'StaffListPage')
+const StaffProfilePage = page(() => import('../features/staff-records/StaffProfilePage'), 'StaffProfilePage')
+const StaffFormPage = page(() => import('../features/staff-records/StaffFormPage'), 'StaffFormPage')
 const VisitLogListPage = page(
   () => import('../features/clinic-visits/VisitLogListPage'),
   'VisitLogListPage',
@@ -122,6 +125,16 @@ function StudentProfileRoute({ viewer }: Viewer) {
 function StudentEditRoute({ viewer }: Viewer) {
   const { studentId } = useParams()
   return <StudentFormPage viewer={viewer} studentId={studentId} />
+}
+
+function StaffProfileRoute({ viewer }: Viewer) {
+  const { personnelId } = useParams()
+  return <StaffProfilePage viewer={viewer} personnelId={personnelId!} />
+}
+
+function StaffEditRoute({ viewer }: Viewer) {
+  const { personnelId } = useParams()
+  return <StaffFormPage viewer={viewer} personnelId={personnelId} />
 }
 
 function IncidentCompleteRoute({ viewer }: Viewer) {
@@ -237,6 +250,35 @@ const APP_ROUTES: AppRoute[] = [
     roles: ['staff'],
     nav: 'students',
     render: (viewer) => <StudentEditRoute viewer={viewer} />,
+  },
+  // ADR-043: staff patients, School Clinician only (the Admin is redirected like any Staff-only screen).
+  {
+    path: paths.staff,
+    title: 'Staff List',
+    roles: ['staff'],
+    nav: 'staff',
+    render: (viewer) => <StaffListPage viewer={viewer} />,
+  },
+  {
+    path: paths.staffNew,
+    title: 'Add Staff',
+    roles: ['staff'],
+    nav: 'staff',
+    render: (viewer) => <StaffFormPage viewer={viewer} />,
+  },
+  {
+    path: '/staff/:personnelId',
+    title: 'Staff Profile',
+    roles: ['staff'],
+    nav: 'staff',
+    render: (viewer) => <StaffProfileRoute viewer={viewer} />,
+  },
+  {
+    path: '/staff/:personnelId/edit',
+    title: 'Edit Staff',
+    roles: ['staff'],
+    nav: 'staff',
+    render: (viewer) => <StaffEditRoute viewer={viewer} />,
   },
   {
     path: paths.visits,

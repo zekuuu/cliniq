@@ -19,12 +19,19 @@ export const paths = {
   /** By the internal id: an LRN never goes in an address, history or logs (ADR-028). */
   studentProfile: (studentId: string) => `/students/${seg(studentId)}`,
   studentEdit: (studentId: string) => `/students/${seg(studentId)}/edit`,
+  /** Staff patients (ADR-043): teachers and school staff, by the internal id. School Clinician only. */
+  staff: '/staff',
+  staffNew: '/staff/new',
+  staffProfile: (personnelId: string) => `/staff/${seg(personnelId)}`,
+  staffEdit: (personnelId: string) => `/staff/${seg(personnelId)}/edit`,
   visits: '/visits',
   visitsWithPendingLetter: '/visits?letter=pending',
   visitsInRange: (from: string, to: string) => `/visits?from=${seg(from)}&to=${seg(to)}`,
   /** The Visits list opened on one day's custom range (the Dashboard calendar's "View visits"). */
   visitsOnDate: (date: string) => `/visits?from=${date}&to=${date}`,
   visitNew: '/visits/new',
+  /** New Visit with a staff member already chosen (the Staff Profile's "Record a visit"). */
+  visitNewForStaff: (personnelId: string) => `/visits/new?staff=${seg(personnelId)}`,
   peReferral: '/visits/pe-referral',
   visitDetail: (visitId: string) => `/visits/${seg(visitId)}`,
   excuseLetter: (visitId: string) => `/visits/${seg(visitId)}/excuse-letter`,
@@ -33,6 +40,7 @@ export const paths = {
   incidents: '/incidents',
   incidentsInRange: (from: string, to: string) => `/incidents?from=${seg(from)}&to=${seg(to)}`,
   incidentNew: '/incidents/new',
+  incidentNewForStaff: (personnelId: string) => `/incidents/new?staff=${seg(personnelId)}`,
   /** Reopens a saved Stage-1 incident to complete Stage 2 (Screen #16b). */
   incidentComplete: (incidentId: string) => `/incidents/${seg(incidentId)}/complete`,
   inventory: '/inventory',
