@@ -21,6 +21,7 @@ import {
 } from '../../components'
 import { Link, useSearchParams } from 'react-router'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { useDateRangeEntryParams } from '../../hooks/useDateRangeEntryParams'
 import { formatDateTime } from '../../lib/dates'
 import { rangeForPreset, type DateRange } from '../../lib/dateRange'
@@ -39,7 +40,6 @@ import { DISPOSITION_LABELS, DISPOSITION_TONES } from '../../lib/dispositions'
 type DispositionFilter = Disposition | 'all'
 type LetterFilter = 'pending' | ''
 
-const PAGE_SIZE = 10
 type VisitLogSortKey = 'dateTime' | 'lrn' | 'record' | 'disposition'
 
 const dispositionOptions = [
@@ -103,6 +103,12 @@ export function VisitLogListPage() {
   ]
   const [sort, setSort] = useState<TableSortState<VisitLogSortKey>>({ key: 'dateTime', direction: 'descending' })
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = usePageSize()
+  // A new page size starts again at page 1 (cliniq-pagination-patterns).
+  const changePageSize = (size: PageSize) => {
+    setPageSize(size)
+    setPage(1)
+  }
 
   const { data, status, isRefetching, reload } = useAsyncData(
     `${range.from}|${range.to}|${search}|${disposition}|${letter}|${inClinicNow}|${includeEnteredInError}`,
@@ -174,9 +180,9 @@ export function VisitLogListPage() {
     }
   })
 
-  const pageCount = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize))
   const currentPage = Math.min(page, pageCount)
-  const pageRows = sortedRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const pageRows = sortedRows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   const sortColumn = (key: VisitLogSortKey, label: string) => ({
     label,
@@ -346,7 +352,8 @@ export function VisitLogListPage() {
                   page={currentPage}
                   pageCount={pageCount}
                   total={sortedRows.length}
-                  pageSize={PAGE_SIZE}
+                  pageSize={pageSize}
+                  onPageSizeChange={changePageSize}
                   itemLabel="visits"
                   onPageChange={setPage}
                 />
