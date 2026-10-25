@@ -173,6 +173,7 @@ export function DayEventsPanel({
   today,
   onClose,
   onChanged,
+  showVisitsLink,
 }: {
   date: ISODate
   day: CalendarDay | undefined
@@ -181,6 +182,8 @@ export function DayEventsPanel({
   today: ISODate
   onClose: () => void
   onChanged: () => void
+  /** The Visit Log is Staff-only, so the Admin gets no "View visits" link. */
+  showVisitsLink: boolean
 }) {
   const [mode, setMode] = useState<Mode>({ kind: 'view' })
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -309,7 +312,7 @@ export function DayEventsPanel({
               </section>
             )}
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-              {past ? (
+              {past && showVisitsLink ? (
                 <Link
                   to={paths.visitsOnDate(date)}
                   state={DRILL_THROUGH_STATE}

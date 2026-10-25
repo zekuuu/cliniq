@@ -1,7 +1,8 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { getInventoryItem, listInventory, resetMockDb, saveInventoryItem, StockRuleError } from '../../lib/mock-db'
+import { addDays } from '../../lib/dates'
+import { getInventoryItem, getMockToday, listInventory, resetMockDb, restockInventoryItem, saveInventoryItem, StockRuleError } from '../../lib/mock-db'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { selectOption } from '../../test/selectOption'
 import { findDuplicateItem, unitSuggestions } from './api/inventoryApi'
@@ -22,6 +23,15 @@ describe('Add Item expiry (IV-2, ADR-035, D10)', () => {
     expect((await getInventoryItem(item.id)).batches[0].expirationDate).toBeNull()
     // Editing an existing item never touches its expiry, so the rule doesn't apply there.
     await expect(saveInventoryItem({ ...NEW_ITEM, name: 'Saline 0.9%', expirationDate: null }, { itemId: item.id })).resolves.toBeTruthy()
+  })
+
+  it('rejects an expiration date in the past on Add Item and Restock; today is allowed (Zean, Sunday, October 25, 2026)', async () => {
+    const today = getMockToday()
+    const yesterday = addDays(today, -1)
+    await expect(saveInventoryItem({ ...NEW_ITEM, expirationDate: yesterday })).rejects.toThrow(/can't be in the past/)
+    const item = await saveInventoryItem({ ...NEW_ITEM, expirationDate: today })
+    await expect(restockInventoryItem(item.id, 5, yesterday)).rejects.toThrow(/can't be in the past/)
+    await expect(restockInventoryItem(item.id, 5, today)).resolves.toBeTruthy()
   })
 
   it('asks on the form before saving a blank expiry', async () => {

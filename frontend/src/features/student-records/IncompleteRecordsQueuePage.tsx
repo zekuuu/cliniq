@@ -120,7 +120,7 @@ export function IncompleteRecordsQueuePage({
     {
       key: 'student',
       header: 'Student',
-      width: '19%',
+      width: '17%',
       rowHeader: true,
       sort: sortColumn('student', 'Student'),
       cell: (record) => (
@@ -133,14 +133,14 @@ export function IncompleteRecordsQueuePage({
     {
       key: 'grade',
       header: 'Grade level',
-      width: '11%',
+      width: '10%',
       sort: sortColumn('grade', 'Grade level'),
       cell: (record) => record.gradeLevel,
     },
     {
       key: 'missing',
       header: 'Missing fields',
-      width: '25%',
+      width: '23%',
       sort: sortColumn('missing', 'Missing fields'),
       cell: (record) => (
         <div className="flex flex-wrap gap-1">
@@ -168,7 +168,7 @@ export function IncompleteRecordsQueuePage({
     {
       key: 'status',
       header: 'Resolution',
-      width: '16%',
+      width: '21%',
       sort: sortColumn('status', 'Resolution'),
       cell: (record) => {
         const resolution = resolutionOf(record)

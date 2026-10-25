@@ -68,10 +68,11 @@ type InventorySortKey = 'name' | 'category' | 'stock' | 'expiry' | 'status'
 
 const baseColumns: Array<DataTableColumn<InventoryItemView>> = [
   { key: 'name', header: 'Item', rowHeader: true, cell: (item) => item.name },
-  { key: 'category', header: 'Category', cell: (item) => item.category === 'medicine' ? 'Medicine' : 'Supply' },
-  { key: 'stock', header: 'Stock', align: 'right', cell: stockCell },
-  { key: 'expiry', header: 'Next usable expiry', cell: (item) => (item.expirationDate ? formatDate(item.expirationDate) : 'No expiration') },
-  { key: 'status', header: 'Status', width: '11.5rem', cell: stockBadges },
+  // Category is only Medicine or Supply, so it stays narrow and the Item name gets the spare width.
+  { key: 'category', header: 'Category', width: '8rem', cell: (item) => item.category === 'medicine' ? 'Medicine' : 'Supply' },
+  { key: 'stock', header: 'Stock', width: '13.5rem', cell: stockCell },
+  { key: 'expiry', header: 'Next usable expiry', width: '9rem', cell: (item) => (item.expirationDate ? formatDate(item.expirationDate) : 'No expiration') },
+  { key: 'status', header: 'Status', width: '10.5rem', cell: stockBadges },
   { key: 'actions', header: 'Actions', width: '15rem', cell: () => null },
 ]
 
@@ -155,7 +156,7 @@ export function InventoryListPage() {
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_14rem_14rem_auto] md:items-end"><Input label="Search" value={filters.search} placeholder="Item name" onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} /><Select label="Category" value={filters.category} options={[{ value: 'medicine', label: 'Medicine' }, { value: 'supply', label: 'Supply' }]} placeholder="All categories" clearable onChange={(value) => setFilters((current) => ({ ...current, category: value as InventoryFilters['category'] }))} /><Select label="Attention" value={filters.attention ?? ''} options={[{ value: 'low_stock', label: 'Low stock' }, { value: 'expiry', label: 'Expired or expiring' }, { value: 'has_expired', label: 'Has expired stock' }]} placeholder="All stock" clearable onChange={(value) => setFilters((current) => ({ ...current, attention: value === 'low_stock' || value === 'expiry' ? value : '', hasExpiredStock: value === 'has_expired' }))} /><Button variant="secondary" onClick={() => setFilters({ search: '', category: '', hasExpiredStock: false, attention: '' })}>Clear Filters</Button></div>
         <p className="text-sm text-text-secondary">Restock when new stock arrives. Adjust Stock to correct a count.</p>
         {message && <p role="status" className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary">{message}</p>}
-        <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>{data.length ? <DataTable caption="Inventory items" columns={columns} rows={sortedData} rowKey={(item) => item.id} fixedLayout minTableWidth="62.5rem" /> : <EmptyState icon="package" title="No inventory items found" description="Try a different search or category." />}</div>
+        <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>{data.length ? <DataTable caption="Inventory items" columns={columns} rows={sortedData} rowKey={(item) => item.id} fixedLayout minTableWidth="67rem" /> : <EmptyState icon="package" title="No inventory items found" description="Try a different search or category." />}</div>
       </CardBody></Card>
       {action && (() => {
         if (action.kind === 'batches') return <BatchDetailsModal item={action.item} onClose={() => setAction(null)} />

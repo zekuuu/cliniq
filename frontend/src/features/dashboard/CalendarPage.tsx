@@ -13,7 +13,7 @@ export function CalendarPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
           Review visits, incidents, holidays, and school events by day.
         </p>
       </header>
-      <VisitCalendar today={today} initialAnchor={today} canNavigate={viewer.role === 'staff'} />
+      <VisitCalendar today={today} initialAnchor={today} canNavigate showVisitsLink={viewer.role === 'staff'} />
     </div>
   )
 }

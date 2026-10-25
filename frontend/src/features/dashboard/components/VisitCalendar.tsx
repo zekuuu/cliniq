@@ -534,13 +534,14 @@ function CalendarTable({
       {
         key: 'month',
         header: 'Month',
+        width: '9rem',
         rowHeader: true,
         sort: sortColumn('month', 'Month'),
         cell: (r) => formatDate(`${r.key}-01`, { month: 'long', year: 'numeric' }),
       },
-      { key: 'visits', header: 'Visits', align: 'right', sort: sortColumn('visits', 'Visits'), cell: (r) => r.visits },
-      { key: 'incidents', header: 'Incidents', align: 'right', sort: sortColumn('incidents', 'Incidents'), cell: (r) => r.incidents },
-      { key: 'total', header: 'Total', align: 'right', sort: sortColumn('total', 'Total'), cell: (r) => r.visits + r.incidents },
+      { key: 'visits', header: 'Visits', width: '4.5rem', align: 'right', sort: sortColumn('visits', 'Visits'), cell: (r) => r.visits },
+      { key: 'incidents', header: 'Incidents', width: '6rem', align: 'right', sort: sortColumn('incidents', 'Incidents'), cell: (r) => r.incidents },
+      { key: 'total', header: 'Total', width: '4.5rem', align: 'right', sort: sortColumn('total', 'Total'), cell: (r) => r.visits + r.incidents },
       { key: 'holidays', header: 'Holidays', sort: sortColumn('holidays', 'Holidays'), cell: (r) => r.holidays.join(', ') || '—' },
       { key: 'tags', header: 'Events', sort: sortColumn('tags', 'Events'), cell: (r) => r.tags.join(', ') || '—' },
     ]
@@ -569,13 +570,14 @@ function CalendarTable({
     {
       key: 'date',
       header: 'Date',
+      width: '7rem',
       rowHeader: true,
       sort: sortColumn('date', 'Date'),
       cell: (d) => formatDate(d.date, { weekday: 'short', month: 'short', day: 'numeric' }),
     },
-    { key: 'visits', header: 'Visits', align: 'right', sort: sortColumn('visits', 'Visits'), cell: (d) => d.visits },
-    { key: 'incidents', header: 'Incidents', align: 'right', sort: sortColumn('incidents', 'Incidents'), cell: (d) => d.incidents },
-    { key: 'total', header: 'Total', align: 'right', sort: sortColumn('total', 'Total'), cell: (d) => d.visits + d.incidents },
+    { key: 'visits', header: 'Visits', width: '4.5rem', align: 'right', sort: sortColumn('visits', 'Visits'), cell: (d) => d.visits },
+    { key: 'incidents', header: 'Incidents', width: '6rem', align: 'right', sort: sortColumn('incidents', 'Incidents'), cell: (d) => d.incidents },
+    { key: 'total', header: 'Total', width: '4.5rem', align: 'right', sort: sortColumn('total', 'Total'), cell: (d) => d.visits + d.incidents },
     { key: 'holidays', header: 'Holidays', sort: sortColumn('holidays', 'Holidays'), cell: (d) => holidayText(d.date) || '—' },
     { key: 'tags', header: 'Events', sort: sortColumn('tags', 'Events'), cell: (d) => dayLabels(d).join(', ') || '—' },
   ]
@@ -755,10 +757,12 @@ export interface VisitCalendarProps {
   /** The date the calendar opens on. */
   initialAnchor: ISODate
   /**
-   * Staff open a day to see its counts and add, edit, or delete events, and can page into future
-   * periods. Admin sees the same chips as a static summary (ADR-019).
+   * Open a day to see its counts and add, edit, or delete events, and page into future periods.
+   * Both Staff and Admin can on the Calendar screen (ADR-042).
    */
   canNavigate: boolean
+  /** Show the day panel's "View visits" link (the Visit Log is Staff-only). */
+  showVisitsLink: boolean
 }
 
 /**
@@ -771,6 +775,7 @@ export function VisitCalendar({
   today,
   initialAnchor,
   canNavigate,
+  showVisitsLink,
 }: VisitCalendarProps) {
   const headingId = useId()
   const [view, setView] = useState<CalendarView>('month')
@@ -950,6 +955,7 @@ export function VisitCalendar({
           today={today}
           onClose={() => setSelectedDate(null)}
           onChanged={reload}
+          showVisitsLink={showVisitsLink}
         />
       )}
     </Card>

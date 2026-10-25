@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { Button, DatePicker, Input, Modal, SegmentedControl, Select } from '../../components'
-import { ADJUSTMENT_REASON_LABELS, StockRuleError, STAFF_ADJUSTMENT_REASONS, type StaffAdjustmentReason } from '../../lib/mock-db'
+import { ADJUSTMENT_REASON_LABELS, getMockToday, StockRuleError, STAFF_ADJUSTMENT_REASONS, type StaffAdjustmentReason } from '../../lib/mock-db'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDate } from '../../lib/dates'
@@ -240,6 +240,7 @@ export function RestockModal({ item, onClose, onSaved }: { item: InventoryItemVi
         />
         <DatePicker
           label="Expiration date"
+          min={getMockToday()}
           value={expirationDate}
           required={!noExpirationConfirmed}
           disabled={noExpirationConfirmed}

@@ -155,15 +155,17 @@ export function FollowUpListPage() {
     {
       key: 'student',
       header: 'LRN',
+      width: '9rem',
       rowHeader: true,
       sort: sortColumn('student', 'LRN'),
       cell: (item) => <MaskedLrn lrn={item.lrn} />,
     },
     { key: 'reason', header: 'Reason', sort: sortColumn('reason', 'Reason'), cell: (item) => item.reason },
-    { key: 'due', header: 'Due date', sort: sortColumn('due', 'Due date'), cell: (item) => formatDate(item.followUpDate) },
+    { key: 'due', header: 'Due date', width: '8.5rem', sort: sortColumn('due', 'Due date'), cell: (item) => formatDate(item.followUpDate) },
     {
       key: 'status',
       header: 'Status',
+      width: '12rem',
       sort: sortColumn('status', 'Status'),
       cell: (item) => (
         <div>
@@ -175,6 +177,7 @@ export function FollowUpListPage() {
     {
       key: 'actions',
       header: 'Actions',
+      width: '12.5rem',
       cell: (item) =>
         item.status === 'pending' ? (
           <Select

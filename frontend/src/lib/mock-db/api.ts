@@ -1413,6 +1413,9 @@ function inventoryView(s: DbState, item: InventoryItem): InventoryItemView {
   return { ...item, ...inventoryStatusFor(s, item) }
 }
 
+/** New stock can't arrive already expired; an expiry of today is still usable (see `usableBatches`). */
+const PAST_EXPIRY_RULE = "The expiration date can't be in the past."
+
 export function listInventory(query: { search?: string; category?: InventoryCategory | ''; hasExpiredStock?: boolean; attention?: '' | 'low_stock' | 'expiry' } = {}): Promise<InventoryItemView[]> {
   return read('inventory', (s) => {
     const search = query.search?.trim().toLowerCase() ?? ''
@@ -1474,6 +1477,7 @@ export function saveInventoryItem(input: InventoryInput, options: { itemId?: str
       throw new StockRuleError('Choose an expiration date, or confirm this item has no expiration date.')
     if (!existing && expirationDate !== null && noExpirationConfirmed)
       throw new StockRuleError('Choose either an expiration date or no expiration date for this item.')
+    if (!existing && expirationDate !== null && expirationDate < s.today) throw new StockRuleError(PAST_EXPIRY_RULE)
     const summary = existing ? changedSummary(existing, fields) : undefined
     const item = existing
       ? Object.assign(existing, fields)
@@ -1542,6 +1546,7 @@ export function restockInventoryItem(
       throw new StockRuleError('Choose an expiration date, or confirm this batch has no expiration date.')
     if (expirationDate !== null && options.noExpirationConfirmed)
       throw new StockRuleError('Choose either an expiration date or no expiration date for this batch.')
+    if (expirationDate !== null && expirationDate < s.today) throw new StockRuleError(PAST_EXPIRY_RULE)
     const batch: InventoryBatch = {
       id: nextBatchId(item),
       quantity,

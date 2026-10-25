@@ -84,7 +84,7 @@ export function SportsReportListPage({ viewer }: { viewer: SessionUser }) {
       {
         key: 'title',
         header: 'Title',
-        width: '26%',
+        width: '23%',
         rowHeader: true,
         cell: (report) => (
           <span className="flex flex-wrap items-center gap-2">
@@ -97,9 +97,9 @@ export function SportsReportListPage({ viewer }: { viewer: SessionUser }) {
           </span>
         ),
       },
-      { key: 'activity', header: 'Activity', width: '17%', cell: (report) => report.activity ?? '—' },
-      { key: 'requestedBy', header: 'Requested by', width: '14%', cell: (report) => report.requestedBy },
-      { key: 'students', header: 'Students', width: '8%', align: 'right', cell: (report) => report.studentCount },
+      { key: 'activity', header: 'Activity', width: '15%', cell: (report) => report.activity ?? '—' },
+      { key: 'requestedBy', header: 'Requested by', width: '15%', cell: (report) => report.requestedBy },
+      { key: 'students', header: 'Students', width: '7%', align: 'right', cell: (report) => report.studentCount },
       { key: 'updatedAt', header: 'Last updated', width: '13%', cell: (report) => formatDateTime(report.updatedAt) },
       {
         key: 'actions',
@@ -138,7 +138,7 @@ export function SportsReportListPage({ viewer }: { viewer: SessionUser }) {
             Show archived reports
           </label>
           {rows.length ? (
-            <DataTable caption="Saved Sports Reports" columns={columns} rows={rows} rowKey={(report) => report.id} fixedLayout minTableWidth="66rem" />
+            <DataTable caption="Saved Sports Reports" columns={columns} rows={rows} rowKey={(report) => report.id} fixedLayout minTableWidth="60rem" />
           ) : (
             <EmptyState
               icon="clipboardList"

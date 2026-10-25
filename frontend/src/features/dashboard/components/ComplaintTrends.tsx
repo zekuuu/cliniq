@@ -669,7 +669,9 @@ function percent(value: number) {
  */
 const FILTER_BUTTON_BASE =
   'cursor-pointer rounded-md border border-border text-left transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green aria-pressed:border-brand-green aria-pressed:bg-background aria-pressed:shadow-card aria-pressed:ring-1 aria-pressed:ring-brand-green motion-reduce:transition-none'
-const FILTER_BUTTON = `${FILTER_BUTTON_BASE} px-3 py-2 text-sm`
+// Fixed-width buttons in a centered row, so two Sex buttons don't stretch across the full-width card (Zean, October 26, 2026).
+const FILTER_ROW = 'flex flex-wrap justify-center gap-2'
+const FILTER_BUTTON = `${FILTER_BUTTON_BASE} w-[calc(50%-0.25rem)] px-3 py-2 text-sm sm:w-48`
 
 /** "1 case", "3 cases": a bare number beside a percentage read as unclear (Zean, October 25, 2026). */
 function casesText(count: number) {
@@ -738,7 +740,7 @@ function DemographicCharts({
             <>
               {/* Legend clicks would hide a segment while its count stays on the button below; filtering is the buttons' job. */}
               <div className="relative h-56 lg:h-72"><Doughnut data={{ labels: demographics.sex.map((row) => row.label), datasets: [{ data: demographics.sex.map((row) => row.count), backgroundColor: sexColors, borderColor: colorToken('background'), borderWidth: 2 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick } } } }} aria-label={`Visits and incidents by Sex: ${countsText(demographics.sex)}.`} role="img" /></div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className={FILTER_ROW}>
                 {demographics.sex.map((row) => (
                   <button key={row.key} type="button" aria-pressed={filters.sex === row.key} onClick={() => onFiltersChange({ ...filters, sex: filters.sex === row.key ? null : row.key as 'female' | 'male' })} className={FILTER_BUTTON}>
                     <span className="block font-semibold text-text-primary">{row.label}</span>{' '}<span className="text-text-secondary">{casesText(row.count)} · {percent(row.share)}</span>
@@ -750,7 +752,7 @@ function DemographicCharts({
             <>
               {/* Stacked, so each bar's height is still the grade's total; incidents use the neutral, so the Trends view keeps to four hues (October 25, 2026). */}
               <div className="relative h-56"><Bar data={{ labels: demographics.gradeLevel.map((row) => row.label), datasets: [{ label: 'Visits', data: demographics.gradeLevel.map((row) => row.visits), backgroundColor: colorToken('brand-green-dark'), borderColor: colorToken('background'), borderWidth: 1 }, { label: 'Incidents', data: demographics.gradeLevel.map((row) => row.incidents), backgroundColor: colorToken('text-secondary'), borderColor: colorToken('background'), borderWidth: 1 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, interaction: { mode: 'index', axis: 'x', intersect: false }, layout: { padding: { right: 2 } }, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick, boxWidth: 14 } } }, scales: { x: { stacked: true, grid: { drawTicks: false }, ticks: { color: tick } }, y: { stacked: true, beginAtZero: true, border: { color: colorToken('text-muted') }, ticks: { precision: 0, color: tick } }, yRight: { display: true, position: 'right', stacked: true, grid: { drawOnChartArea: false, drawTicks: false }, border: { display: true, color: colorToken('text-muted') }, ticks: { display: false } } } }} aria-label={`Visits and incidents by grade level: ${splitText(demographics.gradeLevel)}.`} role="img" /></div>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              <div className={FILTER_ROW}>
                 {demographics.gradeLevel.map((row) => (
                   <button key={row.key} type="button" aria-pressed={filters.gradeLevel === row.key} onClick={() => onFiltersChange({ ...filters, gradeLevel: filters.gradeLevel === row.key ? null : row.key })} className={FILTER_BUTTON}>
                     <span className="block font-semibold text-text-primary">{row.label}</span>{' '}<span className="text-text-secondary">{casesText(row.count)} · {percent(row.share)}</span>

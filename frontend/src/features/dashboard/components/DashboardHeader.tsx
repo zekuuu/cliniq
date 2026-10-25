@@ -50,11 +50,12 @@ export function DashboardHeader({
             : 'Today’s clinic activity and student health updates.'}
         </p>
         <p className="mt-0.5 text-xs text-text-secondary" aria-live="polite">
-          <time dateTime={today}>{formatLongDate(today)}</time>
-          <span>
+          {/* Today's date is in the top bar from 640px up; below that the top bar hides it, so it stays here. */}
+          <span className="sm:hidden">
+            <time dateTime={today}>{formatLongDate(today)}</time>
             <span aria-hidden="true"> · </span>
-            {isRefetching ? 'Updating…' : `Showing ${describeRangeDates(range, oldestRecordDate)}`}
           </span>
+          <span>{isRefetching ? 'Updating…' : `Showing ${describeRangeDates(range, oldestRecordDate)}`}</span>
           <span aria-hidden="true"> · </span>
           View only
         </p>

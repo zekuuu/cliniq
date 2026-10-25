@@ -13,7 +13,7 @@ function renderCalendar({
 }: { today?: string; anchor?: string; canNavigate?: boolean } = {}) {
   setMockToday(today)
   resetMockDb()
-  renderWithRouter(<VisitCalendar today={today} initialAnchor={anchor} canNavigate={canNavigate} />)
+  renderWithRouter(<VisitCalendar today={today} initialAnchor={anchor} canNavigate={canNavigate} showVisitsLink />)
   return userEvent.setup()
 }
 

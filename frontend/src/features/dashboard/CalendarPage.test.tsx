@@ -14,9 +14,13 @@ describe('Clinic Calendar', () => {
     expect(within(screen.getByRole('radiogroup', { name: 'Calendar period' })).getByRole('radio', { name: 'Weekly' })).toHaveAttribute('aria-checked', 'true')
   })
 
-  it('keeps Admin calendar days view-only', async () => {
+  it('lets the Admin open a day to manage its events, without the Staff-only View visits link (ADR-042)', async () => {
+    const user = userEvent.setup()
     renderWithRouter(<CalendarPage viewer={{ id: 'admin', name: 'Principal', role: 'admin' }} />)
-    await screen.findByRole('radiogroup', { name: 'Calendar period' })
-    expect(screen.queryByRole('button', { name: /open day/i })).not.toBeInTheDocument()
+    const days = await screen.findAllByRole('button', { name: /open day/i })
+    await user.click(days[0])
+    const dialog = await screen.findByRole('dialog')
+    expect(within(dialog).getByRole('button', { name: /add event/i })).toBeInTheDocument()
+    expect(within(dialog).queryByRole('link', { name: /view visits/i })).not.toBeInTheDocument()
   })
 })

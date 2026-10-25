@@ -1,7 +1,7 @@
 # ADR-019: Staff Maintain School Events on the Dashboard Calendar
 
 **Date:** Wednesday, October 07, 2026 — 16:48
-**Status:** Accepted
+**Status:** Accepted. **Item 2 amended by [ADR-042](ADR-042-Admin-Manages-Calendar-Events.md) (Sunday, October 25, 2026 — 23:55 PHT): the Admin can also add, edit and delete events.**
 **Note (Wednesday, October 21, 2026 — 01:47):** the PE/Sports Instructor role, the phone-only screens and the `?student=` parameter this ADR may mention were removed (ADR-029, ADR-033, [2026-10-21-remove-phone-screens-and-instructor](../08-Logs/Agent-Sessions/2026-10-21-remove-phone-screens-and-instructor.md)); the rest of the decision stands.
 
 ## Context

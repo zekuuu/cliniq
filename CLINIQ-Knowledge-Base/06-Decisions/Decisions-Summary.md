@@ -165,3 +165,7 @@ A screen about one deliberately opened student shows the full LRN, and so does i
 ### ADR-041: No password re-entry before sensitive actions
 
 The "Confirm it's you" password dialog from ADR-037 item 5 is removed from every action (Zean, Sunday, October 25, 2026 — 23:18 PHT). Archiving a student and approving an incident report keep their plain confirmation dialogs; account changes apply at once. The actions are still audit-logged.
+
+### ADR-042: The Admin can add, edit and delete calendar events
+
+On the Calendar screen the Admin opens any day and manages its events like Staff (Zean, Sunday, October 25, 2026 — 23:55 PHT). The "View visits" link stays Staff-only. Amends ADR-019.

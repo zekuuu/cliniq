@@ -173,7 +173,7 @@ describe('TrendTable', () => {
     ])
   })
 
-  it('lays out grade filters in a compact four-column desktop grid', async () => {
+  it('lays out grade filters as fixed-width buttons in a centered row', async () => {
     const user = userEvent.setup()
     render(
       <ComplaintTrends
@@ -196,7 +196,8 @@ describe('TrendTable', () => {
     // Name on top, count below, like the Female / Male buttons; the count says "case".
     const firstGrade = screen.getByRole('button', { name: 'Grade 1 1 case · 25%' })
     expect(firstGrade.firstElementChild).toHaveClass('block')
-    expect(firstGrade.parentElement).toHaveClass('grid', 'lg:grid-cols-4')
+    expect(firstGrade).toHaveClass('sm:w-48')
+    expect(firstGrade.parentElement).toHaveClass('flex', 'flex-wrap', 'justify-center')
   })
 
   it('shapes the loading skeleton like the demographic cards above the trend row', () => {

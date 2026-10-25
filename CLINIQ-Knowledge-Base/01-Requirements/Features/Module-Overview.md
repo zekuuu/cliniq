@@ -223,6 +223,7 @@ Staff identify a student through Students search or each form's student picker. 
 **Inventory Item Management**
 - Add inventory item
 - Optional "Generic or branded" tag on an item (Generic, Branded, or Not specified, the default), shown on the item form, the item's Batches details and the Dispense picker, not as a list column (Sir Rey, Sunday, October 25, 2026)
+- An expiration date can't be in the past, on Add Item or Restock; today is allowed (Zean, Sunday, October 25, 2026 — 23:55 PHT).
 - On Add Item the first batch follows Restock's rule (ADR-035, panel review IV-2): an expiration date, or an explicit "This item has no expiration date" confirmation; a blank date alone can't be saved (also enforced in the data layer). A non-blocking warning appears when the name and unit match an existing item (case, spacing and a trailing "s" ignored: "Paracetamol 500mg tablet already exists. Restock it instead?", with a link); the unit is free text with suggestions from the units already used (panel review IV-3)
 - Edit inventory item
 - Delete/archive inventory item
@@ -244,7 +245,7 @@ Staff identify a student through Students search or each form's student picker. 
 - Track expiration date per item
 - Auto-flag items nearing expiration
 
-### 9. Clinic Overview Dashboard *(expanded from "Health Trends Dashboard")* — *Access: Staff + Admin/Principal (view-only, except that Staff maintain calendar events; ADR-019)*
+### 9. Clinic Overview Dashboard *(expanded from "Health Trends Dashboard")* — *Access: Staff + Admin/Principal (view-only, except that Staff and the Admin maintain calendar events; ADR-019, ADR-042)*
 Broadened from complaint trends alone into an overall operational snapshot, per the September 19 meeting.
 
 - View total clinic counts (visits, incidents, active students)
@@ -257,7 +258,7 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 - View frequent-visitor flags (the Overview lists the five students with the most visits, with "Show all" for the rest; the count badge shows the total; the config switch `showFrequentVisitors` can hide it; Zean, Sunday, October 25, 2026), shown by **masked LRN** per the display-privacy rule, not full name — **a warning only**, never a diagnosis or suggested action; it exists to help the nurse decide what to do next, not to decide for her
 - **Due/upcoming follow-ups** (Module 3/4's Follow-Up Handling) — this is the system's internal reminder mechanism, since there's no external SMS/push service; computed fresh on page load by comparing today's date to each follow-up's date, not a background alert
 - **Calendar view** of visit and incident counts, toggleable weekly / monthly / yearly, for spotting patterns at a glance (e.g., a calendar-style heatmap of how many visits happened each day). It also surfaces any free-text event tag Staff applied when logging a visit or incident (e.g., "MCA Dance Program") on the relevant day, so clinic activity can be read in context
-- **School events, maintained by Staff** (ADR-019): Staff click any calendar day (past, today, or future) to open that day's panel: its visit and incident counts (past and today only), its events with edit and delete, Add event, and a "View visits" link to the Visit Log filtered to that day. An event has a title (up to 60 characters), a start date, and an optional end date for multi-day events. Each event shows as a yellow chip on every day it covers (up to 2 chips per day, then "+N more"); a visit/incident tag with the same text on the same day shows once. Create, edit, and delete are audit-logged. Admin/Principal sees the same chips but can't open or change anything
+- **School events, maintained by Staff and the Admin** (ADR-019, ADR-042): Staff and the Admin click any calendar day (past, today, or future) to open that day's panel: its visit and incident counts (past and today only), its events with edit and delete, Add event, and, for Staff only, a "View visits" link to the Visit Log filtered to that day. An event has a title (up to 60 characters), a start date, and an optional end date for multi-day events. Each event shows as a yellow chip on every day it covers (up to 2 chips per day, then "+N more"); a visit/incident tag with the same text on the same day shows once. Create, edit, and delete are audit-logged. Admin/Principal sees the same chips but can't open or change anything
 - **National holidays, read-only** (ADR-020): nationwide Philippine holidays (regular, special non-working, special working, Islamic) appear as gray "Holiday: <name>" chips in the Month, Week, Year, and Table views, including future days; long names truncate with the full name in a tooltip, and an unconfirmed date shows "(estimated)". A no-class holiday (anything but a special working day) with zero visits gets faint stripes, so it reads as "no class", not "no illness". Staff's day panel lists the date's holidays with no edit or delete controls. A line under the calendar shows "Holidays updated <date> · Source <name>" to Staff and Admin, with a warning if no holidays are loaded for the current year. Holidays come from a source through the data layer (a bundled 2026 list for now); no role edits them. Local town/province days and class suspensions are entered by Staff as events. Automatic yearly updating is a backend task (Phase B9); the source is still open
 - Filter any of the above by custom date range
 - Export/print the dashboard view
@@ -342,7 +343,7 @@ A second external role, **Canteen Staff**, was also designed but remains deferre
 - **Why still deferred:** It stays a documented future addition. Note that a local-only deployment cannot reach canteen staff either (ADR-029).
 
 ### Future Decision: Full School-Events Calendar — *resolved Wednesday, October 07, 2026 (ADR-019)*
-**Resolved:** Staff maintain school events from the Dashboard calendar's day panel; Admin/Principal views them only (see Module 9). The original note is kept below for history.
+**Resolved:** Staff maintain school events from the calendar's day panel; since ADR-042 ({TS}) the Admin/Principal can too (see Module 9). The original note is kept below for history.
 
 The Dashboard's calendar (Module 9) currently supports only a lightweight, free-text event tag on visits/incidents — deliberately kept minimal for this phase. A fuller calendar, where school events (academic, sports, performances, assemblies, field trips) are their own managed entries plotted alongside clinic activity, was discussed but the two real open questions were left for a future decision rather than guessed at:
 - **Who maintains the events** — Staff manually (adds data-entry work to the one role this whole project is trying to reduce workload for), or Admin/Principal (would require giving that role its first write permission, since it's 100% read-only today)?

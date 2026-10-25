@@ -43,6 +43,7 @@ const baseColumns: Array<DataTableColumn<User>> = [
   {
     key: 'role',
     header: 'Role',
+    width: '9rem',
     cell: (user) => (
       <Badge tone="neutral" variant="soft">
         {ROLE_LABELS[user.role]}
@@ -52,6 +53,7 @@ const baseColumns: Array<DataTableColumn<User>> = [
   {
     key: 'status',
     header: 'Status',
+    width: '7rem',
     cell: (user) =>
       user.deactivatedAt ? (
         <Badge tone="neutral" variant="outline">
@@ -66,6 +68,7 @@ const baseColumns: Array<DataTableColumn<User>> = [
   {
     key: 'lastLogin',
     header: 'Last login',
+    width: '11.5rem',
     cell: (user) => (user.lastLogin ? formatDateTime(user.lastLogin) : 'Never'),
   },
 ]
