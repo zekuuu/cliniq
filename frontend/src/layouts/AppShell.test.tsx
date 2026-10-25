@@ -38,7 +38,8 @@ describe('App Shell / Navigation', () => {
 
     expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument()
     expect(screen.getByRole('banner')).toHaveClass('sticky', 'top-0', 'z-30')
-    expect(screen.getByText('Student Care')).toBeInTheDocument()
+    expect(screen.getByText('Patient Care')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Staff' })).toHaveAttribute('href', '/staff')
     expect(screen.getByText('Operations')).toBeInTheDocument()
     expect(screen.getByText('Administration')).toBeInTheDocument()
     expect(screen.getByText('Students')).toBeInTheDocument()
@@ -278,6 +279,7 @@ describe('App Shell / Navigation', () => {
       'accounts',
       'backup',
     ])
+    expect(groups.map((group) => group.label)).toContain('Patient Care')
   })
 
   it('gives Staff the full navigation, with no QR entry (ADR-027) and no Accounts (ADR-033)', () => {
@@ -286,6 +288,7 @@ describe('App Shell / Navigation', () => {
       'dashboard',
       'calendar',
       'students',
+      'staff',
       'visits',
       'incidents',
       'followUps',

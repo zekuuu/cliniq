@@ -45,6 +45,23 @@ describe('Report Incident', () => {
     expect(screen.queryByText(/enter the (temperature|pulse|blood pressure)/i)).not.toBeInTheDocument()
   })
 
+  it('offers Other first and saves a typed complaint, trimmed', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<IncidentEntryPage />)
+    await pickStudent(user, STUDENT)
+    await user.click(screen.getByRole('button', { name: /^complaint/i }))
+    expect(screen.getAllByRole('option')[0]).toHaveTextContent('Other (type your own)')
+    await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
+    const field = screen.getByLabelText(/specify other complaint/i)
+    expect(field).toHaveFocus()
+    await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
+    expect(screen.getByText('Select the emergency complaint.')).toBeInTheDocument()
+    await user.type(field, '  Nosebleed  ')
+    await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
+    expect(await screen.findByText(/stage 1 saved/i)).toBeInTheDocument()
+    expect((await listIncidents()).find((i) => i.studentId === STUDENT_ID && i.complaint === 'Nosebleed')).toBeTruthy()
+  })
+
   it('saves Stage 1, then completes Stage 2 with audit entries', async () => {
     const user = userEvent.setup()
     renderWithRouter(<IncidentEntryPage />)
@@ -95,7 +112,7 @@ describe('Report Incident', () => {
     renderWithRouter(<IncidentEntryPage />)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
-    expect(screen.getByText(/student not identified yet/i)).toBeInTheDocument()
+    expect(screen.getByText(/student or staff member not identified yet/i)).toBeInTheDocument()
     await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
     await user.type(screen.getByLabelText(/temperature/i), '37.2')
     await user.type(screen.getByLabelText(/pulse/i), '92')
@@ -105,7 +122,7 @@ describe('Report Incident', () => {
 
     const field = screen.getByRole('combobox', { name: /student/i })
     await user.type(field, '209999999')
-    expect(await screen.findByText(/no active student matches/i)).toBeInTheDocument()
+    expect(await screen.findByText(/no active student or staff member matches/i)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
     expect(screen.getByText('Choose the student: type the LRN or name, then pick from the list.')).toBeInTheDocument()
     expect(getRecordedAuditEntries()).toEqual([])

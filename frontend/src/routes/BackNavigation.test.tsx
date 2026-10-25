@@ -29,6 +29,7 @@ const NO_BACK: Record<string, string> = {
   'staff /': 'Dashboard: Staff home screen, nothing above it.',
   'admin /': 'Dashboard: Admin home screen, nothing above it.',
   'staff /students': 'Top-level sidebar destination; Back only after a drill-through link.',
+  'staff /staff': 'Top-level sidebar destination; Back only after a drill-through link (ADR-043).',
   'staff /visits': 'Top-level sidebar destination; Back only after a drill-through link.',
   'staff /incidents': 'Top-level sidebar destination; Back only after a drill-through link.',
   'admin /students': 'Top-level sidebar destination for the Admin too (ADR-038).',
@@ -47,6 +48,7 @@ const NO_BACK: Record<string, string> = {
 /** A real record for each route parameter, from the mock seed. */
 const SAMPLE: Record<string, string> = {
   studentId: 'student-0001',
+  personnelId: 'personnel-0001',
   visitId: 'visit-0157',
   incidentId: 'incident-0022',
   userId: 'user-staff-01',

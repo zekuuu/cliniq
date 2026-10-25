@@ -29,7 +29,7 @@ describe('Incident Log', () => {
     renderWithRouter(<IncidentLogListPage />)
 
     expect(await screen.findByRole('heading', { name: 'Incident Log' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'LRN' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'LRN or Staff No.' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Reason / description' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Status' })).toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: /full name/i })).not.toBeInTheDocument()
@@ -37,14 +37,14 @@ describe('Incident Log', () => {
 
   it('searches incidents by actual LRN', async () => {
     const user = userEvent.setup()
-    const all = await fetchIncidentLog({ ...defaultIncidentLogRange(), search: '', completion: 'all' })
+    const all = await fetchIncidentLog({ ...defaultIncidentLogRange(), search: '', completion: 'all', patient: 'students' })
     const [incident] = all
-    const expected = all.filter((row) => row.lrn === incident.lrn).length
+    const expected = all.filter((row) => row.patient.number === incident.patient.number).length
     renderWithRouter(<IncidentLogListPage />)
     await screen.findByRole('heading', { name: 'Incident Log' })
-    await user.type(screen.getByLabelText('Search'), incident.lrn)
+    await user.type(screen.getByLabelText('Search'), incident.patient.number)
     expect(await screen.findByText(`${expected} record${expected === 1 ? '' : 's'} shown`)).toBeInTheDocument()
-    expect(screen.getAllByText(maskLrn(incident.lrn))).toHaveLength(expected)
+    expect(screen.getAllByText(maskLrn(incident.patient.number))).toHaveLength(expected)
   })
 
   it('filters by completion state', async () => {

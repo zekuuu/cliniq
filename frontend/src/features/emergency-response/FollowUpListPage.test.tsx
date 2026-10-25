@@ -18,8 +18,8 @@ describe('FollowUpListPage', () => {
   async function renderList() {
     const user = userEvent.setup()
     renderWithRouter(<FollowUpListPage />)
-    const [firstFollowUp] = await listFollowUps()
-    expect((await screen.findAllByText(maskLrn(firstFollowUp.lrn))).length).toBeGreaterThan(0)
+    const firstFollowUp = (await listFollowUps()).find((f) => f.patient.kind === 'student')!
+    expect((await screen.findAllByText(maskLrn(firstFollowUp.patient.number))).length).toBeGreaterThan(0)
     return user
   }
 
