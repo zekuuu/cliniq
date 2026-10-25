@@ -356,11 +356,6 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                 : 'Clinical details are visible because this is one deliberately opened visit.'
             }
             icon={<Icon name="clipboardList" />}
-            actions={
-              <Badge tone={editing ? 'warning' : dispositionTone[visit.disposition]} variant="soft">
-                {editing ? 'Editing' : dispositionLabel[visit.disposition]}
-              </Badge>
-            }
           />
           <CardBody>
             {editing ? (

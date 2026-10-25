@@ -15,7 +15,7 @@
 
 ## Open work at a glance
 
-Open: FIX 18 · AUDIT 10 · DOC 32 · DECIDE 94 · LATER 21 | Notes: NOTE 61 · VERIFY 21 | Done: 232 (all in `Issues-Done-Archive.md`)
+Open: FIX 18 · AUDIT 10 · DOC 32 · DECIDE 94 · LATER 21 | Notes: NOTE 61 · VERIFY 21 | Done: 233 (all in `Issues-Done-Archive.md`)
 
 **Open `FIX` items:**
 

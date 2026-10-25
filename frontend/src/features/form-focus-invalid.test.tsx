@@ -55,7 +55,9 @@ describe('A failed submit focuses the first invalid field', () => {
   it('Visit Details edit', async () => {
     await submitEmpty(<VisitDetailPage visitId="visit-0157" />, async (user) => {
       await user.click(await screen.findByRole('button', { name: 'Edit' }))
-      await user.clear(screen.getByRole('combobox', { name: /complaint/i }))
+      // The complaint is a dropdown now: "Other (type your own)" leaves an empty required field.
+      await user.click(screen.getByRole('button', { name: /complaint/i }))
+      await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
     })
   })
 

@@ -93,6 +93,8 @@ Moved: 180 entries (and 4 more on Tuesday, October 20, 2026 — 15:16 PHT, at th
 
 ## Known gaps
 
+- [x] **[DONE]** **Visit Details edit/save tests fail since Monday, October 26** (logged Monday, October 26, 2026 — 02:34 PHT). Saving an edit on Visit Details never shows "Visit updated." in the tests: 4 in `VisitDetailPage.test.tsx`, 2 edit tests in `LogbookFields.test.tsx`, 1 in `ItemsGiven.test.tsx`, and `form-focus-invalid.test.tsx` "Visit Details edit". They fail with or without that session's change and were not failing on Sunday, October 25, so a date-dependent rule or seed date is the likely cause. Find it and fix the code or the tests. Session: [2026-10-26-visit-details-drop-duplicate-badge](Agent-Sessions/2026-10-26-visit-details-drop-duplicate-badge.md) Resolved Monday, October 26, 2026 — 02:47 PHT: today's seed times are now never later than the clock (`relativeDates.ts`); the form-focus test's stale complaint query was also fixed. Session: [2026-10-26-seed-times-not-in-future](Agent-Sessions/2026-10-26-seed-times-not-in-future.md)
+
 - [x] **[DONE]** **Canonical Frontend Context Brief §5 needs the optional AuditLogEntry `summary` field** (Friday, October 2, 2026 — 00:28 PHT). ADR-017 added it (field names only, never values). ERD.md is updated; the canonical brief's AuditLogEntry line still lists only user / action / target / timestamp. Resolved Sunday, October 11, 2026 — 20:31 PHT: §5's AuditLogEntry line now lists the optional summary in ADR-017's wording (fields or states only, never values). Session: [2026-10-11-issues-todos-fix-sweep](Agent-Sessions/2026-10-11-issues-todos-fix-sweep.md)
 
 
