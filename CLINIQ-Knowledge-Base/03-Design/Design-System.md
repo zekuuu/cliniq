@@ -65,6 +65,8 @@ Restrained, cohesive palette. Prioritize strong text/background contrast, consis
 
 **Demographic-chart colors:** The Visits by Sex chart uses `chart-female` pink (`#C74375`) for Female and `chart-male` blue (`#3D7CBC`) for Male. These are dataset colors, not status colors; the chart legend and filters retain the written labels, so color is supplementary.
 
+**Chart hues, at most four per screen (Sunday, October 25, 2026 — Sir Rey):** a chart on the Dashboard, Trends or Reports uses only brand green (`brand-green` / `brand-green-dark`), one neutral (`text-secondary`), the warning color (`warning`, clusters), and the female/male pair above. The grade-level chart's Incidents series moved from `error` red to the neutral. Every series keeps a visible label or legend and a text alternative, so nothing is carried by color alone; the brand greens already match the logo's green, so no token changed.
+
 **Status mapping (Sunday, October 18, 2026 — 17:26 PHT):** use `error` red for incidents, expired or low stock, and overdue/critical states; `success` green for active, verified, approved, or go states; `warning` yellow for pending, in-progress, due-soon, and review-needed states; `info` blue for completed, closed, resolved, and informational states; and `neutral` gray for archived, inactive, and no-state labels. Use the soft variant for statuses inside cards and rows. Icons and text labels remain required; color never carries the meaning alone.
 
 **Contrast rules, stated plainly:**

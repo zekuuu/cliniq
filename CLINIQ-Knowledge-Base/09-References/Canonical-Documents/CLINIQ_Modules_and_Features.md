@@ -4,7 +4,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 
 **Roles in the system (current scope):**
 - **Staff** — School Head Nurse / clinic assistants. Full read/write access.
-- **Admin/Principal** — School Administration. Read-only access to reports and health summaries, plus account management (ADR-033): creates, edits, disables and resets accounts.
+- **Admin/Principal** — School Administration. Read-only access to reports and health summaries, and read-only access to the Student List, Student Profile, Incident Log and Incident Report (ADR-038), plus account management (ADR-033): creates, edits, disables and resets accounts. The Admin/Principal never prints or saves as PDF (ADR-038); the clinician prints.
 - **PE/Sports Instructor** — No account and no access (ADR-029). An instructor asks the clinician, who decides what to share.
 
 **Role documented for future development (not built this phase):** Canteen Staff — see "Future Development" at the end of this document.
@@ -44,13 +44,13 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - Edit role assignment
 - View permissions per role
 
-### 2. Student Records — *Access: Staff full read/write; Admin/Principal has no direct access (reports and trends only)*
+### 2. Student Records — *Access: Staff full read/write; Admin/Principal reads the Student List and Student Profile only (ADR-038)*
 
 **Student Information Encoding**
 - Add new student record — *Staff*
 - Record the required **Sex** recorded by the school (Female or Male). Show it on the deliberate single-student profile and Student Health Record; audit changes by field name only, never the value.
-- Record the student's LRN (Learner Reference Number, ADR-028), entered by Staff from the school records: exactly 12 digits, kept as text so leading zeros survive, required and unique (a repeat shows "This LRN is already used by another student record" without naming that student); spaces and dashes are removed when typed or pasted; a wrong LRN is corrected in Edit Student and audited as "Updated LRN" with neither value. Lists, pickers, printouts and the Audit Trail show it masked to the last four digits (`●●●●●●●●1234`, read as "LRN ending in 1234"); only the Student Profile and the edit form show it in full; addresses carry the internal id, never the LRN
-- Edit student record — *Staff*
+- Record the student's LRN (Learner Reference Number, ADR-028), entered by Staff from the school records: exactly 12 digits, kept as text so leading zeros survive, required and unique (a repeat shows "This LRN is already used by another student record" without naming that student); spaces and dashes are removed when typed or pasted; a wrong LRN is corrected in Edit Student and audited as "Updated LRN" with neither value. Lists, pickers, the Dashboard, Reports and the Audit Trail show it masked to the last four digits (`●●●●●●●●1234`, read as "LRN ending in 1234"); a screen about one opened student, and its printout, show it in full (ADR-040); only the Student Profile and the edit form show it in full; addresses carry the internal id, never the LRN
+- Edit student record — *Staff*. The LRN is locked once the record exists; a name correction needs a reason, recorded in the audit log without the names (Sir Rey, Sunday, October 25, 2026)
 - The student's own contact number is required except for **Kinder**, where it is optional; the emergency contacts stay required for every grade, and a Kinder record isn't "incomplete" for lacking it (panel review ST-3, D8)
 - View student profile/detail — *Staff*. When allergies or medical conditions are recorded, a compact banner at the top of the profile lists them; otherwise nothing extra shows (panel review ST-9)
 - View list of all students (masterlist, shown with full names) — *Staff*
@@ -140,7 +140,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - Mark a follow-up Completed, Missed, or Cancelled
 - Missed and Cancelled ask for a confirmation **and a required reason**, kept on the follow-up and shown in the list; afterwards "Set a new date" offers to create a new pending follow-up for the same student, record and reason (panel review FU-4). Audit-logged
 
-### 4. Emergency Response — *Access: Staff only*
+### 4. Emergency Response — *Access: Staff; Admin/Principal reads the Incident Log and Incident Report only (ADR-038)*
 
 **Incident Recording — two-stage flow**
 - **Stage 1 (fast capture):** open a prefilled emergency form (student picked on the form), complete only the essential field (the complaint) plus whichever readings the case needs (temperature, pulse, blood pressure, oximeter; none is required, "don't force all 4 if not relevant to the case"), and save immediately — speed matters more than completeness in the first moment. Once the student is picked, a read-only card shows the student's allergies, medical conditions and emergency contacts (an empty list reads “None recorded”, never “No allergies”); it adds no input
@@ -168,18 +168,18 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 **Monthly Reports**
 - Generate monthly report — *Staff*
 - View monthly report — *Staff, Admin/Principal*
-- Print/export monthly report as PDF — *Staff, Admin/Principal*
+- Print/export monthly report as PDF — *Staff* (the Admin/Principal reads it on screen; ADR-038)
 
 **Incident Reports**
 - Generate incident report from an incident record — *Staff*
 - Route for nurse review and sign-off — *Staff*. Only a completed (Stage 2) record can be approved
-- Print incident report — *Staff, Admin/Principal*
+- Print incident report — *Staff* (ADR-038)
 - The month's **Incident register** (renamed from "Incident Report Archive", panel review RP-4: it holds unfinished incidents, so it isn't an archive) lists every incident of the month by masked LRN; for Staff each row opens its report, or "Complete Stage 2" for a Stage 1 record
 
 **Complaint summary** (renamed from "Health Summaries", panel review RP-7: it holds complaint counts only)
 - Generate aggregated complaint summary — *Staff*
 - View complaint summary — *Staff, Admin/Principal*
-- Export complaint summary — *Staff, Admin/Principal*
+- Export complaint summary — *Staff* (ADR-038)
 
 **Sports Reports (ADR-034)** — *Staff only; the Admin/Principal cannot open them*
 - Build a saved, reusable list of students for a PE or sports activity: title, activity, requested by (the instructor's name), look-back window (30, 60 or 90 days or the school year; default 90), "Include recorded conditions and allergies" (off by default) — *Staff*
@@ -214,6 +214,7 @@ Staff identify a student through Students search or each form's student picker. 
 
 **Inventory Item Management**
 - Add inventory item
+- Optional "Generic or branded" tag (Generic, Branded, Not specified) on the item form, its details and the Dispense picker (Sir Rey, Sunday, October 25, 2026)
 - On Add Item the first batch follows Restock's rule (ADR-035, panel review IV-2): an expiration date, or an explicit "This item has no expiration date" confirmation; a blank date alone can't be saved (also enforced in the data layer). A non-blocking warning appears when the name and unit match an existing item (case, spacing and a trailing "s" ignored: "Paracetamol 500mg tablet already exists. Restock it instead?", with a link); the unit is free text with suggestions from the units already used (panel review IV-3)
 - Edit inventory item
 - Delete/archive inventory item
@@ -268,7 +269,7 @@ A dedicated screen to review the Audit Trail (below), not just write to it — a
 
 - View the audit log, filtered by date range, user, action type (login/logout/submit/approve/create/update/delete/archive/print), and target/module type — *Staff, Admin/Principal*
 - Each entry: timestamp, who, action type, and the target record (masked LRN, not name, when the target is a student — per the display-privacy rule) — *Staff, Admin/Principal*
-- Export/print a filtered view, for handing to a DPO or during a compliance review — *Staff, Admin/Principal*
+- Export/print a filtered view, for handing to a DPO or during a compliance review — *Staff* (ADR-038)
 - **No role can edit or delete an entry.** The log is read-only by design; that's what makes it a log.
 
 ---
@@ -289,10 +290,10 @@ This satisfies RA 10173 (Data Privacy Act) alignment and is the mechanism that m
 | Module | Staff | Admin/Principal |
 |---|---|---|
 | 1. User Management | Login + own password only | Full (accounts, ADR-033) |
-| 2. Student Records | Full | — |
+| 2. Student Records | Full | Read Student List and Profile (ADR-038) |
 | 3. Clinic Visit Monitoring | Full | — |
-| 4. Emergency Response | Full | — |
-| 5. Reports Generation | Full | View/print only |
+| 4. Emergency Response | Full | Read Incident Log and Report (ADR-038) |
+| 5. Reports Generation | Full | View only, no printing (ADR-038) |
 | 7. First-aid Checklist Quick-Reference | Full | — |
 | 8. Medicine & Supply Inventory Tracker | Full | — |
 | 9. Clinic Overview Dashboard | View | View |

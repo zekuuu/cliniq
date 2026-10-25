@@ -20,7 +20,7 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | Admin edits an account (name, username, role, picture) | `update` | user | changed field names | `features/user-management/profilePicture.test.ts` |
 | Admin disables / enables an account | `update` | user | "Disabled account" / "Enabled account" | `features/backup/AccessAndBackup.test.tsx` |
 | Admin resets a password | `update` | user | "Reset password" | `features/user-management/accounts.test.ts` |
-| Adds / edits a student record | `create` / `update` | student | changed field names ("Updated LRN") | `features/student-records/StudentFormPage.test.tsx` |
+| Adds / edits a student record | `create` / `update` | student | changed field names ("Updated grade level"); a name correction adds "Name corrected; reason: <reason>", never the old or new name. The LRN can't change after creation (Sunday, October 25, 2026) | `features/student-records/StudentFormPage.test.tsx` |
 | Archives a student record | `archive` | student | — | `features/ui-review-regressions.test.tsx` |
 | Saves a visit | `submit` | visit | "Late entry" when dated more than 30 minutes earlier | `features/clinic-visits/VisitLogic.test.tsx` |
 | Edits a visit (including correcting its date and time) | `update` | visit | changed field names ("Updated date and time") | `features/clinic-visits/VisitDetailPage.test.tsx` |
@@ -46,14 +46,15 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | Marks a backup verified | `update` | backup | "Verified backup" | — |
 | Adds / edits / deletes a calendar event | `create` / `update` / `delete` | calendar-event | changed field names on edit | `lib/mock-db/calendarEvents.test.ts` |
 | Creates / edits / duplicates / archives / restores a Sports Report | `create` / `update` / `create` / `archive` / `update` | sports-report | "Duplicated from another Sports Report", "Restored from the archive" | `features/reports/SportsReport.test.tsx` |
-| Prints or saves as PDF | `print` | the printed record, or print-document | the document's title or scope | `components/print/Print.test.tsx` |
+| Prints or saves as PDF | `print` | the printed record, or print-document | the document's title or scope. Never written for the Admin, who can't print, or for a draft excuse letter (ADR-038) | `components/print/Print.test.tsx` |
+| Admin/Principal opens a student profile or an incident report | `view` ("Viewed (Admin)") | student / incident | "Opened student profile" / "Opened incident report". Once per record per sign-in session (ADR-038 item 4) | `features/admin-read-only.test.tsx` |
 | Reports an issue | `create` | issue-report | — | `features/issue-reports/api/issueReportApi.test.ts` |
 
 ## Not logged today (an open decision; nothing was changed)
 
 | Action | Logged? | Should it be? |
 |---|---|---|
-| Opening a student profile, a visit, an incident or a report (reading a health record) | No | **Still open** (lockouts were decided separately). RA 10173 accountability favours logging access to health records; ADR-016 decided that reading the Audit Log itself is not logged. Logging every profile view adds many rows. A `DECIDE` is logged. |
+| Staff opening a student profile, a visit, an incident or a report (reading a health record). The Admin's opening of a profile or an incident report **is** logged since Sunday, October 25, 2026 (ADR-038, above) | No | **Still open** (lockouts were decided separately). RA 10173 accountability favours logging access to health records; ADR-016 decided that reading the Audit Log itself is not logged. Logging every profile view adds many rows. A `DECIDE` is logged. |
 | Searching for a student (Student List, pickers) | No | Probably not: the opened record is the access worth logging. |
 | A single wrong password at sign-in or in "Confirm it's you" | No | No: decided with the lockout below (Zean, Friday, October 23, 2026). Five in a row are logged as a lockout. |
 | Viewing the Dashboard, Calendar, Trends or lists | No | No: aggregate or masked (ADR-004, ADR-028). |

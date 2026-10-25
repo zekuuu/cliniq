@@ -401,6 +401,7 @@ Medicines and supplies with a maintained stock count. Stock changes only through
 | `unit` | `varchar(30)` | no |  |  |
 | `current_stock` | `int` | no | 0 | Signed: it can go negative because over-stock dispensing warns but never blocks (Module 8). Updated in the same transaction as the ledger row, under a row lock. |
 | `low_stock_threshold` | `int unsigned` | no | 0 |  |
+| `brand` | `varchar(8)` | yes | null | **PROVISIONAL** (Sunday, October 25, 2026, Sir Rey): `generic` or `branded`; null reads "Not specified". Optional on the item form. |
 | `expiration_date` | `date` | yes | NULL | One date per item (not per batch), changed only by Restock. Null = never expires. |
 | `archived_at` | `datetime` | yes | NULL | Soft-archive. Referenced items can never be hard-deleted. |
 | `created_at` | `datetime` | no | current_timestamp() |  |
@@ -1027,5 +1028,6 @@ Append-only record of who did what and when (RA 10173 accountability). **Kept 10
 **Checks:**
 
 - `chk_audit_action`: `action_type in ('login','logout','submit','approve','create','update','delete','archive')`
+  - **PROVISIONAL addition (Sunday, October 25, 2026, ADR-038 item 4):** the frontend mock also writes `view` when the Admin/Principal opens a student profile or an incident report, once per record per session. Add `'view'` (and `'print'`, which the mock already writes) here before the migration is built.
 - `chk_audit_actor`: `actor_user_id is not null or actor_role is null`
 - `chk_audit_role`: `actor_role is null or actor_role in ('staff','admin')`

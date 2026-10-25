@@ -376,6 +376,7 @@ erDiagram
         varchar unit
         int current_stock "signed, may go negative"
         int low_stock_threshold
+        varchar brand "PROVISIONAL: generic, branded, or null (not specified)"
         date expiration_date "one per item, changed only by Restock"
         datetime archived_at
     }
