@@ -11,10 +11,14 @@
             "id": "87a2c052d8d9ff12",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "00-Project-Core/Objectives.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Objectives"
             }
           }
         ]
@@ -185,6 +189,7 @@
   },
   "active": "87a2c052d8d9ff12",
   "lastOpenFiles": [
+    "08-Logs/Agent-Sessions/2026-10-25-print-tooltip-and-frequent-badge.md",
     "08-Logs/Issues-Done-Archive.md",
     "02-Architecture/Database/Activity-Diagram.md",
     "00-Project-Core/Objectives.md",
@@ -212,7 +217,6 @@
     "02-Architecture/Database/ERD.md",
     "02-Architecture/Database/Data-Flow-Diagram.md",
     "02-Architecture/System-Architecture.md",
-    "08-Logs/Agent-Sessions/2026-09-25-srs-diagrams.md",
     "09-References/Canonical-Documents",
     "09-References",
     "08-Logs/Agent-Sessions",
