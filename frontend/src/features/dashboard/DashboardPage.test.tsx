@@ -1,8 +1,9 @@
-import { screen, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { DashboardPage } from './DashboardPage'
+import { db } from '../../lib/mock-db/store'
 
 vi.mock('react-chartjs-2', () => {
   const Stub = (props: { 'aria-label'?: string }) => <div role="img" aria-label={props['aria-label']} />
@@ -27,6 +28,46 @@ describe('Clinic Overview Dashboard', () => {
     expect(within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === 'Pending excuse letters')).toHaveClass('text-warning')
     expect(within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === 'Due & overdue follow-ups')).toHaveClass('text-warning')
     expect(screen.getByRole('heading', { name: /frequent-visitor warnings/i })).toBeInTheDocument()
+  })
+
+  it('lists the five most frequent visitors, with Show all for the rest (Zean, October 25, 2026)', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<DashboardPage />, { route: '/?range=all' })
+    await screen.findByRole('region', { name: 'Summary counts' })
+    await user.click(screen.getByRole('button', { name: 'Date range' }))
+    await user.click(screen.getByRole('option', { name: 'All' }))
+    const panel = screen.getByRole('region', { name: 'Frequent visitor warnings' })
+    const list = () => within(panel).getAllByRole('listitem')
+    const showAll = await within(panel).findByRole('button', { name: /^Show all \d+$/ })
+    const total = Number(showAll.textContent?.match(/\d+/)?.[0])
+    expect(total).toBeGreaterThan(5)
+    expect(list()).toHaveLength(5)
+    // The section title already says it; no per-row "Frequent-visit warning" badge (Zean, October 25, 2026).
+    expect(within(panel).queryByText('Frequent-visit warning')).not.toBeInTheDocument()
+    await user.click(showAll)
+    expect(list()).toHaveLength(total)
+    await user.click(within(panel).getByRole('button', { name: 'Show top 5' }))
+    expect(list()).toHaveLength(5)
+  })
+
+  it.each([false, true])('prints the Frequent-visitor section only with the switch on (%s)', async (on) => {
+    db().config.showFrequentVisitors = on
+    renderWithRouter(<DashboardPage />)
+    await screen.findByRole('region', { name: 'Summary counts' })
+    expect(Boolean(screen.queryByRole('heading', { name: /frequent-visitor warnings/i }))).toBe(on)
+    // The print listener is attached in an effect, so retry until the printout mounts.
+    await waitFor(() => {
+      act(() => {
+        window.dispatchEvent(new Event('beforeprint'))
+      })
+      expect(document.body.querySelector('[data-print-document]')?.textContent).toMatch(/Clinic Overview Report/)
+    })
+    const doc = document.body.querySelector('[data-print-document]')
+    expect(doc?.textContent?.includes('Frequent visitors')).toBe(on)
+    expect(doc?.textContent?.includes('and frequent visitors')).toBe(on)
+    act(() => {
+      window.dispatchEvent(new Event('afterprint'))
+    })
   })
 
   it('drills Staff into range-aware logs and attention filters', async () => {
@@ -55,10 +96,13 @@ describe('Clinic Overview Dashboard', () => {
     expect(await screen.findByRole('heading', { name: /visits trend/i })).toBeInTheDocument()
   })
 
-  it('shows Admin the same counts without links to Staff-only screens', async () => {
+  it('shows Admin the same counts, linking only Students and Incidents (ADR-038)', async () => {
     renderWithRouter(<DashboardPage viewer={{ id: 'admin', name: 'Principal', role: 'admin' }} />)
     const summary = await screen.findByRole('region', { name: 'Summary counts' })
-    expect(within(summary).queryByRole('link')).not.toBeInTheDocument()
+    expect(within(summary).getAllByRole('link')).toHaveLength(2)
+    expect(within(summary).queryByRole('link', { name: /visits|follow-ups|letters/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /low stock/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /print/i })).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.getByText('Printing is done by the clinician.')).toBeInTheDocument()
   })
 })

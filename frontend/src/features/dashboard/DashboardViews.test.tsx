@@ -38,7 +38,8 @@ describe('Clinic Overview Dashboard: views', () => {
   })
 
   it('says in the printout when a Trends filter narrows its complaint figures', async () => {
-    renderDashboard('/?view=trends&sex=female&grade=Grade%205', ADMIN)
+    // Staff: the Admin can't print (ADR-038 item 3).
+    renderDashboard('/?view=trends&sex=female&grade=Grade%205')
     await screen.findByText(/^Filtered:/)
     // The print listener is attached in an effect, so retry until the printout mounts.
     await waitFor(() => {
@@ -73,7 +74,8 @@ describe('Clinic Overview Dashboard: views', () => {
     renderDashboard('/', ADMIN)
     await screen.findByRole('region', { name: 'Summary counts' })
     const summary = screen.getByRole('region', { name: 'Summary counts' })
-    expect(within(summary).queryByRole('link')).not.toBeInTheDocument()
+    // ADR-038: Students and Incidents are the only cards the Admin can open.
+    expect(within(summary).getAllByRole('link').map((link) => link.getAttribute('href')?.split('?')[0])).toEqual(['/students', '/incidents'])
     expect(screen.queryByRole('link', { name: 'New Visit' })).not.toBeInTheDocument()
   })
 })

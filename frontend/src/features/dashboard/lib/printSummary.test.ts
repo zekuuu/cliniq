@@ -23,6 +23,7 @@ function summary(overrides: Partial<DashboardSummary> = {}): DashboardSummary {
     upcomingWindowDays: 7,
     frequentVisitors: [],
     frequentVisitorMinVisits: 3,
+    showFrequentVisitors: false,
     percentMinPriorCount: 5,
     backupAlert: null,
     inventoryAlerts: [],

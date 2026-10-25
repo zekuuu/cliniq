@@ -1,14 +1,15 @@
 import {
+  Button,
   inventoryFlagMap,
   stockQuantityText,
   followUpDueMap,
-  frequentVisitorMap,
   ListCard,
   ListCardSkeleton,
   ListRow,
   ListItemLink,
   StatusBadge,
 } from '../../../components'
+import { useState } from 'react'
 import { describeRange, type DateRange } from '../../../lib/dateRange'
 import { paths } from '../../../routes/paths'
 import type { DashboardSummary } from '../../../types/dashboard'
@@ -76,7 +77,7 @@ export function FollowUpsAlert({
       {rows.map((row) => (
         <ListRow
           key={row.followUp.id}
-          primary={canNavigate ? <ListItemLink to={paths.studentProfile(row.student.id)}><MaskedLrn lrn={row.student.lrn} /></ListItemLink> : <MaskedLrn lrn={row.student.lrn} />}
+          primary={<ListItemLink to={paths.studentProfile(row.student.id)}><MaskedLrn lrn={row.student.lrn} /></ListItemLink>}
           secondary={row.followUp.reason}
           meta={<time dateTime={row.followUp.followUpDate}>{dueText(row)}</time>}
           trailing={<StatusBadge status={row.dueState} map={followUpDueMap} />}
@@ -86,22 +87,36 @@ export function FollowUpsAlert({
   )
 }
 
+/** How many frequent visitors the Overview lists before "Show all". */
+const FREQUENT_VISITORS_SHOWN = 5
+
 export function FrequentVisitorsAlert({
   summary,
   range,
-  canNavigate,
 }: {
   summary: DashboardSummary
   range: DateRange
-  canNavigate: boolean
 }) {
-  const rows = summary.frequentVisitors
+  // Zean (October 25, 2026): the panel is back, but shows only the students with the most visits
+  // until "Show all" (the list is already sorted most visits first). The count badge keeps the total.
+  const [showAll, setShowAll] = useState(false)
+  const rows = showAll ? summary.frequentVisitors : summary.frequentVisitors.slice(0, FREQUENT_VISITORS_SHOWN)
+  const hidden = summary.frequentVisitors.length - FREQUENT_VISITORS_SHOWN
   const scope = describeRange(range).toLowerCase()
   return (
     <ListCard
       title={LISTS.frequent.title}
       icon={LISTS.frequent.icon}
-      count={rows.length}
+      count={summary.frequentVisitors.length}
+      // The title keeps at least 14rem, so on a phone "Show all" drops below it instead of squeezing it.
+      className="[&>div:first-child>div:first-child]:basis-56"
+      actions={
+        hidden > 0 && (
+          <Button variant="secondary" size="sm" aria-expanded={showAll} onClick={() => setShowAll((current) => !current)}>
+            {showAll ? `Show top ${FREQUENT_VISITORS_SHOWN}` : `Show all ${summary.frequentVisitors.length}`}
+          </Button>
+        )
+      }
       maxHeightClass={ALERT_LIST_HEIGHT}
       description={`${summary.frequentVisitorMinVisits}+ visits (${scope}). A warning only, not a diagnosis.`}
       empty={{
@@ -112,9 +127,8 @@ export function FrequentVisitorsAlert({
       {rows.map((row) => (
         <ListRow
           key={row.student.id}
-          primary={canNavigate ? <ListItemLink to={paths.studentProfile(row.student.id)}><MaskedLrn lrn={row.student.lrn} /></ListItemLink> : <MaskedLrn lrn={row.student.lrn} />}
+          primary={<ListItemLink to={paths.studentProfile(row.student.id)}><MaskedLrn lrn={row.student.lrn} /></ListItemLink>}
           secondary={`${row.visitCount} visits`}
-          trailing={<StatusBadge status="frequent_visits" map={frequentVisitorMap} />}
         />
       ))}
     </ListCard>

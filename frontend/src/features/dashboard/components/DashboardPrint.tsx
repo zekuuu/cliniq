@@ -97,7 +97,8 @@ export function DashboardPrint({
           <span className="font-semibold">
             {range.preset === 'all' ? `All records ${period}` : `Visits and incidents ${period}`}.
           </span>{' '}
-          The period applies to visits, incidents, complaints, and frequent visitors. Follow-ups,
+          The period applies to visits, incidents, complaints
+          {summary.showFrequentVisitors ? ', and frequent visitors' : ''}. Follow-ups,
           stock, and record counts are as of {formatDate(summary.today)}.
           {filterLabel && ` The activity, complaint, and cluster figures count only ${filterLabel} visits and incidents.`}
         </>
@@ -124,28 +125,32 @@ export function DashboardPrint({
             { header: 'Status', width: '14%', cell: (row) => followUpDueMap[row.dueState].label },
           ]}
         />
-        <h3 className="mt-[3mm] mb-[1mm] font-semibold">
-          Frequent visitors ({summary.frequentVisitorMinVisits}+ visits in the period)
-        </h3>
-        {summary.frequentVisitors.length ? (
+        {summary.showFrequentVisitors && (
           <>
-            {/* A long list flows into columns, so a long range doesn't spend a page on it. */}
-            <ul aria-label="Frequent-visitor warnings" className="columns-4 gap-[5mm] text-[9pt]">
-              {summary.frequentVisitors.map((row) => (
-                <li
-                  key={row.student.id}
-                  className="break-inside-avoid border-b border-border py-[0.8mm] tabular-nums"
-                >
-                  {maskLrn(row.student.lrn)} · {row.visitCount} visits
-                </li>
-              ))}
-            </ul>
-            <PrintNote>A warning to review, not a diagnosis.</PrintNote>
+            <h3 className="mt-[3mm] mb-[1mm] font-semibold">
+              Frequent visitors ({summary.frequentVisitorMinVisits}+ visits in the period)
+            </h3>
+            {summary.frequentVisitors.length ? (
+              <>
+                {/* A long list flows into columns, so a long range doesn't spend a page on it. */}
+                <ul aria-label="Frequent-visitor warnings" className="columns-4 gap-[5mm] text-[9pt]">
+                  {summary.frequentVisitors.map((row) => (
+                    <li
+                      key={row.student.id}
+                      className="break-inside-avoid border-b border-border py-[0.8mm] tabular-nums"
+                    >
+                      {maskLrn(row.student.lrn)} · {row.visitCount} visits
+                    </li>
+                  ))}
+                </ul>
+                <PrintNote>A warning to review, not a diagnosis.</PrintNote>
+              </>
+            ) : (
+              <PrintNote className="text-text-primary">
+                No student reached the frequent-visitor threshold.
+              </PrintNote>
+            )}
           </>
-        ) : (
-          <PrintNote className="text-text-primary">
-            No student reached the frequent-visitor threshold.
-          </PrintNote>
         )}
         {letters && (
           <>

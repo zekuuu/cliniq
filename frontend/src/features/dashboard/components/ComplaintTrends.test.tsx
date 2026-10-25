@@ -173,7 +173,8 @@ describe('TrendTable', () => {
     ])
   })
 
-  it('lays out grade filters in a compact four-column desktop grid', () => {
+  it('lays out grade filters in a compact four-column desktop grid', async () => {
+    const user = userEvent.setup()
     render(
       <ComplaintTrends
         trends={trends}
@@ -191,17 +192,19 @@ describe('TrendTable', () => {
       />,
     )
 
-    const firstGrade = screen.getByRole('button', { name: /Grade 1.*1.*25%/ })
-    expect(firstGrade.className).toContain('px-2')
-    expect(firstGrade.className).toContain('py-1.5')
+    await user.click(screen.getByRole('radio', { name: 'Grade level' }))
+    // Name on top, count below, like the Female / Male buttons; the count says "case".
+    const firstGrade = screen.getByRole('button', { name: 'Grade 1 1 case · 25%' })
+    expect(firstGrade.firstElementChild).toHaveClass('block')
     expect(firstGrade.parentElement).toHaveClass('grid', 'lg:grid-cols-4')
   })
 
   it('shapes the loading skeleton like the demographic cards above the trend row', () => {
     const { container } = render(<ComplaintTrendsSkeleton />)
     const demographics = container.querySelector('[data-skeleton="demographics"]')
+    // One card with a Sex / Grade level switch (Sir Rey, October 25, 2026); it opens on Sex.
     expect(demographics?.textContent).toContain('Visits and incidents by sex')
-    expect(demographics?.textContent).toContain('Visits and incidents by grade level')
+    expect(demographics?.textContent).not.toContain('Visits and incidents by grade level')
     expect(demographics?.compareDocumentPosition(container.querySelector('[data-skeleton="complaint-trends"]')!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
   })
 
@@ -250,16 +253,27 @@ describe('TrendTable', () => {
       />,
     )
 
+    // One card, Sex first; the switch shows the grade chart in the same card.
+    expect(screen.getByRole('heading', { name: 'Visits and incidents by sex' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Sex' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('radiogroup', { name: 'Filter by' })).toBeInTheDocument()
+    expect(screen.getByText('Filter by')).toBeVisible()
     expect(screen.getByRole('img', { name: /by Sex/i })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: /by grade level: Grade 5 3 visits, 1 incident\./i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Female.*3.*75%/i })).toBeInTheDocument()
-    expect(document.querySelector('[data-chart-right-boundary]')).not.toBeInTheDocument()
-    expect((barMock.props as LineProps).options?.scales?.x?.grid?.drawTicks).toBe(false)
+    expect(screen.getByRole('button', { name: 'Female 3 cases · 75%' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /Male.*1.*25%/i }))
     expect(onFiltersChange).toHaveBeenCalledWith({ sex: 'male', gradeLevel: null })
+
+    await user.click(screen.getByRole('radio', { name: 'Grade level' }))
+    expect(screen.getByRole('heading', { name: 'Visits and incidents by grade level' })).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /by Sex/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /by grade level: Grade 5 3 visits, 1 incident\./i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Grade 5.*4.*100%/i })).toBeInTheDocument()
+    expect(document.querySelector('[data-chart-right-boundary]')).not.toBeInTheDocument()
+    expect((barMock.props as LineProps).options?.scales?.x?.grid?.drawTicks).toBe(false)
   })
 
-  it('draws a right plot boundary without ticks extending beyond the baseline', () => {
+  it('draws a right plot boundary without ticks extending beyond the baseline', async () => {
+    const user = userEvent.setup()
     render(
       <ComplaintTrends
         trends={trends}
@@ -269,6 +283,7 @@ describe('TrendTable', () => {
       />,
     )
 
+    await user.click(screen.getByRole('radio', { name: 'Grade level' }))
     expect((barMock.props as LineProps).options?.scales?.yRight).toMatchObject({
       display: true,
       position: 'right',

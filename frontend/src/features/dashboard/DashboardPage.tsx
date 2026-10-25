@@ -219,9 +219,11 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                       pendingLetterCount={letters.data?.length ?? 0}
                     />
                     <AttentionChips summary={d} canNavigate={canNavigate} />
-                    <section aria-label="Frequent visitor warnings">
-                      <FrequentVisitorsAlert summary={d} range={range} canNavigate={canNavigate} />
-                    </section>
+                    {d.showFrequentVisitors && (
+                      <section aria-label="Frequent visitor warnings">
+                        <FrequentVisitorsAlert summary={d} range={range} />
+                      </section>
+                    )}
                   </>
                 ),
               ),
