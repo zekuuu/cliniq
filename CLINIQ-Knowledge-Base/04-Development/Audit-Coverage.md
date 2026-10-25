@@ -12,9 +12,8 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | What the user does | Action | Target recorded | Summary | Also tested in |
 |---|---|---|---|---|
 | Signs in | `login` | user | — | `lib/mock-db/auth.test.ts` |
-| Confirms with their password before a sensitive action (ADR-037) | `login` | user | "Confirmed with password: <purpose>" | `features/backup/AccessAndBackup.test.tsx` |
 | Signs out | `logout` | — | — | `layouts/AppShell.test.tsx` |
-| Gets locked out (5 wrong passwords in a row, at sign-in or in "Confirm it's you"; locked 30 minutes) | `login` | user | "Account locked for 30 minutes after 5 wrong passwords (sign-in)" or ("Confirm it's you") | `features/backup/AccessAndBackup.test.tsx` |
+| Gets locked out (5 wrong passwords in a row at sign-in; locked 30 minutes) | `login` | user | "Account locked for 30 minutes after 5 wrong passwords (sign-in)" | `features/backup/AccessAndBackup.test.tsx` |
 | Changes their password (first sign-in) | `update` | user | "Changed password" | — |
 | Admin creates an account | `create` | user | — | `features/user-management/accounts.test.ts` |
 | Admin edits an account (name, username, role, picture) | `update` | user | changed field names | `features/user-management/profilePicture.test.ts` |
@@ -56,7 +55,7 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 |---|---|---|
 | Staff opening a student profile, a visit, an incident or a report (reading a health record). The Admin's opening of a profile or an incident report **is** logged since Sunday, October 25, 2026 (ADR-038, above) | No | **Still open** (lockouts were decided separately). RA 10173 accountability favours logging access to health records; ADR-016 decided that reading the Audit Log itself is not logged. Logging every profile view adds many rows. A `DECIDE` is logged. |
 | Searching for a student (Student List, pickers) | No | Probably not: the opened record is the access worth logging. |
-| A single wrong password at sign-in or in "Confirm it's you" | No | No: decided with the lockout below (Zean, Friday, October 23, 2026). Five in a row are logged as a lockout. |
+| A single wrong password at sign-in | No | No: decided with the lockout below (Zean, Friday, October 23, 2026). Five in a row are logged as a lockout. |
 | Viewing the Dashboard, Calendar, Trends or lists | No | No: aggregate or masked (ADR-004, ADR-028). |
 | Reading the Audit Log | No | Decided (ADR-016). |
 | Dev-only resets and test data loads (`?mockReset=1`, `cliniqMockDb`) | No | No: development tools, not in a production build. |

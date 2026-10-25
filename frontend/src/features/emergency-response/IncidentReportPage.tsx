@@ -9,7 +9,6 @@ import { READING_LABELS, readingText, takenReadings } from '../../lib/vitals'
 import { approveReport, fetchIncidentRecord, type IncidentRecord } from './api/incidentRecordApi'
 import { calledContactText, OUTCOME_LABELS } from './notificationOutcomes'
 import { FromVisit } from './FromVisit'
-import { useConfirmItsYou } from '../../hooks/useConfirmItsYou'
 
 /**
  * The incident report on A4 (ADR-026): one student, deliberately opened, so the full name is correct
@@ -152,7 +151,6 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
   const [justApproved, setJustApproved] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [approving, setApproving] = useState(false)
-  const { confirm, dialog: confirmDialog } = useConfirmItsYou(viewer)
 
   const back = <BackButton fallback={paths.incidents} />
   if (status === 'error') return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState title="Unable to load the incident report." onRetry={reload} /></div>
@@ -314,7 +312,6 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
         </CardBody>
       </Card>
 
-      {confirmDialog}
       <Modal open={confirming} title="Approve this incident report?" onClose={() => setConfirming(false)}>
         <p className="text-sm text-text-secondary">
           Approving signs off the report for {student.fullName}, LRN {student.lrn} ({incident.complaint}, {formatDateTime(incident.time)}) and records it in the audit log. It can't be un-approved from this screen.
@@ -322,7 +319,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <Button variant="neutral" data-autofocus onClick={() => setConfirming(false)}>Cancel</Button>
           {/* Panel review AC-7: approving asks for the password first. */}
-          <Button variant="primary" loading={approving} onClick={() => { setConfirming(false); confirm('approve an incident report', approve) }}>Approve Report</Button>
+          <Button variant="primary" loading={approving} onClick={() => { setConfirming(false); void approve() }}>Approve Report</Button>
         </div>
       </Modal>
       <IncidentReportPrint record={data} viewer={viewer} />

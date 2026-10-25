@@ -279,17 +279,17 @@ function ExcuseLetterEditor({
               {formatDateTime(context.visit.dateTime)}
             </p>
           </div>
-          <div className="flex flex-wrap items-start gap-2">
-            <PrintButton viewer={viewer} disabledReason={printable ? undefined : DRAFT_PRINT_NOTE} />
-            {approved && !voided && !superseded && (
-              <Button variant="neutral" onClick={() => { setReplaceReason(''); setReplaceError(''); setReplacing(true) }}>
-                Issue a replacement
-              </Button>
-            )}
-            <Badge tone={voided ? 'error' : superseded ? 'neutral' : approved ? 'success' : 'warning'} variant="soft">
-              {voided ? 'Voided' : superseded ? 'Superseded' : approved ? 'Approved' : 'Draft'}
-            </Badge>
-          </div>
+          <Badge tone={voided ? 'error' : superseded ? 'neutral' : approved ? 'success' : 'warning'} variant="soft">
+            {voided ? 'Voided' : superseded ? 'Superseded' : approved ? 'Approved' : 'Draft'}
+          </Badge>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <PrintButton viewer={viewer} disabledReason={printable ? undefined : DRAFT_PRINT_NOTE} />
+          {approved && !voided && !superseded && (
+            <Button variant="neutral" onClick={() => { setReplaceReason(''); setReplaceError(''); setReplacing(true) }}>
+              Issue a replacement
+            </Button>
+          )}
         </div>
       </Card>
 

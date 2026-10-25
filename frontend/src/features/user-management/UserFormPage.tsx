@@ -2,7 +2,6 @@ import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { BackButton, Button, Card, CardBody, CardHeader, ErrorState, Icon, Input, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
-import { useConfirmItsYou } from '../../hooks/useConfirmItsYou'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
@@ -77,7 +76,6 @@ function UserForm({
   const pictureInputRef = useRef<HTMLInputElement>(null)
   const pictureHintId = useId()
   const invalid = useFocusFirstInvalid(invalidRef)
-  const { confirm, dialog: confirmDialog } = useConfirmItsYou(viewer)
   async function submit(event: FormEvent) {
     event.preventDefault()
     const nextErrors = {
@@ -90,9 +88,7 @@ function UserForm({
     invalid.report([nextErrors.name, nextErrors.username, nextErrors.role, nextErrors.temporaryPassword].filter(Boolean).length)
     setSaved(false)
     if (nextErrors.name || nextErrors.username || nextErrors.role || nextErrors.temporaryPassword || !role) return
-    // Changing an existing account's role asks for the Admin's password first (panel review AC-7).
-    if (userId && role !== baseline.role) confirm('change a role', () => save(role))
-    else await save(role)
+    await save(role)
   }
 
   async function save(chosenRole: UserRole) {
@@ -119,7 +115,6 @@ function UserForm({
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {discardDialog}
-      {confirmDialog}
       <BackButton onBack={cancel} />
       <Card className="p-5">
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">

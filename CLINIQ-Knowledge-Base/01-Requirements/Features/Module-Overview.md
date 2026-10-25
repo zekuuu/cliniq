@@ -46,7 +46,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 
 **Role-Based Access** *(Admin/Principal only)*
 - Assign role (Staff / Admin-Principal). Add Account starts with **no role selected** ("Select a role", required), so the smallest role needed is chosen on purpose (panel review AC-4)
-- **"Confirm it's you"** (ADR-037, panel review AC-7): the signed-in user's own password is asked again before archiving a student record, disabling or enabling an account, resetting a password, changing a role, and approving an incident report (default list D7). A wrong password changes nothing and counts toward the sign-in lockout; each confirmation is audit-logged ("Confirmed with password: …"). Ordinary work never asks. Password fields show a "Caps Lock is on." hint (Login, Force Password Change, this dialog)
+- **No password re-entry** (ADR-041, Sunday, October 25, 2026 — 23:18 PHT; supersedes ADR-037's "Confirm it's you"): no action asks for the password again. Archiving a student and approving an incident report keep their plain confirmation dialogs. Password fields show a "Caps Lock is on." hint (Login, Force Password Change)
 - Edit role assignment
 - View permissions per role
 

@@ -14,4 +14,9 @@ Use this with `cliniq-interactive-states` for actions and `cliniq-back-navigatio
 - Retain header or card badges only when they communicate a meaningful state that the title and controls do not already establish, such as an archived record, a pending approval, a selected role, or a safety status.
 - Keep the page title, concise purpose description, and primary action in the header; do not remove meaningful actions to make the header quieter.
 
+## Status badge and actions
+
+- A record's status badge (Approved, Draft, Voided, Needs completion) sits in the title row, top-right beside the title block. It never shares a row with action buttons, so it stays put when buttons appear, disappear or wrap.
+- When the header has both a status badge and actions, put the actions on their own row below the title (`mt-4 flex flex-wrap gap-2`). Reference: Visit Details and the Excuse Letter.
+
 There is no shared page-header component today. Apply these rules locally until repetition justifies one.

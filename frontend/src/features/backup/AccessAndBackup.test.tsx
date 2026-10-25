@@ -1,13 +1,11 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
-  confirmMockPassword,
   getDashboardSummary,
   getMockToday,
   getRecordedAuditEntries,
-  MockAuthError,
   recordBackupNow,
   resetMockAuth,
   resetMockDb,
@@ -69,42 +67,14 @@ describe('stale-backup alert (BK-2, D5)', () => {
   })
 })
 
-describe('"Confirm it\'s you" (AC-7, D7)', () => {
-  it('accepts only the signed-in user\'s password, counts misses toward the lockout, and audits each success', async () => {
-    await expect(confirmMockPassword(STAFF.id, 'wrong', 'archive a student record')).rejects.toBeInstanceOf(MockAuthError)
-    expect(getRecordedAuditEntries()).toEqual([])
-    await confirmMockPassword(STAFF.id, 'demo-nurse', 'archive a student record')
-    const [entry] = getRecordedAuditEntries()
-    expect(entry).toMatchObject({ actionType: 'login', summary: 'Confirmed with password: archive a student record' })
-    expect(JSON.stringify(getRecordedAuditEntries())).not.toContain('demo-nurse')
-    for (let i = 0; i < 4; i += 1) await expect(confirmMockPassword(STAFF.id, 'wrong', 'x')).rejects.toMatchObject({ reason: 'invalid_credentials' })
-    await expect(confirmMockPassword(STAFF.id, 'wrong', 'x')).rejects.toMatchObject({ reason: 'locked' })
-    await expect(confirmMockPassword(STAFF.id, 'demo-nurse', 'x')).rejects.toMatchObject({ reason: 'locked' })
-  })
-
-  it('asks before disabling an account; a wrong password changes nothing, and focus starts in the field', async () => {
+describe('no password re-entry (Zean, Sunday, October 25, 2026)', () => {
+  it('disables an account at once, with no password dialog', async () => {
     const user = userEvent.setup()
     renderWithRouter(<UserListPage viewer={ADMIN} />)
     await user.click(await screen.findByRole('button', { name: 'Disable Jennesse Baas' }))
-    const dialog = screen.getByRole('dialog', { name: "Confirm it's you" })
-    expect(within(dialog).getByLabelText(/your password/i)).toHaveFocus()
-    await user.type(within(dialog).getByLabelText(/your password/i), 'nope')
-    await user.click(within(dialog).getByRole('button', { name: 'Confirm' }))
-    expect(await within(dialog).findByText('That password is not correct. Nothing was changed.')).toBeInTheDocument()
-    expect(getRecordedAuditEntries()).toEqual([])
-    await user.type(within(dialog).getByLabelText(/your password/i), 'demo-admin')
-    await user.click(within(dialog).getByRole('button', { name: 'Confirm' }))
     expect(await screen.findByText("Jennesse Baas's account is disabled.")).toBeInTheDocument()
-    expect(getRecordedAuditEntries().map((e) => e.actionType)).toEqual(['login', 'update'])
-  })
-
-  it('shows a Caps Lock hint on the password field', async () => {
-    const user = userEvent.setup()
-    renderWithRouter(<UserListPage viewer={ADMIN} />)
-    await user.click(await screen.findByRole('button', { name: 'Reset password for Jennesse Baas' }))
-    const field = within(screen.getByRole('dialog', { name: "Confirm it's you" })).getByLabelText(/your password/i)
-    await user.keyboard('{CapsLock}a')
-    expect(field).toHaveAccessibleDescription(/Caps Lock is on/)
+    expect(screen.queryByRole('dialog', { name: "Confirm it's you" })).not.toBeInTheDocument()
+    expect(getRecordedAuditEntries().map((e) => e.actionType)).toEqual(['update'])
   })
 })
 
@@ -135,10 +105,5 @@ describe('lockouts are audit-logged (Zean, Friday, October 23, 2026)', () => {
       expect.objectContaining({ userId: STAFF.id, actionType: 'login', targetRecord: { type: 'user', id: STAFF.id }, summary: 'Account locked for 30 minutes after 5 wrong passwords (sign-in)' }),
     ])
     expect(JSON.stringify(getRecordedAuditEntries())).not.toContain('wrong-4')
-  })
-
-  it("logs a lockout from \"Confirm it's you\" too", async () => {
-    for (let i = 0; i < 5; i += 1) await confirmMockPassword(STAFF.id, 'nope', 'x').catch(() => {})
-    expect(getRecordedAuditEntries().map((e) => e.summary)).toEqual(['Account locked for 30 minutes after 5 wrong passwords ("Confirm it\'s you")'])
   })
 })

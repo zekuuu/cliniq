@@ -9,7 +9,6 @@ vi.mock('react-chartjs-2', () => {
   return { Bar: Stub, Line: Stub, Doughnut: Stub }
 })
 import { renderWithRouter } from '../test/renderWithRouter'
-import { confirmItsYou } from '../test/confirmItsYou'
 import { selectOption } from '../test/selectOption'
 import { incidentCompletionBlocker } from '../lib/itemsGiven'
 import { getGradeLevels, getRecordedAuditEntries, getStudent, listIncidents, listVisits, resetMockDb } from '../lib/mock-db'
@@ -41,11 +40,9 @@ describe('UI/UX review regressions', () => {
     expect(getRecordedAuditEntries()).toEqual([])
 
     await user.click(within(dialog).getByRole('button', { name: 'Archive Record' }))
-    // Panel review AC-7: archiving asks for the password; the confirmation is audited too.
-    await confirmItsYou(user)
     expect(await screen.findByText('Archived')).toBeInTheDocument()
     expect((await getStudent('student-0001')).archived).toBe(true)
-    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['login', 'archive'])
+    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['archive'])
     expect(screen.queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument()
   })
 
@@ -71,10 +68,8 @@ describe('UI/UX review regressions', () => {
     const dialog = screen.getByRole('dialog', { name: 'Approve this incident report?' })
     expect(getRecordedAuditEntries()).toEqual([])
     await user.click(within(dialog).getByRole('button', { name: 'Approve Report' }))
-    // Panel review AC-7: approving asks for the password; the confirmation is audited too.
-    await confirmItsYou(user)
     expect(await screen.findByText('Report approved and logged.')).toBeInTheDocument()
-    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['login', 'approve'])
+    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['approve'])
 
     // Signed off: it can't be approved again, and only it is marked approved in the picker.
     expect(screen.getByRole('button', { name: 'Approved' })).toBeDisabled()

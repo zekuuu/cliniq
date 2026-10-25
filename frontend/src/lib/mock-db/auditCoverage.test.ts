@@ -8,7 +8,6 @@ import {
   authenticateMockUser,
   changeMockPassword,
   completeIncidentStageTwo,
-  confirmMockPassword,
   createCalendarEvent,
   createIssueReport,
   createSportsReport,
@@ -64,14 +63,12 @@ beforeEach(() => {
 })
 
 describe('every audited event is written (AU-1)', () => {
-  it('sign-in, sign-out, password confirmation and password change', async () => {
+  it('sign-in, sign-out and password change', async () => {
     await authenticateMockUser('demo.nurse', 'demo-nurse')
-    await confirmMockPassword(STAFF.id, 'demo-nurse', 'archive a student record')
     await logoutMockSession(STAFF)
     await changeMockPassword('user-staff-02', 'brand-new-pass-1')
     expect(entries()).toEqual([
       ['login', 'user', null],
-      ['login', 'user', 'Confirmed with password: archive a student record'],
       ['logout', null, null],
       ['update', 'user', 'Changed password'],
     ])

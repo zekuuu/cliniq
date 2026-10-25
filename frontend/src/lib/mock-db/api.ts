@@ -320,37 +320,6 @@ function logLockout(user: Pick<SessionUser, 'id' | 'name' | 'role'>, where: stri
 }
 
 /**
- * "Confirm it's you" (panel review AC-7, ADR-037): the signed-in user's own password before a
- * sensitive action. A wrong password counts toward the same lockout as sign-in (5 tries, 30 minutes).
- * Every success is audit-logged with what it was for; the password is never stored or logged.
- */
-export async function confirmMockPassword(userId: string, password: string, purpose: string): Promise<void> {
-  await simulateRequest('confirm password')
-  const state = view()
-  const user = must(state.users.find((candidate) => candidate.id === userId), 'User')
-  const attempt = attemptFor(user.username.toLowerCase())
-  if (attempt.lockedUntil && attempt.lockedUntil > Date.now()) throw new MockAuthError('locked', attempt.lockedUntil)
-  if (attempt.lockedUntil) {
-    attempt.failures = 0
-    attempt.lockedUntil = null
-  }
-  if (fakePasswordHistory(state, user.id)[0] !== password) {
-    attempt.failures += 1
-    if (attempt.failures >= 5) {
-      attempt.failures = 0
-      attempt.lockedUntil = Date.now() + 30 * 60 * 1000
-      await logLockout(user, '"Confirm it\'s you"')
-      throw new MockAuthError('locked', attempt.lockedUntil)
-    }
-    throw new MockAuthError('invalid_credentials')
-  }
-  attempt.failures = 0
-  await write('confirm password', (s) => {
-    audit(s, { id: user.id, name: user.name, role: user.role }, 'login', { type: 'user', id: user.id }, `Confirmed with password: ${purpose}`)
-  })
-}
-
-/**
  * Development stand-in for the future Sanctum login endpoint. It intentionally never returns a
  * password or token. Lockout and password history live in memory until the real backend exists.
  */

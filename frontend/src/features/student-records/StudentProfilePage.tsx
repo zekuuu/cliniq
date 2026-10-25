@@ -25,7 +25,6 @@ import {
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { useConfirmItsYou } from '../../hooks/useConfirmItsYou'
 import { formatDateRange, formatDateTime } from '../../lib/dates'
 import { incidentCareSummary, visitCareSummary } from '../../lib/itemsGiven'
 import { getMockSessionUser, type SessionUser, type StudentExcuseLetter } from '../../lib/mock-db'
@@ -109,7 +108,6 @@ function ProfileHeader({
   onArchived: () => void
 }) {
   const staffCanAct = viewer.role === 'staff'
-  const { confirm, dialog: confirmDialog } = useConfirmItsYou(viewer)
   const [confirmingArchive, setConfirmingArchive] = useState(false)
   const [archiving, setArchiving] = useState(false)
 
@@ -157,7 +155,6 @@ function ProfileHeader({
           )}
         </div>
       </div>
-      {confirmDialog}
       <Modal
         open={confirmingArchive}
         title="Archive this student record?"
@@ -171,13 +168,12 @@ function ProfileHeader({
           <Button variant="neutral" data-autofocus onClick={() => setConfirmingArchive(false)}>
             Cancel
           </Button>
-          {/* Panel review AC-7: archiving asks for the password first. */}
           <Button
             variant="secondary"
             loading={archiving}
             onClick={() => {
               setConfirmingArchive(false)
-              confirm('archive a student record', archive)
+              void archive()
             }}
           >
             Archive Record

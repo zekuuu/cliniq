@@ -161,3 +161,7 @@ The backup stays on the clinic computer and its external drive. No cloud backup,
 ### ADR-040: The full LRN shows on every single-student screen and its printout
 
 A screen about one deliberately opened student shows the full LRN, and so does its printout: the Student Profile, Incident Report, Excuse Letter, Visit Details, Parent Notifications, and the entry forms once a student is picked. Lists, pickers, the Dashboard, Reports and the Audit Trail stay masked to the last four digits. Decided and built Sunday, October 25, 2026 — 22:33 PHT. [ADR-040](ADR-040-Full-LRN-On-Single-Student-Screens-And-Printouts.md)
+
+### ADR-041: No password re-entry before sensitive actions
+
+The "Confirm it's you" password dialog from ADR-037 item 5 is removed from every action (Zean, Sunday, October 25, 2026 — 23:18 PHT). Archiving a student and approving an incident report keep their plain confirmation dialogs; account changes apply at once. The actions are still audit-logged.
