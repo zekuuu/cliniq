@@ -19,6 +19,8 @@ Use this with `cliniq-dropdown-patterns` (the panel and option look), `cliniq-in
 
 ## Complaint field (select plus Other)
 
+- **The shared control is `SelectWithOther`** (`frontend/src/components/forms/SelectWithOther.tsx`, Zean, Monday, October 26, 2026): a `Select` whose first option is "Other (type your own)", which stays visibly selected and reveals a required, focused text field (its label passed as `otherLabel`); the option label is never stored. It serves three fields: the visit Complaint (`ComplaintField`), the **incident Complaint** on Stage 1 (Other plus the incident complaint types; the typed text is trimmed and spaces collapsed with `cleanComplaint`, at most 60 characters), and the Staff Form's **Department or role** (optional: "Not recorded" is a clearable choice, the options are the values already in use, Other types a new one, at most 60 characters). A new "pick from a short list, or type your own" field uses it too.
+
 - The visit Complaint field is the shared `ComplaintField` (`frontend/src/features/clinic-visits/ComplaintField.tsx`), built on the shared `Select`, not a Combobox. New Visit and the Visit Detail edit form both use it. "Other (type your own)" is always the first option: selecting it visibly retains that selection, clears a prior suggestion, reveals a required, focused **Specify other complaint** field, and never stores the option label.
 - The select lists Other plus at most 8 ranked suggestions. Suggestions are predefined visit complaint types plus complaints already saved on visits, ranked by use count, then most recent. The pool comes from a data-layer selector (`complaintSuggestions`, ADR-014), never stored data.
 - On save the text is normalized (`frontend/src/lib/complaints.ts`): trimmed, repeated spaces collapsed, 60 characters max. Text that matches a suggestion case-insensitively is stored in that suggestion's spelling. Whitespace-only is invalid. The data layer applies the same normalization on create (`recordVisit`) and on edit (`updateVisit`).
@@ -34,4 +36,10 @@ Use this with `cliniq-dropdown-patterns` (the panel and option look), `cliniq-in
 - No match: say so under the field. Pass `addStudentHref` only to roles that can add a student (Staff).
 - Search goes through the feature's `api/` function (ADR-013), so the real backend can replace it. Results carry no medical fields (`StudentSearchResult`).
 - After a pick, the form shows the chosen student (name, number, grade) with a Change action that brings the search back, focused. Pass `selected` and `onClear` to get this from `StudentPicker` itself; don't rebuild it on the page.
-- Every field that identifies a student uses it: New Visit, Incident Stage 1, PE/Sports Referral, and Dispense. There is no separate typed identifier field.
+- Every field that identifies a student uses it: PE/Sports Referral and the Sports Report form. There is no separate typed identifier field.
+
+## Patient lookup (`PatientPicker`, ADR-043)
+
+- `frontend/src/components/forms/PatientPicker.tsx`: the same rules as `StudentPicker`, searching students (LRN or name) and staff (Staff No. or name) in one box. Used on New Visit, Incident Stage 1 and Dispense, where the patient can be a teacher or school staff member.
+- Label "Student or staff member"; placeholder "LRN, Staff No. or name". Each result shows the masked LRN or the Staff No., the name, grade or staff type, and a **Student** or **Staff** chip. At most 8 results, nothing medical.
+- A full Staff No. (`STF-0007`) highlights its match, like a complete LRN. "No match" offers Add a student and Add a staff member to the School Clinician.

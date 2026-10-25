@@ -43,14 +43,19 @@ is the file that becomes HTTP calls. Nothing above it has to change.
    Two visits never share a minute, and care notes never name a medicine the visit's lines lack
    (`countsAndSeed.test.ts` checks all three).
 3. **Reference by key.** Visits, incidents, follow-ups, reviews and stock transactions point at a
-   student by its internal `studentId`. Each student has a unique 12-digit `lrn`, clearly synthetic
+   student by its internal `studentId`. A visit, incident, follow-up or stock transaction can instead be
+   about a staff member (ADR-043): it then has `"studentId": null` and a `personnelId`. Exactly one of the
+   two is set (a restock or stock adjustment has neither); a row without `personnelId` reads it as null.
+   Staff have a unique `staffNumber` (`STF-0001`) and a `type` from `config.personnelTypes`, and no LRN,
+   grade, sex or excuse letter. Each student has a unique 12-digit `lrn`, clearly synthetic
    (`000000` + enrolment year + sequence; ADR-028). Follow-ups point at an existing visit or incident *of
-   the same student*. Users are referenced by `id`. Complaints must come from
+   the same patient*. Users are referenced by `id`. Complaints must come from
    `frontendOnly.visitComplaintTypes` / `incidentComplaintTypes`.
-4. **Keep ids readable and unique:** `student-0053`, `visit-0160`, `item-0015`, `user-staff-02`.
+4. **Keep ids readable and unique:** `student-0053`, `personnel-0004`, `visit-0160`, `item-0015`, `user-staff-02`.
 5. **Shapes follow Frontend Context Brief §5** (`src/types/entities.ts`). This isn't a database
    design; the [ERD](../../../../CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md) is a proposed draft, not final or approved. Anything a screen needs that §5 doesn't define lives under
-   `frontendOnly` and is labelled mock-only. Don't add new top-level entities.
+   `frontendOnly` and is labelled mock-only. Don't add new top-level entities. The one exception is
+   `personnel`, the staff patients of ADR-043.
 6. **Thresholds live in `config`.** They're open product decisions, not requirements (ADR-014). `showFrequentVisitors` (true/false, true) shows the Dashboard's Frequent-visitor panel, which lists the top five until "Show all"; false hides it. Each inventory item has an optional `brand` (`"generic"`, `"branded"`, or `null` for Not specified, PROVISIONAL); a browser that saved state before these existed is migrated in `store.ts` (`migratePersistedState`).
 7. Run the checks:
 
@@ -92,7 +97,9 @@ between screens without reloading.
 A copy saved in localStorage before a field changed shape is migrated when it loads
 (`migratePersistedState` in `store.ts`): inventory batches, a missing Sex, and the parent-notification
 outcomes renamed in panel review part 1 (`voicemail` and `left_message` become `left_message_or_voicemail`,
-`not_reached` becomes `no_answer`). The old values appear only there and in its test.
+`not_reached` becomes `no_answer`). The old values appear only there and in its test. A copy saved
+before staff patients (ADR-043) gets an empty `personnel` list, the staff types, and `personnelId: null`
+on every record. Every screen now reads both kinds of patient; lists show the Staff No., never a name.
 
 ## Dev accounts
 

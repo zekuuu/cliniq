@@ -21,6 +21,8 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | Admin resets a password | `update` | user | "Reset password" | `features/user-management/accounts.test.ts` |
 | Adds / edits a student record | `create` / `update` | student | changed field names ("Updated grade level"); a name correction adds "Name corrected; reason: <reason>", never the old or new name. The LRN can't change after creation (Sunday, October 25, 2026) | `features/student-records/StudentFormPage.test.tsx` |
 | Archives a student record | `archive` | student | — | `features/ui-review-regressions.test.tsx` |
+| Adds / edits a staff record (ADR-043, Staff Form) | `create` / `update` | staff | changed field names ("Updated allergies"); the Staff No. is assigned and never edited | `lib/mock-db/personnel.test.ts` |
+| Archives a staff record (ADR-043) | `archive` | staff | — | `lib/mock-db/personnel.test.ts` |
 | Saves a visit | `submit` | visit | "Late entry" when dated more than 30 minutes earlier | `features/clinic-visits/VisitLogic.test.tsx` |
 | Edits a visit (including correcting its date and time) | `update` | visit | changed field names ("Updated date and time") | `features/clinic-visits/VisitDetailPage.test.tsx` |
 | Marks a visit "Entered in error" | `update` | visit | "Marked entered in error" | `features/clinic-visits/VisitLogic.test.tsx` |

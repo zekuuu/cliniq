@@ -19,6 +19,8 @@ The full Student Profile, search results, the masterlist/student directory. Some
 
 **The masterlist is a special case:** show full names freely (it's just a roster of who's enrolled — low sensitivity), but never show medical/confidential fields inline in that list. Allergies, conditions, visit reasons, or anything else diagnostic still requires opening the individual profile.
 
+**Staff patients use the Staff No. the same way (ADR-043).** A teacher or school staff member seen at the clinic appears on every multi-person list by their **Staff No.** (`STF-0007`), never the name, with a small Student or Staff chip so the two kinds read apart (`<PatientNumber>`, `components/ui/PatientNumber.tsx`; text through `lib/patients.ts`). The Staff No. is not masked: it is assigned by CLINIQ and links to no outside record. The Staff Profile, Visit Details and Incident Report of a staff member show the name, like a student's. The Staff List is a masterlist, so it shows names and nothing medical.
+
 ## Applying it to a new screen
 
 Ask one question: **does this screen show one specific student the user has already identified, or a set of multiple students at once?**

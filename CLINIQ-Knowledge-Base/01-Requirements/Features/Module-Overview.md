@@ -92,6 +92,15 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - Re-flag the record if the number is unreachable during an emergency
 - Log verification with class adviser/Registrar's Office
 
+### 2a. Staff Patients (ADR-043) — *Access: Staff (School Clinician) only*
+Teachers, non-teaching staff and utility workers can be clinic patients. Built Monday, October 26, 2026.
+- **Staff List** (`/staff`): name, Staff No., type, department or role; search by name or Staff No., filter by type, "Show archived". A masterlist, so names are shown.
+- **Staff Profile** (`/staff/:id`): the record, the allergy alert, emergency contacts, and visit, incident and follow-up history; "Record a visit" and "Record an incident" open those forms with the person chosen. Archive, never delete.
+- **Add / Edit Staff**: full name and type required; department or role (a value already in use, or Other to type a new one, at most 60 characters), contact number, emergency contacts, allergies and conditions optional. The Staff No. (`STF-0001`) is assigned by CLINIQ and never edited.
+- A visit, incident, follow-up or medicine given is about a student **or** a staff member, exactly one. One patient search on New Visit, New Incident and Dispense labels each result Student or Staff.
+- Not for staff: excuse letter, PE referral, Sports Report, incomplete-records queue, yearly list, Registrar import. An incident's calls go to the **emergency contact**.
+- Lists with more than one person show the Staff No. (never the name) with a Student or Staff chip, and an Everyone / Students / Staff filter.
+
 ### 3. Clinic Visit Monitoring — *Access: Staff only*
 
 **Daily Visit Logging**
@@ -152,6 +161,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 
 **Incident Recording — two-stage flow**
 - **Stage 1 (fast capture):** open a prefilled emergency form (student picked on the form), complete only the essential field (the complaint) plus whichever readings the case needs (temperature, pulse, blood pressure, oximeter; none is required, "don't force all 4 if not relevant to the case"), and save immediately — speed matters more than completeness in the first moment. An optional Additional notes field is offered but never required; when filled, the notes show in Stage 2's Stage 1 summary and on the Incident Report. Once the student is picked, a read-only card shows the student's allergies, medical conditions and emergency contacts (an empty list reads “None recorded”, never “No allergies”); it adds no input
+- **Complaint:** chosen from the incident complaint types, or "Other (type your own)" to type one (at most 60 characters; Zean, Monday, October 26, 2026).
 - **Stage 2 (complete later):** return to the same incident record to fill in remaining details (any further readings, still all optional, and referral specifics) once the immediate situation is handled. Treatment notes and medicines/supplies given are both optional; when neither is recorded, views show “No treatment recorded.” An optional **Body part affected** (free text with suggestions) is recorded at Stage 2 and printed on the report when filled. The record can be **completed and approved** only when it has at least one of treatment notes, a medicine line, a parent notification attempt or a hospital referral; otherwise the nurse ticks “Nothing further was needed or done” and writes a one-line reason, printed on the report as “No treatment or notification: <reason>”. No reading is ever required (panel review part 1, Thursday, October 22, 2026)
 - Edit incident entry
 - View incident detail (full name shown — a deliberately opened single record)
@@ -304,6 +314,7 @@ This satisfies RA 10173 (Data Privacy Act) alignment and is the mechanism that m
 |---|---|---|
 | 1. User Management | Login + own password only | Full (accounts, ADR-033) |
 | 2. Student Records | Full | Read Student List and Profile (ADR-038) |
+| 2a. Staff Patients (ADR-043) | Full | — (no Staff screens; staff incidents left out of the Incident Log) |
 | 3. Clinic Visit Monitoring | Full | — |
 | 4. Emergency Response | Full | Read Incident Log and Report (ADR-038) |
 | 5. Reports Generation | Full | View only, no printing (ADR-038) |

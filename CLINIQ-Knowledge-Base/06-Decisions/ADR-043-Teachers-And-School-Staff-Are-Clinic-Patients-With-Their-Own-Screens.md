@@ -1,7 +1,7 @@
 # ADR-043: Teachers and school staff are clinic patients, with their own Staff screens
 
 **Date:** Monday, October 26, 2026 — 02:59 PHT
-**Status:** Accepted (Zean, Monday, October 26, 2026 — 02:56 PHT). On Monday, October 26, 2026 — 03:07 PHT Zean approved the defaults below and said the clinician's answer is yes, staff belong in the clinic. Not built yet; wanted before the presentation on Tuesday, October 27, 2026.
+**Status:** Accepted (Zean, Monday, October 26, 2026 — 02:56 PHT). On Monday, October 26, 2026 — 03:07 PHT Zean approved the defaults below and said the clinician's answer is yes, staff belong in the clinic. Built Monday, October 26, 2026 (parts 1 to 4; sessions `2026-10-26-staff-as-patients-part-1-data-layer` to `-part-4-counts-and-privacy`).
 
 ## Context
 The clinic is built around students: every visit, incident, follow-up and medicine given points at a student. Two sources say teachers and staff use the clinic too. The professor (Friday, October 16): a clinic serves all staff, not only students, for example the utility workers who need Biogesic. At the clinician meeting (Tuesday, October 20) the answer heard to "is a sick teacher also recorded?" was "Lahat" (everyone), from a recording that is only about 65% recoverable; the clinician also showed a record for a staff member or teacher. The Principal's earlier note was that everyone who enters is logged, without saying whose log. Until now this was an open `DECIDE`. At 03:07 Zean said the clinician's answer is yes, staff belong in the clinic (his report, not the recording), and that the team needs it for the presentation on Tuesday, October 27, 2026.
