@@ -14,5 +14,8 @@ than rendering every row at once.
 - Provide labeled Previous and Next buttons, disabling them at the first and last page.
 - Reset to the first page when a filter changes so a user never lands on an empty later page.
 - A print/export action renders the complete current filtered result, not only the visible page.
+- Offer **Rows per page: 10 or 20** (Sir Rey, Sunday, October 25, 2026): pass `onPageSizeChange` and
+  take the size from `hooks/usePageSize.ts`, which keeps the choice for the browser session and shares
+  it between lists. Changing the size returns to page 1. Default 10.
 
 Follow `cliniq-interactive-states` for cursor, hover, focus, and reduced-motion behavior.

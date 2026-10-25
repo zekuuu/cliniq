@@ -44,9 +44,20 @@ Every printout has:
   doesn't print; log it as `LATER`.
 - Never print an internal record id (`visit-0001`) and never invent a reference number (backend
   `LATER`). A printout that lists several students shows masked LRNs only; a printout about one
-  deliberately opened student may show the full name. Every printout shows the LRN masked (ADR-004,
-  ADR-028).
-- A draft or unapproved record must not look official on paper (the excuse letter's DRAFT mark).
+  deliberately opened student shows the full name and the full LRN (ADR-004, ADR-028, ADR-040).
+- A draft or unapproved excuse letter does not print at all (ADR-038 item 6): it stays on screen and
+  its Print is unavailable, with "Approve the letter to print it." in the same tooltip. A superseded or void letter still prints,
+  stamped SUPERSEDED or VOID, so it can't pass for a valid one.
+
+## Who can print
+
+- **The Admin/Principal never prints or saves as PDF** (ADR-038 item 3). Every Print button is the
+  shared `PrintButton`, which is unavailable for the Admin (not hidden): `aria-disabled`, so it stays
+  focusable, with "Printing is done by the clinician." in a tooltip on hover or focus (Escape closes
+  it) and as its accessible description. A tooltip, not a line under the button, so it never shifts
+  the layout (Zean, Sunday, October 25, 2026). `usePrinting` mounts no document and records no audit entry for the Admin; the shell blocks
+  Ctrl+P / Cmd+P for the Admin, and the browser's own Print menu prints only that line. The browser
+  menu itself can't be blocked.
 
 ## Where it lives
 
@@ -56,7 +67,7 @@ Every printout has:
   `beforeprint` with `flushSync`), renders into `document.body`, and writes the footer into the
   `@page` margin boxes; `index.css` hides the rest of the app for that print. So it costs nothing on
   screen and never duplicates screen text in tests. Pass the screen's loaded data as props.
-- The screen's Print button stays inside a `print:hidden` block, and calls `window.print()`.
+- The screen's Print button is the shared `PrintButton` (`components/print/Print.tsx`), inside a `print:hidden` block; it calls `window.print()` (or `onPrint`) and takes a `disabledReason` for a document that isn't printable yet.
 - Existing printouts: `DashboardPrint` (Clinic Overview Report), `ReportsPrint` (Monthly Clinic
   Report, Incident register, Complaint summary), and the print trees in `ExcuseLetterPage`,
   `IncidentReportPage`, `StudentProfilePage`, and `AuditLogPage`, and `SportsReportPrint` (the Sports
