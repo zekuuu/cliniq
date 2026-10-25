@@ -47,7 +47,7 @@ describe('Visit Log', () => {
     expect(screen.getByRole('button', { name: 'Date range' })).toHaveTextContent('All')
     await waitFor(() => expect(screen.getAllByRole('row')).toHaveLength(Math.min(pending.length, 10) + 1))
     for (const row of pending.slice(0, 10)) {
-      expect(screen.getByRole('link', { name: `Review Letter for ${lrnLabel(row.lrn)}` })).toHaveAttribute('href', `/visits/${row.id}/excuse-letter`)
+      expect(screen.getByRole('link', { name: `Review Letter for ${lrnLabel(row.patient.number)}` })).toHaveAttribute('href', `/visits/${row.id}/excuse-letter`)
     }
 
     await user.click(screen.getByRole('button', { name: /Excuse letter/ }))
@@ -115,7 +115,7 @@ describe('Visit Log', () => {
     renderWithRouter(<VisitLogListPage />)
 
     expect(await screen.findByRole('heading', { name: 'Visit Log' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'LRN' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'LRN or Staff No.' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Disposition' })).toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: /full name/i })).not.toBeInTheDocument()
     // ADR-010 (Option A): the complaint stays visible beside the LRN; names never do.
@@ -134,14 +134,15 @@ describe('Visit Log', () => {
       ...range,
       search: '',
       disposition: 'all',
+      patient: 'students',
     })
 
     renderWithRouter(<VisitLogListPage />)
     await screen.findByRole('heading', { name: 'Visit Log' })
-    await user.type(screen.getByLabelText('Search'), visit.lrn)
+    await user.type(screen.getByLabelText('Search'), visit.patient.number)
 
     expect(await screen.findByText(/records? shown/)).toBeInTheDocument()
-    expect(screen.getAllByText(maskLrn(visit.lrn)).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(maskLrn(visit.patient.number)).length).toBeGreaterThan(0)
   })
 
   it('filters by disposition', async () => {
@@ -239,15 +240,15 @@ describe('Visit Log', () => {
     renderWithRouter(<VisitLogListPage />)
 
     await screen.findByRole('heading', { name: 'Visit Log' })
-    await user.click(screen.getByRole('button', { name: 'Sort by LRN' }))
+    await user.click(screen.getByRole('button', { name: 'Sort by LRN or Staff No.' }))
     expect(
-      screen.getByRole('button', { name: /Sort by LRN, currently ascending/i }),
+      screen.getByRole('button', { name: /Sort by LRN or Staff No., currently ascending/i }),
     ).toBeInTheDocument()
     await user.click(
-      screen.getByRole('button', { name: /Sort by LRN, currently ascending/i }),
+      screen.getByRole('button', { name: /Sort by LRN or Staff No., currently ascending/i }),
     )
     expect(
-      screen.getByRole('button', { name: /Sort by LRN, currently descending/i }),
+      screen.getByRole('button', { name: /Sort by LRN or Staff No., currently descending/i }),
     ).toBeInTheDocument()
   })
 })

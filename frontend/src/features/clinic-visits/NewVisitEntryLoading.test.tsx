@@ -5,7 +5,7 @@ import { renderWithRouter } from '../../test/renderWithRouter'
 
 vi.mock('./api/newVisitApi', () => ({
   fetchNewVisitContext: () => new Promise(() => {}),
-  findVisitStudent: vi.fn(),
+  findVisitPatient: vi.fn(),
   submitNewVisit: vi.fn(),
 }))
 

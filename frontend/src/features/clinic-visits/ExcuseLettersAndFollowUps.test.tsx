@@ -67,7 +67,7 @@ describe('replacement letters (EX-3)', () => {
     const replacement = await approveExcuseLetter(APPROVED_VISIT, { excusedFrom: old.excusedFrom, excusedUntil: addDays(old.excusedUntil, 1) })
     expect(replacement.id).not.toBe(old.id)
     const visit = await getVisit(APPROVED_VISIT)
-    const statuses = (await getStudentExcuseLetters(visit.studentId)).filter((l) => l.visitId === APPROVED_VISIT).map((l) => l.status).sort()
+    const statuses = (await getStudentExcuseLetters(visit.studentId!)).filter((l) => l.visitId === APPROVED_VISIT).map((l) => l.status).sort()
     expect(statuses).toEqual(['approved', 'superseded'])
     expect(getRecordedAuditEntries().map((e) => e.summary)).toContain('Superseded; replacement draft opened')
   })

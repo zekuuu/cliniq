@@ -21,7 +21,7 @@ describe('inventory API', () => {
 
   it('records a dispensation and allows stock to cross below zero with a warning result', async () => {
     const [item] = await fetchInventory({ search: 'Paracetamol', category: '' })
-    const result = await dispenseInventoryItem(item.id, item.currentStock + 8, 'student-0001')
+    const result = await dispenseInventoryItem(item.id, item.currentStock + 8, { studentId: 'student-0001', personnelId: null })
     expect(result.remainingStock).toBe(-8)
     expect(result.belowZero).toBe(true)
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['submit'])

@@ -220,7 +220,7 @@ describe('UI/UX review Group B decisions', () => {
     renderWithRouter(<NewVisitEntryPage />)
 
     await screen.findByRole('heading', { name: 'New Visit' })
-    expect(screen.getByText(/student not identified yet/i)).toBeInTheDocument()
+    expect(screen.getByText(/not identified yet/i)).toBeInTheDocument()
     await user.type(screen.getByRole('combobox', { name: /complaint/i }), 'Headache{Escape}')
     await user.type(screen.getByLabelText(/treatment/i), 'Rested in clinic.')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))

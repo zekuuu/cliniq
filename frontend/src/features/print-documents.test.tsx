@@ -91,7 +91,7 @@ describe('purpose-built printouts', () => {
       summary.counts.activeStudents,
     ])
       expect(figures).toContain(String(value))
-    for (const row of summary.dueFollowUps) expect(doc).toHaveTextContent(maskLrn(row.student.lrn))
+    for (const row of summary.dueFollowUps) expect(doc).toHaveTextContent(row.patient.kind === 'student' ? maskLrn(row.patient.number) : row.patient.number)
     expect(doc).toHaveTextContent('Excuse letters awaiting approval')
     await expectNoNamesOrIds(doc)
   })

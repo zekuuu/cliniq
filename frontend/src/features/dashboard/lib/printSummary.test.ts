@@ -17,6 +17,7 @@ function summary(overrides: Partial<DashboardSummary> = {}): DashboardSummary {
       activeStudents: 0,
       inClinicNow: 0,
       incidentsAwaitingStage2: 0,
+      split: { visits: { students: 0, staff: 0 }, incidents: { students: 0, staff: 0 }, inClinicNow: { students: 0, staff: 0 } },
     },
     previousCounts: null,
     dueFollowUps: [],
@@ -75,6 +76,7 @@ describe('Dashboard printout summary', () => {
         activeStudents: 9,
         inClinicNow: 0,
       incidentsAwaitingStage2: 0,
+        split: { visits: { students: 0, staff: 0 }, incidents: { students: 0, staff: 0 }, inClinicNow: { students: 0, staff: 0 } },
       },
       complaintTrends: {
         granularity: 'day',
@@ -104,6 +106,7 @@ describe('Dashboard printout summary', () => {
         activeStudents: 9,
         inClinicNow: 0,
       incidentsAwaitingStage2: 0,
+        split: { visits: { students: 0, staff: 0 }, incidents: { students: 0, staff: 0 }, inClinicNow: { students: 0, staff: 0 } },
       },
       complaintTrends: {
         granularity: 'day',

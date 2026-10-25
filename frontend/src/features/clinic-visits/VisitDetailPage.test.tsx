@@ -20,6 +20,7 @@ describe('Visit Details', () => {
     expect(await screen.findByRole('heading', { name: 'Visit Details' })).toBeInTheDocument()
     expect(screen.getByText(detail.student.fullName)).toBeInTheDocument()
     // One deliberately opened student: the full LRN (Zean, October 25, 2026).
+    if (detail.student.kind !== 'student') throw new Error('visit-0157 is a student visit')
     expect(screen.getByText(detail.student.lrn)).toBeInTheDocument()
     expect(screen.queryByText(maskLrn(detail.student.lrn))).not.toBeInTheDocument()
     expect(screen.getByText(detail.complaint)).toBeInTheDocument()

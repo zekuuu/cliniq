@@ -49,9 +49,9 @@ describe('Reports', () => {
     const user = userEvent.setup()
     renderReports({ id: 'usr-nurse', name: 'Nurse', role: 'staff' })
     await user.click(screen.getByRole('tab', { name: 'Incident register' }))
-    const [incident] = (await thisMonth()).incidents
+    const incident = (await thisMonth()).incidents.find((row) => row.patient.kind === 'student')!
     const archive = await screen.findByRole('table', { name: 'Incident register' })
-    expect(within(archive).getAllByText(maskLrn(incident.lrn)).length).toBeGreaterThan(0)
+    expect(within(archive).getAllByText(maskLrn(incident.patient.number)).length).toBeGreaterThan(0)
   })
 
   it('lists the newest incidents first, matching the Incident Log', async () => {

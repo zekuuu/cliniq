@@ -47,7 +47,7 @@ describe('Excused period', () => {
 
   it("lists a student's letters with the visit disposition", async () => {
     const visit = await getVisit('visit-0139')
-    const letters = await getStudentExcuseLetters(visit.studentId)
+    const letters = await getStudentExcuseLetters(visit.studentId!)
     expect(letters).toEqual([expect.objectContaining({ visitId: 'visit-0139', disposition: 'sent_home' })])
   })
 
@@ -91,13 +91,13 @@ describe('Excused period', () => {
 
   it('lists drafts as pending, on the profile and in the Staff pending list, until approved', async () => {
     const visit = await getVisit('visit-0151')
-    expect(await getStudentExcuseLetters(visit.studentId)).toEqual([
+    expect(await getStudentExcuseLetters(visit.studentId!)).toEqual([
       expect.objectContaining({ visitId: 'visit-0151', status: 'pending' }),
     ])
     expect((await listPendingExcuseLetters()).map((row) => row.visitId)).toEqual(['visit-0151'])
 
     await approveExcuseLetter('visit-0151', { excusedFrom: '2026-10-01', excusedUntil: '2026-10-02' })
-    expect(await getStudentExcuseLetters(visit.studentId)).toEqual([
+    expect(await getStudentExcuseLetters(visit.studentId!)).toEqual([
       expect.objectContaining({ visitId: 'visit-0151', status: 'approved' }),
     ])
     expect(await listPendingExcuseLetters()).toEqual([])

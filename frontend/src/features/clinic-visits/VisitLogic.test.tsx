@@ -198,7 +198,7 @@ describe('first-aid checklist wording (VS-6) and one search instruction (VS-12)'
   it('calls it the first-aid checklist and says the search instruction once', async () => {
     renderWithRouter(<NewVisitEntryPage />)
     expect(await screen.findByText('Enter a complaint to show the first-aid checklist')).toBeInTheDocument()
-    expect(screen.getAllByText(/LRN or (the student )?name/i)).toHaveLength(1)
+    expect(screen.getAllByText(/LRN, a Staff No\. or a name/i)).toHaveLength(1)
   })
 })
 

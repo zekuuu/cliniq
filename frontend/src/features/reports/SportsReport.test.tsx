@@ -59,7 +59,7 @@ async function studentWithOlderVisitOnly() {
   const recentIds = new Set([...visits.filter((v) => v.dateTime.slice(0, 10) >= recent), ...incidents.filter((i) => i.time.slice(0, 10) >= recent)].map((r) => r.studentId))
   const visit = visits.find((v) => v.dateTime.slice(0, 10) >= older && v.dateTime.slice(0, 10) < recent && !recentIds.has(v.studentId))
   if (!visit) throw new Error('seed has no student with only an older visit')
-  return { studentId: visit.studentId, visit }
+  return { studentId: visit.studentId!, visit }
 }
 
 /** An active student with no visit or incident in the last school year. */

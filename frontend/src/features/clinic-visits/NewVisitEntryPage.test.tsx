@@ -178,7 +178,7 @@ describe('New Visit student lookup', () => {
     renderWithRouter(<NewVisitEntryPage />)
 
     const field = await screen.findByRole('combobox', { name: /student/i })
-    expect(field).toHaveAttribute('placeholder', 'LRN or student name')
+    expect(field).toHaveAttribute('placeholder', 'LRN, Staff No. or name')
     await user.click(field)
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
     await user.type(field, 'q')
@@ -188,7 +188,7 @@ describe('New Visit student lookup', () => {
     expect(option).toHaveTextContent("Kinder")
     await user.click(option)
 
-    const changeButton = await screen.findByRole('button', { name: /change student \(Gian Quizon\)/i })
+    const changeButton = await screen.findByRole('button', { name: /change student or staff member \(Gian Quizon\)/i })
     expect(within(changeButton.parentElement!).getByText('●●●●●●●●0001')).toBeInTheDocument()
     await user.click(changeButton)
     expect(screen.getByRole('combobox', { name: /student/i })).toHaveFocus()
@@ -214,7 +214,7 @@ describe('New Visit student lookup', () => {
     expect(field).toHaveValue('0000-0026 0001')
     await screen.findByRole('option', { name: /LRN ending in 0001 Gian Quizon Kinder/ })
     await user.keyboard('{Enter}')
-    expect(await screen.findByRole('button', { name: /change student \(Gian Quizon\)/i })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /change student or staff member \(Gian Quizon\)/i })).toBeInTheDocument()
   })
 
   it('says when nothing matches and offers Staff a link to add the student', async () => {
@@ -222,7 +222,7 @@ describe('New Visit student lookup', () => {
     renderWithRouter(<NewVisitEntryPage />)
 
     await user.type(await screen.findByRole('combobox', { name: /student/i }), 'zzzz')
-    expect(await screen.findByText(/no active student matches/i)).toBeInTheDocument()
+    expect(await screen.findByText(/no active student or staff member matches/i)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /add a student/i })).toHaveAttribute('href', '/students/new')
   })
 

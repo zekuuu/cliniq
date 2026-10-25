@@ -126,7 +126,7 @@ describe('Standalone Dispense', () => {
   it('records general use with no student', async () => {
     const user = userEvent.setup()
     renderWithRouter(<InventoryDispensePage />, { route: '/inventory/dispense' })
-    await selectOption(user, await screen.findByLabelText(/^for/i), 'Not for a student (general use)')
+    await selectOption(user, await screen.findByLabelText(/^for/i), 'Not for a person (general use)')
     await user.type(screen.getByRole('combobox', { name: 'Item' }), 'gloves')
     await user.click(screen.getByRole('option', { name: /Disposable Gloves/ }))
     await user.click(screen.getByRole('button', { name: 'Record Dispensation' }))
@@ -138,22 +138,22 @@ describe('Standalone Dispense', () => {
     const student = await getStudent('student-0015')
     const user = userEvent.setup()
     renderWithRouter(<InventoryDispensePage />, { route: '/inventory/dispense' })
-    await selectOption(user, await screen.findByLabelText(/^For/), 'A student')
+    await selectOption(user, await screen.findByLabelText(/^For/), 'A student or staff member')
     await pickStudent(user, student.lrn)
     const notice = (await screen.findByText(/This student already has a visit today/)).closest('[role="status"]') as HTMLElement
     expect(within(notice).getByRole('link', { name: /Open today’s visit/ })).toHaveAttribute('href', '/visits/visit-0159')
     expect(within(notice).queryByText(new RegExp(student.fullName))).not.toBeInTheDocument()
     // The picked student shows like New Visit's: a deliberate single lookup (cliniq-display-privacy).
-    expect(screen.getByRole('button', { name: `Change student (${student.fullName})` })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: `Change student or staff member (${student.fullName})` })).toBeInTheDocument()
   })
 
   it('finds the student by name from the first letters and picks from the list', async () => {
     const user = userEvent.setup()
     renderWithRouter(<InventoryDispensePage />, { route: '/inventory/dispense' })
-    await selectOption(user, await screen.findByLabelText(/^For/), 'A student')
+    await selectOption(user, await screen.findByLabelText(/^For/), 'A student or staff member')
     await user.type(screen.getByRole('combobox', { name: /student/i }), 'Gian')
     await user.click(await screen.findByRole('option', { name: /LRN ending in 0001 Gian Quizon Kinder/ }))
-    expect(screen.getByRole('button', { name: 'Change student (Gian Quizon)' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Change student or staff member (Gian Quizon)' })).toBeInTheDocument()
   })
 
   it('shows expired items as unavailable', async () => {
