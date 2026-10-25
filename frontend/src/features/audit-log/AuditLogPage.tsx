@@ -13,6 +13,7 @@ import {
   ListItemLink,
   MultiSelect,
   Pagination,
+  PrintButton,
   PrintDocument,
   PrintTable,
   Select,
@@ -22,6 +23,7 @@ import {
   type StatusMap,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { describeRange, rangeForPreset, type DateRange } from '../../lib/dateRange'
 import { formatDateRange, formatDateTime, todayISO } from '../../lib/dates'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
@@ -30,7 +32,6 @@ import type { AuditActionType } from '../../types/entities'
 import { paths } from '../../routes/paths'
 import { fetchAuditLog } from './api/auditLogApi'
 
-const PAGE_SIZE = 10
 type AuditSortKey = 'timestamp' | 'user' | 'action' | 'module' | 'record'
 
 const actionOptions: Array<{ value: AuditActionType; label: string }> = [
@@ -43,6 +44,7 @@ const actionOptions: Array<{ value: AuditActionType; label: string }> = [
   { value: 'delete', label: 'Delete' },
   { value: 'archive', label: 'Archive' },
   { value: 'print', label: 'Print / Save as PDF' },
+  { value: 'view', label: 'Viewed (Admin)' },
 ]
 
 const actionStatusMap: StatusMap<AuditActionType> = {
@@ -55,6 +57,7 @@ const actionStatusMap: StatusMap<AuditActionType> = {
   delete: { label: 'Delete', tone: 'error' },
   archive: { label: 'Archive', tone: 'neutral' },
   print: { label: 'Print / Save as PDF', tone: 'info' },
+  view: { label: 'Viewed (Admin)', tone: 'neutral' },
 }
 
 const targetLabels: Record<AuditTargetType, string> = {
@@ -92,7 +95,12 @@ function targetPath(row: AuditLogRow, viewer: SessionUser): string | undefined {
   if (!target) return undefined
   // Only an actual generated report opens Reports; excuse letters, referrals, and issue reports have no page of their own.
   const isReport = target.recordType === 'report'
-  if (viewer.role === 'admin') return isReport ? paths.reports : undefined
+  // ADR-038: the Admin can open a student profile and an incident report, nothing else that is Staff-only.
+  if (viewer.role === 'admin') {
+    if (target.type === 'student') return target.studentId ? paths.studentProfile(target.studentId) : undefined
+    if (target.type === 'incident') return paths.incidentReport(target.id)
+    return isReport ? paths.reports : undefined
+  }
   switch (target.type) {
     case 'student':
       return target.studentId ? paths.studentProfile(target.studentId) : undefined
@@ -173,6 +181,12 @@ export function AuditLogPage({ viewer }: { viewer: SessionUser }) {
   const defaultRange = rangeForPreset('all', todayISO())
   const [filters, setFilters] = useState<AuditLogFilters>({ search: '', range: defaultRange, userId: '', actionTypes: [], targetTypes: [] })
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = usePageSize()
+  // A new page size starts again at page 1 (cliniq-pagination-patterns).
+  const changePageSize = (size: PageSize) => {
+    setPageSize(size)
+    setPage(1)
+  }
   const [sort, setSort] = useState<TableSortState<AuditSortKey>>({ key: 'timestamp', direction: 'descending' })
   const { search, range, userId, actionTypes, targetTypes } = filters
   const queryKey = `${range.from}|${range.to}|${userId}|${actionTypes.join(',')}|${targetTypes.join(',')}`
@@ -216,9 +230,9 @@ export function AuditLogPage({ viewer }: { viewer: SessionUser }) {
     { key: 'module', header: 'Module', width: '17%', sort: sortColumn('module', 'Module'), cell: (row) => row.target?.kind ?? emptyCell },
     { key: 'record', header: 'Record', width: '24%', sort: sortColumn('record', 'Record'), cell: (row) => recordCell(row, viewer) },
   ]
-  const pageCount = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize))
   const currentPage = Math.min(page, pageCount)
-  const pageRows = sortedRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const pageRows = sortedRows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   const clearFilters = () => {
     updateFilters({ search: '', range: defaultRange, userId: '', actionTypes: [], targetTypes: [] })
   }
@@ -231,7 +245,7 @@ export function AuditLogPage({ viewer }: { viewer: SessionUser }) {
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">Audit Log</h1>
             <p className="mt-1 text-sm text-text-secondary">Review accountable system activity. Audit entries are permanent and cannot be edited or deleted.</p>
           </div>
-          <Button variant="secondary" icon="printer" onClick={() => window.print()}>Print / Save as PDF</Button>
+          <PrintButton viewer={viewer} />
         </div>
       </Card>
 
@@ -246,7 +260,7 @@ export function AuditLogPage({ viewer }: { viewer: SessionUser }) {
             <MultiSelect label="Target / module" values={targetTypes} options={auditTargetTypes.map((type) => ({ value: type, label: targetLabels[type] }))} allLabel="All targets" onChange={(values) => updateFilters({ targetTypes: values as AuditTargetType[] })} className="w-full sm:w-48" />
           </div>
           <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>
-            {sortedRows.length ? <><DataTable caption="Filtered audit log" columns={columns} rows={pageRows} rowKey={(row) => row.id} fixedLayout /><Pagination page={currentPage} pageCount={pageCount} total={sortedRows.length} pageSize={PAGE_SIZE} itemLabel="entries" onPageChange={setPage} /></> : <EmptyState icon="clipboardList" title="No audit entries found" description="Try another search, date range, user, action type, or target/module filter." />}
+            {sortedRows.length ? <><DataTable caption="Filtered audit log" columns={columns} rows={pageRows} rowKey={(row) => row.id} fixedLayout /><Pagination page={currentPage} pageCount={pageCount} total={sortedRows.length} pageSize={pageSize} onPageSizeChange={changePageSize} itemLabel="entries" onPageChange={setPage} /></> : <EmptyState icon="clipboardList" title="No audit entries found" description="Try another search, date range, user, action type, or target/module filter." />}
           </div>
         </CardBody>
       </Card>

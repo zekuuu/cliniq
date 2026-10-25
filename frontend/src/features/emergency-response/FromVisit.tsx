@@ -6,16 +6,19 @@ import type { ItemGivenLine } from '../../types/entities'
 
 /**
  * An incident escalated from a visit (ADR-036): a link back, and what was given at the visit. The
- * medicines stay on the visit and are not copied, so stock was deducted once.
+ * medicines stay on the visit and are not copied, so stock was deducted once. No link for the Admin,
+ * who can't open visits (ADR-038 item 5).
  */
-export function FromVisit({ visitId, given }: { visitId: string; given: ItemGivenLine[] }) {
+export function FromVisit({ visitId, given, linkToVisit = true }: { visitId: string; given: ItemGivenLine[]; linkToVisit?: boolean }) {
   return (
     <section aria-labelledby="from-visit-title" className="rounded-md border border-border p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="from-visit-title" className="text-sm font-semibold text-text-primary">From visit</h2>
-        <Link to={paths.visitDetail(visitId)} className={buttonClassName({ size: 'sm' })}>
-          Open the visit
-        </Link>
+        {linkToVisit && (
+          <Link to={paths.visitDetail(visitId)} className={buttonClassName({ size: 'sm' })}>
+            Open the visit
+          </Link>
+        )}
       </div>
       <p className="mt-2 text-xs font-semibold text-text-secondary">Given at the visit</p>
       {given.length ? (

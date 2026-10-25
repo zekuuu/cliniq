@@ -12,6 +12,7 @@ import {
   Icon,
   ListRow,
   Modal,
+  PrintButton,
   PrintDocument,
   PrintFields,
   PrintSection,
@@ -32,7 +33,6 @@ import type { Incident, Student, Visit } from '../../types/entities'
 import { DISPOSITION_LABELS as dispositionLabel, DISPOSITION_TONES as dispositionTone } from '../../lib/dispositions'
 import { paths } from '../../routes/paths'
 import { archiveStudentRecord, fetchStudentProfile, type StudentProfileData } from './api/studentProfileApi'
-import { maskLrn } from '../../lib/lrn'
 
 const incidentStageMap = {
   1: { label: 'Needs completion', tone: 'warning', icon: 'alertTriangle', variant: 'soft' },
@@ -142,21 +142,20 @@ function ProfileHeader({
             LRN {student.lrn} · {student.gradeLevel}
           </p>
         </div>
-        {staffCanAct && (
-          <div className="flex flex-wrap justify-end gap-2 print:hidden">
+        {/* ADR-038: the Admin reads the profile; Print stays visible but disabled for the Admin. */}
+        <div className="flex flex-wrap items-start justify-end gap-2 print:hidden">
+          {staffCanAct && (
             <Link to={paths.studentEdit(student.id)} className={buttonClassName()}>
               Edit
             </Link>
-            <Button variant="secondary" icon="printer" onClick={() => window.print()}>
-              Print / Save as PDF
-            </Button>
-            {!student.archived && (
+          )}
+          <PrintButton viewer={viewer} />
+          {staffCanAct && !student.archived && (
               <Button variant="neutral" onClick={() => setConfirmingArchive(true)}>
                 Archive
               </Button>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
       {confirmDialog}
       <Modal
@@ -416,19 +415,19 @@ function IncidentHistoryCard({ incidents }: { incidents: Incident[] }) {
 function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer: SessionUser }) {
   const { student, visits, incidents, excuseLetters } = data
   const contact = student.emergencyContacts
-    .map((item, index) => `${index === 0 ? 'Primary: ' : ''}${item.name} (${item.relationship}) Â· ${item.phone} Â· ${item.verified ? 'verified' : 'needs verification'}`)
+    .map((item, index) => `${index === 0 ? 'Primary: ' : ''}${item.name} (${item.relationship}) · ${item.phone} · ${item.verified ? 'verified' : 'needs verification'}`)
     .join('\n')
   return (
     <PrintDocument
       title="Student Health Record"
       viewer={viewer}
-      scope={`${student.fullName}, LRN ${maskLrn(student.lrn)}, ${student.gradeLevel}.${student.archived ? ' Archived record.' : ''} Every recorded clinic visit and incident, newest first.`}
+      scope={`${student.fullName}, LRN ${student.lrn}, ${student.gradeLevel}.${student.archived ? ' Archived record.' : ''} Every recorded clinic visit and incident, newest first.`}
     >
       <PrintSection title="Student">
         <PrintFields
           fields={[
             { label: 'Full name', value: student.fullName },
-            { label: 'LRN', value: maskLrn(student.lrn) },
+            { label: 'LRN', value: student.lrn },
             { label: 'Grade level', value: student.gradeLevel },
             { label: 'Sex', value: student.sex === 'female' ? 'Female' : 'Male' },
             { label: 'Contact info', value: student.contactInfo || 'Not recorded' },

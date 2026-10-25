@@ -48,10 +48,11 @@ export function StatCardRow({
   const noComparison = range.preset === 'all' ? 'All records' : 'No earlier records to compare'
   const overdue = summary.dueFollowUps.filter((row) => row.daysFromToday < 0).length
   // Same order as the sidebar: Students, Visits (and their excuse letters), Incidents, Follow-Ups.
+  // Students and Incidents link for both roles (ADR-038); the rest only for Staff (`canNavigate`).
   const cards = [
     {
       key: 'students',
-      card: <StatCard icon={CARDS.students.icon} label={CARDS.students.label} tone={CARDS.students.tone} value={counts.activeStudents} scope="Current · excludes archived" labelAction={canNavigate ? <TitleLink to={paths.students}>{CARDS.students.label}</TitleLink> : undefined} />,
+      card: <StatCard icon={CARDS.students.icon} label={CARDS.students.label} tone={CARDS.students.tone} value={counts.activeStudents} scope="Current · excludes archived" labelAction={<TitleLink to={paths.students}>{CARDS.students.label}</TitleLink>} />,
     },
     {
       key: 'visits',
@@ -63,7 +64,7 @@ export function StatCardRow({
     },
     {
       key: 'incidents',
-      card: <StatCard icon={CARDS.incidents.icon} label={CARDS.incidents.label} tone={CARDS.incidents.tone} value={counts.incidents} trend={previousCounts ? trendFor(counts.incidents, previousCounts.incidents, range, summary.percentMinPriorCount) : undefined} scope={previousCounts ? undefined : noComparison} footnote={counts.incidentsAtStage1 > 0 ? `${counts.incidentsAtStage1} still at Stage 1` : undefined} labelAction={canNavigate ? <TitleLink to={paths.incidentsInRange(range.from, range.to)}>{CARDS.incidents.label}</TitleLink> : undefined} />,
+      card: <StatCard icon={CARDS.incidents.icon} label={CARDS.incidents.label} tone={CARDS.incidents.tone} value={counts.incidents} trend={previousCounts ? trendFor(counts.incidents, previousCounts.incidents, range, summary.percentMinPriorCount) : undefined} scope={previousCounts ? undefined : noComparison} footnote={counts.incidentsAtStage1 > 0 ? `${counts.incidentsAtStage1} still at Stage 1` : undefined} labelAction={<TitleLink to={paths.incidentsInRange(range.from, range.to)}>{CARDS.incidents.label}</TitleLink>} />,
     },
     {
       key: 'follow-ups',

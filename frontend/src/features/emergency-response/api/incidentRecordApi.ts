@@ -8,6 +8,7 @@ import {
   getVisit,
   listApprovedIncidentReportIds,
   listIncidents,
+  recordAdminView,
   type IncidentTrail,
   type SessionUser,
 } from '../../../lib/mock-db'
@@ -34,7 +35,7 @@ export interface IncidentRecord {
 }
 
 /** `null` when there is nothing to show: no incidents, or (opened without an id) none pending sign-off. */
-export async function fetchIncidentRecord(incidentId?: string): Promise<IncidentRecord | null> {
+export async function fetchIncidentRecord(incidentId?: string, viewer?: SessionUser): Promise<IncidentRecord | null> {
   const [incidents, approvedIds] = await Promise.all([listIncidents(), listApprovedIncidentReportIds()])
   const approved = new Set(approvedIds)
   const pending = incidents.filter((item) => !approved.has(item.id))
@@ -45,6 +46,8 @@ export async function fetchIncidentRecord(incidentId?: string): Promise<Incident
     getIncidentTrail(incident.id),
     incident.sourceVisitId ? getVisit(incident.sourceVisitId) : null,
   ])
+  // ADR-038 item 4: the Admin's opening of a report is audit-logged.
+  if (viewer) await recordAdminView({ type: 'incident', id: incident.id }, viewer)
   const listed = approved.has(incident.id) ? [incident, ...pending] : pending
   return {
     incident,

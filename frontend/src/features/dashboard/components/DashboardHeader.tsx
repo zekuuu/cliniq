@@ -1,4 +1,4 @@
-import { Button, DateRangePicker } from '../../../components'
+import { DateRangePicker, PrintButton } from '../../../components'
 import { formatLongDate } from '../../../lib/dates'
 import { describeRangeDates, type DateRange } from '../../../lib/dateRange'
 import type { SessionUser } from '../../../lib/mock-db'
@@ -61,9 +61,7 @@ export function DashboardHeader({
       </div>
       <div className="ml-auto flex flex-wrap items-center justify-end gap-2 print:hidden">
         <DateRangePicker value={range} onChange={onRangeChange} today={today} compact />
-        <Button variant="secondary" icon="printer" onClick={onPrint}>
-          Print / Save as PDF
-        </Button>
+        <PrintButton viewer={viewer} onPrint={onPrint} />
       </div>
     </header>
   )

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { BackButton, Badge, Button, Card, CardBody, CardHeader, EmergencyContactList, ErrorState, Icon, Modal, PrintDocument, PrintFields, PrintNote, PrintSection, PrintSignatures, PrintTable, Select, Skeleton } from '../../components'
+import { BackButton, Badge, Button, Card, CardBody, CardHeader, EmergencyContactList, ErrorState, Icon, Modal, PrintDocument, PrintFields, PrintButton, PrintNote, PrintSection, PrintSignatures, PrintTable, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
 import { formatDateTime } from '../../lib/dates'
@@ -7,8 +7,6 @@ import { formatItemGiven, incidentCareSummary, incidentCompletionBlocker } from 
 import { getMockSessionUser, ROLE_LABELS, type SessionUser } from '../../lib/mock-db'
 import { READING_LABELS, readingText, takenReadings } from '../../lib/vitals'
 import { approveReport, fetchIncidentRecord, type IncidentRecord } from './api/incidentRecordApi'
-import { maskLrn } from '../../lib/lrn'
-import { MaskedLrn } from '../../components/ui/MaskedLrn'
 import { calledContactText, OUTCOME_LABELS } from './notificationOutcomes'
 import { FromVisit } from './FromVisit'
 import { useConfirmItsYou } from '../../hooks/useConfirmItsYou'
@@ -27,7 +25,7 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
     <PrintDocument
       title="Incident Report"
       viewer={viewer}
-      scope={`${student.fullName} (LRN ${maskLrn(student.lrn)}), ${student.gradeLevel}. Incident recorded ${formatDateTime(incident.time)}.`}
+      scope={`${student.fullName} (LRN ${student.lrn}), ${student.gradeLevel}. Incident recorded ${formatDateTime(incident.time)}.`}
     >
       {incident.stage === 1 && (
         <p className="mb-[4mm] border-2 border-text-primary px-[3mm] py-[2mm] text-[11pt] font-bold">
@@ -39,7 +37,7 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
           <PrintFields
             columns={3}
             fields={[
-              { label: 'Student', value: `${student.fullName} · LRN ${maskLrn(student.lrn)}` },
+              { label: 'Student', value: `${student.fullName} · LRN ${student.lrn}` },
               { label: 'Grade level', value: student.gradeLevel },
               { label: 'Date and time', value: formatDateTime(incident.time) },
               { label: 'Complaint', value: incident.complaint },
@@ -149,7 +147,8 @@ function Field({ label, children, className }: { label: string; children: ReactN
 
 export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }: { viewer?: SessionUser; incidentId?: string }) {
   const [selectedId, setSelectedId] = useState(incidentId)
-  const { data, status, reload } = useAsyncData(`incident-report|${selectedId ?? 'default'}`, () => fetchIncidentRecord(selectedId))
+  const isStaff = viewer.role === 'staff'
+  const { data, status, reload } = useAsyncData(`incident-report|${selectedId ?? 'default'}`, () => fetchIncidentRecord(selectedId, viewer))
   const [justApproved, setJustApproved] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [approving, setApproving] = useState(false)
@@ -193,14 +192,14 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">Incident Report</h1>
-            <p className="mt-1 text-sm text-text-secondary">Review, approve, and print one incident report.</p>
+            <p className="mt-1 text-sm text-text-secondary">{isStaff ? 'Review, approve, and print one incident report.' : 'Read one incident report.'}</p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
-            <Button variant="secondary" icon="printer" onClick={() => window.print()}>Print / Save as PDF</Button>
-            <Button variant="primary" onClick={() => setConfirming(true)} disabled={approved || approvalBlocker !== null} aria-describedby={approvalBlocker ? 'approve-report-blocker' : undefined}>{approved ? 'Approved' : 'Approve Report'}</Button>
+            <PrintButton viewer={viewer} />
+            {isStaff && <Button variant="primary" onClick={() => setConfirming(true)} disabled={approved || approvalBlocker !== null} aria-describedby={approvalBlocker ? 'approve-report-blocker' : undefined}>{approved ? 'Approved' : 'Approve Report'}</Button>}
           </div>
         </div>
-        {approvalBlocker ? (
+        {!isStaff ? null : approvalBlocker ? (
           <p id="approve-report-blocker" role="status" className="mt-4 rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm font-semibold text-text-primary">
             Can&apos;t be approved yet. {approvalBlocker}
           </p>
@@ -230,7 +229,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
           </div>
 
           <dl className="grid gap-4 sm:grid-cols-2">
-            <Field label="Student"><span className="font-semibold">{student.fullName} · LRN <MaskedLrn lrn={student.lrn} /></span></Field>
+            <Field label="Student"><span className="font-semibold">{student.fullName} · LRN {student.lrn}</span></Field>
             <Field label="Recorded">{formatDateTime(incident.time)}</Field>
             <Field label="Complaint">{incident.complaint}</Field>
             {incident.bodyPart && <Field label="Body part affected">{incident.bodyPart}</Field>}
@@ -258,7 +257,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
             )}
           </section>
 
-          {data.sourceVisit && <FromVisit visitId={data.sourceVisit.id} given={data.sourceVisit.itemsGiven} />}
+          {data.sourceVisit && <FromVisit visitId={data.sourceVisit.id} given={data.sourceVisit.itemsGiven} linkToVisit={isStaff} />}
 
           <section className="border-t border-border pt-4" aria-labelledby="report-treatment-title">
             <h2 id="report-treatment-title" className="text-sm font-semibold text-text-primary">Treatment</h2>
@@ -318,7 +317,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
       {confirmDialog}
       <Modal open={confirming} title="Approve this incident report?" onClose={() => setConfirming(false)}>
         <p className="text-sm text-text-secondary">
-          Approving signs off the report for LRN <MaskedLrn lrn={student.lrn} /> ({incident.complaint}, {formatDateTime(incident.time)}) and records it in the audit log. It can't be un-approved from this screen.
+          Approving signs off the report for {student.fullName}, LRN {student.lrn} ({incident.complaint}, {formatDateTime(incident.time)}) and records it in the audit log. It can't be un-approved from this screen.
         </p>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <Button variant="neutral" data-autofocus onClick={() => setConfirming(false)}>Cancel</Button>

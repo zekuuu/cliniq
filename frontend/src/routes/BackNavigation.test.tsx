@@ -13,7 +13,7 @@ vi.mock('react-chartjs-2', () => {
   const Stub = (props: { 'aria-label'?: string }) => (
     <div role="img" aria-label={props['aria-label']} />
   )
-  return { Bar: Stub, Line: Stub }
+  return { Bar: Stub, Line: Stub, Doughnut: Stub }
 })
 
 const USERS: Record<UserRole, SessionUser> = {
@@ -31,6 +31,8 @@ const NO_BACK: Record<string, string> = {
   'staff /students': 'Top-level sidebar destination; Back only after a drill-through link.',
   'staff /visits': 'Top-level sidebar destination; Back only after a drill-through link.',
   'staff /incidents': 'Top-level sidebar destination; Back only after a drill-through link.',
+  'admin /students': 'Top-level sidebar destination for the Admin too (ADR-038).',
+  'admin /incidents': 'Top-level sidebar destination for the Admin too (ADR-038).',
   'staff /inventory': 'Top-level sidebar destination; Back only after a drill-through link.',
   'staff /follow-ups': 'Top-level sidebar destination; Back only after a drill-through link.',
   'staff /reports': 'Top-level sidebar destination.',

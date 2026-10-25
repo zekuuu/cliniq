@@ -20,6 +20,7 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { Student } from '../../types/entities'
+import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { fetchGradeLevels, fetchStudentList } from './api/studentListApi'
 import { MaskedLrn } from '../../components/ui/MaskedLrn'
 
@@ -126,9 +127,9 @@ const baseColumns: Array<DataTableColumn<Student>> = [
 
 /**
  * Student List (Screen #6). This is the masterlist special case: full names are correct, but no
- * medical/confidential fields are shown inline.
+ * medical/confidential fields are shown inline. The Admin reads it without Add Student (ADR-038).
  */
-export function StudentListPage() {
+export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser } = {}) {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [search, setSearch] = useState('')
   const [gradeLevel, setGradeLevel] = useState('')
@@ -198,10 +199,12 @@ export function StudentListPage() {
               individual profile.
             </p>
           </div>
-          <Link className={buttonClassName({ variant: 'primary' })} to={paths.studentNew}>
-            <Icon name="plus" />
-            Add Student
-          </Link>
+          {viewer.role === 'staff' && (
+            <Link className={buttonClassName({ variant: 'primary' })} to={paths.studentNew}>
+              <Icon name="plus" />
+              Add Student
+            </Link>
+          )}
         </div>
       </Card>
 

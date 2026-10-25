@@ -205,9 +205,10 @@ const APP_ROUTES: AppRoute[] = [
   {
     path: paths.students,
     title: 'Student List',
-    roles: ['staff'],
+    // ADR-038: the Admin reads the Student List, Student Profile, Incident Log and Incident Report.
+    roles: ['staff', 'admin'],
     nav: 'students',
-    render: () => <StudentListPage />,
+    render: (viewer) => <StudentListPage viewer={viewer} />,
   },
   {
     path: paths.studentNew,
@@ -226,7 +227,7 @@ const APP_ROUTES: AppRoute[] = [
   {
     path: '/students/:studentId',
     title: 'Student Profile',
-    roles: ['staff'],
+    roles: ['staff', 'admin'],
     nav: 'students',
     render: (viewer) => <StudentProfileRoute viewer={viewer} />,
   },
@@ -275,9 +276,9 @@ const APP_ROUTES: AppRoute[] = [
   {
     path: paths.incidents,
     title: 'Incident Log',
-    roles: ['staff'],
+    roles: ['staff', 'admin'],
     nav: 'incidents',
-    render: () => <IncidentLogListPage />,
+    render: (viewer) => <IncidentLogListPage viewer={viewer} />,
   },
   {
     path: '/incidents/new',
@@ -310,14 +311,14 @@ const APP_ROUTES: AppRoute[] = [
   {
     path: '/incidents/report',
     title: 'Incident Report',
-    roles: ['staff'],
+    roles: ['staff', 'admin'],
     nav: 'incidents',
     render: (viewer) => <IncidentReportRoute viewer={viewer} />,
   },
   {
     path: '/incidents/:incidentId/report',
     title: 'Incident Report',
-    roles: ['staff'],
+    roles: ['staff', 'admin'],
     nav: 'incidents',
     render: (viewer) => <IncidentReportRoute viewer={viewer} />,
   },

@@ -11,7 +11,7 @@ vi.mock('react-chartjs-2', () => {
   const Stub = (props: { 'aria-label'?: string }) => (
     <div role="img" aria-label={props['aria-label']} />
   )
-  return { Bar: Stub, Line: Stub }
+  return { Bar: Stub, Line: Stub, Doughnut: Stub }
 })
 
 const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
@@ -77,11 +77,37 @@ describe('App routes', () => {
     expect(await screen.findByText('Unable to load the student profile.')).toBeInTheDocument()
   })
 
-  it('redirects Admin/Principal away from Staff-only screens to the Dashboard', async () => {
-    renderAt('/students', ADMIN)
+  it.each([
+    '/students/new',
+    '/students/student-0001/edit',
+    '/students/incomplete',
+    '/visits',
+    '/visits/new',
+    '/visits/visit-0157',
+    '/incidents/new',
+    '/incidents/incident-0022/complete',
+    '/incidents/notifications',
+    '/inventory',
+    '/follow-ups',
+    '/reports/sports',
+  ])('redirects Admin/Principal away from the Staff-only %s to the Dashboard', async (route) => {
+    renderAt(route, ADMIN)
 
     expect(await screen.findByRole('heading', { name: 'Clinic Overview' })).toBeInTheDocument()
     expect(screen.getByTestId('path')).toHaveTextContent(/^\/$/)
+  })
+
+  it.each([
+    ['/students', 'Student List'],
+    ['/students/student-0001', /.+/],
+    ['/incidents', 'Incident Log'],
+    ['/incidents/incident-0022/report', 'Incident Report'],
+    ['/incidents/report', 'Incident Report'],
+  ])('opens the read-only %s for Admin/Principal (ADR-038)', async (route, heading) => {
+    renderAt(route, ADMIN)
+
+    expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument()
+    expect(screen.getByTestId('path')).toHaveTextContent(route)
   })
 
   it('opens the read-only audit log for Admin/Principal and marks it current', async () => {

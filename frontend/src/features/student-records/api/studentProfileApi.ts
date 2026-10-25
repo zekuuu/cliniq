@@ -4,14 +4,15 @@ import {
   getStudent,
   getStudentExcuseLetters,
   getStudentHistory,
+  recordAdminView,
   type SessionUser,
   type StudentExcuseLetter,
 } from '../../../lib/mock-db'
 import type { Incident, Student, Visit } from '../../../types/entities'
 
 /**
- * Student Profile data access (Screen #7 / Reference 3). A read-only profile fetch, so no audit-log
- * write is needed.
+ * Student Profile data access (Screen #7 / Reference 3). A read-only profile fetch; only the Admin's
+ * opening of a profile is audit-logged (ADR-038 item 4), once per record per session.
  *
  * Preview an empty history with `?mockEmpty=visits,incidents` (`lib/mock-db/devToggles.ts`).
  * The whole history loads, newest first: the screen lists the most recent, the printed Student Health
@@ -36,6 +37,7 @@ export async function fetchStudentProfile(
     getStudentHistory(student.id, Infinity),
     viewer?.role === 'staff' ? getStudentExcuseLetters(student.id) : [],
   ])
+  if (viewer) await recordAdminView({ type: 'student', id: student.id }, viewer)
   return { student, ...history, excuseLetters }
 }
 

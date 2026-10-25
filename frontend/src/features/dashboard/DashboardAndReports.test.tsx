@@ -57,11 +57,14 @@ describe('Incident register and Complaint summary (RP-4, RP-7)', () => {
     expect(screen.getByRole('heading', { name: 'Complaint summary' })).toBeInTheDocument()
   })
 
-  it('gives the Admin no incident links (the incident screens are Staff only)', async () => {
+  it('gives the Admin read-only report links, no Stage 2 links, and no printing (ADR-038)', async () => {
     const user = userEvent.setup()
     renderWithRouter(<ReportsPage viewer={ADMIN} />)
     await user.click(await screen.findByRole('tab', { name: 'Incident register' }))
     await screen.findByRole('table', { name: 'Incident register' })
-    expect(screen.queryByRole('link', { name: /^(Open report|Complete Stage 2):/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /^Complete Stage 2:/ })).not.toBeInTheDocument()
+    const links = screen.getAllByRole('link', { name: /^Open report:/ })
+    for (const link of links) expect(link.getAttribute('href')).toMatch(/\/report$/)
+    expect(screen.getByRole('button', { name: /print/i })).toHaveAttribute('aria-disabled', 'true')
   })
 })
