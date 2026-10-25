@@ -1,21 +1,21 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { BackButton, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Input, InventoryItemPicker, Select, Skeleton, StudentPicker } from '../../components'
+import { BackButton, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Input, InventoryItemPicker, PatientPicker, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { formatDateTime } from '../../lib/dates'
 import { StockRuleError } from '../../lib/mock-db'
-import { maskLrn } from '../../lib/lrn'
+import { maskPatientNumber, patientRefOf } from '../../lib/patients'
 import { paths } from '../../routes/paths'
-import type { StudentSearchResult } from '../../types/entities'
-import { dispenseInventoryItem, fetchInventory, findDispenseStudent, searchDispenseStudents } from './api/inventoryApi'
+import type { PatientRef, PatientSearchResult } from '../../types/entities'
+import { dispenseInventoryItem, fetchInventory, findDispensePatient, searchDispensePatients } from './api/inventoryApi'
 
 type Recipient = '' | 'student' | 'general'
 
 const recipientOptions = [
-  { value: 'student', label: 'A student' },
-  { value: 'general', label: 'Not for a student (general use)' },
+  { value: 'student', label: 'A student or staff member' },
+  { value: 'general', label: 'Not for a person (general use)' },
 ]
 
 function DispenseSkeleton({ back }: { back: ReactNode }) {
@@ -24,15 +24,15 @@ function DispenseSkeleton({ back }: { back: ReactNode }) {
 
 /**
  * Standalone Dispense (#30), for medicine or supplies given outside a visit. It must name a student
- * or say it's general use. When the student already has a visit today, a notice links to that visit
+ * or staff member (ADR-043) or say it's general use. When that person already has a visit today, a notice links to that visit
  * so the medicine is added there instead of being recorded twice (ADR-018). Expired items can't be
  * dispensed, here or in the data layer.
  */
 export function InventoryDispensePage() {
   const { data: items, status, reload } = useAsyncData('dispense-items', () => fetchInventory({ search: '', category: '' }))
   const [recipient, setRecipient] = useState<Recipient>('')
-  const [studentId, setStudentId] = useState('')
-  const [picked, setPicked] = useState<StudentSearchResult | null>(null)
+  const [patientRef, setPatientRef] = useState<PatientRef | null>(null)
+  const [picked, setPicked] = useState<PatientSearchResult | null>(null)
   const [itemId, setItemId] = useState('')
   const [quantity, setQuantity] = useState('1')
   const [errors, setErrors] = useState<{ recipient?: string; student?: string; item?: string; quantity?: string; save?: string }>({})
@@ -40,13 +40,13 @@ export function InventoryDispensePage() {
   const [saving, setSaving] = useState(false)
   const { cancel, discardDialog } = useCancelNavigation(
     paths.inventory,
-    !success && (itemId !== '' || quantity !== '1' || recipient !== '' || studentId !== ''),
+    !success && (itemId !== '' || quantity !== '1' || recipient !== '' || patientRef !== null),
   )
   const invalidRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(invalidRef)
-  const lookupId = recipient === 'student' ? studentId : ''
-  const { data: lookup } = useAsyncData(`dispense-student|${lookupId}`, () =>
-    lookupId ? findDispenseStudent(lookupId).catch(() => null) : Promise.resolve(undefined),
+  const lookupRef = recipient === 'student' ? patientRef : null
+  const { data: lookup } = useAsyncData(`dispense-patient|${lookupRef?.studentId ?? ''}|${lookupRef?.personnelId ?? ''}`, () =>
+    lookupRef ? findDispensePatient(lookupRef).catch(() => null) : Promise.resolve(undefined),
   )
 
   const back = <BackButton fallback={paths.inventory} />
@@ -62,8 +62,8 @@ export function InventoryDispensePage() {
     event.preventDefault()
     const next: typeof errors = {}
     if (!recipient) next.recipient = 'Choose who this is for.'
-    if (recipient === 'student' && !studentId) next.student = 'Choose the student: type the LRN or name, then pick from the list.'
-    else if (recipient === 'student' && lookup === null) next.student = 'This student record could not be loaded. Search again.'
+    if (recipient === 'student' && !patientRef) next.student = 'Choose the student or staff member: type an LRN, a Staff No. or a name, then pick from the list.'
+    else if (recipient === 'student' && lookup === null) next.student = 'This record could not be loaded. Search again.'
     if (!item) next.item = 'Choose an item.'
     if (!Number.isInteger(amount) || amount < 1) next.quantity = 'Enter a whole-number quantity of at least 1.'
     setErrors(next)
@@ -71,8 +71,9 @@ export function InventoryDispensePage() {
     if (Object.keys(next).length || !item) return
     setSaving(true)
     try {
-      const result = await dispenseInventoryItem(item.id, amount, recipient === 'student' ? studentId : undefined)
-      setSuccess(`${amount} ${result.item.unit} of ${result.item.name} recorded${recipient === 'student' && picked ? ` for LRN ${maskLrn(picked.lrn)}` : ' for general use'}. Remaining stock: ${result.remainingStock}.${result.belowZero ? ' Stock is now below zero; recount and restock.' : ''}`)
+      const result = await dispenseInventoryItem(item.id, amount, recipient === 'student' ? (patientRef ?? undefined) : undefined)
+      const forWhom = picked ? (picked.kind === 'student' ? `LRN ${maskPatientNumber({ kind: 'student', number: picked.lrn })}` : `Staff No. ${picked.staffNumber}`) : ''
+      setSuccess(`${amount} ${result.item.unit} of ${result.item.name} recorded${recipient === 'student' && picked ? ` for ${forWhom}` : ' for general use'}. Remaining stock: ${result.remainingStock}.${result.belowZero ? ' Stock is now below zero; recount and restock.' : ''}`)
       setItemId('')
       setQuantity('1')
       reload()
@@ -102,19 +103,20 @@ export function InventoryDispensePage() {
           </p>
           <Select label="For" required value={recipient} placeholder="Choose who this is for" options={recipientOptions} error={errors.recipient} onChange={(value) => { setRecipient(value as Recipient); clear('recipient') }} />
           {recipient === 'student' && (
-            <StudentPicker
-              search={searchDispenseStudents}
-              selected={picked ?? lookup?.student ?? null}
-              onSelect={(student) => { setPicked(student); setStudentId(student.id); clear('student') }}
-              onClear={() => { setPicked(null); setStudentId(''); clear('student') }}
+            <PatientPicker
+              search={searchDispensePatients}
+              selected={lookup?.patient ?? null}
+              onSelect={(result) => { setPicked(result); setPatientRef(patientRefOf(result)); clear('student') }}
+              onClear={() => { setPicked(null); setPatientRef(null); clear('student') }}
               error={errors.student}
-              hint="Type the LRN or the student name, then pick the student who received it."
+              hint="Type an LRN, a Staff No. or a name, then pick who received it."
               addStudentHref={paths.studentNew}
+              addStaffHref={paths.staffNew}
             />
           )}
           {recipient === 'student' && lookup?.todaysVisit && (
             <div role="status" className="rounded-md border border-info bg-info/10 px-4 py-3 text-sm text-text-primary">
-              <p className="font-semibold">This student already has a visit today ({formatDateTime(lookup.todaysVisit.dateTime)}).</p>
+              <p className="font-semibold">{lookup.patient.kind === 'student' ? 'This student' : 'This staff member'} already has a visit today ({formatDateTime(lookup.todaysVisit.dateTime)}).</p>
               <p className="mt-1">If this medicine is part of that visit, add it there instead so it isn't recorded twice.</p>
               <Link className="mt-2 inline-flex items-center gap-1 font-semibold text-brand-green-dark underline hover:brightness-75" to={paths.visitDetail(lookup.todaysVisit.id)}>Open today’s visit<Icon name="arrowRight" size={14} /></Link>
             </div>

@@ -4,19 +4,20 @@ import {
   getInventoryItem,
   listInventoryHistory,
   getMockToday,
-  getStudent,
+  getPatient,
   listInventory,
   listVisits,
   restockInventoryItem as restockInLayer,
   saveInventoryItem as saveInLayer,
-  searchStudents,
+  searchPatients,
   type DispenseResult,
   type InventoryItemView,
   type InventoryHistoryRow,
   type SessionUser,
   type StockAdjustmentInput,
 } from '../../../lib/mock-db'
-import type { InventoryCategory, InventoryItem, ItemBrand, Student, StudentSearchResult, Visit } from '../../../types/entities'
+import type { InventoryCategory, InventoryItem, ItemBrand, PatientRef, PatientSearchResult, Visit } from '../../../types/entities'
+import type { Patient } from '../../../lib/patients'
 
 /**
  * Inventory (#28–#30). Low-stock, nearing-expiration, expired, and below-zero states are computed
@@ -110,10 +111,11 @@ export function saveInventoryItem(
 export function dispenseInventoryItem(
   itemId: string,
   quantity: number,
-  studentId?: string,
+  /** The student or staff member it was for (ADR-043); omitted for general use. */
+  patient?: PatientRef,
   actor?: SessionUser,
 ): Promise<DispenseResult> {
-  return dispenseInLayer(itemId, quantity, { studentId }, actor)
+  return dispenseInLayer(itemId, quantity, { studentId: patient?.studentId ?? undefined, personnelId: patient?.personnelId ?? undefined }, actor)
 }
 
 /** Adjust Stock (ADR-018): a signed change or a counted quantity, with a required reason. */
@@ -129,15 +131,16 @@ export function restockItem(itemId: string, quantity: number, values: RestockVal
   })
 }
 
-/** The student a standalone dispense is for, plus any visit they already have today. */
-export async function findDispenseStudent(studentId: string): Promise<{ student: Student; todaysVisit: Visit | null }> {
-  const student = await getStudent(studentId)
+/** The student or staff member a standalone dispense is for, plus any visit they already have today. */
+export async function findDispensePatient(ref: PatientRef): Promise<{ patient: Patient; todaysVisit: Visit | null }> {
+  const patient = await getPatient(ref)
   const today = getMockToday()
   const visits = await listVisits({ from: today, to: today })
-  return { student, todaysVisit: visits.find((visit) => visit.studentId === student.id) ?? null }
+  const mine = (visit: Visit) => (patient.kind === 'student' ? visit.studentId : visit.personnelId) === patient.id
+  return { patient, todaysVisit: visits.find(mine) ?? null }
 }
 
-/** the Dispense student search: LRN prefix or name, active students, at most 8. */
-export function searchDispenseStudents(query: string): Promise<StudentSearchResult[]> {
-  return searchStudents(query)
+/** The Dispense patient search (ADR-043): students and staff in one box, at most 8, labelled. */
+export function searchDispensePatients(query: string): Promise<PatientSearchResult[]> {
+  return searchPatients(query)
 }
