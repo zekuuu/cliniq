@@ -16,6 +16,10 @@ import type {
   ISODateTime,
   ItemGivenLine,
   ParentNotificationAttempt,
+  PatientRef,
+  PatientSearchResult,
+  Personnel,
+  PersonnelSearchResult,
   CalledContact,
   ParentNotificationOutcome,
   Report,
@@ -27,6 +31,7 @@ import type {
   Visit,
 } from '../../types/entities'
 import { normalizeComplaint } from '../complaints'
+import type { Patient, PatientNumber } from '../patients'
 import { incidentCompletionBlocker } from '../itemsGiven'
 import { DISPOSITION_LABELS } from '../dispositions'
 import { addDays, parseISODate, toISODate } from '../dates'
@@ -47,6 +52,9 @@ import {
   inventoryStatusFor,
   missingRequiredFields,
   monthlyCounts,
+  personnelDepartments,
+  searchPatients as searchPatientRecords,
+  searchPersonnel as searchPersonnelRecords,
   searchStudents as searchStudentRecords,
   studentsById,
   toStudent,
@@ -58,7 +66,7 @@ import {
 } from './selectors'
 import { clearMockSession, firstViewThisSession, getMockSessionUser, type SessionUser } from './session'
 import { commit, db, restoreDb } from './store'
-import { CALENDAR_EVENT_TITLE_MAX } from './integrity'
+import { CALENDAR_EVENT_TITLE_MAX, PERSONNEL_DEPARTMENT_MAX } from './integrity'
 import type {
   AdjustmentReason,
   CalendarEvent,
@@ -98,6 +106,7 @@ function view(includeEnteredInError = false): DbState {
     ...s,
     users: isEmptied('users') ? [] : s.users,
     students: isEmptied('students') ? [] : s.students,
+    personnel: isEmptied('personnel') ? [] : s.personnel,
     visits: isEmptied('visits') ? [] : includeEnteredInError ? s.visits : s.visits.filter((v) => !v.enteredInError),
     incidents: isEmptied('incidents') ? [] : s.incidents,
     followUps: isEmptied('followUps') ? [] : s.followUps,
@@ -204,6 +213,7 @@ const FIELD_LABELS: Record<string, string> = {
   parentGuardian: 'parent or guardian',
   profilePicture: 'profile picture',
   brand: 'generic or branded',
+  department: 'department or role',
 }
 
 /** "Updated allergies and grade level" — names the changed fields for the audit summary, never their values. */
@@ -393,6 +403,22 @@ function userName(state: DbState, id: string | null): string | null {
 function studentOf(state: DbState, studentId: string): SeedStudent {
   return must(studentsById(state).get(studentId), 'Student')
 }
+
+function personnelOf(state: DbState, personnelId: string): Personnel {
+  return must(state.personnel.find((p) => p.id === personnelId), 'Staff member')
+}
+
+/** A student or a staff member, exactly one, and it exists (ADR-043 item 4). */
+function patientOf(state: DbState, input: { studentId?: string | null; personnelId?: string | null }): PatientRef {
+  const patient = { studentId: input.studentId || null, personnelId: input.personnelId || null }
+  if ((patient.studentId === null) === (patient.personnelId === null))
+    throw new Error('Choose one patient: a student or a staff member.')
+  if (patient.studentId) studentOf(state, patient.studentId)
+  else personnelOf(state, patient.personnelId!)
+  return patient
+}
+
+const samePatient = (a: PatientRef, b: PatientRef) => a.studentId === b.studentId && a.personnelId === b.personnelId
 
 // ---- reference vocabularies (frontendOnly, mock-only) ---------------------------------------
 
@@ -735,6 +761,157 @@ export function getIncompleteRecordQueue(): Promise<IncompleteRecord[]> {
   )
 }
 
+// ---- personnel: staff patients (ADR-043) -------------------------------------------------------
+
+export interface PersonnelQuery {
+  /** Name or Staff No. */
+  search?: string
+  type?: string
+  includeArchived?: boolean
+}
+
+/** The Staff List: a deliberate masterlist, so names are shown, as on the Student List (D7). */
+export function listPersonnel(query: PersonnelQuery = {}): Promise<Personnel[]> {
+  return read('staff', (s) => {
+    const search = query.search?.trim().toLowerCase() ?? ''
+    return s.personnel
+      .filter((p) => query.includeArchived || !p.archived)
+      .filter((p) => !query.type || p.type === query.type)
+      .filter((p) => !search || p.fullName.toLowerCase().includes(search) || p.staffNumber.toLowerCase().includes(search))
+      .sort((a, b) => a.fullName.localeCompare(b.fullName))
+  })
+}
+
+export function getPersonnel(id: string): Promise<Personnel> {
+  return read('staff member', (s) => personnelOf(s, id))
+}
+
+/** One patient in full (allergies included), for a form or a single-person screen (ADR-043). */
+export function getPatient(ref: PatientRef): Promise<Patient> {
+  return read('patient', (s): Patient =>
+    ref.studentId ? { kind: 'student', ...toStudent(studentOf(s, ref.studentId)) } : { kind: 'personnel', ...personnelOf(s, ref.personnelId ?? '') },
+  )
+}
+
+/** Staff lookup by name or Staff No.: active staff only, capped, nothing medical. */
+export function searchPersonnel(query: string, limit = 8): Promise<PersonnelSearchResult[]> {
+  return read('staff search', (s) => searchPersonnelRecords(s, query, limit))
+}
+
+/** The one patient box (ADR-043 item 5): students and staff, each result labelled by kind. */
+export function searchPatients(query: string, limit = 8): Promise<PatientSearchResult[]> {
+  return read('patient search', (s) => searchPatientRecords(s, query, limit))
+}
+
+/** The staff types the form offers (config; PROVISIONAL until the clinic and registrar answer). */
+export function getPersonnelTypes(): Promise<string[]> {
+  return read('staff types', (s) => s.config.personnelTypes)
+}
+
+/** Department or role values already in use, as suggestions (D4). */
+export function getPersonnelDepartments(): Promise<string[]> {
+  return read('staff departments', personnelDepartments)
+}
+
+export interface PersonnelHistory extends StudentHistory {
+  followUps: FollowUp[]
+}
+
+/** A staff member's visits, incidents and follow-ups, newest first (D8). */
+export function getPersonnelHistory(personnelId: string, limit = 8): Promise<PersonnelHistory> {
+  return read(
+    'staff history',
+    (s) => ({
+      visits: s.visits
+        .filter((v) => v.personnelId === personnelId)
+        .sort((a, b) => b.dateTime.localeCompare(a.dateTime))
+        .slice(0, limit),
+      incidents: s.incidents
+        .filter((i) => i.personnelId === personnelId)
+        .sort((a, b) => b.time.localeCompare(a.time))
+        .slice(0, limit),
+      followUps: s.followUps
+        .filter((f) => f.personnelId === personnelId)
+        .sort((a, b) => b.followUpDate.localeCompare(a.followUpDate))
+        .slice(0, limit),
+    }),
+  )
+}
+
+export type PersonnelInput = Pick<
+  Personnel,
+  'fullName' | 'type' | 'department' | 'contactInfo' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
+>
+
+/** Staff records belong to the School Clinician (ADR-043 item 9). */
+export class PersonnelPermissionError extends Error {
+  constructor() {
+    super('Only the clinic staff can manage staff records.')
+  }
+}
+
+function requireClinician(actor: SessionUser) {
+  if (actor.role !== 'staff') throw new PersonnelPermissionError()
+}
+
+/** The next free Staff No., e.g. "STF-0013". Never reused, archived records included (D2). */
+function nextStaffNumber(state: DbState): string {
+  const max = state.personnel.reduce((m, p) => Math.max(m, Number(p.staffNumber.slice(4)) || 0), 0)
+  return `STF-${String(max + 1).padStart(4, '0')}`
+}
+
+/**
+ * Create or update a staff record. The Staff No. is assigned on create and never edited. No field
+ * beyond the name and type is required: emergency contacts, allergies and conditions are optional (D5, D6).
+ */
+export function savePersonnel(
+  input: PersonnelInput,
+  options: { personnelId?: string; actor?: SessionUser } = {},
+): Promise<{ personnel: Personnel; action: 'create' | 'update' }> {
+  return write('save staff', (s) => {
+    const by = actorOr(options.actor)
+    requireClinician(by)
+    const fullName = input.fullName.trim()
+    if (!fullName) throw new Error('Enter the full name.')
+    if (!s.config.personnelTypes.includes(input.type)) throw new Error('Choose the staff type.')
+    const department = input.department?.trim() || null
+    if (department && department.length > PERSONNEL_DEPARTMENT_MAX)
+      throw new Error(`Department or role can be at most ${PERSONNEL_DEPARTMENT_MAX} characters.`)
+    const fields = {
+      fullName,
+      type: input.type,
+      department,
+      contactInfo: input.contactInfo.trim(),
+      allergies: input.allergies,
+      medicalConditions: input.medicalConditions,
+      emergencyContacts: input.emergencyContacts,
+    }
+    if (options.personnelId) {
+      const record = personnelOf(s, options.personnelId)
+      const summary = changedSummary(record, fields)
+      Object.assign(record, fields)
+      audit(s, by, 'update', { type: 'staff', id: record.id }, summary)
+      return { personnel: record, action: 'update' as const }
+    }
+    const record: Personnel = { id: nextId('personnel', s.personnel), staffNumber: nextStaffNumber(s), ...fields, archived: false }
+    s.personnel.push(record)
+    audit(s, by, 'create', { type: 'staff', id: record.id })
+    return { personnel: record, action: 'create' as const }
+  })
+}
+
+/** Archive, never delete (D9): hidden from active lists and the patient search, kept in history. */
+export function archivePersonnel(personnelId: string, actor?: SessionUser): Promise<Personnel> {
+  return write('archive staff', (s) => {
+    const by = actorOr(actor)
+    requireClinician(by)
+    const record = personnelOf(s, personnelId)
+    record.archived = true
+    audit(s, by, 'archive', { type: 'staff', id: record.id })
+    return record
+  })
+}
+
 // ---- visits --------------------------------------------------------------------------------
 
 /** Visits marked "Entered in error" are left out unless `includeEnteredInError` is set (the Visit Log's filter). */
@@ -762,14 +939,17 @@ export function getLatestVisit(): Promise<Visit> {
   return read('latest visit', (s) => {
     const byId = studentsById(s)
     const sorted = [...s.visits].sort((a, b) => b.dateTime.localeCompare(a.dateTime))
-    return must(sorted.find((v) => !byId.get(v.studentId)?.archived), 'Visit')
+    // A student's visit: the screens opened without an id (the excuse letter) are student screens.
+    return must(sorted.find((v) => v.studentId && byId.get(v.studentId)?.archived === false), 'Visit')
   })
 }
 
 export type FollowUpInput = Pick<FollowUp, 'followUpDate' | 'reason' | 'notes'>
 
 export interface RecordVisitInput extends Partial<VisitLogbookFields> {
-  studentId: string
+  /** The patient: a student or a staff member, exactly one (ADR-043). */
+  studentId?: string | null
+  personnelId?: string | null
   complaint: string
   /** Treatment notes: care that isn't stock (rest, cold compress, advice). */
   treatment: string
@@ -855,13 +1035,14 @@ function dispositionFields(
 function createFollowUp(
   s: DbState,
   actor: SessionUser,
-  studentId: string,
+  patient: PatientRef,
   related: FollowUp['relatedRecord'],
   input: FollowUpInput,
 ): FollowUp {
   const followUp: FollowUp = {
     id: nextId('followup', s.followUps),
-    studentId,
+    studentId: patient.studentId,
+    personnelId: patient.personnelId,
     relatedRecord: related,
     followUpDate: input.followUpDate,
     reason: input.reason,
@@ -885,14 +1066,16 @@ export function recordVisit(
 ): Promise<{ visit: Visit; followUp: FollowUp | null; belowZero: string[] }> {
   return write('record visit', (s) => {
     const by = actorOr(actor)
-    const student = studentOf(s, input.studentId)
+    const patient = patientOf(s, input)
+    // A staff member sent home gets the disposition and no letter (ADR-043 item 7).
+    if (patient.personnelId && input.excuseLetterDraft) throw new Error('An excuse letter is only for a student.')
     const itemLines = input.itemsGiven ?? []
     // Treatment notes and items given are both optional: a visit may record no treatment.
     const extra = dispositionFields(s, null, input.disposition, input.excuseLetterDraft ?? null, input.referredTo ?? null)
     const { dateTime, lateEntry, lateEntryReason } = visitTime(s, input)
     const visit: Visit = {
       id: nextId('visit', s.visits),
-      studentId: input.studentId,
+      ...patient,
       dateTime,
       // Stored in a known suggestion's spelling, so counts never split by case.
       complaint: normalizeComplaint(input.complaint, complaintSuggestions(s)),
@@ -908,10 +1091,10 @@ export function recordVisit(
     s.visits.push(visit)
     // The summary says "late entry", never the reason text (ADR-017).
     audit(s, by, 'submit', { type: 'visit', id: visit.id }, lateEntry ? 'Late entry' : undefined)
-    const given = applyItemLines(s, by, { studentId: student.id, visitId: visit.id }, [], itemLines, 'dispense')
+    const given = applyItemLines(s, by, { ...patient, visitId: visit.id }, [], itemLines, 'dispense')
     visit.itemsGiven = given.lines
     const followUp = input.followUp
-      ? createFollowUp(s, by, input.studentId, { type: 'visit', id: visit.id }, input.followUp)
+      ? createFollowUp(s, by, patient, { type: 'visit', id: visit.id }, input.followUp)
       : null
     return { visit, followUp, belowZero: given.belowZero }
   })
@@ -961,7 +1144,7 @@ export function updateVisit(
     )
     const fields = { ...rest, dateTime, complaint: normalizeComplaint(rest.complaint, complaintSuggestions(s)), ...extra, ...logbook }
     const given = itemsGiven
-      ? applyItemLines(s, by, { studentId: visit.studentId, visitId: id }, visit.itemsGiven, itemsGiven, 'adjust')
+      ? applyItemLines(s, by, { studentId: visit.studentId, personnelId: visit.personnelId, visitId: id }, visit.itemsGiven, itemsGiven, 'adjust')
       : { lines: visit.itemsGiven, belowZero: [] }
     const summary = changedSummary(visit, { ...fields, itemsGiven: given.lines })
     Object.assign(visit, fields, { itemsGiven: given.lines })
@@ -983,7 +1166,7 @@ export function markVisitEnteredInError(id: string, reason: string, actor?: Sess
     if (!why) throw new Error('Give the reason this visit was entered in error.')
     if (visit.enteredInError) throw new Error('This visit is already marked entered in error.')
     const marked = { reason: why, at: now(s), byUserId: by.id }
-    applyItemLines(s, by, { studentId: visit.studentId, visitId: id }, visit.itemsGiven, [], 'adjust')
+    applyItemLines(s, by, { studentId: visit.studentId, personnelId: visit.personnelId, visitId: id }, visit.itemsGiven, [], 'adjust')
     visit.enteredInError = marked
     // The reason stays on the record, not in the audit trail (ADR-017).
     audit(s, by, 'update', { type: 'visit', id }, 'Marked entered in error')
@@ -1116,6 +1299,7 @@ export function approveExcuseLetter(
   return write('approve excuse letter', (s) => {
     const by = actorOr(actor)
     const visit = must(s.visits.find((v) => v.id === visitId), 'Visit')
+    if (visit.personnelId) throw new Error('An excuse letter is only for a student.')
     if (visit.enteredInError) throw new Error('This visit was entered in error, so its excuse letter is void.')
     const invalid = excusedPeriodError(period)
     if (invalid) throw new Error(invalid)
@@ -1159,20 +1343,26 @@ export function submitPeReferral(input: PeReferralInput, actor?: SessionUser): P
 
 // ---- incidents -------------------------------------------------------------------------------
 
-export function listIncidents(range?: { from: ISODate; to: ISODate }): Promise<Incident[]> {
+/** ADR-043 item 9 (D15): the Admin's read-only incident screens leave out staff patients' incidents. */
+const visibleTo = (viewer?: SessionUser) => (incident: Incident) => viewer?.role !== 'admin' || incident.personnelId === null
+
+export function listIncidents(range?: { from: ISODate; to: ISODate }, viewer?: SessionUser): Promise<Incident[]> {
   return read('incidents', (s) =>
     s.incidents
+      .filter(visibleTo(viewer))
       .filter((i) => !range || (dateOf(i.time) >= range.from && dateOf(i.time) <= range.to))
       .sort((a, b) => b.time.localeCompare(a.time)),
   )
 }
 
-export function getIncident(id: string): Promise<Incident> {
-  return read('incident', (s) => must(s.incidents.find((i) => i.id === id), 'Incident'))
+export function getIncident(id: string, viewer?: SessionUser): Promise<Incident> {
+  return read('incident', (s) => must(s.incidents.find((i) => i.id === id && visibleTo(viewer)(i)), 'Incident'))
 }
 
 export interface StageOneInput {
-  studentId: string
+  /** The patient: a student or a staff member, exactly one (ADR-043). */
+  studentId?: string | null
+  personnelId?: string | null
   complaint: string
   vitals: Incident['vitals']
   /** Optional; blank is saved as null. PROVISIONAL (Incident.generalNotes). */
@@ -1187,18 +1377,18 @@ export interface StageOneInput {
 export function saveIncidentStageOne(input: StageOneInput, actor?: SessionUser): Promise<Incident> {
   return write('save incident stage 1', (s) => {
     const by = actorOr(actor)
-    studentOf(s, input.studentId)
+    const patient = patientOf(s, input)
     const saved = now(s)
     if (input.time && input.time > saved) throw new Error("The incident time can't be in the future.")
     const source = input.sourceVisitId ? must(s.visits.find((v) => v.id === input.sourceVisitId), 'Visit') : null
     if (source) {
-      if (source.studentId !== input.studentId) throw new Error('The escalated visit belongs to another student.')
+      if (!samePatient(source, patient)) throw new Error('The escalated visit belongs to another patient.')
       if (source.enteredInError) throw new Error('A visit entered in error cannot be escalated.')
       if (source.escalatedIncidentId) throw new Error('This visit was already escalated to an incident.')
     }
     const incident: Incident = {
       id: nextId('incident', s.incidents),
-      studentId: input.studentId,
+      ...patient,
       time: input.time ?? saved,
       complaint: input.complaint,
       vitals: input.vitals,
@@ -1265,7 +1455,7 @@ export function completeIncidentStageTwo(
       if (input.itemsGiven && !same(lines, incident.itemsGiven))
         throw new StockRuleError("Medicines on a completed incident can't be changed.")
     } else {
-      const given = applyItemLines(s, by, { studentId: incident.studentId, incidentId: incident.id }, [], lines, 'dispense')
+      const given = applyItemLines(s, by, { studentId: incident.studentId, personnelId: incident.personnelId, incidentId: incident.id }, [], lines, 'dispense')
       incident.itemsGiven = given.lines
       belowZero = given.belowZero
     }
@@ -1290,7 +1480,7 @@ export function completeIncidentStageTwo(
       })
     }
     const followUp = input.followUp
-      ? createFollowUp(s, by, incident.studentId, { type: 'incident', id: incident.id }, input.followUp)
+      ? createFollowUp(s, by, incident, { type: 'incident', id: incident.id }, input.followUp)
       : null
     return { incident, followUp, belowZero }
   })
@@ -1365,17 +1555,23 @@ export function approveIncidentReport(incidentId: string, actor?: SessionUser): 
 
 // ---- follow-ups ------------------------------------------------------------------------------
 
-export type FollowUpView = FollowUp & { lrn: string; dueState: FollowUpDueState | null }
+/** `patient`: the LRN or the Staff No. a multi-person list may show (ADR-004, ADR-043). */
+export type FollowUpView = FollowUp & { patient: PatientNumber; dueState: FollowUpDueState | null }
+
+/** The masked-list identifier of a record's patient: LRN or Staff No. */
+function patientNumberOf(s: DbState, ref: PatientRef): PatientNumber {
+  if (ref.studentId) return { kind: 'student', number: studentsById(s).get(ref.studentId)?.lrn ?? '' }
+  return { kind: 'personnel', number: s.personnel.find((p) => p.id === ref.personnelId)?.staffNumber ?? '' }
+}
 
 export function listFollowUps(query: { status?: FollowUpStatus | '' } = {}): Promise<FollowUpView[]> {
   return read('follow-ups', (s) => {
-    const byId = studentsById(s)
     return s.followUps
       .filter((f) => !query.status || f.status === query.status)
       .sort((a, b) => a.followUpDate.localeCompare(b.followUpDate))
       .map((f) => ({
         ...f,
-        lrn: byId.get(f.studentId)?.lrn ?? '',
+        patient: patientNumberOf(s, f),
         dueState: followUpDueState(f, s.today),
       }))
   })
@@ -1401,7 +1597,7 @@ export function rescheduleFollowUp(id: string, followUpDate: ISODate, actor?: Se
     const old = must(s.followUps.find((f) => f.id === id), 'Follow-up')
     if (old.status !== 'missed' && old.status !== 'cancelled') throw new Error('Only a missed or cancelled follow-up gets a new date.')
     if (!followUpDate || followUpDate < s.today) throw new Error("The new date can't be in the past.")
-    return createFollowUp(s, actorOr(actor), old.studentId, old.relatedRecord, { followUpDate, reason: old.reason, notes: old.notes })
+    return createFollowUp(s, actorOr(actor), old, old.relatedRecord, { followUpDate, reason: old.reason, notes: old.notes })
   })
 }
 
@@ -1502,15 +1698,18 @@ export interface DispenseResult {
 export function dispenseInventoryItem(
   itemId: string,
   quantity: number,
-  link: { studentId?: string; visitId?: string } = {},
+  link: { studentId?: string; personnelId?: string; visitId?: string } = {},
   actor?: SessionUser,
 ): Promise<DispenseResult> {
   return write('dispense', (s) => {
     const by = actorOr(actor)
     const item = must(s.inventoryItems.find((i) => i.id === itemId), 'Inventory item')
     if (!Number.isInteger(quantity) || quantity < 1) throw new StockRuleError(QUANTITY_RULE)
+    if (link.studentId && link.personnelId) throw new StockRuleError('Choose one patient: a student or a staff member.')
     if (link.studentId && !s.students.some((st) => st.id === link.studentId))
       throw new StockRuleError('This student record was not found.')
+    if (link.personnelId && !s.personnel.some((p) => p.id === link.personnelId))
+      throw new StockRuleError('This staff record was not found.')
     if (link.visitId && !s.visits.some((v) => v.id === link.visitId)) throw new StockRuleError('That visit no longer exists.')
     const batchAllocations = takeUsableBatches(s, item, quantity)
     const txn = {
@@ -1521,6 +1720,7 @@ export function dispenseInventoryItem(
       timestamp: now(s),
       userId: by.id,
       studentId: link.studentId ?? null,
+      personnelId: link.personnelId ?? null,
       visitId: link.visitId ?? null,
       batchAllocations,
     }
@@ -1556,7 +1756,7 @@ export function restockInventoryItem(
     item.batches.push(batch)
     const id = nextId('txn', s.frontendOnly.inventoryTransactions)
     s.frontendOnly.inventoryTransactions.push({
-      id, itemId, type: 'restock', quantity, timestamp: now(s), userId: by.id, studentId: null, visitId: null,
+      id, itemId, type: 'restock', quantity, timestamp: now(s), userId: by.id, studentId: null, personnelId: null, visitId: null,
       batchAllocations: [{ batchId: batch.id, quantity }],
     })
     audit(s, by, 'submit', { type: 'inventory-restock', id })
@@ -1620,6 +1820,7 @@ export function adjustInventoryStock(itemId: string, input: StockAdjustmentInput
       timestamp: now(s),
       userId: by.id,
       studentId: null,
+      personnelId: null,
       visitId: null,
       reason: input.reason,
       note,
@@ -1710,7 +1911,7 @@ function splitAllocations(allocations: ReadonlyArray<InventoryBatchAllocation>, 
 function applyItemLines(
   s: DbState,
   by: SessionUser,
-  link: { studentId: string; visitId?: string; incidentId?: string },
+  link: PatientRef & { visitId?: string; incidentId?: string },
   before: ItemGivenLine[],
   next: ItemLineInput[],
   mode: 'dispense' | 'adjust',
@@ -1750,6 +1951,7 @@ function applyItemLines(
       timestamp: now(s),
       userId: by.id,
       studentId: link.studentId,
+      personnelId: link.personnelId,
       visitId: link.visitId ?? null,
       ...(link.incidentId ? { incidentId: link.incidentId } : {}),
     }
@@ -1815,7 +2017,8 @@ export interface MonthlyReportData {
    */
   itemsGiven: Array<{ itemName: string; unit: string; quantity: number }>
   /** Incident archive rows carry the LRN only, masked when shown (multi-student list, ADR-004). */
-  incidents: Array<Incident & { lrn: string }>
+  /** `patient`: the LRN or Staff No. the register prints (ADR-043). */
+  incidents: Array<Incident & { patient: PatientNumber }>
   /** Visits per complaint, most frequent first (ties alphabetical, so the order is stable). */
   complaintCounts: ComplaintCount[]
 }
@@ -1848,7 +2051,6 @@ function itemsGivenInMonth(s: DbState, month: string): MonthlyReportData['itemsG
 /** `month` is "YYYY-MM". Everything is generated from raw records on each call. */
 export function getMonthlyReport(month: string): Promise<MonthlyReportData> {
   return read('monthly report', (s) => {
-    const byId = studentsById(s)
     return {
       month,
       counts: monthlyCounts(s, month),
@@ -1865,7 +2067,7 @@ export function getMonthlyReport(month: string): Promise<MonthlyReportData> {
       incidents: s.incidents
         .filter((i) => i.time.startsWith(month))
         .sort((a, b) => b.time.localeCompare(a.time))
-        .map((i) => ({ ...i, lrn: byId.get(i.studentId)?.lrn ?? '' })),
+        .map((i) => ({ ...i, patient: patientNumberOf(s, i) })),
       complaintCounts: complaintCounts(countedVisits(s).filter((v) => v.dateTime.startsWith(month))),
     }
   })

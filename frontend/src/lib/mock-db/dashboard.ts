@@ -25,9 +25,9 @@ import {
   inClinicNow,
   inventoryStatusFor,
   lowStockCount,
+  patientSplit,
   pendingRecordCount,
   studentsById,
-  toListRef,
 } from './selectors'
 import type { DbState, MockDbConfig } from './types'
 
@@ -50,13 +50,14 @@ export function buildDashboardSummary(
   const visitsInRange = counted.filter((v) => isWithin(dateOf(v.dateTime), from, to))
   const incidentsInRange = state.incidents.filter((i) => isWithin(dateOf(i.time), from, to))
   const students = studentsById(state)
+  // Trends by sex and grade read the student, so staff records drop out here (ADR-043 item 8).
   const trendEvents = [
     ...counted.flatMap((v) => {
-      const student = students.get(v.studentId)
+      const student = students.get(v.studentId ?? '')
       return student ? [{ date: dateOf(v.dateTime), hour: hourOf(v.dateTime), complaint: v.complaint, eventTag: v.eventTag, sex: student.sex ?? 'female', gradeLevel: student.gradeLevel, kind: 'visit' as const }] : []
     }),
     ...state.incidents.flatMap((i) => {
-      const student = students.get(i.studentId)
+      const student = students.get(i.studentId ?? '')
       return student ? [{ date: dateOf(i.time), hour: hourOf(i.time), complaint: i.complaint, eventTag: i.eventTag, sex: student.sex ?? 'female', gradeLevel: student.gradeLevel, kind: 'incident' as const }] : []
     }),
   ]
@@ -84,6 +85,7 @@ export function buildDashboardSummary(
       activeStudents: state.students.filter((s) => !s.archived).length,
       inClinicNow: inClinicNow(state).length,
       incidentsAwaitingStage2: state.incidents.filter((i) => i.stage === 1).length,
+      split: { visits: patientSplit(visitsInRange), incidents: patientSplit(incidentsInRange), inClinicNow: patientSplit(inClinicNow(state)) },
     },
     previousCounts: comparable
       ? {
@@ -112,10 +114,17 @@ export function buildDashboardSummary(
  */
 export function buildDueFollowUps(state: DbState): DueFollowUpRow[] {
   const byId = studentsById(state)
+  const personnel = new Map(state.personnel.map((p) => [p.id, p]))
   return dueFollowUps(state).flatMap((f) => {
-    const student = byId.get(f.studentId)
+    const student = byId.get(f.studentId ?? '')
+    const person = personnel.get(f.personnelId ?? '')
     const dueState = followUpDueState(f, state.today)
-    if (!student || !dueState) return []
+    const patient = student
+      ? { kind: 'student' as const, id: student.id, number: student.lrn }
+      : person
+        ? { kind: 'personnel' as const, id: person.id, number: person.staffNumber }
+        : null
+    if (!patient || !dueState) return []
     return [
       {
         followUp: {
@@ -125,7 +134,7 @@ export function buildDueFollowUps(state: DbState): DueFollowUpRow[] {
           status: f.status,
           relatedRecord: f.relatedRecord,
         },
-        student: toListRef(student),
+        patient,
         dueState,
         daysFromToday: diffDays(state.today, f.followUpDate),
       },

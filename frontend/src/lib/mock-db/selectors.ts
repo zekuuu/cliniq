@@ -10,6 +10,10 @@ import type {
   FollowUp,
   ISODate,
   InventoryItem,
+  PatientRef,
+  PatientSearchResult,
+  Personnel,
+  PersonnelSearchResult,
   Student,
   StudentListRef,
   StudentSearchResult,
@@ -40,6 +44,7 @@ export const auditTargetTypes = [
   'follow-up',
   'calendar-event',
   'sports-report',
+  'staff',
 ] as const
 
 export type AuditTargetType = (typeof auditTargetTypes)[number]
@@ -115,6 +120,7 @@ const AUDIT_RECORD_KINDS: Record<string, string> = {
   'issue-report': 'Issue report',
   'calendar-event': 'Calendar event',
   'sports-report': 'Sports Report',
+  staff: 'Staff',
   'print-document': 'Printed document',
 }
 
@@ -134,26 +140,38 @@ const REPORT_NAMES: Record<string, string> = {
  * a per-entry `find` over visits made the screen take seconds.
  */
 function auditLookups(state: DbState) {
-  const studentOf = (records: ReadonlyArray<{ id: string; studentId: string }>) => new Map(records.map((record) => [record.id, record.studentId]))
-  return { state, students: studentsById(state), visits: studentOf(state.visits), incidents: studentOf(state.incidents), followUps: studentOf(state.followUps) }
+  const patientOf = (records: ReadonlyArray<PatientRef & { id: string }>) => new Map<string, PatientRef>(records.map((record) => [record.id, record]))
+  return {
+    state,
+    students: studentsById(state),
+    personnel: new Map(state.personnel.map((person) => [person.id, person])),
+    visits: patientOf(state.visits),
+    incidents: patientOf(state.incidents),
+    followUps: patientOf(state.followUps),
+  }
 }
 
 function auditTargetIdentifier(lookups: ReturnType<typeof auditLookups>, target: NonNullable<AuditLogEntry['targetRecord']>, type: AuditTargetType): { label: string; studentId?: string } {
   const { state, students } = lookups
-  const studentId =
+  const patient: PatientRef | undefined =
     type === 'student'
-      ? target.id
-      : type === 'visit'
-        ? lookups.visits.get(target.id)
-        : type === 'incident'
-          ? lookups.incidents.get(target.id)
-          : type === 'follow-up'
-            ? lookups.followUps.get(target.id)
-            : undefined
-  if (studentId !== undefined) {
-    const student = students.get(studentId)
-    return student ? { label: maskLrn(student.lrn), studentId } : { label: '' }
+      ? { studentId: target.id, personnelId: null }
+      : type === 'staff'
+        ? { studentId: null, personnelId: target.id }
+        : type === 'visit'
+          ? lookups.visits.get(target.id)
+          : type === 'incident'
+            ? lookups.incidents.get(target.id)
+            : type === 'follow-up'
+              ? lookups.followUps.get(target.id)
+              : undefined
+  if (patient?.studentId) {
+    const student = students.get(patient.studentId)
+    return student ? { label: maskLrn(student.lrn), studentId: patient.studentId } : { label: '' }
   }
+  // A staff patient appears by Staff No., never by name (ADR-043 item 6).
+  if (patient?.personnelId) return { label: lookups.personnel.get(patient.personnelId)?.staffNumber ?? '' }
+  if (patient) return { label: '' }
   if (type === 'inventory') return { label: state.inventoryItems.find((item) => item.id === target.id)?.name ?? '' }
   if (type === 'user') return { label: state.users.find((user) => user.id === target.id)?.name ?? '' }
   if (type === 'sports-report') return { label: state.frontendOnly.sportsReports.find((report) => report.id === target.id)?.title ?? '' }
@@ -254,6 +272,50 @@ export function searchStudents(state: DbState, query: string, limit = 8): Studen
     .map(({ s }) => ({ id: s.id, lrn: s.lrn, fullName: s.fullName, gradeLevel: s.gradeLevel }))
 }
 
+// ---- Personnel: staff patients (ADR-043) ----------------------------------------------------
+
+export function activePersonnel(state: DbState): Personnel[] {
+  return state.personnel.filter((p) => !p.archived)
+}
+
+/**
+ * Active staff whose Staff No. starts with the typed value ("STF-0007", or its digits "0007") or
+ * whose name contains the query. Capped like the student search; nothing medical.
+ */
+export function searchPersonnel(state: DbState, query: string, limit = 8): PersonnelSearchResult[] {
+  const q = query.trim().toLowerCase()
+  if (q.length < STUDENT_SEARCH_MIN_LENGTH) return []
+  // Only a query with a digit can be a Staff No., so "st" stays a name search.
+  const number = /\d/.test(q) ? q.toUpperCase().replace(/\s/g, '') : null
+  return activePersonnel(state)
+    .map((p) => ({ p, byNumber: number !== null && (p.staffNumber.startsWith(number) || p.staffNumber.slice(4).startsWith(number)) }))
+    .filter(({ p, byNumber }) => byNumber || p.fullName.toLowerCase().includes(q))
+    .sort((a, b) => Number(b.byNumber) - Number(a.byNumber) || a.p.fullName.localeCompare(b.p.fullName))
+    .slice(0, limit)
+    .map(({ p }) => ({ id: p.id, staffNumber: p.staffNumber, fullName: p.fullName, type: p.type }))
+}
+
+/** One box for students and staff (ADR-043 item 5): both searches, labelled, by name, capped at `limit`. */
+export function searchPatients(state: DbState, query: string, limit = 8): PatientSearchResult[] {
+  return [
+    ...searchStudents(state, query, limit).map((s) => ({ kind: 'student' as const, ...s })),
+    ...searchPersonnel(state, query, limit).map((p) => ({ kind: 'personnel' as const, ...p })),
+  ]
+    .sort((a, b) => a.fullName.localeCompare(b.fullName))
+    .slice(0, limit)
+}
+
+/** Department or role values already used, for the Staff Form's suggestions (D4). */
+export function personnelDepartments(state: DbState): string[] {
+  return [...new Set(state.personnel.flatMap((p) => (p.department ? [p.department] : [])))].sort((a, b) => a.localeCompare(b))
+}
+
+/** The Students / Staff split of any set of clinical records (ADR-043 item 8). */
+export function patientSplit(records: ReadonlyArray<PatientRef>): { students: number; staff: number } {
+  const staff = records.filter((r) => r.personnelId !== null).length
+  return { students: records.length - staff, staff }
+}
+
 /**
  * The New Visit complaint suggestions: the predefined visit complaint types plus every complaint
  * already saved on a visit, merged case-insensitively (a predefined type keeps its own spelling,
@@ -340,7 +402,8 @@ export function frequentVisitors(state: DbState, range?: { from: ISODate; to: IS
   const byId = studentsById(state)
   const counts = new Map<string, number>()
   for (const v of countedVisits(state))
-    if (isWithin(dateOf(v.dateTime), from, to)) counts.set(v.studentId, (counts.get(v.studentId) ?? 0) + 1)
+    // Students only (ADR-043 item 8): a staff visit has no student.
+    if (v.studentId && isWithin(dateOf(v.dateTime), from, to)) counts.set(v.studentId, (counts.get(v.studentId) ?? 0) + 1)
   return [...counts.entries()]
     .filter(([, n]) => n >= state.config.frequentVisitorMinVisits)
     .flatMap(([id, visitCount]) => {

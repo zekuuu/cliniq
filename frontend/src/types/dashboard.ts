@@ -1,5 +1,6 @@
 import type { FollowUpDueState, InventoryFlag } from '../components'
 import type { DateRange } from '../lib/dateRange'
+import type { PatientNumber } from '../lib/patients'
 import type {
   FollowUp,
   ISODate,
@@ -58,11 +59,19 @@ export interface DashboardCounts {
   inClinicNow: number
   /** Every incident still at Stage 1, whatever the range: one of the Overview tab's urgent items (DB-4). */
   incidentsAwaitingStage2: number
+  /** The Students / Staff split of the totals above that count people (ADR-043, D14). Each pair sums to its total. */
+  split: Record<'visits' | 'incidents' | 'inClinicNow', PatientSplit>
+}
+
+export interface PatientSplit {
+  students: number
+  staff: number
 }
 
 export interface DueFollowUpRow {
   followUp: Pick<FollowUp, 'id' | 'followUpDate' | 'reason' | 'status' | 'relatedRecord'>
-  student: StudentListRef
+  /** A student (masked LRN) or a staff member (Staff No.), never a name (ADR-004, ADR-043). */
+  patient: PatientNumber & { id: string }
   dueState: FollowUpDueState
   /** Negative = overdue by N days. */
   daysFromToday: number
