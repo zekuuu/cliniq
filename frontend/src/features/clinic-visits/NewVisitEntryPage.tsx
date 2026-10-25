@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import {
   BackButton,
   Button,
@@ -15,7 +15,7 @@ import {
   ItemsGivenField,
   SegmentedControl,
   Skeleton,
-  StudentPicker,
+  PatientPicker,
   type ItemLineDraft,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
@@ -23,17 +23,18 @@ import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { cn } from '../../lib/cn'
+import { patientLine, patientRefOf, type Patient } from '../../lib/patients'
 import { cleanComplaint, normalizeComplaint } from '../../lib/complaints'
 import { addDays, todayISO } from '../../lib/dates'
 import { getMockSessionUser, LATE_ENTRY_MINUTES, StockRuleError, type ComplaintType, type InventoryItemView, type SessionUser } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
-import type { Disposition } from '../../types/entities'
+import type { Disposition, PatientRef } from '../../types/entities'
 import {
   fetchComplaintSuggestions,
   fetchNewVisitContext,
   fetchVisitItems,
-  findVisitStudent,
-  searchVisitStudents,
+  findVisitPatient,
+  searchVisitPatients,
   submitNewVisit,
 } from './api/newVisitApi'
 import { ComplaintField } from './ComplaintField'
@@ -202,11 +203,22 @@ function TriagePanel({
 export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser }) {
   const today = todayISO()
   const { data, status, reload } = useAsyncData('new-visit', fetchNewVisitContext)
-  const identified = useIdentifiedStudent(null, findVisitStudent)
+  const identified = useIdentifiedStudent<Patient, PatientRef>(null, findVisitPatient)
+  const isStaffPatient = identified.student?.kind === 'personnel'
+  // The Staff Profile's "Record a visit" opens with the staff member chosen (`?staff=`, D8).
+  const [searchParams] = useSearchParams()
+  const staffParam = searchParams.get('staff')
+  useEffect(() => {
+    if (staffParam) void identified.select({ studentId: null, personnelId: staffParam })
+    // Only on arrival; Change and a save clear the pick as usual.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [staffParam])
   const [complaint, setComplaint] = useState('')
   const [treatment, setTreatment] = useState('')
   const [disposition, setDisposition] = useState<Disposition>('returned_to_class')
   const [dispositionValues, setDispositionValues] = useState(() => emptyDispositionValues(today))
+  // A staff patient gets no excuse letter (ADR-043, D13).
+  const letterValues = isStaffPatient ? { ...dispositionValues, prepareLetter: false } : dispositionValues
   const [triageSteps, setTriageSteps] = useState<string[]>([])
   const [needsFollowUp, setNeedsFollowUp] = useState(false)
   const [followUpDate, setFollowUpDate] = useState(addDays(today, 1))
@@ -240,7 +252,6 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
   const [freshItems, setFreshItems] = useState<InventoryItemView[] | null>(null)
   /** Complaint suggestions refreshed after a save, so a newly typed complaint is offered next time. */
   const [freshSuggestions, setFreshSuggestions] = useState<string[] | null>(null)
-  /** After "Change", the student search takes focus again. */
   const [errors, setErrors] = useState<Errors>({})
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
@@ -284,7 +295,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
   function escalateToIncident() {
     const temperature = Number(logbook.temperatureC)
     const escalate: EscalationPrefill = {
-      studentId: identified.student?.id,
+      ...(identified.student ? patientRefOf(identified.student) : {}),
       complaint: cleanComplaint(complaint),
       time: whenEdited ? `${visitDate}T${visitClock}:00+08:00` : undefined,
       temperatureC: logbook.temperatureC.trim() && Number.isFinite(temperature) ? temperature : null,
@@ -327,7 +338,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
     }
     return {
       ...next,
-      ...dispositionErrors(disposition, dispositionValues),
+      ...dispositionErrors(disposition, letterValues),
       ...logbookErrors(logbook, currentClock(), timeOutRef.current?.validity.badInput),
     }
   }
@@ -336,7 +347,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
     event.preventDefault()
     if (!data) return
     const nextErrors = validate()
-    const studentOk = identified.validate('Choose the student: type the LRN or name, then pick from the list.')
+    const studentOk = identified.validate('Choose the student or staff member: type an LRN, a Staff No. or a name, then pick from the list.')
     setErrors(nextErrors)
     if (nextErrors.timeOut) setMoreOpen(true)
     invalid.report(Object.keys(nextErrors).length + (studentOk ? 0 : 1))
@@ -344,11 +355,11 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
     setSaving(true)
     setSaveError('')
     try {
-      const student = await identified.resolve()
-      if (!student) return
+      const patient = await identified.resolve()
+      if (!patient) return
       const result = await submitNewVisit(
         {
-          studentId: student.id,
+          ...patientRefOf(patient),
           complaint: normalizeComplaint(complaint, suggestions),
           treatment: treatment.trim(),
           disposition,
@@ -361,7 +372,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
               }
             : null,
           itemsGiven: lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity, instructions: line.instructions })),
-          ...dispositionPayload(disposition, dispositionValues),
+          ...dispositionPayload(disposition, letterValues),
           ...logbookPayload(logbook),
           ...(whenEdited && { dateTime: `${visitDate}T${visitClock}` }),
           lateEntryReason: isLateEntry ? lateEntryReason : null,
@@ -441,8 +452,8 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">New Visit</h1>
             <p className="mt-1 text-sm text-text-secondary">
               {identified.student
-                ? `${identified.student.fullName} · LRN ${identified.student.lrn} · ${identified.student.gradeLevel}`
-                : 'Student not identified yet.'}
+                ? `${identified.student.fullName} · ${patientLine(identified.student)}`
+                : 'Student or staff member not identified yet.'}
             </p>
           </div>
         </div>
@@ -495,22 +506,23 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
             description="Required fields are marked."
           />
           <CardBody className="flex flex-col gap-4">
-            <StudentPicker
-              search={searchVisitStudents}
+            <PatientPicker
+              search={searchVisitPatients}
               selected={identified.student}
               onClear={identified.reset}
-              onSelect={(student) => {
+              onSelect={(result) => {
                 setSaved(null)
                 // Sir Rey (October 25, 2026): Parent or guardian starts as the primary emergency
-                // contact, only when the field is still empty; it stays editable.
-                void identified.select(student.id).then((full) => {
-                  const primary = full?.emergencyContacts[0]?.name
+                // contact, only when the field is still empty; it stays editable. Students only.
+                void identified.select(patientRefOf(result)).then((full) => {
+                  const primary = full?.kind === 'student' ? full.emergencyContacts[0]?.name : undefined
                   if (primary) setLogbook((current) => (current.parentGuardian.trim() ? current : { ...current, parentGuardian: primary }))
                 })
               }}
               error={identified.error}
               addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
-              autoFocus
+              addStaffHref={viewer.role === 'staff' ? paths.staffNew : undefined}
+              autoFocus={!staffParam}
             />
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <DatePicker
@@ -628,6 +640,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 setErrors((current) => ({ ...current, excusedUntil: undefined }))
               }}
               errors={errors}
+              noLetter={isStaffPatient}
             />
 
             <fieldset className="rounded-md border border-border p-4">
@@ -643,7 +656,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 />
                 <span>
                   <span className="block text-sm font-semibold text-text-primary">
-                    This student needs a follow-up
+                    {isStaffPatient ? 'This staff member needs a follow-up' : 'This student needs a follow-up'}
                   </span>
                   <span className="block text-xs text-text-secondary">
                     Creates a pending follow-up connected to this visit.

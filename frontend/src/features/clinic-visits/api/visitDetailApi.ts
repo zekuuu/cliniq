@@ -2,7 +2,7 @@ import {
   getExcuseLetterApproval,
   getLatestVisit,
   getVisitComplaintSuggestions,
-  getStudent,
+  getPatient,
   getUser,
   getVisit,
   getVitalsWarningRanges,
@@ -17,7 +17,8 @@ import {
   type VitalsWarningRanges,
 } from '../../../lib/mock-db'
 import { normalizeComplaint } from '../../../lib/complaints'
-import type { Disposition, EnteredInError, ExcuseLetterDraft, ISODateTime, ItemGivenLine, Student } from '../../../types/entities'
+import type { Disposition, EnteredInError, ExcuseLetterDraft, ISODateTime, ItemGivenLine } from '../../../types/entities'
+import type { Patient } from '../../../lib/patients'
 import {
   emptyDispositionValues,
   dispositionPayload,
@@ -27,7 +28,8 @@ import { logbookPayload, logbookValuesFrom, type LogbookValues } from '../logboo
 
 export interface VisitDetail extends VisitLogbookFields {
   id: string
-  student: Student
+  /** A student or a staff member (ADR-043); a staff visit has no excuse letter. */
+  student: Patient
   dateTime: ISODateTime
   complaint: string
   treatment: string
@@ -88,7 +90,7 @@ export async function fetchVisitDetail(visitId?: string): Promise<VisitDetail> {
   const visit = visitId ? await getVisit(visitId) : await getLatestVisit()
   const userName = (id: string) => getUser(id).then((user) => user.name, () => 'Unknown user')
   const [student, loggedBy, items, approval, complaintSuggestions, vitalsRanges, enteredInErrorBy] = await Promise.all([
-    getStudent(visit.studentId),
+    getPatient(visit),
     userName(visit.loggedByUserId),
     listInventory(),
     getExcuseLetterApproval(visit.id),
@@ -141,6 +143,8 @@ export async function updateVisitDetail(
   itemsGiven: ItemLineInput[],
   actor?: SessionUser,
 ): Promise<{ visit: VisitDetail; belowZero: string[] }> {
+  // A staff patient gets no excuse letter (ADR-043, D13).
+  if (visit.student.kind === 'personnel') values = { ...values, prepareLetter: false }
   const { visit: updated, belowZero } = await updateVisit(
     visit.id,
     {

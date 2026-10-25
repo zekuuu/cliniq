@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { usePatientFilter } from '../../hooks/usePatientFilter'
 import {
   BackButton,
   Badge,
@@ -14,6 +15,8 @@ import {
   Input,
   MultiSelect,
   Pagination,
+  PatientFilterSelect,
+  PatientNumber,
   SegmentedControl,
   Select,
   Skeleton,
@@ -33,8 +36,7 @@ import {
   fetchVisitLog,
   type VisitLogRow,
 } from './api/visitLogApi'
-import { MaskedLrn } from '../../components/ui/MaskedLrn'
-import { lrnLabel } from '../../lib/lrn'
+import { patientNumberLabel, type PatientFilter } from '../../lib/patients'
 import { DISPOSITION_LABELS, DISPOSITION_TONES } from '../../lib/dispositions'
 
 type DispositionFilter = Disposition | 'all'
@@ -97,6 +99,7 @@ export function VisitLogListPage() {
   // `?inClinic=1` (the Dashboard's "In clinic now" chip) applies only on arrival.
   const [inClinicNow, setInClinicNow] = useState(searchParams.get('inClinic') === '1')
   const [includeEnteredInError, setIncludeEnteredInError] = useState(false)
+  const [patient, setPatient] = usePatientFilter()
   const visitStatusFilters = [
     ...(inClinicNow ? ['in-clinic-now'] : []),
     ...(includeEnteredInError ? ['include-entered-in-error'] : []),
@@ -111,8 +114,8 @@ export function VisitLogListPage() {
   }
 
   const { data, status, isRefetching, reload } = useAsyncData(
-    `${range.from}|${range.to}|${search}|${disposition}|${letter}|${inClinicNow}|${includeEnteredInError}`,
-    () => fetchVisitLog({ from: range.from, to: range.to, search, disposition, letter, inClinicNow, includeEnteredInError }),
+    `${range.from}|${range.to}|${search}|${disposition}|${letter}|${inClinicNow}|${includeEnteredInError}|${patient}`,
+    () => fetchVisitLog({ from: range.from, to: range.to, search, disposition, letter, inClinicNow, includeEnteredInError, patient }),
   )
 
   // Filters reset to the first page in the same event, so a narrower result never lands on an
@@ -128,6 +131,10 @@ export function VisitLogListPage() {
   }
   function changeDisposition(next: DispositionFilter) {
     setDisposition(next)
+    setPage(1)
+  }
+  function changePatient(next: PatientFilter) {
+    setPatient(next)
     setPage(1)
   }
   function changeLetter(next: string) {
@@ -172,7 +179,7 @@ export function VisitLogListPage() {
       case 'dateTime':
         return row.dateTime
       case 'lrn':
-        return row.lrn
+        return `${row.patient.kind}|${row.patient.number}`
       case 'record':
         return row.complaint
       case 'disposition':
@@ -200,11 +207,11 @@ export function VisitLogListPage() {
     },
     {
       key: 'student',
-      header: 'LRN',
-      sort: sortColumn('lrn', 'LRN'),
+      header: 'LRN or Staff No.',
+      sort: sortColumn('lrn', 'LRN or Staff No.'),
       cell: (row) => (
         <div>
-          <p><MaskedLrn lrn={row.lrn} /></p>
+          <p><PatientNumber patient={row.patient} /></p>
           <p className="text-xs text-text-secondary">{row.gradeLevel}</p>
         </div>
       ),
@@ -249,7 +256,7 @@ export function VisitLogListPage() {
           {row.letterPending && (
             <Link
               to={paths.excuseLetter(row.id)}
-              aria-label={`Review Letter for ${lrnLabel(row.lrn)}`}
+              aria-label={`Review Letter for ${patientNumberLabel(row.patient)}`}
               className={buttonClassName({ size: 'sm' })}
             >
               Review Letter
@@ -270,7 +277,7 @@ export function VisitLogListPage() {
               Visit Log
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
-              Review daily clinic visits by LRN and complaint. Treatment details open
+              Review daily clinic visits by LRN or Staff No. and complaint. Treatment details open
               from the individual record.
             </p>
           </div>
@@ -303,10 +310,11 @@ export function VisitLogListPage() {
             <Input
               label="Search"
               value={search}
-              placeholder="LRN, grade, complaint, or event"
+              placeholder="LRN, Staff No., complaint or event"
               onChange={(event) => changeSearch(event.target.value)}
               className="min-w-56 flex-1"
             />
+            <PatientFilterSelect value={patient} onChange={changePatient} />
             <Select
               label="Excuse letter"
               value={letter}

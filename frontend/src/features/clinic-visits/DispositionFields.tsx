@@ -9,7 +9,8 @@ import { ExcusedPeriodPresets } from './ExcusedPeriodPresets'
 /**
  * Progressive disclosure under Disposition: nothing for Returned to class; the excuse-letter
  * section for Sent home; that section plus "Referred to" for Referred to hospital. When the
- * visit's letter is already approved, its fixed period replaces the draft fields.
+ * visit's letter is already approved, its fixed period replaces the draft fields. A staff patient
+ * gets no excuse letter (ADR-043, D13): only "Referred to" can show.
  */
 export function DispositionFields({
   disposition,
@@ -17,6 +18,7 @@ export function DispositionFields({
   onChange,
   errors,
   approvedPeriod,
+  noLetter = false,
 }: {
   disposition: Disposition
   values: DispositionValues
@@ -24,6 +26,8 @@ export function DispositionFields({
   errors: DispositionErrors
   /** Set when the visit already has an approved letter. */
   approvedPeriod?: ExcusedPeriod | null
+  /** A staff patient: no excuse-letter section (D13). Pass `prepareLetter: false` in the values too. */
+  noLetter?: boolean
 }) {
   const set = <K extends keyof DispositionValues>(field: K, value: DispositionValues[K]) =>
     onChange({ ...values, [field]: value })
@@ -42,6 +46,9 @@ export function DispositionFields({
       </div>
     )
   }
+
+  if (noLetter)
+    return disposition === 'referred_to_hospital' ? <ReferredToField value={values.referredTo} onChange={(value) => set('referredTo', value)} /> : null
 
   if (!hasExcuseLetter(disposition)) return null
 

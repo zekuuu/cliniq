@@ -1,13 +1,13 @@
 import {
   getIncidentComplaintTypes,
-  getStudent,
+  getPatient,
   getVisitComplaintSuggestions,
   getVisitComplaintTypes,
   getVitalsWarningRanges,
   listInventory,
   listUsers,
   recordVisit,
-  searchStudents,
+  searchPatients,
   type ComplaintType,
   type InventoryItemView,
   type ItemLineInput,
@@ -15,7 +15,8 @@ import {
   type VisitLogbookFields,
   type VitalsWarningRanges,
 } from '../../../lib/mock-db'
-import type { Disposition, ExcuseLetterDraft, FollowUp, Student, StudentSearchResult, Visit } from '../../../types/entities'
+import type { Patient } from '../../../lib/patients'
+import type { Disposition, ExcuseLetterDraft, FollowUp, PatientRef, PatientSearchResult, Visit } from '../../../types/entities'
 
 export interface NewVisitContext {
   /** Complaint options + their first-aid checklists (mock-only content; see mock-db.json). */
@@ -30,8 +31,7 @@ export interface NewVisitContext {
   emergencyComplaints: string[]
 }
 
-export interface NewVisitInput extends Partial<VisitLogbookFields> {
-  studentId: string
+export interface NewVisitInput extends Partial<VisitLogbookFields>, PatientRef {
   complaint: string
   treatment: string
   disposition: Disposition
@@ -76,13 +76,14 @@ export async function fetchAssistedByNames(): Promise<string[]> {
   return (await listUsers()).filter((user) => !user.deactivatedAt).map((user) => user.name)
 }
 
-export function searchVisitStudents(query: string): Promise<StudentSearchResult[]> {
-  return searchStudents(query)
+/** The New Visit patient search (ADR-043): students and staff in one box, at most 8, labelled. */
+export function searchVisitPatients(query: string): Promise<PatientSearchResult[]> {
+  return searchPatients(query)
 }
 
-/** Loads the picked student in full (allergies included). */
-export function findVisitStudent(studentId: string): Promise<Student> {
-  return getStudent(studentId)
+/** Loads the picked patient in full (allergies included). */
+export function findVisitPatient(ref: PatientRef): Promise<Patient> {
+  return getPatient(ref)
 }
 
 /** Fresh stock figures after a save, so the picker shows what's left. */
@@ -98,6 +99,7 @@ export function submitNewVisit(input: NewVisitInput, user: SessionUser): Promise
   return recordVisit(
     {
       studentId: input.studentId,
+      personnelId: input.personnelId,
       complaint: input.complaint,
       treatment: input.treatment,
       disposition: input.disposition,

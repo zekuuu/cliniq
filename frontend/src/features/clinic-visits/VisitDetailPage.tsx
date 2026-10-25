@@ -1,4 +1,5 @@
 import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { PATIENT_KIND_LABELS, patientLine } from '../../lib/patients'
 import { Link, useNavigate } from 'react-router'
 import {
   BackButton,
@@ -191,7 +192,7 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
     if (lines.some((line) => line.quantity < 1)) next.itemsGiven = 'Each quantity must be at least 1.'
     return {
       ...next,
-      ...dispositionErrors(values.disposition, values, Boolean(visit.approval)),
+      ...dispositionErrors(values.disposition, values, Boolean(visit.approval) || visit.student.kind === 'personnel'),
       ...logbookErrors(values, values.visitClock || visit.dateTime.slice(11, 16), timeOutRef.current?.validity.badInput),
     }
   }
@@ -246,7 +247,7 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
               Visit Details
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
-              {visit.student.fullName} · LRN {visit.student.lrn} · {visit.student.gradeLevel}
+              {visit.student.fullName} · {patientLine(visit.student)}
             </p>
           </div>
           <Badge tone="info" variant="soft" icon="calendarClock">
@@ -318,12 +319,12 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
           />
           <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <p className="text-xs font-semibold text-text-secondary">Student</p>
+              <p className="text-xs font-semibold text-text-secondary">{PATIENT_KIND_LABELS[visit.student.kind]}</p>
               <p className="text-sm font-semibold text-text-primary">{visit.student.fullName}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold text-text-secondary">LRN</p>
-              <p className="text-sm font-semibold text-text-primary tabular-nums">{visit.student.lrn}</p>
+              <p className="text-xs font-semibold text-text-secondary">{visit.student.kind === 'student' ? 'LRN' : 'Staff No.'}</p>
+              <p className="text-sm font-semibold text-text-primary tabular-nums">{visit.student.kind === 'student' ? visit.student.lrn : visit.student.staffNumber}</p>
             </div>
             <div>
               <p className="text-xs font-semibold text-text-secondary">Logged by</p>
@@ -441,6 +442,7 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                   }}
                   errors={errors}
                   approvedPeriod={visit.approval}
+                  noLetter={visit.student.kind === 'personnel'}
                 />
                 <Input
                   label="Event tag"
@@ -550,7 +552,8 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
           </CardBody>
         </Card>
 
-        <ExcuseLetterCard visit={visit} />
+        {/* A staff visit has no excuse letter (ADR-043, D13). */}
+        {visit.student.kind === 'student' && <ExcuseLetterCard visit={visit} />}
       </div>
 
       <Modal open={markingError} title="Mark this visit as entered in error?" onClose={() => setMarkingError(false)}>

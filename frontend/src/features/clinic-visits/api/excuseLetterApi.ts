@@ -55,7 +55,7 @@ export function defaultBody(student: Student, visit: Visit, period: ExcusedPerio
 export async function fetchExcuseLetterContext(visitId?: string, letterId?: string): Promise<ExcuseLetterContext> {
   const visit = visitId ? await getVisit(visitId) : await getLatestVisit()
   const [student, approval] = await Promise.all([
-    getStudent(visit.studentId),
+    getStudent(visit.studentId ?? ''),
     // `letterId` opens one stored letter (a superseded one, say); otherwise the visit's current letter.
     letterId ? getExcuseLetterById(letterId).then((letter) => (letter.visitId === visit.id ? letter : null)) : getExcuseLetterApproval(visit.id),
   ])
