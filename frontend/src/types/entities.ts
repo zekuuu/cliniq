@@ -51,6 +51,46 @@ export type StudentListRef = Pick<Student, 'id' | 'lrn'>
  */
 export type StudentSearchResult = Pick<Student, 'id' | 'lrn' | 'fullName' | 'gradeLevel'>
 
+/**
+ * A teacher, non-teaching staff member or utility worker seen at the clinic (ADR-043). Called
+ * "personnel" in code because "staff" already names the clinician role; labelled "Staff" on screen.
+ * No LRN, grade, section or sex, and no record-completeness status. PROVISIONAL, pending the ERD.
+ */
+export interface Personnel {
+  id: string
+  /** System-assigned, unique, `STF-0001`. Stands in for the masked LRN on lists (ADR-004). PROVISIONAL: the school may have its own employee number. */
+  staffNumber: string
+  fullName: string
+  /** One of `config.personnelTypes`. PROVISIONAL: the clinic and registrar give the real groups. */
+  type: string
+  /** Optional department or role, free text, at most 60 characters. */
+  department: string | null
+  contactInfo: string
+  /** Optional; empty means none recorded, as on a student. */
+  allergies: string[]
+  medicalConditions: string[]
+  /** Ordered; the first is the primary. May be empty: staff need none to be saved. */
+  emergencyContacts: EmergencyContact[]
+  archived: boolean
+}
+
+/** One result of a deliberate staff search: enough to tell people apart, nothing medical. */
+export type PersonnelSearchResult = Pick<Personnel, 'id' | 'staffNumber' | 'fullName' | 'type'>
+
+/** One result of the combined patient search (ADR-043 item 5), labelled by kind. */
+export type PatientSearchResult =
+  | ({ kind: 'student' } & StudentSearchResult)
+  | ({ kind: 'personnel' } & PersonnelSearchResult)
+
+/**
+ * Who a visit, incident, follow-up or medicine given is about: a student or a staff member, exactly
+ * one of the two (ADR-043 item 4). The other is null. PROVISIONAL, pending the ERD.
+ */
+export interface PatientRef {
+  studentId: string | null
+  personnelId: string | null
+}
+
 export type UserRole = 'staff' | 'admin'
 
 export interface User {
@@ -78,9 +118,8 @@ export interface EnteredInError {
   byUserId: string
 }
 
-export interface Visit {
+export interface Visit extends PatientRef {
   id: string
-  studentId: string
   dateTime: ISODateTime
   complaint: string
   treatment: string
@@ -178,9 +217,8 @@ export interface HospitalReferral {
   departureTime: ISODateTime
 }
 
-export interface Incident {
+export interface Incident extends PatientRef {
   id: string
-  studentId: string
   time: ISODateTime
   complaint: string
   /**
@@ -218,9 +256,8 @@ export interface Incident {
 
 export type FollowUpStatus = 'pending' | 'completed' | 'missed' | 'cancelled'
 
-export interface FollowUp {
+export interface FollowUp extends PatientRef {
   id: string
-  studentId: string
   relatedRecord: { type: 'visit' | 'incident'; id: string }
   followUpDate: ISODate
   reason: string

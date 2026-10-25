@@ -13,14 +13,21 @@ import type { MockDbSeed } from './types'
 /** The LRN: exactly 12 digits, kept as text (ADR-028). */
 export const LRN_PATTERN = /^\d{12}$/
 
+/** The system-assigned Staff No. of a staff patient (ADR-043, D2). PROVISIONAL. */
+export const STAFF_NUMBER_PATTERN = /^STF-\d{4}$/
+
+/** Longest department or role on a staff record (D4). */
+export const PERSONNEL_DEPARTMENT_MAX = 60
+
 /** Longest calendar event title, so a chip stays readable (ADR-019). */
 export const CALENDAR_EVENT_TITLE_MAX = 60
 
 const FIELDS = {
-  top: ['meta', 'config', 'users', 'students', 'visits', 'incidents', 'followUps', 'inventoryItems', 'reports', 'backupLogs', 'auditLog', 'frontendOnly'],
-  config: ['_note', 'showFrequentVisitors', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges'],
+  top: ['meta', 'config', 'users', 'students', 'personnel', 'visits', 'incidents', 'followUps', 'inventoryItems', 'reports', 'backupLogs', 'auditLog', 'frontendOnly'],
+  config: ['_note', 'showFrequentVisitors', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'personnelTypes', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges'],
   users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture', 'deactivatedAt'],
   students: ['id', 'lrn', 'fullName', 'gradeLevel', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
+  personnel: ['id', 'staffNumber', 'fullName', 'type', 'department', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived'],
   emergencyContact: ['name', 'relationship', 'phone', 'verified'],
   visits: ['id', 'studentId', 'dateTime', 'complaint', 'treatment', 'disposition', 'loggedByUserId', 'eventTag', 'itemsGiven', 'excuseLetterDraft', 'referredTo', 'temperatureC', 'timeOut', 'assistedBy', 'parentGuardian', 'remarks'],
   excuseLetterDraft: ['excusedFrom', 'excusedUntil', 'note'],
@@ -67,6 +74,7 @@ const ENUMS = {
 const ID_PATTERNS: Record<string, RegExp> = {
   users: /^user-(staff|admin)-\d{2}$/,
   students: /^student-\d{4}$/,
+  personnel: /^personnel-\d{4}$/,
   visits: /^visit-\d{4}$/,
   incidents: /^incident-\d{4}$/,
   followUps: /^followup-\d{4}$/,
@@ -126,6 +134,9 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
         if (!(typeof min === 'number' && typeof max === 'number' && min > 0 && min < max))
           fail(`config.vitalsWarningRanges.${vital}: needs positive numbers with min < max`)
       }
+    } else if (key === 'personnelTypes') {
+      if (!Array.isArray(value) || !value.length || value.some((v) => typeof v !== 'string' || !v.trim()) || new Set(value).size !== value.length)
+        fail('config.personnelTypes: must be a non-empty list of distinct names')
     } else if (key === 'showFrequentVisitors') {
       if (typeof value !== 'boolean') fail('config.showFrequentVisitors: must be true or false')
     } else if (!key.startsWith('_') && !(typeof value === 'number' && value > 0)) fail(`config.${key}: must be a positive number`)
@@ -186,6 +197,52 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     if (!studentIds.has(String(id))) fail(`${where}: student "${String(id)}" doesn't exist`)
   }
 
+  // Personnel: staff patients (ADR-043). No LRN, grade or sex, and no completeness status.
+  const personnelIds = new Set<string>()
+  const staffNumbers = new Set<string>()
+  const personnelTypes = ((s.config as Rec | undefined)?.personnelTypes ?? []) as unknown[]
+  list('personnel').forEach((pe, i) => {
+    const w = `personnel[${i}] (${String(pe.id)})`
+    checkFields(w, pe, FIELDS.personnel)
+    personnelIds.add(String(pe.id))
+    const number = String(pe.staffNumber)
+    if (!STAFF_NUMBER_PATTERN.test(number)) fail(`${w}.staffNumber: "${number}" doesn't look like STF-0001`)
+    if (staffNumbers.has(number)) fail(`${w}.staffNumber: duplicate "${number}"`)
+    staffNumbers.add(number)
+    if (!String(pe.fullName ?? '').trim()) fail(`${w}.fullName: must not be empty`)
+    oneOf(`${w}.type`, pe.type, personnelTypes)
+    if (pe.department !== null && (typeof pe.department !== 'string' || !pe.department.trim() || pe.department.length > PERSONNEL_DEPARTMENT_MAX))
+      fail(`${w}.department: must be null or text of at most ${PERSONNEL_DEPARTMENT_MAX} characters`)
+    if (!Array.isArray(pe.allergies) || !Array.isArray(pe.medicalConditions))
+      fail(`${w}: allergies and medicalConditions must be arrays`)
+    if (!Array.isArray(pe.emergencyContacts)) fail(`${w}.emergencyContacts: must be an array`)
+    else pe.emergencyContacts.forEach((contact, contactIndex) => checkFields(`${w}.emergencyContacts[${contactIndex}]`, contact, FIELDS.emergencyContact))
+    if (typeof pe.archived !== 'boolean') fail(`${w}.archived: must be true or false`)
+  })
+  /**
+   * Exactly one patient, a student or a staff member (ADR-043 item 4); `optional` allows neither (a
+   * restock). Returns a key like "student:student-0001" for same-patient checks, or null.
+   */
+  const patientRef = (where: string, record: Rec, optional = false): string | null => {
+    const studentId = record.studentId ?? null
+    const personnelId = record.personnelId ?? null
+    if (studentId !== null && personnelId !== null) {
+      fail(`${where}: sets both studentId and personnelId; exactly one patient is allowed (ADR-043)`)
+      return null
+    }
+    if (studentId === null && personnelId === null) {
+      if (!optional) fail(`${where}: sets neither studentId nor personnelId; exactly one patient is required (ADR-043)`)
+      return null
+    }
+    if (studentId !== null) {
+      studentRef(`${where}.studentId`, studentId)
+      return `student:${String(studentId)}`
+    }
+    if (!personnelIds.has(String(personnelId))) fail(`${where}.personnelId: staff member "${String(personnelId)}" doesn't exist`)
+    return `personnel:${String(personnelId)}`
+  }
+  const patientName = (key: string | null) => (key === null ? 'no patient' : key.replace(':', ' '))
+
   // Complaint vocabularies (frontendOnly) that visit/incident complaints must come from.
   const fo = (s.frontendOnly ?? {}) as Rec
   const visitComplaints = new Set(((fo.visitComplaintTypes ?? []) as Rec[]).map((c) => String(c.label)))
@@ -217,19 +274,20 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   }
 
   // Visits.
-  const visitStudent = new Map<string, string>()
+  /** visit id -> its patient key ("student:…" or "personnel:…"). */
+  const visitPatient = new Map<string, string>()
   const draftVisits = new Set<string>()
   list('visits').forEach((v, i) => {
     const w = `visits[${i}] (${String(v.id)})`
-    checkFields(w, v, FIELDS.visits)
-    studentRef(`${w}.studentId`, v.studentId)
+    checkFields(w, v, FIELDS.visits, ['personnelId'])
+    const patient = patientRef(w, v)
     relDateTime(`${w}.dateTime`, v.dateTime)
     oneOf(`${w}.disposition`, v.disposition, ENUMS.disposition)
     userRef(`${w}.loggedByUserId`, v.loggedByUserId)
     if (userRole.has(String(v.loggedByUserId)) && userRole.get(String(v.loggedByUserId)) !== 'staff')
       fail(`${w}.loggedByUserId: only Staff log visits`)
     if (!visitComplaints.has(String(v.complaint))) fail(`${w}.complaint: "${String(v.complaint)}" isn't in frontendOnly.visitComplaintTypes`)
-    visitStudent.set(String(v.id), String(v.studentId))
+    if (patient) visitPatient.set(String(v.id), patient)
     if (v.excuseLetterDraft !== null) draftVisits.add(String(v.id))
     // Treatment notes and items given are both optional (a visit may record no treatment).
     checkLines(w, v)
@@ -237,6 +295,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     const draft = v.excuseLetterDraft as Rec | null
     if (draft !== null) {
       if (v.disposition === 'returned_to_class') fail(`${w}.excuseLetterDraft: only a Sent home or Referred visit has an excuse-letter draft`)
+      if (v.personnelId != null) fail(`${w}.excuseLetterDraft: an excuse letter is only for a student (ADR-043)`)
       checkFields(`${w}.excuseLetterDraft`, draft, FIELDS.excuseLetterDraft)
       relDate(`${w}.excuseLetterDraft.excusedFrom`, draft?.excusedFrom)
       relDate(`${w}.excuseLetterDraft.excusedUntil`, draft?.excusedUntil)
@@ -256,11 +315,11 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   })
 
   // Incidents.
-  const incidentStudent = new Map<string, string>()
+  const incidentPatient = new Map<string, string>()
   list('incidents').forEach((inc, i) => {
     const w = `incidents[${i}] (${String(inc.id)})`
-    checkFields(w, inc, FIELDS.incidents)
-    studentRef(`${w}.studentId`, inc.studentId)
+    checkFields(w, inc, FIELDS.incidents, ['personnelId'])
+    const patient = patientRef(w, inc)
     relDateTime(`${w}.time`, inc.time)
     oneOf(`${w}.stage`, inc.stage, ENUMS.stage)
     if (!incidentComplaints.has(String(inc.complaint))) fail(`${w}.complaint: "${String(inc.complaint)}" isn't in frontendOnly.incidentComplaintTypes`)
@@ -279,26 +338,26 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
       oneOf(`${w}.parentNotifications[${k}].outcome`, n.outcome, ENUMS.outcome)
       relDateTime(`${w}.parentNotifications[${k}].timestamp`, n.timestamp)
     })
-    incidentStudent.set(String(inc.id), String(inc.studentId))
+    if (patient) incidentPatient.set(String(inc.id), patient)
     if (checkLines(w, inc) && inc.stage === 1) fail(`${w}.itemsGiven: Stage 1 stays fast; medicines are recorded at Stage 2`)
   })
 
-  // Follow-ups: must point at a real visit/incident belonging to the same student.
+  // Follow-ups: must point at a real visit/incident belonging to the same patient.
   list('followUps').forEach((f, i) => {
     const w = `followUps[${i}] (${String(f.id)})`
-    checkFields(w, f, FIELDS.followUps)
-    studentRef(`${w}.studentId`, f.studentId)
+    checkFields(w, f, FIELDS.followUps, ['personnelId'])
+    const patient = patientRef(w, f)
     relDate(`${w}.followUpDate`, f.followUpDate)
     oneOf(`${w}.status`, f.status, ENUMS.followUpStatus)
     userRef(`${w}.createdByUserId`, f.createdByUserId)
     const related = (f.relatedRecord ?? {}) as Rec
     checkFields(`${w}.relatedRecord`, related, ['type', 'id'])
     oneOf(`${w}.relatedRecord.type`, related.type, ENUMS.relatedType)
-    const owners = related.type === 'incident' ? incidentStudent : visitStudent
+    const owners = related.type === 'incident' ? incidentPatient : visitPatient
     const owner = owners.get(String(related.id))
     if (!owner) fail(`${w}.relatedRecord: ${String(related.type)} "${String(related.id)}" doesn't exist`)
-    else if (owner !== f.studentId)
-      fail(`${w}: student ${String(f.studentId)} doesn't match its ${String(related.type)}'s student ${owner}`)
+    else if (patient && owner !== patient)
+      fail(`${w}: ${patientName(patient)} doesn't match its ${String(related.type)}'s ${patientName(owner)}`)
   })
 
   // Inventory.
@@ -358,31 +417,31 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     if (!ids.inventoryItems?.has(String(t.itemId))) fail(`${w}.itemId: "${String(t.itemId)}" doesn't exist`)
     oneOf(`${w}.type`, t.type, ENUMS.transactionType)
     userRef(`${w}.userId`, t.userId)
-    studentRef(`${w}.studentId`, t.studentId, true)
+    const patient = patientRef(w, t, true)
     const linked: Array<[string, Map<string, string>, unknown]> = [
-      ['visit', visitStudent, t.visitId],
-      ['incident', incidentStudent, t.incidentId ?? null],
+      ['visit', visitPatient, t.visitId],
+      ['incident', incidentPatient, t.incidentId ?? null],
     ]
     for (const [kind, owners, id] of linked) {
       if (id === null) continue
       const owner = owners.get(String(id))
       if (!owner) fail(`${w}.${kind}Id: "${String(id)}" doesn't exist`)
-      else if (t.studentId !== owner) fail(`${w}.studentId: must match ${kind} ${String(id)}'s student ${owner}`)
+      else if (patient !== owner) fail(`${w}: patient must match ${kind} ${String(id)}'s ${patientName(owner)}`)
     }
     if (t.visitId !== null && t.incidentId != null) fail(`${w}: links both a visit and an incident`)
     relDateTime(`${w}.timestamp`, t.timestamp)
     const quantity = t.quantity as number
     if (t.type === 'adjustment') {
-      checkFields(w, t, ['id', 'itemId', 'type', 'quantity', 'timestamp', 'userId', 'studentId', 'visitId', 'reason', 'note'])
+      checkFields(w, t, ['id', 'itemId', 'type', 'quantity', 'timestamp', 'userId', 'studentId', 'visitId', 'reason', 'note'], ['personnelId'])
       oneOf(`${w}.reason`, t.reason, ENUMS.adjustmentReason)
       if (!Number.isInteger(quantity) || quantity === 0) fail(`${w}.quantity: an adjustment is a whole number other than 0`)
       if (t.reason === 'other' && !String(t.note ?? '').trim()) fail(`${w}.note: required when the reason is "other"`)
       if ((t.reason === 'visit_edited') !== (t.visitId !== null)) fail(`${w}: a "visit_edited" adjustment, and only that, links a visit`)
     } else {
-      checkFields(w, t, ['id', 'itemId', 'type', 'quantity', 'timestamp', 'userId', 'studentId', 'visitId'], ['incidentId'])
+      checkFields(w, t, ['id', 'itemId', 'type', 'quantity', 'timestamp', 'userId', 'studentId', 'visitId'], ['incidentId', 'personnelId'])
       if (!Number.isInteger(quantity) || quantity < 1) fail(`${w}.quantity: must be a whole number ≥ 1`)
-      if (t.type === 'restock' && (t.studentId !== null || t.visitId !== null || t.incidentId != null))
-        fail(`${w}: a restock links no student, visit, or incident`)
+      if (t.type === 'restock' && (patient !== null || t.visitId !== null || t.incidentId != null))
+        fail(`${w}: a restock links no patient, visit, or incident`)
     }
     const recordId = t.visitId ?? t.incidentId ?? null
     if (recordId !== null) {
@@ -408,7 +467,8 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   })
   ;((fo.excuseLetterApprovals ?? []) as Rec[]).forEach((a, i) => {
     const w = `frontendOnly.excuseLetterApprovals[${i}]`
-    if (!visitStudent.has(String(a.visitId))) fail(`${w}.visitId: "${String(a.visitId)}" doesn't exist`)
+    if (!visitPatient.has(String(a.visitId))) fail(`${w}.visitId: "${String(a.visitId)}" doesn't exist`)
+    else if (!visitPatient.get(String(a.visitId))!.startsWith('student:')) fail(`${w}.visitId: an excuse letter is only for a student (ADR-043)`)
     userRef(`${w}.approvedByUserId`, a.approvedByUserId)
     relDateTime(`${w}.approvedAt`, a.approvedAt)
     relDate(`${w}.excusedFrom`, a.excusedFrom)

@@ -11,6 +11,7 @@
     "showFrequentVisitors": true,
     "frequentVisitorMinVisits": 3,
     "frequentVisitorWindowDays": 30,
+    "personnelTypes": ["Teacher", "Non-teaching staff", "Utility worker"],
     "upcomingFollowUpDays": 7,
     "expiryWarningDays": 30,
     "clusterMinCount": 8,
@@ -973,6 +974,222 @@
           "name": "Rodel Lacson",
           "relationship": "Mother",
           "phone": "0900-111-2051",
+          "verified": true
+        }
+      ],
+      "archived": true
+    }
+  ],
+  "personnel": [
+    {
+      "id": "personnel-0001",
+      "staffNumber": "STF-0001",
+      "fullName": "Mara Villacorta",
+      "type": "Teacher",
+      "department": "Grade 4 adviser",
+      "contactInfo": "0900-300-0001",
+      "allergies": [],
+      "medicalConditions": ["Hypertension"],
+      "emergencyContacts": [
+        {
+          "name": "Ruben Villacorta",
+          "relationship": "Spouse",
+          "phone": "0900-311-0001",
+          "verified": true
+        }
+      ],
+      "archived": false
+    },
+    {
+      "id": "personnel-0002",
+      "staffNumber": "STF-0002",
+      "fullName": "Dindo Arcega",
+      "type": "Teacher",
+      "department": "Science department",
+      "contactInfo": "0900-300-0002",
+      "allergies": ["Penicillin"],
+      "medicalConditions": [],
+      "emergencyContacts": [
+        {
+          "name": "Lorna Arcega",
+          "relationship": "Spouse",
+          "phone": "0900-311-0002",
+          "verified": true
+        }
+      ],
+      "archived": false
+    },
+    {
+      "id": "personnel-0003",
+      "staffNumber": "STF-0003",
+      "fullName": "Celia Mabanta",
+      "type": "Teacher",
+      "department": "Kinder adviser",
+      "contactInfo": "0900-300-0003",
+      "allergies": [],
+      "medicalConditions": [],
+      "emergencyContacts": [
+        {
+          "name": "Nilo Mabanta",
+          "relationship": "Brother",
+          "phone": "0900-311-0003",
+          "verified": true
+        }
+      ],
+      "archived": false
+    },
+    {
+      "id": "personnel-0004",
+      "staffNumber": "STF-0004",
+      "fullName": "Ramil Ocampo",
+      "type": "Teacher",
+      "department": "PE department",
+      "contactInfo": "0900-300-0004",
+      "allergies": [],
+      "medicalConditions": ["Asthma"],
+      "emergencyContacts": [
+        {
+          "name": "Grace Ocampo",
+          "relationship": "Spouse",
+          "phone": "0900-311-0004",
+          "verified": true
+        }
+      ],
+      "archived": false
+    },
+    {
+      "id": "personnel-0005",
+      "staffNumber": "STF-0005",
+      "fullName": "Liza Pangilinan",
+      "type": "Teacher",
+      "department": "Grade 9 adviser",
+      "contactInfo": "0900-300-0005",
+      "allergies": ["Shellfish"],
+      "medicalConditions": [],
+      "emergencyContacts": [],
+      "archived": false
+    },
+    {
+      "id": "personnel-0006",
+      "staffNumber": "STF-0006",
+      "fullName": "Tessa Dumalo",
+      "type": "Non-teaching staff",
+      "department": "Registrar's office",
+      "contactInfo": "0900-300-0006",
+      "allergies": [],
+      "medicalConditions": [],
+      "emergencyContacts": [
+        {
+          "name": "Jun Dumalo",
+          "relationship": "Spouse",
+          "phone": "0900-311-0006",
+          "verified": true
+        }
+      ],
+      "archived": false
+    },
+    {
+      "id": "personnel-0007",
+      "staffNumber": "STF-0007",
+      "fullName": "Bong Saldivar",
+      "type": "Non-teaching staff",
+      "department": "Accounting",
+      "contactInfo": "0900-300-0007",
+      "allergies": [],
+      "medicalConditions": ["Type 2 diabetes"],
+      "emergencyContacts": [
+        {
+          "name": "Ellen Saldivar",
+          "relationship": "Spouse",
+          "phone": "0900-311-0007",
+          "verified": true
+        }
+      ],
+      "archived": false
+    },
+    {
+      "id": "personnel-0008",
+      "staffNumber": "STF-0008",
+      "fullName": "Marites Gutib",
+      "type": "Non-teaching staff",
+      "department": "Library",
+      "contactInfo": "0900-300-0008",
+      "allergies": [],
+      "medicalConditions": [],
+      "emergencyContacts": [
+        {
+          "name": "Ana Gutib",
+          "relationship": "Daughter",
+          "phone": "0900-311-0008",
+          "verified": true
+        }
+      ],
+      "archived": false
+    },
+    {
+      "id": "personnel-0009",
+      "staffNumber": "STF-0009",
+      "fullName": "Edgar Malonzo",
+      "type": "Utility worker",
+      "department": "Maintenance",
+      "contactInfo": "0900-300-0009",
+      "allergies": [],
+      "medicalConditions": [],
+      "emergencyContacts": [
+        {
+          "name": "Rosa Malonzo",
+          "relationship": "Spouse",
+          "phone": "0900-311-0009",
+          "verified": true
+        }
+      ],
+      "archived": false
+    },
+    {
+      "id": "personnel-0010",
+      "staffNumber": "STF-0010",
+      "fullName": "Nestor Pabalan",
+      "type": "Utility worker",
+      "department": "Grounds",
+      "contactInfo": "0900-300-0010",
+      "allergies": ["Aspirin"],
+      "medicalConditions": [],
+      "emergencyContacts": [
+        {
+          "name": "Cora Pabalan",
+          "relationship": "Spouse",
+          "phone": "0900-311-0010",
+          "verified": true
+        }
+      ],
+      "archived": false
+    },
+    {
+      "id": "personnel-0011",
+      "staffNumber": "STF-0011",
+      "fullName": "Joy Tagle",
+      "type": "Utility worker",
+      "department": "Canteen",
+      "contactInfo": "0900-300-0011",
+      "allergies": [],
+      "medicalConditions": [],
+      "emergencyContacts": [],
+      "archived": false
+    },
+    {
+      "id": "personnel-0012",
+      "staffNumber": "STF-0012",
+      "fullName": "Rolly Ambrocio",
+      "type": "Utility worker",
+      "department": null,
+      "contactInfo": "0900-300-0012",
+      "allergies": [],
+      "medicalConditions": [],
+      "emergencyContacts": [
+        {
+          "name": "Mila Ambrocio",
+          "relationship": "Spouse",
+          "phone": "0900-311-0012",
           "verified": true
         }
       ],
@@ -3892,6 +4109,402 @@
       "assistedBy": null,
       "parentGuardian": null,
       "remarks": null
+    },
+    {
+      "id": "visit-0160",
+      "studentId": null,
+      "personnelId": "personnel-0001",
+      "dateTime": { "daysAgo": 0, "time": "08:15" },
+      "complaint": "Headache",
+      "treatment": "Rested in clinic; blood pressure checked",
+      "disposition": "resting_in_clinic",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0161",
+      "studentId": null,
+      "personnelId": "personnel-0009",
+      "dateTime": { "daysAgo": 0, "time": "10:05" },
+      "complaint": "Minor wound",
+      "treatment": "Wound cleaned and dressed",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [
+        {
+          "itemId": "item-0010",
+          "itemName": "Adhesive Bandages",
+          "unit": "pieces",
+          "quantity": 1,
+          "instructions": null
+        }
+      ],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0162",
+      "studentId": null,
+      "personnelId": "personnel-0002",
+      "dateTime": { "daysAgo": 1, "time": "09:20" },
+      "complaint": "Cough and colds",
+      "treatment": "Advised fluids and rest",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0163",
+      "studentId": null,
+      "personnelId": "personnel-0010",
+      "dateTime": { "daysAgo": 2, "time": "13:11" },
+      "complaint": "Headache",
+      "treatment": "Rested",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [
+        {
+          "itemId": "item-0001",
+          "itemName": "Paracetamol 500mg",
+          "unit": "tablets",
+          "quantity": 1,
+          "instructions": null
+        }
+      ],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0164",
+      "studentId": null,
+      "personnelId": "personnel-0007",
+      "dateTime": { "daysAgo": 3, "time": "10:43" },
+      "complaint": "Dizziness",
+      "treatment": "Rested lying down; blood sugar concern noted",
+      "disposition": "sent_home",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0165",
+      "studentId": null,
+      "personnelId": "personnel-0004",
+      "dateTime": { "daysAgo": 4, "time": "14:26" },
+      "complaint": "Sprain",
+      "treatment": "Cold compress applied",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0166",
+      "studentId": null,
+      "personnelId": "personnel-0003",
+      "dateTime": { "daysAgo": 6, "time": "08:50" },
+      "complaint": "Fever",
+      "treatment": "Temperature taken; advised to go home",
+      "disposition": "sent_home",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0167",
+      "studentId": null,
+      "personnelId": "personnel-0006",
+      "dateTime": { "daysAgo": 8, "time": "11:30" },
+      "complaint": "Stomachache",
+      "treatment": "Rested",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0168",
+      "studentId": null,
+      "personnelId": "personnel-0011",
+      "dateTime": { "daysAgo": 10, "time": "12:15" },
+      "complaint": "Minor wound",
+      "treatment": "Wound cleaned",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0169",
+      "studentId": null,
+      "personnelId": "personnel-0008",
+      "dateTime": { "daysAgo": 13, "time": "09:35" },
+      "complaint": "Headache",
+      "treatment": "Rested",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0170",
+      "studentId": null,
+      "personnelId": "personnel-0005",
+      "dateTime": { "daysAgo": 15, "time": "13:46" },
+      "complaint": "Allergic reaction",
+      "treatment": "Observed; no breathing difficulty",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0171",
+      "studentId": null,
+      "personnelId": "personnel-0009",
+      "dateTime": { "daysAgo": 20, "time": "07:55" },
+      "complaint": "Sprain",
+      "treatment": "Cold compress applied",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0172",
+      "studentId": null,
+      "personnelId": "personnel-0001",
+      "dateTime": { "daysAgo": 24, "time": "10:20" },
+      "complaint": "Dizziness",
+      "treatment": "Rested; blood pressure checked",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0173",
+      "studentId": null,
+      "personnelId": "personnel-0002",
+      "dateTime": { "daysAgo": 29, "time": "14:06" },
+      "complaint": "Toothache",
+      "treatment": "Advised to see a dentist",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0174",
+      "studentId": null,
+      "personnelId": "personnel-0010",
+      "dateTime": { "daysAgo": 35, "time": "11:10" },
+      "complaint": "Cough and colds",
+      "treatment": "Advised fluids and rest",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0175",
+      "studentId": null,
+      "personnelId": "personnel-0006",
+      "dateTime": { "daysAgo": 42, "time": "09:05" },
+      "complaint": "Headache",
+      "treatment": "Rested",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0176",
+      "studentId": null,
+      "personnelId": "personnel-0004",
+      "dateTime": { "daysAgo": 50, "time": "15:00" },
+      "complaint": "Minor wound",
+      "treatment": "Wound cleaned and dressed",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0177",
+      "studentId": null,
+      "personnelId": "personnel-0012",
+      "dateTime": { "daysAgo": 120, "time": "10:31" },
+      "complaint": "Stomachache",
+      "treatment": "Rested",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0178",
+      "studentId": null,
+      "personnelId": "personnel-0003",
+      "dateTime": { "daysAgo": 60, "time": "08:40" },
+      "complaint": "Fever",
+      "treatment": "Rested; advised fluids",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
+    },
+    {
+      "id": "visit-0179",
+      "studentId": null,
+      "personnelId": "personnel-0007",
+      "dateTime": { "daysAgo": 75, "time": "13:22" },
+      "complaint": "Headache",
+      "treatment": "Rested",
+      "disposition": "returned_to_class",
+      "loggedByUserId": "user-staff-01",
+      "eventTag": null,
+      "itemsGiven": [],
+      "excuseLetterDraft": null,
+      "referredTo": null,
+      "temperatureC": null,
+      "timeOut": null,
+      "assistedBy": null,
+      "parentGuardian": null,
+      "remarks": null
     }
   ],
   "incidents": [
@@ -4457,6 +5070,44 @@
       "stage": 1,
       "eventTag": null,
       "itemsGiven": []
+    },
+    {
+      "id": "incident-0024",
+      "studentId": null,
+      "personnelId": "personnel-0004",
+      "time": { "daysAgo": 0, "time": "11:20" },
+      "complaint": "Asthma attack",
+      "vitals": {
+        "pulseBpm": 104
+      },
+      "hospitalReferral": null,
+      "parentNotifications": [],
+      "stage": 1,
+      "eventTag": null,
+      "itemsGiven": []
+    },
+    {
+      "id": "incident-0025",
+      "studentId": null,
+      "personnelId": "personnel-0009",
+      "time": { "daysAgo": 9, "time": "14:10" },
+      "complaint": "Fall injury",
+      "vitals": {
+        "temperatureC": 36.6,
+        "pulseBpm": 88,
+        "bloodPressure": "120/80",
+        "treatmentNotes": "Fell from a step ladder; bruised forearm, cold compress applied"
+      },
+      "hospitalReferral": null,
+      "parentNotifications": [
+        {
+          "outcome": "reached",
+          "timestamp": { "daysAgo": 9, "time": "14:25" }
+        }
+      ],
+      "stage": 2,
+      "eventTag": null,
+      "itemsGiven": []
     }
   ],
   "followUps": [
@@ -4598,6 +5249,34 @@
       "reason": "Return for monitoring",
       "status": "completed",
       "notes": "Student returned; no further concerns",
+      "createdByUserId": "user-staff-01"
+    },
+    {
+      "id": "followup-0015",
+      "studentId": null,
+      "personnelId": "personnel-0007",
+      "relatedRecord": {
+        "type": "visit",
+        "id": "visit-0164"
+      },
+      "followUpDate": { "daysFromNow": 2 },
+      "reason": "Recheck after dizziness",
+      "status": "pending",
+      "notes": null,
+      "createdByUserId": "user-staff-01"
+    },
+    {
+      "id": "followup-0016",
+      "studentId": null,
+      "personnelId": "personnel-0009",
+      "relatedRecord": {
+        "type": "incident",
+        "id": "incident-0025"
+      },
+      "followUpDate": { "daysAgo": 7 },
+      "reason": "Check the bruised forearm",
+      "status": "completed",
+      "notes": "Healing well",
       "createdByUserId": "user-staff-01"
     }
   ],
@@ -5170,6 +5849,28 @@
         "studentId": "student-0032",
         "visitId": null,
         "incidentId": "incident-0021"
+      },
+      {
+        "id": "txn-0013",
+        "itemId": "item-0010",
+        "type": "dispense",
+        "quantity": 1,
+        "timestamp": { "daysAgo": 0, "time": "10:05" },
+        "userId": "user-staff-01",
+        "studentId": null,
+        "personnelId": "personnel-0009",
+        "visitId": "visit-0161"
+      },
+      {
+        "id": "txn-0014",
+        "itemId": "item-0001",
+        "type": "dispense",
+        "quantity": 1,
+        "timestamp": { "daysAgo": 2, "time": "13:11" },
+        "userId": "user-staff-01",
+        "studentId": null,
+        "personnelId": "personnel-0010",
+        "visitId": "visit-0163"
       }
     ],
     "recordReviews": [

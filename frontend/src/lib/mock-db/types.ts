@@ -7,6 +7,7 @@ import type {
   HospitalReferral,
   Incident,
   InventoryItem,
+  Personnel,
   InventoryBatchAllocation,
   ISODate,
   ISODateTime,
@@ -41,18 +42,21 @@ export type SeedUser = Replace<User, { lastLogin: RelativeDateTime | null }>
 /** Old mock JSON did not hold Sex; `resolveSeed` assigns a deterministic synthetic value on load. */
 export type SeedStudent = Omit<Student, 'recordComplete' | 'sex'> & { sex?: StudentSex }
 
-export type SeedVisit = Replace<Visit, { dateTime: RelativeDateTime; excuseLetterDraft: ExcuseLetterDraft<RelativeDate> | null }>
+/** Older seed rows have no `personnelId`; `resolveSeed` reads a missing one as null (ADR-043). */
+type SeedPatient = { personnelId?: string | null }
+
+export type SeedVisit = Replace<Visit, SeedPatient & { dateTime: RelativeDateTime; excuseLetterDraft: ExcuseLetterDraft<RelativeDate> | null }>
 
 export type SeedIncident = Replace<
   Incident,
-  {
+  SeedPatient & {
     time: RelativeDateTime
     hospitalReferral: Replace<HospitalReferral, { departureTime: RelativeDateTime }> | null
     parentNotifications: Array<Replace<ParentNotificationAttempt, { timestamp: RelativeDateTime }>>
   }
 >
 
-export type SeedFollowUp = Replace<FollowUp, { followUpDate: RelativeDate }>
+export type SeedFollowUp = Replace<FollowUp, SeedPatient & { followUpDate: RelativeDate }>
 
 /**
  * The JSON seed predates batch tracking. It is deliberately accepted in its old one-stock/one-date
@@ -87,6 +91,11 @@ export interface MockDbConfig {
   frequentVisitorMinVisits: number
   /** Default window when a caller doesn't pass a date range (the Dashboard passes its own). */
   frequentVisitorWindowDays: number
+  /**
+   * The kinds of staff patient a personnel record can be (ADR-043). PROVISIONAL: the clinic and the
+   * registrar give the real groups.
+   */
+  personnelTypes: string[]
   /** How many days ahead a pending follow-up counts as "upcoming". */
   upcomingFollowUpDays: number
   /** Days before the expiration date that an item counts as "nearing expiration". */
@@ -164,7 +173,10 @@ export interface InventoryTransaction<D = ISODateTime> {
   quantity: number
   timestamp: D
   userId: string
+  /** The patient a dispense or `visit_edited` adjustment is for: one of the two, or both null (ADR-043). */
   studentId: string | null
+  /** PROVISIONAL (ADR-043). */
+  personnelId: string | null
   visitId: string | null
   /** Set when the dispense was part of an incident's Stage 2. PROVISIONAL (ADR-018). */
   incidentId?: string
@@ -270,7 +282,7 @@ export interface SeedFrontendOnly {
   devAccounts: DevAccount[]
   visitComplaintTypes: ComplaintType[]
   incidentComplaintTypes: string[]
-  inventoryTransactions: Array<InventoryTransaction<RelativeDateTime>>
+  inventoryTransactions: Array<Replace<InventoryTransaction<RelativeDateTime>, SeedPatient>>
   recordReviews: Array<RecordReview<RelativeDate, RelativeDateTime>>
   excuseLetterApprovals: Array<ExcuseLetterApproval<RelativeDateTime, RelativeDate>>
   peReferrals: Array<PeReferral<RelativeDateTime>>
@@ -284,6 +296,8 @@ export interface MockDbSeed {
   config: MockDbConfig & { _note?: string }
   users: SeedUser[]
   students: SeedStudent[]
+  /** Staff patients (ADR-043): the one top-level entity added since the §5 shapes. PROVISIONAL. */
+  personnel: Personnel[]
   visits: SeedVisit[]
   incidents: SeedIncident[]
   followUps: SeedFollowUp[]
@@ -315,6 +329,7 @@ export interface DbState {
   config: MockDbConfig
   users: User[]
   students: SeedStudent[]
+  personnel: Personnel[]
   visits: Visit[]
   incidents: Incident[]
   followUps: FollowUp[]

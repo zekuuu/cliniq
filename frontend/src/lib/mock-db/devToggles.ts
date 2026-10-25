@@ -17,6 +17,7 @@ export type MockMode = 'normal' | 'error' | 'empty' | 'slow'
 export type MockCollection =
   | 'users'
   | 'students'
+  | 'personnel'
   | 'visits'
   | 'incidents'
   | 'followUps'

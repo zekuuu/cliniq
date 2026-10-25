@@ -101,6 +101,11 @@ export function migratePersistedState(saved: Saved): Saved {
   // October 25, 2026: the Frequent-visitor switch; on (the panel lists the top five, Zean).
   const config = saved.state.config as unknown as Record<string, unknown>
   if (typeof config.showFrequentVisitors !== 'boolean') config.showFrequentVisitors = true
+  // October 26, 2026 (ADR-043): staff patients. An older copy has no staff, and every record in it is a student's.
+  if (!Array.isArray(config.personnelTypes)) config.personnelTypes = [...seed.config.personnelTypes]
+  saved.state.personnel ??= []
+  for (const record of [...saved.state.visits, ...saved.state.incidents, ...saved.state.followUps, ...saved.state.frontendOnly.inventoryTransactions])
+    record.personnelId ??= null
   return saved
 }
 

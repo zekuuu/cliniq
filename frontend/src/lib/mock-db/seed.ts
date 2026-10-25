@@ -57,8 +57,10 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
       ...student,
       sex: student.sex ?? (index % 2 === 0 ? 'female' : 'male'),
     })),
+    personnel: source.personnel,
     visits: source.visits.map((v) => ({
       ...v,
+      personnelId: v.personnelId ?? null,
       dateTime: resolveSchoolDateTime(v.dateTime, today),
       excuseLetterDraft: v.excuseLetterDraft
         ? {
@@ -70,6 +72,7 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
     })),
     incidents: source.incidents.map((i) => ({
       ...i,
+      personnelId: i.personnelId ?? null,
       time: resolveSchoolDateTime(i.time, today),
       hospitalReferral: i.hospitalReferral
         ? {
@@ -84,6 +87,7 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
     })),
     followUps: source.followUps.map((f) => ({
       ...f,
+      personnelId: f.personnelId ?? null,
       followUpDate: resolveSchoolDate(f.followUpDate, today),
     })),
     inventoryItems: source.inventoryItems.map(({ currentStock, expirationDate, ...item }) => ({
@@ -107,6 +111,7 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
       incidentComplaintTypes: fo.incidentComplaintTypes,
       inventoryTransactions: fo.inventoryTransactions.map((t) => ({
         ...t,
+        personnelId: t.personnelId ?? null,
         timestamp: resolveSchoolDateTime(t.timestamp, today),
       })),
       recordReviews: fo.recordReviews.map((r) => ({
