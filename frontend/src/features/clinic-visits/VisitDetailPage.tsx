@@ -23,7 +23,7 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { cn } from '../../lib/cn'
 import { cleanComplaint } from '../../lib/complaints'
-import { formatDateRange, formatDateTime, todayISO } from '../../lib/dates'
+import { formatDate, formatDateRange, formatDateTime, todayISO } from '../../lib/dates'
 import { draftsFrom, formatItemGiven } from '../../lib/itemsGiven'
 import { formatDecimal } from '../../lib/numbers'
 import { getMockSessionUser, StockRuleError, type SessionUser } from '../../lib/mock-db'
@@ -43,7 +43,6 @@ import {
   type VisitDetail,
   type VisitDetailValues,
 } from './api/visitDetailApi'
-import { MaskedLrn } from '../../components/ui/MaskedLrn'
 import { DISPOSITION_LABELS as dispositionLabel, DISPOSITION_OPTIONS as dispositionOptions, DISPOSITION_TONES as dispositionTone } from '../../lib/dispositions'
 
 interface Errors extends DispositionErrors, LogbookErrors {
@@ -247,7 +246,7 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
               Visit Details
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
-              {visit.student.fullName} · LRN <MaskedLrn lrn={visit.student.lrn} /> · {visit.student.gradeLevel}
+              {visit.student.fullName} · LRN {visit.student.lrn} · {visit.student.gradeLevel}
             </p>
           </div>
           <Badge tone="info" variant="soft" icon="calendarClock">
@@ -324,7 +323,7 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
             </div>
             <div>
               <p className="text-xs font-semibold text-text-secondary">LRN</p>
-              <p className="text-sm font-semibold text-text-primary tabular-nums"><MaskedLrn lrn={visit.student.lrn} /></p>
+              <p className="text-sm font-semibold text-text-primary tabular-nums">{visit.student.lrn}</p>
             </div>
             <div>
               <p className="text-xs font-semibold text-text-secondary">Logged by</p>
@@ -529,7 +528,8 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                 {visit.timeOut && (
                   <section>
                     <h2 className="text-sm font-bold text-text-primary">Time out</h2>
-                    <p className="mt-1 text-sm text-text-primary">{formatClock(visit.timeOut)}</p>
+                    {/* The input is time only (a same-day visit); the date shows with it (Sir Rey, October 25, 2026). */}
+                    <p className="mt-1 text-sm text-text-primary">{formatDate(visit.dateTime.slice(0, 10))} · {formatClock(visit.timeOut)}</p>
                   </section>
                 )}
                 {visit.assistedBy && (

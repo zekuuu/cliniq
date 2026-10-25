@@ -33,9 +33,10 @@ describe('Visit logbook fields ("Show more fields")', () => {
     await pickStudent(user, '000000260001')
     await screen.findByRole('heading', { name: 'New Visit' })
 
-    expect(moreButton()).toHaveAccessibleName('Show more fields')
+    // Parent or guardian is prefilled from the primary emergency contact (Sir Rey, October 25, 2026).
+    expect(moreButton()).toHaveAccessibleName('Show more fields (1 filled)')
     expect(moreButton()).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.queryByRole('textbox', { name: 'Assisted by' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: 'Assisted by' })).not.toBeInTheDocument()
     const remarks = screen.getByLabelText('Remarks', { selector: 'textarea' })
     expect(remarks).not.toBeVisible()
     moreButton().focus()
@@ -62,7 +63,8 @@ describe('Visit logbook fields ("Show more fields")', () => {
     await user.type(screen.getByLabelText('Assisted by'), 'Ms. Reyes')
     await user.type(screen.getByLabelText('Remarks'), 'Rested well')
     await user.click(moreButton())
-    expect(moreButton()).toHaveAccessibleName('Show more fields (2 filled)')
+    // Two typed, plus the prefilled Parent or guardian.
+    expect(moreButton()).toHaveAccessibleName('Show more fields (3 filled)')
     await user.click(moreButton())
     expect(screen.getByLabelText('Assisted by')).toHaveValue('Ms. Reyes')
   })
@@ -73,6 +75,9 @@ describe('Visit logbook fields ("Show more fields")', () => {
     await pickStudent(user, '000000260001')
     await screen.findByRole('heading', { name: 'New Visit' })
     await pickHeadache(user)
+    // The prefilled Parent or guardian can be emptied; every one of the five stays optional.
+    await user.click(moreButton())
+    await user.clear(screen.getByLabelText('Parent or guardian'))
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
     expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
@@ -95,6 +100,7 @@ describe('Visit logbook fields ("Show more fields")', () => {
     await user.type(screen.getByLabelText('Body temperature (°C)'), '37.8')
     setTimeOut('23:59')
     await user.type(screen.getByLabelText('Assisted by'), '  Ms. Reyes ')
+    await user.clear(screen.getByLabelText('Parent or guardian'))
     await user.type(screen.getByLabelText('Parent or guardian'), 'Maria Santos')
     await user.type(screen.getByLabelText('Remarks'), 'Picked up by mother')
     await user.click(moreButton())
@@ -174,7 +180,8 @@ describe('Visit logbook fields ("Show more fields")', () => {
     expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
     expect((await getVisit('visit-0158')).timeOut).toBe('23:59')
     expect(screen.getByRole('heading', { name: 'Time out' })).toBeInTheDocument()
-    expect(screen.getByText('11:59 PM')).toBeInTheDocument()
+    // The date shows with the time out (Sir Rey, October 25, 2026).
+    expect(screen.getByText(/^[A-Z][a-z]{2} \d{1,2}, \d{4} · 11:59 PM$/)).toBeInTheDocument()
     // The visit has no other logbook value, so Visit Detail leaves those out.
     expect(screen.queryByRole('heading', { name: 'Remarks' })).not.toBeInTheDocument()
     const [entry] = getRecordedAuditEntries()

@@ -5,6 +5,7 @@ import {
   getVisitComplaintTypes,
   getVitalsWarningRanges,
   listInventory,
+  listUsers,
   recordVisit,
   searchStudents,
   type ComplaintType,
@@ -70,6 +71,11 @@ export function fetchComplaintSuggestions(): Promise<string[]> {
 }
 
 /** The New Visit student search: LRN prefix or name, active students, at most 8. */
+/** "Assisted by" suggestions (Sir Rey): the display names of active accounts. Free text stays allowed. */
+export async function fetchAssistedByNames(): Promise<string[]> {
+  return (await listUsers()).filter((user) => !user.deactivatedAt).map((user) => user.name)
+}
+
 export function searchVisitStudents(query: string): Promise<StudentSearchResult[]> {
   return searchStudents(query)
 }

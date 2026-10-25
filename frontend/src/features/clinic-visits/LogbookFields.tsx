@@ -1,7 +1,9 @@
 import type { RefObject } from 'react'
-import { ExpandableSection, Input, Textarea, VitalsWarning } from '../../components'
+import { Combobox, ExpandableSection, Input, Textarea, VitalsWarning } from '../../components'
+import { useAsyncData } from '../../hooks/useAsyncData'
 import type { VitalsWarningRanges } from '../../lib/mock-db'
 import { filledLogbookCount, type LogbookErrors, type LogbookValues } from './logbookValues'
+import { fetchAssistedByNames } from './api/newVisitApi'
 
 /**
  * The visit's optional logbook fields (body temperature, time out, assisted by, parent/guardian,
@@ -26,6 +28,9 @@ export function LogbookFields({
   timeOutRef: RefObject<HTMLInputElement | null>
 }) {
   const set = (field: keyof LogbookValues, value: string) => onChange({ ...values, [field]: value })
+  const accounts = useAsyncData('assisted-by-names', fetchAssistedByNames)
+  const typed = values.assistedBy.trim().toLowerCase()
+  const assistedByOptions = (accounts.data ?? []).filter((name) => name.toLowerCase().includes(typed))
   return (
     <ExpandableSection open={open} onOpenChange={onOpenChange} filledCount={filledLogbookCount(values)}>
       <div className="flex flex-col gap-4">
@@ -51,11 +56,16 @@ export function LogbookFields({
         </div>
         <VitalsWarning readings={{ temperatureC: values.temperatureC }} ranges={ranges} />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Input
+          <Combobox
             label="Assisted by"
-            hint="Name of whoever helped, even without an account."
+            hint="Pick a staff account, or type the name of whoever helped, even without an account."
             value={values.assistedBy}
-            onChange={(event) => set('assistedBy', event.target.value)}
+            onValueChange={(text) => set('assistedBy', text)}
+            options={assistedByOptions}
+            optionKey={(name) => name}
+            optionLabel={(name) => name}
+            allowFreeText
+            noMatchesText={null}
           />
           <Input
             label="Parent or guardian"

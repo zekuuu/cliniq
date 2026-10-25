@@ -19,7 +19,9 @@ describe('Visit Details', () => {
 
     expect(await screen.findByRole('heading', { name: 'Visit Details' })).toBeInTheDocument()
     expect(screen.getByText(detail.student.fullName)).toBeInTheDocument()
-    expect(screen.getAllByText(maskLrn(detail.student.lrn)).length).toBeGreaterThan(0)
+    // One deliberately opened student: the full LRN (Zean, October 25, 2026).
+    expect(screen.getByText(detail.student.lrn)).toBeInTheDocument()
+    expect(screen.queryByText(maskLrn(detail.student.lrn))).not.toBeInTheDocument()
     expect(screen.getByText(detail.complaint)).toBeInTheDocument()
     expect(screen.getByText(detail.treatment)).toBeInTheDocument()
   })

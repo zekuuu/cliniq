@@ -28,6 +28,7 @@ import type { Student } from '../../types/entities'
 import {
   DuplicateLrnError,
   fetchStudentFormContext,
+  NAME_CORRECTION_REASON_MIN,
   submitStudentForm,
   type DuplicateMatch,
   type StudentFormContext,
@@ -174,6 +175,9 @@ function StudentFormEditor({
   const [duplicateMatches, setDuplicateMatches] = useState<DuplicateMatch[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  // Sir Rey (October 25, 2026): the LRN is locked after creation; a name correction asks why.
+  const [nameReason, setNameReason] = useState('')
+  const nameChanged = data.mode === 'edit' && values.fullName.trim() !== (data.student?.fullName ?? '')
   const navigate = useNavigate()
   // Set by the Incomplete Records queue's Edit Record, so a save goes back there instead of to the profile.
   const returnTo = (useLocation().state as { returnTo?: string } | null)?.returnTo
@@ -247,6 +251,8 @@ function StudentFormEditor({
 
   async function save(confirmDuplicate = false) {
     const nextErrors = validate(values)
+    if (nameChanged && nameReason.trim().length < NAME_CORRECTION_REASON_MIN)
+      nextErrors.nameCorrectionReason = `Enter why the name is being corrected (at least ${NAME_CORRECTION_REASON_MIN} characters).`
     setErrors(nextErrors)
     invalid.report(Object.keys(nextErrors).length)
     if (Object.keys(nextErrors).length > 0) return
@@ -259,6 +265,7 @@ function StudentFormEditor({
           mode,
           studentId: data.student?.id,
           confirmDuplicate,
+          nameCorrectionReason: nameChanged ? nameReason : undefined,
         })
       } catch (cause) {
         if (!(cause instanceof DuplicateLrnError)) throw cause
@@ -340,16 +347,26 @@ function StudentFormEditor({
               <h2 id="identity-title" className="sr-only">
                 Identity
               </h2>
-              <Input
-                label="LRN"
-                required
-                inputMode="numeric"
-                autoComplete="off"
-                value={values.lrn}
-                error={errors.lrn}
-                hint="The 12-digit Learner Reference Number. Spaces and dashes are removed."
-                onChange={(event) => setField('lrn', normalizeLrn(event.target.value))}
-              />
+              {mode === 'edit' ? (
+                <Input
+                  label="LRN"
+                  readOnly
+                  value={values.lrn}
+                  hint="The LRN is the student's identifier and can't be changed."
+                  inputClassName="cursor-default bg-surface hover:border-border"
+                />
+              ) : (
+                <Input
+                  label="LRN"
+                  required
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={values.lrn}
+                  error={errors.lrn}
+                  hint="The 12-digit Learner Reference Number. Spaces and dashes are removed."
+                  onChange={(event) => setField('lrn', normalizeLrn(event.target.value))}
+                />
+              )}
               <Input
                 label="Full name"
                 required
@@ -357,6 +374,20 @@ function StudentFormEditor({
                 error={errors.fullName}
                 onChange={(event) => setField('fullName', event.target.value)}
               />
+              {nameChanged && (
+                <Input
+                  className="md:col-span-2"
+                  label="Reason for the name correction"
+                  required
+                  value={nameReason}
+                  error={errors.nameCorrectionReason}
+                  hint="For example, a misspelling corrected against the school records. Saved in the audit log."
+                  onChange={(event) => {
+                    setNameReason(event.target.value)
+                    setErrors((current) => ({ ...current, nameCorrectionReason: undefined }))
+                  }}
+                />
+              )}
               <Select
                 label="Grade level"
                 required

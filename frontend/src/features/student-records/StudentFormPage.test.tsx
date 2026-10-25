@@ -1,8 +1,8 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { getRecordedAuditEntries, resetMockDb } from '../../lib/mock-db'
+import { getRecordedAuditEntries, getStudent, LrnLockedError, NameCorrectionReasonError, resetMockDb, saveStudent } from '../../lib/mock-db'
 import { selectOption } from '../../test/selectOption'
 import { paths } from '../../routes/paths'
 import { StudentFormPage } from './StudentFormPage'
@@ -85,20 +85,49 @@ describe('Student Form', () => {
     expect(getRecordedAuditEntries()).toEqual([])
   })
 
-  it('audits a corrected LRN by field name only, never the value', async () => {
+  it('locks the LRN on Edit Student, in the form and in the data layer (ADR-028, Sir Rey)', async () => {
+    const [existing] = await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false })
+    renderWithRouter(<StudentFormPage studentId={existing.id} />)
+
+    await screen.findByRole('heading', { name: 'Edit Student' })
+    const lrn = screen.getByLabelText(/^LRN/)
+    expect(lrn).toHaveValue(existing.lrn)
+    expect(lrn).toHaveAttribute('readonly')
+    expect(lrn).toHaveAccessibleDescription("The LRN is the student's identifier and can't be changed.")
+
+    const full = await getStudent(existing.id)
+    await expect(saveStudent({ ...full, lrn: '987654321098' }, { studentId: existing.id })).rejects.toBeInstanceOf(LrnLockedError)
+    expect((await getStudent(existing.id)).lrn).toBe(existing.lrn)
+    expect(getRecordedAuditEntries()).toHaveLength(0)
+  })
+
+  it('asks for a reason before saving a name correction, and audits the reason without the names', async () => {
     const user = userEvent.setup()
     const [existing] = await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false })
     renderWithRouter(<StudentFormPage studentId={existing.id} />)
 
     await screen.findByRole('heading', { name: 'Edit Student' })
-    expect(screen.getByLabelText(/^LRN/)).toHaveValue(existing.lrn)
-    await user.clear(screen.getByLabelText(/^LRN/))
-    await user.type(screen.getByLabelText(/^LRN/), '987654321098')
+    expect(screen.queryByLabelText(/^Reason for the name correction/)).not.toBeInTheDocument()
+    await user.clear(screen.getByLabelText(/^Full name/))
+    await user.type(screen.getByLabelText(/^Full name/), 'Corrected Surname')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
+    const reason = screen.getByLabelText(/^Reason for the name correction/)
+    expect(reason).toHaveAccessibleDescription(expect.stringMatching(/Enter why the name is being corrected/))
+    expect(reason).toHaveFocus()
+    expect(getRecordedAuditEntries()).toHaveLength(0)
 
-    const entry = getRecordedAuditEntries().at(-1)
-    expect(entry).toMatchObject({ actionType: 'update', summary: 'Updated LRN' })
-    expect(JSON.stringify(getRecordedAuditEntries())).not.toMatch(new RegExp(`987654321098|${existing.lrn}`))
+    const full = await getStudent(existing.id)
+    await expect(saveStudent({ ...full, fullName: 'Corrected Surname' }, { studentId: existing.id, nameCorrectionReason: 'ok' })).rejects.toBeInstanceOf(NameCorrectionReasonError)
+
+    await user.type(reason, 'Misspelled on the enrolment form')
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }))
+    await waitFor(() => expect(getRecordedAuditEntries()).toHaveLength(1))
+    expect(getRecordedAuditEntries()[0]).toMatchObject({
+      actionType: 'update',
+      summary: 'Updated name. Name corrected; reason: Misspelled on the enrolment form',
+    })
+    expect(JSON.stringify(getRecordedAuditEntries())).not.toMatch(new RegExp(`Corrected Surname|${existing.fullName}`))
+    expect((await getStudent(existing.id)).fullName).toBe('Corrected Surname')
   })
 
   it('validates required fields inline', async () => {

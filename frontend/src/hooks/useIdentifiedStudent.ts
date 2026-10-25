@@ -28,13 +28,16 @@ export function useIdentifiedStudent(
       setError(message)
       return false
     },
-    /** A student picked from a search (`StudentPicker`), looked up in full (allergies included). */
-    async select(studentId: string): Promise<void> {
+    /** A student picked from a search (`StudentPicker`), looked up in full (allergies included); `null` if it failed. */
+    async select(studentId: string): Promise<Student | null> {
       try {
-        setPicked(await find(studentId))
+        const found = await find(studentId)
+        setPicked(found)
         setError(undefined)
+        return found
       } catch {
         setError("This student couldn't be loaded. Search again.")
+        return null
       }
     },
     /** The identified student; `null` when none was picked. */

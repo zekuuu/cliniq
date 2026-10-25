@@ -55,7 +55,6 @@ import {
   logbookPayload,
   type LogbookErrors,
 } from './logbookValues'
-import { maskLrn } from '../../lib/lrn'
 import { DISPOSITION_OPTIONS as dispositionOptions } from '../../lib/dispositions'
 
 /** The first-aid checklist's complaint type for what was typed: a case-insensitive match, or none. */
@@ -442,7 +441,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">New Visit</h1>
             <p className="mt-1 text-sm text-text-secondary">
               {identified.student
-                ? `${identified.student.fullName} · LRN ${maskLrn(identified.student.lrn)} · ${identified.student.gradeLevel}`
+                ? `${identified.student.fullName} · LRN ${identified.student.lrn} · ${identified.student.gradeLevel}`
                 : 'Student not identified yet.'}
             </p>
           </div>
@@ -502,7 +501,12 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
               onClear={identified.reset}
               onSelect={(student) => {
                 setSaved(null)
-                void identified.select(student.id)
+                // Sir Rey (October 25, 2026): Parent or guardian starts as the primary emergency
+                // contact, only when the field is still empty; it stays editable.
+                void identified.select(student.id).then((full) => {
+                  const primary = full?.emergencyContacts[0]?.name
+                  if (primary) setLogbook((current) => (current.parentGuardian.trim() ? current : { ...current, parentGuardian: primary }))
+                })
               }}
               error={identified.error}
               addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}

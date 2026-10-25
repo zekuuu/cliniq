@@ -2,13 +2,14 @@ import {
   DuplicateLrnError,
   getGradeLevels,
   getStudent,
+  NAME_CORRECTION_REASON_MIN,
   saveStudent,
   type DuplicateMatch,
   type SessionUser,
 } from '../../../lib/mock-db'
 import type { EmergencyContact, Student, StudentSex } from '../../../types/entities'
 
-export { DuplicateLrnError }
+export { DuplicateLrnError, NAME_CORRECTION_REASON_MIN }
 export type { DuplicateMatch }
 export type StudentFormMode = 'add' | 'edit'
 
@@ -53,7 +54,7 @@ export async function fetchStudentFormContext(studentId?: string): Promise<Stude
 
 export async function submitStudentForm(
   values: StudentFormValues,
-  options: { mode: StudentFormMode; studentId?: string; confirmDuplicate?: boolean; actor?: SessionUser },
+  options: { mode: StudentFormMode; studentId?: string; confirmDuplicate?: boolean; actor?: SessionUser; nameCorrectionReason?: string },
 ): Promise<StudentFormSubmitResult> {
   return saveStudent(
     {
@@ -73,7 +74,12 @@ export async function submitStudentForm(
           verified: contact.verified,
         })),
     },
-    { studentId: options.mode === 'edit' ? options.studentId : undefined, confirmDuplicate: options.confirmDuplicate, actor: options.actor },
+    {
+      studentId: options.mode === 'edit' ? options.studentId : undefined,
+      confirmDuplicate: options.confirmDuplicate,
+      actor: options.actor,
+      nameCorrectionReason: options.nameCorrectionReason,
+    },
   )
 }
 
