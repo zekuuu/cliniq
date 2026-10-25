@@ -9,7 +9,7 @@ import type { SessionUser } from '../../lib/mock-db'
 import { fetchMonthlyReport, type MonthlyReportData } from './api/reportsApi'
 import { HealthSummary } from './components/HealthSummary'
 import { ReportsPrint, type ReportView } from './components/ReportsPrint'
-import { MaskedLrn } from '../../components/ui/MaskedLrn'
+import { PatientNumber } from '../../components/ui/PatientNumber'
 
 type ArchiveRow = MonthlyReportData['incidents'][number]
 
@@ -21,7 +21,7 @@ function monthLabel(value: string) { return new Date(`${value}-01T00:00:00`).toL
 type ArchiveSortKey = 'student' | 'date' | 'complaint' | 'status'
 
 const baseIncidentColumns: Array<DataTableColumn<ArchiveRow>> = [
-  { key: 'student', header: 'LRN', rowHeader: true, cell: (incident) => <MaskedLrn lrn={incident.lrn} /> },
+  { key: 'student', header: 'LRN or Staff No.', rowHeader: true, cell: (incident) => <PatientNumber patient={incident.patient} /> },
   { key: 'date', header: 'Date', cell: (incident) => formatDateTime(incident.time) },
   { key: 'complaint', header: 'Complaint', cell: (incident) => incident.complaint },
   { key: 'status', header: 'Status', cell: (incident) => <Badge tone={incident.stage === 1 ? 'warning' : 'info'} variant="soft">{incident.stage === 1 ? 'Needs completion' : 'Complete'}</Badge> },
@@ -31,11 +31,11 @@ function ReportBodySkeleton() {
   return <div aria-hidden="true" className="grid gap-4 sm:grid-cols-3">{Array.from({ length: 3 }, (_, index) => <Skeleton key={index} className="h-24" />)}</div>
 }
 
-const ARCHIVE_SORT_LABELS: Record<ArchiveSortKey, string> = { student: 'LRN', date: 'date', complaint: 'complaint', status: 'status' }
+const ARCHIVE_SORT_LABELS: Record<ArchiveSortKey, string> = { student: 'LRN or Staff No.', date: 'date', complaint: 'complaint', status: 'status' }
 
 function sortArchive(rows: ArchiveRow[], sort: TableSortState<ArchiveSortKey>) {
   return sortTableRows(rows, sort, (row, key) => {
-    if (key === 'student') return row.lrn
+    if (key === 'student') return `${row.patient.kind}|${row.patient.number}`
     if (key === 'date') return row.time
     if (key === 'complaint') return row.complaint
     return row.stage === 1 ? 'Needs completion' : 'Complete'

@@ -15,6 +15,7 @@ import { paths } from '../../../routes/paths'
 import type { DashboardSummary } from '../../../types/dashboard'
 import { dueText, expiryLabel } from '../lib/alerts'
 import { MaskedLrn } from '../../../components/ui/MaskedLrn'
+import { PatientNumber } from '../../../components/ui/PatientNumber'
 
 /*
  * The three alert groups (Reference 1, item 3). All three are read-only: no resolve or complete
@@ -77,7 +78,11 @@ export function FollowUpsAlert({
       {rows.map((row) => (
         <ListRow
           key={row.followUp.id}
-          primary={<ListItemLink to={paths.studentProfile(row.student.id)}><MaskedLrn lrn={row.student.lrn} /></ListItemLink>}
+          primary={
+            <ListItemLink to={row.patient.kind === 'student' ? paths.studentProfile(row.patient.id) : paths.staffProfile(row.patient.id)}>
+              <PatientNumber patient={row.patient} />
+            </ListItemLink>
+          }
           secondary={row.followUp.reason}
           meta={<time dateTime={row.followUp.followUpDate}>{dueText(row)}</time>}
           trailing={<StatusBadge status={row.dueState} map={followUpDueMap} />}
@@ -118,7 +123,7 @@ export function FrequentVisitorsAlert({
         )
       }
       maxHeightClass={ALERT_LIST_HEIGHT}
-      description={`${summary.frequentVisitorMinVisits}+ visits (${scope}). A warning only, not a diagnosis.`}
+      description={`Students with ${summary.frequentVisitorMinVisits}+ visits (${scope}); staff are not counted. A warning only, not a diagnosis.`}
       empty={{
         title: 'No frequent-visitor warnings',
         description: `No student reached ${summary.frequentVisitorMinVisits} visits in this date range.`,

@@ -24,7 +24,7 @@ export function AttentionChips({ summary, canNavigate }: { summary: DashboardSum
       <CountChip label="incomplete records" count={summary.counts.pendingRecords} to={paths.incompleteRecords} canNavigate={canNavigate} />
       {/* Panel review VS-1: today's "Resting in clinic" visits with no Time out. The list shows masked LRNs (ADR-004). */}
       {summary.counts.inClinicNow > 0 && (
-        <CountChip label="in clinic now" count={summary.counts.inClinicNow} to={`${paths.visits}?inClinic=1`} canNavigate={canNavigate} />
+        <CountChip label={summary.counts.split.inClinicNow.staff ? `in clinic now (${summary.counts.split.inClinicNow.staff} staff)` : 'in clinic now'} count={summary.counts.inClinicNow} to={`${paths.visits}?inClinic=1`} canNavigate={canNavigate} />
       )}
       <CountChip label="low stock" count={summary.counts.lowStockItems} to={`${paths.inventory}?attention=low_stock`} canNavigate={canNavigate} />
       <CountChip label="expired or expiring" count={expiredOrExpiring} to={`${paths.inventory}?attention=expiry`} canNavigate={canNavigate} />

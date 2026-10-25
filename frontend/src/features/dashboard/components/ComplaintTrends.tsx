@@ -715,7 +715,8 @@ function DemographicCharts({
           // The title keeps at least 14rem, so on a phone "Filter by" drops below it instead of squeezing it.
           className="[&>div:first-child]:basis-56"
           title={`Visits and incidents by ${groupBy === 'sex' ? 'sex' : 'grade level'}`}
-          description="Visits and incidents in the selected period; aggregated only."
+          // Sex and grade level are a student's (ADR-043, D14), so staff records are left out and the caption says so.
+          description="Students' visits and incidents in the selected period; aggregated only. Staff are not included."
           icon={<Icon name="barChart" />}
           actions={
             // A visible label beside the switch, so it isn't mistaken for the chart's legend (Zean, October 25, 2026).

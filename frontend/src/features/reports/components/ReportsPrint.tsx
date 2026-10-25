@@ -11,7 +11,7 @@ import { formatDateTime } from '../../../lib/dates'
 import { ROLE_LABELS, type ComplaintCount, type SessionUser } from '../../../lib/mock-db'
 import { DISPOSITION_LABELS } from '../../../lib/dispositions'
 import type { MonthlyReportData } from '../api/reportsApi'
-import { maskLrn } from '../../../lib/lrn'
+import { maskPatientNumber } from '../../../lib/patients'
 
 /*
  * Reports printouts (ADR-026): the tab on screen prints as its own formal document, with its own
@@ -62,7 +62,7 @@ function IncidentTable({ rows }: { rows: ArchiveRow[] }) {
       rowKey={(row) => row.id}
       empty="No incidents were recorded this month."
       columns={[
-        { header: 'LRN', width: '18%', cell: (row) => maskLrn(row.lrn) },
+        { header: 'LRN or Staff No.', width: '18%', cell: (row) => maskPatientNumber(row.patient) },
         { header: 'Date and time', width: '26%', cell: (row) => formatDateTime(row.time) },
         { header: 'Complaint', cell: (row) => row.complaint },
         { header: 'Stage and status', width: '26%', cell: stageText },

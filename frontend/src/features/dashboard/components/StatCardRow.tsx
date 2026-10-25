@@ -1,3 +1,4 @@
+import { splitText } from '../../../lib/patients'
 import {
   StatCard,
   StatCardSkeleton,
@@ -56,7 +57,7 @@ export function StatCardRow({
     },
     {
       key: 'visits',
-      card: <StatCard icon={CARDS.visits.icon} label={CARDS.visits.label} tone={CARDS.visits.tone} value={counts.visits} trend={previousCounts ? trendFor(counts.visits, previousCounts.visits, range, summary.percentMinPriorCount) : undefined} scope={previousCounts ? undefined : noComparison} footnote="Visits only; incidents are counted separately" labelAction={canNavigate ? <TitleLink to={paths.visitsInRange(range.from, range.to)}>{CARDS.visits.label}</TitleLink> : undefined} />,
+      card: <StatCard icon={CARDS.visits.icon} label={CARDS.visits.label} tone={CARDS.visits.tone} value={counts.visits} trend={previousCounts ? trendFor(counts.visits, previousCounts.visits, range, summary.percentMinPriorCount) : undefined} scope={previousCounts ? undefined : noComparison} footnote={`${splitText(counts.split.visits)}. Incidents are counted separately.`} labelAction={canNavigate ? <TitleLink to={paths.visitsInRange(range.from, range.to)}>{CARDS.visits.label}</TitleLink> : undefined} />,
     },
     {
       key: 'letters',
@@ -64,7 +65,7 @@ export function StatCardRow({
     },
     {
       key: 'incidents',
-      card: <StatCard icon={CARDS.incidents.icon} label={CARDS.incidents.label} tone={CARDS.incidents.tone} value={counts.incidents} trend={previousCounts ? trendFor(counts.incidents, previousCounts.incidents, range, summary.percentMinPriorCount) : undefined} scope={previousCounts ? undefined : noComparison} footnote={counts.incidentsAtStage1 > 0 ? `${counts.incidentsAtStage1} still at Stage 1` : undefined} labelAction={<TitleLink to={paths.incidentsInRange(range.from, range.to)}>{CARDS.incidents.label}</TitleLink>} />,
+      card: <StatCard icon={CARDS.incidents.icon} label={CARDS.incidents.label} tone={CARDS.incidents.tone} value={counts.incidents} trend={previousCounts ? trendFor(counts.incidents, previousCounts.incidents, range, summary.percentMinPriorCount) : undefined} scope={previousCounts ? undefined : noComparison} footnote={[splitText(counts.split.incidents), counts.incidentsAtStage1 > 0 && `${counts.incidentsAtStage1} still at Stage 1`].filter(Boolean).join(' · ')} labelAction={<TitleLink to={paths.incidentsInRange(range.from, range.to)}>{CARDS.incidents.label}</TitleLink>} />,
     },
     {
       key: 'follow-ups',

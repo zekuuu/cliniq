@@ -237,6 +237,15 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
               to the roles described in Section 4, and is not shared outside the school except as
               described in this policy.
             </p>
+            {/* ADR-043 (D18): wording pending the school's privacy officer (open DECIDE in Issues-and-TODOs). */}
+            <p className={paragraphClass}>
+              <strong>Teachers and school staff (PROVISIONAL).</strong> The clinic may also record visits,
+              incidents and medicines given for teachers, non-teaching staff and utility workers, with their
+              allergies and medical conditions if they choose to give them. This health information is kept
+              only with the staff member&apos;s knowledge and consent, is seen only by the School Clinician,
+              and is protected in the same way as students&apos; records. This wording is provisional until
+              the school&apos;s privacy officer approves it.
+            </p>
           </section>
 
           <section aria-labelledby="privacy-section-8" className="mt-8">

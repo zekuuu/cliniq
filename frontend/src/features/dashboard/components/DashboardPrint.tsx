@@ -18,6 +18,7 @@ import { dueText, expiryLabel } from '../lib/alerts'
 import { activityRows, overviewSentences, periodPhrase } from '../lib/printSummary'
 import { bucketName, findClusters } from '../lib/trends'
 import { maskLrn } from '../../../lib/lrn'
+import { maskPatientNumber, splitText } from '../../../lib/patients'
 
 const COMPLAINT_ROWS = 8
 
@@ -51,13 +52,14 @@ export function DashboardPrint({
     {
       label: 'Clinic visits',
       value: counts.visits,
-      note: previousCounts ? previousNote(previousCounts.visits) : 'In the period',
+      note: [splitText(counts.split.visits), previousCounts ? previousNote(previousCounts.visits) : 'In the period'].join('; '),
     },
     {
       label: 'Incidents',
       value: counts.incidents,
       note:
         [
+          splitText(counts.split.incidents),
           previousCounts && previousNote(previousCounts.incidents),
           counts.incidentsAtStage1 > 0 && `${counts.incidentsAtStage1} still at Stage 1`,
         ]
@@ -119,7 +121,7 @@ export function DashboardPrint({
           rowKey={(row) => row.followUp.id}
           empty="No follow-ups are overdue or due soon."
           columns={[
-            { header: 'LRN', width: '18%', cell: (row) => maskLrn(row.student.lrn) },
+            { header: 'LRN or Staff No.', width: '18%', cell: (row) => maskPatientNumber(row.patient) },
             { header: 'Reason', cell: (row) => row.followUp.reason },
             { header: 'Due', width: '28%', cell: (row) => dueText(row) },
             { header: 'Status', width: '14%', cell: (row) => followUpDueMap[row.dueState].label },

@@ -71,6 +71,7 @@ const targetLabels: Record<AuditTargetType, string> = {
   'follow-up': 'Follow-up',
   'calendar-event': 'Calendar event',
   'sports-report': 'Sports Report',
+  staff: 'Staff',
 }
 
 interface AuditLogFilters {
@@ -108,6 +109,8 @@ function targetPath(row: AuditLogRow, viewer: SessionUser): string | undefined {
       return paths.visitDetail(target.id)
     case 'incident':
       return paths.incidentReport(target.id)
+    case 'staff':
+      return paths.staffProfile(target.id)
     case 'follow-up':
       return paths.followUps
     case 'report':

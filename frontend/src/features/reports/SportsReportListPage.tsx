@@ -51,7 +51,7 @@ export function SportsReportListPage({ viewer }: { viewer: SessionUser }) {
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">Sports Reports</h1>
             <p className="mt-1 max-w-prose text-sm text-text-secondary">
               Saved lists of students for a PE or sports activity. Print one for the instructor who asks; it shows each
-              student's recent visits and incidents.
+              student's recent visits and incidents. Students only; staff are not included (ADR-043).
             </p>
           </div>
           <Link className={buttonClassName({ variant: 'primary' })} to={paths.sportsReportNew}>
