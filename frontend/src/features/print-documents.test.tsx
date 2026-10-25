@@ -14,7 +14,7 @@ import { ReportsPage } from './reports/ReportsPage'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
 import { maskLrn } from '../lib/lrn'
 
-vi.mock('react-chartjs-2', () => ({ Bar: () => null, Line: () => null }))
+vi.mock('react-chartjs-2', () => ({ Bar: () => null, Line: () => null, Doughnut: () => null }))
 
 /*
  * Every Print produces a purpose-built A4 document (ADR-026, cliniq-print-patterns): letterhead, a
@@ -96,12 +96,14 @@ describe('purpose-built printouts', () => {
     await expectNoNamesOrIds(doc)
   })
 
-  it('Dashboard: Admin’s printout has no Staff-only part', async () => {
+  it('Dashboard: the Admin gets no printout and a disabled Print (ADR-038 item 3)', async () => {
     renderWithRouter(<DashboardPage viewer={ADMIN} />)
-    await screen.findByRole('heading', { name: /due & upcoming follow-ups/i })
-    const doc = print()
-    expectDocument(doc, 'Clinic Overview Report')
-    expect(doc).not.toHaveTextContent('Excuse letters awaiting approval')
+    await screen.findByRole('region', { name: 'Summary counts' })
+    expect(screen.getByRole('button', { name: 'Print / Save as PDF' })).toHaveAttribute('aria-disabled', 'true')
+    act(() => {
+      window.dispatchEvent(new Event('beforeprint'))
+    })
+    expect(document.body.querySelector('[data-print-document]')).toBeNull()
   })
 
   it('Reports: prints the tab on screen as its own document, totals beside the previous month', async () => {
@@ -142,23 +144,28 @@ describe('purpose-built printouts', () => {
     await expectNoNamesOrIds(doc)
   })
 
-  it('Excuse Letter: a draft prints with a DRAFT mark and a reference block without ids', async () => {
+  it('Excuse Letter: a draft mounts no printout and its Print is disabled (ADR-038 item 6)', async () => {
     renderWithRouter(<ExcuseLetterPage viewer={STAFF} visitId="visit-0151" />)
+    await screen.findByRole('heading', { name: 'Excuse Letter' })
+    expect(screen.getByRole('button', { name: 'Print / Save as PDF' })).toHaveAttribute('aria-disabled', 'true')
+    act(() => {
+      window.dispatchEvent(new Event('beforeprint'))
+    })
+    expect(document.body.querySelector('[data-print-document]')).toBeNull()
+  })
+
+  it('Excuse Letter: an approved letter prints unstamped, with a reference block without ids', async () => {
+    renderWithRouter(<ExcuseLetterPage viewer={STAFF} visitId="visit-0141" />)
     await screen.findByRole('heading', { name: 'Excuse Letter' })
     expectScreenControlHidden('Print / Save as PDF')
     const doc = print()
     expectDocument(doc, 'Clinic Excuse Letter')
-    expect(doc).toHaveTextContent('DRAFT, NOT APPROVED')
+    expect(doc).not.toHaveTextContent(/DRAFT|VOID|SUPERSEDED/)
     expect(doc).toHaveTextContent('Not a medical certificate')
-    expect(doc).toHaveTextContent('●●●●●●●●0041')
+    // A letter about one student carries the full LRN (Zean, October 25, 2026).
+    expect(doc).toHaveTextContent(/LRN \d{12}/)
+    expect(doc).not.toHaveTextContent('●')
     expect(doc.textContent).not.toMatch(/visit-\d+/)
-  })
-
-  it('Excuse Letter: an approved letter prints without the DRAFT mark', async () => {
-    renderWithRouter(<ExcuseLetterPage viewer={STAFF} visitId="visit-0141" />)
-    await screen.findByRole('heading', { name: 'Excuse Letter' })
-    const doc = print()
-    expect(doc).not.toHaveTextContent('DRAFT')
     expect(doc).toHaveTextContent(/Approved \w{3} \d{1,2}, \d{4}/)
     // Panel review EX-4: a signature line, and no internal storage wording on paper.
     expect(doc).toHaveTextContent('Signature over printed name')
@@ -174,6 +181,8 @@ describe('purpose-built printouts', () => {
     expect(doc).toHaveTextContent('Not yet completed')
     expect(doc).toHaveTextContent('Parent or guardian informed')
     expect(doc).toHaveTextContent('No treatment recorded.')
+    expect(doc).toHaveTextContent(/LRN \d{12}/)
+    expect(doc).not.toHaveTextContent('●')
     expect(doc.textContent).not.toMatch(/incident-\d+/)
   })
 
@@ -187,6 +196,8 @@ describe('purpose-built printouts', () => {
     expect(within(visits).getAllByRole('row').length - 1).toBe(12)
     expect(doc).toHaveTextContent('Excuse letters issued')
     expect(doc).not.toHaveTextContent('Archive')
+    expect(doc).toHaveTextContent('LRN 000000220004')
+    expect(doc).not.toHaveTextContent('●')
   })
 
   it('Audit Log: the filters in words, the entry count, and every matching entry', async () => {

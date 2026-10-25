@@ -1,9 +1,9 @@
 import { renderWithRouter } from '../../test/renderWithRouter'
-import { screen } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { addDays, formatDate, formatDateRange } from '../../lib/dates'
-import { getExcuseLetterApproval, getRecordedAuditEntries, resetMockDb } from '../../lib/mock-db'
+import { getExcuseLetterApproval, getRecordedAuditEntries, markVisitEnteredInError, resetMockDb } from '../../lib/mock-db'
 import { pickDate } from '../../test/pickDate'
 import { ExcuseLetterPage } from './ExcuseLetterPage'
 import { fetchExcuseLetterContext } from './api/excuseLetterApi'
@@ -27,15 +27,46 @@ describe('Excuse Letter', () => {
     expect(screen.queryByRole('heading', { name: /medical certificate/i })).not.toBeInTheDocument()
   })
 
-  it('prints the letter preview', async () => {
+  it('keeps a draft on screen with Print disabled, and prints once it is approved (ADR-038 item 6)', async () => {
     const user = userEvent.setup()
     const print = vi.spyOn(window, 'print').mockImplementation(() => {})
     renderWithRouter(<ExcuseLetterPage />)
 
     await screen.findByRole('heading', { name: 'Excuse Letter' })
-    await user.click(screen.getByRole('button', { name: 'Print / Save as PDF' }))
+    const button = screen.getByRole('button', { name: 'Print / Save as PDF' })
+    expect(button).toHaveAttribute('aria-disabled', 'true')
+    expect(button).toHaveAccessibleDescription('Approve the letter to print it.')
+    act(() => {
+      window.dispatchEvent(new Event('beforeprint'))
+    })
+    expect(document.body.querySelector('[data-print-document]')).toBeNull()
+    expect(getRecordedAuditEntries().some((entry) => entry.actionType === 'print')).toBe(false)
+    act(() => {
+      window.dispatchEvent(new Event('afterprint'))
+    })
 
+    await user.click(screen.getByLabelText(/I checked the letter and approve storing it in the student's record/i))
+    await user.click(screen.getByRole('button', { name: 'Approve and Store' }))
+    await screen.findByText('Excuse letter approved and stored in the student record.')
+    await user.click(screen.getByRole('button', { name: 'Print / Save as PDF' }))
     expect(print).toHaveBeenCalledOnce()
+  })
+
+  it('still prints a void letter, stamped VOID', async () => {
+    await markVisitEnteredInError('visit-0151', 'Wrong student picked')
+    renderWithRouter(<ExcuseLetterPage visitId="visit-0151" />)
+    await screen.findByRole('heading', { name: 'Excuse Letter' })
+    expect(screen.getByRole('button', { name: 'Print / Save as PDF' })).not.toHaveAttribute('aria-disabled')
+    // The print listener is attached in an effect, so retry until the printout mounts.
+    await waitFor(() => {
+      act(() => {
+        window.dispatchEvent(new Event('beforeprint'))
+      })
+      expect(document.body.querySelector('[data-print-document]')).toHaveTextContent('VOID. The clinic visit was entered in error')
+    })
+    act(() => {
+      window.dispatchEvent(new Event('afterprint'))
+    })
   })
 
   it('requires nurse check before approval and writes an audit entry', async () => {

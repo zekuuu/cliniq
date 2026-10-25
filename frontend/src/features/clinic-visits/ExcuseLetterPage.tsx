@@ -13,6 +13,7 @@ import {
   Icon,
   Input,
   Modal,
+  PrintButton,
   PrintDocument,
   PrintFields,
   Skeleton,
@@ -31,8 +32,6 @@ import {
   type ExcuseLetterContext,
   type ExcusedPeriod,
 } from './api/excuseLetterApi'
-import { maskLrn } from '../../lib/lrn'
-import { MaskedLrn } from '../../components/ui/MaskedLrn'
 import { ExcusedPeriodPresets } from './ExcusedPeriodPresets'
 
 function LetterSkeleton({ back }: { back: ReactNode }) {
@@ -104,7 +103,7 @@ function PrintableLetter({
         </div>
         {/* Internal record status: on screen only, never on paper (panel review EX-4). */}
         <div className="rounded-md border border-border bg-surface px-3 py-2 text-xs print:hidden">
-          Student: {context.student.fullName} · LRN <MaskedLrn lrn={context.student.lrn} />
+          Student: {context.student.fullName} · LRN {context.student.lrn}
           <br />
           Clinic visit: {formatDateTime(context.visit.dateTime)}
           <br />
@@ -117,8 +116,9 @@ function PrintableLetter({
 
 /**
  * The letter on A4 (ADR-026): letterhead, date, recipient, excused period, body, teacher note, and a
- * signature block, then a reference block without internal ids. A draft prints with a DRAFT mark so
- * it can't pass for an approved letter. Single student, so the full name is correct (ADR-004).
+ * signature block, then a reference block without internal ids. Only an approved, superseded or void
+ * letter prints (ADR-038 item 6); the last two are stamped so they can't pass for a valid letter. A
+ * draft never prints, so it has no mark. Single student, so the full name is correct (ADR-004).
  */
 function ExcuseLetterPrint({
   context,
@@ -147,19 +147,17 @@ function ExcuseLetterPrint({
     <PrintDocument
       title="Clinic Excuse Letter"
       viewer={viewer}
-      scope={`For ${student.fullName} (LRN ${maskLrn(student.lrn)}), ${student.gradeLevel}, after a clinic visit on ${formatDateTime(visit.dateTime)}.`}
+      scope={`For ${student.fullName} (LRN ${student.lrn}), ${student.gradeLevel}, after a clinic visit on ${formatDateTime(visit.dateTime)}.`}
     >
-      {(!approved || voided || superseded) && (
+      {(voided || superseded) && (
         <>
           <div aria-hidden="true" className="pointer-events-none fixed inset-0 flex items-center justify-center">
-            <span className="-rotate-30 text-[110pt] font-bold tracking-widest text-border">{voided ? 'VOID' : superseded ? 'SUPERSEDED' : 'DRAFT'}</span>
+            <span className="-rotate-30 text-[110pt] font-bold tracking-widest text-border">{voided ? 'VOID' : 'SUPERSEDED'}</span>
           </div>
           <p className="relative mb-[5mm] border-2 border-text-primary px-[3mm] py-[2mm] text-[11pt] font-bold">
             {voided
               ? 'VOID. The clinic visit was entered in error, so this letter is not valid.'
-              : superseded
-                ? 'SUPERSEDED. A later letter replaced this one, so this letter is not valid.'
-                : 'DRAFT, NOT APPROVED. This letter is not valid until the school clinic approves it.'}
+              : 'SUPERSEDED. A later letter replaced this one, so this letter is not valid.'}
           </p>
         </>
       )}
@@ -182,7 +180,7 @@ function ExcuseLetterPrint({
         <p className="mb-[2mm] font-semibold">Reference</p>
         <PrintFields
           fields={[
-            { label: 'Student', value: `${student.fullName} · LRN ${maskLrn(student.lrn)}` },
+            { label: 'Student', value: `${student.fullName} · LRN ${student.lrn}` },
             { label: 'Grade level', value: student.gradeLevel },
             { label: 'Clinic visit', value: formatDateTime(visit.dateTime) },
             {
@@ -195,7 +193,7 @@ function ExcuseLetterPrint({
                   ? `Approved ${formatDateTime(context.approval.approvedAt)}`
                   : approved
                     ? 'Approved'
-                    : 'Draft, not approved',
+                    : 'Not approved',
             },
           ]}
         />
@@ -203,6 +201,8 @@ function ExcuseLetterPrint({
     </PrintDocument>
   )
 }
+
+const DRAFT_PRINT_NOTE = 'Approve the letter to print it.'
 
 function ExcuseLetterEditor({
   onReplaced,
@@ -233,6 +233,8 @@ function ExcuseLetterEditor({
   // Opened from the student's record: a letter a later one replaced. Read-only.
   const superseded = context.approval?.superseded ?? null
   const body = editedBody ?? defaultBody(context.student, context.visit, period)
+  // ADR-038 item 6 (Sir Rey): a draft stays on screen but can't be printed or saved as PDF.
+  const printable = approved || Boolean(voided) || Boolean(superseded)
 
   async function replace() {
     if (!replaceReason.trim()) {
@@ -260,7 +262,11 @@ function ExcuseLetterEditor({
   }
 
   return (
-    <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8 print:max-w-none print:px-0 print:py-0">
+    <div
+      data-print-blocked={!printable || undefined}
+      className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8 print:max-w-none print:px-0 print:py-0"
+    >
+      {!printable && <p data-print-note className="hidden p-8 text-base text-text-primary print:block">{DRAFT_PRINT_NOTE}</p>}
       {back}
       <Card className="p-5 print:hidden">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -269,14 +275,12 @@ function ExcuseLetterEditor({
               Excuse Letter
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
-              {context.student.fullName} · LRN <MaskedLrn lrn={context.student.lrn} /> · visit on{' '}
+              {context.student.fullName} · LRN {context.student.lrn} · visit on{' '}
               {formatDateTime(context.visit.dateTime)}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" icon="printer" onClick={() => window.print()}>
-              Print / Save as PDF
-            </Button>
+          <div className="flex flex-wrap items-start gap-2">
+            <PrintButton viewer={viewer} disabledReason={printable ? undefined : DRAFT_PRINT_NOTE} />
             {approved && !voided && !superseded && (
               <Button variant="neutral" onClick={() => { setReplaceReason(''); setReplaceError(''); setReplacing(true) }}>
                 Issue a replacement
@@ -443,7 +447,7 @@ function ExcuseLetterEditor({
           </Button>
         </div>
       </Modal>
-      <ExcuseLetterPrint
+      {printable && <ExcuseLetterPrint
         context={context}
         viewer={viewer}
         recipient={recipient}
@@ -451,7 +455,7 @@ function ExcuseLetterEditor({
         period={period}
         note={note}
         approved={approved}
-      />
+      />}
     </div>
   )
 }
