@@ -3,6 +3,8 @@ import { Link } from 'react-router'
 import { AppFooter, Icon } from '../components'
 import { Modal } from '../components'
 import { cn } from '../lib/cn'
+import { ADMIN_PRINT_NOTE } from '../components'
+import { canPrint } from '../hooks/usePrinting'
 import { logoutMockSession, ROLE_LABELS, type SessionUser } from '../lib/mock-db'
 import { showKeyboardShortcuts } from '../lib/shortcuts'
 import { BrandLogo, Sidebar } from './Sidebar'
@@ -53,6 +55,18 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
   const [isReportIssueOpen, setIsReportIssueOpen] = useState(false)
   const [reportIssueNotice, setReportIssueNotice] = useState<string | null>(null)
   const navGroups = navGroupsFor(user.role)
+  const printBlocked = !canPrint(user)
+
+  // ADR-038 item 3: Ctrl+P / Cmd+P does nothing for the Admin. The browser's own menu can't be
+  // blocked; then the page prints only the note below instead of the screen (index.css).
+  useEffect(() => {
+    if (!printBlocked) return
+    const block = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'p') event.preventDefault()
+    }
+    window.addEventListener('keydown', block)
+    return () => window.removeEventListener('keydown', block)
+  }, [printBlocked])
 
   function openReportIssue() {
     setReportIssueNotice(null)
@@ -71,6 +85,7 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
 
   return (
     <div
+      data-print-blocked={printBlocked || undefined}
       className={cn(
         'min-h-screen bg-surface transition-[grid-template-columns] duration-200 motion-reduce:transition-none lg:grid print:block print:bg-background',
         isSidebarCollapsed
@@ -84,6 +99,7 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
       >
         Skip to main content
       </a>
+      {printBlocked && <p data-print-note className="hidden p-8 text-base text-text-primary print:block">{ADMIN_PRINT_NOTE}</p>}
 
       <Sidebar
         active={active}

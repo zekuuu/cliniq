@@ -47,6 +47,8 @@ export {
   CONFIDENTIALITY_LINE,
   PrintBars,
   PrintDocument,
+  PrintButton,
+  ADMIN_PRINT_NOTE,
   PrintFields,
   PrintFigures,
   PrintNote,

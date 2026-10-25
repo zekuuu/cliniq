@@ -3,6 +3,11 @@ import { flushSync } from 'react-dom'
 import { recordPrint, type PrintAuditRecord, type SessionUser } from '../lib/mock-db'
 
 let activePrintAudit = false
+
+/** ADR-038 item 3: the Admin never prints or saves as PDF; the clinician prints. */
+export function canPrint(viewer?: SessionUser): boolean {
+  return viewer?.role !== 'admin'
+}
 let printListeners = 0
 
 /**
@@ -12,13 +17,16 @@ let printListeners = 0
  * When a document title is supplied, the first `beforeprint` event records one audit entry for the
  * signed-in viewer; `record` makes that entry name a record (e.g. a Sports Report and its student
  * count) instead of the title. Print-only trees therefore cost nothing on screen and never render twice in tests.
+ * For the Admin nothing mounts and nothing is recorded (`canPrint`), so the browser's own Print gets no document.
  */
 export function usePrinting(documentTitle?: string, viewer?: SessionUser, record?: PrintAuditRecord): string | null {
   const [printedAt, setPrintedAt] = useState<string | null>(null)
   const recordType = record?.type
   const recordId = record?.id
   const recordSummary = record?.summary
+  const allowed = canPrint(viewer)
   useEffect(() => {
+    if (!allowed) return
     printListeners += 1
     const before = () => {
       flushSync(() => setPrintedAt(new Date().toISOString()))
@@ -39,6 +47,6 @@ export function usePrinting(documentTitle?: string, viewer?: SessionUser, record
       printListeners -= 1
       if (!printListeners) activePrintAudit = false
     }
-  }, [documentTitle, viewer, recordType, recordId, recordSummary])
+  }, [allowed, documentTitle, viewer, recordType, recordId, recordSummary])
   return printedAt
 }

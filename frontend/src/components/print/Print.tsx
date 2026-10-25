@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { usePrinting } from '../../hooks/usePrinting'
+import { canPrint, usePrinting } from '../../hooks/usePrinting'
+import { Button } from '../ui/Button'
 import { cn } from '../../lib/cn'
 import { formatDateTime } from '../../lib/dates'
 import { getMockSessionUser, ROLE_LABELS, type PrintAuditRecord, type SessionUser } from '../../lib/mock-db'
@@ -42,6 +43,61 @@ function footerCss(printedBy: string, confidentiality: string): string {
 
 function printedByLine(printedAt: string, viewer: SessionUser): string {
   return `Printed ${formatDateTime(printedAt)} (Philippine time) by ${viewer.name}, ${ROLE_LABELS[viewer.role]}`
+}
+
+export const ADMIN_PRINT_NOTE = 'Printing is done by the clinician.'
+
+/**
+ * The one Print / Save as PDF button. Unavailable, not hidden, with its reason in a tooltip: for the
+ * Admin (ADR-038 item 3) or when the document isn't printable yet (`disabledReason`, e.g. a draft
+ * letter). `aria-disabled` rather than `disabled`, so keyboard users can still focus it and read the
+ * reason; the tooltip opens on hover or focus, stays open while hovered, and Escape closes it.
+ */
+export function PrintButton({
+  viewer = getMockSessionUser(),
+  disabledReason,
+  onPrint = () => window.print(),
+  className,
+}: {
+  viewer?: SessionUser
+  disabledReason?: string
+  onPrint?: () => void
+  className?: string
+}) {
+  const noteId = useId()
+  const [open, setOpen] = useState(false)
+  const reason = canPrint(viewer) ? disabledReason : ADMIN_PRINT_NOTE
+  return (
+    <span
+      className={cn('relative inline-flex', className)}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={() => setOpen(false)}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') setOpen(false)
+      }}
+    >
+      <Button
+        variant="secondary"
+        icon="printer"
+        onClick={reason ? undefined : onPrint}
+        aria-disabled={reason ? true : undefined}
+        aria-describedby={reason ? noteId : undefined}
+        className={reason ? 'cursor-not-allowed opacity-50 hover:bg-background' : undefined}
+      >
+        Print / Save as PDF
+      </Button>
+      {reason && (
+        // `pt-1.5` instead of a margin, so the pointer can move onto the tooltip without closing it.
+        <span id={noteId} role="tooltip" hidden={!open} className="absolute top-full left-0 z-30 pt-1.5">
+          <span className="block w-max max-w-56 rounded-md bg-text-primary px-2.5 py-1.5 text-xs font-semibold text-white shadow-card">
+            {reason}
+          </span>
+        </span>
+      )}
+    </span>
+  )
 }
 
 export interface PrintDocumentProps {

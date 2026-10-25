@@ -170,6 +170,11 @@
   @page landscape {
     size: A4 landscape;
   }
+  /* ADR-038 item 3: for the Admin, the browser's own Print gets only the "printing is done by the clinician" note. */
+  [data-print-blocked] > :not([data-print-note]) {
+    display: none !important;
+  }
+
   /* A purpose-built printout replaces the screen entirely (components/print/Print.tsx). */
   body:has(> [data-print-document]) > :not([data-print-document]) {
     display: none !important;
