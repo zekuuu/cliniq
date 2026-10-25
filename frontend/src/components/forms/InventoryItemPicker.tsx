@@ -1,6 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { cn } from '../../lib/cn'
 import { stockQuantityText, type InventoryFlag } from '../status/inventory'
+import { ITEM_BRAND_LABELS, type ItemBrand } from '../../types/entities'
 import { Badge } from '../ui/Badge'
 import { Input } from '../ui/Input'
 import { DROPDOWN_PANEL, dropdownOptionClassName, placeDropdownPanel } from '../ui/dropdownClassName'
@@ -14,6 +15,8 @@ export type PickableItem = {
   unit: string
   flags: ReadonlyArray<InventoryFlag>
   daysUntilExpiry: number | null
+  /** Generic or branded, when recorded (Sir Rey, October 25, 2026). */
+  brand?: ItemBrand | null
 }
 
 const GROUPS = [
@@ -188,6 +191,7 @@ export function InventoryItemPicker({
                   >
                     <span className="flex items-center gap-2">
                       {item.name}
+                      {item.brand && <span className="text-xs text-text-secondary">{ITEM_BRAND_LABELS[item.brand]}</span>}
                       {disabled && <Badge tone="error" variant="soft">Expired</Badge>}
                       {nearing && (
                         <Badge tone="warning" variant="soft">

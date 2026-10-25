@@ -16,7 +16,7 @@ import {
   type SessionUser,
   type StockAdjustmentInput,
 } from '../../../lib/mock-db'
-import type { InventoryCategory, InventoryItem, Student, StudentSearchResult, Visit } from '../../../types/entities'
+import type { InventoryCategory, InventoryItem, ItemBrand, Student, StudentSearchResult, Visit } from '../../../types/entities'
 
 /**
  * Inventory (#28–#30). Low-stock, nearing-expiration, expired, and below-zero states are computed
@@ -41,6 +41,8 @@ export interface InventoryFormValues {
   lowStockThreshold: string
   /** Add Item only (ADR-035): an explicit confirmation; an empty date alone is never this choice. */
   noExpirationConfirmed: boolean
+  /** '' is "Not specified" (Sir Rey, October 25, 2026). */
+  brand: '' | ItemBrand
 }
 
 export interface InventoryFormContext {
@@ -98,6 +100,7 @@ export function saveInventoryItem(
       expirationDate: values.expirationDate || null,
       lowStockThreshold: Number(values.lowStockThreshold),
       noExpirationConfirmed: values.noExpirationConfirmed,
+      brand: values.brand || null,
     },
     options,
   )
