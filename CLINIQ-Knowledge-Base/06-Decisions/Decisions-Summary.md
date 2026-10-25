@@ -149,3 +149,15 @@ Two forms stay, matching the clinic's two logbooks. A visit can be escalated to 
 ## 037 Backup and the Audit Log for both roles, 10-year audit retention, password re-entry
 
 The Principal and the clinician can both see the Audit Log and Backup (the review's advice to hide them from the clinician is declined and its risk accepted). The audit log is kept 10 years (Zean's answer; the school has not confirmed it). The Backup page gets "Back up now" and the Dashboard warns when the last good backup is over 48 hours old. A "Confirm it's you" password re-entry guards archiving a student, disabling or enabling an account, resetting a password, changing a role and approving an incident report. Decided Thursday, October 22, 2026; not built yet.
+
+## 038 Admin reads student profiles and incidents but cannot print; a draft letter cannot be printed
+
+The Admin/Principal can open the Student List, Student Profile, Incident Log and Incident Report read only (no write controls, visits shown as text, views audit-logged by default), and cannot print or Save as PDF anywhere; the clinician prints and hands over the printout. A draft excuse letter cannot be printed or saved as PDF until it is approved (it replaces the printed DRAFT mark). No Super Admin role, and the Admin does not get the clinician's features. Decided Sunday, October 25, 2026 after Sir Mina's and Sir Rey's feedback; built Sunday, October 25, 2026 — 21:57. ADR-029 and ADR-026 carry a note. [ADR-038](ADR-038-Admin-Read-Only-Access-No-Printing-And-No-Printing-Of-Draft-Letters.md)
+
+## 039 Backup stays on the internal and external drives, with no cloud and no extra copy planned yet
+
+The backup stays on the clinic computer and its external drive. No cloud backup, because off-site health data needs the parents' consent and a provider agreement and the school has no IT staff (ADR-029). A second copy held by the Principal was suggested and withdrawn; no extra layer is planned, and the question stays open. Decided Sunday, October 25, 2026. [ADR-039](ADR-039-Backup-Stays-Local-No-Cloud-No-Extra-Copy-Planned.md)
+
+### ADR-040: The full LRN shows on every single-student screen and its printout
+
+A screen about one deliberately opened student shows the full LRN, and so does its printout: the Student Profile, Incident Report, Excuse Letter, Visit Details, Parent Notifications, and the entry forms once a student is picked. Lists, pickers, the Dashboard, Reports and the Audit Trail stay masked to the last four digits. Decided and built Sunday, October 25, 2026 — 22:33 PHT. [ADR-040](ADR-040-Full-LRN-On-Single-Student-Screens-And-Printouts.md)

@@ -2,6 +2,7 @@
 
 **Date:** Thursday, October 15, 2026 — 23:02
 **Status:** Accepted (requested by Zean, project team; details agent-decided)
+**Note (Sunday, October 25, 2026 — 16:58):** the printed DRAFT mark on an unapproved excuse letter is replaced by a rule: a draft letter cannot be printed or saved as PDF until it is approved; the Admin cannot print at all (ADR-038, Zean, Sunday, October 25, 2026 — 16:45). Built Sunday, October 25, 2026 — 21:57 PHT ([2026-10-25-mina-rey-feedback-build-all-parts](../08-Logs/Agent-Sessions/2026-10-25-mina-rey-feedback-build-all-parts.md)); the DRAFT banner and watermark described below no longer occur. A superseded or void letter still prints stamped.
 **Note (Wednesday, October 21, 2026 — 01:09):** the QR feature this ADR mentions was removed (ADR-027, [2026-10-21-remove-qr-feature](../08-Logs/Agent-Sessions/2026-10-21-remove-qr-feature.md)); the rest of the decision stands.
 **Note (Wednesday, October 21, 2026 — 07:00):** the CLINIQ Student Number this ADR mentions was replaced by the LRN (ADR-028, [2026-10-21-lrn-replaces-student-number](../08-Logs/Agent-Sessions/2026-10-21-lrn-replaces-student-number.md)); lists show it masked. The rest of the decision stands.
 
