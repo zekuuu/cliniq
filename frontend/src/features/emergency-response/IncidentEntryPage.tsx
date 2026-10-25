@@ -48,7 +48,6 @@ import {
   type EscalationPrefill,
   type IncidentEntryContext,
 } from './api/incidentEntryApi'
-import { maskLrn } from '../../lib/lrn'
 import { CalledContactField } from './CalledContactField'
 import {
   calledContactText,
@@ -535,7 +534,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
               {student
-                ? `${student.fullName} · LRN ${maskLrn(student.lrn)} · ${student.gradeLevel}`
+                ? `${student.fullName} · LRN ${student.lrn} · ${student.gradeLevel}`
                 : 'Student not identified yet. Search by LRN or name in Stage 1.'}
             </p>
           </div>
