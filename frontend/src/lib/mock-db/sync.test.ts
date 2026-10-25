@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { rangeForPreset } from '../dateRange'
 import { todayISO } from '../dates'
-import { findVisitStudent, submitNewVisit } from '../../features/clinic-visits/api/newVisitApi'
+import { findVisitPatient, submitNewVisit } from '../../features/clinic-visits/api/newVisitApi'
 import { fetchVisitLog, defaultVisitLogRange } from '../../features/clinic-visits/api/visitLogApi'
 import { fetchDashboardSummary } from '../../features/dashboard/api/dashboardApi'
 import { fetchIncidentLog } from '../../features/emergency-response/api/incidentLogApi'
@@ -33,7 +33,7 @@ vi.mock('./mock-db.json', async (importOriginal) => {
   // The student with the most visits in the last 30 days: they appear on the most screens.
   const recent = seed.visits.filter((v) => 'daysAgo' in v.dateTime && v.dateTime.daysAgo <= 29)
   const counts = new Map<string, number>()
-  for (const v of recent) counts.set(v.studentId, (counts.get(v.studentId) ?? 0) + 1)
+  for (const v of recent) if (v.studentId) counts.set(v.studentId, (counts.get(v.studentId) ?? 0) + 1)
   const [target] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]
   const student = seed.students.find((s) => s.id === target)!
   student.fullName = 'Renamed Synthetic Student'
@@ -73,7 +73,7 @@ describe('editing mock-db.json changes every screen consistently', () => {
     for (const row of incidentRows) expect(row.gradeLevel).toBe(EDITED_GRADE)
 
     // New Visit Entry: the picked student is loaded with the edited name.
-    expect((await findVisitStudent(student.id)).fullName).toBe(EDITED_NAME)
+    expect((await findVisitPatient({ studentId: student.id, personnelId: null })).fullName).toBe(EDITED_NAME)
 
     // Dashboard: they're a frequent visitor, shown by LRN only (ADR-004).
     const dash = await fetchDashboardSummary({ range: rangeForPreset('last30', todayISO()) })
@@ -116,6 +116,7 @@ describe('writing through the layer updates every screen together', () => {
     const { visit, followUp } = await submitNewVisit(
       {
         studentId: student.id,
+        personnelId: null,
         complaint: 'Headache',
         treatment: 'Rested in clinic',
         disposition: 'returned_to_class',
@@ -136,6 +137,6 @@ describe('writing through the layer updates every screen together', () => {
 
     const logAfter = await fetchVisitLog({ from: todayISO(), to: todayISO(), search: '', disposition: 'all' })
     expect(logAfter.length).toBe(logBefore.length + 1)
-    expect(logAfter.find((row) => row.id === visit.id)?.lrn).toBe(student.lrn)
+    expect(logAfter.find((row) => row.id === visit.id)?.patient).toEqual({ kind: 'student', number: student.lrn })
   })
 })

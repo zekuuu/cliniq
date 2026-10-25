@@ -21,6 +21,7 @@ const CONFIG: MockDbConfig = {
   showFrequentVisitors: true,
   frequentVisitorMinVisits: 3,
   frequentVisitorWindowDays: 30,
+  personnelTypes: ['Teacher'],
   upcomingFollowUpDays: 7,
   expiryWarningDays: 30,
   clusterMinCount: 8,
@@ -50,6 +51,7 @@ const student = (id: string, n: string, extra: Partial<SeedStudent> = {}): SeedS
 const followUp = (id: string, date: string, status: FollowUp['status'] = 'pending'): FollowUp => ({
   id,
   studentId: 's1',
+  personnelId: null,
   relatedRecord: { type: 'visit', id: 'v1' },
   followUpDate: date,
   reason: 'Recheck temperature',
@@ -67,6 +69,7 @@ const visit = (
 ): Visit => ({
   id,
   studentId,
+  personnelId: null,
   dateTime: `${date}T09:00:00+08:00`,
   complaint,
   treatment: 'Rest',
@@ -99,6 +102,7 @@ function dataset(partial: Partial<DbState>): DbState {
     config: CONFIG,
     users: [],
     students: [],
+    personnel: [],
     visits: [],
     incidents: [],
     followUps: [],
@@ -147,7 +151,7 @@ describe('due/upcoming follow-ups', () => {
 
   it('carries the LRN and never the name', () => {
     const rows = buildDueFollowUps(dataset({ students, followUps: [followUp('a', TODAY)] }))
-    expect(rows[0].student).toEqual({ id: 's1', lrn: '000000260001' })
+    expect(rows[0].patient).toEqual({ kind: 'student', id: 's1', number: '000000260001' })
     expect(JSON.stringify(rows)).not.toContain('SECRET NAME')
   })
 })
