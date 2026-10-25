@@ -21,6 +21,7 @@ vi.mock('react-chartjs-2', () => {
       return <Stub {...props} />
     },
     Line: Stub,
+    Doughnut: Stub,
   }
 })
 

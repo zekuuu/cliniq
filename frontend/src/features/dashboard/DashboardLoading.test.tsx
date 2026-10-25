@@ -9,7 +9,7 @@ vi.mock('./api/dashboardApi', () => ({
   fetchPendingExcuseLetters: () => new Promise(() => {}),
   fetchPeriodEvents: () => new Promise(() => {}),
 }))
-vi.mock('react-chartjs-2', () => ({ Bar: () => null, Line: () => null }))
+vi.mock('react-chartjs-2', () => ({ Bar: () => null, Line: () => null, Doughnut: () => null }))
 
 describe('Clinic Overview Dashboard: first-load skeletons', () => {
   it('shows summary-shaped placeholders while its shared request loads', () => {

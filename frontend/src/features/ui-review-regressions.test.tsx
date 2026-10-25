@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 // jsdom has no canvas. Replace the chart with a stub that keeps its accessible label.
 vi.mock('react-chartjs-2', () => {
   const Stub = (props: { 'aria-label'?: string }) => <div role="img" aria-label={props['aria-label']} />
-  return { Bar: Stub, Line: Stub }
+  return { Bar: Stub, Line: Stub, Doughnut: Stub }
 })
 import { renderWithRouter } from '../test/renderWithRouter'
 import { confirmItsYou } from '../test/confirmItsYou'
