@@ -55,6 +55,10 @@ Monthly Report?" stays open for the nurse and the school.
 This supersedes ADR-025's "Print prints everything, whichever view is open": the Dashboard now prints
 the Clinic Overview Report whichever view is open.
 
+**Amended Monday, October 26, 2026 — 11:35 PHT (ADR-046, Zean):** the footer is now "Page X of Y" only. The printed-by and confidentiality lines are removed from every printout.
+
+**Amended Monday, October 26, 2026 — 11:13 PHT (ADR-045, Zean):** the Dashboard now prints only the open tab. Overview prints the Clinic Overview Report, with the screen's stat cards and chip counts plus the lists behind them. Trends prints the Clinic Trends Report. The scope line names the tab.
+
 ## Alternatives Considered
 - **Keep printing the screen, with tighter print CSS:** the fastest change, but still widget order,
   color-coded badges, and no who/when, so the paper doesn't stand alone.

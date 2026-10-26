@@ -303,9 +303,8 @@ export function IncompleteRecordsQueuePage({
                 rows={sortedRows}
                 rowKey={(record) => record.id}
                 fixedLayout
-                // Below this the six columns squeeze; the table scrolls inside the card instead, name pinned.
+                // Below this the six columns squeeze; the table scrolls inside the card instead.
                 minTableWidth="60rem"
-                stickyFirstColumn
               />
             ) : (
               <EmptyState

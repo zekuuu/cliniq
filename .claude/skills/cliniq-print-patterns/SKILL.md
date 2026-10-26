@@ -1,6 +1,6 @@
 ---
 name: cliniq-print-patterns
-description: Apply when adding or changing any CLINIQ Print / Save as PDF, or any screen whose output is meant for paper (reports, letters, record sheets, logs). Keeps every printout a purpose-built A4 document with a letterhead, a scope line, and a printed-by footer, built on the shared print components, never the screen with its buttons hidden.
+description: Apply when adding or changing any CLINIQ Print / Save as PDF, or any screen whose output is meant for paper (reports, letters, record sheets, logs). Keeps every printout a purpose-built A4 document with a letterhead, a scope line, and a page-number footer, built on the shared print components, never the screen with its buttons hidden.
 ---
 
 # CLINIQ Print Patterns
@@ -20,9 +20,12 @@ Every printout has:
    Academy — School Clinic", and the document title.
 2. **A "what is this" line:** the scope in plain words (the date range, the report month, the applied
    filters, or the student and visit it is about). Never a placeholder date such as All's 1900 start.
-3. **A footer on every page:** "Printed <date and time, Philippine time> by <name>, <role>", the
-   confidentiality line ("Confidential: contains student health information. Handle according to the
-   school's Data Privacy policy."), and "Page X of Y".
+3. **A footer on every page:** "Page X of Y" at the bottom right, and nothing else. The printed-by
+   and confidentiality lines were removed to unclutter the page (ADR-046, Zean, Monday, October 26,
+   2026); who printed what and when stays in the audit log. The page has no top margin (`index.css`),
+   so Chrome has no room for its own date/title header; `PrintDocument`'s top padding is cloned onto
+   every page (`box-decoration-break: clone`). Don't add a top `@page` margin back. If Chrome's own
+   footer still shows, untick "Headers and footers" in the print dialog.
 4. **Real content in reading order:** a short summary first, then the detail, then notes. Numbers that
    matter appear in words or a table, never only in a chart.
 5. **No app chrome:** no sidebar, top bar, Back, buttons, tabs, filter controls, skeletons, tooltips,
@@ -43,7 +46,8 @@ Every printout has:
   screen's figure because it comes from the same data function. If a figure isn't in the data, it
   doesn't print; log it as `LATER`.
 - Never print an internal record id (`visit-0001`) and never invent a reference number (backend
-  `LATER`). A printout that lists several students shows masked LRNs only; a printout about one
+  `LATER`). A printout that lists several students shows masked LRNs only, except the Dashboard's Clinic
+  Overview Report, which prints full LRNs and no names (ADR-044); a printout about one
   deliberately opened student shows the full name and the full LRN (ADR-004, ADR-028, ADR-040).
 - A draft or unapproved excuse letter does not print at all (ADR-038 item 6): it stays on screen and
   its Print is unavailable, with "Approve the letter to print it." in the same tooltip. A superseded or void letter still prints,
@@ -63,18 +67,27 @@ Every printout has:
 
 - Shared components: `frontend/src/components/print/Print.tsx` (`PrintDocument`, `PrintSection`,
   `PrintTable`, `PrintFigures`, `PrintBars`, `PrintFields`, `PrintSignatures`, `PrintNote`).
+- **Signature lines carry the name when CLINIQ knows it** (`PrintSignatures` `name`; Zean, Monday,
+  October 26, 2026): never leave a bare "Prepared by" for a known person. The person printing for
+  Prepared by, the active Admin/Principal account (`getPrincipalName`) for a Principal line, and the
+  record's own people where it has them (the Incident Report: whoever completed it, the contact logged
+  as reached, and the Principal only once approved). Leave the name blank when nobody fits; don't
+  invent one.
+- **Signature block layout** (Zean, Monday, October 26, 2026): a heading ("Prepared by:", "Reviewed by:",
+  "Noted by (if applicable):"), room to sign, the line, then the printed name, the position, and
+  "Date: ____". Pass `heading`, `name` and `position` to `PrintSignatures`. Blank name or position keeps
+  its row so it can be handwritten.
 - `PrintDocument` mounts only while the browser prints (`frontend/src/hooks/usePrinting.ts`, set on
   `beforeprint` with `flushSync`), renders into `document.body`, and writes the footer into the
   `@page` margin boxes; `index.css` hides the rest of the app for that print. So it costs nothing on
   screen and never duplicates screen text in tests. Pass the screen's loaded data as props.
 - The screen's Print button is the shared `PrintButton` (`components/print/Print.tsx`), inside a `print:hidden` block; it calls `window.print()` (or `onPrint`) and takes a `disabledReason` for a document that isn't printable yet.
-- Existing printouts: `DashboardPrint` (Clinic Overview Report), `ReportsPrint` (Monthly Clinic
+- Existing printouts: `DashboardPrint` (prints the open Dashboard tab: Clinic Overview Report or Clinic Trends Report, ADR-045), `ReportsPrint` (Monthly Clinic
   Report, Incident register, Complaint summary), and the print trees in `ExcuseLetterPage`,
   `IncidentReportPage`, `StudentProfilePage`, and `AuditLogPage`, and `SportsReportPrint` (the Sports
   Report, ADR-034).
-- **The Sports Report is the one printout with its own confidentiality line** (`confidentiality` prop:
-  "Confidential: for the PE/Sports Instructor named above. Do not post or share. Shows only what CLINIQ
-  recorded; this is not a medical clearance.") and full names (a decided exception, ADR-034). Its Print
+- **The Sports Report keeps its confidentiality line on the screen only** (`SPORTS_REPORT_CONFIDENTIALITY`;
+  the printout's footer is the page number alone, ADR-046) and prints full names (a decided exception, ADR-034). Its Print
   button reads the visits and incidents again just before calling `window.print()`, so the paper is
   current; the print tree itself still renders only what the screen holds. Its audit entry names the
   report and the student count (`auditRecord` prop), not the title alone.

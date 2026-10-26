@@ -4,7 +4,7 @@ import { getRecordedAuditEntries } from '../../lib/mock-db'
 import { PrintDocument } from './Print'
 
 describe('PrintDocument', () => {
-  it('writes the printed-by footer as a safe CSS string, whatever the name holds', () => {
+  it('footers every page with the page number only, never the name of who printed (ADR-046)', () => {
     render(
       <PrintDocument
         title="Test"
@@ -18,7 +18,8 @@ describe('PrintDocument', () => {
       window.dispatchEvent(new Event('beforeprint'))
     })
     const css = document.querySelector('[data-print-document] style')?.textContent ?? ''
-    expect(css).toContain('by Ana \\"Q\\" \\\\ O’Neil\\A }, School Clinician')
+    expect(css).toContain('counter(pages)')
+    expect(css).not.toContain('Ana')
     act(() => {
       window.dispatchEvent(new Event('afterprint'))
     })

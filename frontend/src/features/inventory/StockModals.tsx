@@ -30,7 +30,8 @@ export function BatchDetailsModal({ item, onClose }: { item: InventoryItemView; 
         <section aria-labelledby="batch-list-title">
           <h2 id="batch-list-title" className="text-sm font-semibold text-text-primary">Batches on hand</h2>
           <ul className="mt-2 divide-y divide-border rounded-md border border-border">
-            {item.batches.map((batch) => {
+            {/* First to expire first; no-expiry batches last (same order dispensing uses). */}
+            {[...item.batches].sort((left, right) => (left.expirationDate ?? '9999-12-31').localeCompare(right.expirationDate ?? '9999-12-31')).map((batch) => {
               const expired = Boolean(batch.expirationDate && batch.expirationDate < new Date().toISOString().slice(0, 10))
               return <li key={batch.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm"><span><span className="font-semibold text-text-primary">{batch.quantity} {item.unit}</span> · received {formatDate(batch.receivedDate)}</span><span className={expired ? 'font-semibold text-error' : 'text-text-secondary'}>{batch.expirationDate ? `${formatDate(batch.expirationDate)}${expired ? ' · Expired' : ''}` : 'No expiration'}</span></li>
             })}

@@ -12,11 +12,13 @@ import {
   ErrorState,
   Icon,
   Input,
+  Pagination,
   Select,
   Skeleton,
   type DataTableColumn,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { paths } from '../../routes/paths'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { Personnel } from '../../types/entities'
@@ -107,6 +109,12 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   const [type, setType] = useState('')
   const [includeArchived, setIncludeArchived] = useState(false)
   const [sort, setSort] = useState<TableSortState<StaffSortKey>>({ key: 'name', direction: 'ascending' })
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = usePageSize()
+  const changePageSize = (size: PageSize) => {
+    setPageSize(size)
+    setPage(1)
+  }
   const { data, status, isRefetching, reload } = useAsyncData(`staff-list|${search}|${type}|${includeArchived}`, () =>
     fetchStaffList({ search, type, includeArchived }),
   )
@@ -150,6 +158,9 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   const rows = sortTableRows(data, sort, (person, key) =>
     key === 'name' ? person.fullName : key === 'number' ? person.staffNumber : key === 'type' ? person.type : (person.department ?? ''),
   )
+  const pageCount = Math.max(1, Math.ceil(rows.length / pageSize))
+  const currentPage = Math.min(page, pageCount)
+  const pageRows = rows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   return (
     <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
@@ -179,13 +190,13 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
         />
         <CardBody className="flex flex-col gap-4">
           <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1fr)_16rem_auto]">
-            <Input label="Search" value={search} placeholder="Name or Staff No." onChange={(event) => setSearch(event.target.value)} />
-            <TypeSelect value={type} onChange={setType} />
+            <Input label="Search" value={search} placeholder="Name or Staff No." onChange={(event) => { setSearch(event.target.value); setPage(1) }} />
+            <TypeSelect value={type} onChange={(value) => { setType(value); setPage(1) }} />
             <label className="flex min-h-10 cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-text-primary shadow-card transition-colors hover:bg-surface">
               <input
                 type="checkbox"
                 checked={includeArchived}
-                onChange={(event) => setIncludeArchived(event.target.checked)}
+                onChange={(event) => { setIncludeArchived(event.target.checked); setPage(1) }}
                 className="size-4 cursor-pointer accent-brand-green-dark"
               />
               Show archived
@@ -194,14 +205,25 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
 
           <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>
             {data.length ? (
-              <DataTable
-                caption="Staff masterlist"
-                columns={columns}
-                rows={rows}
-                rowKey={(person) => person.id}
-                fixedLayout
-                minTableWidth="40rem"
-              />
+              <>
+                <DataTable
+                  caption="Staff masterlist"
+                  columns={columns}
+                  rows={pageRows}
+                  rowKey={(person) => person.id}
+                  fixedLayout
+                  minTableWidth="40rem"
+                />
+                <Pagination
+                  page={currentPage}
+                  pageCount={pageCount}
+                  total={rows.length}
+                  pageSize={pageSize}
+                  onPageSizeChange={changePageSize}
+                  itemLabel="staff"
+                  onPageChange={setPage}
+                />
+              </>
             ) : (
               <EmptyState icon="user" title="No staff found" description="Try a different search or type filter, or add a staff record." />
             )}

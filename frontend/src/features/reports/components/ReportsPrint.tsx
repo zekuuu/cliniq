@@ -221,11 +221,11 @@ export function ReportsPrint({
         <IncidentTable rows={data.incidents} />
       </PrintSection>
 
-      <p className="mt-[6mm] break-inside-avoid">
-        Prepared by {viewer.name}, {ROLE_LABELS[viewer.role]}.
-      </p>
       <PrintSignatures
-        lines={[{ label: `Prepared by (${ROLE_LABELS.staff})` }, { label: 'Reviewed by (Principal)' }]}
+        lines={[
+          { heading: 'Prepared by:', name: viewer.name, position: ROLE_LABELS.staff },
+          { heading: 'Reviewed by:', name: data.principalName ?? undefined, position: 'Principal' },
+        ]}
       />
     </PrintDocument>
   )

@@ -174,3 +174,14 @@ On the Calendar screen the Admin opens any day and manages its events like Staff
 
 Teachers, non-teaching staff and utility workers (called personnel in documents and code, because "Staff" is the clinician role) can be patients (Zean, Monday, October 26, 2026 — 02:56 PHT). They get their own Staff List, Profile and Form under a sidebar group renamed Patient Care. A record has name, type, department or role, contact, emergency contacts, allergies and conditions, and a system-assigned Staff No.; no LRN, grade or sex. Visits, incidents, follow-ups and medicine given are about a student or a staff member, exactly one. Lists show the Staff No., not the name. No excuse letter, PE referral or Sports Report for staff. The School Clinician only; the Admin does not see staff. Zean approved the defaults and reported the clinician's yes on Monday, October 26, 2026 — 03:07 PHT. Not built yet; wanted for the presentation on October 27. [ADR-043](ADR-043-Teachers-And-School-Staff-Are-Clinic-Patients-With-Their-Own-Screens.md)
 
+### ADR-044: Full LRN on the Dashboard printout
+
+The Clinic Overview Report (the Dashboard's printout) prints the full LRN wherever it lists a student, still with no names (Zean, Monday, October 26, 2026 — 11:04 PHT). The Dashboard screen and every other list and printout stay masked. Narrows ADR-004 and ADR-028. [ADR-044](ADR-044-Full-LRN-On-The-Dashboard-Printout.md)
+
+### ADR-045: The Dashboard prints the open tab
+
+Overview prints the Clinic Overview Report: the screen's five stat cards and three chip counts, the written summary, and the lists behind them (due follow-ups, frequent visitors, excuse letters awaiting approval, low-stock and expiring items). Trends prints the Clinic Trends Report: the sex and grade-level tables, complaints, and visit activity. The scope line names the tab (Zean, Monday, October 26, 2026 — 11:13 PHT). Amends ADR-026. [ADR-045](ADR-045-Dashboard-Prints-The-Open-Tab.md)
+
+### ADR-046: Printouts footer with the page number only
+
+Every printout's footer is "Page X of Y" at the bottom right; the "Printed … by …" line and the confidentiality line (including the Sports Report's own) are removed to unclutter the page (Zean, Monday, October 26, 2026 — 11:35 PHT). Prints stay audit-logged. The browser's own header and footer are turned off in the print dialog, since code can't remove them without losing the page number. Amends ADR-026 and ADR-034. [ADR-046](ADR-046-Print-Footer-Page-Number-Only.md)

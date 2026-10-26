@@ -16,7 +16,8 @@ import { FromVisit } from './FromVisit'
  * (ADR-004). Ends with signature lines; a Stage 1 record prints a "Not yet completed" notice.
  */
 function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewer: SessionUser }) {
-  const { incident, student, approved, trail, sourceVisit } = record
+  const { incident, student, approved, trail, sourceVisit, principalName } = record
+  const reached = incident.parentNotifications.findLast((attempt) => attempt.outcome === 'reached')
   const referral = incident.hospitalReferral
   const notes = String(incident.vitals.treatmentNotes ?? '').trim()
   const vitals = takenReadings(incident.vitals)
@@ -126,7 +127,18 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
         </PrintSection>
       </div>
       <PrintSignatures
-        lines={[{ label: ROLE_LABELS.staff }, { label: `${capitalize(contactNoun(student.kind))} informed` }, { label: 'Principal (if applicable)' }]}
+        lines={[
+          // The clinician who completed Stage 2, or who recorded it while still at Stage 1.
+          { heading: 'Prepared by:', name: (trail.completed ?? trail.recorded)?.by, position: ROLE_LABELS.staff },
+          // The latest call logged as reached; blank when nobody was reached.
+          {
+            heading: `${capitalize(contactNoun(student.kind))} informed:`,
+            name: reached?.calledContact?.name,
+            position: reached?.calledContact?.relationship || capitalize(contactNoun(student.kind)),
+          },
+          // Staff approve the report (ADR-038), so the Principal line names the Admin/Principal account once it is approved.
+          { heading: 'Noted by (if applicable):', name: approved ? (principalName ?? undefined) : undefined, position: 'Principal' },
+        ]}
       />
     </PrintDocument>
   )

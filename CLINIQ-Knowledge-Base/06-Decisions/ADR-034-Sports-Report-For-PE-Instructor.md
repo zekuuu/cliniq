@@ -39,3 +39,5 @@ Zean's plan, in his words (Wednesday, October 21, 2026): the instructor comes to
 - **The ERD draft** gains a sports report table and its students and notes (a list, not clinical data); the content comes from visits and incidents.
 - **Releasing health information of minors to a third person** is a privacy matter under RA 10173 (purpose, minimum necessary, consent). Until the nurse and the Principal confirm, treat the report as a draft and keep the conditions option off by default.
 - **Until it is built nothing changes in the app.** The prompt is part 6 of `Prompt-Build-Removals-QR-LRN-Mobile-Instructor-UserMgmt.md`, run after the LRN part.
+
+**Amended Monday, October 26, 2026 — 11:35 PHT (ADR-046, Zean):** the printout no longer carries the confidentiality line; the footer is the page number only. The line stays on the Sports Report screen. Since the same day (session [2026-10-26-system-review-lists-dashboard-inventory-sports](../08-Logs/Agent-Sessions/2026-10-26-system-review-lists-dashboard-inventory-sports.md)), the signature lines print the clinician's name (the signed-in user) and the instructor's name (Requested by).

@@ -161,11 +161,12 @@
 }
 
 @media print {
-  /* Every printout is A4 (ADR-026). The bottom margin holds the printed-by footer and page number,
-     which a PrintDocument writes into the @page margin boxes. */
+  /* Every printout is A4 (ADR-026). The bottom margin holds the page number, which a PrintDocument
+     writes into the @page margin boxes. No top margin, so Chrome has no room for its own date/title
+     header (ADR-046); the PrintDocument's cloned top padding keeps content off the paper's edge. */
   @page {
     size: A4;
-    margin: 14mm 15mm 20mm;
+    margin: 0 15mm 20mm;
   }
   @page landscape {
     size: A4 landscape;

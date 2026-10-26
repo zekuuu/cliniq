@@ -3,8 +3,7 @@ import { createPortal } from 'react-dom'
 import { canPrint, usePrinting } from '../../hooks/usePrinting'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/cn'
-import { formatDateTime } from '../../lib/dates'
-import { getMockSessionUser, ROLE_LABELS, type PrintAuditRecord, type SessionUser } from '../../lib/mock-db'
+import { getMockSessionUser, type PrintAuditRecord, type SessionUser } from '../../lib/mock-db'
 
 /*
  * Purpose-built printouts (ADR-026, `.claude/skills/cliniq-print-patterns`). A printout is its own
@@ -20,30 +19,16 @@ const LOGO_SRC = '/MCA_Logo.png'
 // Warm the cache so the letterhead logo is ready when the print tree mounts mid-print.
 if (typeof window !== 'undefined' && typeof Image !== 'undefined') new Image().src = LOGO_SRC
 
-export const CONFIDENTIALITY_LINE =
-  "Confidential: contains student health information. Handle according to the school's Data Privacy policy."
-
 const FOOTER_FONT = `font-family: 'Inter Variable', 'Segoe UI', Arial, sans-serif; font-size: 7.5pt; line-height: 1.35; color: #1a1a1a; vertical-align: top; padding-top: 3mm;`
 
-/** A CSS string literal; `\A` is a line break inside generated content. */
-function cssString(text: string): string {
-  return `"${text.replace(/[\\"]/g, '\\$&').replace(/[\r\n]+/g, '\\A ')}"`
-}
-
 /**
- * The footer lives in the page's bottom margin (CSS `@page` margin boxes), so it repeats on every page
- * without ever overlapping the content. The text depends on who prints and when, so it is generated here.
+ * The footer is the page number only, bottom right, in the page's bottom margin (CSS `@page` margin
+ * box), so it repeats on every page without overlapping the content. The printed-by and
+ * confidentiality lines were removed to unclutter the page (ADR-046).
  */
-function footerCss(printedBy: string, confidentiality: string): string {
-  return `@page {
-  @bottom-left { content: ${cssString(`${printedBy}\n${confidentiality}`)}; white-space: pre-wrap; ${FOOTER_FONT} }
+const FOOTER_CSS = `@page {
   @bottom-right { content: "Page " counter(page) " of " counter(pages); white-space: nowrap; text-align: right; ${FOOTER_FONT} }
 }`
-}
-
-function printedByLine(printedAt: string, viewer: SessionUser): string {
-  return `Printed ${formatDateTime(printedAt)} (Philippine time) by ${viewer.name}, ${ROLE_LABELS[viewer.role]}`
-}
 
 export const ADMIN_PRINT_NOTE = 'Printing is done by the clinician.'
 
@@ -109,8 +94,6 @@ export interface PrintDocumentProps {
   /** Only for a table that can't be read in portrait (`@page landscape` in `index.css`). */
   landscape?: boolean
   viewer?: SessionUser
-  /** The footer's confidentiality line, when a document needs its own (the Sports Report). */
-  confidentiality?: string
   /** Makes the print's audit entry name this record instead of the title (`usePrinting`). */
   auditRecord?: PrintAuditRecord
 }
@@ -121,7 +104,6 @@ export function PrintDocument({
   children,
   landscape = false,
   viewer = getMockSessionUser(),
-  confidentiality = CONFIDENTIALITY_LINE,
   auditRecord,
 }: PrintDocumentProps) {
   const printedAt = usePrinting(title, viewer, auditRecord)
@@ -130,11 +112,12 @@ export function PrintDocument({
     <div
       data-print-document
       className={cn(
-        'hidden text-[10pt] leading-snug text-text-primary print:block',
+        // The page has no top margin (index.css); this padding repeats at the top of every page.
+        'hidden pt-[14mm] text-[10pt] leading-snug text-text-primary [box-decoration-break:clone] print:block',
         landscape && '[page:landscape]',
       )}
     >
-      <style>{footerCss(printedByLine(printedAt, viewer), confidentiality)}</style>
+      <style>{FOOTER_CSS}</style>
       <header className="flex items-center gap-[4mm] border-b-2 border-text-primary pb-[3mm]">
         <img src={LOGO_SRC} alt="" className="size-[15mm] shrink-0 object-contain" />
         <div className="min-w-0">
@@ -332,15 +315,20 @@ export function PrintFields({
 }
 
 /** Signature lines with room for a handwritten signature above each. */
-export function PrintSignatures({ lines }: { lines: Array<{ label: string; name?: string }> }) {
+/**
+ * Signature blocks: "Prepared by:", room to sign, the line, then the printed name, the position and a
+ * date to write in (Zean, October 26, 2026). A name CLINIQ doesn't know stays blank to be handwritten.
+ */
+export function PrintSignatures({ lines }: { lines: Array<{ heading: string; name?: string; position?: string }> }) {
   return (
     <div className="mt-[8mm] grid break-inside-avoid grid-cols-3 gap-[8mm]">
       {lines.map((line) => (
-        <div key={line.label} className="pt-[12mm]">
-          <div className="border-t border-text-primary pt-[1mm]">
-            {line.name && <p className="font-semibold">{line.name}</p>}
-            <p className="text-[9pt] text-text-secondary">{line.label}</p>
-            <p className="mt-[3mm] text-[9pt] text-text-secondary">Date: ____________</p>
+        <div key={line.heading}>
+          <p className="font-semibold">{line.heading}</p>
+          <div className="mt-[12mm] border-t border-text-primary pt-[1mm]">
+            <p className="min-h-[1lh] font-semibold">{line.name}</p>
+            <p className="min-h-[1lh] text-[9pt]">{line.position}</p>
+            <p className="mt-[2mm] text-[9pt]">Date: ____________</p>
           </div>
         </div>
       ))}

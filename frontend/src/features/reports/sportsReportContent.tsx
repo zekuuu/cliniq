@@ -4,7 +4,7 @@ import type { SportsReportContent, SportsReportContentRow, SportsReportWindow } 
 
 /* Wording and table columns shared by the Sports Report screen and its printout (ADR-034), so the preview is the paper. */
 
-/** ADR-034's footer line: the printout leaves the clinic, so it names who it is for and what it isn't. */
+/** ADR-034's line, shown on the screen only: the printout's footer is the page number alone (ADR-046). */
 export const SPORTS_REPORT_CONFIDENTIALITY =
   'Confidential: for the PE/Sports Instructor named above. Do not post or share. Shows only what CLINIQ recorded; this is not a medical clearance.'
 
@@ -31,18 +31,20 @@ export function leftOutText({ leftOut }: Pick<SportsReportContent, 'leftOut'>): 
   return parts.length ? `Left out of this report: ${parts.join(' and ')}.` : null
 }
 
-/** The visits and incidents of one student, newest first: date, what happened, outcome. Shared by the preview and the printout. */
+/**
+ * The visits and incidents of one student, newest first, in three aligned columns: date, what
+ * happened, outcome. Every entry uses the same column template, so wrapped text stays in its column.
+ * Shared by the preview and the printout.
+ */
 function entriesCell(row: SportsReportContentRow) {
   if (!row.entries.length) return <>{NO_ENTRIES_TEXT}</>
   return (
     <ul className="flex flex-col gap-1">
       {row.entries.map((entry) => (
-        <li key={entry.id}>
+        <li key={entry.id} className="grid grid-cols-[6.5em_minmax(0,1fr)_minmax(0,0.75fr)] gap-x-2">
           <span className="font-semibold tabular-nums">{formatDate(entry.dateTime.slice(0, 10))}</span>
-          {' · '}
-          {entry.kind}: {entry.what}
-          {' · '}
-          {entry.outcome}
+          <span>{entry.kind}: {entry.what}</span>
+          <span>{entry.outcome}</span>
         </li>
       ))}
     </ul>

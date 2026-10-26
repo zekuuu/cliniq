@@ -450,6 +450,15 @@ export function listUsers(): Promise<User[]> {
   return read('users', (s) => [...s.users].sort((a, b) => a.name.localeCompare(b.name)))
 }
 
+/** The active Admin/Principal account's name, for a printout's Principal signature line; null if none. */
+function principalNameOf(s: DbState): string | null {
+  return s.users.find((u) => u.role === 'admin' && !u.deactivatedAt)?.name ?? null
+}
+
+export function getPrincipalName(): Promise<string | null> {
+  return read('principal name', principalNameOf)
+}
+
 export function getUser(id: string): Promise<User> {
   return read('user', (s) => must(s.users.find((u) => u.id === id), 'User'))
 }
@@ -2021,6 +2030,8 @@ export interface MonthlyReportData {
   incidents: Array<Incident & { patient: PatientNumber }>
   /** Visits per complaint, most frequent first (ties alphabetical, so the order is stable). */
   complaintCounts: ComplaintCount[]
+  /** The active Admin/Principal account's name for the "Reviewed by" signature line, or null if none. */
+  principalName: string | null
 }
 
 function complaintCounts(visits: Visit[]): ComplaintCount[] {
@@ -2069,6 +2080,7 @@ export function getMonthlyReport(month: string): Promise<MonthlyReportData> {
         .sort((a, b) => b.time.localeCompare(a.time))
         .map((i) => ({ ...i, patient: patientNumberOf(s, i) })),
       complaintCounts: complaintCounts(countedVisits(s).filter((v) => v.dateTime.startsWith(month))),
+      principalName: principalNameOf(s),
     }
   })
 }

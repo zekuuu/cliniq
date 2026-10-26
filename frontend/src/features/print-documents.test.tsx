@@ -1,7 +1,6 @@
 import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { CONFIDENTIALITY_LINE } from '../components'
 import { formatDateRange, todayISO } from '../lib/dates'
 import { getDashboardSummary, getMonthlyReport, listAuditLog, listStudents } from '../lib/mock-db'
 import { rangeForPreset } from '../lib/dateRange'
@@ -12,13 +11,12 @@ import { DashboardPage } from './dashboard/DashboardPage'
 import { IncidentReportPage } from './emergency-response/IncidentReportPage'
 import { ReportsPage } from './reports/ReportsPage'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
-import { maskLrn } from '../lib/lrn'
 
 vi.mock('react-chartjs-2', () => ({ Bar: () => null, Line: () => null, Doughnut: () => null }))
 
 /*
  * Every Print produces a purpose-built A4 document (ADR-026, cliniq-print-patterns): letterhead, a
- * scope line, the printed-by footer, figures equal to the screen's, and no names or internal ids on a
+ * scope line, the page-number footer, figures equal to the screen's, and no names or internal ids on a
  * multi-student printout. jsdom applies no print CSS, so this checks the markup; the PDF checks in the
  * session log cover layout.
  */
@@ -49,9 +47,10 @@ function expectDocument(doc: HTMLElement, title: string | RegExp) {
   expect(within(doc).getByRole('heading', { level: 1 })).toHaveTextContent(title)
   expect(doc.querySelector('[data-print-scope]')?.textContent?.trim()).toBeTruthy()
   const css = doc.querySelector('style')?.textContent ?? ''
-  expect(css).toContain('Printed ')
-  expect(css).toContain(CONFIDENTIALITY_LINE)
+  // The footer is the page number only (ADR-046).
   expect(css).toContain('counter(pages)')
+  expect(css).not.toContain('Printed ')
+  expect(css).not.toContain('Confidential')
 }
 
 async function expectNoNamesOrIds(doc: HTMLElement) {
@@ -68,17 +67,20 @@ function expectScreenControlHidden(name: string | RegExp) {
 describe('purpose-built printouts', () => {
   it('mounts nothing until the browser prints', async () => {
     renderWithRouter(<DashboardPage viewer={STAFF} />)
-    await screen.findByRole('heading', { name: /due & upcoming follow-ups/i })
+    await screen.findByRole('region', { name: 'Summary counts' })
     expect(document.body.querySelector('[data-print-document]')).toBeNull()
   })
 
-  it('Dashboard: a Clinic Overview Report with the screen’s figures, masked LRNs only', async () => {
+  it('Dashboard: a Clinic Overview Report with the screen’s figures and full LRNs, no names (ADR-044)', async () => {
     renderWithRouter(<DashboardPage viewer={STAFF} />)
-    await screen.findByRole('heading', { name: /due & upcoming follow-ups/i })
+    await screen.findByRole('region', { name: 'Summary counts' })
     expectScreenControlHidden('Print / Save as PDF')
-    const summary = await getDashboardSummary({ range: rangeForPreset('thisMonth', todayISO()) })
+    // The Dashboard opens on Today.
+    const summary = await getDashboardSummary({ range: rangeForPreset('today', todayISO()) })
     const doc = print()
     expectDocument(doc, 'Clinic Overview Report')
+    expect(doc.querySelector('[data-print-scope]')).toHaveTextContent('Dashboard tab: Overview')
+    expect(doc).not.toHaveTextContent('Complaints (visits and incidents)')
     expect(doc.querySelector('[data-print-scope]')).not.toHaveTextContent('1900')
     const figures = within(doc)
       .getAllByRole('definition')
@@ -91,8 +93,22 @@ describe('purpose-built printouts', () => {
       summary.counts.activeStudents,
     ])
       expect(figures).toContain(String(value))
-    for (const row of summary.dueFollowUps) expect(doc).toHaveTextContent(row.patient.kind === 'student' ? maskLrn(row.patient.number) : row.patient.number)
+    for (const row of summary.dueFollowUps) expect(doc).toHaveTextContent(row.patient.number)
+    expect(doc.textContent).not.toContain('●')
     expect(doc).toHaveTextContent('Excuse letters awaiting approval')
+    await expectNoNamesOrIds(doc)
+  })
+
+  it('Dashboard: on the Trends tab, prints the Trends content only, with the sex and grade breakdown', async () => {
+    renderWithRouter(<DashboardPage viewer={STAFF} />, { route: '/?view=trends' })
+    await screen.findByRole('region', { name: 'Demographic analysis' })
+    const doc = print()
+    expectDocument(doc, 'Clinic Trends Report')
+    expect(doc.querySelector('[data-print-scope]')).toHaveTextContent('Dashboard tab: Trends')
+    expect(within(doc).getByRole('table', { name: 'By sex' })).toBeInTheDocument()
+    expect(within(doc).getByRole('table', { name: 'By grade level' })).toBeInTheDocument()
+    expect(doc).toHaveTextContent('Complaints (visits and incidents)')
+    expect(doc).not.toHaveTextContent('Items needing attention')
     await expectNoNamesOrIds(doc)
   })
 
@@ -122,7 +138,9 @@ describe('purpose-built printouts', () => {
     expect(within(totals).getByRole('row', { name: /clinic visits/i })).toHaveTextContent(
       String(report.previousCounts.visits),
     )
-    expect(doc).toHaveTextContent('Reviewed by (Principal)')
+    // Signature blocks: heading, line, name, position, date. The printing clinician and the Admin/Principal account.
+    expect(doc).toHaveTextContent(`Prepared by:${STAFF.name}School ClinicianDate:`)
+    expect(doc).toHaveTextContent(`Reviewed by:${ADMIN.name}PrincipalDate:`)
     await expectNoNamesOrIds(doc)
     act(() => {
       window.dispatchEvent(new Event('afterprint'))
@@ -179,8 +197,10 @@ describe('purpose-built printouts', () => {
     const doc = print()
     expectDocument(doc, 'Incident Report')
     expect(doc).toHaveTextContent('Not yet completed')
-    expect(doc).toHaveTextContent('Parent or guardian informed')
+    expect(doc).toHaveTextContent('Parent or guardian informed:')
     expect(doc).toHaveTextContent('No treatment recorded.')
+    // Not approved yet, so the Principal line stays blank.
+    expect(doc).not.toHaveTextContent(ADMIN.name)
     expect(doc).toHaveTextContent(/LRN \d{12}/)
     expect(doc).not.toHaveTextContent('●')
     expect(doc.textContent).not.toMatch(/incident-\d+/)

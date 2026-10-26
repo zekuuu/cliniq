@@ -245,6 +245,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           range={range}
           viewer={viewer}
           filterLabel={filterLabel}
+          view={view}
           letters={viewer.role === 'staff' ? (letters.data ?? []) : undefined}
         />
       )}

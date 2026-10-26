@@ -12,11 +12,13 @@ import {
   ErrorState,
   Icon,
   Input,
+  Pagination,
   Select,
   Skeleton,
   type DataTableColumn,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { paths } from '../../routes/paths'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { Student } from '../../types/entities'
@@ -135,6 +137,12 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
   const [gradeLevel, setGradeLevel] = useState('')
   const [includeArchived, setIncludeArchived] = useState(false)
   const [sort, setSort] = useState<TableSortState<StudentSortKey>>({ key: 'name', direction: 'ascending' })
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = usePageSize()
+  const changePageSize = (size: PageSize) => {
+    setPageSize(size)
+    setPage(1)
+  }
   const key = `${search}|${gradeLevel}|${includeArchived}`
   const { data, status, isRefetching, reload } = useAsyncData(key, () =>
     fetchStudentList({ search, gradeLevel, includeArchived }),
@@ -186,6 +194,9 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
     if (key === 'grade') return student.gradeLevel
     return student.recordComplete ? (student.archived ? 'Complete Archived' : 'Complete') : 'Incomplete'
   })
+  const pageCount = Math.max(1, Math.ceil(sortedData.length / pageSize))
+  const currentPage = Math.min(page, pageCount)
+  const pageRows = sortedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   return (
     <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
@@ -222,14 +233,26 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
               label="Search"
               value={search}
               placeholder="Name or LRN"
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => {
+                setSearch(event.target.value)
+                setPage(1)
+              }}
             />
-            <GradeSelect value={gradeLevel} onChange={setGradeLevel} />
+            <GradeSelect
+              value={gradeLevel}
+              onChange={(value) => {
+                setGradeLevel(value)
+                setPage(1)
+              }}
+            />
             <label className="flex min-h-10 cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-text-primary shadow-card transition-colors hover:bg-surface">
               <input
                 type="checkbox"
                 checked={includeArchived}
-                onChange={(event) => setIncludeArchived(event.target.checked)}
+                onChange={(event) => {
+                  setIncludeArchived(event.target.checked)
+                  setPage(1)
+                }}
                 className="size-4 cursor-pointer accent-brand-green-dark"
               />
               Include archived
@@ -238,14 +261,25 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
 
           <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>
             {data.length ? (
-              <DataTable
-                caption="Student masterlist"
-                columns={columns}
-                rows={sortedData}
-                rowKey={(student) => student.id}
-                fixedLayout
-                minTableWidth="40rem"
-              />
+              <>
+                <DataTable
+                  caption="Student masterlist"
+                  columns={columns}
+                  rows={pageRows}
+                  rowKey={(student) => student.id}
+                  fixedLayout
+                  minTableWidth="40rem"
+                />
+                <Pagination
+                  page={currentPage}
+                  pageCount={pageCount}
+                  total={sortedData.length}
+                  pageSize={pageSize}
+                  onPageSizeChange={changePageSize}
+                  itemLabel="students"
+                  onPageChange={setPage}
+                />
+              </>
             ) : (
               <EmptyState
                 icon="users"

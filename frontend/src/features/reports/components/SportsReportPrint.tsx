@@ -1,7 +1,7 @@
 import { PrintDocument, PrintNote, PrintSignatures, PrintTable } from '../../../components'
 import { formatDateTime } from '../../../lib/dates'
-import type { SessionUser, SportsReportContent } from '../../../lib/mock-db'
-import { SPORTS_REPORT_CONFIDENTIALITY, leftOutText, sportsReportColumns, windowRange } from '../sportsReportContent'
+import { ROLE_LABELS, type SessionUser, type SportsReportContent } from '../../../lib/mock-db'
+import { leftOutText, sportsReportColumns, windowRange } from '../sportsReportContent'
 
 /** The A4 Sports Report (ADR-026, ADR-034): mounts only while printing, from the content the screen loaded. */
 export function SportsReportPrint({ content, viewer }: { content: SportsReportContent; viewer: SessionUser }) {
@@ -11,7 +11,6 @@ export function SportsReportPrint({ content, viewer }: { content: SportsReportCo
     <PrintDocument
       title="Sports Report"
       viewer={viewer}
-      confidentiality={SPORTS_REPORT_CONFIDENTIALITY}
       auditRecord={{ type: 'sports-report', id: report.id, summary: `Printed for ${content.rows.length} student${content.rows.length === 1 ? '' : 's'}` }}
       scope={
         <>
@@ -32,7 +31,7 @@ export function SportsReportPrint({ content, viewer }: { content: SportsReportCo
         empty="No students on this report."
       />
       {leftOut && <PrintNote>{leftOut}</PrintNote>}
-      <PrintSignatures lines={[{ label: 'Released by (clinician)' }, { label: 'Received by (instructor)' }]} />
+      <PrintSignatures lines={[{ heading: 'Released by:', name: viewer.name, position: ROLE_LABELS.staff }, { heading: 'Received by:', name: report.requestedBy, position: 'PE/Sports Instructor' }]} />
     </PrintDocument>
   )
 }

@@ -141,7 +141,7 @@ export function SportsReportPage({ reportId = '', viewer }: { reportId?: string;
         />
         <CardBody>
           {content.rows.length ? (
-            <DataTable caption="Sports Report preview" columns={columns} rows={content.rows} rowKey={(row) => row.studentId} fixedLayout minTableWidth="48rem" />
+            <DataTable caption="Sports Report preview" columns={columns} rows={content.rows} rowKey={(row) => row.studentId} fixedLayout minTableWidth="48rem" className="[&_td]:align-top [&_th]:align-top" />
           ) : (
             <EmptyState icon="users" title="No students on this report" description="Edit the report to add students before printing." />
           )}

@@ -4,6 +4,7 @@ import {
   approveIncidentReport,
   getIncident,
   getIncidentTrail,
+  getPrincipalName,
   getPatient,
   getVisit,
   listApprovedIncidentReportIds,
@@ -34,6 +35,8 @@ export interface IncidentRecord {
   options: Array<{ value: string; label: string }>
   /** The visit this incident was escalated from (ADR-036), with what was given there. */
   sourceVisit: { id: string; itemsGiven: ItemGivenLine[] } | null
+  /** The Admin/Principal account's name for the printout's Principal signature line. */
+  principalName: string | null
 }
 
 /** `null` when there is nothing to show: no incidents, or (opened without an id) none pending sign-off. */
@@ -43,10 +46,11 @@ export async function fetchIncidentRecord(incidentId?: string, viewer?: SessionU
   const pending = incidents.filter((item) => !approved.has(item.id))
   const incident = incidentId ? await getIncident(incidentId, viewer) : pending[0]
   if (!incident) return null
-  const [student, trail, source] = await Promise.all([
+  const [student, trail, source, principalName] = await Promise.all([
     getPatient(incident),
     getIncidentTrail(incident.id),
     incident.sourceVisitId ? getVisit(incident.sourceVisitId) : null,
+    getPrincipalName(),
   ])
   // ADR-038 item 4: the Admin's opening of a report is audit-logged.
   if (viewer) await recordAdminView({ type: 'incident', id: incident.id }, viewer)
@@ -57,6 +61,7 @@ export async function fetchIncidentRecord(incidentId?: string, viewer?: SessionU
     approved: approved.has(incident.id),
     trail,
     sourceVisit: source && { id: source.id, itemsGiven: source.itemsGiven },
+    principalName,
     options: listed.map((item) => ({
       value: item.id,
       label: `${formatDateTime(item.time)} · ${item.complaint}${approved.has(item.id) ? ' (approved)' : ''}`,

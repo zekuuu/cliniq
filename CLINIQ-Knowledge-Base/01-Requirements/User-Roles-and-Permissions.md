@@ -9,7 +9,7 @@
 **Deferred role (designed, not built):** Canteen Staff — a scoped sign-in with a narrow data scope (food allergies only). See `08-Logs/Issues-and-TODOs.md`.
 
 ## Display-Privacy Rule
-A screen showing **multiple students at once** (Visit Log List, Incident Log List, the Dashboard's frequent-visitor section) shows the **masked LRN**, not the name — these are the screens a bystander could glance at. A screen showing **one deliberately-identified student** (full profile, search results, the masterlist) shows the **full name** normally. See `06-Decisions/` for the correction history on this rule — it was originally scoped backwards and fixed once. The Sports Report (Staff only) is a decided exception: it lists students by full name for the PE/Sports Instructor who receives it (ADR-034).
+A screen showing **multiple students at once** (Visit Log List, Incident Log List, the Dashboard's frequent-visitor section) shows the **masked LRN**, not the name — these are the screens a bystander could glance at. A screen showing **one deliberately-identified student** (full profile, search results, the masterlist) shows the **full name** normally. See `06-Decisions/` for the correction history on this rule — it was originally scoped backwards and fixed once. The Sports Report (Staff only) is a decided exception: it lists students by full name for the PE/Sports Instructor who receives it (ADR-034). The Dashboard's printout (Clinic Overview Report) prints the full LRN, still with no names; the Dashboard screen stays masked (ADR-044).
 
 Full detail: Frontend Context Brief, Section 3.
 

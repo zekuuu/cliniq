@@ -59,7 +59,7 @@ describe('totals include staff and show the split (D14)', () => {
 
   it('prints the split on the Clinic Overview Report', async () => {
     const summary = await getDashboardSummary({ range: ALL })
-    render(<MemoryRouter><DashboardPrint summary={summary} range={ALL} viewer={STAFF} letters={[]} filterLabel="" /></MemoryRouter>)
+    render(<MemoryRouter><DashboardPrint summary={summary} range={ALL} viewer={STAFF} letters={[]} filterLabel="" view="overview" /></MemoryRouter>)
     act(() => {
       window.dispatchEvent(new Event('beforeprint'))
     })
