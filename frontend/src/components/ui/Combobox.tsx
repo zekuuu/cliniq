@@ -14,9 +14,14 @@ import {
   dropdownTriggerClassName,
   placeDropdownPanel,
 } from './dropdownClassName'
+import { Icon, type IconName } from '../icons/Icon'
 
 export interface ComboboxProps<T> {
   label: string
+  /** Longer accessible name when the visible label leans on its group, e.g. "Primary emergency contact relationship". */
+  'aria-label'?: string
+  /** Decorative leading icon inside the field; the visible label still names it. */
+  icon?: IconName
   /** The text in the field. */
   value: string
   onValueChange: (text: string) => void
@@ -66,6 +71,8 @@ export interface ComboboxProps<T> {
  */
 export function Combobox<T>({
   label,
+  'aria-label': ariaLabel,
+  icon,
   value,
   onValueChange,
   options,
@@ -181,11 +188,15 @@ export function Combobox<T>({
         {required && <span className="sr-only"> (required)</span>}
       </label>
       <div ref={rootRef} className="relative">
+        {icon && (
+          <Icon name={icon} className="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2 text-text-secondary" />
+        )}
         <input
           ref={inputRef}
           id={inputId}
           type="text"
           role="combobox"
+          aria-label={ariaLabel}
           value={value}
           placeholder={placeholder}
           maxLength={maxLength}
@@ -210,12 +221,12 @@ export function Combobox<T>({
             invalid: Boolean(error),
             className:
               // No chevron: it would promise a list the field may not have yet (StudentPicker lists nothing on focus).
-              'w-full cursor-text pr-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green',
+              cn('w-full cursor-text pr-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green', icon && 'pl-9!'),
           })}
         />
         {showPanel && (
           <div ref={panelRef} className={cn(DROPDOWN_PANEL, 'fixed overflow-y-auto scrollbar-thin')}>
-            <div id={listboxId} role="listbox" aria-label={label}>
+            <div id={listboxId} role="listbox" aria-label={ariaLabel ?? label}>
               {options.map((option, index) => (
                 <div
                   key={optionKey(option)}

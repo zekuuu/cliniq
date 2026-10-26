@@ -57,7 +57,7 @@ describe('Incomplete Records', () => {
 
   it('edits a record from the queue, returns to it, and credits who resolved it', async () => {
     const user = userEvent.setup()
-    const fillable = ['Student contact information', 'Emergency contact', 'Emergency contact name', 'Emergency contact phone']
+    const fillable = ['Emergency contact', 'Emergency contact name', 'Emergency contact phone']
     const record = (await fetchIncompleteRecords()).find(
       (row) => !row.resolvedAt && row.missingFields.every((field) => fillable.includes(field)),
     )!
@@ -73,10 +73,9 @@ describe('Incomplete Records', () => {
     await user.click(await screen.findByRole('link', { name: `Edit Record for ${record.fullName}` }))
     await screen.findByRole('heading', { name: 'Edit Student' })
     for (const [label, value] of [
-      ['Student contact information', '09171234567'],
-      ['Contact name', 'Maria Santos'],
-      ['Relationship', 'Mother'],
-      ['Contact phone', '09171234568'],
+      ['Primary emergency contact name', 'Maria Santos'],
+      ['Primary emergency contact relationship', 'Mother'],
+      ['Primary emergency contact phone', '09171234568'],
     ]) {
       const field = screen.getByLabelText(new RegExp(`^${label}`))
       if (!(field as HTMLInputElement).value) await user.type(field, value)

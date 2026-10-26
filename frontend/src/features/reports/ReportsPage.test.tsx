@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
@@ -52,6 +52,25 @@ describe('Reports', () => {
     const incident = (await thisMonth()).incidents.find((row) => row.patient.kind === 'student')!
     const archive = await screen.findByRole('table', { name: 'Incident register' })
     expect(within(archive).getAllByText(maskLrn(incident.patient.number)).length).toBeGreaterThan(0)
+  })
+
+  it('prints the full LRN in the incident register while the screen stays masked', async () => {
+    const user = userEvent.setup()
+    renderReports({ id: 'usr-nurse', name: 'Nurse', role: 'staff' })
+    await user.click(screen.getByRole('tab', { name: 'Incident register' }))
+    const incident = (await thisMonth()).incidents.find((row) => row.patient.kind === 'student')!
+    const archive = await screen.findByRole('table', { name: 'Incident register' })
+    expect(within(archive).queryByText(incident.patient.number)).not.toBeInTheDocument()
+    // The print listener is attached in an effect, so retry until the printout mounts.
+    await waitFor(() => {
+      act(() => {
+        window.dispatchEvent(new Event('beforeprint'))
+      })
+      expect(document.body.querySelector('[data-print-document]')?.textContent).toContain(incident.patient.number)
+    })
+    act(() => {
+      window.dispatchEvent(new Event('afterprint'))
+    })
   })
 
   it('lists the newest incidents first, matching the Incident Log', async () => {

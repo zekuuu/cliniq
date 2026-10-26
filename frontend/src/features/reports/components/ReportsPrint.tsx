@@ -11,7 +11,6 @@ import { formatDateTime } from '../../../lib/dates'
 import { ROLE_LABELS, type ComplaintCount, type SessionUser } from '../../../lib/mock-db'
 import { DISPOSITION_LABELS } from '../../../lib/dispositions'
 import type { MonthlyReportData } from '../api/reportsApi'
-import { maskPatientNumber } from '../../../lib/patients'
 
 /*
  * Reports printouts (ADR-026): the tab on screen prints as its own formal document, with its own
@@ -62,7 +61,7 @@ function IncidentTable({ rows }: { rows: ArchiveRow[] }) {
       rowKey={(row) => row.id}
       empty="No incidents were recorded this month."
       columns={[
-        { header: 'LRN or Staff No.', width: '18%', cell: (row) => maskPatientNumber(row.patient) },
+        { header: 'LRN or Staff No.', width: '18%', cell: (row) => row.patient.number },
         { header: 'Date and time', width: '26%', cell: (row) => formatDateTime(row.time) },
         { header: 'Complaint', cell: (row) => row.complaint },
         { header: 'Stage and status', width: '26%', cell: stageText },
@@ -98,7 +97,7 @@ export function ReportsPrint({
       <PrintDocument
         viewer={viewer}
         title={`Incident register — ${month}`}
-        scope={`Incidents recorded in ${month}: ${data.incidents.length} ${data.incidents.length === 1 ? 'incident' : 'incidents'}, sorted by ${archiveOrder}. Students are identified by the last four digits of the LRN only.`}
+        scope={`Incidents recorded in ${month}: ${data.incidents.length} ${data.incidents.length === 1 ? 'incident' : 'incidents'}, sorted by ${archiveOrder}. Students are identified by their LRN, staff by Staff No.`}
       >
         <IncidentTable rows={archiveRows} />
       </PrintDocument>

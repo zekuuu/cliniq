@@ -85,6 +85,35 @@ describe('Student Form', () => {
     expect(getRecordedAuditEntries()).toEqual([])
   })
 
+  it('says while typing that an LRN is taken or a name is already listed, before any save', async () => {
+    const user = userEvent.setup()
+    const [existing] = await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false })
+    renderWithRouter(<StudentFormPage />)
+    await screen.findByRole('heading', { name: 'Add Student' })
+
+    await user.type(screen.getByLabelText(/^LRN/), existing.lrn)
+    expect(await screen.findByText('This LRN is already used by another student record.')).toBeInTheDocument()
+    expect(document.body.textContent).not.toContain(existing.fullName)
+
+    await user.type(screen.getByLabelText(/full name/i), existing.fullName)
+    const note = await screen.findByText('Already in the Student List:')
+    expect(note.parentElement).toHaveTextContent(existing.gradeLevel)
+    expect(note.parentElement).toHaveTextContent(existing.lrn.slice(-4))
+    expect(getRecordedAuditEntries()).toEqual([])
+  })
+
+  it('suggests None when Allergies or Medical conditions is focused', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<StudentFormPage />)
+    await screen.findByRole('heading', { name: 'Add Student' })
+    await user.click(screen.getByRole('combobox', { name: /^Allergies/ }))
+    await user.click(await screen.findByRole('option', { name: 'None' }))
+    expect(screen.getByRole('combobox', { name: /^Allergies/ })).toHaveValue('None')
+
+    await user.type(screen.getByRole('combobox', { name: /^Medical conditions/ }), 'Asthma')
+    expect(screen.queryByRole('option', { name: 'None' })).not.toBeInTheDocument()
+  })
+
   it('locks the LRN on Edit Student, in the form and in the data layer (ADR-028, Sir Rey)', async () => {
     const [existing] = await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false })
     renderWithRouter(<StudentFormPage studentId={existing.id} />)
@@ -184,6 +213,8 @@ describe('Student Form', () => {
 
     expect(await screen.findByText('Student record created for Lara Santos.')).toBeInTheDocument()
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['create'])
+    // The form is cleared for the next student.
+    expect(screen.getByLabelText(/full name/i)).toHaveValue('')
   })
 
   it('adds, promotes, and removes repeatable emergency contacts', async () => {
@@ -257,7 +288,7 @@ describe('Student Form', () => {
     await user.click(screen.getByRole('button', { name: 'Save Student' }))
 
     expect(screen.getByLabelText(/^LRN/)).toHaveFocus()
-    expect(screen.getByText('9 fields need attention.')).toBeInTheDocument()
+    expect(screen.getByText('8 fields need attention.')).toBeInTheDocument()
   })
 
   it('requires Sex and audits an edit to it without storing a value in the audit summary', async () => {

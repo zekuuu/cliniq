@@ -47,7 +47,8 @@ Every printout has:
   doesn't print; log it as `LATER`.
 - Never print an internal record id (`visit-0001`) and never invent a reference number (backend
   `LATER`). A printout that lists several students shows masked LRNs only, except the Dashboard's Clinic
-  Overview Report, which prints full LRNs and no names (ADR-044); a printout about one
+  Overview Report and the Monthly Report printouts (incident table, Incident register), which print
+  full LRNs and no names (ADR-044, amended October 26, 2026); a printout about one
   deliberately opened student shows the full name and the full LRN (ADR-004, ADR-028, ADR-040).
 - A draft or unapproved excuse letter does not print at all (ADR-038 item 6): it stays on screen and
   its Print is unavailable, with "Approve the letter to print it." in the same tooltip. A superseded or void letter still prints,

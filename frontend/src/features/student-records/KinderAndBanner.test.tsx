@@ -5,7 +5,7 @@ import { missingRequiredFields } from '../../lib/mock-db/selectors'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { StudentProfilePage } from './StudentProfilePage'
 
-/** Panel review part 7: the student's own phone is optional for Kinder (ST-3, D8); the profile banner (ST-9). */
+/** The student's own phone is optional for every grade; the profile banner (ST-9). */
 
 const base = {
   id: 'student-x',
@@ -19,13 +19,13 @@ const base = {
   archived: false,
 }
 
-describe('student contact information (ST-3, D8)', () => {
-  it('is optional for Kinder and still required for every other grade', () => {
+describe('student contact information', () => {
+  it('is optional for every grade', () => {
     expect(missingRequiredFields({ ...base, gradeLevel: 'Kinder' })).toEqual([])
-    expect(missingRequiredFields({ ...base, gradeLevel: 'Grade 1' })).toEqual(['Student contact information'])
+    expect(missingRequiredFields({ ...base, gradeLevel: 'Grade 1' })).toEqual([])
   })
 
-  it('keeps the emergency contacts required for Kinder', () => {
+  it('keeps the emergency contacts required', () => {
     expect(missingRequiredFields({ ...base, gradeLevel: 'Kinder', emergencyContacts: [] })).toEqual(['Emergency contact'])
   })
 })

@@ -1,5 +1,4 @@
 import type { FollowUpDueState } from '../../components/status/followUp'
-import { contactInfoRequired } from '../students'
 import type { InventoryFlag } from '../../components/status/inventory'
 import { addDays, diffDays, formatDateTime, isWithin } from '../dates'
 import { maskLrn, STUDENT_SEARCH_MIN_LENGTH } from '../lrn'
@@ -217,14 +216,13 @@ export function auditLogList(state: DbState, query: AuditLogQuery): AuditLogList
  * Required fields per Module 2 ("full name, grade level, emergency contact, allergies,
  * conditions"). OPEN QUESTION: `allergies`/`medicalConditions` are string arrays, and an empty
  * array can't tell "none" from "not yet recorded", so those two can't be checked until the API
- * contract distinguishes them. Contact info is checked because the Registrar import can omit it.
+ * contract distinguishes them.
  */
 export function missingRequiredFields(student: SeedStudent): string[] {
   const missing: string[] = []
   if (!student.fullName.trim()) missing.push('Full name')
   if (!student.gradeLevel.trim()) missing.push('Grade level')
   if (student.sex !== 'male' && student.sex !== 'female') missing.push('Sex')
-  if (contactInfoRequired(student.gradeLevel) && !student.contactInfo.trim()) missing.push('Student contact information')
   if (!student.emergencyContacts.length) missing.push('Emergency contact')
   student.emergencyContacts.forEach((contact, index) => {
     const prefix = student.emergencyContacts.length === 1 ? 'Emergency contact' : `Emergency contact ${index + 1}`

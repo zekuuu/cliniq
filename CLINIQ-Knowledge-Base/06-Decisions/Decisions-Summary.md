@@ -176,7 +176,7 @@ Teachers, non-teaching staff and utility workers (called personnel in documents 
 
 ### ADR-044: Full LRN on the Dashboard printout
 
-The Clinic Overview Report (the Dashboard's printout) prints the full LRN wherever it lists a student, still with no names (Zean, Monday, October 26, 2026 — 11:04 PHT). The Dashboard screen and every other list and printout stay masked. Narrows ADR-004 and ADR-028. [ADR-044](ADR-044-Full-LRN-On-The-Dashboard-Printout.md)
+The Clinic Overview Report (the Dashboard's printout) prints the full LRN wherever it lists a student, still with no names (Zean, Monday, October 26, 2026 — 11:04 PHT). The Dashboard screen and every other list and printout stay masked. Amended Monday, October 26, 2026 — 14:43 PHT: the Monthly Report printouts (incident table and Incident register) print the full LRN too; the Reports screen stays masked. Narrows ADR-004 and ADR-028. [ADR-044](ADR-044-Full-LRN-On-The-Dashboard-Printout.md)
 
 ### ADR-045: The Dashboard prints the open tab
 

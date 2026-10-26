@@ -1,5 +1,4 @@
-import { useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { contactInfoRequired } from '../../lib/students'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import {
   BackButton,
@@ -12,6 +11,7 @@ import {
   ErrorState,
   Icon,
   Input,
+  MaskedLrn,
   Modal,
   Select,
   Skeleton,
@@ -26,11 +26,14 @@ import type { SessionUser } from '../../lib/mock-db'
 import { getMockSessionUser } from '../../lib/mock-db'
 import type { Student } from '../../types/entities'
 import {
+  checkStudentDuplicates,
+  DUPLICATE_LRN_MESSAGE,
   DuplicateLrnError,
   fetchStudentFormContext,
   NAME_CORRECTION_REASON_MIN,
   submitStudentForm,
   type DuplicateMatch,
+  type StudentDuplicateCheck,
   type StudentFormContext,
   type StudentFormMode,
   type StudentFormValues,
@@ -48,6 +51,12 @@ const EMPTY_VALUES: StudentFormValues = {
   emergencyContacts: [{ name: '', relationship: '', phone: '', verified: false }],
   allergies: '',
   medicalConditions: '',
+}
+
+/** Offers "None" while the field is empty or being typed toward it. */
+function noneSuggestion(value: string): string[] {
+  const typed = value.trim().toLowerCase()
+  return typed !== 'none' && 'none'.startsWith(typed) ? ['None'] : []
 }
 
 function valuesFromStudent(student: Student | null): StudentFormValues {
@@ -147,7 +156,6 @@ function validate(values: StudentFormValues): StudentFormErrors {
   if (!values.fullName.trim()) errors.fullName = 'Enter the student full name.'
   if (!values.gradeLevel) errors.gradeLevel = 'Select the grade level.'
   if (!values.sex) errors.sex = 'Select the sex recorded by the school.'
-  if (contactInfoRequired(values.gradeLevel) && !values.contactInfo.trim()) errors.contactInfo = 'Enter the student contact information.'
   values.emergencyContacts.forEach((contact, index) => {
     const started = index === 0 || [contact.name, contact.relationship, contact.phone].some((value) => value.trim())
     if (!started) return
@@ -175,6 +183,8 @@ function StudentFormEditor({
   const [duplicateMatches, setDuplicateMatches] = useState<DuplicateMatch[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const successRef = useRef<HTMLParagraphElement>(null)
+  const [liveDuplicates, setLiveDuplicates] = useState<StudentDuplicateCheck>({ lrnTaken: false, nameMatches: [] })
   // Sir Rey (October 25, 2026): the LRN is locked after creation; a name correction asks why.
   const [nameReason, setNameReason] = useState('')
   const nameChanged = data.mode === 'edit' && values.fullName.trim() !== (data.student?.fullName ?? '')
@@ -202,6 +212,21 @@ function StudentFormEditor({
     () => Object.keys(validate(values)).length,
     [values],
   )
+
+  // Add only: say while typing whether the LRN is taken or the name is already listed.
+  useEffect(() => {
+    if (mode !== 'add') return
+    let stale = false
+    const timer = setTimeout(() => {
+      void checkStudentDuplicates(values.lrn, values.fullName).then((result) => {
+        if (!stale) setLiveDuplicates(result)
+      })
+    }, 300)
+    return () => {
+      stale = true
+      clearTimeout(timer)
+    }
+  }, [mode, values.lrn, values.fullName])
 
   function setField<K extends keyof StudentFormValues>(field: K, value: StudentFormValues[K]) {
     setValues((current) => ({ ...current, [field]: value }))
@@ -291,12 +316,11 @@ function StudentFormEditor({
         })
         return
       }
-      setBaseline(values)
-      setSuccessMessage(
-        result.action === 'create'
-          ? `Student record created for ${result.student.fullName}.`
-          : `Student record updated for ${result.student.fullName}.`,
-      )
+      // A create clears the form for the next student; the banner says what was saved.
+      setValues(EMPTY_VALUES)
+      setBaseline(EMPTY_VALUES)
+      setSuccessMessage(`Student record created for ${result.student.fullName}.`)
+      successRef.current?.scrollIntoView?.({ block: 'center' })
     } finally {
       setIsSaving(false)
     }
@@ -337,11 +361,13 @@ function StudentFormEditor({
             }
           />
           <CardBody className="flex flex-col gap-5">
-            {successMessage && (
-              <div className="rounded-md border border-success/40 bg-success/10 px-3 py-2 text-sm font-semibold text-success">
-                {successMessage}
-              </div>
-            )}
+            <p
+              ref={successRef}
+              role="status"
+              className={successMessage ? 'rounded-md border border-success/40 bg-success/10 px-3 py-2 text-sm font-semibold text-success' : 'sr-only'}
+            >
+              {successMessage}
+            </p>
 
             <section aria-labelledby="identity-title" className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <h2 id="identity-title" className="sr-only">
@@ -362,18 +388,39 @@ function StudentFormEditor({
                   inputMode="numeric"
                   autoComplete="off"
                   value={values.lrn}
-                  error={errors.lrn}
+                  error={errors.lrn ?? (liveDuplicates.lrnTaken ? DUPLICATE_LRN_MESSAGE : undefined)}
                   hint="The 12-digit Learner Reference Number. Spaces and dashes are removed."
                   onChange={(event) => setField('lrn', normalizeLrn(event.target.value))}
                 />
               )}
-              <Input
-                label="Full name"
-                required
-                value={values.fullName}
-                error={errors.fullName}
-                onChange={(event) => setField('fullName', event.target.value)}
-              />
+              <div className="flex flex-col gap-2">
+                <Input
+                  label="Full name"
+                  required
+                  value={values.fullName}
+                  error={errors.fullName}
+                  onChange={(event) => setField('fullName', event.target.value)}
+                />
+                {mode === 'add' && liveDuplicates.nameMatches.length > 0 && (
+                  <div
+                    role="status"
+                    className="flex items-start gap-2 rounded-md border border-warning bg-warning/10 px-3 py-2 text-xs text-text-primary"
+                  >
+                    <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning" />
+                    <div>
+                      <p className="font-semibold">Already in the Student List:</p>
+                      <ul>
+                        {liveDuplicates.nameMatches.map((match) => (
+                          <li key={match.id}>
+                            {match.gradeLevel} · <MaskedLrn lrn={match.lrn} />
+                          </li>
+                        ))}
+                      </ul>
+                      <p>Check it isn't the same student. You can still save.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
               {nameChanged && (
                 <Input
                   className="md:col-span-2"
@@ -411,8 +458,7 @@ function StudentFormEditor({
               />
               <Input
                 label="Student contact information"
-                required={contactInfoRequired(values.gradeLevel)}
-                hint={contactInfoRequired(values.gradeLevel) ? undefined : 'Optional for Kinder. The emergency contacts below are still required.'}
+                hint="Optional. The emergency contacts below are still required."
                 value={values.contactInfo}
                 error={errors.contactInfo}
                 onChange={(event) => setField('contactInfo', event.target.value)}
@@ -432,14 +478,18 @@ function StudentFormEditor({
                       <legend className="px-1 text-sm font-semibold text-text-primary">{label}</legend>
                       <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-3">
                         <Input
-                          label={`${label} name`}
+                          label="Name"
+                          icon="user"
+                          aria-label={`${label} name`}
                           required={index === 0}
                           value={contact.name}
                           error={errors[contactErrorKey(index, 'name')]}
                           onChange={(event) => setEmergencyContact(index, 'name', event.target.value)}
                         />
                         <Combobox
-                          label={`${label} relationship`}
+                          label="Relationship"
+                          icon="users"
+                          aria-label={`${label} relationship`}
                           required={index === 0}
                           value={contact.relationship}
                           options={RELATIONSHIP_SUGGESTIONS}
@@ -450,7 +500,10 @@ function StudentFormEditor({
                           onValueChange={(value) => setEmergencyContact(index, 'relationship', value)}
                         />
                         <Input
-                          label={`${label} phone`}
+                          label="Phone"
+                          icon="phone"
+                          type="tel"
+                          aria-label={`${label} phone`}
                           required={index === 0}
                           value={contact.phone}
                           error={errors[contactErrorKey(index, 'phone')]}
@@ -475,21 +528,31 @@ function StudentFormEditor({
                 Medical history
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Input
+                <Combobox
                   label="Allergies"
                   required
-                  hint="Comma-separated list, or write None."
+                  hint="Comma-separated list, or pick None."
                   value={values.allergies}
+                  options={noneSuggestion(values.allergies)}
+                  optionKey={(option) => option}
+                  optionLabel={(option) => option}
+                  allowFreeText
+                  noMatchesText={null}
                   error={errors.allergies}
-                  onChange={(event) => setField('allergies', event.target.value)}
+                  onValueChange={(value) => setField('allergies', value)}
                 />
-                <Input
+                <Combobox
                   label="Medical conditions"
                   required
-                  hint="Comma-separated list, or write None."
+                  hint="Comma-separated list, or pick None."
                   value={values.medicalConditions}
+                  options={noneSuggestion(values.medicalConditions)}
+                  optionKey={(option) => option}
+                  optionLabel={(option) => option}
+                  allowFreeText
+                  noMatchesText={null}
                   error={errors.medicalConditions}
-                  onChange={(event) => setField('medicalConditions', event.target.value)}
+                  onValueChange={(value) => setField('medicalConditions', value)}
                 />
               </div>
             </section>

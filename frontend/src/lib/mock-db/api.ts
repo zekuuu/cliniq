@@ -662,11 +662,36 @@ export interface DuplicateMatch {
   gradeLevel: string
 }
 
+export const DUPLICATE_LRN_MESSAGE = 'This LRN is already used by another student record.'
+
 /** The LRN is unique; the message never names the other student (ADR-028). */
 export class DuplicateLrnError extends Error {
   constructor() {
-    super('This LRN is already used by another student record.')
+    super(DUPLICATE_LRN_MESSAGE)
   }
+}
+
+export interface StudentDuplicateCheck {
+  /** Never says which student has it (ADR-028). */
+  lrnTaken: boolean
+  /** Active students with the same name, in any grade. */
+  nameMatches: DuplicateMatch[]
+}
+
+/** Add Student's live check while typing; the save itself still enforces both rules. */
+export function checkStudentDuplicates(lrn: string, fullName: string): Promise<StudentDuplicateCheck> {
+  return read('check student duplicates', (s) => {
+    const normalized = normalizeLrn(lrn)
+    const name = fullName.trim().toLowerCase()
+    return {
+      lrnTaken: isLrn(normalized) && s.students.some((st) => st.lrn === normalized),
+      nameMatches: name
+        ? s.students
+            .filter((st) => !st.archived && st.fullName.trim().toLowerCase() === name)
+            .map((st) => ({ id: st.id, fullName: st.fullName, lrn: st.lrn, gradeLevel: st.gradeLevel }))
+        : [],
+    }
+  })
 }
 
 /** The LRN is the student's identifier: set on create, never changed afterwards (ADR-028, Sir Rey). */

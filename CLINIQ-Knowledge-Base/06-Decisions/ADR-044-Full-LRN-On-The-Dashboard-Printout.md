@@ -9,6 +9,8 @@ The Dashboard's printout (the Clinic Overview Report, ADR-026) lists several stu
 ## Decision
 The Clinic Overview Report prints the full 12-digit LRN wherever it lists a student. A staff member still prints by Staff No. No names are printed. The Dashboard screen is not changed: it still shows masked LRNs. The other multi-student printouts (the Monthly Report and the Audit Log) are not changed either.
 
+**Amended Monday, October 26, 2026 — 14:43 PHT (Zean, "Report printing still has censored LRN"):** the Monthly Report printout also prints the full LRN: the incident table in the Monthly Report and the Incident register printout. The Reports screen stays masked. The Audit Log printout is unchanged.
+
 ## Alternatives Considered
 - Add the masked LRN where a section had none. This was not chosen because the request was for the LRN itself.
 - Show the full LRN on the screen as well. This was not chosen because the bystander concern of ADR-004 applies to the open screen, not to a sheet the nurse holds.

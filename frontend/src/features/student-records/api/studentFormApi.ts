@@ -1,4 +1,6 @@
 import {
+  checkStudentDuplicates,
+  DUPLICATE_LRN_MESSAGE,
   DuplicateLrnError,
   getGradeLevels,
   getStudent,
@@ -6,11 +8,12 @@ import {
   saveStudent,
   type DuplicateMatch,
   type SessionUser,
+  type StudentDuplicateCheck,
 } from '../../../lib/mock-db'
 import type { EmergencyContact, Student, StudentSex } from '../../../types/entities'
 
-export { DuplicateLrnError, NAME_CORRECTION_REASON_MIN }
-export type { DuplicateMatch }
+export { checkStudentDuplicates, DUPLICATE_LRN_MESSAGE, DuplicateLrnError, NAME_CORRECTION_REASON_MIN }
+export type { DuplicateMatch, StudentDuplicateCheck }
 export type StudentFormMode = 'add' | 'edit'
 
 export interface StudentFormValues {

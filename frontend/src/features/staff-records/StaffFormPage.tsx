@@ -197,9 +197,13 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                     <fieldset key={index} className="rounded-md border border-border bg-surface p-3">
                       <legend className="px-1 text-sm font-semibold text-text-primary">{label}</legend>
                       <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <Input label={`${label} name`} value={contact.name} error={errors[contactKey(index, 'name')]} onChange={(event) => setContact(index, 'name', event.target.value)} />
+                        <Input label="Name"
+                          icon="user"
+                          aria-label={`${label} name`} value={contact.name} error={errors[contactKey(index, 'name')]} onChange={(event) => setContact(index, 'name', event.target.value)} />
                         <Combobox
-                          label={`${label} relationship`}
+                          label="Relationship"
+                          icon="users"
+                          aria-label={`${label} relationship`}
                           value={contact.relationship}
                           options={RELATIONSHIP_SUGGESTIONS}
                           optionKey={(option) => option}
@@ -208,7 +212,10 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                           error={errors[contactKey(index, 'relationship')]}
                           onValueChange={(value) => setContact(index, 'relationship', value)}
                         />
-                        <Input label={`${label} phone`} value={contact.phone} error={errors[contactKey(index, 'phone')]} onChange={(event) => setContact(index, 'phone', event.target.value)} />
+                        <Input label="Phone"
+                          icon="phone"
+                          type="tel"
+                          aria-label={`${label} phone`} value={contact.phone} error={errors[contactKey(index, 'phone')]} onChange={(event) => setContact(index, 'phone', event.target.value)} />
                       </div>
                       {values.emergencyContacts.length > 1 && (
                         <div className="mt-3 flex flex-wrap gap-2">

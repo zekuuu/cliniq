@@ -87,6 +87,7 @@ describe('Back after a save never returns to the submitted form', () => {
     await user.type(screen.getByLabelText(/^LRN/), '123456789012')
     await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
     await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
+    await selectOption(user, screen.getByLabelText(/^sex/i), 'Female')
     await user.type(screen.getByLabelText(/student contact information/i), '09XX-111-2222')
     await user.type(screen.getByLabelText(/contact name/i), 'Marisol Santos')
     await user.type(screen.getByLabelText(/relationship/i), 'Mother')
