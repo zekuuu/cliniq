@@ -1,5 +1,9 @@
 # CLINIQ Knowledge Base
 
+Last checked against the code on Thursday, October 29, 2026 (commit dde64408).
+
+**Current state:** the browser app (frontend) is built and runs on sample (mock) data, the server side (backend) is not built, and the database design is a proposed draft awaiting team approval. The full status list is in the root [README.md](../README.md#current-state).
+
 This is the operational reference for building CLINIQ, meant to be opened as an Obsidian vault. It complements — not replaces — the five canonical planning documents (see `09-References/Canonical-Documents.md`), which remain the source of truth for *what* the system must do. This vault is where *how it's being built*, day to day, gets recorded: architecture-as-implemented, development conventions, decisions, and the running history of what every AI agent (or human) has done.
 
 **If you're an AI agent starting a task, read `AGENTS.md` first, not this file.**

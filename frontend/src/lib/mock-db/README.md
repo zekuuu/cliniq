@@ -1,5 +1,7 @@
 # mock-db: the frontend's single source of mock data
 
+Last checked against the code on Thursday, October 29, 2026 (commit dde64408).
+
 Every CLINIQ screen reads and writes data through this folder during the frontend-first phases
 (ADR-006). Edit `mock-db.json` and every page changes with it. Decision record:
 `CLINIQ-Knowledge-Base/06-Decisions/ADR-014-Central-Mock-Data-Layer.md`.
@@ -56,7 +58,7 @@ is the file that becomes HTTP calls. Nothing above it has to change.
    design; the [ERD](../../../../CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md) is a proposed draft, not final or approved. Anything a screen needs that §5 doesn't define lives under
    `frontendOnly` and is labelled mock-only. Don't add new top-level entities. The one exception is
    `personnel`, the staff patients of ADR-043.
-6. **Thresholds live in `config`.** They're open product decisions, not requirements (ADR-014). `showFrequentVisitors` (true/false, true) shows the Dashboard's Frequent-visitor panel, which lists the top five until "Show all"; false hides it. Each inventory item has an optional `brand` (`"generic"`, `"branded"`, or `null` for Not specified, PROVISIONAL); a browser that saved state before these existed is migrated in `store.ts` (`migratePersistedState`).
+6. **Thresholds live in `config`.** They're open product decisions, not requirements (ADR-014). ADR-051 chose new starting values (a frequent visitor is 3 visits in 14 days; follow-ups overdue after 3 days and closed after 7); they are decided, not built, so `config` still holds the older values. `showFrequentVisitors` (true/false, true) shows the Dashboard's Frequent-visitor panel, which lists the top five until "Show all"; false hides it. Each inventory item has an optional `brand` (`"generic"`, `"branded"`, or `null` for Not specified, PROVISIONAL); a browser that saved state before these existed is migrated in `store.ts` (`migratePersistedState`).
 7. Run the checks:
 
    ```bash

@@ -1,1 +1,1 @@
-Shared TypeScript types — Student, User, Visit, Incident, FollowUp, InventoryItem, Report, BackupLog, AuditLogEntry. See Frontend Context Brief, Section 5, for the authoritative shapes.
+Shared TypeScript types — Student, Personnel (staff patients, ADR-043), User, Visit, Incident, FollowUp, InventoryItem, Report, BackupLog, AuditLogEntry in `entities.ts`; the Dashboard's shapes in `dashboard.ts`. See Frontend Context Brief, Section 5, for the authoritative shapes.

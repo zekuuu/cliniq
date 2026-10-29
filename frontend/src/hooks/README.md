@@ -7,4 +7,7 @@ Generic shared hooks not tied to one feature (e.g. auth state, session handling)
 - `useAsyncData` loads a screen's data with loading, error, and refetch states (ADR-013).
 - `useIdentifiedStudent` holds which student an entry form is about (picked on the form, or a reopened incident's student).
 - `useDateRangeEntryParams` reads a one-time `from`/`to` entry filter from the URL.
+- `usePatientFilter` keeps the Everyone / Students / Staff filter in `?patient=` (ADR-043).
+- `usePageSize` holds the shared `Pagination`'s rows-per-page choice (10 or 20) for the browser session.
+- `useCapsLock` warns when Caps Lock is on in a password field.
 - `usePrinting` reports when the browser is printing, so print-only documents mount only then (ADR-026, `cliniq-print-patterns`).

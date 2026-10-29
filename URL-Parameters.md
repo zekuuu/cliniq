@@ -23,8 +23,8 @@ treated as production authentication, API, or database settings.
 
 Valid `mockEmpty` collection names are:
 
-`users`, `students`, `visits`, `incidents`, `followUps`, `inventoryItems`, `reports`,
-`backupLogs`, `auditLog`, and `holidays` (empties the bundled holiday list, to preview the calendar's "No holidays loaded" warning).
+`users`, `students`, `personnel` (staff patients), `visits`, `incidents`, `followUps`, `inventoryItems`, `reports`,
+`backupLogs`, `auditLog`, `issueReports`, `calendarEvents`, `sportsReports`, and `holidays` (empties the bundled holiday list, to preview the calendar's "No holidays loaded" warning).
 
 Useful combinations include:
 
@@ -37,18 +37,26 @@ Useful combinations include:
 
 | Parameter | Used on | Accepted value | Effect | Example |
 |---|---|---|---|---|
-| `item` | Add/Edit Inventory Item | An inventory item ID | Opens the inventory form in edit mode for that item. Without it, the form is for a new item. | `/inventory/new?item=item-0015` |
-| `focus` | Student List | `search` | Automatically focuses the student search field. | `/students?focus=search` |
+| `item` | Add/Edit Inventory Item | An inventory item ID | Opens the inventory form in edit mode for that item. Without it, the form is for a new item. | `/inventory/new?item=item-0001` |
+| `focus` | Student List | `search` | Meant to focus the student search field; `Alt + K` links here. **Does not work at present:** on Thursday, October 29, 2026 the field was not focused when the page opened (see the `FIX` in Issues-and-TODOs). | `/students?focus=search` |
+| `search` | Inventory | Any text | Opens Inventory with this text in the search box. Read only on arrival. Built by Add Item's duplicate warning. | `/inventory?search=Paracetamol` |
+| `letter` | Visit Log | `pending` | Opens the Visit Log on visits with a pending excuse letter, over a range that includes older outstanding letters. Read only on arrival. Built by the Dashboard's Pending excuse letters card (`paths.visitsWithPendingLetter`). | `/visits?letter=pending` |
+| `letter` | Excuse Letter | A letter ID | Opens that version of the visit's excuse letter (`paths.excuseLetterVersion`). | `/visits/visit-0001/excuse-letter?letter=<letter-id>` |
+| `inClinic` | Visit Log | `1` | Opens the Visit Log filtered to patients still in the clinic. Read only on arrival. No screen links to it at present. | `/visits?inClinic=1` |
+| `patient` | Visit Log, Incident Log, Follow-Ups | `students`, `staff` | The Everyone / Students / Staff filter (ADR-043). Everyone is the default and leaves the address clean. Changes use replace navigation. | `/visits?patient=staff` |
+| `staff` | New Visit, Report Incident | A staff patient ID | Opens the form with that staff member chosen. Built by the Staff Profile's Record a visit and Record an incident (`paths.visitNewForStaff`, `paths.incidentNewForStaff`). | `/visits/new?staff=personnel-0001` |
+| `fromVisit` | Report Incident | A visit ID | Escalate to incident (ADR-036): carries the patient, complaint, time and temperature over from that visit. Built by Visit Details. | `/incidents/new?fromVisit=visit-0001` |
 | `from`, `to` | Visit Log, Incident Log | Both valid `YYYY-MM-DD` dates, `from` not after `to` | **Entry filters only.** Opens the list on that custom range and remains in the URL until the user changes the in-screen range. That change removes only `from` and `to` with replace navigation, so reload then uses the default All range. Invalid or missing values fall back to All. Built by Dashboard range drill-throughs and `paths.visitsOnDate(date)`. | `/visits?from=2026-10-07&to=2026-10-07` |
 | `attention` | Inventory | `low_stock`, `expiry` | Opens Inventory filtered to low-stock items or items that are expired or expiring. Invalid values show all stock. | `/inventory?attention=expiry` |
 | `view` | Dashboard | `trends` | Opens Dashboard Trends. `calendar` is retained only as a legacy value and replaces to `/calendar`. | `/?view=trends` |
+| `sex`, `grade` | Dashboard | `sex`: `female`, `male`; `grade`: a grade level such as `Grade 7` | The Trends demographic filters. Set and cleared by the Dashboard itself. | `/?view=trends&sex=female` |
 
 
 ## Not active in the current router
 
 ### `student`
 
-`?student=<Student Number>` pre-selected the student on New Visit, Report Incident, PE/Sports Referral and Dispense. It was removed on Wednesday, October 21, 2026: once the QR hub was gone nothing in the app linked with it, so Staff pick the student on the form.
+`?student=<Student Number>` (the Student Number itself was dropped, ADR-027) pre-selected the student on New Visit, Report Incident, PE/Sports Referral and Dispense. It was removed on Wednesday, October 21, 2026: once the QR hub was gone nothing in the app linked with it, so the School Clinician picks the student on the form.
 
 ### `role`
 
@@ -94,5 +102,6 @@ but the current code does not read `dateRange`. It is not an active parameter ye
 - Shared route builders: `frontend/src/routes/paths.ts`
 - Route-level query handling: `frontend/src/routes/AppRoutes.tsx`
 - Shared date-entry handling: `frontend/src/hooks/useDateRangeEntryParams.ts`
-- Inventory query handling: the corresponding feature page under
-  `frontend/src/features/`
+- Patient filter: `frontend/src/hooks/usePatientFilter.ts`
+- Other screen-state parameters: the page that reads them under `frontend/src/features/`
+  (Visit Log, Report Incident, New Visit, Inventory, Excuse Letter, Dashboard)

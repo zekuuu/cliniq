@@ -1,10 +1,10 @@
 # Set Up and Run the CLINIQ Frontend
 
-This guide is for a first-time setup on Windows. It starts only the frontend; Laravel, PHP, and MySQL are not needed.
+This guide is for a first-time setup on Windows. It starts only the frontend; Laravel, PHP, and the database (MariaDB from XAMPP) are not needed.
 
 ## 1. Install Git and Node.js
 
-Install Git for Windows and Node.js **22.22.2 or newer**. The frontend's Vite version needs a recent Node.js release.
+Install Git for Windows and Node.js **22.22.2 or a later 22.x, 24.15 or a later 24.x, or 26 or later**. These are the oldest versions the frontend's test tools (jsdom and Vitest) accept; older versions are not supported.
 
 Open PowerShell and check that the installations are available:
 
@@ -69,30 +69,28 @@ This installs the exact dependency versions recorded for the frontend.
 
 ## 6. Start the development server
 
-In `frontend\package.json`, replace the existing `scripts.dev` value with:
-
-```json
-"dev": "if exist frontend (cd frontend && git pull origin main && vite --host 0.0.0.0 --port 5173) else (git pull origin main && vite --host 0.0.0.0 --port 5173)"
-```
-
-Save `package.json`, then run the dev script from the frontend folder:
+From the frontend folder, start the app:
 
 ```powershell
 npm run dev
 ```
+
+Do not edit `frontend\package.json` to change this command. A local edit to a tracked file can make a later `git pull` fail.
 
 Keep this PowerShell window open while using the app. Open the URL printed in the terminal, usually [http://localhost:5173](http://localhost:5173).
 
 Press **Ctrl+C** in PowerShell to stop the server.
 
-The frontend runs using its mock data. You do not need to start the backend, PHP, or MySQL.
+The frontend runs using its mock data. You do not need to start the backend, PHP, or a database.
 
 ## 7. Run it again on a later day
 
-After the first-time setup, open VSCode and make sure the cliniq project is opened, then run the following command:
+After the first-time setup, open the `cliniq` folder in VS Code, open a terminal at the repository root, and run:
 
 ```powershell
 npm run dev
 ```
+
+At the repository root, this command first runs `git pull origin main` to fetch the latest changes, then starts the frontend. From the `frontend` folder, `npm run dev` starts the app without pulling.
 
 Open [http://localhost:5173](http://localhost:5173). Keep PowerShell open while using the app, then press **Ctrl+C** there to stop it.
