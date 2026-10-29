@@ -185,3 +185,32 @@ Overview prints the Clinic Overview Report: the screen's five stat cards and thr
 ### ADR-046: Printouts footer with the page number only
 
 Every printout's footer is "Page X of Y" at the bottom right; the "Printed … by …" line and the confidentiality line (including the Sports Report's own) are removed to unclutter the page (Zean, Monday, October 26, 2026 — 11:35 PHT). Prints stay audit-logged. The browser's own header and footer are turned off in the print dialog, since code can't remove them without losing the page number. Amends ADR-026 and ADR-034. [ADR-046](ADR-046-Print-Footer-Page-Number-Only.md)
+
+### ADR-047: The yearly list drives grade and section, a visit keeps the grade it had, and archiving is yearly
+
+No bulk promotion: grade and section come from one yearly import of the registrar's list, which flags students missing from it. Archive in one yearly batch plus single archives by the clinician; a returning student is restored; no reason for leaving. Visits and incidents keep the grade and section they had when saved. Students missing from the new list are archived automatically and records are kept 5 years from the archive date (amended by ADR-051). Zean, decisions sheet, Thursday, October 29, 2026 — 12:33 PHT. [ADR-047](ADR-047-Yearly-List-Drives-Grade-And-Section-Visit-Keeps-Its-Grade-Archive-Yearly.md)
+
+### ADR-048: Admin sign-out, Acknowledge on an incident report, email password reset, and logging who opens a record
+
+The Admin is signed out after 30 idle minutes (amends ADR-015); the Admin can Acknowledge an incident report (amends ADR-038); passwords can be reset by email when online, with the Admin reset as fallback; disabling an account ends its sessions; the clinician opening a profile or an incident report is audit-logged. Zean, decisions sheet, Thursday, October 29, 2026 — 12:33 PHT. [ADR-048](ADR-048-Admin-Sign-Out-Acknowledge-Email-Reset-And-Logging-Record-Opens.md)
+
+### ADR-049: Clinical record rules: letters, allergies, notes and what the clinic does not add
+
+"Save and approve now"; a warning past 3 days; the approved wording stored; one allergies field and one conditions field that say "None recorded" (amended by ADR-051), with an "avoid if allergic to" tag on medicines (warn, never block); the student's mobile number optional; optional collected-by, stay-home and notes rules; no safety rule engine and no extra emergency fields. Zean, decisions sheet, Thursday, October 29, 2026 — 12:33 PHT. [ADR-049](ADR-049-Clinical-Record-Rules-Letters-Allergies-Notes.md)
+
+### ADR-050: Reports, Dashboard and calendar: exact counts, a cluster alert, weekly and inventory prints, and "Activity calendar"
+
+Exact counts with no masking; a clinician-only cluster alert (3 students, same complaint and grade, 3 days); the Monthly Report gets a weekly breakdown and a monthly inventory print; no Finalize month; the Calendar is renamed Activity calendar. Zean, decisions sheet, Thursday, October 29, 2026 — 12:33 PHT. [ADR-050](ADR-050-Reports-Dashboard-And-Calendar-Exact-Counts-Cluster-Alert-Weekly-And-Inventory-Prints.md)
+
+### ADR-051: Starting numbers, follow-up closing, vitals ranges, automatic archive with 5-year retention, the allergy wording and required marks
+
+Starting values chosen for the clinic (frequent visitor 3 visits in 14 days, follow-ups overdue after 3 days and closed after 7); a Visit/Incident hint ("common and worse"); the clinician picks which entries the Sports Report prints; common vitals ranges as warnings; the yearly import archives missing students automatically after a review list, records kept 5 years from archive and the audit log 10 years; allergies and conditions say "None recorded" instead of "None", also when empty (no three-state control, no warning style) and the student's own number is renamed "Student's mobile number"; the required mark shows only where saving is blocked. Amends ADR-047 and ADR-049. Zean, in chat, Thursday, October 29, 2026 — 13:46 PHT. [ADR-051](ADR-051-Starting-Values-Follow-Up-Closing-Vitals-Ranges-Automatic-Archive-And-Required-Marks.md)
+
+### ADR-052: Backup locations are chosen in the system and the folders are created automatically
+
+The clinician chooses, adds and edits the internal and external backup locations on the Backup screen; the system creates a `.cliniq` folder structure on each (backups by year and month, logs, a marker file) and keeps the latest 60 backups per location. Still local, no cloud, no extra copy (ADR-039). Zean, in chat, Thursday, October 29, 2026 — 22:15 PHT. [ADR-052](ADR-052-Backup-Locations-Chosen-In-The-System-With-Automatic-Folders.md)
+
+### ADR-053: Extra complaint tags, staff wording, Admin counts, two patient tables and the PE wording
+
+Up to 3 extra complaint tags on a visit (reports count the main complaint); the staff type "Other"; "Returned to work" for staff; the Admin's totals leave staff incidents out; two patient tables in the ERD; the PE wording marked "to confirm"; the printable Monthly Report is enough for now. Zean, in chat, Thursday, October 29, 2026 — 22:15 PHT. [ADR-053](ADR-053-Extra-Complaint-Tags-Staff-Wording-Admin-Counts-And-Two-Patient-Tables.md)
+

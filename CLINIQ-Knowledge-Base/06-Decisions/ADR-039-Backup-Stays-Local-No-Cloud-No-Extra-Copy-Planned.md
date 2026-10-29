@@ -1,7 +1,7 @@
 # ADR-039: Backup stays on the internal and external drives, with no cloud and no extra copy planned yet
 
 **Date:** Sunday, October 25, 2026 — 16:58 PHT
-**Status:** Accepted (Zean, Sunday, October 25, 2026 — 16:45, corrected at 16:57). Nothing to build.
+**Status:** Accepted (Zean, Sunday, October 25, 2026 — 16:45, corrected at 16:57). Nothing to build. Amended Thursday, October 29, 2026 — 22:18 PHT: the internal and external drives are now locations the clinician chooses, adds and edits in the system, with the folders created automatically; still no cloud and no extra copy (see [ADR-052](ADR-052-Backup-Locations-Chosen-In-The-System-With-Automatic-Folders.md)).
 
 ## Context
 The backup plan is the app's backup on the clinic computer and an external drive. The panel review (BK-1) said one drive plugged into the same computer is exposed to fire, theft, power surges and ransomware, and the question of an additional layer was open. Sir Mina asked where the backup goes. Sir Rey said a cloud backup should already exist ("dapat meron na"). ADR-029 decided CLINIQ runs locally; the school has no IT staff and the Principal's network is separate from the clinic's.
