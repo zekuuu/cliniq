@@ -1,7 +1,7 @@
 # ADR-050: Reports, Dashboard and calendar: exact counts, a cluster alert, weekly and inventory prints, and "Activity calendar"
 
 **Date:** Thursday, October 29, 2026 — 12:33 PHT
-**Status:** Accepted (Zean, in the "CLINIQ Decisions to Answer" sheet, recorded Thursday, October 29, 2026 — 12:33 PHT). Not built yet.
+**Status:** Accepted (Zean, in the "CLINIQ Decisions to Answer" sheet, recorded Thursday, October 29, 2026 — 12:33 PHT). **Item 2 (cluster alert) built** Friday, October 30, 2026 — 00:17 PHT on `build/decisions-sheet-answers-oct29` ([Part 3 session](../08-Logs/Agent-Sessions/2026-10-30-decisions-build-part-3-admin-audit-and-dashboard.md)); items 3, 4 and 6 (complaint grouping, the weekly breakdown, the monthly inventory print, "Activity calendar") built Friday, October 30, 2026 — 00:26 PHT ([Part 4 session](../08-Logs/Agent-Sessions/2026-10-30-decisions-build-part-4-reports-and-calendar.md)).
 
 ## Context
 Zean answered the sheet's questions on report privacy, outbreak alerts, the clinic's paper reports, and the Calendar.

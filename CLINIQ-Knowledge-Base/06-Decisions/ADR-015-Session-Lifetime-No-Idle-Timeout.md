@@ -1,7 +1,7 @@
 # ADR-015: Session Lifetime — One Week Until Token Expiry, No Idle Timeout
 
 **Date:** Monday, September 28, 2026 — actual time not available (no system clock access in this environment)
-**Status:** Accepted
+**Status:** Accepted. **Amended by ADR-048, built Friday, October 30, 2026 — 00:17 PHT** ([Part 3 session](../08-Logs/Agent-Sessions/2026-10-30-decisions-build-part-3-admin-audit-and-dashboard.md)): the Admin account is signed out after `config.adminIdleMinutes` (30) without pointer, key or scroll activity, with a notice a minute before; the clinician still has no idle timeout.
 **Note (Wednesday, October 21, 2026 — 01:47):** the PE/Sports Instructor role, the phone-only screens and the `?student=` parameter this ADR may mention were removed (ADR-029, ADR-033, [2026-10-21-remove-phone-screens-and-instructor](../08-Logs/Agent-Sessions/2026-10-21-remove-phone-screens-and-instructor.md)); the rest of the decision stands.
 **Note (Thursday, October 29, 2026 — 12:33 PHT):** the Admin is now signed out after 30 idle minutes (a `config` value); the clinician still has no idle timeout (ADR-048, Zean). Not built yet.
 

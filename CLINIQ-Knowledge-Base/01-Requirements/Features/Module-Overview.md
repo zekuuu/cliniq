@@ -22,6 +22,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 
 ### 1. User Management — *Access: Admin/Principal (manages every account, ADR-033)*
 **Login Authentication** *(Staff, Admin/Principal — everyone with an account)*
+- **Admin idle sign-out (ADR-048, built Friday, October 30, 2026 — 00:17 PHT):** the Admin/Principal is signed out after `config.adminIdleMinutes` (30) without pointer, key or scroll activity; a "Still there?" notice appears a minute before, and Login then says "You were signed out after 30 minutes of inactivity." The clinician has no idle timeout (ADR-015).
 - Log in (username/password)
 - Log out
 - Session lasts 1 week, until the login token expires — there is no idle timeout. One session lifetime applies to every role (Staff, Admin/Principal)
@@ -71,11 +72,14 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 **Allergy/Food Restriction Monitoring**
 - Add/edit an allergy or food-restriction entry — *Staff*
 - View/flag students with restrictions — *Staff*
+- **ADR-051 (built Friday, October 30, 2026 — 00:02 PHT):** allergies and medical conditions stay one free-text field each and are optional on the student and staff forms. The suggestion reads **None recorded**; an empty field shows "None recorded" in plain text on the forms, profiles, alert card, pickers and printouts, with no warning style. Typed "None" or "None recorded" is stored as no entry. The incomplete-records rule is unchanged (it never read these fields).
+- An inventory item can carry optional **"avoid if allergic to"** words (ADR-049). At the visit, incident and Dispense medicine pickers, a word that the patient's allergy entries mention (any case) shows "Avoid if allergic to penicillin: this patient lists penicillin." beside the allergies; it never blocks (ADR-018).
 
 **Contact Information Management**
 - Add/edit one or more emergency contacts — *Staff*. At least one is required; the ordered list has no fixed maximum, its first contact is primary, and Staff can move another contact to the top.
 - View all emergency contacts, primary first, with each contact's verification state — *Staff*
 - Mark each contact number as verified/unverified — *Staff*
+- The student's own phone is **"Student's mobile number (optional)"** (ADR-051; the stored field is still `contactInfo`). A blank one never makes a record incomplete.
 
 **Duplicate Detection**
 - Auto-check for name + grade-level match on save
@@ -102,6 +106,8 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 - Lists with more than one person show the Staff No. (never the name) with a Student or Staff chip, and an Everyone / Students / Staff filter.
 
 ### 3. Clinic Visit Monitoring — *Access: Staff only*
+
+**Grade at the time (ADR-047, built Friday, October 30, 2026 — 00:02 PHT):** a student's visit and incident store the grade level the student had when it was saved; the Visit and Incident Logs, the Student Profile history and the Dashboard trends by grade read it, so promotion never moves old records. Student records have no section, so none is kept; staff records have no grade. Records from before the field existed take the student's current grade, once.
 
 **Daily Visit Logging**
 - Add new visit entry. A visit opened without an identified student finds one by LRN or student name (results appear from the first character typed, at most 8 active students, each shown with masked LRN, full name, and grade). Incident Stage 1, PE/Sports Referral, and Dispense use the same search.
@@ -140,11 +146,13 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 - On the visit form (new or edit), fields follow the disposition: none for Returned to class; for Sent home, an "Excuse letter" section ("Prepare an excuse letter", on by default; Excused from, default today; Excused until, required while ticked; optional note for the teacher); for Referred to hospital, the same section plus an optional "Referred to (hospital or clinic)". Fields clear when the disposition changes and are validated only while shown. Saving stores these as a draft with the visit, not an approved letter; "Review excuse letter" opens the letter prefilled, and approval moves the period and note onto the letter and clears the draft. Once a letter is approved, editing the visit (even to another disposition) never changes or removes it, and the form says so
 - Drafts awaiting approval are findable without remembering the visit: the Student Profile's Staff-only Excuse Letters card lists them with a "Pending approval" badge and a "Review letter" link, and the Dashboard shows Staff an "Excuse letters awaiting approval" list (masked LRN, excused period, visit time; oldest first), shown only while drafts exist
 - Visit detail (Staff only) shows an "Excuse letter" section: Not prepared, Pending approval, or Approved, with the excused period, the teacher note, and a link to the letter; and "Referred to" when recorded
+- **ADR-049 (built Thursday, October 29, 2026 — 23:48 PHT):** "Save and approve now" beside Save on New Visit and the Visit Details edit form saves the visit and approves its prepared letter in one step (both audit entries); the letter page keeps its tick-then-"Approve and Store" path. An excused period longer than `config.medicalCertificateAfterDays` (3, both dates counted) shows "More than 3 days: a medical certificate is usually needed." on the visit form and the letter page; it never blocks. Approval stores the final recipient and body, and the letter prints from that stored text; letters approved earlier get their wording from the template once, on load. An approved letter whose visit is no longer Sent home or Referred shows "Outcome changed since approval" on Visit Details and the Student Profile. An optional "Stay home until cleared" tick and note on the letter prints "Stay home until cleared by the school clinic."
 - **Out of scope:** medical certificates are hospital-issued documents, not generated by CLINIQ — the excuse letter is a distinct, clinic-issued document and the system should never conflate the two
 
 **PE/Sports Injury Referral Logging**
 - Log a referral submitted by a PE instructor
 - Record clinical assessment
+- **Who collected the student** (ADR-049): for Sent home and Referred to hospital, optional Collected by, Relationship (suggestions Parent, Guardian, Relative, Other; free text) and Time collected (now by default, never in the future). Shown on Visit Details. Not asked for a staff patient. "Show more fields" (body temperature) opens by itself when the complaint is Fever, Headache or Chills (matched like the first-aid checklist; "Chills" was added to the complaint types); it can be closed. A follow-up (visit or incident) can carry "Stay home until cleared" with a note; the Follow-Up List shows it under the reason.
 - Record disposition (returned to class / resting in clinic / sent home / referred to hospital). **Resting in clinic** (panel review VS-1) is a student kept for observation; today's resting visits with no Time out are "in the clinic now" and show as a Dashboard chip that opens the filtered Visit Log. Only Sent home and Referred get an excuse letter. The default stays Returned to class (open `DECIDE`)
 - Escalate to Emergency Response if hospital referral is needed
 
@@ -159,8 +167,10 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 
 ### 4. Emergency Response — *Access: Staff; Admin/Principal reads the Incident Log and Incident Report only (ADR-038), audit-logged once per report per session*
 
+**Acknowledge (ADR-048, built Friday, October 30, 2026 — 00:17 PHT):** on an approved incident report the Admin/Principal has an Acknowledge button (with a confirmation); it records "Acknowledged by <name> on <date>" on the report and its printout, writes an audit entry, and can't be undone. It is the Admin's only write. The clinician's opening of a student or staff profile or an incident report is now audit-logged once per record per session, like the Admin's.
+
 **Incident Recording — two-stage flow**
-- **Stage 1 (fast capture):** open a prefilled emergency form (student picked on the form), complete only the essential field (the complaint) plus whichever readings the case needs (temperature, pulse, blood pressure, oximeter; none is required, "don't force all 4 if not relevant to the case"), and save immediately — speed matters more than completeness in the first moment. An optional Additional notes field is offered but never required; when filled, the notes show in Stage 2's Stage 1 summary and on the Incident Report. Once the student is picked, a read-only card shows the student's allergies, medical conditions and emergency contacts (an empty list reads “None recorded”, never “No allergies”); it adds no input
+- **Stage 1 (fast capture):** open a prefilled emergency form (student picked on the form), complete only the essential field (the complaint) plus whichever readings the case needs (temperature, pulse, blood pressure, oximeter; none is required, "don't force all 4 if not relevant to the case"), and save immediately — speed matters more than completeness in the first moment. An optional Additional notes field is offered but never required; it stays editable on Stage 2 until the incident report is approved (ADR-049; each change is an audited edit), then shows read-only in the Stage 1 summary and on the Incident Report. Once the student is picked, a read-only card shows the student's allergies, medical conditions and emergency contacts (an empty list reads “None recorded”, never “No allergies”); it adds no input
 - **Complaint:** chosen from the incident complaint types, or "Other (type your own)" to type one (at most 60 characters; Zean, Monday, October 26, 2026).
 - **Stage 2 (complete later):** return to the same incident record to fill in remaining details (any further readings, still all optional, and referral specifics) once the immediate situation is handled. Treatment notes and medicines/supplies given are both optional; when neither is recorded, views show “No treatment recorded.” An optional **Body part affected** (free text with suggestions) is recorded at Stage 2 and printed on the report when filled. The record can be **completed and approved** only when it has at least one of treatment notes, a medicine line, a parent notification attempt or a hospital referral; otherwise the nurse ticks “Nothing further was needed or done” and writes a one-line reason, printed on the report as “No treatment or notification: <reason>”. No reading is ever required (panel review part 1, Thursday, October 22, 2026)
 - Edit incident entry
@@ -182,6 +192,8 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 **Follow-Up Handling** — same feature as Clinic Visit Monitoring's Follow-Up Handling (Module 3); an incident can originate a follow-up the same way a routine visit can (prompted inline at the end of Log Emergency)
 
 ### 5. Reports Generation — *Access: Staff (generates) + Admin/Principal (views, read-only)*
+
+**Decisions build (ADR-050, built Friday, October 30, 2026 — 00:26 PHT):** reports group complaints after trimming, collapsing spaces and ignoring case and trailing punctuation, matched to the complaint types ("head ache" and "Headache." count as Headache; an unmatched complaint keeps its own cleaned text; no merge screen). The Monthly Report adds visits by complaint per week (Monday weeks clipped to the month, weekend days in the week before, a last week of three weekdays or fewer joined to the one before, labelled like the paper report, "1-4, 7-11, 14-18, 21-30"), with a total column, on screen and on paper. A new **Inventory sheet** (one A4 page per month) lists each item's New Purchase, Total Available and Ending Inventory, all computed from the stock movements. The Calendar is renamed **Activity calendar**.
 
 **Monthly Reports**
 - Generate monthly report — *Staff*
