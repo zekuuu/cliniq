@@ -1,7 +1,7 @@
 # ADR-053: Extra complaint tags, staff wording, Admin counts, two patient tables and the PE wording
 
 **Date:** Thursday, October 29, 2026 — 22:18 PHT
-**Status:** Accepted (Zean, in chat, Thursday, October 29, 2026 — 22:15 PHT). Not built yet.
+**Status:** Accepted (Zean, in chat, Thursday, October 29, 2026 — 22:15 PHT). **Items 1, 2, 3, 4 and 6 built** Friday, October 30, 2026 — 03:36 PHT on `build/decisions-sheet-answers-oct29` ([Part 6 session](../08-Logs/Agent-Sessions/2026-10-30-decisions-build-part-6-staff-wording-complaints-and-backup.md)) in the mock frontend; item 5 waits for the ERD review (`DOC`).
 
 ## Context
 Zean answered the remaining open decisions. Most of them were small choices about visits, staff patients and the Admin's view.

@@ -1,7 +1,7 @@
 # ADR-047: The yearly list drives grade and section, a visit keeps the grade it had, and archiving is yearly
 
 **Date:** Thursday, October 29, 2026 — 12:33 PHT
-**Status:** Accepted (Zean, in the "CLINIQ Decisions to Answer" sheet, recorded Thursday, October 29, 2026 — 12:33 PHT). Not built yet. Amended Thursday, October 29, 2026 — 13:46 PHT: point 3 is now decided and the retention period is 5 years from the archive date (see [ADR-051](ADR-051-Starting-Values-Follow-Up-Closing-Vitals-Ranges-Automatic-Archive-And-Required-Marks.md)).
+**Status:** Accepted (Zean, in the "CLINIQ Decisions to Answer" sheet, recorded Thursday, October 29, 2026 — 12:33 PHT). **Point 5 built** Friday, October 30, 2026 — 00:02 PHT on `build/decisions-sheet-answers-oct29` (grade at the time; student records have no section, so none is stored; [Part 2 session](../08-Logs/Agent-Sessions/2026-10-30-decisions-build-part-2-student-and-incident-records.md)); the yearly import and archive are not built. Amended Thursday, October 29, 2026 — 13:46 PHT: point 3 is now decided and the retention period is 5 years from the archive date (see [ADR-051](ADR-051-Starting-Values-Follow-Up-Closing-Vitals-Ranges-Automatic-Archive-And-Required-Marks.md)).
 
 ## Context
 The registrar sends a new student list each year; sections are reshuffled and students move up. The Issues file had seven open questions on promotion, sections, the yearly sync, grade accuracy in old records, returning students, why a student left and archive timing. Zean answered them in the decisions sheet.

@@ -1,7 +1,7 @@
 # ADR-038: Admin gets read-only access to student profiles and incidents, Admin cannot print, and a draft excuse letter cannot be printed
 
 **Date:** Sunday, October 25, 2026 — 16:58 PHT
-**Status:** Accepted (Zean, Sunday, October 25, 2026 — 16:45). Built: items 1 to 6 (parts 1 and 5 of `Prompt-Build-Professor-Feedback-Mina-Rey-Oct25.md`), Built Sunday, October 25, 2026 — 21:57 PHT ([2026-10-25-mina-rey-feedback-build-all-parts](../08-Logs/Agent-Sessions/2026-10-25-mina-rey-feedback-build-all-parts.md)). Item 4 (the audit of Admin views) is built as the default and still awaits Zean's confirmation.
+**Status:** Accepted (Zean, Sunday, October 25, 2026 — 16:45). Built: items 1 to 6 (parts 1 and 5 of `Prompt-Build-Professor-Feedback-Mina-Rey-Oct25.md`), Built Sunday, October 25, 2026 — 21:57 PHT ([2026-10-25-mina-rey-feedback-build-all-parts](../08-Logs/Agent-Sessions/2026-10-25-mina-rey-feedback-build-all-parts.md)). Item 4 (the audit of Admin views) is built as the default and still awaits Zean's confirmation. **Amended by ADR-048, built Friday, October 30, 2026 — 00:17 PHT on `build/decisions-sheet-answers-oct29`** ([Part 3 session](../08-Logs/Agent-Sessions/2026-10-30-decisions-build-part-3-admin-audit-and-dashboard.md)): the Admin can Acknowledge an approved incident report (who and when, audit-logged, never undone), the only write the Admin has; and the clinician's opening of a profile or an incident report is logged too.
 **Note (Thursday, October 29, 2026 — 12:33 PHT):** the Admin can also press **Acknowledge** on a completed incident report; it records who and when and is audit-logged, and everything else stays read-only (ADR-048, Zean). Not built yet.
 
 ## Context

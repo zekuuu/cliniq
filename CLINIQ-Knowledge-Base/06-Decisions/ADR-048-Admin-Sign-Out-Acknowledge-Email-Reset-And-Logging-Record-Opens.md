@@ -1,7 +1,7 @@
 # ADR-048: Admin sign-out, Acknowledge on an incident report, email password reset, and logging who opens a record
 
 **Date:** Thursday, October 29, 2026 — 12:33 PHT
-**Status:** Accepted (Zean, in the "CLINIQ Decisions to Answer" sheet, recorded Thursday, October 29, 2026 — 12:33 PHT). Not built yet.
+**Status:** Accepted (Zean, in the "CLINIQ Decisions to Answer" sheet, recorded Thursday, October 29, 2026 — 12:33 PHT). **Items 1, 2 and 5 built** Friday, October 30, 2026 — 00:17 PHT on `build/decisions-sheet-answers-oct29` ([Part 3 session](../08-Logs/Agent-Sessions/2026-10-30-decisions-build-part-3-admin-audit-and-dashboard.md)); items 3 and 4 are backend work (`LATER`).
 
 ## Context
 The Principal signs in on the clinic computer (ADR-029) and now reads profiles and incident reports (ADR-038). ADR-015 has no idle timeout for anyone. The Issues file also asked about password recovery, an acknowledgement step for the Principal, ending the sessions of a disabled account, and whether opening a health record is logged.

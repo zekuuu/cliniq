@@ -30,6 +30,9 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | …and its pending follow-ups are cancelled | `update` | follow-up | "Marked cancelled: visit entered in error" | `features/clinic-visits/VisitLogic.test.tsx` |
 | Escalates a visit to an incident (ADR-036) | `update` | visit | "Escalated to incident" | `features/clinic-visits/VisitLogic.test.tsx` |
 | Approves an excuse letter | `approve` | excuse-letter | — | `features/clinic-visits/ExcuseLetterPage.test.tsx` |
+| Corrects an incident's Additional notes before approval (ADR-049) | `update` | incident-stage-2 | "…; included corrected additional notes" | `features/student-records/RecordsDecisions.test.tsx` |
+| Sets an item's "avoid if allergic to" words (ADR-049) | `update` | inventory | "Updated avoid if allergic to" | `features/student-records/RecordsDecisions.test.tsx` |
+| "Save and approve now" on a visit (ADR-049) | `submit` / `update` + `approve` | visit + excuse-letter | — | `features/clinic-visits/LettersAndVisitsDecisions.test.tsx` |
 | Issues a replacement letter | `update` | excuse-letter | "Superseded; replacement draft opened" | `features/clinic-visits/ExcuseLettersAndFollowUps.test.tsx` |
 | Creates a follow-up (from a visit or incident) | `create` | follow-up | — | `features/clinic-visits/NewVisitEntryPage.test.tsx` |
 | Changes a follow-up's status | `update` | follow-up | "Marked <status>" (the reason stays on the record) | `features/emergency-response/FollowUpListPage.test.tsx` |
@@ -43,19 +46,22 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | Dispenses stock (standalone, or a visit or incident line) | `submit` | inventory-dispensation | — | `lib/mock-db/stock.test.ts` |
 | Restocks | `submit` | inventory-restock | — | — |
 | Adjusts stock (or a visit edit moves stock) | `submit` | inventory-adjustment | the reason ("Visit edited", "Damaged or spilled", …) | `lib/mock-db/stock.test.ts` |
-| Starts a backup ("Back up now") | `create` | backup | "Backup started from the Backup page" | `features/backup/AccessAndBackup.test.tsx` |
+| Starts a backup ("Back up now") | `create` | backup | "Backup started from the Backup page (2 locations)": the number of enabled locations (ADR-052) | `features/backup/AccessAndBackup.test.tsx` |
+| Adds, edits, disables or enables a backup location (ADR-052) | `create` / `update` | backup-location | — / "Updated label" / "Disabled" / "Enabled" | `features/StaffComplaintsBackupDecisions.test.tsx` |
 | Marks a backup verified | `update` | backup | "Verified backup" | — |
 | Adds / edits / deletes a calendar event | `create` / `update` / `delete` | calendar-event | changed field names on edit | `lib/mock-db/calendarEvents.test.ts` |
 | Creates / edits / duplicates / archives / restores a Sports Report | `create` / `update` / `create` / `archive` / `update` | sports-report | "Duplicated from another Sports Report", "Restored from the archive" | `features/reports/SportsReport.test.tsx` |
 | Prints or saves as PDF | `print` | the printed record, or print-document | the document's title or scope. Never written for the Admin, who can't print, or for a draft excuse letter (ADR-038) | `components/print/Print.test.tsx` |
-| Admin/Principal opens a student profile or an incident report | `view` ("Viewed (Admin)") | student / incident | "Opened student profile" / "Opened incident report". Once per record per sign-in session (ADR-038 item 4) | `features/admin-read-only.test.tsx` |
+| Admin/Principal or the clinician opens a student or staff profile or an incident report | `view` ("Viewed a record") | student / staff / incident | "Opened student profile" / "Opened staff profile" / "Opened incident report". Once per record per sign-in session (ADR-038 item 4; the clinician's since ADR-048, Friday, October 30, 2026 — 00:17 PHT). Lists and searches are not logged | `features/admin-read-only.test.tsx`, `features/AdminAuditDashboardDecisions.test.tsx` |
+| Admin/Principal acknowledges an approved incident report (ADR-048) | `update` | incident-report | "Acknowledged" | `features/AdminAuditDashboardDecisions.test.tsx` |
+| The Admin is signed out after the idle limit (ADR-048) | `logout` | — | "Signed out after 30 minutes of inactivity" | `features/AdminAuditDashboardDecisions.test.tsx` |
 | Reports an issue | `create` | issue-report | — | `features/issue-reports/api/issueReportApi.test.ts` |
 
 ## Not logged today (an open decision; nothing was changed)
 
 | Action | Logged? | Should it be? |
 |---|---|---|
-| Staff opening a student profile, a visit, an incident or a report (reading a health record). The Admin's opening of a profile or an incident report **is** logged since Sunday, October 25, 2026 (ADR-038, above) | No | **Still open** (lockouts were decided separately). RA 10173 accountability favours logging access to health records; ADR-016 decided that reading the Audit Log itself is not logged. Logging every profile view adds many rows. A `DECIDE` is logged. |
+| Staff opening a visit or a report (reading a health record). Opening a student or staff profile or an incident report **is** logged for both roles since Friday, October 30, 2026 — 00:17 PHT (ADR-048, above) | No | Visits and reports stay unlogged (ADR-048 chose profiles and incident reports). RA 10173 accountability favours logging access to health records; ADR-016 decided that reading the Audit Log itself is not logged. Logging every profile view adds many rows. A `DECIDE` is logged. |
 | Searching for a student (Student List, pickers) | No | Probably not: the opened record is the access worth logging. |
 | A single wrong password at sign-in | No | No: decided with the lockout below (Zean, Friday, October 23, 2026). Five in a row are logged as a lockout. |
 | Viewing the Dashboard, Calendar, Trends or lists | No | No: aggregate or masked (ADR-004, ADR-028). |
