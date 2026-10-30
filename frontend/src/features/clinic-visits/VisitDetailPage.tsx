@@ -27,13 +27,15 @@ import { cleanComplaint } from '../../lib/complaints'
 import { formatDate, formatDateRange, formatDateTime, todayISO } from '../../lib/dates'
 import { draftsFrom, formatItemGiven } from '../../lib/itemsGiven'
 import { formatDecimal } from '../../lib/numbers'
-import { getMockSessionUser, StockRuleError, type SessionUser } from '../../lib/mock-db'
+import { ageGroupOf } from '../../lib/vitals'
+import { getMockSessionUser, outcomeChangedSinceApproval, StockRuleError, type SessionUser } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
 import type { Disposition } from '../../types/entities'
 import { ComplaintField } from './ComplaintField'
+import { ExtraComplaintsField } from './ExtraComplaintsField'
 import { MedicineInNotesHint } from './MedicineInNotesHint'
 import { DispositionFields } from './DispositionFields'
-import { dispositionErrors, emptyDispositionValues, type DispositionErrors } from './dispositionValues'
+import { dispositionErrors, emptyDispositionValues, hasExcuseLetter, type DispositionErrors } from './dispositionValues'
 import { LogbookFields } from './LogbookFields'
 import { currentClock, filledLogbookCount, formatClock, logbookErrors, type LogbookErrors, type LogbookValues } from './logbookValues'
 import {
@@ -44,7 +46,7 @@ import {
   type VisitDetail,
   type VisitDetailValues,
 } from './api/visitDetailApi'
-import { DISPOSITION_LABELS as dispositionLabel, DISPOSITION_OPTIONS as dispositionOptions, DISPOSITION_TONES as dispositionTone } from '../../lib/dispositions'
+import { dispositionLabel, dispositionOptionsFor, DISPOSITION_TONES as dispositionTone } from '../../lib/dispositions'
 
 interface Errors extends DispositionErrors, LogbookErrors {
   visitTime?: string
@@ -150,6 +152,9 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
   const [errorReasonMessage, setErrorReasonMessage] = useState('')
   const [markingSaving, setMarkingSaving] = useState(false)
   const locked = Boolean(visit.enteredInError)
+  /** Set by "Save and approve now" (ADR-049, D3) for the submit it starts. */
+  const approveNowRef = useRef(false)
+  const preparingLetter = !visit.approval && visit.student.kind === 'student' && hasExcuseLetter(values.disposition) && values.prepareLetter
 
   async function confirmEnteredInError() {
     if (!errorReason.trim()) {
@@ -192,13 +197,15 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
     if (lines.some((line) => line.quantity < 1)) next.itemsGiven = 'Each quantity must be at least 1.'
     return {
       ...next,
-      ...dispositionErrors(values.disposition, values, Boolean(visit.approval) || visit.student.kind === 'personnel'),
+      ...dispositionErrors(values.disposition, values, Boolean(visit.approval) || visit.student.kind === 'personnel', values.visitDate),
       ...logbookErrors(values, values.visitClock || visit.dateTime.slice(11, 16), timeOutRef.current?.validity.badInput),
     }
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    const approveNow = approveNowRef.current && preparingLetter
+    approveNowRef.current = false
     const nextErrors = validate()
     setErrors(nextErrors)
     if (nextErrors.timeOut) setMoreOpen(true)
@@ -211,6 +218,8 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
         visit,
         values,
         lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity, instructions: line.instructions })),
+        undefined,
+        approveNow,
       )
       setVisit(updated)
       setValues(valuesFromVisit(updated))
@@ -392,6 +401,12 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                   suggestions={visit.complaintSuggestions}
                   error={errors.complaint}
                 />
+                <ExtraComplaintsField
+                  value={values.extraComplaints}
+                  onChange={(next) => setField('extraComplaints', next)}
+                  main={values.complaint}
+                  suggestions={visit.complaintSuggestions}
+                />
                 <TextareaField
                   label="Treatment notes"
                   required={false}
@@ -428,7 +443,7 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                     className="max-sm:grid max-sm:w-full max-sm:grid-cols-2"
                     value={values.disposition}
                     onChange={setDisposition}
-                    options={dispositionOptions}
+                    options={dispositionOptionsFor(visit.student.kind)}
                     size="md"
                   />
                 </div>
@@ -462,6 +477,7 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                   onOpenChange={setMoreOpen}
                   ranges={visit.vitalsRanges}
                   timeOutRef={timeOutRef}
+                  ageGroup={ageGroupOf(visit.student)}
                 />
                 <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
                   {!values.treatment.trim() && !lines.length && (
@@ -470,6 +486,19 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                   <Button variant="neutral" onClick={cancelEdit}>
                     Cancel
                   </Button>
+                  {preparingLetter && (
+                    <Button
+                      variant="secondary"
+                      icon="checkCircle"
+                      disabled={saving}
+                      onClick={() => {
+                        approveNowRef.current = true
+                        invalidRef.current?.requestSubmit()
+                      }}
+                    >
+                      Save and approve now
+                    </Button>
+                  )}
                   <Button type="submit" variant="primary" icon="checkCircle" loading={saving}>
                     Save Changes
                   </Button>
@@ -481,6 +510,12 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                   <h2 className="text-sm font-bold text-text-primary">Complaint</h2>
                   <p className="mt-1 text-sm text-text-primary">{visit.complaint}</p>
                 </section>
+                {visit.extraComplaints.length > 0 && (
+                  <section>
+                    <h2 className="text-sm font-bold text-text-primary">Other complaints</h2>
+                    <p className="mt-1 text-sm text-text-primary">{visit.extraComplaints.join(', ')}</p>
+                  </section>
+                )}
                 <section>
                   <h2 className="text-sm font-bold text-text-primary">Treatment notes</h2>
                   {visit.treatment.trim() ? (
@@ -506,13 +541,22 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                 <section>
                   <h2 className="text-sm font-bold text-text-primary">Disposition</h2>
                   <Badge tone={dispositionTone[visit.disposition]} variant="soft">
-                    {dispositionLabel[visit.disposition]}
+                    {dispositionLabel(visit.disposition, visit.student.kind)}
                   </Badge>
                 </section>
                 {visit.referredTo && (
                   <section>
                     <h2 className="text-sm font-bold text-text-primary">Referred to</h2>
                     <p className="mt-1 text-sm text-text-primary">{visit.referredTo}</p>
+                  </section>
+                )}
+                {visit.collectedBy && (
+                  <section>
+                    <h2 className="text-sm font-bold text-text-primary">Collected by</h2>
+                    <p className="mt-1 text-sm text-text-primary">
+                      {[visit.collectedBy.name, visit.collectedBy.relationship && `(${visit.collectedBy.relationship})`].filter(Boolean).join(' ')}
+                      {visit.collectedBy.time && ` · ${formatClock(visit.collectedBy.time)}`}
+                    </p>
                   </section>
                 )}
                 {/* The optional logbook fields: only the filled ones, nothing collapsed. */}
@@ -597,6 +641,8 @@ function ExcuseLetterCard({ visit }: { visit: VisitDetail }) {
   // A letter whose visit was entered in error is void, draft or approved (D2).
   const voided = Boolean(visit.enteredInError && letter)
   const status = voided ? 'Voided' : visit.approval ? 'Approved' : visit.excuseLetterDraft ? 'Pending approval' : 'Not prepared'
+  // ADR-049 (D7): the letter stands, but the visit no longer sends the student out.
+  const outcomeChanged = Boolean(visit.approval && !voided && outcomeChangedSinceApproval(visit))
   return (
     <Card aria-labelledby="visit-excuse-letter-title">
       <CardHeader
@@ -604,9 +650,16 @@ function ExcuseLetterCard({ visit }: { visit: VisitDetail }) {
         title="Excuse letter"
         icon={<Icon name="fileText" />}
         actions={
-          <Badge tone={voided ? 'error' : visit.approval ? 'success' : visit.excuseLetterDraft ? 'warning' : 'neutral'} variant="soft">
-            {status}
-          </Badge>
+          <div className="flex flex-wrap justify-end gap-2">
+            {outcomeChanged && (
+              <Badge tone="warning" variant="soft">
+                Outcome changed since approval
+              </Badge>
+            )}
+            <Badge tone={voided ? 'error' : visit.approval ? 'success' : visit.excuseLetterDraft ? 'warning' : 'neutral'} variant="soft">
+              {status}
+            </Badge>
+          </div>
         }
       />
       <CardBody className="flex flex-col gap-4">

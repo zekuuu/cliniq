@@ -277,6 +277,8 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
                 onChange={(event) => setField('activity', event.target.value)}
               />
             </div>
+            {/* ADR-053: on screen only, never on paper. */}
+            <p className="text-xs font-semibold text-text-secondary print:hidden">Starting wording, to be confirmed: the three fields below start with suggested phrases you can edit.</p>
             <TextareaField
               label="Injury summary"
               value={values.injurySummary}

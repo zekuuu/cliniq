@@ -25,6 +25,7 @@ export interface PeReferralValues {
  * not findings. No requirement specifies them; the School Clinician should confirm or replace them
  * (tracked in Issues-and-TODOs.md).
  */
+/** Starting wording, to be confirmed by the clinic (ADR-053); the form says so on screen. */
 const CLINICAL_DEFAULTS = {
   injurySummary: 'Injury reported during PE/Sports activity. Area affected: ',
   clinicalAssessment: 'Assessed in the clinic. Findings: ',

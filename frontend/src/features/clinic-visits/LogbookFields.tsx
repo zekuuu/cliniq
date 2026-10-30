@@ -1,7 +1,7 @@
 import type { RefObject } from 'react'
 import { Combobox, ExpandableSection, Input, Textarea, VitalsWarning } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import type { VitalsWarningRanges } from '../../lib/mock-db'
+import type { AgeGroup, VitalsWarningRanges } from '../../lib/mock-db'
 import { filledLogbookCount, type LogbookErrors, type LogbookValues } from './logbookValues'
 import { fetchAssistedByNames } from './api/newVisitApi'
 
@@ -18,6 +18,7 @@ export function LogbookFields({
   onOpenChange,
   ranges,
   timeOutRef,
+  ageGroup = null,
 }: {
   values: LogbookValues
   onChange: (next: LogbookValues) => void
@@ -26,6 +27,8 @@ export function LogbookFields({
   onOpenChange: (open: boolean) => void
   ranges: VitalsWarningRanges
   timeOutRef: RefObject<HTMLInputElement | null>
+  /** For the usual-range note (ADR-051); null until the patient is picked. */
+  ageGroup?: AgeGroup | null
 }) {
   const set = (field: keyof LogbookValues, value: string) => onChange({ ...values, [field]: value })
   const accounts = useAsyncData('assisted-by-names', fetchAssistedByNames)
@@ -54,7 +57,7 @@ export function LogbookFields({
             error={errors.timeOut}
           />
         </div>
-        <VitalsWarning readings={{ temperatureC: values.temperatureC }} ranges={ranges} />
+        <VitalsWarning readings={{ temperatureC: values.temperatureC }} ranges={ranges} ageGroup={ageGroup} />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Combobox
             label="Assisted by"

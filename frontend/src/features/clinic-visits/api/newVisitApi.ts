@@ -16,7 +16,7 @@ import {
   type VitalsWarningRanges,
 } from '../../../lib/mock-db'
 import type { Patient } from '../../../lib/patients'
-import type { Disposition, ExcuseLetterDraft, FollowUp, PatientRef, PatientSearchResult, Visit } from '../../../types/entities'
+import type { CollectedBy, Disposition, ExcuseLetterDraft, FollowUp, PatientRef, PatientSearchResult, Visit } from '../../../types/entities'
 
 export interface NewVisitContext {
   /** Complaint options + their first-aid checklists (mock-only content; see mock-db.json). */
@@ -36,11 +36,17 @@ export interface NewVisitInput extends Partial<VisitLogbookFields>, PatientRef {
   treatment: string
   disposition: Disposition
   triageStepsCompleted: string[]
-  followUp: null | Pick<FollowUp, 'followUpDate' | 'reason' | 'notes'>
+  followUp: null | (Pick<FollowUp, 'followUpDate' | 'reason' | 'notes'> & Partial<Pick<FollowUp, 'stayHomeUntilCleared' | 'stayHomeNote'>>)
   itemsGiven?: ItemLineInput[]
   /** Sent home or referred, letter box ticked: the draft period and note. Not an approved letter. */
   excuseLetterDraft?: ExcuseLetterDraft | null
   referredTo?: string | null
+  /** Sent home or referred: who collected the student (ADR-049, D4). */
+  collectedBy?: CollectedBy | null
+  /** "Save and approve now" (ADR-049, D3): the draft is approved in the same save. */
+  approveExcuseLetterNow?: boolean
+  /** Up to 3 more complaints (ADR-053). */
+  extraComplaints?: string[]
   /** "YYYY-MM-DDTHH:MM", only when Staff changed it from now (a late entry). */
   dateTime?: string
   lateEntryReason?: string | null
@@ -107,6 +113,9 @@ export function submitNewVisit(input: NewVisitInput, user: SessionUser): Promise
       itemsGiven: input.itemsGiven,
       excuseLetterDraft: input.excuseLetterDraft ?? null,
       referredTo: input.referredTo ?? null,
+      collectedBy: input.collectedBy ?? null,
+      approveExcuseLetterNow: input.approveExcuseLetterNow,
+      extraComplaints: input.extraComplaints,
       temperatureC: input.temperatureC,
       timeOut: input.timeOut,
       assistedBy: input.assistedBy,
