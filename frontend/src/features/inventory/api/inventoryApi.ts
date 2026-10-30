@@ -44,6 +44,8 @@ export interface InventoryFormValues {
   noExpirationConfirmed: boolean
   /** '' is "Not specified" (Sir Rey, October 25, 2026). */
   brand: '' | ItemBrand
+  /** "Avoid if allergic to" words, comma-separated (ADR-049, D8). Optional. */
+  avoidIfAllergicTo: string
 }
 
 export interface InventoryFormContext {
@@ -102,6 +104,7 @@ export function saveInventoryItem(
       lowStockThreshold: Number(values.lowStockThreshold),
       noExpirationConfirmed: values.noExpirationConfirmed,
       brand: values.brand || null,
+      avoidIfAllergicTo: values.avoidIfAllergicTo.split(','),
     },
     options,
   )

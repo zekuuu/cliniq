@@ -5,11 +5,13 @@ import {
   getPersonnelHistory,
   getPersonnelTypes,
   listPersonnel,
+  recordView,
   savePersonnel,
   type PersonnelHistory,
   type SessionUser,
 } from '../../../lib/mock-db'
 import type { EmergencyContact, Personnel } from '../../../types/entities'
+import { isNoneRecorded } from '../../../lib/patients'
 
 /**
  * Staff patients (ADR-043): the Staff List, Staff Profile and Staff Form. School Clinician only.
@@ -34,8 +36,10 @@ export interface StaffProfileData extends PersonnelHistory {
   personnel: Personnel
 }
 
-export async function fetchStaffProfile(personnelId: string): Promise<StaffProfileData> {
+export async function fetchStaffProfile(personnelId: string, viewer?: SessionUser): Promise<StaffProfileData> {
   const [personnel, history] = await Promise.all([getPersonnel(personnelId), getPersonnelHistory(personnelId, Infinity)])
+  // ADR-048: opening a staff profile is audit-logged once per session.
+  if (viewer) await recordView({ type: 'staff', id: personnel.id }, viewer)
   return { personnel, ...history }
 }
 
@@ -49,7 +53,7 @@ export interface StaffFormValues {
   department: string
   contactInfo: string
   emergencyContacts: Array<Pick<EmergencyContact, 'name' | 'relationship' | 'phone' | 'verified'>>
-  /** Comma-separated, like the student form; blank or "None" means none recorded (D5). */
+  /** Comma-separated, like the student form; blank or "None recorded" stores nothing (D5, ADR-051). */
   allergies: string
   medicalConditions: string
 }
@@ -75,7 +79,7 @@ function parseList(value: string): string[] {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
-    .filter((item) => item.toLowerCase() !== 'none')
+    .filter((item) => !isNoneRecorded(item))
 }
 
 export function submitStaffForm(values: StaffFormValues, options: { personnelId?: string; actor: SessionUser }) {
