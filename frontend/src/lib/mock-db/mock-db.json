@@ -7,11 +7,11 @@
     "schema": "Frontend-facing shapes from CLINIQ_Frontend_Context_Brief.md §5. This is NOT a database design; the ERD is a proposed draft, not final or approved."
   },
   "config": {
-    "_note": "OPEN PRODUCT DECISIONS: none of these values is defined in the requirements. They are carried over from the Dashboard mock so screens have something to show. See ADR-014.",
+    "_note": "Starting values, nurse to confirm (ADR-051): none of these is defined in the requirements. The frequent-visitor numbers (3 visits in 14 days), the follow-up reminder window (7 days), the expiry warning (30 days), the top complaints (5), the follow-up overdue and closing days (3 and 7), the usual vitals ranges and the cluster alert (3 students in 3 days) were chosen by the team on Thursday, October 29, 2026. Stock exactly at an item's threshold counts as low. See ADR-014 and ADR-051.",
     "showFrequentVisitors": true,
     "frequentVisitorMinVisits": 3,
-    "frequentVisitorWindowDays": 30,
-    "personnelTypes": ["Teacher", "Non-teaching staff", "Utility worker"],
+    "frequentVisitorWindowDays": 14,
+    "personnelTypes": ["Teacher", "Non-teaching staff", "Utility worker", "Other"],
     "upcomingFollowUpDays": 7,
     "expiryWarningDays": 30,
     "clusterMinCount": 8,
@@ -25,6 +25,24 @@
       "pulseBpm": { "min": 30, "max": 250 },
       "oxygenSaturationPct": null,
       "feverFromC": 37
+    },
+    "medicalCertificateAfterDays": 3,
+    "adminIdleMinutes": 30,
+    "clusterMinStudents": 3,
+    "clusterWindowDays": 3,
+    "followUpOverdueAfterDays": 3,
+    "followUpAutoCloseDays": 7,
+    "backupKeepLast": 60,
+    "vitalsUsualRanges": {
+      "_note": "Starting ranges, nurse to confirm (ADR-051): common normal ranges by age group, picked by grade because students have no birth date (Kinder ages 3 to 5, Grades 1 to 6 ages 6 to 12, Grades 7 to 12 teenagers; staff adults). A reading outside them gets a soft note on the Visit and Incident forms and never blocks. The fever flag stays at vitalsWarningRanges.feverFromC.",
+      "temperatureMinC": 36,
+      "oxygenSaturationMinPct": 95,
+      "byAgeGroup": {
+        "kinder": { "pulseBpm": { "min": 80, "max": 110 }, "systolic": { "min": 95, "max": 110 }, "diastolic": { "min": 60, "max": 75 } },
+        "grades1to6": { "pulseBpm": { "min": 70, "max": 100 }, "systolic": { "min": 100, "max": 120 }, "diastolic": { "min": 60, "max": 75 } },
+        "grades7to12": { "pulseBpm": { "min": 60, "max": 100 }, "systolic": { "min": 100, "max": 120 }, "diastolic": { "min": 70, "max": 80 } },
+        "adult": { "pulseBpm": { "min": 60, "max": 100 }, "systolic": { "min": 90, "max": 120 }, "diastolic": { "min": 60, "max": 80 } }
+      }
     }
   },
   "users": [
@@ -5175,7 +5193,7 @@
       "id": "followup-0007",
       "studentId": "student-0032",
       "relatedRecord": { "type": "visit", "id": "visit-0150" },
-      "followUpDate": { "daysAgo": 3 },
+      "followUpDate": { "daysAgo": 4 },
       "reason": "Recheck temperature",
       "status": "pending",
       "notes": null,
@@ -5714,6 +5732,10 @@
           "Record pulse and breathing",
           "Keep student lying down"
         ]
+      },
+      {
+        "label": "Chills",
+        "triageSteps": []
       }
     ],
     "incidentComplaintTypes": [
@@ -6041,6 +6063,10 @@
           "time": "10:30"
         }
       }
+    ],
+    "backupLocations": [
+      { "id": "backup-location-0001", "label": "Internal drive", "path": "C:\\CLINIQ-Backups", "enabled": true, "status": "found", "lastBackupAt": { "daysAgo": 1, "time": "02:00" }, "lastResult": "ok" },
+      { "id": "backup-location-0002", "label": "External drive", "path": "E:\\", "enabled": true, "status": "found", "lastBackupAt": { "daysAgo": 1, "time": "02:00" }, "lastResult": "ok" }
     ],
     "sportsReports": [
       {

@@ -118,6 +118,50 @@ export interface MockDbConfig {
    * PLACEHOLDER sanity bounds, not clinical thresholds: the nurse sets the real ones.
    */
   vitalsWarningRanges: VitalsWarningRanges
+  /**
+   * An excused period longer than this many days (both dates counted) warns that a medical certificate
+   * is usually needed; never blocks (ADR-049). Starting value; the school sets the real limit.
+   */
+  medicalCertificateAfterDays: number
+  /** Minutes without pointer, key or scroll activity before the Admin is signed out (ADR-048). The clinician has no timeout. */
+  adminIdleMinutes: number
+  /** A possible cluster: at least this many students with the same complaint and grade (ADR-050)... */
+  clusterMinStudents: number
+  /** ...within this many calendar days, today included. Starting values, nurse to confirm. */
+  clusterWindowDays: number
+  /** A pending follow-up is Overdue once this many days have passed since its date (ADR-051). */
+  followUpOverdueAfterDays: number
+  /** ...and closes by itself as Missed once this many have passed, with a "no response" note (ADR-051). */
+  followUpAutoCloseDays: number
+  /** Usual vitals by age group (ADR-051): starting ranges, nurse to confirm. A soft note, never a block. */
+  vitalsUsualRanges: VitalsUsualRanges
+  /** Backups kept per location, oldest removed first (ADR-052). The backend prunes; the mock only shows it. */
+  backupKeepLast: number
+}
+
+/**
+ * A place backups are written to (ADR-052): an internal or external drive, or one the clinician named.
+ * Never deleted, only disabled. `status` and the last result stand in for what the backend reports;
+ * a browser cannot reach a drive. PROVISIONAL, pending the ERD.
+ */
+export interface BackupLocation<T = ISODateTime> {
+  id: string
+  label: string
+  path: string
+  enabled: boolean
+  status: 'found' | 'not_found' | 'not_writable'
+  lastBackupAt: T | null
+  lastResult: 'ok' | 'failed' | null
+}
+
+export type AgeGroup = 'kinder' | 'grades1to6' | 'grades7to12' | 'adult'
+
+export interface VitalsUsualRanges {
+  /** A temperature below this is noted; the fever flag stays `vitalsWarningRanges.feverFromC`. */
+  temperatureMinC: number
+  /** An oximeter reading below this is noted. */
+  oxygenSaturationMinPct: number
+  byAgeGroup: Record<AgeGroup, { pulseBpm: VitalRange; systolic: VitalRange; diastolic: VitalRange }>
 }
 
 export interface VitalRange {
@@ -132,6 +176,8 @@ export interface VitalsWarningRanges {
   oxygenSaturationPct: VitalRange | null
   /** A temperature at or above this (°C) is flagged as a fever. Team rule, clinician to confirm. */
   feverFromC: number
+  /** `config.vitalsUsualRanges`, sent along by `getVitalsWarningRanges` (never stored here). */
+  usual?: VitalsUsualRanges
 }
 
 // ---- frontendOnly: MOCK-ONLY data that §5 doesn't define. Not a schema. ----------------------
@@ -214,6 +260,15 @@ export interface ExcuseLetterApproval<T = ISODateTime, D = ISODate> {
    * same visit and is kept, never valid again. PROVISIONAL.
    */
   superseded?: { reason: string; at: ISODateTime; byUserId: string } | null
+  /**
+   * The final wording, stored at approval so a signed letter never changes when the template does
+   * (ADR-049, D6). Older letters are filled from the template on load. PROVISIONAL.
+   */
+  recipient?: string
+  body?: string
+  /** "Stay home until cleared", snapshotted at approval (ADR-049, D5). PROVISIONAL. */
+  stayHomeUntilCleared?: boolean
+  stayHomeNote?: string | null
 }
 
 export interface PeReferral<T = ISODateTime> {
@@ -289,6 +344,7 @@ export interface SeedFrontendOnly {
   issueReports: Array<IssueReport<RelativeDateTime>>
   calendarEvents: Array<CalendarEvent<RelativeDate, RelativeDateTime>>
   sportsReports: Array<SportsReport<RelativeDateTime>>
+  backupLocations: Array<BackupLocation<RelativeDateTime>>
 }
 
 export interface MockDbSeed {
@@ -321,6 +377,7 @@ export interface FrontendOnlyState {
   issueReports: IssueReport[]
   calendarEvents: CalendarEvent[]
   sportsReports: SportsReport[]
+  backupLocations: BackupLocation[]
 }
 
 /** Raw records only. `Student` here never carries `recordComplete`; selectors add it on read. */
