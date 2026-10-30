@@ -92,7 +92,7 @@ First-time Windows setup, step by step: [setup-step.md](./setup-step.md). Sign-i
 
 ## Where to find what (for the Project Plan and the SRS)
 
-The canonical documents in [`09-References/Canonical-Documents/`](./CLINIQ-Knowledge-Base/09-References/Canonical-Documents/) are the source of truth for what the system must do. Several of them predate later decisions; check the ADRs and the [plain-language guide to the canonical documents](./CLINIQ-Knowledge-Base/09-References/Canonical-Documents-Summary.md).
+The canonical documents in [`09-References/Canonical-Documents/`](./CLINIQ-Knowledge-Base/09-References/Canonical-Documents/) are the source of truth for what the system must do. The Project Plan, Modules and Features, Frontend Context Brief and Frontend Design Reference were brought up to ADR-053 on Friday, October 30, 2026; the copies of the same material in `01-Requirements/` and `03-Design/` may lag until they are checked. See the ADRs and the [plain-language guide to the canonical documents](./CLINIQ-Knowledge-Base/09-References/Canonical-Documents-Summary.md).
 
 | Part of the paper | Current facts |
 |---|---|

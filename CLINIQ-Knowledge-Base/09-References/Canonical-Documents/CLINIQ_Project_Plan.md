@@ -9,8 +9,8 @@
 
 | Field | Detail |
 |---|---|
-| Document Revision No. | 2.7 |
-| Date of Issue | September 13, 2026 |
+| Document Revision No. | 2.8 |
+| Date of Issue | October 30, 2026 |
 | Project Manager | Ghenly B. Tinapay |
 | System Analyst | Christian John C. Lugami |
 | Developer / Tester | Zean Kurt G. Balboa |
@@ -41,6 +41,7 @@
 | 2.5 | September 28, 2026 | Ghenly B. Tinapay, Christian John C. Lugami, Zean Kurt G. Balboa | Removed the 15-minute idle session timeout. Every role now has one session lifetime: 1 week, until the login token expires — the same session length the retired QR Viewer role had (Revision 1.5), applied to all logins. Updated Section 5.1's Security & Privacy requirement to match, and Module 1 in Modules & Features. Account lockout after repeated failed logins is unchanged. Trade-offs and reasoning are recorded in the Obsidian vault, ADR-015. |
 | 2.6 | September 30, 2026 | Ghenly B. Tinapay, Christian John C. Lugami, Zean Kurt G. Balboa | Added Module 11: Audit Log Viewer (Screen #35) — Staff and Admin/Principal can view the audit log the system already writes to, filtered by date range, user, action type, and target/module; previously nothing let anyone actually read it back. Updated the Modularity & Scalability NFR's module count. Full reasoning: Obsidian vault, ADR-016. |
 | 2.7 | October 1, 2026 | Ghenly B. Tinapay, Christian John C. Lugami, Zean Kurt G. Balboa | Recorded Prof. Kryss Coleen Creus as the Software Engineering II Course Adviser. |
+| 2.8 | October 30, 2026 | Zean Kurt G. Balboa (updated with AI assistance; for the team to review) | Brought the plan in line with the decisions recorded in the team's knowledge base (ADR-001 to ADR-053) since Revision 2.7. **Scope and access:** removed the QR Digital Health ID and the generated Student Number (the LRN identifies each student, ADR-027, ADR-028); no account for PE/Sports Instructors (ADR-029); the system runs on the clinic computer only and the Principal signs in there; the Admin/Principal reads the Dashboard, reports, student profiles and incident reports on screen, manages accounts, acknowledges incident reports, never prints and is signed out after 30 idle minutes (ADR-029, 033, 038, 048); teachers and school employees can be clinic patients (ADR-043). **Features:** school-events calendar and national holidays now in scope (ADR-019, 020, 042); inventory held in received batches (ADR-030); Sports Report (ADR-034); visits and incidents stay separate with Escalate to incident (ADR-036); yearly list import and automatic yearly archive (ADR-047, 051); cluster alert, weekly breakdown and monthly inventory print (ADR-050); backup locations chosen in the system (ADR-052). **Technology and policy:** database named "MariaDB (XAMPP), MySQL-compatible"; backup stays local with no cloud (ADR-039); retention is 5 years from the archive date for student records and 10 years for the audit log (ADR-051); every printout is an A4 document (ADR-026, 044, 045, 046). **Budget:** removed the QR sticker line and recomputed the subtotal (Section 7). The schedule dates are unchanged. |
 
 ---
 
@@ -52,7 +53,7 @@ This project plan is submitted to the College of Engineering and Information Tec
 
 ### Abstract
 
-The Mendez Christian Academy School Clinic currently serves over 900 students using a single workstation, a partially digitized Excel-based reporting process, and manual paper logbooks. The Software Engineering I phase of this project — comprising a SWOT analysis, problem stratification, weighted problem prioritization, fishbone analysis, and full technical documentation — identified **time-consuming manual processes**, **insufficient manpower**, and **high risk of human error** as the top three problems to be solved, with **overdependence on a single device** close behind as a structural risk. This Project Plan carries that analysis into Software Engineering II by laying out the objectives, scope, development approach, system design, timeline, and budget for building **CLINIQ**, a locally hosted clinic tracking and monitoring system. Beyond the baseline modules already specified in the Technical Documentation, this plan proposes low-cost, high-impact enhancements — a Smart Triage quick-reference, an automated medicine inventory tracker, a clinic overview dashboard, and a backup-verification assistant — each mapped directly to a specific SWOT weakness or threat, and each designed to work within the client's existing single-device, limited-budget, non-technical-staff environment rather than around it.
+The Mendez Christian Academy School Clinic currently serves over 900 students using a single workstation, a partially digitized Excel-based reporting process, and manual paper logbooks. The Software Engineering I phase of this project — comprising a SWOT analysis, problem stratification, weighted problem prioritization, fishbone analysis, and full technical documentation — identified **time-consuming manual processes**, **insufficient manpower**, and **high risk of human error** as the top three problems to be solved, with **overdependence on a single device** close behind as a structural risk. This Project Plan carries that analysis into Software Engineering II by laying out the objectives, scope, development approach, system design, timeline, and budget for building **CLINIQ**, a locally hosted clinic tracking and monitoring system. Beyond the baseline modules already specified in the Technical Documentation, this plan proposes low-cost, high-impact enhancements — a first-aid checklist quick-reference, an automated medicine inventory tracker, a clinic overview dashboard, and a backup-verification assistant — each mapped directly to a specific SWOT weakness or threat, and each designed to work within the client's existing single-device, limited-budget, non-technical-staff environment rather than around it.
 
 ---
 
@@ -117,7 +118,7 @@ At the same time, the SWOT analysis identified real opportunities the project ca
 
 ### 1.3 Objectives
 
-**General Objective:** To design, develop, and deploy CLINIQ — a locally hosted, intranet-based clinic tracking and monitoring system for Mendez Christian Academy — that measurably reduces manual workload, minimizes human error, and gives school administration reliable data for decision-making, all within the school's existing single-workstation, limited-budget environment.
+**General Objective:** To design, develop, and deploy CLINIQ — a locally hosted clinic tracking and monitoring system for Mendez Christian Academy — that measurably reduces manual workload, minimizes human error, and gives school administration reliable data for decision-making, all within the school's existing single-workstation, limited-budget environment.
 
 **Specific Objectives:**
 
@@ -125,33 +126,38 @@ At the same time, the SWOT analysis identified real opportunities the project ca
 2. *(Removed — ADR-027.)* The QR-based student lookup was dropped; Staff identify a student by LRN or name on each form. The number is kept so later objectives keep their numbers.
 3. Reduce documentation errors linked to manual re-entry (SWOT Threat: human error) by enforcing system-level validation — duplicate detection, mandatory fields, and standardized first-aid checklists — across all clinic-visit and incident records.
 4. Automate the generation of monthly health summaries and incident reports, eliminating the manual Excel compilation currently done by the School Head Nurse.
-5. Provide School Administration a self-service clinic overview dashboard — visit/incident counts, pending records, recurring complaints, unusual symptom clustering, frequent-visitor warnings, and a calendar view of visit volume — directly addressing the SWOT threat of "data inconsistency and incomplete decision-making."
-6. Establish an automated, verifiable daily backup routine with a nurse-visible backup-status indicator, mitigating the risks tied to overdependence on a single device.
+5. Provide School Administration a self-service clinic overview dashboard — visit/incident counts, pending records, recurring complaints, a possible-cluster alert, frequent-visitor warnings, and an Activity calendar of visit volume, school events and holidays — directly addressing the SWOT threat of "data inconsistency and incomplete decision-making."
+6. Establish an automated, verifiable daily backup routine, written to the internal and external drives the clinician chooses in the system, with a nurse-visible backup-status indicator and a warning when the last good backup is more than 48 hours old, mitigating the risks tied to overdependence on a single device.
 7. Deliver the working system, staff training, and full documentation within the AY 2026–2027 1st Semester timeline, at a total implementation cost no greater than approximately PHP 10,000 — respecting the client's limited operating budget.
 
 ### 1.4 Significance and Scope of the Project
 
-**Significance.** For the School Head Nurse and clinic staff, CLINIQ removes the burden of duplicate manual encoding and end-of-month report compilation. For the PE/Sports Department, it shortens the time between an injury and the clinic having full context on the student. For School Administration, it turns scattered logbook entries into a reliable, queryable record for planning and reporting. For students and parents, it means faster, better-informed emergency response. For the proponents, it is an opportunity to apply the full Software Engineering II lifecycle — design, iterative development, testing, deployment, and training — to a real, resource-constrained client rather than a hypothetical one.
+**Significance.** For the School Head Nurse and clinic staff, CLINIQ removes the burden of duplicate manual encoding and end-of-month report compilation. For the PE/Sports Department, the clinician can print a Sports Report for the students in an activity, so the instructor has the relevant history without needing an account. For School Administration, it turns scattered logbook entries into a reliable, queryable record for planning and reporting, read on screen at the clinic computer. For students and parents, it means faster, better-informed emergency response. For the proponents, it is an opportunity to apply the full Software Engineering II lifecycle — design, iterative development, testing, deployment, and training — to a real, resource-constrained client rather than a hypothetical one.
 
 **Scope.**
 
+*A note on words.* In this plan "Staff" is the clinician role (called "School Clinician" in the app). Teachers and other school employees who are seen at the clinic as patients are called "staff patients" or "personnel" (ADR-043).
+
 *In scope:*
-- User Management (authentication, role-based access for Staff and Admin/Principal)
-- Student Records (encoding, medical history, allergies, contact validation)
-- Clinic Visit Monitoring (daily logging, complaints, treatment, excuse letters, PE/Sports referrals)
-- Emergency Response (incident logging, hospital referral tracking, parent-notification outcome logging)
-- Reports Generation (monthly reports, incident reports, health summaries)
-- The team-proposed enhancements described in Section 5.3: Smart Triage quick-reference, Medicine & Supply Inventory Tracker, Clinic Overview Dashboard, and Backup Verification Assistant
-- Deployment on the school's existing single workstation via XAMPP over the employee-tier intranet
-- RA 10173 (Data Privacy Act of 2012)–aligned data handling, audit logging, and daily backups
+- User Management (sign-in, two roles: Staff, and Admin/Principal who manages every account)
+- Student Records (encoding, medical history, allergies, contact validation, a yearly list import, archiving) and staff patients (teachers and school employees recorded as patients, ADR-043)
+- Clinic Visit Monitoring (daily logging, complaints, treatment with medicines taken from inventory, excuse letters, PE/Sports referrals, follow-ups)
+- Emergency Response (two-stage incident logging, hospital referral tracking, parent-notification outcome logging)
+- Reports Generation (monthly reports with a weekly breakdown, incident reports, complaint summaries, a monthly inventory print, and Sports Reports for PE instructors)
+- The team-proposed enhancements described in Section 5.3: First-aid checklist quick-reference, Medicine & Supply Inventory Tracker, Clinic Overview Dashboard with an Activity calendar (school events and national holidays), and Backup Verification Assistant
+- An Audit Log Viewer that lets Staff and the Admin/Principal read back the audit trail
+- Deployment on the clinic's existing single computer using XAMPP (Apache, PHP and MariaDB), used on that computer; the Admin/Principal signs in at the clinic computer
+- RA 10173 (Data Privacy Act of 2012)–aligned data handling, audit logging, and daily backups kept on the clinic computer and an external drive
 - Staff training and a User Acceptance Testing (UAT) phase at the client site
 
 *Out of scope for this implementation, but explicitly planned for as a later phase — consistent with both the ICT Head's expressed interest in future remote access and the "Future Deployment: Remote Server / Cloud" line in the current tech stack:*
-- Remote or off-campus access, and hosting the system on a remote server/cloud instance instead of the local LAN. The React + Laravel architecture is deliberately API-driven so this move is a deployment change later, not a rewrite — but it stays out of scope for this semester's rollout, which remains LAN-only on the client's existing workstation.
+- Remote or off-campus access, and hosting the system on a remote server/cloud instance instead of the clinic computer. The React + Laravel architecture is deliberately API-driven so this move is a deployment change later, not a rewrite — but it stays out of scope for this semester's rollout, which stays local on the clinic's existing computer. Whether the school will ever go online has not been decided with the client (ADR-029). Password reset by email works only when the computer is online (ADR-048).
 - A parent/guardian self-service web or mobile portal
 - Automated SMS or push-notification gateways (parents continue to be contacted by phone, as scoped in the Technical Documentation)
 - Direct external access for canteen staff (checking food allergies before serving). PE/Sports Instructors have no account (ADR-029); canteen staff access remains designed and documented (see the Modules & Features companion document) but deferred to a later phase
-- A fuller, separately-managed school-events calendar (with its own add/edit interface for academic events, sports, performances, assemblies, and field trips). The current phase keeps this lightweight — a free-text event tag on visit/incident entries — because who would maintain a fuller calendar is a genuine open question: Staff doing it adds workload to the role this project is already trying to lighten, while giving Admin/Principal write access would be their first write permission in the system. Left for a future decision rather than guessed at now
+- QR codes and a system-generated Student Number: dropped (ADR-027). Students are identified by the LRN (ADR-028); QR may return as a future idea
+- A cloud or off-site backup copy (ADR-039)
+- Immunization tracking, clinic passes or queues, Excel export, and similar extras suggested during planning (ADR-049)
 - RFID, barcode, or biometric hardware
 - Billing, insurance, or Medicaid-style billing modules
 - Multi-school or cloud multi-tenant hosting
@@ -165,9 +171,9 @@ At the same time, the SWOT analysis identified real opportunities the project ca
 | Party | Role in the Project |
 |---|---|
 | Ms. Jennesse Baas, School Head Nurse | Primary client contact and product owner; validates requirements, participates in UAT, receives training |
-| Mendez Christian Academy Administration / Principal | Sponsor of the digitalization effort; consumer of health summary reports |
-| Registrar's Office | Source of authoritative student information used to populate Student Records |
-| PE/Sports Department | Source of injury referrals, logged by Staff (Section 5.3) |
+| Mendez Christian Academy Administration / Principal | Sponsor of the digitalization effort; signs in at the clinic computer to read the Dashboard, reports, student profiles and incident reports on screen, acknowledge incident reports and manage accounts; does not print (ADR-029, 033, 038, 048) |
+| Registrar's Office | Source of authoritative student information used to populate Student Records, including the yearly student list that sets each student's grade and section (ADR-047); the import waits for the data privacy agreement |
+| PE/Sports Department | Source of injury referrals, logged by Staff (Section 5.3); asks the clinician for a printed Sports Report (ADR-034); no account (ADR-029) |
 | School's Outsourced IT Provider | Maintains the existing workstation and network; partner for quarterly backup-recovery testing and major hardware issues |
 | Prof. Kryss Coleen Creus, CvSU–CEIT Course Adviser | Academic oversight, milestone review, and grading |
 
@@ -246,7 +252,7 @@ Features are merged where two systems described the same capability in different
 ![CLINIQ feature comparison table — Clinical and Records features across all ten reviewed systems and CLINIQ](images/table_3_2_clinical.png)
 
 
-\* CLINIQ runs on the client's local LAN for this implementation; the React + Laravel architecture is API-driven so a move to remote/cloud hosting later is a deployment change, not a redesign (Section 1.4).
+\* CLINIQ runs locally on the clinic's computer for this implementation; the React + Laravel architecture is API-driven so a move to remote/cloud hosting later is a deployment change, not a redesign (Section 1.4).
 
 ### 3.3 Feature Comparison — Inventory & Supply Management
 
@@ -255,7 +261,7 @@ Features are merged where two systems described the same capability in different
 
 ### 3.4 What This Comparison Means for CLINIQ
 
-No single reviewed system covers both halves of the matrix well: the Philippine capstones and Medical Tracker are strong on clinical records and incident logging but thin on inventory discipline; SurgiCare is the opposite — excellent inventory control with no patient records at all. CLINIQ's five team-proposed enhancements (Section 5.3) were chosen specifically to sit in that gap: the Medicine & Supply Inventory Tracker now also tracks expiration dates (a feature borrowed directly from this review, since four of the ten alternatives had it and CLINIQ's original scope did not), while the Smart Triage checklist adds the kind of fast, low-friction clinical access that ClinicSync and Medical Tracker validated as genuinely useful, without requiring the licensing costs, multi-school scale, or hardware (barcode scanners, dedicated devices) that make SurgiCare, LinkHMS, EduHealth, and iSAMS impractical for a single-nurse, single-workstation clinic.
+No single reviewed system covers both halves of the matrix well: the Philippine capstones and Medical Tracker are strong on clinical records and incident logging but thin on inventory discipline; SurgiCare is the opposite — excellent inventory control with no patient records at all. CLINIQ's four team-proposed enhancements (Section 5.3) were chosen specifically to sit in that gap: the Medicine & Supply Inventory Tracker now also tracks expiration dates (a feature borrowed directly from this review, since four of the ten alternatives had it and CLINIQ's original scope did not), while the first-aid checklist adds the kind of fast, low-friction clinical access that ClinicSync and Medical Tracker validated as genuinely useful, without requiring the licensing costs, multi-school scale, or hardware (barcode scanners, dedicated devices) that make SurgiCare, LinkHMS, EduHealth, and iSAMS impractical for a single-nurse, single-workstation clinic.
 
 Three features that appear across several alternatives were deliberately left out, and that omission is a scope decision rather than an oversight: **billing/invoicing** (LinkHMS) does not apply to a school clinic that does not charge students; **barcode scanning and purchase-order/vendor management** (SurgiCare) assume a procurement workflow and hardware budget the client does not have; and **multi-room/multi-location inventory visibility** (SurgiCare, Medical Tracker) is meant for hospital networks or multi-academy trusts, not a single clinic room. Leaving these out keeps CLINIQ aligned with the client's actual scale instead of building toward a size the school will likely never reach.
 
@@ -271,7 +277,7 @@ The team will follow an **iterative-incremental (Agile-inspired) development app
 
 A single, unavailable-most-of-the-day client contact and a three-person team make a heavyweight, document-driven waterfall approach risky: any misunderstanding discovered only at the end would be expensive to fix with so little slack in the schedule. Short, module-sized iterations let the team surface mistakes early, and let the client keep giving feedback without needing to block out large amounts of time. Rolling out modules incrementally — rather than a single hard cutover — also directly mitigates the "overdependence on a single device" risk identified in the SWOT: if a later module needs rework, the clinic is never left with *no* working digital tool, only a partially completed one.
 
-The team also revised the original plain HTML/CSS/JS + PHP stack to **React + TypeScript on the frontend and Laravel on the backend** (Section 4.3). TypeScript's static typing catches a category of mistakes — mismatched fields, wrong data types passed between the UI and the API — at build time instead of after the nurse has already hit "Save," which reinforces the same error-reduction goal behind Objective 3 and the "high risk of human error" problem, only now at the code level rather than the workflow level. Laravel's built-in authentication, migrations, and ORM also reduce the amount of custom backend code the team has to write and maintain by hand, which matters for a three-person team on a fixed semester timeline. The trade-off is added build tooling (Node.js, Composer) during development; Section 5.1 and 5.2 note how that is kept from becoming a burden on the client's actual runtime hardware.
+The team also revised the original plain HTML/CSS/JS + PHP stack to **React + TypeScript on the frontend and Laravel on the backend** (Section 4.3). TypeScript's static typing catches a category of mistakes — mismatched fields, wrong data types passed between the UI and the API — at build time instead of after the nurse has already hit "Save," which reinforces the same error-reduction goal behind Objective 3 and the "high risk of human error" problem, only now at the code level rather than the workflow level. Laravel's authentication (Sanctum), migrations, and ORM also reduce the amount of custom backend code the team has to write and maintain by hand, which matters for a three-person team on a fixed semester timeline. The trade-off is added build tooling (Node.js, Composer) during development; Section 5.1 and 5.2 note how that is kept from becoming a burden on the client's actual runtime hardware.
 
 ### 4.3 Technologies to Be Used
 
@@ -281,10 +287,10 @@ The team also revised the original plain HTML/CSS/JS + PHP stack to **React + Ty
 | Build tool | **Vite** | Free |
 | Styling | Tailwind CSS | Free |
 | Backend | Laravel (PHP) | Free |
-| Database | MySQL | Free |
+| Database | **MariaDB (XAMPP), MySQL-compatible** — the database XAMPP installs; Laravel reaches it through its MySQL driver | Free |
 | Authentication | **Laravel Sanctum** (SPA-mode token/cookie auth, built specifically for a React+Laravel pairing) | Free |
 | Local development environment | **XAMPP**, standardized across all dev machines (matches the client's production environment exactly) | Free |
-| Deployment (current phase) | Local LAN, on the client's existing workstation | Free |
+| Deployment (current phase) | Local, on the clinic's existing computer (one machine); no internet-facing hosting | Free |
 | Deployment (future phase) | Remote server / cloud — deferred, see Section 1.4 | Deferred, cost TBD if pursued |
 | Dashboard charts | **Chart.js** (via `react-chartjs-2`) — chosen over Recharts specifically for the smaller bundle and Canvas rendering, both of which matter more here than Recharts' nicer JSX composability given the 4GB RAM target and the Dashboard's fairly simple chart needs | Free |
 | ERD / diagramming | Lucidchart (free tier) | Free |
@@ -301,59 +307,66 @@ This stack replaces the original plain HTML/CSS/JS + PHP approach documented in 
 ### 5.1 Requirements
 
 **Functional Requirements** (grouped by module — see Section 5.3 for full module list):
-- Role-based login for Staff (full read/write) and Admin/Principal (read-only reporting); PE/Sports Instructors have no account (ADR-029)
-- Student record encoding with duplicate detection and mandatory-field enforcement
-- Daily clinic visit logging with complaint, treatment, and disposition tracking
-- Excuse letter and PE/Sports referral handling; medical certificates are explicitly out of scope (hospital-issued, not generated by CLINIQ)
+- Role-based login for Staff (full read/write) and Admin/Principal (reads the Dashboard, reports, student profiles and incident reports; acknowledges incident reports; manages accounts; never prints; ADR-033, 038, 048); PE/Sports Instructors have no account (ADR-029)
+- Student record encoding with duplicate detection and mandatory-field enforcement; a yearly import of the registrar's list sets grade and section, and a student missing from the new list is archived after a review list is shown (ADR-047, 051); a visit or incident keeps the grade and section the student had when it was saved
+- Teachers and school employees recorded as clinic patients with their own screens, identified by a Staff No. (ADR-043)
+- Daily clinic visit logging with complaint (one main complaint and up to 3 extra tags), treatment, medicines and supplies taken from inventory, and disposition tracking; a visit recorded by mistake is marked "Entered in error", never deleted; a visit can be escalated to an incident (ADR-036, 053)
+- Excuse letter and PE/Sports referral handling; the clinician can approve a letter in one step and gets a warning, never a block, when it covers more than 3 days; medical certificates are explicitly out of scope (hospital-issued, not generated by CLINIQ; ADR-049)
 - Two-stage emergency incident logging — essential fields captured fast, remaining detail completed afterward — plus hospital referral tracking and timestamped parent-notification outcome logging
 - Follow-up handling for students told to return for monitoring, recorded inline after a visit or incident, with a Pending/Completed/Missed/Cancelled status and no dependency on external SMS or push notifications
-- Automated monthly and incident report generation
+- Automated monthly and incident report generation, with a weekly breakdown, a monthly inventory print, exact counts, and Sports Reports for PE instructors (ADR-034, 050); every printout is an A4 document printed by the clinician
 - Student lookup by LRN or name from each form's student picker, so recording a visit or logging an emergency starts with the student already identified
-- Screen-context display rule: multi-student list/dashboard views (visit logs, incident logs, frequent-visitor flags) show the masked LRN, not the student's name, since these are the screens a bystander could glance at; a deliberate single-student lookup — full profile, search — shows the full name normally
+- Screen-context display rule: multi-student list/dashboard views (visit logs, incident logs, frequent-visitor flags) show the masked LRN (last four digits), not the student's name, since these are the screens a bystander could glance at; a deliberate single-student lookup — full profile, search — shows the full name and the full LRN, and so do the printouts about one student (ADR-040, 044)
 - Rule-based first-aid checklist prompts during visit logging
-- Medicine/supply consumption logging with low-stock alerts
-- Clinic-wide operational dashboard: visit/incident counts, pending records, health trends, frequent-visitor warnings, due/upcoming follow-ups, and a calendar view of visit volume with lightweight event tagging
-- Daily automated backup with a visible backup-status indicator
-- Audit logging of every login, submission, and approval across all modules
+- Medicine/supply consumption logging from received batches, earliest-expiring batch first, with low-stock and nearing-expiry alerts and explicit disposal of expired stock (ADR-030)
+- Clinic-wide operational dashboard with an Overview and a Trends view: visit/incident counts, pending records, health trends, a possible-cluster alert, frequent-visitor warnings and due/upcoming follow-ups; and a separate Activity calendar of visit and incident counts with school events (kept by Staff and the Admin/Principal) and national holidays (ADR-019, 020, 032, 042, 050)
+- Daily automated backup to the internal and external drive locations the clinician chooses in the system, with a visible backup-status indicator, "Back up now", and a warning when the last good backup is over 48 hours old (ADR-037, 052)
+- Audit logging of every login, submission, approval and print across all modules, a read-only Audit Log Viewer for Staff and the Admin/Principal, and a log entry when the clinician or Admin opens a student profile or incident report (ADR-016, 038, 048)
 
 **Non-Functional Requirements:**
 - **Performance:** must run acceptably on the existing minimum-spec workstation (Intel Core i3 or equivalent, 4GB RAM) with no perceptible lag during data entry. The React frontend is compiled into optimized static assets at build time, so the workstation only ever serves and renders a finished bundle — it does not need to run the heavier Node.js build tooling in production, only during development
-- **Security & Privacy:** Laravel Sanctum (bcrypt password hashing, session/token handling), a 1-week session lifetime for every role (the token expires after 7 days; there is no idle timeout), account lockout after repeated failed logins, and handling aligned with RA 10173 (legitimate purpose, consent, purpose limitation, and a defined data retention policy — see Section 5.3)
-- **Availability:** must function fully offline from the public internet, over the school's employee-tier intranet only
+- **Security & Privacy:** Laravel Sanctum (bcrypt password hashing, session/token handling), a 1-week session lifetime for Staff (the token expires after 7 days; there is no idle timeout, so urgent work is never interrupted, ADR-015), a 30-minute idle sign-out for the Admin/Principal (ADR-048), account lockout for 30 minutes after 5 failed logins, passwords reset by the Admin with a temporary password and, when the computer is online, by an email link (ADR-048), and handling aligned with RA 10173 (legitimate purpose, consent, purpose limitation, and a defined data retention policy — see Section 5.3)
+- **Availability:** must function fully offline from the public internet, on the clinic computer; it does not depend on the school's network (ADR-029). In an emergency the nurse helps the student first, uses paper, and enters the record afterwards
 - **Usability:** must be learnable by non-technical clinic staff within a single training session
 - **Maintainability:** codebase and database schema documented clearly enough for the school's outsourced IT provider to support after the team's academic involvement ends
-- **Modularity & Scalability:** each of the 11 modules must be a loosely-coupled, independently developable and testable unit in the actual code, not just at the planning level — reduces cross-module breakage with 3 developers (and AI agents) working concurrently, and lets the system grow without a structural rewrite. Full architectural detail: Obsidian vault, `06-Decisions/ADR-008` (frontend) and `ADR-009` (backend)
+- **Modularity & Scalability:** each of the system's modules must be a loosely-coupled, independently developable and testable unit in the actual code, not just at the planning level — reduces cross-module breakage with 3 developers (and AI agents) working concurrently, and lets the system grow without a structural rewrite. Full architectural detail: Obsidian vault, `06-Decisions/ADR-008` (frontend) and `ADR-009` (backend)
 
 ### 5.2 Resources
 
 **Human Resources:** the three-person development team (Section 2.3), Ms. Jennesse Baas as primary client validator, the school's outsourced IT provider for network/hardware support, and the CvSU–CEIT adviser for milestone review.
 
-**Hardware Resources (reused, not purchased):** the client's existing Windows 11 workstation, its existing inkjet/laser printer (for reports and excuse letters), and the existing PLDT Fiber/employee Wi-Fi network. The only genuinely new hardware items are low-cost consumables (see Section 7). Node.js and Composer, needed to build the React frontend and install Laravel's dependencies, run on the **development team's own machines**, not the client's workstation — the client only ever receives the finished, compiled application.
+**Hardware Resources (reused, not purchased):** the client's existing Windows 11 workstation, its existing inkjet/laser printer (for reports and excuse letters), and an external drive for backups. CLINIQ itself does not need the school network to run. The only genuinely new hardware items are low-cost consumables (see Section 7). Node.js and Composer, needed to build the React frontend and install Laravel's dependencies, run on the **development team's own machines**, not the client's workstation — the client only ever receives the finished, compiled application.
 
 **Software Resources:** all items listed in Section 4.3 — every one free or already in use by the client.
 
 ### 5.3 System Overview
 
-CLINIQ is a three-tier local application: a React + TypeScript single-page frontend styled with Tailwind CSS, a Laravel (PHP) backend exposing a REST API and handling authentication and business logic, and a MySQL data layer. During development the stack runs on XAMPP or Laravel Herd; for production it is deployed on the client's single workstation over the local LAN, served to any authorized staff device connected to the school's employee Wi-Fi intranet. Because the frontend talks to the backend only through an API, moving to a remote server or cloud host later — the "Future Deployment" already noted in the tech stack — is a deployment change, not a redesign, though it stays outside this semester's scope (Section 1.4).
+CLINIQ is a three-tier local application: a React + TypeScript single-page frontend styled with Tailwind CSS, a Laravel (PHP) backend exposing a REST API and handling authentication and business logic, and a MariaDB (XAMPP), MySQL-compatible, data layer. The stack runs on XAMPP on every development machine (ADR-007); for production it is deployed on the clinic's single computer and used on that computer, where the Admin/Principal also signs in (ADR-029). Because the frontend talks to the backend only through an API, moving to a remote server or cloud host later — the "Future Deployment" already noted in the tech stack — is a deployment change, not a redesign, though it stays outside this semester's scope (Section 1.4).
 
 **Baseline modules** (carried forward from the Software Engineering I Technical Documentation): User Management, Student Records, Clinic Visit Monitoring, Emergency Response, and Reports Generation.
 
-**Follow-Up Handling** (added within Clinic Visit Monitoring and Emergency Response, per the September 19 team meeting). When a student is told to return for monitoring or reassessment, Staff can record it inline at the end of a visit or incident entry — student, related record, follow-up date, reason, and a status of Pending / Completed / Missed / Cancelled. Due and upcoming follow-ups surface on the Clinic Overview Dashboard, computed fresh each time the page loads rather than through any background or push mechanism, since the system has no external SMS/push service.
+**Follow-Up Handling** (added within Clinic Visit Monitoring and Emergency Response, per the September 19 team meeting). When a student is told to return for monitoring or reassessment, Staff can record it inline at the end of a visit or incident entry — student, related record, follow-up date, reason, and a status of Pending / Completed / Missed / Cancelled. Due and upcoming follow-ups surface on the Clinic Overview Dashboard, computed fresh each time the page loads rather than through any background or push mechanism, since the system has no external SMS/push service. A follow-up is overdue 3 days after its date and is closed automatically as Missed with a "No response" note after 7 days (ADR-051).
 
 **Student identifier.** Each student is identified by the LRN (Learner Reference Number) the school already holds (ADR-028): 12 digits, stored as text, unique, entered by Staff and correctable (corrections are audited). CLINIQ no longer generates its own Student Number (ADR-027). Because the LRN links to school and DepEd records, screens and printouts that list several students, and the audit trail, show only its last four digits; a screen or printout about one opened student shows it in full (ADR-040).
 
-**Data retention policy.** At an estimated 60–100MB of visit/incident data per 20 years and well under 1GB total even with zero purging, ever, storage space is not the driver for this policy — RA 10173 (IRR Section 19) is: personal data must not be retained "longer than necessary" for the purpose it was collected for. Reading the Technical Documentation's original rule ("retained only for the duration of enrollment") literally would mean deleting a record the instant a student leaves, which is stricter than the law requires and leaves no room for a re-enrollment, a legitimate records request, or a legal claim arising after departure. CLINIQ instead retains a departed student's records for **up to 5 years after archiving**, then deletes them — a finite, justified window rather than either extreme. Archiving (hiding a record from active lists, per Section 5.3's Student Records module) happens immediately on departure; deletion is a separate, later step at the end of that window. The audit trail (below) follows a shorter, separate retention period, since it is the fastest-growing table by row count and is about system usage rather than individual student health. No automated purge tooling is being built this phase, since current volume estimates don't require it — the trigger for building it is the Backup Verification Assistant's tracked backup file size crossing a defined threshold (Module 10), not a fixed calendar date. This is the team's policy design, not verified legal advice; final sign-off should come from whoever formally handles data privacy compliance for the school, if that role is designated.
+**Staff patients (ADR-043).** Teachers, non-teaching staff and utility workers can be patients. They have their own list, profile and form, a Staff No. assigned by CLINIQ (no LRN, grade or sex), and appear on the Visit Log, Incident Log, Follow-Ups and inventory dispensing as a separate kind of patient. They get no excuse letter, PE referral or Sports Report, and the Admin/Principal does not see staff patients or their incidents.
+
+**Sports Report (ADR-034).** The clinician builds a saved, reusable list of students for a PE or sports activity and prints a report of their recent visits and incidents (default 90 days), her own note, and conditions only if she ticks that option. It is the way a PE instructor, who has no account, receives information.
+
+**Yearly list and archiving (ADR-047, 051).** Grade level and section come from one yearly import of the registrar's list, not from a promotion button. A student missing from the new list is archived by the import after the clinician sees the list of who would be archived, and a returning student is restored. The import itself waits for the data privacy agreement.
+
+**Data retention policy.** At an estimated 60–100MB of visit/incident data per 20 years and well under 1GB total even with zero purging, ever, storage space is not the driver for this policy — RA 10173 (IRR Section 19) is: personal data must not be retained "longer than necessary" for the purpose it was collected for. Reading the Technical Documentation's original rule ("retained only for the duration of enrollment") literally would mean deleting a record the instant a student leaves, which is stricter than the law requires and leaves no room for a re-enrollment, a legitimate records request, or a legal claim arising after departure. CLINIQ instead retains a student's records for **5 years from the archive date**, then deletes them — a finite, justified window rather than either extreme (ADR-051). Archiving (hiding a record from active lists, per Section 5.3's Student Records module) happens when the yearly list shows the student has left, or when the clinician archives a record; deletion is a separate, later step at the end of that window. The audit log follows its own, longer retention of **10 years**, the team's decision based on what the Principal said about keeping documents (ADR-037, 051); the school has not yet confirmed it. No automated purge tooling is being built this phase, since current volume estimates don't require it — the trigger for building it is the Backup Verification Assistant's tracked backup file size crossing a defined threshold (Module 10), not a fixed calendar date. This is the team's policy design, not verified legal advice; final sign-off should come from whoever formally handles data privacy compliance for the school, if that role is designated.
 
 **Team-Proposed Enhancements** — each chosen specifically because it is low-cost to build on the existing stack, requires no new major hardware, and directly answers a weakness or threat named in the client's own SWOT analysis:
 
 | Enhancement | What it does | SWOT item it addresses |
 |---|---|---|
-| **Smart Triage Quick-Reference** | When staff selects a common complaint (e.g., fainting, headache, wound) while logging a visit, the system surfaces a standardized first-aid checklist on screen. | Reduces "high risk of human error" (3rd-ranked problem) and shortens the learning curve for any staff assisting the nurse |
-| **Medicine & Supply Inventory Tracker** | Each item carries a current stock count and one expiration date (tracked per item, not per batch, to stay simple). Dispensing an item — usually as a quick-action linked to a visit or incident — decrements stock and auto-checks it against a low-stock threshold; restocking is a separate, manually-logged action that increments stock and clears that flag. Low-stock and nearing-expiration are independent, separately-badged flags, both surfaced on the staff dashboard. Full step-by-step flow documented in the Modules & Features companion document. | Prevents last-minute understocking and expired-medicine use (an unaddressed SWOT threat) and reduces manual stock-checking, easing the manpower burden |
-| **Clinic Overview Dashboard** *(expanded from Health Trends Dashboard)* | Aggregates clinic activity into one operational view for Staff and Administration: total visit/incident counts, pending or incomplete student records, common complaints per week/month, symptom clustering (early outbreak flag), frequent-visitor warnings identified by masked LRN rather than name (a flag for the nurse to act on, never a diagnosis, and not something a passerby glancing at the screen should be able to attach to a named student), **due/upcoming follow-ups** (the system's own internal reminder, since there's no external SMS/push service), and a calendar view of visit and incident counts toggleable by week, month, or year — for now also showing a free-text event tag Staff can attach to a visit/incident (e.g., "MCA Dance Program") so activity can be read in school-year context; a fuller, separately-managed school-events calendar is a decision deferred to a future phase. | Directly answers the SWOT threat of "data inconsistency and incomplete decision-making" — and, per the September 19 meeting, a health-complaints-only view was judged too narrow for what Administration actually needs day to day |
-| **Backup Verification Assistant** | A simple, nurse-facing screen showing the last backup's date, size, and status, plus a plain-language guided recovery checklist. The tracked backup size also doubles as the trigger for the data retention policy (Section 5.3): if it crosses a defined threshold, that's the signal to build automated purge tooling — not a fixed calendar date. | Mitigates "overdependence on a single device" by letting a non-technical user self-verify backup health daily, without waiting on the outsourced IT provider for routine checks |
+| **First-aid Checklist Quick-Reference** | When staff selects a common complaint (e.g., fainting, headache, wound) while logging a visit, the system surfaces a standardized first-aid checklist on screen. The nurse owns and signs off the checklist content. | Reduces "high risk of human error" (3rd-ranked problem) and shortens the learning curve for any staff assisting the nurse |
+| **Medicine & Supply Inventory Tracker** | Stock is held in received batches, each with a quantity and an expiration date (ADR-030). Usable (not expired) stock, expired stock and the total are worked out from the batches. Dispensing an item — usually as part of a visit or incident — takes stock from the earliest-expiring usable batch first and auto-checks usable stock against a low-stock threshold; restocking adds a new batch and needs an expiration date or an explicit "no expiration date" confirmation (ADR-035). Expired units stay visible until the clinician records their disposal. Low-stock and nearing-expiration are independent, separately-badged flags, both surfaced on the staff dashboard. Full step-by-step flow documented in the Modules & Features companion document. | Prevents last-minute understocking and expired-medicine use (an unaddressed SWOT threat) and reduces manual stock-checking, easing the manpower burden |
+| **Clinic Overview Dashboard** *(expanded from Health Trends Dashboard)* | Aggregates clinic activity into one operational view for Staff and Administration, with an Overview and a Trends view: total visit/incident counts, pending or incomplete student records, common complaints per week/month, a possible-cluster alert for the clinician (3 or more students with the same complaint and grade within 3 days; nothing is sent to anyone, ADR-050), frequent-visitor warnings identified by masked LRN rather than name (3 or more visits in 14 days as a starting value for the nurse to confirm; a flag for the nurse to act on, never a diagnosis, and not something a passerby glancing at the screen should be able to attach to a named student), and **due/upcoming follow-ups** (the system's own internal reminder, since there's no external SMS/push service). Counts are exact, with no masking of small groups (ADR-050). A separate **Activity calendar** (ADR-032) shows visit and incident counts by week, month or year, the school events that Staff and the Admin/Principal add, and national holidays; a free-text event tag on a visit or incident also appears on its day. The Dashboard prints as a Clinic Overview Report or a Clinic Trends Report, depending on the open tab (ADR-045). | Directly answers the SWOT threat of "data inconsistency and incomplete decision-making" — and, per the September 19 meeting, a health-complaints-only view was judged too narrow for what Administration actually needs day to day |
+| **Backup Verification Assistant** | A simple screen, open to Staff and the Admin/Principal (ADR-037), showing the last backup's date, size, and status, plus a plain-language guided recovery checklist. The clinician chooses the internal and external backup locations on this screen and the system creates a `.cliniq` folder on each (ADR-052); "Back up now" starts a backup, and a Dashboard chip warns when the last good backup is over 48 hours old. The tracked backup size also doubles as the trigger for the data retention policy (Section 5.3): if it crosses a defined threshold, that's the signal to build automated purge tooling — not a fixed calendar date. | Mitigates "overdependence on a single device" by letting a non-technical user self-verify backup health daily, without waiting on the outsourced IT provider for routine checks |
 
-None of these five require new paid infrastructure, additional hardware purchases beyond low-cost consumables, or technical staff the client does not have — each is designed to fit inside the constraints already documented, not to add new ones.
+None of these four require new paid infrastructure, additional hardware purchases beyond low-cost consumables, or technical staff the client does not have — each is designed to fit inside the constraints already documented, not to add new ones.
 
 ### 5.4 Risk Assessment and Mitigation (Team Addition)
 
@@ -365,8 +378,10 @@ None of these five require new paid infrastructure, additional hardware purchase
 | Scope creep beyond a 3-person team's capacity | Small team, fixed semester timeline | Explicit out-of-scope list (Section 1.4) agreed with the client up front |
 | Student health data reaching people outside the clinic | PE/Sports Instructors need injury information but have no account (ADR-029) | The clinician decides what to share and prints it; only Staff and the Admin/Principal sign in, and every action is logged. Canteen Staff access remains deferred |
 | Bystander seeing a named student tied to a visit/incident pattern on an open screen | Desktop screens showing multi-student logs or dashboards could be glanced at by passersby | The display-privacy rule addresses this directly: the Visit Log List, Incident Log List, and the Dashboard's frequent-visitor flags show masked LRN, not name. A single deliberate lookup — full profile, search — still shows the full name, since that's a legitimate one-student view, not an ambient pattern |
-| No off-site backup layer beyond local workstation + external drive | Power loss identified at the September 19 meeting as the main operational risk — it can take down the router/server, not just interrupt a save | Open item: the team is still evaluating what an additional backup layer should be. A UPS is recommended (Section 7) to reduce how often this risk is even triggered. Not blocking for this phase, but should be resolved before the system goes fully live |
+| No off-site backup layer beyond local workstation + external drive | Power loss identified at the September 19 meeting as the main operational risk — it can take down the router/server, not just interrupt a save | Decided (ADR-039, 052): backups stay on the clinic computer and its external drive, with no cloud copy, because off-site health data needs the parents' consent and a provider agreement and the school has no IT staff. A copy held by the Principal was suggested and withdrawn. Whether an extra layer is needed stays an open question. A UPS is recommended (Section 7) to reduce how often the risk is even triggered |
 | No defined coverage when the School Head Nurse is absent | The client currently has exactly one Staff-level account holder | Pending client input — the team has asked Ms. Jennesse Baas and is awaiting a reply on who, if anyone, should be designated a backup Staff account holder. No system change should be made here until the client responds |
+| More than one person signing in on the one clinic computer (the Principal and the clinician) | The system is local, so the Principal signs in at the clinic computer (ADR-029) | Individual accounts, a 30-minute idle sign-out for the Admin/Principal, an audit trail of every sign-in, profile view and print, and no printing by the Admin/Principal (ADR-038, 048) |
+| System unavailable during an emergency (power cut, computer down) | Local, single-computer deployment | Working rule: help the student first, use paper at the time, and enter the record afterwards; the system is for tracking and incident summaries, not for running an emergency (ADR-029). The team still plans a written outage plan for the Principal |
 | React + Laravel stack is less familiar or harder to hand off to the outsourced IT provider than plain PHP | Team decision to upgrade the tech stack (Section 4.3) | Clear code documentation and a written handover guide at deployment (Section 2.4); Laravel and React are both widely documented, actively maintained frameworks with large support communities, which reduces long-term maintenance risk compared to an undocumented custom PHP codebase |
 
 ---
@@ -382,8 +397,8 @@ Timeline: **September 15, 2026 – December 19, 2026** (1st Semester, AY 2026–
 | 1. Planning & Requirements Validation | ■ | ■ | | | | | | | | | | | | |
 | 2. System Design (ERD, DFD, UI) | | ■ | ■ | | | | | | | | | | | |
 | 3. Sprint 1 — User Mgmt + Student Records | | | | ■ | ■ | | | | | | | | | |
-| 4. Sprint 2 — Visit Monitoring + QR Health ID | | | | | | ■ | ■ | | | | | | | |
-| 5. Sprint 3 — Emergency Response + Smart Triage | | | | | | | | ■ | ■ | | | | | |
+| 4. Sprint 2 — Visit Monitoring + Follow-Ups | | | | | | ■ | ■ | | | | | | | |
+| 5. Sprint 3 — Emergency Response + First-aid Checklist | | | | | | | | ■ | ■ | | | | | |
 | 6. Sprint 4 — Reports/Dashboard + Inventory Tracker | | | | | | | | | | ■ | ■ | | | |
 | 7. Integration Testing & Bug Fixing | | | | | | | | | | | | ■ | | |
 | 8. UAT at Mendez Christian Academy | | | | | | | | | | | | | ■ | |
@@ -403,19 +418,19 @@ Timeline: **September 15, 2026 – December 19, 2026** (1st Semester, AY 2026–
 3. **Sprint 1 — User Management + Student Records**
    3.1 Authentication, RBAC, password policy
    3.2 Student encoding, duplicate detection, contact validation
-4. **Sprint 2 — Clinic Visit Monitoring + QR Digital Health ID**
+4. **Sprint 2 — Clinic Visit Monitoring + Follow-Ups**
    4.1 Visit logging, excuse letters, PE/Sports referral logging, follow-up handling
-   4.2 QR generation and printing, Student Number scheme, computer + mobile scan/lookup, Staff quick-action routing (Record Visit, Log Emergency, View Profile), PE/Sports Instructor read-only mobile lookup
-5. **Sprint 3 — Emergency Response + Smart Triage**
+   4.2 Student lookup by LRN or name on every form, staff patients (ADR-043), and the Sports Report for PE instructors (ADR-034)
+5. **Sprint 3 — Emergency Response + First-aid Checklist**
    5.1 Incident logging, hospital referral tracking, notification-outcome logging
    5.2 Standardized first-aid checklist prompts
 6. **Sprint 4 — Reports/Dashboard + Medicine Inventory Tracker**
    6.1 Monthly/incident report generation
-   6.2 Clinic overview dashboard (counts, pending records, trends, due/upcoming follow-ups, calendar view with event tagging, display-privacy rule for frequent-visitor flags)
-   6.3 Supply logging and low-stock alerts
+   6.2 Clinic overview dashboard (Overview and Trends, pending records, due/upcoming follow-ups, cluster alert, display-privacy rule for frequent-visitor flags) and the Activity calendar (school events, national holidays)
+   6.3 Supply logging from batches, low-stock and expiry alerts, and monthly inventory print
 7. **Integration Testing & Bug Fixing**
    7.1 Cross-module testing
-   7.2 Backup Verification Assistant testing
+   7.2 Backup Verification Assistant testing, including the backup locations chosen in the system
 8. **User Acceptance Testing**
    8.1 Real-condition testing by the School Head Nurse
    8.2 Feedback collection and fixes
@@ -433,20 +448,19 @@ Timeline: **September 15, 2026 – December 19, 2026** (1st Semester, AY 2026–
 
 | Item | Purpose | Estimated Cost (PHP) |
 |---|---|---|
-| Software (React, TypeScript, Tailwind CSS, Laravel, MySQL, XAMPP/Laravel Herd, Node.js, Composer, Git/GitHub, Lucidchart, Canva) | All open-source/free tiers | 0 |
-| Hardware | Existing workstation, printer, and network reused; no new purchase required | 0 |
-| External USB backup drive (if not already available on-site) | Local storage for daily .sql backups, kept in the locked clinic cabinet | 2,500 |
-| QR sticker paper / laminating supplies | Printing Digital Health ID stickers for enrolled students | 1,500 |
+| Software (React, TypeScript, Tailwind CSS, Laravel, MariaDB via XAMPP, Node.js, Composer, Git/GitHub, Lucidchart, Canva) | All open-source/free tiers | 0 |
+| Hardware | Existing workstation and printer reused; no new purchase required | 0 |
+| External USB backup drive (if not already available on-site) | Local storage for the daily database backups, kept in the locked clinic cabinet | 2,500 |
 | Bond paper, ink, printed manuals | Documentation, training handouts, defense materials | 800 |
 | Team transportation/allowance | On-site client interviews and UAT sessions | 3,000 |
-| Contingency (~10%) | Unforeseen minor expenses | 850 |
-| **Subtotal** | | **8,650** |
+| Contingency (~10%) | Unforeseen minor expenses | 630 |
+| **Subtotal** | | **6,930** |
 
 Labor is contributed in-kind by the student team as part of the academic requirement and carries no monetary cost.
 
 ### 7.2 Total Projected Budget
 
-**Total Projected Budget: approximately PHP 8,650 – PHP 10,000**, with the large majority of that figure going to one-time consumables (backup drive, printing supplies, documentation) rather than software licenses or new hardware. This keeps the project well within what a single-nurse, budget-constrained private school clinic can realistically absorb — no recurring subscription fees, no major equipment purchases, and no ongoing cost beyond what the school already pays for its existing internet and workstation.
+**Total Projected Budget: approximately PHP 6,930 – PHP 10,000** (the QR sticker line of PHP 1,500 was removed with the QR feature, ADR-027; the upper figure is the cap in Objective 7), with the large majority of that figure going to one-time consumables (backup drive, printing supplies, documentation) rather than software licenses or new hardware. This keeps the project well within what a single-nurse, budget-constrained private school clinic can realistically absorb — no recurring subscription fees, no major equipment purchases, and no ongoing cost beyond what the school already pays for its existing internet and workstation.
 
 **Recommendation, not costed into this total:** a UPS (Uninterruptible Power Supply) for the clinic workstation, raised at the September 19, 2026 team meeting after identifying power loss — not just data loss — as the main operational risk to system availability. This is left as a recommendation for the client or a future budget revision rather than added here, since it wasn't part of the original scope this budget was built against.
 
