@@ -4,7 +4,10 @@ import {
   getDashboardSummary,
   getHolidays,
   listCalendarEvents,
+  listClusterAlerts,
   listPendingExcuseLetters,
+  type ClusterAlert,
+  type SessionUser,
   type BackupStatusView,
   type PendingExcuseLetter,
 } from '../../../lib/mock-db'
@@ -29,8 +32,9 @@ import type {
  * Preview switches: `?mock=slow`, `?mock=empty`, `?mock=error` (see `lib/mock-db/devToggles.ts`).
  */
 
-export function fetchDashboardSummary(query: DashboardQuery): Promise<DashboardSummary> {
-  return getDashboardSummary(query)
+/** The Admin's incident totals leave out staff incidents (ADR-053); pass the viewer. */
+export function fetchDashboardSummary(query: DashboardQuery, viewer?: SessionUser): Promise<DashboardSummary> {
+  return getDashboardSummary(query, viewer)
 }
 
 export function fetchCalendarDays(from: ISODate, to: ISODate): Promise<CalendarDay[]> {
@@ -61,6 +65,11 @@ export function fetchBackupIndicator(): Promise<BackupIndicator> {
 /** Staff only: excuse-letter drafts saved with visits and still awaiting approval. Not range-filtered. */
 export function fetchPendingExcuseLetters(): Promise<PendingExcuseLetter[]> {
   return listPendingExcuseLetters()
+}
+
+/** Possible clusters (ADR-050); always empty for the Admin. */
+export function fetchClusterAlerts(viewer: SessionUser): Promise<ClusterAlert[]> {
+  return listClusterAlerts(viewer)
 }
 
 /**

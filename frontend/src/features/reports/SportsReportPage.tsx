@@ -22,7 +22,7 @@ import type { SessionUser, SportsReportContent, SportsReportContentRow } from '.
 import { paths } from '../../routes/paths'
 import { fetchSportsReportContent } from './api/sportsReportApi'
 import { SportsReportPrint } from './components/SportsReportPrint'
-import { SPORTS_REPORT_CONFIDENTIALITY, leftOutText, sportsReportColumns, windowDates, windowLabel, windowRange } from './sportsReportContent'
+import { SPORTS_REPORT_CONFIDENTIALITY, leftOutText, sportsReportColumns, windowDates, windowLabel, windowRange, withChosenEntries } from './sportsReportContent'
 
 /**
  * One Sports Report (ADR-034): the preview is the printout's own table, read from the visits and
@@ -32,6 +32,14 @@ export function SportsReportPage({ reportId = '', viewer }: { reportId?: string;
   const { data, status, reload } = useAsyncData(`sports-report-content|${reportId}`, () => fetchSportsReportContent(reportId, viewer))
   const [printed, setPrinted] = useState<SportsReportContent | null>(null)
   const [printError, setPrintError] = useState<string | null>(null)
+  // ADR-051: every entry starts ticked; the clinician unticks what should not be released.
+  const [excluded, setExcluded] = useState<ReadonlySet<string>>(new Set())
+  const toggle = (entryId: string) =>
+    setExcluded((current) => {
+      const next = new Set(current)
+      if (!next.delete(entryId)) next.add(entryId)
+      return next
+    })
   const content = printed ?? data
   const back = <BackButton fallback={paths.sportsReports} />
 
@@ -77,7 +85,9 @@ export function SportsReportPage({ reportId = '', viewer }: { reportId?: string;
 
   const { report } = content
   const leftOut = leftOutText(content)
-  const columns: Array<DataTableColumn<SportsReportContentRow>> = sportsReportColumns(report.includeConditions).map((column, index) => ({
+  const entryIds = content.rows.flatMap((row) => row.entries.map((entry) => entry.id))
+  const included = entryIds.filter((id) => !excluded.has(id)).length
+  const columns: Array<DataTableColumn<SportsReportContentRow>> = sportsReportColumns(report.includeConditions, { excluded, onToggle: toggle }).map((column, index) => ({
     key: column.header,
     header: column.header,
     width: column.width,
@@ -136,7 +146,7 @@ export function SportsReportPage({ reportId = '', viewer }: { reportId?: string;
         <CardHeader
           titleId="sports-report-preview"
           title="What the printout shows"
-          description={`As of ${formatDateTime(content.asOf)}. ${windowRange(content)}.`}
+          description={`As of ${formatDateTime(content.asOf)}. ${windowRange(content)}. ${included} of ${entryIds.length} ${entryIds.length === 1 ? 'entry' : 'entries'} included; untick any that should not print.`}
           icon={<Icon name="fileText" />}
         />
         <CardBody>
@@ -149,7 +159,7 @@ export function SportsReportPage({ reportId = '', viewer }: { reportId?: string;
           <p className="mt-3 text-sm text-text-secondary">{SPORTS_REPORT_CONFIDENTIALITY}</p>
         </CardBody>
       </Card>
-      <SportsReportPrint content={content} viewer={viewer} />
+      <SportsReportPrint content={withChosenEntries(content, excluded)} viewer={viewer} />
     </div>
   )
 }

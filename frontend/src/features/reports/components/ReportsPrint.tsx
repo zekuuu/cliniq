@@ -11,6 +11,7 @@ import { formatDateTime } from '../../../lib/dates'
 import { ROLE_LABELS, type ComplaintCount, type SessionUser } from '../../../lib/mock-db'
 import { DISPOSITION_LABELS } from '../../../lib/dispositions'
 import type { MonthlyReportData } from '../api/reportsApi'
+import { InventorySheetPrint, VisitsBySexPrint, WeeklyComplaintsPrint } from './MonthlyTables'
 
 /*
  * Reports printouts (ADR-026): the tab on screen prints as its own formal document, with its own
@@ -18,7 +19,7 @@ import type { MonthlyReportData } from '../api/reportsApi'
  * the screen's own report data for the month.
  */
 
-export type ReportView = 'monthly' | 'incidents' | 'health'
+export type ReportView = 'monthly' | 'incidents' | 'health' | 'inventory'
 type ArchiveRow = MonthlyReportData['incidents'][number]
 
 
@@ -103,6 +104,23 @@ export function ReportsPrint({
       </PrintDocument>
     )
 
+  if (view === 'inventory')
+    return (
+      <PrintDocument
+        viewer={viewer}
+        title={`Monthly Inventory — ${month}`}
+        scope={`Medicines and supplies in ${month}: ${data.inventory.length} ${data.inventory.length === 1 ? 'item' : 'items'}. Computed from the recorded stock movements.`}
+      >
+        <InventorySheetPrint rows={data.inventory} />
+        <PrintNote>
+          New Purchase: restocked in the month. Total Available: stock at the start of the month plus New
+          Purchase. Ending Inventory: stock at the end of the month, after dispensing, adjustments and expiry
+          write-offs.
+        </PrintNote>
+        <PrintSignatures lines={[{ heading: 'Prepared by:', name: viewer.name, position: ROLE_LABELS.staff }]} />
+      </PrintDocument>
+    )
+
   if (view === 'health')
     return (
       <PrintDocument
@@ -165,6 +183,14 @@ export function ReportsPrint({
         />
       </PrintSection>
 
+      <PrintSection title="Visits by sex">
+        <VisitsBySexPrint bySex={data.visitsBySex} />
+      </PrintSection>
+
+      <PrintSection title="Complaints by week">
+        <WeeklyComplaintsPrint weekly={data.weeklyComplaints} />
+      </PrintSection>
+
       <div className="grid grid-cols-2 items-start gap-[6mm]">
         <PrintSection title="After the visit">
           <PrintTable
@@ -173,7 +199,8 @@ export function ReportsPrint({
             rowKey={(row) => row.disposition}
             empty=""
             columns={[
-              { header: 'Disposition', cell: (row) => DISPOSITION_LABELS[row.disposition] },
+              // Students and staff together (ADR-053): "Returned to class or work".
+              { header: 'Disposition', cell: (row) => (row.disposition === 'returned_to_class' ? 'Returned to class or work' : DISPOSITION_LABELS[row.disposition]) },
               { header: 'Visits', width: '22%', align: 'right', cell: (row) => row.count },
               {
                 header: 'Share',

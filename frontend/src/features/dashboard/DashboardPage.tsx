@@ -10,6 +10,7 @@ import { paths } from '../../routes/paths'
 import type { DashboardSummary } from '../../types/dashboard'
 import type { StudentSex } from '../../types/entities'
 import {
+  fetchClusterAlerts,
   fetchDashboardSummary,
   fetchPendingExcuseLetters,
 } from './api/dashboardApi'
@@ -17,6 +18,7 @@ import {
   FrequentVisitorsAlert,
 } from './components/AlertLists'
 import { AttentionChips } from './components/AttentionChips'
+import { ClusterAlerts } from './components/ClusterAlerts'
 import { urgentCount } from './lib/urgentCount'
 import { ComplaintTrends, ComplaintTrendsSkeleton } from './components/ComplaintTrends'
 import { DashboardPrint } from './components/DashboardPrint'
@@ -76,11 +78,15 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   const { data, status, isRefetching, reload } = useAsyncData(
     // The preset is part of the key: the trend's bucket size depends on it, not only the dates.
     `${range.preset}|${range.from}|${range.to}|${demographicFilters.sex ?? ''}|${demographicFilters.gradeLevel ?? ''}`,
-    () => fetchDashboardSummary({ range, ...demographicFilters }),
+    () => fetchDashboardSummary({ range, ...demographicFilters }, viewer),
   )
   // For the stat card's count and the printout's list; Admin/Principal can't open excuse letters.
   const letters = useAsyncData(`dashboard-pending-excuse-letters|${viewer.role}`, () =>
     viewer.role === 'staff' ? fetchPendingExcuseLetters() : Promise.resolve([]),
+  )
+  // ADR-050: the possible-cluster alert is the clinician's only.
+  const clusters = useAsyncData(`dashboard-clusters|${viewer.role}`, () =>
+    viewer.role === 'staff' ? fetchClusterAlerts(viewer) : Promise.resolve([]),
   )
 
   // After every hook: an early return above them would change the hook order between renders.
@@ -219,6 +225,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                       pendingLetterCount={letters.data?.length ?? 0}
                     />
                     <AttentionChips summary={d} canNavigate={canNavigate} />
+                    {viewer.role === 'staff' && <ClusterAlerts alerts={clusters.data ?? []} />}
                     {d.showFrequentVisitors && (
                       <section aria-label="Frequent visitor warnings">
                         <FrequentVisitorsAlert summary={d} range={range} />
