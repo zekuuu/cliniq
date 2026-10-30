@@ -30,6 +30,23 @@ const CONFIG: MockDbConfig = {
   percentMinPriorCount: 5,
   staleBackupHours: 48,
   vitalsWarningRanges: { temperatureC: { min: 30, max: 43 }, pulseBpm: { min: 30, max: 250 }, oxygenSaturationPct: null, feverFromC: 37 },
+  medicalCertificateAfterDays: 3,
+  adminIdleMinutes: 30,
+  clusterMinStudents: 3,
+  clusterWindowDays: 3,
+  followUpOverdueAfterDays: 3,
+  followUpAutoCloseDays: 7,
+  backupKeepLast: 60,
+  vitalsUsualRanges: {
+    temperatureMinC: 36,
+    oxygenSaturationMinPct: 95,
+    byAgeGroup: {
+      kinder: { pulseBpm: { min: 80, max: 110 }, systolic: { min: 95, max: 110 }, diastolic: { min: 60, max: 75 } },
+      grades1to6: { pulseBpm: { min: 70, max: 100 }, systolic: { min: 100, max: 120 }, diastolic: { min: 60, max: 75 } },
+      grades7to12: { pulseBpm: { min: 60, max: 100 }, systolic: { min: 100, max: 120 }, diastolic: { min: 70, max: 80 } },
+      adult: { pulseBpm: { min: 60, max: 100 }, systolic: { min: 90, max: 120 }, diastolic: { min: 60, max: 80 } },
+    },
+  },
 }
 
 // Hand-built records typed against the §5 entity shapes. If the entity contract changes, this
@@ -121,6 +138,7 @@ function dataset(partial: Partial<DbState>): DbState {
       issueReports: [],
       calendarEvents: [],
       sportsReports: [],
+      backupLocations: [],
     },
     ...partial,
   }
@@ -133,7 +151,8 @@ describe('due/upcoming follow-ups', () => {
     const data = dataset({
       students,
       followUps: [
-        followUp('overdue', '2026-09-24'),
+        followUp('overdue', '2026-09-22'), // 4 days past: Overdue (ADR-051)
+        followUp('due', '2026-09-24'), // 2 days past: still Due
         followUp('today', TODAY),
         followUp('soon', '2026-10-03'), // exactly +7
         followUp('too-far', '2026-10-04'), // +8
@@ -143,7 +162,8 @@ describe('due/upcoming follow-ups', () => {
     })
     const rows = buildDueFollowUps(data)
     expect(rows.map((r) => [r.followUp.id, r.dueState, r.daysFromToday])).toEqual([
-      ['overdue', 'overdue', -2],
+      ['overdue', 'overdue', -4],
+      ['due', 'due', -2],
       ['today', 'due_today', 0],
       ['soon', 'upcoming', 7],
     ])
@@ -162,7 +182,7 @@ describe('inventory alerts', () => {
       inventoryItems: [
         item('both', { batches: [{ id: 'both-batch', quantity: 2, expirationDate: '2026-10-06', receivedDate: TODAY }] }),
         item('expired', { batches: [{ id: 'expired-batch', quantity: 100, expirationDate: '2026-09-20', receivedDate: TODAY }] }),
-        item('at-threshold', { batches: [{ id: 'threshold-batch', quantity: 10, expirationDate: null, receivedDate: TODAY }] }), // "below" the threshold = strictly less
+        item('at-threshold', { batches: [{ id: 'threshold-batch', quantity: 10, expirationDate: null, receivedDate: TODAY }] }), // exactly at the threshold counts as low (ADR-051)
         item('fine', { batches: [{ id: 'fine-batch', quantity: 100, expirationDate: '2027-09-26', receivedDate: TODAY }] }),
       ],
     })
@@ -170,6 +190,7 @@ describe('inventory alerts', () => {
     expect(rows.map((r) => [r.item.id, r.flags, r.daysUntilExpiry])).toEqual([
       ['expired', ['low_stock', 'expired'], -6],
       ['both', ['low_stock', 'nearing_expiration'], 10],
+      ['at-threshold', ['low_stock'], null],
     ])
   })
 })

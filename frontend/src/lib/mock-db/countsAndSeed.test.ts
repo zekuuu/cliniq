@@ -63,7 +63,7 @@ describe('the same count on every screen (DB-3, FU-5)', () => {
     const today = getMockToday()
     const dashboard = await getDashboardSummary({ range: { preset: 'today', from: today, to: today } })
     const list = await listFollowUps({ status: 'pending' })
-    expect(dashboard.dueFollowUps.filter((row) => row.daysFromToday < 0).length).toBe(list.filter((f) => f.dueState === 'overdue').length)
+    expect(dashboard.dueFollowUps.filter((row) => row.dueState === 'overdue').length).toBe(list.filter((f) => f.dueState === 'overdue').length)
   })
 })
 

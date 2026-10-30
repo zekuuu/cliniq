@@ -175,7 +175,7 @@ describe('mock-db.json integrity', () => {
  */
 describe.each(['2026-09-28', '2027-01-01', '2028-02-29', '2031-06-15'])('seed resolved on %s', (today) => {
   const state = resolveSeed(seed, today)
-  const dueStates = state.followUps.map((f) => followUpDueState(f, today))
+  const dueStates = state.followUps.map((f) => followUpDueState(f, today, state.config.followUpOverdueAfterDays))
   const flags = state.inventoryItems.flatMap((i) => inventoryStatusFor(state, i).flags)
 
   it('has overdue, due-today, and upcoming follow-ups', () => {

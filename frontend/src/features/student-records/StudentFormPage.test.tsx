@@ -16,7 +16,7 @@ async function fillRequiredStudentFields() {
   await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
   await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
   await selectOption(user, screen.getByLabelText(/^sex/i), 'Female')
-  await user.type(screen.getByLabelText(/student contact information/i), '09XX-111-2222')
+  await user.type(screen.getByLabelText(/student's mobile number/i), '09XX-111-2222')
   await user.type(screen.getByLabelText(/contact name/i), 'Marisol Santos')
   await user.type(screen.getByLabelText(/relationship/i), 'Mother')
   await user.type(screen.getByLabelText(/contact phone/i), '0917-333-4444')
@@ -102,16 +102,16 @@ describe('Student Form', () => {
     expect(getRecordedAuditEntries()).toEqual([])
   })
 
-  it('suggests None when Allergies or Medical conditions is focused', async () => {
+  it('suggests None recorded when Allergies or Medical conditions is focused (ADR-051)', async () => {
     const user = userEvent.setup()
     renderWithRouter(<StudentFormPage />)
     await screen.findByRole('heading', { name: 'Add Student' })
     await user.click(screen.getByRole('combobox', { name: /^Allergies/ }))
-    await user.click(await screen.findByRole('option', { name: 'None' }))
-    expect(screen.getByRole('combobox', { name: /^Allergies/ })).toHaveValue('None')
+    await user.click(await screen.findByRole('option', { name: 'None recorded' }))
+    expect(screen.getByRole('combobox', { name: /^Allergies/ })).toHaveValue('None recorded')
 
     await user.type(screen.getByRole('combobox', { name: /^Medical conditions/ }), 'Asthma')
-    expect(screen.queryByRole('option', { name: 'None' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'None recorded' })).not.toBeInTheDocument()
   })
 
   it('locks the LRN on Edit Student, in the form and in the data layer (ADR-028, Sir Rey)', async () => {
@@ -169,8 +169,9 @@ describe('Student Form', () => {
     expect(screen.getByText('Enter the student full name.')).toBeInTheDocument()
     expect(screen.getByText('Select the grade level.')).toBeInTheDocument()
     expect(screen.getByText('Select the sex recorded by the school.')).toBeInTheDocument()
-    expect(screen.getByText('Enter allergies, or write None.')).toBeInTheDocument()
-    expect(screen.getByText('Enter medical conditions, or write None.')).toBeInTheDocument()
+    // Allergies and conditions may be left empty; an empty field reads "None recorded" (ADR-051).
+    expect(screen.queryByText(/Enter allergies/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Enter medical conditions/)).not.toBeInTheDocument()
   })
 
   it('warns before creating a possible duplicate and records the confirmed create', async () => {
@@ -187,7 +188,7 @@ describe('Student Form', () => {
     await user.type(screen.getByLabelText(/full name/i), existing.fullName)
     await selectOption(user, screen.getByLabelText(/grade level/i), existing.gradeLevel)
     await selectOption(user, screen.getByLabelText(/^sex/i), 'Female')
-    await user.type(screen.getByLabelText(/student contact information/i), '09XX-111-2222')
+    await user.type(screen.getByLabelText(/student's mobile number/i), '09XX-111-2222')
     await user.type(screen.getByLabelText(/contact name/i), 'Parent Guardian')
     await user.type(screen.getByLabelText(/relationship/i), 'Parent')
     await user.type(screen.getByLabelText(/contact phone/i), '0917-333-4444')
@@ -254,8 +255,8 @@ describe('Student Form', () => {
     )
 
     expect(await screen.findByRole('heading', { name: 'Edit Student' })).toBeInTheDocument()
-    await user.clear(screen.getByLabelText(/student contact information/i))
-    await user.type(screen.getByLabelText(/student contact information/i), '09XX-999-0000')
+    await user.clear(screen.getByLabelText(/student's mobile number/i))
+    await user.type(screen.getByLabelText(/student's mobile number/i), '09XX-999-0000')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
     expect(await screen.findByText(`Student record updated for ${existing.fullName}.`)).toBeInTheDocument()
@@ -288,7 +289,8 @@ describe('Student Form', () => {
     await user.click(screen.getByRole('button', { name: 'Save Student' }))
 
     expect(screen.getByLabelText(/^LRN/)).toHaveFocus()
-    expect(screen.getByText('8 fields need attention.')).toBeInTheDocument()
+    // Allergies and conditions are optional now (ADR-051), so two fewer than before.
+    expect(screen.getByText('6 fields need attention.')).toBeInTheDocument()
   })
 
   it('requires Sex and audits an edit to it without storing a value in the audit summary', async () => {

@@ -172,7 +172,7 @@ describe('every audited event is written (AU-1)', () => {
   it('backup: back up now, verify', async () => {
     await recordBackupNow(ADMIN)
     await verifyLatestBackup(STAFF)
-    expect(entries()).toEqual([['create', 'backup', 'Backup started from the Backup page'], ['update', 'backup', 'Verified backup']])
+    expect(entries()).toEqual([['create', 'backup', 'Backup started from the Backup page (2 locations)'], ['update', 'backup', 'Verified backup']])
   })
 
   it('calendar events: create, edit, delete', async () => {

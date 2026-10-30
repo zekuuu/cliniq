@@ -16,9 +16,10 @@ function getSavedVisit() {
 
 const moreButton = () => screen.getByRole('button', { name: /show (more|fewer) fields/i })
 
-async function pickHeadache(user: ReturnType<typeof userEvent.setup>) {
+async function pickComplaint(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: /complaint/i }))
-  await user.click(screen.getByRole('option', { name: 'Headache' }))
+  // Not Fever, Headache or Chills: those open the section by themselves (ADR-049).
+  await user.click(screen.getByRole('option', { name: 'Dizziness' }))
 }
 
 // jsdom's time input takes a full "HH:MM" value; a change event sets it the way a finished entry does.
@@ -74,7 +75,7 @@ describe('Visit logbook fields ("Show more fields")', () => {
     renderWithRouter(<NewVisitEntryPage />)
     await pickStudent(user, '000000260001')
     await screen.findByRole('heading', { name: 'New Visit' })
-    await pickHeadache(user)
+    await pickComplaint(user)
     // The prefilled Parent or guardian can be emptied; every one of the five stays optional.
     await user.click(moreButton())
     await user.clear(screen.getByLabelText('Parent or guardian'))
@@ -95,7 +96,7 @@ describe('Visit logbook fields ("Show more fields")', () => {
     renderWithRouter(<NewVisitEntryPage />)
     await pickStudent(user, '000000260001')
     await screen.findByRole('heading', { name: 'New Visit' })
-    await pickHeadache(user)
+    await pickComplaint(user)
     await user.click(moreButton())
     await user.type(screen.getByLabelText('Body temperature (°C)'), '37.8')
     setTimeOut('23:59')
@@ -123,7 +124,7 @@ describe('Visit logbook fields ("Show more fields")', () => {
     renderWithRouter(<NewVisitEntryPage />)
     await pickStudent(user, '000000260001')
     await screen.findByRole('heading', { name: 'New Visit' })
-    await pickHeadache(user)
+    await pickComplaint(user)
     await user.click(moreButton())
     setTimeOut('00:00')
     await user.click(moreButton())
@@ -140,7 +141,7 @@ describe('Visit logbook fields ("Show more fields")', () => {
     renderWithRouter(<NewVisitEntryPage />)
     await pickStudent(user, '000000260001')
     await screen.findByRole('heading', { name: 'New Visit' })
-    await pickHeadache(user)
+    await pickComplaint(user)
     await user.click(moreButton())
     await user.type(screen.getByLabelText('Body temperature (°C)'), '36.9')
     expect(screen.queryByText(/^Fever:/)).not.toBeInTheDocument()

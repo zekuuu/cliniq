@@ -1,4 +1,5 @@
 import { act, renderHook, screen, waitFor, within } from '@testing-library/react'
+import { recordedWrites } from '../test/recordedWrites'
 import { useState } from 'react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -11,7 +12,7 @@ vi.mock('react-chartjs-2', () => {
 import { renderWithRouter } from '../test/renderWithRouter'
 import { selectOption } from '../test/selectOption'
 import { incidentCompletionBlocker } from '../lib/itemsGiven'
-import { getGradeLevels, getRecordedAuditEntries, getStudent, listIncidents, listVisits, resetMockDb } from '../lib/mock-db'
+import { getGradeLevels, getStudent, listIncidents, listVisits, resetMockDb } from '../lib/mock-db'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
 import { IncidentReportPage } from './emergency-response/IncidentReportPage'
 import { UserFormPage } from './user-management/UserFormPage'
@@ -37,12 +38,12 @@ describe('UI/UX review regressions', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Archive' }))
     const dialog = screen.getByRole('dialog', { name: 'Archive this student record?' })
-    expect(getRecordedAuditEntries()).toEqual([])
+    expect(recordedWrites()).toEqual([])
 
     await user.click(within(dialog).getByRole('button', { name: 'Archive Record' }))
     expect(await screen.findByText('Archived')).toBeInTheDocument()
     expect((await getStudent('student-0001')).archived).toBe(true)
-    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['archive'])
+    expect(recordedWrites().map((entry) => entry.actionType)).toEqual(['archive'])
     expect(screen.queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument()
   })
 
@@ -66,10 +67,10 @@ describe('UI/UX review regressions', () => {
 
     await user.click(screen.getByRole('button', { name: 'Approve Report' }))
     const dialog = screen.getByRole('dialog', { name: 'Approve this incident report?' })
-    expect(getRecordedAuditEntries()).toEqual([])
+    expect(recordedWrites()).toEqual([])
     await user.click(within(dialog).getByRole('button', { name: 'Approve Report' }))
     expect(await screen.findByText('Report approved and logged.')).toBeInTheDocument()
-    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['approve'])
+    expect(recordedWrites().map((entry) => entry.actionType)).toEqual(['approve'])
 
     // Signed off: it can't be approved again, and only it is marked approved in the picker.
     expect(screen.getByRole('button', { name: 'Approved' })).toBeDisabled()
@@ -86,7 +87,7 @@ describe('UI/UX review regressions', () => {
     await user.click(screen.getByRole('button', { name: 'Create User' }))
     expect(screen.getByText("Enter the person's full name.")).toBeInTheDocument()
     expect(screen.getByText('Enter a username for this account.')).toBeInTheDocument()
-    expect(getRecordedAuditEntries()).toEqual([])
+    expect(recordedWrites()).toEqual([])
   })
 
   it('paginates the visit log and reaches every visit, not only the first 120', async () => {
@@ -161,7 +162,7 @@ describe('UI/UX review follow-up fixes', () => {
 
     expect(await screen.findByText('Another account already uses this username. Choose a different one.')).toBeInTheDocument()
     expect(screen.queryByText('User saved and audit event recorded.')).not.toBeInTheDocument()
-    expect(getRecordedAuditEntries()).toEqual([])
+    expect(recordedWrites()).toEqual([])
   })
 
   it('keeps loaded data on screen while reload() re-fetches (no skeleton flash after a save)', async () => {
@@ -225,7 +226,7 @@ describe('UI/UX review Group B decisions', () => {
     await user.type(screen.getByLabelText(/treatment/i), 'Rested in clinic.')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
     expect(screen.getByText(/choose the student/i)).toBeInTheDocument()
-    expect(getRecordedAuditEntries()).toEqual([])
+    expect(recordedWrites()).toEqual([])
 
     await user.type(screen.getByRole('combobox', { name: /student/i }), '000000260001')
     await screen.findByRole('option', { name: /LRN ending in 0001/ })
@@ -246,14 +247,14 @@ describe('UI/UX review Group B decisions', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Mark as Verified' }))
     const dialog = screen.getByRole('dialog', { name: 'Mark this backup as verified?' })
-    expect(getRecordedAuditEntries()).toEqual([])
+    expect(recordedWrites()).toEqual([])
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
-    expect(getRecordedAuditEntries()).toEqual([])
+    expect(recordedWrites()).toEqual([])
 
     await user.click(screen.getByRole('button', { name: 'Mark as Verified' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Mark as Verified' }))
     expect(await screen.findByText('Verification recorded in the audit trail.')).toBeInTheDocument()
-    expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['update'])
+    expect(recordedWrites().map((entry) => entry.actionType)).toEqual(['update'])
   })
 
   it('never shows an internal record id in the Audit Log', async () => {

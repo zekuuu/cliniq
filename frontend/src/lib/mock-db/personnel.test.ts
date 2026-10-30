@@ -170,7 +170,7 @@ describe('a copy saved before staff patients existed', () => {
 
     const { state: migrated } = migratePersistedState({ state, seedAuditLength: 0 })
     expect(migrated.personnel).toEqual([])
-    expect(migrated.config.personnelTypes).toEqual(['Teacher', 'Non-teaching staff', 'Utility worker'])
+    expect(migrated.config.personnelTypes).toEqual(['Teacher', 'Non-teaching staff', 'Utility worker', 'Other'])
     expect(records().length).toBeGreaterThan(0)
     for (const record of records()) expect(record.personnelId).toBeNull()
   })

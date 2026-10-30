@@ -59,10 +59,13 @@ describe('stale-backup alert (BK-2, D5)', () => {
     // Only one successful run, 3 days ago: older than 48 hours.
     const ago = (ms: number) => new Date(Date.now() - ms).toISOString()
     db().backupLogs = [{ lastRun: ago(3 * 86_400_000), fileSizeBytes: 18_000_000, status: 'ok', verifiedByUserId: null }]
+    // The warning reads the newest success on an enabled backup location (ADR-052).
+    for (const location of db().frontendOnly.backupLocations) location.lastBackupAt = ago(3 * 86_400_000)
     expect((await summary()).backupAlert).toMatchObject({ kind: 'stale', staleAfterHours: 48 })
     db().backupLogs.push({ lastRun: ago(60_000), fileSizeBytes: 0, status: 'failed', verifiedByUserId: null })
     expect((await summary()).backupAlert?.kind).toBe('failed')
     db().backupLogs = []
+    for (const location of db().frontendOnly.backupLocations) Object.assign(location, { lastBackupAt: null, lastResult: null })
     expect((await summary()).backupAlert?.kind).toBe('never')
   })
 })

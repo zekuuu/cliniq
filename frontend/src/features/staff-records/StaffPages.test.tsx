@@ -1,8 +1,9 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
+import { recordedWrites } from '../../test/recordedWrites'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
-import { getPersonnel, getRecordedAuditEntries, type SessionUser } from '../../lib/mock-db'
+import { getPersonnel, type SessionUser } from '../../lib/mock-db'
 import { AppRoutes } from '../../routes/AppRoutes'
 import { selectOption } from '../../test/selectOption'
 
@@ -64,7 +65,7 @@ describe('Staff Profile', () => {
     await user.click(await screen.findByRole('button', { name: 'Archive' }))
     await user.click(within(screen.getByRole('dialog', { name: 'Archive this staff record?' })).getByRole('button', { name: 'Archive Record' }))
     await waitFor(async () => expect((await getPersonnel('personnel-0003')).archived).toBe(true))
-    expect(getRecordedAuditEntries().at(-1)).toMatchObject({ actionType: 'archive', targetRecord: { type: 'staff', id: 'personnel-0003' } })
+    expect(recordedWrites().at(-1)).toMatchObject({ actionType: 'archive', targetRecord: { type: 'staff', id: 'personnel-0003' } })
   })
 })
 
@@ -91,7 +92,7 @@ describe('Staff Form', () => {
     expect(screen.getByText('STF-0013 · Teacher · Guidance office')).toBeInTheDocument()
     // "None" stores no allergy, as on the student form.
     expect(screen.queryByRole('region', { name: 'Allergies and medical conditions' })).not.toBeInTheDocument()
-    expect(getRecordedAuditEntries().at(-1)).toMatchObject({ actionType: 'create', targetRecord: { type: 'staff', id: 'personnel-0013' } })
+    expect(recordedWrites().at(-1)).toMatchObject({ actionType: 'create', targetRecord: { type: 'staff', id: 'personnel-0013' } })
   })
 
   it('edits a record, shows the Staff No. read only, and checks a started emergency contact', async () => {
@@ -110,6 +111,6 @@ describe('Staff Form', () => {
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     expect(await screen.findByText('Staff record updated for Liza Pangilinan.')).toBeInTheDocument()
     expect((await getPersonnel('personnel-0005')).medicalConditions).toEqual(['Migraine'])
-    expect(getRecordedAuditEntries().at(-1)).toMatchObject({ actionType: 'update', summary: 'Updated medical conditions' })
+    expect(recordedWrites().at(-1)).toMatchObject({ actionType: 'update', summary: 'Updated medical conditions' })
   })
 })

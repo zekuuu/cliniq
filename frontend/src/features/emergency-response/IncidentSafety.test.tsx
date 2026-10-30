@@ -1,7 +1,8 @@
 import { act, screen, within } from '@testing-library/react'
+import { recordedWrites } from '../../test/recordedWrites'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { addParentNotification, approveIncidentReport, getIncident, getRecordedAuditEntries, getStudent, resetMockDb } from '../../lib/mock-db'
+import { addParentNotification, approveIncidentReport, getIncident, getStudent, resetMockDb } from '../../lib/mock-db'
 import { db, migratePersistedState } from '../../lib/mock-db/store'
 import { incidentCompletionBlocker } from '../../lib/itemsGiven'
 import { pickStudent } from '../../test/pickStudent'
@@ -75,16 +76,16 @@ describe('No empty completion or approval (IN-3)', () => {
     expect(complete).toBeEnabled()
     await user.click(complete)
     expect(screen.getByText('Write one line on why nothing further was needed.')).toBeInTheDocument()
-    expect(getRecordedAuditEntries()).toEqual([])
+    expect(recordedWrites()).toEqual([])
 
     await user.type(screen.getByRole('textbox', { name: /^reason/i }), 'Rested ten minutes; no complaint after.')
     await user.click(complete)
     expect(await screen.findByText(/incident completed/i)).toBeInTheDocument()
     expect((await getIncident('incident-0022')).noFurtherActionReason).toBe('Rested ten minutes; no complaint after.')
     // The audit names the field, never the reason text (ADR-017).
-    const [entry] = getRecordedAuditEntries()
+    const [entry] = recordedWrites()
     expect(entry.summary).toMatch(/nothing further was needed or done/)
-    expect(JSON.stringify(getRecordedAuditEntries())).not.toContain('Rested')
+    expect(JSON.stringify(recordedWrites())).not.toContain('Rested')
   })
 
   it('hides the tick once any care is recorded', async () => {
@@ -106,7 +107,7 @@ describe('No empty completion or approval (IN-3)', () => {
     expect(approve).toBeDisabled()
     expect(screen.getByText(/can't be approved yet/i)).toBeInTheDocument()
     await expect(approveIncidentReport('incident-0022')).rejects.toThrow(/nothing further was needed or done/i)
-    expect(getRecordedAuditEntries()).toEqual([])
+    expect(recordedWrites()).toEqual([])
   })
 
   it('prints the reason when nothing further was needed', async () => {
@@ -188,7 +189,7 @@ describe('Parent notification log (IN-6, D6)', () => {
     await user.click(screen.getByRole('button', { name: 'Add Attempt' }))
     expect(screen.getByText('Enter the name of the person called.')).toBeInTheDocument()
     expect(screen.getByText('Enter the number called.')).toBeInTheDocument()
-    expect(getRecordedAuditEntries()).toEqual([])
+    expect(recordedWrites()).toEqual([])
 
     await user.type(screen.getByLabelText(/name of person called/i), 'Lola Remedios')
     await user.type(screen.getByLabelText(/number called/i), '0917-000-1111')
@@ -226,7 +227,7 @@ describe('Body part affected (D11)', () => {
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
     await screen.findByRole('heading', { name: 'Stage 2 completion' })
     expect(screen.getByRole('combobox', { name: /body part affected/i })).not.toBeRequired()
-    const id = getRecordedAuditEntries()[0].targetRecord!.id
+    const id = recordedWrites()[0].targetRecord!.id
 
     renderWithRouter(<IncidentReportPage incidentId={id} />)
     await screen.findAllByRole('heading', { name: 'Incident summary' })
