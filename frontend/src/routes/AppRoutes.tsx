@@ -210,7 +210,7 @@ const APP_ROUTES: AppRoute[] = [
   },
   {
     path: paths.calendar,
-    title: 'Clinic Calendar',
+    title: 'Activity calendar',
     roles: ['staff', 'admin'],
     nav: 'calendar',
     render: (viewer) => <CalendarPage viewer={viewer} />,
@@ -494,7 +494,7 @@ function RouteLoading() {
   )
 }
 
-function withShell(user: SessionUser, nav: NavKey | null, content: ReactNode, onLogout: () => void) {
+function withShell(user: SessionUser, nav: NavKey | null, content: ReactNode, onLogout: (idleMinutes?: number) => void) {
   return (
     <AppShell user={user} active={nav} onLogout={onLogout}>
       {content}
@@ -509,7 +509,8 @@ export function AppRoutes({
 }: {
   /** `null` until someone signs in; every route except Login and Force Password Change then redirects to Login. */
   user: SessionUser | null
-  onLogout: () => void
+  /** `idleMinutes` when the Admin was signed out for inactivity (ADR-048). */
+  onLogout: (idleMinutes?: number) => void
   onLogin?: (user: SessionUser) => void
 }) {
   return (

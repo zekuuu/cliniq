@@ -36,7 +36,7 @@ export interface NavItem {
 
 const ALL: Record<NavKey, NavItem> = {
   dashboard: { key: 'dashboard', label: 'Dashboard', icon: 'layoutGrid', available: true, to: paths.dashboard },
-  calendar: { key: 'calendar', label: 'Calendar', icon: 'calendar', available: true, to: paths.calendar },
+  calendar: { key: 'calendar', label: 'Activity calendar', icon: 'calendar', available: true, to: paths.calendar },
   students: { key: 'students', label: 'Students', icon: 'users', available: true, to: paths.students },
   staff: { key: 'staff', label: 'Staff', icon: 'user', available: true, to: paths.staff },
   visits: { key: 'visits', label: 'Visits', icon: 'stethoscope', available: true, to: paths.visits },
