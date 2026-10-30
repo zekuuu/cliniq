@@ -214,3 +214,6 @@ The clinician chooses, adds and edits the internal and external backup locations
 
 Up to 3 extra complaint tags on a visit (reports count the main complaint); the staff type "Other"; "Returned to work" for staff; the Admin's totals leave staff incidents out; two patient tables in the ERD; the PE wording marked "to confirm"; the printable Monthly Report is enough for now. Zean, in chat, Thursday, October 29, 2026 — 22:15 PHT. [ADR-053](ADR-053-Extra-Complaint-Tags-Staff-Wording-Admin-Counts-And-Two-Patient-Tables.md)
 
+### ADR-054: The student's own number is dropped, an optional birthdate is added, and the age group follows the age
+
+The school's masterlist has no student phone number but has birthdates, so the student's own number is removed (parents stay reachable through the emergency contacts; staff keep theirs) and an optional birthdate is added. The profile header shows the age, the full date only appears in the profile details, the Edit form and the profile printout. The vitals age group follows the age (under 6, 6 to 12, 13 and over) and falls back to the grade when there is no birthdate. Zean, in chat, Friday, October 30, 2026 — 21:03 PHT. [ADR-054](ADR-054-Student-Own-Number-Dropped-Birthdate-Added-Age-Group-By-Age.md)

@@ -54,10 +54,11 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 **Student Information Encoding**
 - Add new student record — *Staff*
 - Record the required **Sex** recorded by the school (Female or Male). Show it on the deliberate single-student profile and Student Health Record; audit changes by field name only, never the value.
+- Record the student's optional **Birthdate** (ADR-054), filled by the yearly import when the school's list has it and left empty for a student added by hand without one. It must be a real date and not in the future; when the age is more than 3 years away from the usual age for the grade (starting rule, to confirm), the form shows a soft note and still saves. The age is calculated from it, never stored. The student profile header shows the age (for example "9 years"); the full date shows only in the profile details, the Edit form and the profile printout, never in lists, pickers, the Dashboard, reports or other printouts. Audit changes by field name only, never the value
 - Record the student's LRN (Learner Reference Number, ADR-028), entered by Staff from the school records: exactly 12 digits, kept as text so leading zeros survive, required and unique (a repeat shows "This LRN is already used by another student record" without naming that student); spaces and dashes are removed when typed or pasted; a wrong LRN is corrected in Edit Student and audited as "Updated LRN" with neither value. Lists, pickers, the Dashboard, Reports and the Audit Trail show it masked to the last four digits (`●●●●●●●●1234`, read as "LRN ending in 1234"); a screen about one opened student, and its printout, show it in full (ADR-040); only the Student Profile and the edit form show it in full; addresses carry the internal id, never the LRN
 - Edit student record — *Staff*. The LRN is locked once the record exists (read-only on Edit Student and refused by the data layer); a name correction stays possible but asks for a reason of at least 3 characters, which the audit entry records ("Name corrected; reason: ...") without the old or new name (Sir Rey, Sunday, October 25, 2026)
 - Admin/Principal opening a student profile is audit-logged once per record per sign-in session (ADR-038 item 4); visits on the profile show as text, not links, for the Admin
-- The student's own number is called **Student's mobile number** and is optional for every grade (Zean, October 26, 2026; renamed by ADR-051 so it is not read as the student number); the emergency contacts stay required for every grade, and no record is "incomplete" for lacking it
+- The student's own phone number is not recorded (ADR-054; the school's list has no such column). Parents and guardians are reached through the emergency contacts, which stay required for every grade, and no record is "incomplete" for lacking a birthdate or any other optional field
 - View student profile/detail — *Staff*. When allergies or medical conditions are recorded, a compact banner at the top of the profile lists them; otherwise nothing extra shows (panel review ST-9)
 - View list of all students (masterlist, shown with full names) — *Staff*
 - Search/filter students (name, grade level, status, or LRN) — *Staff*
@@ -78,7 +79,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 - Mark each contact number as verified/unverified — *Staff*
 
 **Yearly List and Archiving (ADR-047, ADR-051)**
-- Grade level and section come from one yearly import of the registrar's student list; there is no bulk promotion button. The import adds new students, updates continuing ones and flags students missing from the new list. It waits for the school's data privacy agreement
+- Grade level and section come from one yearly import of the registrar's student list; there is no bulk promotion button. The import adds new students, updates continuing ones (and fills each student's birthdate when the list has one, ADR-054) and flags students missing from the new list. It waits for the school's data privacy agreement
 - Before the import is applied, the clinician sees the list of students that would be archived. A student missing from the new list is then archived automatically, without a reason (a generic archived flag is enough); a returning student is restored, not re-created
 - The clinician can also archive a single record at any time
 - A visit and an incident keep the grade and section the student had when they were saved, so reports by grade stay correct after the new year
@@ -160,7 +161,7 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 - "Show more fields" opens by itself for fever, headache or chills
 - For Sent home and Referred to hospital, optional fields record who collected the child, the relationship and the time
 - The outcome keeps its default, "Returned to class" ("Returned to work" for staff). No first-visit prompt; the first-aid checklist stays as it is, owned and signed off by the clinician
-- Optional vitals ranges: a reading outside the most common normal range for the student's age group (picked from the grade level, since records have no birth date) shows a warning and never blocks. The ranges are starting values marked "to confirm" with the nurse; the fever flag stays at 37.0 °C (ADR-051)
+- Optional vitals ranges: a reading outside the most common normal range for the student's age group shows a warning and never blocks. The age group follows the student's age on the date of the visit or incident (under 6, 6 to 12, 13 and over; ADR-054), and the grade level picks it when no birthdate is recorded. The ranges are starting values marked "to confirm" with the nurse; the fever flag stays at 37.0 °C (ADR-051)
 
 **PE/Sports Injury Referral Logging**
 - Log a referral submitted by a PE instructor (the referral wording is editable starting text, marked "to confirm" on screen, ADR-053)
