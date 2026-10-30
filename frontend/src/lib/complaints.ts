@@ -15,3 +15,17 @@ export function normalizeComplaint(text: string, known: ReadonlyArray<string>): 
   const lower = cleaned.toLowerCase()
   return known.find((label) => label.toLowerCase() === lower) ?? cleaned
 }
+
+/**
+ * How Reports group complaints (ADR-050): case, spacing and trailing punctuation are ignored, so
+ * "head ache", "Headache." and "headache" fall together.
+ */
+export function complaintGroupKey(text: string): string {
+  return cleanComplaint(text).toLowerCase().replace(/[.,;:!?]+$/, '').replace(/\s+/g, '')
+}
+
+/** The group a complaint is counted under: the matching complaint type's spelling, else its own cleaned text. */
+export function reportComplaint(text: string, known: ReadonlyArray<string>): string {
+  const key = complaintGroupKey(text)
+  return known.find((label) => complaintGroupKey(label) === key) ?? cleanComplaint(text).replace(/[.,;:!?]+$/, '')
+}
