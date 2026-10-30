@@ -39,6 +39,7 @@ import {
   type StudentFormValues,
 } from './api/studentFormApi'
 import { isLrn, maskLrn, normalizeLrn } from '../../lib/lrn'
+import { NONE_RECORDED } from '../../lib/patients'
 
 type StudentFormErrors = Partial<Record<string, string>>
 
@@ -53,10 +54,10 @@ const EMPTY_VALUES: StudentFormValues = {
   medicalConditions: '',
 }
 
-/** Offers "None" while the field is empty or being typed toward it. */
+/** Offers "None recorded" while the field is empty or being typed toward it (ADR-051). */
 function noneSuggestion(value: string): string[] {
   const typed = value.trim().toLowerCase()
-  return typed !== 'none' && 'none'.startsWith(typed) ? ['None'] : []
+  return typed !== NONE_RECORDED.toLowerCase() && NONE_RECORDED.toLowerCase().startsWith(typed) ? [NONE_RECORDED] : []
 }
 
 function valuesFromStudent(student: Student | null): StudentFormValues {
@@ -70,10 +71,10 @@ function valuesFromStudent(student: Student | null): StudentFormValues {
     emergencyContacts: student.emergencyContacts.length
       ? student.emergencyContacts.map(({ name, relationship, phone, verified }) => ({ name, relationship, phone, verified }))
       : [{ name: '', relationship: '', phone: '', verified: false }],
-    allergies: student.allergies.length ? student.allergies.join(', ') : 'None',
+    allergies: student.allergies.length ? student.allergies.join(', ') : NONE_RECORDED,
     medicalConditions: student.medicalConditions.length
       ? student.medicalConditions.join(', ')
-      : 'None',
+      : NONE_RECORDED,
   }
 }
 
@@ -164,10 +165,7 @@ function validate(values: StudentFormValues): StudentFormErrors {
     if (!contact.phone.trim()) errors[contactErrorKey(index, 'phone')] = 'Enter the emergency contact phone.'
     else if (!isPhilippinePhone(contact.phone)) errors[contactErrorKey(index, 'phone')] = PHONE_ERROR
   })
-  if (!values.allergies.trim()) errors.allergies = 'Enter allergies, or write None.'
-  if (!values.medicalConditions.trim()) {
-    errors.medicalConditions = 'Enter medical conditions, or write None.'
-  }
+  // Allergies and conditions may be left empty: an empty field reads "None recorded" (ADR-051).
   return errors
 }
 
@@ -457,8 +455,8 @@ function StudentFormEditor({
                 onChange={(value) => setField('sex', value as StudentFormValues['sex'])}
               />
               <Input
-                label="Student contact information"
-                hint="Optional. The emergency contacts below are still required."
+                label="Student's mobile number (optional)"
+                hint="The student's own phone, if any. Parents and guardians go in the emergency contacts below."
                 value={values.contactInfo}
                 error={errors.contactInfo}
                 onChange={(event) => setField('contactInfo', event.target.value)}
@@ -530,8 +528,8 @@ function StudentFormEditor({
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Combobox
                   label="Allergies"
-                  required
-                  hint="Comma-separated list, or pick None."
+                  placeholder={NONE_RECORDED}
+                  hint="Optional. Comma-separated list. Left empty, it reads None recorded."
                   value={values.allergies}
                   options={noneSuggestion(values.allergies)}
                   optionKey={(option) => option}
@@ -543,8 +541,8 @@ function StudentFormEditor({
                 />
                 <Combobox
                   label="Medical conditions"
-                  required
-                  hint="Comma-separated list, or pick None."
+                  placeholder={NONE_RECORDED}
+                  hint="Optional. Comma-separated list. Left empty, it reads None recorded."
                   value={values.medicalConditions}
                   options={noneSuggestion(values.medicalConditions)}
                   optionKey={(option) => option}

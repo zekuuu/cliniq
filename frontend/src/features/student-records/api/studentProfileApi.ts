@@ -4,7 +4,7 @@ import {
   getStudent,
   getStudentExcuseLetters,
   getStudentHistory,
-  recordAdminView,
+  recordView,
   type SessionUser,
   type StudentExcuseLetter,
 } from '../../../lib/mock-db'
@@ -37,7 +37,7 @@ export async function fetchStudentProfile(
     getStudentHistory(student.id, Infinity),
     viewer?.role === 'staff' ? getStudentExcuseLetters(student.id) : [],
   ])
-  if (viewer) await recordAdminView({ type: 'student', id: student.id }, viewer)
+  if (viewer) await recordView({ type: 'student', id: student.id }, viewer)
   return { student, ...history, excuseLetters }
 }
 

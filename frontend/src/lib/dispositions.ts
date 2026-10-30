@@ -16,7 +16,17 @@ export const DISPOSITION_TONES: Record<Disposition, BadgeTone> = {
   resting_in_clinic: 'info',
 }
 
+/**
+ * ADR-053: a staff patient's "Returned to class" reads "Returned to work". The stored value is the
+ * same; only the words change, wherever one visit's disposition is shown.
+ */
+export function dispositionLabel(disposition: Disposition, kind: 'student' | 'personnel' = 'student'): string {
+  return kind === 'personnel' && disposition === 'returned_to_class' ? 'Returned to work' : DISPOSITION_LABELS[disposition]
+}
+
 /** Shown on New Visit and the Visit Detail edit form, in the logbook's order. */
-export const DISPOSITION_OPTIONS = (
-  ['returned_to_class', 'resting_in_clinic', 'sent_home', 'referred_to_hospital'] as const
-).map((value) => ({ value, label: DISPOSITION_LABELS[value] }))
+export function dispositionOptionsFor(kind: 'student' | 'personnel' = 'student') {
+  return (['returned_to_class', 'resting_in_clinic', 'sent_home', 'referred_to_hospital'] as const).map((value) => ({ value, label: dispositionLabel(value, kind) }))
+}
+
+export const DISPOSITION_OPTIONS = dispositionOptionsFor('student')

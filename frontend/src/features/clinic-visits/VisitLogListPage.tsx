@@ -37,7 +37,7 @@ import {
   type VisitLogRow,
 } from './api/visitLogApi'
 import { patientNumberLabel, type PatientFilter } from '../../lib/patients'
-import { DISPOSITION_LABELS, DISPOSITION_TONES } from '../../lib/dispositions'
+import { dispositionLabel, DISPOSITION_TONES } from '../../lib/dispositions'
 
 type DispositionFilter = Disposition | 'all'
 type LetterFilter = 'pending' | ''
@@ -52,7 +52,8 @@ const dispositionOptions = [
   { value: 'resting_in_clinic', label: 'Resting' },
 ] satisfies Array<{ value: DispositionFilter; label: string }>
 
-const dispositionMeta = (disposition: Disposition) => ({ label: DISPOSITION_LABELS[disposition], tone: DISPOSITION_TONES[disposition] })
+// ADR-053: a staff visit's "Returned to class" reads "Returned to work".
+const dispositionMeta = (disposition: Disposition, kind: 'student' | 'personnel' = 'student') => ({ label: dispositionLabel(disposition, kind), tone: DISPOSITION_TONES[disposition] })
 
 function VisitLogSkeleton({ back }: { back: ReactNode }) {
   return (
@@ -183,7 +184,7 @@ export function VisitLogListPage() {
       case 'record':
         return row.complaint
       case 'disposition':
-        return dispositionMeta(row.disposition).label
+        return dispositionMeta(row.disposition, row.patient.kind).label
     }
   })
 
@@ -240,7 +241,7 @@ export function VisitLogListPage() {
       sort: sortColumn('disposition', 'Disposition'),
       cell: (row) => (
         <Badge tone={dispositionMeta(row.disposition).tone} variant="soft">
-          {dispositionMeta(row.disposition).label}
+          {dispositionMeta(row.disposition, row.patient.kind).label}
         </Badge>
       ),
     },

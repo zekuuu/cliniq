@@ -13,6 +13,7 @@ import {
   ErrorState,
   Icon,
   Input,
+  StayHomeField,
   ItemsGivenField,
   ListRow,
   RowList,
@@ -33,8 +34,8 @@ import { paths } from '../../routes/paths'
 import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { addDays, todayISO } from '../../lib/dates'
 import { draftsFrom, formatItemGiven, incidentCompletionBlocker } from '../../lib/itemsGiven'
-import { readingText, takenReadings, type ReadingKey, type ReadingValues } from '../../lib/vitals'
-import {
+import { ageGroupOf, readingText, takenReadings, type ReadingKey, type ReadingValues } from '../../lib/vitals'
+import { type AgeGroup,
   getMockSessionUser,
   StockRuleError,
   type SessionUser,
@@ -187,11 +188,14 @@ function ReadingsFields({
   onChange,
   error,
   ranges,
+  ageGroup,
 }: {
   values: ReadingValues
   onChange: (key: ReadingKey, value: string) => void
   error?: string
   ranges: VitalsWarningRanges
+  /** For the usual-range note (ADR-051); null until the patient is picked. */
+  ageGroup: AgeGroup | null
 }) {
   return (
     <fieldset className="flex flex-col gap-3">
@@ -231,7 +235,7 @@ function ReadingsFields({
           error={error}
         />
       </div>
-      <VitalsWarning readings={values} ranges={ranges} />
+      <VitalsWarning readings={values} ranges={ranges} ageGroup={ageGroup} />
     </fieldset>
   )
 }
@@ -354,6 +358,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const [followUpDate, setFollowUpDate] = useState(addDays(today, 1))
   const [followUpReason, setFollowUpReason] = useState('')
   const [followUpNotes, setFollowUpNotes] = useState('')
+  const [followUpStayHome, setFollowUpStayHome] = useState({ checked: false, note: '' })
   const [lines, setLines] = useState<ItemLineDraft[]>(() => draftsFrom(existing?.itemsGiven ?? []))
   const [stockMessage, setStockMessage] = useState('')
   const [errors, setErrors] = useState<Errors>({})
@@ -375,6 +380,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       notifications.length > 0 ||
       notificationDetail.trim() !== '' ||
       bodyPart !== (incident.bodyPart ?? '') ||
+      generalNotes !== (incident.generalNotes ?? '') ||
       nothingFurther !== Boolean(incident.noFurtherActionReason) ||
       needsFollowUp ||
       lines.length !== incident.itemsGiven.length)
@@ -504,11 +510,13 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
           bodyPart,
           // Kept only while nothing else on the record answers the rule; adding care makes it moot.
           noFurtherActionReason: careBlocker && nothingFurther ? noFurtherActionReason : '',
+          ...(!data.approved && { generalNotes }),
           followUp: needsFollowUp
             ? {
                 followUpDate,
                 reason: followUpReason.trim(),
                 notes: followUpNotes.trim() || null,
+                ...(followUpStayHome.checked && { stayHomeUntilCleared: true, stayHomeNote: followUpStayHome.note.trim() || null }),
               }
             : null,
           itemsGiven: lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity, instructions: line.instructions })),
@@ -542,6 +550,8 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                 ? `${student.fullName} · ${patientLine(student)}`
                 : 'Student or staff member not identified yet. Search by LRN, Staff No. or name in Stage 1.'}
             </p>
+            {/* ADR-051: which form to use; the nurse is to confirm the wording. */}
+            <p className="mt-2 text-xs text-text-secondary">Incident: a worse case that needs fast two-stage capture. A common, routine case is a Visit.</p>
           </div>
           <StatusBadge status={statusValue} map={incidentStatusMap} />
         </div>
@@ -627,6 +637,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                 onChange={setReading}
                 error={errors.oxygenSaturationPct}
                 ranges={data.vitalsRanges}
+                ageGroup={student ? ageGroupOf(student) : null}
               />
               <TextareaField label="Additional notes (optional)" value={generalNotes} onChange={setGeneralNotes} rows={3} />
               <div className="flex flex-wrap justify-end gap-2 pt-2">
@@ -670,19 +681,24 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     <p className="text-xs font-semibold text-text-secondary">Stage 1 summary</p>
                     <p className="mt-1 text-sm font-semibold text-text-primary">{complaint}</p>
                     <p className="text-xs text-text-secondary">{readingSummary(incident.vitals)}</p>
-                    {incident.generalNotes && (
+                    {data.approved && incident.generalNotes && (
                       <p className="mt-2 text-sm whitespace-pre-line text-text-primary">
                         <span className="text-xs font-semibold text-text-secondary">Additional notes: </span>
                         {incident.generalNotes}
                       </p>
                     )}
                   </div>
+                  {/* ADR-049: correctable until the report is approved; each change is an audited edit. */}
+                  {!data.approved && (
+                    <TextareaField label="Additional notes (optional)" value={generalNotes} onChange={setGeneralNotes} rows={3} />
+                  )}
                   {incident.sourceVisitId && <FromVisit visitId={incident.sourceVisitId} given={data.sourceVisit?.itemsGiven ?? []} />}
                   <ReadingsFields
                     values={readings}
                     onChange={setReading}
                     error={errors.oxygenSaturationPct}
                     ranges={data.vitalsRanges}
+                    ageGroup={student ? ageGroupOf(student) : null}
                   />
                   <TextareaField
                     label="Treatment notes"
@@ -883,6 +899,9 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                         />
                         <div className="sm:col-span-2">
                           <TextareaField label="Notes" value={followUpNotes} onChange={setFollowUpNotes} rows={3} />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <StayHomeField checked={followUpStayHome.checked} note={followUpStayHome.note} onChange={setFollowUpStayHome} />
                         </div>
                       </div>
                     )}

@@ -146,3 +146,32 @@ export function formatTime(value: ISODateTime | number): string {
     timeZone: CLINIC_TIME_ZONE,
   })
 }
+
+export interface MonthWeek {
+  from: ISODate
+  to: ISODate
+  /** "7-11": the first day to the last weekday, as the clinic's paper report writes it. */
+  label: string
+}
+
+/**
+ * The Monthly Report's weeks (ADR-050, D16): Monday-start weeks clipped to the month, so a Saturday
+ * and Sunday count in the week before them. A month that starts on a weekend joins those days to the
+ * first week, and a last week of three weekdays or fewer joins the week before it. `month` is "YYYY-MM".
+ */
+export function monthWeeks(month: string): MonthWeek[] {
+  const days = eachDay(`${month}-01`, endOfMonth(`${month}-01`))
+  const weekday = (day: ISODate) => parseISODate(day).getDay() % 6 !== 0
+  const chunks: ISODate[][] = []
+  for (const day of days) {
+    const startsWeek = parseISODate(day).getDay() === 1 && chunks.length > 0 && chunks[chunks.length - 1].some(weekday)
+    if (!chunks.length || startsWeek) chunks.push([day])
+    else chunks[chunks.length - 1].push(day)
+  }
+  if (chunks.length > 1 && chunks[chunks.length - 1].filter(weekday).length <= 3) chunks.splice(-2, 2, [...chunks[chunks.length - 2], ...chunks[chunks.length - 1]])
+  return chunks.map((chunk) => {
+    const weekdays = chunk.filter(weekday)
+    const last = weekdays[weekdays.length - 1] ?? chunk[chunk.length - 1]
+    return { from: chunk[0], to: chunk[chunk.length - 1], label: `${Number(chunk[0].slice(8))}-${Number(last.slice(8))}` }
+  })
+}

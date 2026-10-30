@@ -54,11 +54,11 @@ export function buildDashboardSummary(
   const trendEvents = [
     ...counted.flatMap((v) => {
       const student = students.get(v.studentId ?? '')
-      return student ? [{ date: dateOf(v.dateTime), hour: hourOf(v.dateTime), complaint: v.complaint, eventTag: v.eventTag, sex: student.sex ?? 'female', gradeLevel: student.gradeLevel, kind: 'visit' as const }] : []
+      return student ? [{ date: dateOf(v.dateTime), hour: hourOf(v.dateTime), complaint: v.complaint, eventTag: v.eventTag, sex: student.sex ?? 'female', gradeLevel: v.gradeLevelAtTime ?? student.gradeLevel, kind: 'visit' as const }] : []
     }),
     ...state.incidents.flatMap((i) => {
       const student = students.get(i.studentId ?? '')
-      return student ? [{ date: dateOf(i.time), hour: hourOf(i.time), complaint: i.complaint, eventTag: i.eventTag, sex: student.sex ?? 'female', gradeLevel: student.gradeLevel, kind: 'incident' as const }] : []
+      return student ? [{ date: dateOf(i.time), hour: hourOf(i.time), complaint: i.complaint, eventTag: i.eventTag, sex: student.sex ?? 'female', gradeLevel: i.gradeLevelAtTime ?? student.gradeLevel, kind: 'incident' as const }] : []
     }),
   ]
   const inRangeEvents = trendEvents.filter((event) => isWithin(event.date, from, to))
@@ -118,7 +118,7 @@ export function buildDueFollowUps(state: DbState): DueFollowUpRow[] {
   return dueFollowUps(state).flatMap((f) => {
     const student = byId.get(f.studentId ?? '')
     const person = personnel.get(f.personnelId ?? '')
-    const dueState = followUpDueState(f, state.today)
+    const dueState = followUpDueState(f, state.today, state.config.followUpOverdueAfterDays)
     const patient = student
       ? { kind: 'student' as const, id: student.id, number: student.lrn }
       : person

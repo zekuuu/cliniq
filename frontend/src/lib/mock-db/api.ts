@@ -2,6 +2,7 @@ import { isLrn, normalizeLrn } from '../lrn'
 import type {
   AuditActionType,
   AuditLogEntry,
+  CollectedBy,
   Disposition,
   ExcuseLetterDraft,
   FollowUp,
@@ -30,11 +31,12 @@ import type {
   UserRole,
   Visit,
 } from '../../types/entities'
-import { normalizeComplaint } from '../complaints'
+import { normalizeComplaint, reportComplaint } from '../complaints'
 import type { Patient, PatientNumber } from '../patients'
 import { incidentCompletionBlocker } from '../itemsGiven'
 import { DISPOSITION_LABELS } from '../dispositions'
-import { addDays, parseISODate, toISODate } from '../dates'
+import { EXCUSE_LETTER_RECIPIENT, excuseLetterBody } from '../excuseLetter'
+import { addDays, endOfMonth, monthWeeks, parseISODate, toISODate, type MonthWeek } from '../dates'
 import type { BackupAlert, CalendarDay, CalendarDayEvent, DashboardQuery, DashboardSummary, Holiday, HolidayFeed } from '../../types/dashboard'
 import holidayData from './holidays-ph.json'
 import type { FollowUpDueState } from '../../components/status/followUp'
@@ -43,11 +45,14 @@ import { isEmptied, simulateRequest } from './devToggles'
 import {
   backupStatus,
   auditLogList,
+  clusterAlerts,
+  type ClusterAlert,
   complaintSuggestions,
   countedVisits,
   dateOf,
   followUpDueState,
   gradeLevels,
+  withAutoClosedFollowUps,
   incompleteRecordQueue,
   inventoryStatusFor,
   missingRequiredFields,
@@ -69,6 +74,7 @@ import { commit, db, restoreDb } from './store'
 import { CALENDAR_EVENT_TITLE_MAX, PERSONNEL_DEPARTMENT_MAX } from './integrity'
 import type {
   AdjustmentReason,
+  BackupLocation,
   CalendarEvent,
   ComplaintType,
   DbState,
@@ -109,7 +115,8 @@ function view(includeEnteredInError = false): DbState {
     personnel: isEmptied('personnel') ? [] : s.personnel,
     visits: isEmptied('visits') ? [] : includeEnteredInError ? s.visits : s.visits.filter((v) => !v.enteredInError),
     incidents: isEmptied('incidents') ? [] : s.incidents,
-    followUps: isEmptied('followUps') ? [] : s.followUps,
+    // Pending follow-ups long past their date read as Missed (ADR-051); the stored record is untouched.
+    followUps: isEmptied('followUps') ? [] : withAutoClosedFollowUps(s.followUps, s.today, s.config.followUpAutoCloseDays),
     inventoryItems: isEmptied('inventoryItems') ? [] : s.inventoryItems,
     reports: isEmptied('reports') ? [] : s.reports,
     backupLogs: isEmptied('backupLogs') ? [] : s.backupLogs,
@@ -214,6 +221,8 @@ const FIELD_LABELS: Record<string, string> = {
   profilePicture: 'profile picture',
   brand: 'generic or branded',
   department: 'department or role',
+  avoidIfAllergicTo: 'avoid if allergic to',
+  generalNotes: 'additional notes',
 }
 
 /** "Updated allergies and grade level" — names the changed fields for the audit summary, never their values. */
@@ -235,9 +244,9 @@ function actorOr(actor?: SessionUser): SessionUser {
  * Development stand-in for Sanctum's logout endpoint. It keeps logout accountable even while the
  * frontend uses the mock session, then clears the selected mock role from this browser tab.
  */
-export async function logoutMockSession(actor: SessionUser): Promise<void> {
+export async function logoutMockSession(actor: SessionUser, summary?: string): Promise<void> {
   await write('logout', (s) => {
-    audit(s, actor, 'logout', null)
+    audit(s, actor, 'logout', null, summary)
   })
   clearMockSession()
 }
@@ -258,15 +267,23 @@ export function recordPrint(documentTitle: string, actor?: SessionUser, record?:
   })
 }
 
+const VIEW_SUMMARIES = { student: 'Opened student profile', staff: 'Opened staff profile', incident: 'Opened incident report' } as const
+
 /**
- * ADR-038 item 4: the Admin opening a student profile or an incident report is logged (who, what,
- * when), once per record per sign-in session. Staff views are not logged (open DECIDE).
+ * Opening a student or staff profile or an incident report is logged (who, what, when), once per
+ * record per sign-in session: the Admin's views (ADR-038 item 4) and the clinician's (ADR-048).
+ * Lists and searches are not logged.
  */
-export async function recordAdminView(target: { type: 'student' | 'incident'; id: string }, actor: SessionUser): Promise<void> {
-  if (actor.role !== 'admin' || !firstViewThisSession(`${actor.id}|${target.type}|${target.id}`)) return
+export async function recordView(target: { type: keyof typeof VIEW_SUMMARIES; id: string }, actor: SessionUser): Promise<void> {
+  if (!firstViewThisSession(`${actor.id}|${target.type}|${target.id}`)) return
   await write('record view', (s) => {
-    audit(s, actor, 'view', target, target.type === 'student' ? 'Opened student profile' : 'Opened incident report')
+    audit(s, actor, 'view', target, VIEW_SUMMARIES[target.type])
   })
+}
+
+/** Minutes of inactivity before the Admin is signed out (ADR-048). */
+export function getAdminIdleMinutes(): Promise<number> {
+  return read('admin idle minutes', (s) => s.config.adminIdleMinutes)
 }
 
 // ---- authentication (frontend-first mock only) --------------------------------------------
@@ -420,6 +437,11 @@ function patientOf(state: DbState, input: { studentId?: string | null; personnel
 
 const samePatient = (a: PatientRef, b: PatientRef) => a.studentId === b.studentId && a.personnelId === b.personnelId
 
+/** ADR-047: a student's visit or incident keeps the grade they were in when it was saved. Staff have none. */
+function gradeAtTime(s: DbState, patient: PatientRef): Pick<Visit, 'gradeLevelAtTime'> {
+  return patient.studentId ? { gradeLevelAtTime: studentOf(s, patient.studentId).gradeLevel } : {}
+}
+
 // ---- reference vocabularies (frontendOnly, mock-only) ---------------------------------------
 
 export function getVisitComplaintTypes(): Promise<ComplaintType[]> {
@@ -435,9 +457,14 @@ export function getIncidentComplaintTypes(): Promise<string[]> {
   return read('incident complaint types', (s) => s.frontendOnly.incidentComplaintTypes)
 }
 
-/** Placeholder sanity bounds for the incident vitals warning (config; nurse to confirm). */
+/** Sanity bounds for the vitals warning, with the usual ranges by age group (ADR-051; config, nurse to confirm). */
 export function getVitalsWarningRanges(): Promise<VitalsWarningRanges> {
-  return read('vitals warning ranges', (s) => s.config.vitalsWarningRanges)
+  return read('vitals warning ranges', (s) => ({ ...s.config.vitalsWarningRanges, usual: s.config.vitalsUsualRanges }))
+}
+
+/** Days an excused period may run before the letter warns that a medical certificate is usually needed (ADR-049). */
+export function getMedicalCertificateAfterDays(): Promise<number> {
+  return read('medical certificate limit', (s) => s.config.medicalCertificateAfterDays)
 }
 
 export function getGradeLevels(): Promise<string[]> {
@@ -978,7 +1005,8 @@ export function getLatestVisit(): Promise<Visit> {
   })
 }
 
-export type FollowUpInput = Pick<FollowUp, 'followUpDate' | 'reason' | 'notes'>
+export type FollowUpInput = Pick<FollowUp, 'followUpDate' | 'reason' | 'notes'> &
+  Partial<Pick<FollowUp, 'stayHomeUntilCleared' | 'stayHomeNote'>>
 
 export interface RecordVisitInput extends Partial<VisitLogbookFields> {
   /** The patient: a student or a staff member, exactly one (ADR-043). */
@@ -1003,6 +1031,37 @@ export interface RecordVisitInput extends Partial<VisitLogbookFields> {
   dateTime?: string
   /** Optional reason for a late entry, such as "system was down". */
   lateEntryReason?: string | null
+  /** Sent home or Referred only: who collected the student (ADR-049, D4). */
+  collectedBy?: CollectedBy | null
+  /** "Save and approve now" (ADR-049, D3): the draft letter is approved in the same write. */
+  approveExcuseLetterNow?: boolean
+  /** Up to 3 more complaints as tags (ADR-053); the reports count only `complaint`. */
+  extraComplaints?: string[]
+}
+
+export const EXTRA_COMPLAINTS_MAX = 3
+
+export class ExtraComplaintsError extends Error {
+  constructor() {
+    super(`Add at most ${EXTRA_COMPLAINTS_MAX} extra complaints.`)
+  }
+}
+
+/** Cleaned like the main complaint, without repeats or the main one; more than 3 is refused (ADR-053). */
+function cleanExtraComplaints(s: DbState, main: string, extras: ReadonlyArray<string>): string[] {
+  const known = complaintSuggestions(s)
+  const mainKey = normalizeComplaint(main, known).toLowerCase()
+  const cleaned = extras
+    .map((text) => normalizeComplaint(text, known))
+    .filter((text, index, all) => text && text.toLowerCase() !== mainKey && all.findIndex((other) => other.toLowerCase() === text.toLowerCase()) === index)
+  if (cleaned.length > EXTRA_COMPLAINTS_MAX) throw new ExtraComplaintsError()
+  return cleaned
+}
+
+/** A new visit carries the field only when it has extra complaints. */
+function extraComplaintsField(s: DbState, main: string, extras: ReadonlyArray<string> | undefined): Pick<Visit, 'extraComplaints'> {
+  const cleaned = cleanExtraComplaints(s, main, extras ?? [])
+  return cleaned.length ? { extraComplaints: cleaned } : {}
 }
 
 /** A visit dated more than this many minutes before it is saved is a late entry (D1 of the panel-review prompt). */
@@ -1042,7 +1101,8 @@ function logbookFields(input: Partial<VisitLogbookFields>, timeIn: ISODateTime):
 /**
  * The disposition-specific values, cleaned and checked: an excuse-letter draft only on Sent home or
  * Referred, "Referred to" only on Referred, and no draft once the visit's letter is approved (the
- * approved letter then holds the period, so the two can't diverge).
+ * approved letter then holds the period, so the two can't diverge). Who collected the student is
+ * kept only on Sent home or Referred, and its time is never in the future (ADR-049, D4).
  */
 function dispositionFields(
   s: DbState,
@@ -1050,7 +1110,9 @@ function dispositionFields(
   disposition: Disposition,
   draft: ExcuseLetterDraft | null,
   referredTo: string | null,
-): Pick<Visit, 'excuseLetterDraft' | 'referredTo'> {
+  collected: CollectedBy | null,
+  dateTime: ISODateTime,
+): Pick<Visit, 'excuseLetterDraft' | 'referredTo' | 'collectedBy'> {
   if (draft) {
     if (disposition === 'returned_to_class') throw new Error('Only a Sent home or Referred visit has an excuse letter.')
     const invalid = excusedPeriodError(draft)
@@ -1060,9 +1122,24 @@ function dispositionFields(
   }
   const referred = referredTo?.trim() || null
   if (referred && disposition !== 'referred_to_hospital') throw new Error('Only a Referred to hospital visit has "Referred to".')
+  const leftClinic = disposition === 'sent_home' || disposition === 'referred_to_hospital'
+  const name = collected?.name?.trim() || null
+  const relationship = collected?.relationship?.trim() || null
+  const time = collected?.time?.trim() || null
+  if (time && !/^\d{2}:\d{2}$/.test(time)) throw new Error('The collection time must be HH:MM.')
+  if (time && `${dateTime.slice(0, 10)}T${time}:00+08:00` > now(s)) throw new Error("The collection time can't be in the future.")
   return {
-    excuseLetterDraft: draft ? { excusedFrom: draft.excusedFrom, excusedUntil: draft.excusedUntil, note: draft.note?.trim() || null } : null,
+    excuseLetterDraft: draft
+      ? {
+          excusedFrom: draft.excusedFrom,
+          excusedUntil: draft.excusedUntil,
+          note: draft.note?.trim() || null,
+          ...(draft.stayHomeUntilCleared && { stayHomeUntilCleared: true, stayHomeNote: draft.stayHomeNote?.trim() || null }),
+        }
+      : null,
     referredTo: referred,
+    // Nobody named means nobody recorded, whatever the time field says.
+    collectedBy: leftClinic && (name || relationship) ? { name, relationship, time } : null,
   }
 }
 
@@ -1083,6 +1160,7 @@ function createFollowUp(
     status: 'pending',
     notes: input.notes,
     createdByUserId: actor.id,
+    ...(input.stayHomeUntilCleared && { stayHomeUntilCleared: true, stayHomeNote: input.stayHomeNote?.trim() || null }),
   }
   s.followUps.push(followUp)
   audit(s, actor, 'create', { type: 'follow-up', id: followUp.id })
@@ -1104,15 +1182,17 @@ export function recordVisit(
     // A staff member sent home gets the disposition and no letter (ADR-043 item 7).
     if (patient.personnelId && input.excuseLetterDraft) throw new Error('An excuse letter is only for a student.')
     const itemLines = input.itemsGiven ?? []
-    // Treatment notes and items given are both optional: a visit may record no treatment.
-    const extra = dispositionFields(s, null, input.disposition, input.excuseLetterDraft ?? null, input.referredTo ?? null)
     const { dateTime, lateEntry, lateEntryReason } = visitTime(s, input)
+    // Treatment notes and items given are both optional: a visit may record no treatment.
+    const extra = dispositionFields(s, null, input.disposition, input.excuseLetterDraft ?? null, input.referredTo ?? null, input.collectedBy ?? null, dateTime)
     const visit: Visit = {
       id: nextId('visit', s.visits),
       ...patient,
+      ...gradeAtTime(s, patient),
       dateTime,
       // Stored in a known suggestion's spelling, so counts never split by case.
       complaint: normalizeComplaint(input.complaint, complaintSuggestions(s)),
+      ...extraComplaintsField(s, input.complaint, input.extraComplaints),
       treatment: input.treatment,
       disposition: input.disposition,
       loggedByUserId: by.id,
@@ -1130,6 +1210,7 @@ export function recordVisit(
     const followUp = input.followUp
       ? createFollowUp(s, by, patient, { type: 'visit', id: visit.id }, input.followUp)
       : null
+    if (input.approveExcuseLetterNow) approveDraftNow(s, by, visit)
     return { visit, followUp, belowZero: given.belowZero }
   })
 }
@@ -1139,7 +1220,12 @@ export type VisitPatch = Pick<Visit, 'complaint' | 'treatment' | 'disposition' |
   itemsGiven?: ItemLineInput[]
   /** "YYYY-MM-DDTHH:MM" to correct when the visit happened; never in the future. Omitted, it stays. */
   dateTime?: string
-} & Partial<Pick<Visit, 'excuseLetterDraft' | 'referredTo'> & VisitLogbookFields>
+} & Partial<Pick<Visit, 'excuseLetterDraft' | 'referredTo' | 'collectedBy'> & VisitLogbookFields> & {
+  /** "Save and approve now" (ADR-049, D3): the edited draft letter is approved in the same write. */
+  approveExcuseLetterNow?: boolean
+  /** The full new set of extra complaints (ADR-053). Omitted, they stay. */
+  extraComplaints?: string[]
+}
 
 /**
  * Edits a saved visit. Changed medicine lines move stock through `visit_edited` adjustment
@@ -1155,7 +1241,7 @@ export function updateVisit(
     const by = actorOr(actor)
     const visit = must(s.visits.find((v) => v.id === id), 'Visit')
     if (visit.enteredInError) throw new Error('This visit was marked entered in error and can no longer be edited.')
-    const { itemsGiven, excuseLetterDraft, referredTo, temperatureC, timeOut, assistedBy, parentGuardian, remarks, dateTime: correctedTime, ...rest } = patch
+    const { itemsGiven, excuseLetterDraft, referredTo, collectedBy, approveExcuseLetterNow, extraComplaints, temperatureC, timeOut, assistedBy, parentGuardian, remarks, dateTime: correctedTime, ...rest } = patch
     // A corrected time is checked like a new visit's (never in the future); the audit names the field.
     // Callers that pass the whole visit back send its saved timestamp; same minute means unchanged.
     const dateTime =
@@ -1163,7 +1249,15 @@ export function updateVisit(
         ? visitTime(s, { dateTime: correctedTime.slice(0, 16) }).dateTime
         : visit.dateTime
     // Omitted disposition fields stay as they are; checked against the (possibly new) disposition.
-    const extra = dispositionFields(s, id, rest.disposition, excuseLetterDraft === undefined ? visit.excuseLetterDraft : excuseLetterDraft, referredTo === undefined ? visit.referredTo : referredTo)
+    const extra = dispositionFields(
+      s,
+      id,
+      rest.disposition,
+      excuseLetterDraft === undefined ? visit.excuseLetterDraft : excuseLetterDraft,
+      referredTo === undefined ? visit.referredTo : referredTo,
+      collectedBy === undefined ? (visit.collectedBy ?? null) : collectedBy,
+      dateTime,
+    )
     // Same normalization as a new visit, so an edit can't reintroduce a spelling or case variant.
     // Omitted logbook fields stay as they are.
     const logbook = logbookFields(
@@ -1176,13 +1270,25 @@ export function updateVisit(
       },
       dateTime,
     )
-    const fields = { ...rest, dateTime, complaint: normalizeComplaint(rest.complaint, complaintSuggestions(s)), ...extra, ...logbook }
+    const fields = {
+      ...rest,
+      dateTime,
+      complaint: normalizeComplaint(rest.complaint, complaintSuggestions(s)),
+      // Set only when they change, so an edit that leaves them alone isn't audited as one.
+      ...(() => {
+        const cleaned = extraComplaints === undefined ? undefined : cleanExtraComplaints(s, rest.complaint, extraComplaints)
+        return cleaned && JSON.stringify(cleaned) !== JSON.stringify(visit.extraComplaints ?? []) ? { extraComplaints: cleaned } : {}
+      })(),
+      ...extra,
+      ...logbook,
+    }
     const given = itemsGiven
       ? applyItemLines(s, by, { studentId: visit.studentId, personnelId: visit.personnelId, visitId: id }, visit.itemsGiven, itemsGiven, 'adjust')
       : { lines: visit.itemsGiven, belowZero: [] }
-    const summary = changedSummary(visit, { ...fields, itemsGiven: given.lines })
+    const summary = changedSummary({ ...visit, collectedBy: visit.collectedBy ?? null }, { ...fields, itemsGiven: given.lines })
     Object.assign(visit, fields, { itemsGiven: given.lines })
     audit(s, by, 'update', { type: 'visit', id }, summary)
+    if (approveExcuseLetterNow) approveDraftNow(s, by, visit)
     return { visit, belowZero: given.belowZero }
   })
 }
@@ -1253,7 +1359,12 @@ export function issueReplacementExcuseLetter(visitId: string, reason: string, ac
     if (!old) throw new Error('Only an approved letter can be replaced.')
     if (old.voided || visit.enteredInError) throw new Error('A voided letter cannot be replaced.')
     old.superseded = { reason: why, at: now(s), byUserId: by.id }
-    visit.excuseLetterDraft = { excusedFrom: old.excusedFrom, excusedUntil: old.excusedUntil, note: old.note }
+    visit.excuseLetterDraft = {
+      excusedFrom: old.excusedFrom,
+      excusedUntil: old.excusedUntil,
+      note: old.note,
+      ...(old.stayHomeUntilCleared && { stayHomeUntilCleared: true, stayHomeNote: old.stayHomeNote ?? null }),
+    }
     audit(s, by, 'update', { type: 'excuse-letter', id: old.id }, 'Superseded; replacement draft opened')
   })
 }
@@ -1267,6 +1378,11 @@ export interface StudentExcuseLetter extends ExcusedPeriod {
    * `voided`: its visit was entered in error. Both stay in the record (panel review EX-3).
    */
   status: 'approved' | 'pending' | 'superseded' | 'voided'
+  /**
+   * An approved letter whose visit no longer sends the student out (edited to "Returned to class",
+   * say): the letter still stands, flagged "Outcome changed since approval" (ADR-049, D7).
+   */
+  outcomeChanged: boolean
 }
 
 /** A student's excuse letters, approved and pending, newest period first. */
@@ -1275,13 +1391,16 @@ export function getStudentExcuseLetters(studentId: string): Promise<StudentExcus
     const approved = s.frontendOnly.excuseLetterApprovals.flatMap((a) => {
       const visit = s.visits.find((v) => v.id === a.visitId && v.studentId === studentId)
       return visit
-        ? [{ id: a.id, visitId: a.visitId, disposition: visit.disposition, excusedFrom: a.excusedFrom, excusedUntil: a.excusedUntil, status: a.superseded ? ('superseded' as const) : a.voided || visit.enteredInError ? ('voided' as const) : ('approved' as const) }]
+        ? [(() => {
+            const status = a.superseded ? ('superseded' as const) : a.voided || visit.enteredInError ? ('voided' as const) : ('approved' as const)
+            return { id: a.id, visitId: a.visitId, disposition: visit.disposition, excusedFrom: a.excusedFrom, excusedUntil: a.excusedUntil, status, outcomeChanged: status === 'approved' && outcomeChangedSinceApproval(visit) }
+          })()]
         : []
     })
     // A visit never holds a draft once its letter is approved, so the two lists can't overlap.
     const pending = s.visits.flatMap((v) =>
       v.studentId === studentId && v.excuseLetterDraft
-        ? [{ id: `draft-${v.id}`, visitId: v.id, disposition: v.disposition, excusedFrom: v.excuseLetterDraft.excusedFrom, excusedUntil: v.excuseLetterDraft.excusedUntil, status: 'pending' as const }]
+        ? [{ id: `draft-${v.id}`, visitId: v.id, disposition: v.disposition, excusedFrom: v.excuseLetterDraft.excusedFrom, excusedUntil: v.excuseLetterDraft.excusedUntil, status: 'pending' as const, outcomeChanged: false }]
         : [],
     )
     return [...approved, ...pending].sort((a, b) => b.excusedFrom.localeCompare(a.excusedFrom))
@@ -1321,39 +1440,60 @@ export function excusedPeriodError({ excusedFrom, excusedUntil }: ExcusedPeriod)
   return null
 }
 
+/** ADR-049 (D7): the visit no longer sends the student out, so an approved letter's outcome changed. */
+export function outcomeChangedSinceApproval(visit: Pick<Visit, 'disposition'>): boolean {
+  return visit.disposition !== 'sent_home' && visit.disposition !== 'referred_to_hospital'
+}
+
+export interface ExcuseLetterApprovalInput extends ExcusedPeriod {
+  note?: string | null
+  /** The final wording (ADR-049, D6). Omitted, the template's wording for this visit is stored. */
+  recipient?: string
+  body?: string
+  stayHomeUntilCleared?: boolean
+  stayHomeNote?: string | null
+}
+
+/** One approval inside a write: the checks, the letter with its final wording, the cleared draft and the audit entry. */
+function storeApproval(s: DbState, by: SessionUser, visit: Visit, input: ExcuseLetterApprovalInput): ExcuseLetterApproval {
+  if (visit.personnelId) throw new Error('An excuse letter is only for a student.')
+  if (visit.enteredInError) throw new Error('This visit was entered in error, so its excuse letter is void.')
+  const invalid = excusedPeriodError(input)
+  if (invalid) throw new Error(invalid)
+  // Approved letters are permanent: the period is fixed once stored. A superseded one makes room for its replacement.
+  if (activeApproval(s, visit.id)) throw new Error('This excuse letter is already approved and stored.')
+  const earlier = s.frontendOnly.excuseLetterApprovals.filter((a) => a.visitId === visit.id).length
+  const period = { excusedFrom: input.excusedFrom, excusedUntil: input.excusedUntil }
+  const approval: ExcuseLetterApproval = {
+    id: earlier ? `excuse-${visit.id}-${earlier + 1}` : `excuse-${visit.id}`,
+    visitId: visit.id,
+    approvedByUserId: by.id,
+    approvedAt: now(s),
+    ...period,
+    note: input.note?.trim() || null,
+    recipient: input.recipient?.trim() || EXCUSE_LETTER_RECIPIENT,
+    body: input.body?.trim() || excuseLetterBody(studentOf(s, visit.studentId ?? '').fullName, visit.dateTime.slice(0, 10), period),
+    ...(input.stayHomeUntilCleared && { stayHomeUntilCleared: true, stayHomeNote: input.stayHomeNote?.trim() || null }),
+  }
+  s.frontendOnly.excuseLetterApprovals = [...s.frontendOnly.excuseLetterApprovals, approval]
+  visit.excuseLetterDraft = null
+  audit(s, by, 'approve', { type: 'excuse-letter', id: approval.id })
+  return approval
+}
+
+/** "Save and approve now" (ADR-049, D3): the draft just saved with the visit, approved with the template's wording. */
+function approveDraftNow(s: DbState, by: SessionUser, visit: Visit) {
+  if (!visit.excuseLetterDraft) throw new Error('Prepare the excuse letter before approving it.')
+  storeApproval(s, by, visit, visit.excuseLetterDraft)
+}
+
 /**
- * Approves and stores a visit's letter. The period and note are snapshotted onto the letter and the
- * visit's draft is cleared in the same write, so from here on the approved letter is the only record.
+ * Approves and stores a visit's letter. The period, note and final wording are snapshotted onto the
+ * letter and the visit's draft is cleared in the same write, so from here on the approved letter is the
+ * only record, and it prints from the stored text (ADR-049, D6).
  */
-export function approveExcuseLetter(
-  visitId: string,
-  period: ExcusedPeriod & { note?: string | null },
-  actor?: SessionUser,
-): Promise<ExcuseLetterApproval> {
-  return write('approve excuse letter', (s) => {
-    const by = actorOr(actor)
-    const visit = must(s.visits.find((v) => v.id === visitId), 'Visit')
-    if (visit.personnelId) throw new Error('An excuse letter is only for a student.')
-    if (visit.enteredInError) throw new Error('This visit was entered in error, so its excuse letter is void.')
-    const invalid = excusedPeriodError(period)
-    if (invalid) throw new Error(invalid)
-    // Approved letters are permanent: the period is fixed once stored. A superseded one makes room for its replacement.
-    if (activeApproval(s, visitId)) throw new Error('This excuse letter is already approved and stored.')
-    const earlier = s.frontendOnly.excuseLetterApprovals.filter((a) => a.visitId === visitId).length
-    const approval: ExcuseLetterApproval = {
-      id: earlier ? `excuse-${visitId}-${earlier + 1}` : `excuse-${visitId}`,
-      visitId,
-      approvedByUserId: by.id,
-      approvedAt: now(s),
-      excusedFrom: period.excusedFrom,
-      excusedUntil: period.excusedUntil,
-      note: period.note?.trim() || null,
-    }
-    s.frontendOnly.excuseLetterApprovals = [...s.frontendOnly.excuseLetterApprovals, approval]
-    visit.excuseLetterDraft = null
-    audit(s, by, 'approve', { type: 'excuse-letter', id: approval.id })
-    return approval
-  })
+export function approveExcuseLetter(visitId: string, input: ExcuseLetterApprovalInput, actor?: SessionUser): Promise<ExcuseLetterApproval> {
+  return write('approve excuse letter', (s) => storeApproval(s, actorOr(actor), must(s.visits.find((v) => v.id === visitId), 'Visit'), input))
 }
 
 export type PeReferralInput = Omit<PeReferral, 'id' | 'createdAt'>
@@ -1423,6 +1563,7 @@ export function saveIncidentStageOne(input: StageOneInput, actor?: SessionUser):
     const incident: Incident = {
       id: nextId('incident', s.incidents),
       ...patient,
+      ...gradeAtTime(s, patient),
       time: input.time ?? saved,
       complaint: input.complaint,
       vitals: input.vitals,
@@ -1459,6 +1600,19 @@ export interface StageTwoInput {
   bodyPart?: string
   /** The reason given with "Nothing further was needed or done"; blank is saved as null. PROVISIONAL. */
   noFurtherActionReason?: string
+  /** Corrected Additional notes (ADR-049); accepted until the incident report is approved. Omitted, they stay. */
+  generalNotes?: string
+}
+
+/** ADR-049: Additional notes can be corrected until the incident report is approved. */
+export class IncidentApprovedError extends Error {
+  constructor() {
+    super('This incident report is approved, so its Additional notes can no longer be changed.')
+  }
+}
+
+function incidentApproved(s: DbState, incidentId: string): boolean {
+  return s.auditLog.some((entry) => entry.actionType === 'approve' && entry.targetRecord?.type === 'incident-report' && entry.targetRecord.id === incidentId)
 }
 
 /** Stage 2 completion: same record, now complete. Logged separately from Stage 1. */
@@ -1480,6 +1634,9 @@ export function completeIncidentStageTwo(
       noFurtherActionReason,
     })
     if (blocker) throw new Error(blocker)
+    const notes = input.generalNotes === undefined ? (incident.generalNotes ?? null) : input.generalNotes.trim() || null
+    const notesChanged = notes !== (incident.generalNotes ?? null)
+    if (notesChanged && incidentApproved(s, incident.id)) throw new IncidentApprovedError()
     let belowZero: string[] = []
     // ponytail: medicines are fixed once Stage 2 is complete; changing them later needs an
     // incident-edit adjustment rule that hasn't been decided (Issues-and-TODOs).
@@ -1500,9 +1657,10 @@ export function completeIncidentStageTwo(
       stage: 2 as const,
       bodyPart: input.bodyPart?.trim() || null,
       noFurtherActionReason,
+      generalNotes: notes,
     })
     // The summary names the optional fields, never their values (ADR-017).
-    const named = [incident.bodyPart && 'body part affected', noFurtherActionReason && 'nothing further was needed or done']
+    const named = [incident.bodyPart && 'body part affected', noFurtherActionReason && 'nothing further was needed or done', notesChanged && 'corrected additional notes']
       .filter(Boolean)
       .join(' and ')
     audit(s, by, 'update', { type: 'incident-stage-2', id: incident.id }, `Completed Stage 2 details${named ? `; included ${named}` : ''}`)
@@ -1554,6 +1712,8 @@ export interface IncidentTrail {
   recorded: { by: string; at: ISODateTime } | null
   completed: { by: string; at: ISODateTime } | null
   approved: { by: string; at: ISODateTime } | null
+  /** The Admin's Acknowledge (ADR-048), from the incident itself. */
+  acknowledged: { by: string; at: ISODateTime } | null
 }
 
 /**
@@ -1568,11 +1728,33 @@ export function getIncidentTrail(incidentId: string): Promise<IncidentTrail> {
       )
       return entry ? { by: userName(s, entry.userId) ?? 'Unknown user', at: entry.timestamp } : null
     }
+    const acknowledged = s.incidents.find((i) => i.id === incidentId)?.acknowledged
     return {
       recorded: find('submit', ['incident', 'incident-stage-1']),
       completed: find('update', ['incident-stage-2']),
       approved: find('approve', ['incident-report']),
+      acknowledged: acknowledged ? { by: userName(s, acknowledged.byUserId) ?? 'Unknown user', at: acknowledged.at } : null,
     }
+  })
+}
+
+/** ADR-048: only the Admin acknowledges, only an approved report, and only once. */
+export class AcknowledgeError extends Error {}
+
+/**
+ * The Admin's Acknowledge on an approved incident report (ADR-048, amends ADR-038): records who and
+ * when, writes an audit entry, and is never undone. It changes nothing else on the report.
+ */
+export function acknowledgeIncidentReport(incidentId: string, actor?: SessionUser): Promise<Incident> {
+  return write('acknowledge incident report', (s) => {
+    const by = actorOr(actor)
+    if (by.role !== 'admin') throw new AcknowledgeError('Only the Admin/Principal acknowledges an incident report.')
+    const incident = must(s.incidents.find((i) => i.id === incidentId && visibleTo(by)(i)), 'Incident')
+    if (!incidentApproved(s, incidentId)) throw new AcknowledgeError('Only an approved incident report can be acknowledged.')
+    if (incident.acknowledged) throw new AcknowledgeError('This incident report is already acknowledged.')
+    incident.acknowledged = { byUserId: by.id, at: now(s) }
+    audit(s, by, 'update', { type: 'incident-report', id: incidentId }, 'Acknowledged')
+    return incident
   })
 }
 
@@ -1606,7 +1788,7 @@ export function listFollowUps(query: { status?: FollowUpStatus | '' } = {}): Pro
       .map((f) => ({
         ...f,
         patient: patientNumberOf(s, f),
-        dueState: followUpDueState(f, s.today),
+        dueState: followUpDueState(f, s.today, s.config.followUpOverdueAfterDays),
       }))
   })
 }
@@ -1700,7 +1882,13 @@ export type InventoryInput = Omit<InventoryItem, 'id' | 'batches'> & {
 export function saveInventoryItem(input: InventoryInput, options: { itemId?: string; actor?: SessionUser } = {}): Promise<InventoryItem> {
   return write('save inventory item', (s) => {
     const existing = options.itemId ? must(s.inventoryItems.find((i) => i.id === options.itemId), 'Inventory item') : null
-    const { currentStock, expirationDate, noExpirationConfirmed, ...fields } = input
+    const { currentStock, expirationDate, noExpirationConfirmed, avoidIfAllergicTo, ...rest } = input
+    // Distinct words (first spelling kept), blanks dropped.
+    const tags = (avoidIfAllergicTo ?? [])
+      .map((tag) => tag.trim())
+      .filter((tag, index, all) => tag && all.findIndex((other) => other.toLowerCase() === tag.toLowerCase()) === index)
+    // An item that never had tags stays without the field, so an unrelated edit isn't audited as a tag change.
+    const fields = { ...rest, ...((tags.length || existing?.avoidIfAllergicTo?.length) && { avoidIfAllergicTo: tags }) }
     // The first batch follows Restock's rule (ADR-035): a date, or an explicit "no expiration". A blank
     // date alone is never read as "no expiration". An existing item's expiry changes only through Restock.
     if (!existing && expirationDate === null && !noExpirationConfirmed)
@@ -2055,16 +2243,76 @@ export interface MonthlyReportData {
   incidents: Array<Incident & { patient: PatientNumber }>
   /** Visits per complaint, most frequent first (ties alphabetical, so the order is stable). */
   complaintCounts: ComplaintCount[]
+  /**
+   * The same visits by week (ADR-050, D16): one row per complaint group in `complaintCounts` order,
+   * one count per week in `weeks`. Every week column sums with the others to the monthly total.
+   */
+  weeklyComplaints: { weeks: MonthWeek[]; rows: Array<{ complaint: string; counts: number[]; total: number }>; totals: number[] }
+  /** The monthly inventory sheet (ADR-050, D17), computed from the stock movements. */
+  inventory: MonthlyInventoryRow[]
+  /** The month's visits by sex (ADR-051): students only; staff patients have no sex field and are counted apart (ADR-043). */
+  visitsBySex: { female: number; male: number; staff: number }
   /** The active Admin/Principal account's name for the "Reviewed by" signature line, or null if none. */
   principalName: string | null
 }
 
-function complaintCounts(visits: Visit[]): ComplaintCount[] {
+/**
+ * Visits per complaint group (ADR-050, D15): a typed variant ("head ache", "Headache.") is counted
+ * under the matching complaint type; anything else under its own cleaned text. Nothing is merged by hand.
+ */
+function complaintCounts(s: DbState, visits: Visit[]): ComplaintCount[] {
+  const known = s.frontendOnly.visitComplaintTypes.map((type) => type.label)
   const counts = new Map<string, number>()
-  for (const v of visits) counts.set(v.complaint, (counts.get(v.complaint) ?? 0) + 1)
+  for (const v of visits) {
+    const group = reportComplaint(v.complaint, known)
+    counts.set(group, (counts.get(group) ?? 0) + 1)
+  }
   return [...counts]
     .map(([complaint, count]) => ({ complaint, count }))
     .sort((a, b) => b.count - a.count || a.complaint.localeCompare(b.complaint))
+}
+
+function weeklyComplaints(s: DbState, month: string, visits: Visit[], groups: ComplaintCount[]): MonthlyReportData['weeklyComplaints'] {
+  const known = s.frontendOnly.visitComplaintTypes.map((type) => type.label)
+  const weeks = monthWeeks(month)
+  const week = (date: ISODate) => weeks.findIndex((w) => date >= w.from && date <= w.to)
+  const rows = groups.map((group) => ({ complaint: group.complaint, counts: weeks.map(() => 0), total: group.count }))
+  const byComplaint = new Map(rows.map((row) => [row.complaint, row]))
+  for (const v of visits) byComplaint.get(reportComplaint(v.complaint, known))!.counts[week(dateOf(v.dateTime))] += 1
+  return { weeks, rows, totals: weeks.map((_, index) => rows.reduce((sum, row) => sum + row.counts[index], 0)) }
+}
+
+/** One item on the monthly inventory sheet (ADR-050, D17). Nothing here is stored; it all comes from the stock movements. */
+export interface MonthlyInventoryRow {
+  itemId: string
+  itemName: string
+  unit: string
+  /** Restocked in the month. */
+  newPurchase: number
+  /** Stock at the start of the month plus New Purchase. */
+  totalAvailable: number
+  /** Stock at the end of the month, after dispensing, adjustments and expiry write-offs. */
+  endingInventory: number
+}
+
+/** What a movement did to the stock: a dispense takes, a restock adds, an adjustment is already signed. */
+const stockEffect = (t: InventoryTransaction) => (t.type === 'dispense' ? -t.quantity : t.quantity)
+
+function monthlyInventory(s: DbState, month: string): MonthlyInventoryRow[] {
+  const first = `${month}-01`
+  const last = endOfMonth(first)
+  return s.inventoryItems
+    .map((item) => {
+      const moves = s.frontendOnly.inventoryTransactions.filter((t) => t.itemId === item.id)
+      const sum = (keep: (t: InventoryTransaction) => boolean, value = stockEffect) => moves.filter(keep).reduce((total, t) => total + value(t), 0)
+      const inMonth = (t: InventoryTransaction) => dateOf(t.timestamp) >= first && dateOf(t.timestamp) <= last
+      // Today's stock, wound back over the movements after the month: the stock at its end.
+      const endingInventory = item.batches.reduce((total, batch) => total + batch.quantity, 0) - sum((t) => dateOf(t.timestamp) > last)
+      const newPurchase = sum((t) => inMonth(t) && t.type === 'restock')
+      const startOfMonth = endingInventory - sum(inMonth)
+      return { itemId: item.id, itemName: item.name, unit: item.unit, newPurchase, totalAvailable: startOfMonth + newPurchase, endingInventory }
+    })
+    .sort((a, b) => a.itemName.localeCompare(b.itemName))
 }
 
 function itemsGivenInMonth(s: DbState, month: string): MonthlyReportData['itemsGiven'] {
@@ -2104,7 +2352,22 @@ export function getMonthlyReport(month: string): Promise<MonthlyReportData> {
         .filter((i) => i.time.startsWith(month))
         .sort((a, b) => b.time.localeCompare(a.time))
         .map((i) => ({ ...i, patient: patientNumberOf(s, i) })),
-      complaintCounts: complaintCounts(countedVisits(s).filter((v) => v.dateTime.startsWith(month))),
+      ...(() => {
+        const visits = countedVisits(s).filter((v) => v.dateTime.startsWith(month))
+        const groups = complaintCounts(s, visits)
+        const students = studentsById(s)
+        const sexOf = (v: Visit) => (v.studentId ? (students.get(v.studentId)?.sex ?? 'female') : null)
+        return {
+          complaintCounts: groups,
+          weeklyComplaints: weeklyComplaints(s, month, visits, groups),
+          visitsBySex: {
+            female: visits.filter((v) => sexOf(v) === 'female').length,
+            male: visits.filter((v) => sexOf(v) === 'male').length,
+            staff: visits.filter((v) => v.personnelId).length,
+          },
+        }
+      })(),
+      inventory: monthlyInventory(s, month),
       principalName: principalNameOf(s),
     }
   })
@@ -2122,7 +2385,7 @@ function reportData(s: DbState, type: ReportType, range: { from: ISODate; to: IS
   const visits = countedVisits(s).filter((v) => inRange(dateOf(v.dateTime)))
   const incidents = s.incidents.filter((i) => inRange(dateOf(i.time)))
   if (type === 'incident') return { incidents: incidents.length }
-  if (type === 'health_summary') return { complaintCounts: complaintCounts(visits) }
+  if (type === 'health_summary') return { complaintCounts: complaintCounts(s, visits) }
   return { visits: visits.length, incidents: incidents.length }
 }
 
@@ -2149,37 +2412,128 @@ export function verifyLatestBackup(actor?: SessionUser): Promise<BackupStatusVie
   })
 }
 
+export class NoBackupLocationError extends Error {
+  constructor() {
+    super('Enable at least one backup location first.')
+  }
+}
+
 /**
- * "Back up now" (panel review BK-2). MOCK ONLY: it writes a successful backup record with a size close
- * to the last one. The real job (copying the database to the external drive) belongs to the backend
- * phase; until then this only records that a backup was asked for and "ran".
+ * "Back up now" (panel review BK-2, ADR-052). MOCK ONLY: it "runs" to every enabled location, each
+ * succeeding when its drive was found, and records one backup log that succeeded when any location
+ * did. The real job (writing the zip into `<location>\.cliniq\backups\…`) is backend-phase work.
  */
 export function recordBackupNow(actor?: SessionUser): Promise<BackupStatusView> {
   return write('back up now', (s) => {
     const by = actorOr(actor)
+    const enabled = s.frontendOnly.backupLocations.filter((l) => l.enabled)
+    if (s.frontendOnly.backupLocations.length && !enabled.length) throw new NoBackupLocationError()
+    const at = now(s)
+    for (const location of enabled) Object.assign(location, { lastBackupAt: at, lastResult: location.status === 'found' ? 'ok' : 'failed' })
+    const ok = !enabled.length || enabled.some((l) => l.lastResult === 'ok')
     const lastOk = backupStatus(s).history.find((b) => b.status === 'ok')
-    const record = { lastRun: now(s), fileSizeBytes: Math.round((lastOk?.fileSizeBytes ?? 18_000_000) * 1.002), status: 'ok' as const, verifiedByUserId: null }
+    const record = { lastRun: at, fileSizeBytes: ok ? Math.round((lastOk?.fileSizeBytes ?? 18_000_000) * 1.002) : 0, status: ok ? ('ok' as const) : ('failed' as const), verifiedByUserId: null }
     s.backupLogs.push(record)
-    audit(s, by, 'create', { type: 'backup', id: record.lastRun }, 'Backup started from the Backup page')
+    audit(s, by, 'create', { type: 'backup', id: record.lastRun }, `Backup started from the Backup page (${enabled.length} ${enabled.length === 1 ? 'location' : 'locations'})`)
     return { ...backupStatus(s), verifiedByName: null }
   })
 }
 
 // ---- dashboard -----------------------------------------------------------------------------
 
-export function getDashboardSummary(query: DashboardQuery): Promise<DashboardSummary> {
-  return read('dashboard summary', (s) => ({ ...buildDashboardSummary(s, query, new Date().toISOString()), backupAlert: backupAlertFor(s) }))
+/** ADR-053 (ADR-043 item 9): the Admin's incident totals leave staff incidents out, matching the Admin's Incident Log. */
+export function getDashboardSummary(query: DashboardQuery, viewer?: SessionUser): Promise<DashboardSummary> {
+  return read('dashboard summary', (s) => {
+    const seen = viewer?.role === 'admin' ? { ...s, incidents: s.incidents.filter(visibleTo(viewer)) } : s
+    return { ...buildDashboardSummary(seen, query, new Date().toISOString()), backupAlert: backupAlertFor(s) }
+  })
 }
 
-/** No successful backup, a failed latest run, or a last success older than `config.staleBackupHours` (BK-2, D5). */
+/**
+ * No successful backup, a failed latest run, or a last success older than `config.staleBackupHours`
+ * (BK-2, D5). The last success is the newest successful backup on an enabled location (ADR-052); with no
+ * location recorded yet, the backup log's.
+ */
 function backupAlertFor(s: DbState): BackupAlert | null {
   const { latest, history } = backupStatus(s)
-  const lastSuccess = history.find((b) => b.status === 'ok') ?? null
-  const base = { lastSuccessAt: lastSuccess?.lastRun ?? null, staleAfterHours: s.config.staleBackupHours }
-  if (!lastSuccess) return { kind: 'never', ...base }
+  const located = s.frontendOnly.backupLocations
+    .filter((l) => l.enabled && l.lastResult === 'ok' && l.lastBackupAt)
+    .map((l) => l.lastBackupAt!)
+    .sort()
+    .at(-1)
+  const lastSuccessAt = s.frontendOnly.backupLocations.length ? (located ?? null) : (history.find((b) => b.status === 'ok')?.lastRun ?? null)
+  const base = { lastSuccessAt, staleAfterHours: s.config.staleBackupHours }
+  if (!lastSuccessAt) return { kind: 'never', ...base }
   if (latest?.status === 'failed') return { kind: 'failed', ...base }
-  const hours = (Date.parse(now(s)) - Date.parse(lastSuccess.lastRun)) / 3_600_000
+  const hours = (Date.parse(now(s)) - Date.parse(lastSuccessAt)) / 3_600_000
   return hours > s.config.staleBackupHours ? { kind: 'stale', ...base } : null
+}
+
+// ---- backup locations (ADR-052; PROVISIONAL pending the ERD) ----------------------------
+
+export interface BackupLocationSettings {
+  locations: BackupLocation[]
+  /** Backups kept per location (`config.backupKeepLast`). */
+  keepLast: number
+}
+
+export function listBackupLocations(): Promise<BackupLocationSettings> {
+  return read('backup locations', (s) => ({ locations: s.frontendOnly.backupLocations, keepLast: s.config.backupKeepLast }))
+}
+
+export interface BackupLocationInput {
+  label: string
+  path: string
+}
+
+function cleanLocation(input: BackupLocationInput): BackupLocationInput {
+  const label = input.label.trim()
+  const path = input.path.trim()
+  if (!label) throw new Error('Enter a label for the location.')
+  if (!path) throw new Error('Enter the folder or drive path.')
+  return { label, path }
+}
+
+/**
+ * Adds or edits a backup location (ADR-052), audited. A browser can't reach a drive, so a new location
+ * reads "found" until the backend checks it.
+ */
+export function saveBackupLocation(input: BackupLocationInput, options: { id?: string; actor?: SessionUser } = {}): Promise<BackupLocation> {
+  return write('save backup location', (s) => {
+    const by = actorOr(options.actor)
+    const fields = cleanLocation(input)
+    if (options.id) {
+      const location = must(s.frontendOnly.backupLocations.find((l) => l.id === options.id), 'Backup location')
+      const summary = changedSummary(location, fields)
+      Object.assign(location, fields)
+      audit(s, by, 'update', { type: 'backup-location', id: location.id }, summary)
+      return location
+    }
+    const location: BackupLocation = { id: nextId('backup-location', s.frontendOnly.backupLocations), ...fields, enabled: true, status: 'found', lastBackupAt: null, lastResult: null }
+    s.frontendOnly.backupLocations.push(location)
+    audit(s, by, 'create', { type: 'backup-location', id: location.id })
+    return location
+  })
+}
+
+/** Locations are never deleted, only disabled and enabled again (ADR-052). */
+export function setBackupLocationEnabled(id: string, enabled: boolean, actor?: SessionUser): Promise<BackupLocation> {
+  return write(enabled ? 'enable backup location' : 'disable backup location', (s) => {
+    const location = must(s.frontendOnly.backupLocations.find((l) => l.id === id), 'Backup location')
+    if (location.enabled !== enabled) {
+      location.enabled = enabled
+      audit(s, actorOr(actor), 'update', { type: 'backup-location', id }, enabled ? 'Enabled' : 'Disabled')
+    }
+    return location
+  })
+}
+
+/**
+ * Possible clusters for the clinician's Dashboard Overview (ADR-050): students only, read by the grade
+ * at the time. Nothing for the Admin, and nothing is sent to anyone.
+ */
+export function listClusterAlerts(viewer?: SessionUser): Promise<ClusterAlert[]> {
+  return read('cluster alerts', (s) => (actorOr(viewer).role === 'staff' ? clusterAlerts(s) : []))
 }
 
 export function getCalendarDays(from: ISODate, to: ISODate): Promise<CalendarDay[]> {

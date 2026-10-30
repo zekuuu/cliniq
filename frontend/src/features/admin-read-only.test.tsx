@@ -96,7 +96,7 @@ describe('Admin read-only access (ADR-038)', () => {
     })
   })
 
-  it('logs the Admin opening a profile and a report once per record per session; Staff views are not logged', async () => {
+  it('logs the Admin opening a profile and a report once per record per session, and the clinician views too (ADR-048)', async () => {
     startMockSession(ADMIN)
     const first = renderWithRouter(<StudentProfilePage viewer={ADMIN} studentId="student-0001" />)
     await screen.findByRole('heading', { name: 'Visit History' })
@@ -120,8 +120,10 @@ describe('Admin read-only access (ADR-038)', () => {
     later.unmount()
     await waitFor(() => expect(viewEntries()).toHaveLength(3))
 
+    // ADR-048: the clinician's views are logged too.
     renderWithRouter(<StudentProfilePage viewer={STAFF} studentId="student-0002" />)
     await screen.findByRole('heading', { name: 'Visit History' })
-    expect(viewEntries()).toHaveLength(3)
+    await waitFor(() => expect(viewEntries()).toHaveLength(4))
+    expect(viewEntries().at(-1)).toMatchObject({ userId: STAFF.id, targetRecord: { type: 'student', id: 'student-0002' } })
   })
 })

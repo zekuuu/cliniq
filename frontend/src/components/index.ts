@@ -45,6 +45,7 @@ export { PatientPicker } from './forms/PatientPicker'
 export { SelectWithOther } from './forms/SelectWithOther'
 export { PatientFilterSelect } from './forms/PatientFilterSelect'
 export { VitalsWarning } from './forms/VitalsWarning'
+export { StayHomeField } from './forms/StayHomeField'
 export { InventoryItemPicker, type PickableItem } from './forms/InventoryItemPicker'
 export { ItemsGivenField, INSTRUCTIONS_MAX, type ItemLineDraft } from './forms/ItemsGivenField'
 export {

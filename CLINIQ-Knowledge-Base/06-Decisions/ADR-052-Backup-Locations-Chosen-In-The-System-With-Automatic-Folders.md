@@ -1,7 +1,7 @@
 # ADR-052: Backup locations are chosen in the system and the folders are created automatically
 
 **Date:** Thursday, October 29, 2026 — 22:18 PHT
-**Status:** Accepted (Zean, in chat, Thursday, October 29, 2026 — 22:15 PHT). Amends ADR-039 (the backup stays local; still no cloud and no extra copy). Not built yet.
+**Status:** Accepted (Zean, in chat, Thursday, October 29, 2026 — 22:15 PHT). Amends ADR-039 (the backup stays local; still no cloud and no extra copy). **Built** Friday, October 30, 2026 — 03:36 PHT on `build/decisions-sheet-answers-oct29` ([Part 6 session](../08-Logs/Agent-Sessions/2026-10-30-decisions-build-part-6-staff-wording-complaints-and-backup.md)) in the mock frontend (writing the files to the drives is backend work, `LATER`).
 
 ## Context
 The Backup screen assumes one "designated external drive". The open decision "Additional backup layer beyond local + external drive" asked whether to add more. Zean answered: keep the internal and external drives, but let the clinician choose, add and edit which locations are backed up, and have the system create the folders itself in a sensible structure, as most apps do.

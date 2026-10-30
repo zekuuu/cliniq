@@ -26,7 +26,7 @@ import { useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDateRange, formatDateTime } from '../../lib/dates'
-import { incidentCareSummary, visitCareSummary } from '../../lib/itemsGiven'
+import { complaintWithExtras, incidentCareSummary, visitCareSummary } from '../../lib/itemsGiven'
 import { getMockSessionUser, type SessionUser, type StudentExcuseLetter } from '../../lib/mock-db'
 import type { Incident, Student, Visit } from '../../types/entities'
 import { DISPOSITION_LABELS as dispositionLabel, DISPOSITION_TONES as dispositionTone } from '../../lib/dispositions'
@@ -229,7 +229,7 @@ function OverviewCard({ student }: { student: Student }) {
           <p className="text-sm font-semibold text-text-primary">{student.sex === 'female' ? 'Female' : 'Male'}</p>
         </div>
         <div>
-          <p className="text-xs font-semibold text-text-secondary">Contact info</p>
+          <p className="text-xs font-semibold text-text-secondary">Student&apos;s mobile number</p>
           <p className="text-sm font-semibold text-text-primary">{student.contactInfo || 'Not recorded'}</p>
         </div>
         <div>
@@ -269,7 +269,7 @@ function MedicalHistoryCard({ student }: { student: Student }) {
             Conditions
           </h3>
           <div className="mt-2">
-            {tagList(student.medicalConditions, 'No medical conditions recorded.')}
+            {tagList(student.medicalConditions, 'None recorded.')}
           </div>
         </section>
       </CardBody>
@@ -291,9 +291,10 @@ function VisitHistoryCard({ visits }: { visits: Visit[] }) {
           {visits.slice(0, HISTORY_ON_SCREEN).map((visit) => (
             <ListRow
               key={visit.id}
-              primary={visit.complaint}
+              primary={complaintWithExtras(visit)}
               secondary={visitCareSummary(visit)}
-              meta={formatDateTime(visit.dateTime)}
+              // The grade the student was in at the time (ADR-047), not today's.
+              meta={[formatDateTime(visit.dateTime), visit.gradeLevelAtTime].filter(Boolean).join(' · ')}
               trailing={
                 <Badge tone={dispositionTone[visit.disposition]} variant="soft" icon="checkCircle">
                   {dispositionLabel[visit.disposition]}
@@ -336,6 +337,11 @@ function ExcuseLettersCard({ letters }: { letters: StudentExcuseLetter[] }) {
                   </div>
                 ) : (
                   <div className="flex flex-wrap items-center justify-end gap-2">
+                    {letter.outcomeChanged && (
+                      <Badge tone="warning" variant="soft">
+                        Outcome changed since approval
+                      </Badge>
+                    )}
                     {letter.status !== 'approved' && (
                       <Badge tone={letter.status === 'voided' ? 'error' : 'neutral'} variant="soft">
                         {LETTER_STATUS[letter.status]}
@@ -388,7 +394,7 @@ function IncidentHistoryCard({ incidents }: { incidents: Incident[] }) {
                   </span>
                 </>
               }
-              meta={formatDateTime(incident.time)}
+              meta={[formatDateTime(incident.time), incident.gradeLevelAtTime].filter(Boolean).join(' · ')}
               trailing={<StatusBadge status={String(incident.stage) as '1' | '2'} map={incidentStageMap} />}
             />
           ))}
@@ -426,7 +432,7 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
             { label: 'LRN', value: student.lrn },
             { label: 'Grade level', value: student.gradeLevel },
             { label: 'Sex', value: student.sex === 'female' ? 'Female' : 'Male' },
-            { label: 'Contact info', value: student.contactInfo || 'Not recorded' },
+            { label: "Student's mobile number", value: student.contactInfo || 'Not recorded' },
             {
               label: 'Emergency contacts',
               value: contact || 'No emergency contact recorded.',
@@ -452,7 +458,7 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
           empty="No clinic visits are recorded for this student."
           columns={[
             { header: 'Date and time', width: '24%', cell: (visit) => formatDateTime(visit.dateTime) },
-            { header: 'Complaint', width: '20%', cell: (visit) => visit.complaint },
+            { header: 'Complaint', width: '20%', cell: (visit) => complaintWithExtras(visit) },
             { header: 'Care given', cell: visitCareSummary },
             { header: 'Disposition', width: '18%', cell: (visit) => dispositionLabel[visit.disposition] },
           ]}

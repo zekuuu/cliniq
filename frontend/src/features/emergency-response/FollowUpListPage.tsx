@@ -164,7 +164,22 @@ export function FollowUpListPage() {
       sort: sortColumn('student', 'LRN or Staff No.'),
       cell: (item) => <PatientNumber patient={item.patient} />,
     },
-    { key: 'reason', header: 'Reason', sort: sortColumn('reason', 'Reason'), cell: (item) => item.reason },
+    {
+      key: 'reason',
+      header: 'Reason',
+      sort: sortColumn('reason', 'Reason'),
+      cell: (item) => (
+        <div>
+          {item.reason}
+          {/* ADR-049 (D5): the clinician's "Stay home until cleared", with her note. */}
+          {item.stayHomeUntilCleared && (
+            <p className="mt-1 text-xs font-semibold text-text-primary">
+              Stay home until cleared{item.stayHomeNote ? `: ${item.stayHomeNote}` : ''}
+            </p>
+          )}
+        </div>
+      ),
+    },
     { key: 'due', header: 'Due date', width: '8.5rem', sort: sortColumn('due', 'Due date'), cell: (item) => formatDate(item.followUpDate) },
     {
       key: 'status',

@@ -814,7 +814,7 @@ export function VisitCalendar({
       <CardHeader
         titleId={headingId}
         icon={<Icon name="calendar" />}
-        title="Calendar"
+        title="Visits, incidents and events"
         description={
           canNavigate
             ? 'Visits and incidents per day, with national holidays, school events, and visit or incident tags. Select a day to add or edit its events.'

@@ -1,11 +1,13 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { useAsyncData } from '../hooks/useAsyncData'
+import { useIdleSignOut } from '../hooks/useIdleSignOut'
 import { Link } from 'react-router'
 import { AppFooter, Icon } from '../components'
-import { Modal } from '../components'
+import { Button, Modal } from '../components'
 import { cn } from '../lib/cn'
 import { ADMIN_PRINT_NOTE } from '../components'
 import { canPrint } from '../hooks/usePrinting'
-import { logoutMockSession, ROLE_LABELS, type SessionUser } from '../lib/mock-db'
+import { getAdminIdleMinutes, logoutMockSession, ROLE_LABELS, type SessionUser } from '../lib/mock-db'
 import { showKeyboardShortcuts } from '../lib/shortcuts'
 import { BrandLogo, Sidebar } from './Sidebar'
 import { navGroupsFor, type NavKey } from './navigation'
@@ -26,7 +28,8 @@ export interface AppShellProps {
   user: SessionUser
   active: NavKey | null
   children: ReactNode
-  onLogout: () => void
+  /** `idleMinutes` is set when the Admin was signed out for inactivity (ADR-048), so Login can say so. */
+  onLogout: (idleMinutes?: number) => void
 }
 
 /** The workstation's date and time, on its own so only this text re-renders every second. */
@@ -56,6 +59,13 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
   const [reportIssueNotice, setReportIssueNotice] = useState<string | null>(null)
   const navGroups = navGroupsFor(user.role)
   const printBlocked = !canPrint(user)
+  // ADR-048: only the Admin is signed out after `config.adminIdleMinutes` without activity.
+  const { data: idleMinutes } = useAsyncData(`admin-idle|${user.role}`, () =>
+    user.role === 'admin' ? getAdminIdleMinutes() : Promise.resolve(null),
+  )
+  const idleWarning = useIdleSignOut(idleMinutes ?? null, () => {
+    void logoutMockSession(user, `Signed out after ${idleMinutes} minutes of inactivity`).then(() => onLogout(idleMinutes ?? undefined))
+  })
 
   // ADR-038 item 3: Ctrl+P / Cmd+P does nothing for the Admin. The browser's own menu can't be
   // blocked; then the page prints only the note below instead of the screen (index.css).
@@ -217,6 +227,15 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
             </button>
           </div>
         </nav>
+      </Modal>
+      <Modal open={idleWarning} title="Still there?" onClose={() => {}}>
+        <p className="text-sm text-text-secondary">
+          For privacy, the Admin account signs out after {idleMinutes} minutes without activity. You will be signed out in about a minute.
+        </p>
+        <div className="mt-5 flex justify-end">
+          {/* Any key, click or scroll keeps the session; the button gives that an obvious target. */}
+          <Button variant="primary" data-autofocus>Stay signed in</Button>
+        </div>
       </Modal>
       <ReportIssueModal
         open={isReportIssueOpen}

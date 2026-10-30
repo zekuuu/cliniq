@@ -11,6 +11,7 @@ import {
   type StudentDuplicateCheck,
 } from '../../../lib/mock-db'
 import type { EmergencyContact, Student, StudentSex } from '../../../types/entities'
+import { isNoneRecorded } from '../../../lib/patients'
 
 export { checkStudentDuplicates, DUPLICATE_LRN_MESSAGE, DuplicateLrnError, NAME_CORRECTION_REASON_MIN }
 export type { DuplicateMatch, StudentDuplicateCheck }
@@ -43,7 +44,7 @@ function parseList(value: string): string[] {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
-    .filter((item) => item.toLowerCase() !== 'none')
+    .filter((item) => !isNoneRecorded(item))
 }
 
 /** Edit mode when `studentId` is given (`/students/:studentId/edit`); add mode otherwise. */

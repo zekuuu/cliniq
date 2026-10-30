@@ -7,6 +7,7 @@ import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { isPhilippinePhone, PHONE_ERROR } from '../../lib/phone'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
+import { NONE_RECORDED } from '../../lib/patients'
 import type { Personnel } from '../../types/entities'
 import { fetchStaffFormContext, submitStaffForm, type StaffFormContext, type StaffFormValues } from './api/staffApi'
 
@@ -27,8 +28,8 @@ function valuesFrom(person: Personnel | null): StaffFormValues {
     emergencyContacts: person.emergencyContacts.length
       ? person.emergencyContacts.map(({ name, relationship, phone, verified }) => ({ name, relationship, phone, verified }))
       : [EMPTY_CONTACT],
-    allergies: person.allergies.length ? person.allergies.join(', ') : 'None',
-    medicalConditions: person.medicalConditions.length ? person.medicalConditions.join(', ') : 'None',
+    allergies: person.allergies.length ? person.allergies.join(', ') : NONE_RECORDED,
+    medicalConditions: person.medicalConditions.length ? person.medicalConditions.join(', ') : NONE_RECORDED,
   }
 }
 
@@ -243,10 +244,11 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                 Allergies and conditions
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Input label="Allergies" hint="Optional. Comma-separated list, or write None." value={values.allergies} onChange={(event) => setField('allergies', event.target.value)} />
+                <Input label="Allergies" placeholder={NONE_RECORDED} hint="Optional. Comma-separated list. Left empty, it reads None recorded." value={values.allergies} onChange={(event) => setField('allergies', event.target.value)} />
                 <Input
                   label="Medical conditions"
-                  hint="Optional. Comma-separated list, or write None."
+                  placeholder={NONE_RECORDED}
+                  hint="Optional. Comma-separated list. Left empty, it reads None recorded."
                   value={values.medicalConditions}
                   onChange={(event) => setField('medicalConditions', event.target.value)}
                 />

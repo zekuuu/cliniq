@@ -36,17 +36,35 @@ export function leftOutText({ leftOut }: Pick<SportsReportContent, 'leftOut'>): 
  * happened, outcome. Every entry uses the same column template, so wrapped text stays in its column.
  * Shared by the preview and the printout.
  */
-function entriesCell(row: SportsReportContentRow) {
+/** On screen only (ADR-051): a tick per entry, all ticked to start; an unticked one does not print. */
+export interface EntrySelection {
+  excluded: ReadonlySet<string>
+  onToggle: (entryId: string) => void
+}
+
+function entriesCell(row: SportsReportContentRow, select?: EntrySelection) {
   if (!row.entries.length) return <>{NO_ENTRIES_TEXT}</>
   return (
     <ul className="flex flex-col gap-1">
-      {row.entries.map((entry) => (
-        <li key={entry.id} className="grid grid-cols-[6.5em_minmax(0,1fr)_minmax(0,0.75fr)] gap-x-2">
-          <span className="font-semibold tabular-nums">{formatDate(entry.dateTime.slice(0, 10))}</span>
-          <span>{entry.kind}: {entry.what}</span>
-          <span>{entry.outcome}</span>
-        </li>
-      ))}
+      {row.entries.map((entry) => {
+        const date = formatDate(entry.dateTime.slice(0, 10))
+        return (
+          <li key={entry.id} className={select ? 'grid grid-cols-[1.25rem_6.5em_minmax(0,1fr)_minmax(0,0.75fr)] items-start gap-x-2' : 'grid grid-cols-[6.5em_minmax(0,1fr)_minmax(0,0.75fr)] gap-x-2'}>
+            {select && (
+              <input
+                type="checkbox"
+                aria-label={`Include ${entry.kind.toLowerCase()} of ${date} (${entry.what}) for ${row.fullName}`}
+                checked={!select.excluded.has(entry.id)}
+                onChange={() => select.onToggle(entry.id)}
+                className="mt-1 size-4 cursor-pointer accent-brand-green-dark"
+              />
+            )}
+            <span className="font-semibold tabular-nums">{date}</span>
+            <span>{entry.kind}: {entry.what}</span>
+            <span>{entry.outcome}</span>
+          </li>
+        )
+      })}
     </ul>
   )
 }
@@ -63,12 +81,17 @@ function conditionsCell(row: SportsReportContentRow) {
 }
 
 /** The columns of the report table, in the order ADR-034 sets; the conditions column only when ticked. */
-export function sportsReportColumns(includeConditions: boolean): Array<PrintColumn<SportsReportContentRow>> {
+export function sportsReportColumns(includeConditions: boolean, select?: EntrySelection): Array<PrintColumn<SportsReportContentRow>> {
   const columns: Array<PrintColumn<SportsReportContentRow>> = [
     { header: 'Student', width: includeConditions ? '20%' : '24%', cell: (row) => <><span className="block font-semibold">{row.fullName}</span>{row.gradeLevel}</> },
-    { header: 'Recent visits and incidents', width: includeConditions ? '38%' : '46%', cell: (row) => entriesCell(row) },
+    { header: 'Recent visits and incidents', width: includeConditions ? '38%' : '46%', cell: (row) => entriesCell(row, select) },
     { header: "Clinician's note", width: includeConditions ? '22%' : '30%', cell: (row) => <span className="whitespace-pre-line">{row.note ?? ''}</span> },
   ]
   if (includeConditions) columns.push({ header: 'Recorded conditions and allergies', width: '20%', cell: (row) => conditionsCell(row) })
   return columns
+}
+
+/** The report as it prints: only the entries the clinician left ticked (ADR-051). */
+export function withChosenEntries(content: SportsReportContent, excluded: ReadonlySet<string>): SportsReportContent {
+  return { ...content, rows: content.rows.map((row) => ({ ...row, entries: row.entries.filter((entry) => !excluded.has(entry.id)) })) }
 }

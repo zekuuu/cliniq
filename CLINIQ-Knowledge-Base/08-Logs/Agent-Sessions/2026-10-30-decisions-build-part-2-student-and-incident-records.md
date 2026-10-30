@@ -5,6 +5,7 @@ Agent: Claude Code (Opus 5.5)
 Task: Build Part 2 of the decisions-sheet answers (ADR-047, ADR-049, ADR-051): five `FIX` entries on student and incident records.
 Status: Completed
 Prompt/Request: The same "Build the fixes that came out of the decisions sheet" prompt, "Parts 1 to 6", on the branch `build/decisions-sheet-answers-oct29`. Part 2: "None recorded" wording for allergies and conditions, "avoid if allergic to" tag, "Student's mobile number", grade and section kept at the time, Additional notes correctable. Defaults D1, D8, D9, D10 and D19 apply.
+Committed to `main`: the Part 1 to 4 documentation (this log included) was committed to `main` by Zean at Friday, October 30, 2026 — 01:28 PHT (`3bcaea1`), which took it out of this branch's working tree. The agent first misread that as a reset and re-applied the same documentation on the branch at 03:40 PHT, so the branch and `3bcaea1` overlap in those 15 files; reconcile them when merging. No code was affected.
 
 Files Modified:
 - Data layer: `frontend/src/lib/mock-db/api.ts` (`gradeAtTime`, tag cleaning, `IncidentApprovedError`, Stage 2 `generalNotes`), `seed.ts` and `store.ts` (`fillGradeAtTime`), `dashboard.ts` (trends by grade read the grade at the time), `frontend/src/types/entities.ts`, `frontend/src/lib/itemsGiven.ts` (`allergyMatches`, `allergyWarningText`), `frontend/src/lib/patients.ts` (`NONE_RECORDED`, `isNoneRecorded`)

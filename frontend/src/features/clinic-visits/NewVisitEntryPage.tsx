@@ -16,6 +16,7 @@ import {
   SegmentedControl,
   Skeleton,
   PatientPicker,
+  StayHomeField,
   type ItemLineDraft,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
@@ -25,6 +26,7 @@ import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { cn } from '../../lib/cn'
 import { patientLine, patientRefOf, type Patient } from '../../lib/patients'
 import { cleanComplaint, normalizeComplaint } from '../../lib/complaints'
+import { ageGroupOf } from '../../lib/vitals'
 import { addDays, todayISO } from '../../lib/dates'
 import { getMockSessionUser, LATE_ENTRY_MINUTES, StockRuleError, type ComplaintType, type InventoryItemView, type SessionUser } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
@@ -38,6 +40,7 @@ import {
   submitNewVisit,
 } from './api/newVisitApi'
 import { ComplaintField } from './ComplaintField'
+import { ExtraComplaintsField } from './ExtraComplaintsField'
 import { MedicineInNotesHint } from './MedicineInNotesHint'
 import type { EscalationPrefill } from '../emergency-response/api/incidentEntryApi'
 import { DispositionFields } from './DispositionFields'
@@ -45,6 +48,7 @@ import {
   dispositionErrors,
   dispositionPayload,
   emptyDispositionValues,
+  hasExcuseLetter,
   type DispositionErrors,
 } from './dispositionValues'
 import { LogbookFields } from './LogbookFields'
@@ -56,7 +60,14 @@ import {
   logbookPayload,
   type LogbookErrors,
 } from './logbookValues'
-import { DISPOSITION_OPTIONS as dispositionOptions } from '../../lib/dispositions'
+import { dispositionOptionsFor } from '../../lib/dispositions'
+
+/**
+ * Complaint types that open "Show more fields" (body temperature) by themselves (ADR-049). Matched
+ * to a complaint type the way the first-aid checklist is (case-insensitive, whole label), so "Chills"
+ * typed under Other counts and "chills and cough" does not.
+ */
+const OPENS_MORE_FIELDS = new Set(['Fever', 'Headache', 'Chills'])
 
 /** The first-aid checklist's complaint type for what was typed: a case-insensitive match, or none. */
 function matchComplaintType(complaint: string, complaintTypes: ComplaintType[]): ComplaintType | undefined {
@@ -214,6 +225,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [staffParam])
   const [complaint, setComplaint] = useState('')
+  const [extraComplaints, setExtraComplaints] = useState<string[]>([])
   const [treatment, setTreatment] = useState('')
   const [disposition, setDisposition] = useState<Disposition>('returned_to_class')
   const [dispositionValues, setDispositionValues] = useState(() => emptyDispositionValues(today))
@@ -224,6 +236,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
   const [followUpDate, setFollowUpDate] = useState(addDays(today, 1))
   const [followUpReason, setFollowUpReason] = useState('')
   const [followUpNotes, setFollowUpNotes] = useState('')
+  const [followUpStayHome, setFollowUpStayHome] = useState({ checked: false, note: '' })
   const [lines, setLines] = useState<ItemLineDraft[]>([])
   const [logbook, setLogbook] = useState(emptyLogbookValues)
   // When the visit happened (panel review VS-8, ADR-029). Shown as now; sent only once Staff changes it,
@@ -262,6 +275,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
     given: number
     belowZero: string[]
     letterPrepared: boolean
+    letterApproved: boolean
   }>(null)
   // Allergies sit beside the medicine picker; picking a student loads them in full.
   const allergies = identified.student?.allergies ?? null
@@ -269,6 +283,9 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
   const formRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(formRef)
   const saveAndNewRef = useRef(false)
+  /** Set by "Save and approve now" (ADR-049, D3) for the submit it starts. */
+  const approveNowRef = useRef(false)
+  const preparingLetter = hasExcuseLetter(disposition) && letterValues.prepareLetter && !isStaffPatient
   // The next visit in this open form starts with the last successfully saved disposition.
   const lastSavedDisposition = useRef<Disposition>('returned_to_class')
   // Anything typed or chosen beyond the defaults; a save clears the form back to them.
@@ -316,6 +333,9 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
     // Ticked steps survive typing that keeps the same complaint type ("fever" to "Fever ").
     const types = data?.complaintTypes ?? []
     if (matchComplaintType(value, types) !== matchComplaintType(complaint, types)) setTriageSteps([])
+    // Opens once when one of these is picked; closing it again is up to the clinician.
+    const opensMore = (text: string) => OPENS_MORE_FIELDS.has(matchComplaintType(text, types)?.label ?? '')
+    if (opensMore(value) && !opensMore(complaint)) setMoreOpen(true)
     setComplaint(value)
     setErrors((current) => ({ ...current, complaint: undefined }))
   }
@@ -338,13 +358,20 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
     }
     return {
       ...next,
-      ...dispositionErrors(disposition, letterValues),
+      ...dispositionErrors(disposition, isStaffPatient ? { ...letterValues, collectedTime: '' } : letterValues, false, visitDate),
       ...logbookErrors(logbook, currentClock(), timeOutRef.current?.validity.badInput),
     }
   }
 
+  function saveAndApproveNow() {
+    approveNowRef.current = true
+    formRef.current?.requestSubmit()
+  }
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    const approveNow = approveNowRef.current && preparingLetter
+    approveNowRef.current = false
     if (!data) return
     const nextErrors = validate()
     const studentOk = identified.validate('Choose the student or staff member: type an LRN, a Staff No. or a name, then pick from the list.')
@@ -369,10 +396,15 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 followUpDate,
                 reason: followUpReason.trim(),
                 notes: followUpNotes.trim() || null,
+                ...(followUpStayHome.checked && { stayHomeUntilCleared: true, stayHomeNote: followUpStayHome.note.trim() || null }),
               }
             : null,
           itemsGiven: lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity, instructions: line.instructions })),
           ...dispositionPayload(disposition, letterValues),
+          // A staff patient leaves on their own: no "who collected" (ADR-049, D4).
+          ...(isStaffPatient && { collectedBy: null }),
+          approveExcuseLetterNow: approveNow,
+          extraComplaints,
           ...logbookPayload(logbook),
           ...(whenEdited && { dateTime: `${visitDate}T${visitClock}` }),
           lateEntryReason: isLateEntry ? lateEntryReason : null,
@@ -387,11 +419,13 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
         given: lines.length,
         belowZero: result.belowZero,
         letterPrepared: result.visit.excuseLetterDraft !== null,
+        letterApproved: approveNow,
       })
       setLines([])
       setFreshItems(await fetchVisitItems())
       setFreshSuggestions(await fetchComplaintSuggestions())
       setComplaint('')
+      setExtraComplaints([])
       setTreatment('')
       lastSavedDisposition.current = disposition
       setDisposition(disposition)
@@ -401,6 +435,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
       setFollowUpDate(addDays(today, 1))
       setFollowUpReason('')
       setFollowUpNotes('')
+      setFollowUpStayHome({ checked: false, note: '' })
       setLogbook(emptyLogbookValues())
       setVisitDate(todayISO())
       setVisitClock(currentClock())
@@ -455,6 +490,8 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 ? `${identified.student.fullName} · ${patientLine(identified.student)}`
                 : 'Student or staff member not identified yet.'}
             </p>
+            {/* ADR-051: which form to use; the nurse is to confirm the wording. Escalate to incident stays (ADR-036). */}
+            <p className="mt-2 text-xs text-text-secondary">Visit: a common, routine case. A worse case that needs fast two-stage capture is an Incident.</p>
           </div>
         </div>
       </Card>
@@ -470,6 +507,14 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
           {saved.belowZero.length > 0 && (
             <span className="mt-1 block text-warning">
               Now below zero: {saved.belowZero.join(', ')}. Recount and restock.
+            </span>
+          )}
+          {saved.letterApproved && (
+            <span className="mt-2 flex flex-wrap items-center gap-2 font-normal">
+              The excuse letter was approved and stored in the student&apos;s record.
+              <Link to={paths.excuseLetter(saved.visitId)} replace className={buttonClassName({ size: 'sm' })}>
+                Open excuse letter
+              </Link>
             </span>
           )}
           {saved.letterPrepared && (
@@ -563,6 +608,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
               suggestions={suggestions}
               error={errors.complaint}
             />
+            <ExtraComplaintsField value={extraComplaints} onChange={setExtraComplaints} main={complaint} suggestions={suggestions} />
             {looksLikeEmergency && (
               <div role="note" className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm text-text-primary">
                 <span className="flex items-center gap-2">
@@ -628,7 +674,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                   setDispositionValues(emptyDispositionValues(today))
                   setErrors((current) => ({ ...current, excusedUntil: undefined }))
                 }}
-                options={dispositionOptions}
+                options={dispositionOptionsFor(isStaffPatient ? 'personnel' : 'student')}
                 size="md"
               />
             </div>
@@ -694,6 +740,9 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                       rows={3}
                     />
                   </div>
+                  <div className="sm:col-span-2">
+                    <StayHomeField checked={followUpStayHome.checked} note={followUpStayHome.note} onChange={setFollowUpStayHome} />
+                  </div>
                 </div>
               )}
             </fieldset>
@@ -710,6 +759,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
               onOpenChange={setMoreOpen}
               ranges={data.vitalsRanges}
               timeOutRef={timeOutRef}
+              ageGroup={identified.student ? ageGroupOf(identified.student) : null}
             />
 
             {/* The note gets its own line so the actions stay together instead of Save wrapping alone. */}
@@ -722,6 +772,11 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                   Escalate to incident
                 </Button>
                 <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
+                {preparingLetter && (
+                  <Button type="button" variant="secondary" icon="checkCircle" disabled={saving} onClick={saveAndApproveNow}>
+                    Save and approve now
+                  </Button>
+                )}
                 <Button type="submit" variant="primary" loading={saving}>
                   Save Visit
                 </Button>

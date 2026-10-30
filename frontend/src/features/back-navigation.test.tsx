@@ -72,7 +72,7 @@ describe('Back after a save never returns to the submitted form', () => {
     const user = userEvent.setup()
     renderAfterPrevious(`/students/${STUDENT}/edit`, <StudentFormPage studentId={STUDENT} />)
     await screen.findByRole('heading', { name: 'Edit Student' })
-    await user.type(screen.getByLabelText(/student contact information/i), '0')
+    await user.type(screen.getByLabelText(/student's mobile number/i), '0')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     await screen.findByText(/^Student record updated for/)
 
@@ -88,7 +88,7 @@ describe('Back after a save never returns to the submitted form', () => {
     await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
     await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
     await selectOption(user, screen.getByLabelText(/^sex/i), 'Female')
-    await user.type(screen.getByLabelText(/student contact information/i), '09XX-111-2222')
+    await user.type(screen.getByLabelText(/student's mobile number/i), '09XX-111-2222')
     await user.type(screen.getByLabelText(/contact name/i), 'Marisol Santos')
     await user.type(screen.getByLabelText(/relationship/i), 'Mother')
     await user.type(screen.getByLabelText(/contact phone/i), '0917-333-4444')

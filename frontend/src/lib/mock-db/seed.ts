@@ -1,5 +1,6 @@
 import rawSeed from './mock-db.json'
 import type { ISODate } from '../../types/entities'
+import { EXCUSE_LETTER_RECIPIENT, excuseLetterBody } from '../excuseLetter'
 import { resolveDate, resolveDateTime, resolveSchoolDate, resolveSchoolDateTime } from './relativeDates'
 import type { DbState, MockDbSeed } from './types'
 
@@ -43,7 +44,7 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
   delete config._note
   const fo = source.frontendOnly
 
-  return structuredClone({
+  return fillGradeAtTime(fillApprovedLetterWording(structuredClone({
     today,
     config,
     users: source.users.map((u) => ({
@@ -139,6 +140,34 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
         createdAt: resolveDateTime(r.createdAt, today),
         updatedAt: resolveDateTime(r.updatedAt, today),
       })),
+      backupLocations: fo.backupLocations.map((l) => ({ ...l, lastBackupAt: l.lastBackupAt ? resolveDateTime(l.lastBackupAt, today) : null })),
     },
-  })
+  })))
+}
+
+/**
+ * ADR-047 (D9): a student's visit or incident keeps the grade it was saved in. Records from before
+ * the field existed get the student's current grade, a best effort; staff records get none.
+ */
+export function fillGradeAtTime(state: DbState): DbState {
+  const grades = new Map(state.students.map((student) => [student.id, student.gradeLevel]))
+  for (const record of [...state.visits, ...state.incidents])
+    if (record.gradeLevelAtTime === undefined && record.studentId) record.gradeLevelAtTime = grades.get(record.studentId) ?? null
+  return state
+}
+
+/**
+ * ADR-049 (D6): an approved letter keeps the wording it was approved with. Letters approved before the
+ * wording was stored get it built once from the current template, so later template changes leave
+ * them alone. Used for the seed and for a saved copy of the mock state.
+ */
+export function fillApprovedLetterWording(state: DbState): DbState {
+  for (const approval of state.frontendOnly.excuseLetterApprovals) {
+    if (approval.body !== undefined && approval.recipient !== undefined) continue
+    const visit = state.visits.find((v) => v.id === approval.visitId)
+    const student = state.students.find((st) => st.id === visit?.studentId)
+    approval.recipient ??= EXCUSE_LETTER_RECIPIENT
+    approval.body ??= excuseLetterBody(student?.fullName ?? 'The student', (visit?.dateTime ?? approval.approvedAt).slice(0, 10), approval)
+  }
+  return state
 }

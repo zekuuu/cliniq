@@ -21,8 +21,8 @@ import {
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDate, formatDateTime } from '../../lib/dates'
-import { DISPOSITION_LABELS as dispositionLabel, DISPOSITION_TONES as dispositionTone } from '../../lib/dispositions'
-import { incidentCareSummary, visitCareSummary } from '../../lib/itemsGiven'
+import { dispositionLabel, DISPOSITION_TONES as dispositionTone } from '../../lib/dispositions'
+import { complaintWithExtras, incidentCareSummary, visitCareSummary } from '../../lib/itemsGiven'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import type { FollowUp, Incident, Personnel, Visit } from '../../types/entities'
 import { paths } from '../../routes/paths'
@@ -228,7 +228,7 @@ function Medical({ person }: { person: Personnel }) {
           <h3 id="staff-conditions" className="text-sm font-semibold text-text-primary">
             Conditions
           </h3>
-          <div className="mt-2">{tagList(person.medicalConditions, 'No medical conditions recorded.')}</div>
+          <div className="mt-2">{tagList(person.medicalConditions, 'None recorded.')}</div>
         </section>
       </CardBody>
     </Card>
@@ -244,12 +244,12 @@ function Visits({ visits }: { visits: Visit[] }) {
           {visits.slice(0, HISTORY_ON_SCREEN).map((visit) => (
             <ListRow
               key={visit.id}
-              primary={visit.complaint}
+              primary={complaintWithExtras(visit)}
               secondary={visitCareSummary(visit)}
               meta={formatDateTime(visit.dateTime)}
               trailing={
                 <Badge tone={dispositionTone[visit.disposition]} variant="soft" icon="checkCircle">
-                  {dispositionLabel[visit.disposition]}
+                  {dispositionLabel(visit.disposition, 'personnel')}
                 </Badge>
               }
             />
@@ -316,7 +316,7 @@ function FollowUps({ followUps }: { followUps: FollowUp[] }) {
  * School Clinician only; the Admin never reaches it (route guard).
  */
 export function StaffProfilePage({ viewer = getMockSessionUser(), personnelId }: { viewer?: SessionUser; personnelId: string }) {
-  const { data, status, reload } = useAsyncData(`staff-profile|${personnelId}`, () => fetchStaffProfile(personnelId))
+  const { data, status, reload } = useAsyncData(`staff-profile|${personnelId}`, () => fetchStaffProfile(personnelId, viewer))
   const savedMessage = (useLocation().state as { savedMessage?: string } | null)?.savedMessage
   const back = <BackButton fallback={paths.staff} />
 

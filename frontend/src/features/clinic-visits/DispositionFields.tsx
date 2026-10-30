@@ -1,10 +1,14 @@
 import type { ChangeEvent } from 'react'
-import { DatePicker, Input } from '../../components'
+import { Combobox, DatePicker, Input, StayHomeField } from '../../components'
 import { formatDateRange } from '../../lib/dates'
 import type { ExcusedPeriod } from '../../lib/mock-db'
 import type { Disposition } from '../../types/entities'
+import { CertificateWarning } from './CertificateWarning'
 import { hasExcuseLetter, type DispositionErrors, type DispositionValues } from './dispositionValues'
 import { ExcusedPeriodPresets } from './ExcusedPeriodPresets'
+
+/** Suggestions only; any relationship can be typed (ADR-049, D4). */
+const COLLECTED_RELATIONSHIPS = ['Parent', 'Guardian', 'Relative', 'Other']
 
 /**
  * Progressive disclosure under Disposition: nothing for Returned to class; the excuse-letter
@@ -32,12 +36,18 @@ export function DispositionFields({
   const set = <K extends keyof DispositionValues>(field: K, value: DispositionValues[K]) =>
     onChange({ ...values, [field]: value })
 
+  // A student who left the clinic: who collected them. Not for a staff patient, who leaves on their own.
+  const collected = hasExcuseLetter(disposition) && !noLetter && (
+    <CollectedByFields values={values} onChange={onChange} error={errors.collectedTime} />
+  )
+
   if (approvedPeriod) {
     return (
       <div className="flex flex-col gap-4">
         {disposition === 'referred_to_hospital' && (
           <ReferredToField value={values.referredTo} onChange={(value) => set('referredTo', value)} />
         )}
+        {collected}
         <p role="note" className="rounded-md border border-info/40 bg-info/10 px-3 py-2 text-sm text-text-primary">
           An approved excuse letter exists for this visit (
           {formatDateRange(approvedPeriod.excusedFrom, approvedPeriod.excusedUntil)}). This edit doesn't change or
@@ -57,6 +67,7 @@ export function DispositionFields({
       {disposition === 'referred_to_hospital' && (
         <ReferredToField value={values.referredTo} onChange={(value) => set('referredTo', value)} />
       )}
+      {collected}
       <fieldset className="rounded-md border border-border p-4">
         <legend className="px-1 text-sm font-semibold text-text-primary">Excuse letter</legend>
         <label className="mt-2 flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
@@ -93,6 +104,9 @@ export function DispositionFields({
               <ExcusedPeriodPresets from={values.excusedFrom} onPick={(until) => set('excusedUntil', until)} />
             </div>
             <div className="sm:col-span-2">
+              <CertificateWarning period={{ excusedFrom: values.excusedFrom, excusedUntil: values.excusedUntil }} />
+            </div>
+            <div className="sm:col-span-2">
               <Input
                 label="Note for the teacher"
                 value={values.letterNote}
@@ -100,10 +114,61 @@ export function DispositionFields({
                 onChange={(event) => set('letterNote', event.target.value)}
               />
             </div>
+            <div className="sm:col-span-2">
+              <StayHomeField
+                checked={values.stayHome}
+                note={values.stayHomeNote}
+                onChange={(next) => onChange({ ...values, stayHome: next.checked, stayHomeNote: next.note })}
+              />
+            </div>
           </div>
         )}
       </fieldset>
     </div>
+  )
+}
+
+/** Who collected the student (ADR-049, D4): name, relationship and time, all optional. */
+function CollectedByFields({
+  values,
+  onChange,
+  error,
+}: {
+  values: DispositionValues
+  onChange: (next: DispositionValues) => void
+  error?: string
+}) {
+  const typed = values.collectedRelationship.trim().toLowerCase()
+  return (
+    <fieldset className="rounded-md border border-border p-4">
+      <legend className="px-1 text-sm font-semibold text-text-primary">Who collected the student</legend>
+      <p className="text-xs text-text-secondary">Optional.</p>
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Input
+          label="Collected by"
+          value={values.collectedName}
+          maxLength={80}
+          onChange={(event) => onChange({ ...values, collectedName: event.target.value })}
+        />
+        <Combobox
+          label="Relationship"
+          value={values.collectedRelationship}
+          onValueChange={(text) => onChange({ ...values, collectedRelationship: text })}
+          options={COLLECTED_RELATIONSHIPS.filter((option) => option.toLowerCase().includes(typed))}
+          optionKey={(option) => option}
+          optionLabel={(option) => option}
+          allowFreeText
+          noMatchesText={null}
+        />
+        <Input
+          type="time"
+          label="Time collected"
+          value={values.collectedTime}
+          onChange={(event) => onChange({ ...values, collectedTime: event.target.value })}
+          error={error}
+        />
+      </div>
+    </fieldset>
   )
 }
 

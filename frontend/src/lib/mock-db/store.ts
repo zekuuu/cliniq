@@ -2,7 +2,7 @@ import { todayISO } from '../dates'
 import type { AuditLogEntry, ISODate } from '../../types/entities'
 import { persistParam, resetParam } from './devToggles'
 import { checkSeedIntegrity } from './integrity'
-import { resolveSeed, seed } from './seed'
+import { fillApprovedLetterWording, fillGradeAtTime, resolveSeed, seed } from './seed'
 import type { DbState } from './types'
 
 /**
@@ -106,6 +106,21 @@ export function migratePersistedState(saved: Saved): Saved {
   saved.state.personnel ??= []
   for (const record of [...saved.state.visits, ...saved.state.incidents, ...saved.state.followUps, ...saved.state.frontendOnly.inventoryTransactions])
     record.personnelId ??= null
+  // October 29, 2026 (ADR-049): the medical-certificate limit, and the wording stored on approved letters.
+  if (typeof config.medicalCertificateAfterDays !== 'number') config.medicalCertificateAfterDays = seed.config.medicalCertificateAfterDays
+  // ADR-048 and ADR-050: the Admin's idle sign-out and the cluster alert's numbers.
+  for (const key of ['adminIdleMinutes', 'clusterMinStudents', 'clusterWindowDays', 'followUpOverdueAfterDays', 'followUpAutoCloseDays'] as const)
+    if (typeof config[key] !== 'number') config[key] = seed.config[key]
+  // ADR-051: the usual vitals ranges, and the frequent-visitor window's new starting value.
+  if (!config.vitalsUsualRanges) config.vitalsUsualRanges = structuredClone(seed.config.vitalsUsualRanges)
+  // ADR-052 and ADR-053: backup locations, how many backups to keep, and the staff type "Other".
+  if (typeof config.backupKeepLast !== 'number') config.backupKeepLast = seed.config.backupKeepLast
+  const types = config.personnelTypes as string[]
+  if (!types.includes('Other')) types.push('Other')
+  saved.state.frontendOnly.backupLocations ??= resolveSeed(seed, saved.state.today).frontendOnly.backupLocations
+  fillApprovedLetterWording(saved.state)
+  // October 29, 2026 (ADR-047): visits and incidents keep the grade they were saved in.
+  fillGradeAtTime(saved.state)
   return saved
 }
 

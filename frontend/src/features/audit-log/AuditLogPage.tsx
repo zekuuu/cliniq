@@ -44,7 +44,7 @@ const actionOptions: Array<{ value: AuditActionType; label: string }> = [
   { value: 'delete', label: 'Delete' },
   { value: 'archive', label: 'Archive' },
   { value: 'print', label: 'Print / Save as PDF' },
-  { value: 'view', label: 'Viewed (Admin)' },
+  { value: 'view', label: 'Viewed a record' },
 ]
 
 const actionStatusMap: StatusMap<AuditActionType> = {
@@ -57,7 +57,7 @@ const actionStatusMap: StatusMap<AuditActionType> = {
   delete: { label: 'Delete', tone: 'error' },
   archive: { label: 'Archive', tone: 'neutral' },
   print: { label: 'Print / Save as PDF', tone: 'info' },
-  view: { label: 'Viewed (Admin)', tone: 'neutral' },
+  view: { label: 'Viewed a record', tone: 'neutral' },
 }
 
 const targetLabels: Record<AuditTargetType, string> = {
@@ -72,6 +72,7 @@ const targetLabels: Record<AuditTargetType, string> = {
   'calendar-event': 'Calendar event',
   'sports-report': 'Sports Report',
   staff: 'Staff',
+  'backup-location': 'Backup location',
 }
 
 interface AuditLogFilters {

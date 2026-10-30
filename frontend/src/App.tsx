@@ -20,10 +20,11 @@ function AppContent() {
     setUser(nextUser)
   }
 
-  // The shell's Log out control has already audited the logout and cleared the stored session.
-  function signOut() {
+  // The shell's Log out control (or the Admin's idle sign-out, ADR-048) has already audited the
+  // logout and cleared the stored session.
+  function signOut(idleMinutes?: number) {
     setUser(null)
-    navigate(paths.login, { replace: true })
+    navigate(paths.login, { replace: true, state: idleMinutes ? { signedOutAfterMinutes: idleMinutes } : null })
   }
 
   return (

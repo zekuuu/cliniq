@@ -1,7 +1,7 @@
 import { renderWithRouter } from '../../test/renderWithRouter'
+import { recordedWrites } from '../../test/recordedWrites'
 import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { getRecordedAuditEntries } from '../../lib/mock-db'
 import { ParentNotificationPage } from './ParentNotificationPage'
 
 describe('Parent Notification Log', () => {
@@ -21,6 +21,6 @@ describe('Parent Notification Log', () => {
     expect(screen.getByText('Beatriz Cabrera')).toBeInTheDocument()
     expect(screen.getByText('Primary')).toBeInTheDocument()
     expect(screen.getByText('Needs verification')).toBeInTheDocument()
-    expect(getRecordedAuditEntries()).toEqual([])
+    expect(recordedWrites()).toEqual([])
   })
 })

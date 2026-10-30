@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Modal, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDateTime } from '../../lib/dates'
-import { getMockSessionUser } from '../../lib/mock-db'
-import { backUpNow, fetchBackupStatus, verifyBackup, type BackupStatusView } from './api/backupApi'
+import { getMockSessionUser, NoBackupLocationError } from '../../lib/mock-db'
+import { backUpNow, fetchBackupLocations, fetchBackupStatus, verifyBackup, type BackupStatusView } from './api/backupApi'
+import { BackupLocationsPanel } from './BackupLocationsPanel'
 
 function formatSize(bytes: number): string {
     return bytes >= 1_048_576 ? `${(bytes / 1_048_576).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`
@@ -36,17 +37,25 @@ export function BackupStatusPage() {
     const [confirming, setConfirming] = useState(false)
     const [backingUp, setBackingUp] = useState(false)
     const [backedUp, setBackedUp] = useState(false)
+    const [backupError, setBackupError] = useState('')
+    const locations = useAsyncData('backup-locations', fetchBackupLocations)
 
-    // Panel review BK-2: either role can start a backup here.
+    // Panel review BK-2: either role can start a backup here. It runs to every enabled location (ADR-052).
     async function runBackup() {
         setBackingUp(true)
+        setBackupError('')
         try {
             setUpdated(await backUpNow(viewer))
             setBackedUp(true)
+            locations.reload()
+        } catch (caught) {
+            if (!(caught instanceof NoBackupLocationError)) throw caught
+            setBackupError(caught.message)
         } finally {
             setBackingUp(false)
         }
     }
+    const locationsPanel = locations.data && <BackupLocationsPanel settings={locations.data} viewer={viewer} onChanged={locations.reload} />
     const backUpNowButton = (
         <Button variant="secondary" icon="refresh" loading={backingUp} onClick={() => void runBackup()}>
             Back up now
@@ -80,6 +89,7 @@ export function BackupStatusPage() {
                     description="The first scheduled backup will appear here once it has run, or start one now."
                 />
                 <div className="mt-4 flex justify-center">{backUpNowButton}</div>
+                <div className="mt-6">{locationsPanel}</div>
             </div>
         )
     const verified = Boolean(latest.verifiedByUserId)
@@ -104,7 +114,7 @@ export function BackupStatusPage() {
                             Backup Verification
                         </h1>
                         <p className="mt-1 text-sm text-text-secondary">
-                            Check the latest local backup and follow the recovery steps if it needs attention.
+                            Check the latest backup on each location and follow the recovery steps if it needs attention.
                         </p>
                     </div>
                     <Badge
@@ -148,7 +158,7 @@ export function BackupStatusPage() {
                     <section className="rounded-md border border-border bg-surface p-4">
                         <h2 className="text-sm font-semibold text-text-primary">Guided recovery checklist</h2>
                         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-text-secondary">
-                            <li>Confirm the backup file exists on the designated external drive.</li>
+                            <li>Confirm the backup file exists on each enabled backup location, in its <code>.cliniq\backups</code> folder.</li>
                             <li>Check that the file size is plausible compared with the previous backup.</li>
                             <li>
                                 Record the verification, then notify the School Clinician if anything is missing.
@@ -170,7 +180,12 @@ export function BackupStatusPage() {
                     </section>
                     {backedUp && (
                         <p role="status" className="rounded-md border border-success bg-success/10 px-3 py-2 text-sm font-semibold text-text-primary">
-                            Backup recorded. Check the file on the external drive, then mark it verified.
+                            Backup recorded. Each location&apos;s result is under Backup locations below. Check the files, then mark it verified.
+                        </p>
+                    )}
+                    {backupError && (
+                        <p role="alert" className="rounded-md border border-error bg-error/10 px-3 py-2 text-sm font-semibold text-text-primary">
+                            {backupError}
                         </p>
                     )}
                     <div className="flex flex-wrap justify-end gap-2">
@@ -191,7 +206,7 @@ export function BackupStatusPage() {
                     >
                         <p className="text-sm text-text-secondary">
                             This records, under your name, that you checked the backup from{' '}
-                            {formatDateTime(latest.lastRun)} on the external drive. The verification is
+                            {formatDateTime(latest.lastRun)} on the backup locations. The verification is
                             permanent in the audit trail and can't be undone.
                         </p>
                         <div className="mt-5 flex flex-wrap justify-end gap-2">
@@ -213,6 +228,7 @@ export function BackupStatusPage() {
                     )}
                 </CardBody>
             </Card>
+            {locationsPanel}
         </div>
     )
 }

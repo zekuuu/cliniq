@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { allergyMatches, allergyWarningText } from '../../lib/itemsGiven'
 import type { ItemGivenLine } from '../../types/entities'
 import { Icon } from '../icons/Icon'
 import { Badge } from '../ui/Badge'
@@ -24,8 +25,8 @@ const iconButton =
  * block; expired items can't be picked, and an expired item already on a saved record can be kept or
  * lowered but not raised. The data layer enforces the same rules.
  *
- * The student's recorded allergies sit next to the picker for awareness only: there's no ingredient
- * data, so nothing is matched automatically.
+ * The patient's recorded allergies sit next to the picker. An item's optional "avoid if allergic to"
+ * words that the allergies mention add a warning there (ADR-049, D8); nothing is ever blocked.
  */
 export function ItemsGivenField({
   items,
@@ -52,6 +53,7 @@ export function ItemsGivenField({
   const expired = (itemId: string) => Boolean(byId.get(itemId)?.flags.includes('expired'))
   /** Raising past what's already saved takes new stock, which an expired item can't give. */
   const canRaise = (line: ItemLineDraft) => !expired(line.itemId) || line.quantity < (savedById.get(line.itemId)?.quantity ?? 0)
+  const allergyWarnings = [...new Set(lines.flatMap((line) => allergyMatches(byId.get(line.itemId) ?? {}, allergies ?? [])))]
 
   function update(itemId: string, patch: Partial<ItemLineDraft>) {
     onChange(lines.map((line) => (line.itemId === itemId ? { ...line, ...patch } : line)))
@@ -90,10 +92,15 @@ export function ItemsGivenField({
                 <Icon name="alertTriangle" size={14} />
                 Allergies: {allergies.join(', ')}
               </span>
-              <span className="mt-0.5 block">Check before giving medicine. Items aren’t matched to allergies.</span>
+              <span className="mt-0.5 block">Check before giving medicine.</span>
+              {allergyWarnings.map((tag) => (
+                <span key={tag} className="mt-1 block font-semibold text-text-primary">
+                  {allergyWarningText(tag)}
+                </span>
+              ))}
             </>
           ) : (
-            // "None recorded", not "No allergies": an empty list can also mean nobody asked (open DECIDE).
+            // "None recorded", not "No allergies": an empty field also reads this way (ADR-051).
             'Allergies: None recorded.'
           )}
         </div>

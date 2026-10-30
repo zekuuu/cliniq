@@ -56,7 +56,8 @@ export async function fetchIncidentLog(query: IncidentLogQuery, viewer?: Session
         {
           id: incident.id,
           patient,
-          gradeLevel: student?.gradeLevel ?? person?.type ?? '',
+          // The grade at the time of the incident (ADR-047); a staff row shows the staff type.
+          gradeLevel: incident.gradeLevelAtTime ?? student?.gradeLevel ?? person?.type ?? '',
           time: incident.time,
           complaint: incident.complaint,
           completion: incident.stage === 1 ? 'needs_completion' : 'complete',

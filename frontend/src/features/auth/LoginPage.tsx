@@ -28,6 +28,8 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
   const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({})
   const formRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(formRef)
+  // ADR-048: the Admin's idle sign-out says why the session ended.
+  const idleMinutes = (location.state as { signedOutAfterMinutes?: unknown } | null)?.signedOutAfterMinutes
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -79,6 +81,11 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
           </div>
           <div className="flex flex-1 flex-col justify-center py-10">
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">Sign In</h1>
+            {typeof idleMinutes === 'number' && (
+              <p role="status" className="mt-4 rounded-md border border-info bg-info/10 px-3 py-2 text-sm text-text-primary">
+                You were signed out after {idleMinutes} minutes of inactivity.
+              </p>
+            )}
             <form ref={formRef} className="mt-6 flex w-full flex-col gap-4" onSubmit={submit} noValidate>
               <p role="status" className="sr-only">{invalid.announcement}</p>
               <Input label="Username" icon="user" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} error={fieldErrors.username} required />

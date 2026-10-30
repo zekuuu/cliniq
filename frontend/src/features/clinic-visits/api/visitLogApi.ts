@@ -71,7 +71,8 @@ export async function fetchVisitLog(query: VisitLogQuery): Promise<VisitLogRow[]
             {
               id: visit.id,
               patient,
-              gradeLevel: student?.gradeLevel ?? person?.type ?? '',
+              // The grade at the time of the visit (ADR-047); a staff row shows the staff type.
+              gradeLevel: visit.gradeLevelAtTime ?? student?.gradeLevel ?? person?.type ?? '',
               dateTime: visit.dateTime,
               complaint: visit.complaint,
               disposition: visit.disposition,

@@ -44,6 +44,7 @@ export const auditTargetTypes = [
   'calendar-event',
   'sports-report',
   'staff',
+  'backup-location',
 ] as const
 
 export type AuditTargetType = (typeof auditTargetTypes)[number]
@@ -120,6 +121,7 @@ const AUDIT_RECORD_KINDS: Record<string, string> = {
   'calendar-event': 'Calendar event',
   'sports-report': 'Sports Report',
   staff: 'Staff',
+  'backup-location': 'Backup location',
   'print-document': 'Printed document',
 }
 
@@ -175,6 +177,7 @@ function auditTargetIdentifier(lookups: ReturnType<typeof auditLookups>, target:
   if (type === 'user') return { label: state.users.find((user) => user.id === target.id)?.name ?? '' }
   if (type === 'sports-report') return { label: state.frontendOnly.sportsReports.find((report) => report.id === target.id)?.title ?? '' }
   if (type === 'calendar-event') return { label: state.frontendOnly.calendarEvents.find((event) => event.id === target.id)?.title ?? '' }
+  if (type === 'backup-location') return { label: state.frontendOnly.backupLocations.find((location) => location.id === target.id)?.label ?? '' }
   if (target.type === 'report') return { label: REPORT_NAMES[target.id] ?? '' }
   if (target.type === 'print-document') return { label: target.id }
   if (target.type === 'backup') return { label: /^\d{4}-\d{2}-\d{2}T/.test(target.id) ? formatDateTime(target.id) : '' }
@@ -413,11 +416,29 @@ export function frequentVisitors(state: DbState, range?: { from: ISODate; to: IS
 
 // ---- Follow-ups ------------------------------------------------------------------------------
 
-/** How close a *pending* follow-up is to its date, relative to today. Null once it's resolved. */
-export function followUpDueState(followUp: FollowUp, today: ISODate): FollowUpDueState | null {
+/**
+ * How close a *pending* follow-up is to its date (ADR-051): Upcoming before it, Due today on it, Due
+ * for the next `overdueAfterDays` days, then Overdue. Null once it's resolved.
+ */
+export function followUpDueState(followUp: FollowUp, today: ISODate, overdueAfterDays: number): FollowUpDueState | null {
   if (followUp.status !== 'pending') return null
-  const days = diffDays(today, followUp.followUpDate)
-  return days < 0 ? 'overdue' : days === 0 ? 'due_today' : 'upcoming'
+  const passed = diffDays(followUp.followUpDate, today)
+  return passed < 0 ? 'upcoming' : passed === 0 ? 'due_today' : passed <= overdueAfterDays ? 'due' : 'overdue'
+}
+
+export const AUTO_CLOSED_REASON = (days: number) => `No response (closed automatically after ${days} days)`
+
+/**
+ * ADR-051: a pending follow-up more than `followUpAutoCloseDays` past its date reads as Missed with a
+ * "no response" note. Computed on every read in the mock (the backend will need a daily job, `LATER`),
+ * so the stored record stays pending and nothing is written by reading.
+ */
+export function withAutoClosedFollowUps(followUps: FollowUp[], today: ISODate, autoCloseDays: number): FollowUp[] {
+  return followUps.map((f) =>
+    f.status === 'pending' && diffDays(f.followUpDate, today) > autoCloseDays
+      ? { ...f, status: 'missed', statusReason: AUTO_CLOSED_REASON(autoCloseDays) }
+      : f,
+  )
 }
 
 /** Pending follow-ups due on or before today + the upcoming window (overdue ones stay listed). */
@@ -445,7 +466,7 @@ export interface InventoryStatus {
 }
 
 /**
- * Low stock = strictly below the threshold (OPEN QUESTION: "at" the threshold isn't specified).
+ * Low stock = at or below the threshold (ADR-051: stock exactly at it counts as low).
  * Low-stock and expiry flags are independent and can both apply (Module 8, stock flow step 5).
  */
 export function inventoryStatus(item: InventoryItem, today: ISODate, expiryWarningDays: number): InventoryStatus {
@@ -458,7 +479,7 @@ export function inventoryStatus(item: InventoryItem, today: ISODate, expiryWarni
   const currentStock = usable.reduce((sum, batch) => sum + batch.quantity, 0)
   const expiredStock = expired.reduce((sum, batch) => sum + batch.quantity, 0)
   const flags: InventoryFlag[] = []
-  if (currentStock < item.lowStockThreshold) flags.push('low_stock')
+  if (currentStock <= item.lowStockThreshold) flags.push('low_stock')
   if (expiredStock > 0) flags.push('expired')
   else if (daysUntilExpiry !== null && daysUntilExpiry <= expiryWarningDays) flags.push('nearing_expiration')
   return {
@@ -520,6 +541,44 @@ export function countedVisits(state: DbState) {
  */
 export function inClinicNow(state: DbState) {
   return state.visits.filter((v) => v.disposition === 'resting_in_clinic' && !v.timeOut && dateOf(v.dateTime) === state.today)
+}
+
+/** One possible cluster: how many students with the same complaint and grade in the window (ADR-050). */
+export interface ClusterAlert {
+  complaint: string
+  gradeLevel: string
+  students: number
+  from: ISODate
+  to: ISODate
+}
+
+/**
+ * ADR-050: `clusterMinStudents` or more different students with the same complaint and the same grade
+ * (the grade at the time, ADR-047) within the last `clusterWindowDays` calendar days, today included.
+ * Visits (escalated ones counted once, as the incident) and incidents; students only. A flag, nothing more.
+ */
+export function clusterAlerts(state: DbState): ClusterAlert[] {
+  const { clusterMinStudents, clusterWindowDays } = state.config
+  const from = addDays(state.today, -(clusterWindowDays - 1))
+  const to = state.today
+  const grades = new Map(state.students.map((student) => [student.id, student.gradeLevel]))
+  const groups = new Map<string, { complaint: string; gradeLevel: string; students: Set<string> }>()
+  const records = [
+    ...countedVisits(state).map((v) => ({ studentId: v.studentId, date: dateOf(v.dateTime), complaint: v.complaint, grade: v.gradeLevelAtTime })),
+    ...state.incidents.map((i) => ({ studentId: i.studentId, date: dateOf(i.time), complaint: i.complaint, grade: i.gradeLevelAtTime })),
+  ]
+  for (const record of records) {
+    if (!record.studentId || !isWithin(record.date, from, to)) continue
+    const gradeLevel = record.grade ?? grades.get(record.studentId) ?? ''
+    const key = `${record.complaint.trim().toLowerCase()}|${gradeLevel}`
+    const group = groups.get(key) ?? { complaint: record.complaint.trim(), gradeLevel, students: new Set<string>() }
+    group.students.add(record.studentId)
+    groups.set(key, group)
+  }
+  return [...groups.values()]
+    .filter((group) => group.students.size >= clusterMinStudents)
+    .map((group) => ({ complaint: group.complaint, gradeLevel: group.gradeLevel, students: group.students.size, from, to }))
+    .sort((a, b) => b.students - a.students || compareGradeLevels(a.gradeLevel, b.gradeLevel) || a.complaint.localeCompare(b.complaint))
 }
 
 /** `month` is "YYYY-MM". */

@@ -6,6 +6,7 @@ Task: Build Part 1 of the decisions-sheet answers (ADR-049): six `FIX` entries o
 Status: Completed
 Prompt/Request: Zean pasted "Prompt — Build the fixes that came out of the decisions sheet" with "This run" left blank and answered "Parts 1 to 6" when asked; mid-session he added "do the work on its own branch". Part 1: Save and approve now, a warning past 3 days, the approved wording kept and a changed-outcome label, extra fields open for fever, who collected the child, "Stay home until cleared". Defaults D2 to D7 of the prompt apply.
 Branch: `build/decisions-sheet-answers-oct29`, created from `main` at `41c1556` (the Part 1 edits started on `main` uncommitted and were carried onto the branch when it was created; nothing was committed).
+Committed to `main`: the Part 1 to 4 documentation (this log included) was committed to `main` by Zean at Friday, October 30, 2026 — 01:28 PHT (`3bcaea1`), which took it out of this branch's working tree. The agent first misread that as a reset and re-applied the same documentation on the branch at 03:40 PHT, so the branch and `3bcaea1` overlap in those 15 files; reconcile them when merging. No code was affected.
 
 Files Modified:
 - Data layer: `frontend/src/lib/mock-db/api.ts`, `types.ts`, `seed.ts`, `store.ts`, `integrity.ts`, `mock-db.json` (`config.medicalCertificateAfterDays` 3; complaint type "Chills"), `frontend/src/types/entities.ts`, new `frontend/src/lib/excuseLetter.ts`

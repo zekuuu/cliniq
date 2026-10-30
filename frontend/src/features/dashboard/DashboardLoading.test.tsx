@@ -7,6 +7,7 @@ vi.mock('./api/dashboardApi', () => ({
   fetchDashboardSummary: () => new Promise(() => {}),
   fetchBackupIndicator: () => new Promise(() => {}),
   fetchPendingExcuseLetters: () => new Promise(() => {}),
+  fetchClusterAlerts: () => new Promise(() => {}),
   fetchPeriodEvents: () => new Promise(() => {}),
 }))
 vi.mock('react-chartjs-2', () => ({ Bar: () => null, Line: () => null, Doughnut: () => null }))

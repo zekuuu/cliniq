@@ -71,3 +71,14 @@ export const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.
 export function splitText(split: { students: number; staff: number }): string {
   return `Students ${split.students} · Staff ${split.staff}`
 }
+
+/**
+ * ADR-051: allergies and medical conditions say "None recorded" for an empty field, and the form
+ * offers the same words as a choice. Typed "None" or "None recorded" is stored as an empty list.
+ */
+export const NONE_RECORDED = 'None recorded'
+
+export function isNoneRecorded(value: string): boolean {
+  const typed = value.trim().toLowerCase()
+  return typed === 'none' || typed === NONE_RECORDED.toLowerCase()
+}

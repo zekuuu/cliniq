@@ -16,6 +16,8 @@ export {
 } from './session'
 export type {
   AdjustmentReason,
+  AgeGroup,
+  BackupLocation,
   CalendarEvent,
   ComplaintType,
   ExcuseLetterApproval,
@@ -29,7 +31,7 @@ export type {
   VitalRange,
   VitalsWarningRanges,
 } from './types'
-export type { AuditLogList, AuditLogQuery, AuditLogRow, AuditTargetType, BackupStatus, FrequentVisitor, IncompleteRecordRow, InventoryStatus } from './selectors'
+export type { AuditLogList, AuditLogQuery, AuditLogRow, AuditTargetType, BackupStatus, ClusterAlert, FrequentVisitor, IncompleteRecordRow, InventoryStatus } from './selectors'
 export { auditTargetTypes } from './selectors'
 export { getMockToday, getRecordedAuditEntries, resetMockDb, setMockPersistence, setMockToday } from './store'
 export { queryParam } from './devToggles'

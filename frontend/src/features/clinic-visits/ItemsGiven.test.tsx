@@ -25,7 +25,7 @@ async function openNewVisit(user: UserEvent) {
   renderWithRouter(<NewVisitEntryPage />)
   await pickStudent(user, '000000260001')
   await screen.findByRole('heading', { name: 'New Visit' })
-  await selectOption(user, screen.getByLabelText(/complaint/i), 'Headache')
+  await selectOption(user, screen.getByLabelText(/^complaint/i), 'Headache')
 }
 
 describe('New Visit: medicines and supplies given', () => {

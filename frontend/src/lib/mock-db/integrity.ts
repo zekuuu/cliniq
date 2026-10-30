@@ -24,7 +24,7 @@ export const CALENDAR_EVENT_TITLE_MAX = 60
 
 const FIELDS = {
   top: ['meta', 'config', 'users', 'students', 'personnel', 'visits', 'incidents', 'followUps', 'inventoryItems', 'reports', 'backupLogs', 'auditLog', 'frontendOnly'],
-  config: ['_note', 'showFrequentVisitors', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'personnelTypes', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges'],
+  config: ['_note', 'showFrequentVisitors', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'personnelTypes', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges', 'medicalCertificateAfterDays', 'adminIdleMinutes', 'clusterMinStudents', 'clusterWindowDays', 'followUpOverdueAfterDays', 'followUpAutoCloseDays', 'vitalsUsualRanges', 'backupKeepLast'],
   users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture', 'deactivatedAt'],
   students: ['id', 'lrn', 'fullName', 'gradeLevel', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
   personnel: ['id', 'staffNumber', 'fullName', 'type', 'department', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived'],
@@ -40,7 +40,7 @@ const FIELDS = {
   reports: ['type', 'dateRange'],
   backupLogs: ['lastRun', 'fileSizeBytes', 'status', 'verifiedByUserId'],
   auditLog: ['userId', 'actionType', 'targetRecord', 'timestamp'],
-  frontendOnly: ['_note', 'devAccounts', 'visitComplaintTypes', 'incidentComplaintTypes', 'inventoryTransactions', 'recordReviews', 'excuseLetterApprovals', 'peReferrals', 'issueReports', 'calendarEvents', 'sportsReports'],
+  frontendOnly: ['_note', 'devAccounts', 'visitComplaintTypes', 'incidentComplaintTypes', 'inventoryTransactions', 'recordReviews', 'excuseLetterApprovals', 'peReferrals', 'issueReports', 'calendarEvents', 'sportsReports', 'backupLocations'],
 } as const
 
 /**
@@ -134,6 +134,17 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
         if (!(typeof min === 'number' && typeof max === 'number' && min > 0 && min < max))
           fail(`config.vitalsWarningRanges.${vital}: needs positive numbers with min < max`)
       }
+    } else if (key === 'vitalsUsualRanges') {
+      const usual = (value ?? {}) as Rec
+      checkFields('config.vitalsUsualRanges', usual, ['_note', 'temperatureMinC', 'oxygenSaturationMinPct', 'byAgeGroup'])
+      const groups = (usual.byAgeGroup ?? {}) as Rec
+      checkFields('config.vitalsUsualRanges.byAgeGroup', groups, ['kinder', 'grades1to6', 'grades7to12', 'adult'])
+      for (const [group, ranges] of Object.entries(groups))
+        for (const vital of ['pulseBpm', 'systolic', 'diastolic']) {
+          const { min, max } = (((ranges ?? {}) as Rec)[vital] ?? {}) as Rec
+          if (!(typeof min === 'number' && typeof max === 'number' && min > 0 && min < max))
+            fail(`config.vitalsUsualRanges.byAgeGroup.${group}.${vital}: needs positive numbers with min < max`)
+        }
     } else if (key === 'personnelTypes') {
       if (!Array.isArray(value) || !value.length || value.some((v) => typeof v !== 'string' || !v.trim()) || new Set(value).size !== value.length)
         fail('config.personnelTypes: must be a non-empty list of distinct names')
@@ -535,6 +546,21 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     userRef(`${w}.createdByUserId`, r.createdByUserId)
     relDateTime(`${w}.createdAt`, r.createdAt)
     relDateTime(`${w}.updatedAt`, r.updatedAt)
+  })
+
+  // Backup locations (ADR-052): never deleted, so ids stay unique; status from a fixed list.
+  const locationIds = new Set<string>()
+  ;((fo.backupLocations ?? []) as Rec[]).forEach((l, i) => {
+    const w = `frontendOnly.backupLocations[${i}]`
+    checkFields(w, l, ['id', 'label', 'path', 'enabled', 'status', 'lastBackupAt', 'lastResult'])
+    if (!/^backup-location-\d{4}$/.test(String(l.id))) fail(`${w}.id: "${String(l.id)}" should look like backup-location-0001`)
+    if (locationIds.has(String(l.id))) fail(`${w}.id: duplicate "${String(l.id)}"`)
+    locationIds.add(String(l.id))
+    if (!String(l.label ?? '').trim() || !String(l.path ?? '').trim()) fail(`${w}: label and path must not be empty`)
+    if (typeof l.enabled !== 'boolean') fail(`${w}.enabled: must be true or false`)
+    oneOf(`${w}.status`, l.status, ['found', 'not_found', 'not_writable'])
+    relDateTime(`${w}.lastBackupAt`, l.lastBackupAt, true)
+    if (l.lastResult !== null) oneOf(`${w}.lastResult`, l.lastResult, ['ok', 'failed'])
   })
 
   return problems

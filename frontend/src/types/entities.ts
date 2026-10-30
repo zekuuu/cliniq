@@ -162,6 +162,24 @@ export interface Visit extends PatientRef {
   enteredInError?: EnteredInError | null
   /** The incident this visit was escalated to (ADR-036). The event then counts once, as the incident. */
   escalatedIncidentId?: string | null
+  /** Sent home or Referred to hospital only: who collected the student (ADR-049, D4). Absent on older records. PROVISIONAL, pending the ERD. */
+  collectedBy?: CollectedBy | null
+  /** Up to 3 more complaints as tags (ADR-053). Reports and the Dashboard count `complaint` only. Absent on older records. PROVISIONAL. */
+  extraComplaints?: string[]
+  /**
+   * The student's grade level when the visit was saved (ADR-047), so an old Grade 7 visit stays Grade 7
+   * after promotion. Student records have no section, so none is kept. Staff visits have none. PROVISIONAL.
+   */
+  gradeLevelAtTime?: string | null
+}
+
+/** Who collected a student who was sent home or referred. Every part is optional. PROVISIONAL, pending the ERD. */
+export interface CollectedBy {
+  name: string | null
+  /** Parent, Guardian, Relative, Other, or typed. */
+  relationship: string | null
+  /** "HH:MM" on the visit's date, never in the future. */
+  time: string | null
 }
 
 /** Excuse-letter values entered on a visit before approval. PROVISIONAL, pending the ERD. */
@@ -170,6 +188,10 @@ export interface ExcuseLetterDraft<D = ISODate> {
   excusedUntil: D
   /** Optional note for the teacher, printed on the letter. */
   note: string | null
+  /** The clinician's "Stay home until cleared" (ADR-049, D5). Absent on older drafts. PROVISIONAL. */
+  stayHomeUntilCleared?: boolean
+  /** Optional one-line note with it. PROVISIONAL. */
+  stayHomeNote?: string | null
 }
 
 /**
@@ -244,6 +266,10 @@ export interface Incident extends PatientRef {
   generalNotes?: string | null
   /** The visit this incident was escalated from (ADR-036). Absent on other incidents. PROVISIONAL, pending the ERD. */
   sourceVisitId?: string | null
+  /** The student's grade level when Stage 1 was saved (ADR-047). Staff incidents have none. PROVISIONAL, pending the ERD. */
+  gradeLevelAtTime?: string | null
+  /** The Admin's Acknowledge on an approved report (ADR-048): who and when. Never undone. PROVISIONAL, pending the ERD. */
+  acknowledged?: { byUserId: string; at: ISODateTime } | null
   /** Optional free text with suggestions, Stage 2 only (D11). Absent on older records. PROVISIONAL, pending the ERD. */
   bodyPart?: string | null
   /**
@@ -266,6 +292,10 @@ export interface FollowUp extends PatientRef {
   createdByUserId: string
   /** Required when the status became Missed or Cancelled (panel review FU-4). Absent on older records. PROVISIONAL, pending the ERD. */
   statusReason?: string | null
+  /** The clinician's "Stay home until cleared" (ADR-049, D5). Absent on older records. PROVISIONAL, pending the ERD. */
+  stayHomeUntilCleared?: boolean
+  /** Optional one-line note with it. PROVISIONAL, pending the ERD. */
+  stayHomeNote?: string | null
 }
 
 export type InventoryCategory = 'medicine' | 'supply'
@@ -300,6 +330,11 @@ export interface InventoryItem {
    * branded pays for it). Optional: missing or `null` reads "Not specified".
    */
   brand?: ItemBrand | null
+  /**
+   * Optional words such as "penicillin" (ADR-049, D8). A patient whose allergies mention one gets a
+   * warning at the medicine pickers; it never blocks (ADR-018). PROVISIONAL, pending the ERD.
+   */
+  avoidIfAllergicTo?: string[]
   /** @deprecated Derived on `InventoryItemView`; retained only for transition compatibility. */
   currentStock?: number
   /** @deprecated Derived on `InventoryItemView`; retained only for transition compatibility. */
@@ -323,8 +358,9 @@ export interface BackupLog {
 }
 
 /**
- * `view` (PROVISIONAL, pending the ERD): the Admin opened a student profile or an incident report
- * (ADR-038 item 4). Written once per record per sign-in session; the clinician's own views are not logged.
+ * `view` (PROVISIONAL, pending the ERD): someone opened a student or staff profile or an incident
+ * report (ADR-038 item 4 for the Admin, ADR-048 for the clinician). Written once per record per
+ * sign-in session; lists and searches are not logged.
  */
 export type AuditActionType =
   'login' | 'logout' | 'submit' | 'approve' | 'create' | 'update' | 'delete' | 'archive' | 'print' | 'view'

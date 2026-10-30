@@ -73,3 +73,22 @@ export function itemsNamedInNotes<T extends { id: string; name: string; currentS
 export function draftsFrom(lines: ReadonlyArray<ItemGivenLine>): ItemLineDraft[] {
   return lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity, instructions: line.instructions ?? '' }))
 }
+
+/**
+ * ADR-049 (D8): the item's "avoid if allergic to" words that the patient's allergy entries mention,
+ * case-insensitively ("Penicillin (rash)" matches "penicillin"). A warning only; nothing is blocked.
+ */
+export function allergyMatches(item: { avoidIfAllergicTo?: string[] }, allergies: readonly string[]): string[] {
+  const listed = allergies.map((allergy) => allergy.toLowerCase())
+  return (item.avoidIfAllergicTo ?? []).filter((tag) => listed.some((allergy) => allergy.includes(tag.toLowerCase())))
+}
+
+/** "Avoid if allergic to penicillin: this patient lists penicillin." */
+export function allergyWarningText(tag: string): string {
+  return `Avoid if allergic to ${tag}: this patient lists ${tag}.`
+}
+
+/** "Fever (also Headache, Chills)": the main complaint, then any extra tags (ADR-053). */
+export function complaintWithExtras(visit: Pick<Visit, 'complaint' | 'extraComplaints'>): string {
+  return visit.extraComplaints?.length ? `${visit.complaint} (also ${visit.extraComplaints.join(', ')})` : visit.complaint
+}

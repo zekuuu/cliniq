@@ -27,6 +27,7 @@ export function BatchDetailsModal({ item, onClose }: { item: InventoryItemView; 
     <Modal open title={`Batches: ${item.name}`} onClose={onClose}>
       <div className="flex flex-col gap-5">
         <p className="text-sm text-text-secondary">Generic or branded: <span className="font-semibold text-text-primary">{item.brand ? ITEM_BRAND_LABELS[item.brand] : 'Not specified'}</span></p>
+        <p className="text-sm text-text-secondary">Avoid if allergic to: <span className="font-semibold text-text-primary">{item.avoidIfAllergicTo?.length ? item.avoidIfAllergicTo.join(', ') : 'None set'}</span></p>
         <section aria-labelledby="batch-list-title">
           <h2 id="batch-list-title" className="text-sm font-semibold text-text-primary">Batches on hand</h2>
           <ul className="mt-2 divide-y divide-border rounded-md border border-border">

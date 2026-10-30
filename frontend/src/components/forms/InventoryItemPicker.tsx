@@ -17,6 +17,8 @@ export type PickableItem = {
   daysUntilExpiry: number | null
   /** Generic or branded, when recorded (Sir Rey, October 25, 2026). */
   brand?: ItemBrand | null
+  /** "Avoid if allergic to" words (ADR-049, D8). */
+  avoidIfAllergicTo?: string[]
 }
 
 const GROUPS = [

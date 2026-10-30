@@ -84,7 +84,7 @@ Every printout has:
   screen and never duplicates screen text in tests. Pass the screen's loaded data as props.
 - The screen's Print button is the shared `PrintButton` (`components/print/Print.tsx`), inside a `print:hidden` block; it calls `window.print()` (or `onPrint`) and takes a `disabledReason` for a document that isn't printable yet.
 - Existing printouts: `DashboardPrint` (prints the open Dashboard tab: Clinic Overview Report or Clinic Trends Report, ADR-045), `ReportsPrint` (Monthly Clinic
-  Report, Incident register, Complaint summary), and the print trees in `ExcuseLetterPage`,
+  Report, Incident register, Complaint summary, the monthly Inventory sheet), and the print trees in `ExcuseLetterPage`,
   `IncidentReportPage`, `StudentProfilePage`, and `AuditLogPage`, and `SportsReportPrint` (the Sports
   Report, ADR-034).
 - **The Sports Report keeps its confidentiality line on the screen only** (`SPORTS_REPORT_CONFIDENTIALITY`;

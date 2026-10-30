@@ -5,6 +5,7 @@ Agent: Claude Code (Opus 5.5)
 Task: Build Part 3 of the decisions-sheet answers (ADR-048, ADR-050): four `FIX` entries.
 Status: Completed
 Prompt/Request: The same "Build the fixes that came out of the decisions sheet" prompt, "Parts 1 to 6", on the branch `build/decisions-sheet-answers-oct29`. Part 3: Acknowledge on an incident report, Admin sign-out after 30 idle minutes, audit of the clinician opening a record, a possible-cluster alert. Defaults D11 to D14 apply.
+Committed to `main`: the Part 1 to 4 documentation (this log included) was committed to `main` by Zean at Friday, October 30, 2026 — 01:28 PHT (`3bcaea1`), which took it out of this branch's working tree. The agent first misread that as a reset and re-applied the same documentation on the branch at 03:40 PHT, so the branch and `3bcaea1` overlap in those 15 files; reconcile them when merging. No code was affected.
 
 Files Modified:
 - Data layer: `frontend/src/lib/mock-db/api.ts` (`recordView` replaces `recordAdminView` and logs both roles; `acknowledgeIncidentReport`, `AcknowledgeError`; `getAdminIdleMinutes`; `listClusterAlerts`; `logoutMockSession` takes an optional summary; `IncidentTrail.acknowledged`), `selectors.ts` (`clusterAlerts`), `types.ts`, `store.ts`, `integrity.ts`, `mock-db.json` (`adminIdleMinutes` 30, `clusterMinStudents` 3, `clusterWindowDays` 3), `index.ts`, `frontend/src/types/entities.ts` (`Incident.acknowledged`, PROVISIONAL)

@@ -17,8 +17,11 @@ import {
   PrintDocument,
   PrintFields,
   Skeleton,
+  StayHomeField,
   Textarea,
 } from '../../components'
+import { STAY_HOME_LINE } from '../../lib/excuseLetter'
+import { CertificateWarning } from './CertificateWarning'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
 import { formatDate, formatDateRange, formatDateTime } from '../../lib/dates'
@@ -59,12 +62,18 @@ function LetterSkeleton({ back }: { back: ReactNode }) {
   )
 }
 
+/** "Stay home until cleared by the school clinic." and the clinician's note, when ticked (ADR-049, D5). */
+function stayHomeText(stayHome: { checked: boolean; note: string }): string | null {
+  return stayHome.checked ? [STAY_HOME_LINE, stayHome.note.trim()].filter(Boolean).join(' ') : null
+}
+
 function PrintableLetter({
   context,
   recipient,
   body,
   period,
   note,
+  stayHome,
   approved,
 }: {
   context: ExcuseLetterContext
@@ -72,6 +81,7 @@ function PrintableLetter({
   body: string
   period: ExcusedPeriod
   note: string
+  stayHome: string | null
   approved: boolean
 }) {
   const periodValid = !excusedPeriodError(period)
@@ -94,6 +104,7 @@ function PrintableLetter({
           Excused period:{' '}
           {periodValid ? formatDateRange(period.excusedFrom, period.excusedUntil) : 'Not set'}
         </p>
+        {stayHome && <p className="font-semibold">{stayHome}</p>}
         <div className="whitespace-pre-line">{body}</div>
         {note.trim() && <p>Note for the teacher: {note.trim()}</p>}
         <div className="mt-6 w-64 max-w-full border-t border-text-primary pt-1">
@@ -127,6 +138,7 @@ function ExcuseLetterPrint({
   body,
   period,
   note,
+  stayHome,
   approved,
 }: {
   context: ExcuseLetterContext
@@ -135,6 +147,7 @@ function ExcuseLetterPrint({
   body: string
   period: ExcusedPeriod
   note: string
+  stayHome: string | null
   approved: boolean
 }) {
   const { student, visit } = context
@@ -165,6 +178,7 @@ function ExcuseLetterPrint({
         <p>{formatDate(context.issuedAt.slice(0, 10))}</p>
         <p>To: {recipient}</p>
         <p className="font-semibold">Excused period: {periodText}</p>
+        {stayHome && <p className="font-semibold">{stayHome}</p>}
         <div className="whitespace-pre-line">{body}</div>
         {note.trim() && <p>Note for the teacher: {note.trim()}</p>}
         <div className="mt-[14mm] w-[70mm] break-inside-avoid border-t border-text-primary pt-[1.5mm]">
@@ -225,6 +239,7 @@ function ExcuseLetterEditor({
   const [replaceSaving, setReplaceSaving] = useState(false)
   const [period, setPeriod] = useState(context.period)
   const [note, setNote] = useState(context.note)
+  const [stayHome, setStayHome] = useState({ checked: context.stayHome, note: context.stayHomeNote })
   const [checked, setChecked] = useState(Boolean(context.approval))
   const [approved, setApproved] = useState(Boolean(context.approval))
   const [saving, setSaving] = useState(false)
@@ -232,7 +247,9 @@ function ExcuseLetterEditor({
   const voided = context.visit.enteredInError ?? null
   // Opened from the student's record: a letter a later one replaced. Read-only.
   const superseded = context.approval?.superseded ?? null
-  const body = editedBody ?? defaultBody(context.student, context.visit, period)
+  // A stored letter keeps the wording it was approved with (ADR-049, D6); a draft follows the dates until edited.
+  const body = context.approval?.body ?? editedBody ?? defaultBody(context.student, context.visit, period)
+  const locked = approved || Boolean(voided)
   // ADR-038 item 6 (Sir Rey): a draft stays on screen but can't be printed or saved as PDF.
   const printable = approved || Boolean(voided) || Boolean(superseded)
 
@@ -254,7 +271,7 @@ function ExcuseLetterEditor({
   async function approve() {
     setSaving(true)
     try {
-      await approveExcuseLetter(context, period, note)
+      await approveExcuseLetter(context, { period, note, recipient, body, stayHome: stayHome.checked, stayHomeNote: stayHome.note })
       setApproved(true)
     } finally {
       setSaving(false)
@@ -327,6 +344,8 @@ function ExcuseLetterEditor({
               label="Recipient"
               value={recipient}
               onChange={(event) => setRecipient(event.target.value)}
+              hint={approved ? 'Fixed once the letter is approved.' : undefined}
+              disabled={locked}
             />
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <DatePicker
@@ -353,6 +372,9 @@ function ExcuseLetterEditor({
                   onPick={(excusedUntil) => setPeriod((current) => ({ ...current, excusedUntil }))}
                 />
               </div>
+              <div className="sm:col-span-2">
+                <CertificateWarning period={period} />
+              </div>
             </div>
             <Input
               label="Note for the teacher"
@@ -362,6 +384,7 @@ function ExcuseLetterEditor({
               hint={approved ? 'Fixed once the letter is approved.' : undefined}
               disabled={approved || Boolean(voided)}
             />
+            <StayHomeField checked={stayHome.checked} note={stayHome.note} onChange={setStayHome} disabled={locked} />
             <div className="flex flex-col gap-1">
               <label htmlFor="excuse-body" className="text-xs font-semibold text-text-primary">
                 Letter body
@@ -370,9 +393,16 @@ function ExcuseLetterEditor({
                 id="excuse-body"
                 rows={8}
                 value={body}
+                readOnly={locked}
+                aria-describedby={approved ? 'excuse-body-hint' : undefined}
                 onChange={(event) => setBody(event.target.value)}
-                className="resize-y rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary shadow-card transition-colors duration-150 hover:border-brand-green motion-reduce:transition-none"
+                className="resize-y rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary shadow-card transition-colors duration-150 hover:border-brand-green read-only:bg-surface read-only:hover:border-border motion-reduce:transition-none"
               />
+              {approved && (
+                <p id="excuse-body-hint" className="text-xs text-text-secondary">
+                  Fixed once the letter is approved. It prints exactly as stored.
+                </p>
+              )}
             </div>
             <div className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-text-primary">
               This tool generates clinic excuse letters only. It must not be used as a medical
@@ -415,6 +445,7 @@ function ExcuseLetterEditor({
               body={body}
               period={period}
               note={note}
+              stayHome={stayHomeText(stayHome)}
               approved={approved}
             />
           </CardBody>
@@ -454,6 +485,7 @@ function ExcuseLetterEditor({
         body={body}
         period={period}
         note={note}
+        stayHome={stayHomeText(stayHome)}
         approved={approved}
       />}
     </div>
