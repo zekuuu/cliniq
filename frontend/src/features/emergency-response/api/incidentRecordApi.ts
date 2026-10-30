@@ -9,7 +9,8 @@ import {
   getVisit,
   listApprovedIncidentReportIds,
   listIncidents,
-  recordAdminView,
+  recordView,
+  acknowledgeIncidentReport,
   type IncidentTrail,
   type SessionUser,
 } from '../../../lib/mock-db'
@@ -52,8 +53,8 @@ export async function fetchIncidentRecord(incidentId?: string, viewer?: SessionU
     incident.sourceVisitId ? getVisit(incident.sourceVisitId) : null,
     getPrincipalName(),
   ])
-  // ADR-038 item 4: the Admin's opening of a report is audit-logged.
-  if (viewer) await recordAdminView({ type: 'incident', id: incident.id }, viewer)
+  // ADR-038 item 4 and ADR-048: opening a report is audit-logged, for both roles.
+  if (viewer) await recordView({ type: 'incident', id: incident.id }, viewer)
   const listed = approved.has(incident.id) ? [incident, ...pending] : pending
   return {
     incident,
@@ -67,6 +68,11 @@ export async function fetchIncidentRecord(incidentId?: string, viewer?: SessionU
       label: `${formatDateTime(item.time)} · ${item.complaint}${approved.has(item.id) ? ' (approved)' : ''}`,
     })),
   }
+}
+
+/** The Admin's Acknowledge (ADR-048); the data layer refuses anyone else, an unapproved report, or a second time. */
+export async function acknowledgeReport(incidentId: string, actor?: SessionUser): Promise<void> {
+  await acknowledgeIncidentReport(incidentId, actor)
 }
 
 export async function approveReport(incidentId: string, actor?: SessionUser): Promise<void> {

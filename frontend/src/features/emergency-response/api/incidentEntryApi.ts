@@ -5,6 +5,7 @@ import {
   getPatient,
   getVisit,
   getVitalsWarningRanges,
+  listApprovedIncidentReportIds,
   listInventory,
   saveIncidentStageOne,
   searchPatients,
@@ -46,6 +47,8 @@ export interface IncidentEntryContext {
   escalation: EscalationPrefill | null
   /** On a saved incident escalated from a visit: that visit, with what was given there (not copied). */
   sourceVisit: { id: string; itemsGiven: ItemGivenLine[] } | null
+  /** The incident report is approved: Additional notes are fixed from then on (ADR-049). */
+  approved: boolean
 }
 
 /** What "Escalate to incident" carries from a visit (ADR-036). Never its medicines. */
@@ -76,13 +79,15 @@ export interface StageTwoIncidentInput {
   hospitalReferral: HospitalReferral | null
   /** Attempts logged on this form; appended to the incident's notification log. */
   parentNotifications: ParentNotificationAttempt[]
-  followUp: null | Pick<FollowUp, 'followUpDate' | 'reason' | 'notes'>
+  followUp: null | (Pick<FollowUp, 'followUpDate' | 'reason' | 'notes'> & Partial<Pick<FollowUp, 'stayHomeUntilCleared' | 'stayHomeNote'>>)
   /** Dispensed with the Stage 2 save; each dispense references the incident (ADR-018). */
   itemsGiven?: ItemLineInput[]
   /** Optional, Stage 2 only (D11). */
   bodyPart?: string
   /** Required only with "Nothing further was needed or done" (panel review IN-3). */
   noFurtherActionReason?: string
+  /** Corrected Additional notes (ADR-049); omitted once the report is approved. */
+  generalNotes?: string
 }
 
 /**
@@ -98,13 +103,14 @@ export async function fetchIncidentEntryContext(
   const vitalsRanges = await getVitalsWarningRanges()
   if (incidentId) {
     const incident = await getIncident(incidentId)
-    const [student, types, source] = await Promise.all([
+    const [student, types, source, approvedIds] = await Promise.all([
       getPatient(incident),
       complaintTypes,
       incident.sourceVisitId ? getVisit(incident.sourceVisitId) : null,
+      listApprovedIncidentReportIds(),
     ])
     const sourceVisit = source && { id: source.id, itemsGiven: source.itemsGiven }
-    return { student, complaintTypes: types, incident, items: await items, vitalsRanges, escalation: null, sourceVisit }
+    return { student, complaintTypes: types, incident, items: await items, vitalsRanges, escalation: null, sourceVisit, approved: approvedIds.includes(incident.id) }
   }
   let escalation = escalate?.prefill ?? null
   let sourceVisit: IncidentEntryContext['sourceVisit'] = null
@@ -116,7 +122,7 @@ export async function fetchIncidentEntryContext(
   // The Staff Profile's "Record an incident" opens with the staff member chosen (`?staff=`, D8).
   const ref = escalate?.staffId ? { studentId: null, personnelId: escalate.staffId } : escalation
   const student = ref?.studentId || ref?.personnelId ? await getPatient({ studentId: ref.studentId ?? null, personnelId: ref.personnelId ?? null }) : null
-  return { student, complaintTypes: await complaintTypes, incident: null, items: await items, vitalsRanges, escalation, sourceVisit }
+  return { student, complaintTypes: await complaintTypes, incident: null, items: await items, vitalsRanges, escalation, sourceVisit, approved: false }
 }
 
 /** Loads the picked patient in full. */
@@ -155,6 +161,7 @@ export function completeStageTwoIncident(
       itemsGiven: input.itemsGiven,
       bodyPart: input.bodyPart,
       noFurtherActionReason: input.noFurtherActionReason,
+      generalNotes: input.generalNotes,
     },
     user,
   )
