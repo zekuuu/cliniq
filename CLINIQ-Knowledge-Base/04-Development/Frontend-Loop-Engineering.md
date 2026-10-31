@@ -2,7 +2,7 @@
 
 This is the **operating manual an agent keeps open while actually building**, not a one-time read. `Development-Phases.md` says *what* to build and in what order (F0→F3); this file says *how*, and gives a resumable checklist so a fresh agent can pick up exactly where a previous one stopped — including mid-token-limit, mid-screen.
 
-**Frontend only.** This covers F0–F3. There is no backend equivalent of this file yet.
+**Frontend only.** This covers F0–F3. The backend equivalent is [`Backend-Loop-Engineering.md`](./Backend-Loop-Engineering.md).
 
 **Sequencing, revised from the original per-screen loop:** build every screen first, completely, before any cross-checking or auditing happens. Don't interleave build-then-check-then-build-then-check per screen — that was the original design, and it burns tokens/credits fast, since every single screen triggered a full Countercheck+Audit+Simulate cycle before the next one could start. Now: one full Build Phase across everything, then one full Cross-Check & Audit Phase across everything, screen by screen, afterward.
 

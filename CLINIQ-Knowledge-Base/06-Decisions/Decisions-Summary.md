@@ -221,3 +221,7 @@ The school's masterlist has no student phone number but has birthdates, so the s
 ### ADR-055: The Monthly Report's weeks run Sunday to Saturday
 
 The weekly breakdown now follows the Activity calendar: Sunday to Saturday, clipped to the month, so October 2026 reads 1-3, 4-10, 11-17, 18-24 and 25-31.
+
+### ADR-056: Backend preparation: Sanctum SPA cookie mode, a separate `backend` branch, nothing wired to the frontend, and no migrations before the ERD is approved
+
+The backend signs the browser app in with Sanctum's cookie mode (7-day session, CORS from one explicit origin with credentials). All backend work happens on a branch called `backend`, changes only `backend/`, and is not connected to the frontend yet. The first round is the foundation only (scaffold, modular folders, configuration, CORS, middleware, one error format, the audit-log service contract, a health route, tests); the ERD is reviewed first and no migration is built until the team approves it. Zean, in chat, Saturday, October 31, 2026 — 18:10 PHT. [ADR-056](ADR-056-Backend-Preparation-Sanctum-SPA-Cookie-Mode-Own-Branch-Nothing-Wired-No-Migrations-Before-ERD-Approval.md)

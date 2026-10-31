@@ -1,4 +1,8 @@
 # Changelog
+
+**Backend changes are logged in [`Backend-Changelog.md`](./Backend-Changelog.md), not here** (ADR-056); this file covers the frontend, the documents and the project.
+
+| Saturday, October 31, 2026 — 18:30 PHT | Recorded ADR-056 (backend: Sanctum SPA cookie mode, a separate `backend` branch, backend only, nothing wired to the frontend, no migrations before the ERD is approved), added a backend pointer to `AGENTS.md`, `CLAUDE.md` and the phase and readiness documents, and gave the backend its own logs (`Backend-Issues-and-TODOs.md`, `Backend-Changelog.md`) so it never conflicts with `main`. Wrote the documentation accuracy prompt. See [Agent session](Agent-Sessions/2026-10-31-backend-preparation.md). |
 | Saturday, October 31, 2026 — 12:56 PHT | Removed the expanded yearly Activity calendar day list after review: the yearly view now stays a readable summary, while the Table view remains the place for full date-level details. See [Agent session](Agent-Sessions/2026-10-31-activity-calendar-day-list-removed.md). |
 | Saturday, October 31, 2026 — 12:55 PHT | The yearly Activity calendar day list now opens in a capped, keyboard-focusable scroll panel, preventing the 119-day list from flooding the screen while keeping the full list available and printable. See [Agent session](Agent-Sessions/2026-10-31-activity-calendar-day-list-panel.md). |
 | Saturday, October 31, 2026 — 12:52 PHT | Yearly Activity calendar dates with events now use a restrained brand-yellow outline instead of the previous black outline, matching event chips without overpowering the date numbers. See [Agent session](Agent-Sessions/2026-10-31-activity-calendar-event-indicator.md). |

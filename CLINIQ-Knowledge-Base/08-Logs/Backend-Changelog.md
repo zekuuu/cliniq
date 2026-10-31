@@ -1,0 +1,5 @@
+# Backend Changelog
+
+Every change to the backend (the Laravel API, the database build, the API contract, the ERD review, backend tooling and tests) is logged here, newest first, in the same row format as the main [`Changelog.md`](./Changelog.md). The files are separate on purpose ([ADR-056](../06-Decisions/ADR-056-Backend-Preparation-Sanctum-SPA-Cookie-Mode-Own-Branch-Nothing-Wired-No-Migrations-Before-ERD-Approval.md)): the `backend` branch edits this one and `main` edits the other, so they never conflict. A change that touches both sides is logged in the main file and names the row here. Every row carries a real timestamp.
+
+| Saturday, October 31, 2026 — 18:30 PHT | Wrote the backend operating manual (`04-Development/Backend-Loop-Engineering.md`: ground rules, read-first, test-first build, countercheck and audit, resumable checklist P1 to P3, B0.1 to B0.10 and B1 to B10) and the three-part prompt `Prompt-Backend-Preparation-Oct31.md` (environment, API contract, ERD review, then the Laravel foundation). No backend code written. See [Agent session](Agent-Sessions/2026-10-31-backend-preparation.md). |
