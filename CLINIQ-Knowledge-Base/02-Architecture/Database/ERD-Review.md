@@ -1,29 +1,33 @@
 # ERD Review
 
-**Status: first list, for the team's approval.** Written Saturday, October 31, 2026 — 19:46 PHT from the documentation accuracy pass, against the code at `9b4861db` plus that pass's changes. `ERD.md`, `Data-Dictionary.md`, `Reference-Schema.sql` and the `Diagrams/ERD-*` files are not edited until Zean approves these changes (ADR-056). Part 1 of the backend preparation continues this review function by function against the mock API.
+**Status: the approval checklist.** Rewritten Saturday, October 31, 2026 — 20:31 PHT. `ERD.md`, `Data-Dictionary.md`, `Reference-Schema.sql` and `Diagrams/ERD-*` now carry the accepted decisions up to ADR-056 and the frontend's data shapes (104 exported functions in `frontend/src/lib/mock-db/api.ts`). They stay a proposed draft, not final or approved. What waits for the team is below, plus the open items in `ERD.md` sections 11 and 12. No migration, seeder or model with columns is built before that (ADR-056).
 
-## Missing from all three files
+## Now in the drafts
 
-| What the system has | Decision | Where in the code |
-|---|---|---|
-| Staff patients: their own table; visits, incidents, follow-ups and stock transactions point at a student or a staff member, exactly one | ADR-043, ADR-053 | `Personnel`, `PatientRef` |
-| `students.student_id` is `NOT NULL` on `visits`, `incidents`, `follow_ups`; composite keys `(id, student_id)` must allow for a staff patient | ADR-043 | Same |
-| Inventory batches: quantity, expiry and received date per batch, with allocations per movement. `inventory_items` still holds one `expiration_date` | ADR-030, ADR-035 | `InventoryItem.batches`, `InventoryBatchAllocation` |
-| `birth_date` on students; `contact_number` dropped | ADR-054 | `Student.birthDate` |
-| `section` on students; grade and section at the time on visits and incidents | ADR-047 | `Student.section`, `gradeLevelAtTime`, `sectionAtTime` |
-| Disposition `resting_in_clinic`; `chk_visits_disposition` needs checking against it | Panel review VS-1 | `lib/dispositions.ts` |
-| Up to 3 extra complaint tags on a visit | ADR-053 | `Visit.extraComplaints` |
-| Collected by, relationship, time collected | ADR-049 | `Visit.collectedBy` |
-| Stay home until cleared, on follow-ups and letters | ADR-049 | `FollowUp.stayHomeUntilCleared`, `stayHomeNote` |
-| Stored letter wording (`recipient`, `body`), superseded and voided letters. `uq_letters_visit` allows one letter per visit, but a replacement needs several | ADR-049, panel review EX-3 | `ExcuseLetterApproval` |
-| Avoid-if-allergic words on an item; generic or branded | ADR-049 | `InventoryItem.avoidIfAllergicTo`, `brand` |
-| Acknowledge on an incident report | ADR-048 | `Incident.acknowledged` |
-| Backup locations; a backup result per location | ADR-052 | `BackupLocation` |
+Staff patients and the exactly-one-patient rule (ADR-043, ADR-053); batches and allocations (ADR-030, ADR-035); `birth_date`, no student `contact_number` (ADR-054); `section`, `grade_level_at_time`, `section_at_time` (ADR-047); `resting_in_clinic`; extra complaint tags (ADR-053); collected-by, stay-home, stored wording, voided and superseded letters (ADR-049); avoid-if-allergic words and brand; Acknowledge (ADR-048); backup locations and a result per location (ADR-052); `print` and `view` audit actions; the 10-year audit retention setting; the starting values in `system_settings` (ADR-051); the visit logbook fields and the panel-review columns that were in the dictionary but missing from the SQL; `users.email` (ADR-048); archiving without a reason (ADR-047).
 
-## Wording in the drafts
+## Questions for the team's approval
 
-- `ERD.md` and `Data-Dictionary.md` name the module `SmartTriage`; the feature is the First-aid Checklist. `ERD.md` says the backend README lacks it, and the module list has no staff-patient module.
-- `ERD.md` section 14 says "the 64 mock functions" (103 now), and asks for "MySQL" wording changes that are done.
-- `Data-Dictionary.md`'s frontend line for students lists `contactInfo`.
-- 29 table-of-contents anchors in `Data-Dictionary.md` do not resolve.
-- Diagrams need regenerating after any of the above.
+No decision or code shape settles these. The drafts hold a working answer so they load; approving means saying yes or changing it.
+
+- [ ] **Ids.** Keep `BIGINT UNSIGNED` surrogate keys (rule K-1)? The mock uses readable string ids.
+- [ ] **Column lengths** on everything new (`section` 60, `collected_by_name` 120, `recipient` 150 and others). The code sets no limit.
+- [ ] **`section`:** free text, as now, or a lookup table once the registrar's list is known? The same for `grade_level_at_time`: text, as now, or a key to `grade_levels`?
+- [ ] **`personnel.type`:** free text checked by the service, as now, or a lookup table? The clinic and the registrar still give the real groups.
+- [ ] **`staff_number`:** CLINIQ's `STF-0001`, or the school's own employee number?
+- [ ] **Staff health entries and contacts:** separate tables, as drafted (a CHECK on a CASCADE column breaks rule F-2), or one shared table?
+- [ ] **Who was called for a staff patient:** `parent_notification_attempts.contact_id` points at student contacts only, and the mock keeps a name, relationship and phone snapshot that the table does not hold.
+- [ ] **`audit_logs.subject_student_id`** has no staff twin.
+- [ ] **`users.email`:** unique? And where do reset tokens live (Laravel's default table)?
+- [ ] **`students.health_reviewed_at`:** ADR-049 and ADR-051 leave it with no use. Drop it?
+- [ ] **Batches on a medicine line:** the mock keeps allocations on the line and on the transaction; the draft keeps them on the transaction only.
+- [ ] **Letter draft values:** the mock holds them on the visit; the draft holds them on a `draft` row. Is `snapshot_text` the stored `body`?
+- [ ] **Vitals ranges, `personnelTypes`, `showFrequentVisitors`:** not numbers, so not in `system_settings` as it stands.
+- [ ] **Retention of staff patients:** no decision names a period.
+- [ ] **Audit retention:** 10 years still needs the school's confirmation (D-09).
+- [ ] **Indexes** on the new tables were not measured; `ERD.md` section 10 is the first draft's run.
+
+## Checks still owed
+
+- The 107 constraint tests and the stress load of `ERD.md` section 10 were run on the first draft, and their scripts are not in the repository. The update was loaded on MariaDB 10.11 with spot checks only.
+- Not loaded on MySQL 8.
