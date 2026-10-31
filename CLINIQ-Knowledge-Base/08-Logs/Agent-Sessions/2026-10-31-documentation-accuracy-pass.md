@@ -1,4 +1,4 @@
-Date/Day/Time: Saturday, October 31, 2026 — 19:24 PHT
+Date/Day/Time: Saturday, October 31, 2026 — 19:24 PHT (time estimated)
 Agent: Claude Code (Opus 5.5)
 Task: Documentation accuracy pass: check every markdown document against the code and the ADRs before backend work starts
 Status: Completed, with the limits under Known Issues
@@ -21,7 +21,7 @@ Next Steps: Zean reviews and commits this branch and merges it before `backend` 
 
 Failing tests: `BackNavigation.test.tsx` (staff and admin `/calendar`), `lib/mock-db/sync.test.ts` (renamed student), `lib/mock-db/stock.test.ts` (expired stock after restock), `ui-review-regressions.test.tsx` (4), `StudentProfilePage.test.tsx` (excused periods), `form-cancel.test.tsx` (1), `back-navigation.test.tsx` (2). Causes were not investigated: no code changes in this task. Several read like date-dependent or complaint-label failures.
 
-Link check: 538 tracked files, 1,191 relative links, 33 broken before the pass . 29 are anchors inside `Data-Dictionary.md` (do not edit, listed), 2 are missing images in the Project Plan (canonical, listed), 2 are in past `Agent-Sessions/` (history). Recheck after the pass (Saturday, October 31, 2026 — 19:26 PHT): 1,214 links, the same 33 broken, all in files this pass may not edit.
+Link check: 538 tracked files, 1,191 relative links, 33 broken before the pass . 29 are anchors inside `Data-Dictionary.md` (do not edit, listed), 2 are missing images in the Project Plan (canonical, listed), 2 are in past `Agent-Sessions/` (history). Recheck after the pass (Saturday, October 31, 2026 — 19:26 PHT (time estimated)): 1,214 links, the same 33 broken, all in files this pass may not edit.
 
 ## Facts inventory (from the code, `9b4861db`)
 
@@ -123,6 +123,8 @@ Prompt/Request: "fix all the FIX you added and DOC or anything you added, do it 
 - ERD differences written to `Database/ERD-Review.md`, as the entry said. The drafts themselves stay unedited (ADR-056 item 6).
 
 Testing: typecheck and build pass; lint unchanged (1 error, 2 warnings); tests 833 passed, 13 failed of 846. Twelve are the baseline failures; `IncidentSafety.test.tsx` failed once under full-suite load and passes alone (14 of 14).
+
+**Correction (Saturday, October 31, 2026 — 20:31 PHT):** the "29 anchors" in `Data-Dictionary.md` never were broken. The checker stripped underscores from headings, which GitHub keeps. Fixed, it reports 4 broken links in the repository: 2 in a past session log and the 2 Project Plan images.
 
 ## Known Issues
 

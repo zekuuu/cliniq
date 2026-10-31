@@ -6,7 +6,7 @@ Everything open about the backend lives here: the Laravel API, the database buil
 
 ## Open work at a glance
 
-Open: FIX 1 · AUDIT 0 · DOC 0 · DECIDE 0 · LATER 1 | Notes: NOTE 1 · VERIFY 0 | Done: 1
+Open: FIX 1 · AUDIT 0 · DOC 0 · DECIDE 0 · LATER 1 | Notes: NOTE 1 · VERIFY 0 | Done: 2
 
 **Open `FIX` items:**
 
@@ -24,4 +24,5 @@ Open: FIX 1 · AUDIT 0 · DOC 0 · DECIDE 0 · LATER 1 | Notes: NOTE 1 · VERIFY
 
 ## Done
 
-- [x] **[DONE]** **ERD, Data Dictionary and Reference Schema lag the frontend** (logged Saturday, October 31, 2026 — 19:24 PHT). Not edited (ADR-056). None of the three holds staff patients (ADR-043, ADR-053), `birth_date` (ADR-054), extra complaints, collected-by, avoid-if-allergic, grade at the time, Acknowledge, backup locations or the stored letter wording; `ERD.md` still names `SmartTriage` and "64 mock functions" (103 now); 29 `Data-Dictionary.md` anchors do not resolve. Take the list into `ERD-Review.md`. Session: [2026-10-31-documentation-accuracy-pass](Agent-Sessions/2026-10-31-documentation-accuracy-pass.md) Listed in `02-Architecture/Database/ERD-Review.md`; the drafts stay unedited until Zean approves the changes (ADR-056). Resolved Saturday, October 31, 2026 — 19:46 PHT. Session: [2026-10-31-documentation-accuracy-pass](Agent-Sessions/2026-10-31-documentation-accuracy-pass.md)
+- [x] **[DONE]** **ERD drafts updated to the accepted decisions** (logged Saturday, October 31, 2026 — 20:31 PHT). `ERD.md`, `Data-Dictionary.md`, `Reference-Schema.sql` and `Diagrams/ERD-*` carry the decisions up to ADR-056 and the frontend data shapes, still a proposed draft. The open choices are in `ERD-Review.md`. Resolved Saturday, October 31, 2026 — 20:31 PHT. Session: [2026-10-31-backend-erd-drafts-updated](Agent-Sessions/2026-10-31-backend-erd-drafts-updated.md)
+- [x] **[DONE]** **ERD, Data Dictionary and Reference Schema lag the frontend** (logged Saturday, October 31, 2026 — 19:24 PHT (time estimated)). Not edited (ADR-056). None of the three holds staff patients (ADR-043, ADR-053), `birth_date` (ADR-054), extra complaints, collected-by, avoid-if-allergic, grade at the time, Acknowledge, backup locations or the stored letter wording; `ERD.md` still names `SmartTriage` and "64 mock functions" (103 now); 29 `Data-Dictionary.md` anchors do not resolve. Take the list into `ERD-Review.md`. Session: [2026-10-31-documentation-accuracy-pass](Agent-Sessions/2026-10-31-documentation-accuracy-pass.md) Listed in `02-Architecture/Database/ERD-Review.md`; the drafts stay unedited until Zean approves the changes (ADR-056). Resolved Saturday, October 31, 2026 — 19:46 PHT. Session: [2026-10-31-documentation-accuracy-pass](Agent-Sessions/2026-10-31-documentation-accuracy-pass.md)
