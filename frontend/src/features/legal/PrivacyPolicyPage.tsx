@@ -89,8 +89,8 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
               </li>
               <li>
                 <strong>Audit records:</strong> who accessed or acted on a record, what action was
-                taken, and when — logged automatically for every login, scan, submission, approval,
-                and create/update/delete/archive action.
+                taken, and when — logged automatically for every login, submission, approval, print,
+                opened profile or incident report, and create/update/delete/archive action.
               </li>
             </ul>
           </section>
@@ -155,8 +155,8 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
                       <strong>Admin/Principal</strong>
                     </th>
                     <td className="px-3 py-3">
-                      View-only access to reports, the Clinic Overview Dashboard, and the audit log.
-                      No access to individual student records.
+                      View-only access to reports, the Clinic Overview Dashboard, the audit log, the student
+                      list and profiles, and incident reports. Opening a profile or report is logged.
                     </td>
                   </tr>
                   <tr className="align-top">
@@ -194,14 +194,14 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
                 is archived — hidden from active lists but not immediately deleted.
               </li>
               <li>
-                Archived records are kept for up to 5 years after archiving, then deleted. This
+                Archived records are kept for 5 years from the archive date, then deleted. This
                 period exists in case a transferred student re-enrolls, and reflects the Data
                 Privacy Act&apos;s principle of not keeping personal information longer than
                 necessary.
               </li>
               <li>
-                Audit log records are kept for a shorter period than clinic records, since their
-                purpose is near-term accountability rather than long-term care history.
+                Audit log records are kept separately from clinic records, for accountability. Their
+                retention period is stated here once the school confirms it.
               </li>
             </ul>
           </section>
