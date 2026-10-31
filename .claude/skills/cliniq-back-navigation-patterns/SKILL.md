@@ -10,7 +10,7 @@ Use this with `cliniq-interactive-states` (hover, cursor, focus) and `cliniq-dis
 ## When a screen gets Back
 
 - **Yes:** every child, detail, form, and flow-step screen (anything reached from another screen); every dead end (Not Found, load-error and "not found" states, an empty state with no next step); Privacy Policy.
-- **No:** top-level screens the sidebar reaches (Dashboard, Student List, Visit Log, Incident Log, Inventory, Follow-Ups, Reports, Audit Log, User Management, Backup), Login, and a role's home screen (the Dashboard, for both Staff and Admin/Principal).
+- **No:** top-level screens the sidebar reaches (Dashboard, Activity calendar, Student List, Staff List, Visit Log, Incident Log, Inventory, Follow-Ups, Reports, Audit Log, User Management, Backup), Login, and a role's home screen (the Dashboard, for both Staff and Admin/Principal).
 - **Drill-through exception:** a top-level list shows Back only when a drill-through link opened it. Drill-through links pass `DRILL_THROUGH_STATE` (`hooks/useGoBack.ts`) as router state: the shared `TitleLink` and `ListItemLink` do it already, and so does the Dashboard calendar's "View visits". The list renders `<BackButton fallback={paths.dashboard} drillThroughOnly />`. Opened from the sidebar or a URL, it shows nothing.
 - **In-page drill-ins** that swap content without changing the route get a way back to the previous view: Visit Details in edit mode passes `onBack={cancelEdit}` (Back = Cancel, back to the read view). Dialogs (the calendar day panel) already have Close/Cancel and need no Back.
 

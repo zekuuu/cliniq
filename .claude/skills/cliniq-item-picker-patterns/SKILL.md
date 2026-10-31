@@ -18,12 +18,12 @@ Use this with `cliniq-dropdown-patterns` (the panel look), `cliniq-input-pattern
 
 ## The lines (`ItemsGivenField`)
 
-- Legend: **Medicines & supplies given**. Optional; a record with only treatment notes stays valid. The free-text box beside it is labelled **Treatment notes** (care that isn't stock). Visits need notes or at least one line.
+- Legend: **Medicines & supplies given**. Optional; the free-text box beside it is labelled **Treatment notes** (care that isn't stock), and a visit can be saved with neither.
 - Each line: the item name, a **quantity stepper** (bare `-`/`+` icon buttons around a typed whole-number field, minimum 1), the **unit** read-only from the item, an optional **Instructions** field (120 characters max, with a counter), and a bare **remove** icon. Every control's accessible name includes the item name ("Increase Paracetamol 500mg").
 - Picking an item already on a line **adds one to that line**; it never creates a duplicate. Picks and removals are announced through a polite status region.
 - A quantity above current stock **warns but never blocks** ("Only 12 tablets in stock. Saving takes stock below zero; recount and restock."). On an edit form, available stock counts what the saved record already took.
 - An expired item already on a saved record can be kept or lowered, not raised: its `+` is disabled.
-- Show the student's **recorded allergies** next to the picker, for awareness only. Nothing is matched automatically (there's no ingredient data). Before a student is identified, say they'll appear once identified; picking the student loads them at once.
+- Show the student's **recorded allergies** next to the picker, for awareness. An item's optional "avoid if allergic to" words that the patient's allergy entries mention show a warning that never blocks (ADR-049); nothing else is matched (there's no ingredient data). Before a student is identified, say they'll appear once identified; picking the student loads them at once.
 - Saved lines are displayed with `formatItemGiven` from `frontend/src/lib/itemsGiven.ts`: "Paracetamol 500mg × 2 tablets (1 tablet every 6 hours)", from the line's own name/unit snapshot. History lists use `visitCareSummary`.
 
 ## Where it's used
