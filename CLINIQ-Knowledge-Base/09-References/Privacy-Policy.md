@@ -17,7 +17,7 @@ This policy covers CLINIQ, the clinic tracking and monitoring system used by Men
 - **Clinic records:** visit records (date, complaint, treatment, outcome), incident/emergency records (including hospital referral and parent-notification details where applicable), and follow-up records.
 - **Inventory records:** medicine and supply stock levels and usage history. This does not identify students except where a specific dispensing is linked to a visit record.
 - **Account information:** name, username, and role, for every Staff and Admin/Principal account.
-- **Audit records:** who accessed or acted on a record, what action was taken, and when — logged automatically for every login, scan, submission, approval, and create/update/delete/archive action.
+- **Audit records:** who accessed or acted on a record, what action was taken, and when — logged automatically for every login, submission, approval, print, opened profile or incident report, and create/update/delete/archive action.
 
 ## 3. Why CLINIQ collects this information
 
@@ -33,7 +33,7 @@ Access is role-based and limited to what each role needs:
 | Role | Access |
 |---|---|
 | **Staff** (School Clinician) | Full access to student records, visits, incidents, inventory, reports, and the audit log. |
-| **Admin/Principal** | View-only access to reports, the Clinic Overview Dashboard, and the audit log. No access to individual student records. |
+| **Admin/Principal** | View-only access to reports, the Clinic Overview Dashboard, the audit log, the student list and profiles, and incident reports. Opening a profile or report is logged. |
 | **PE/Sports Instructor** | No account and no access to CLINIQ. An instructor asks the clinic, and the school clinician decides what health information to share. |
 
 No role can view information for a student they have not specifically looked up or that isn't relevant to their role. Multi-student list views (such as the visit log) show only the last digits of the LRN rather than a name, so that information isn't identifiable to someone glancing at a shared screen.
@@ -42,8 +42,8 @@ No role can view information for a student they have not specifically looked up 
 
 - Active student, visit, and incident records are kept for as long as the student is enrolled.
 - When a student leaves the school (graduates, transfers, or withdraws), their record is archived — hidden from active lists but not immediately deleted.
-- Archived records are kept for up to 5 years after archiving, then deleted. This period exists in case a transferred student re-enrolls, and reflects the Data Privacy Act's principle of not keeping personal information longer than necessary.
-- Audit log records are kept for a shorter period than clinic records, since their purpose is near-term accountability rather than long-term care history.
+- Archived records are kept for 5 years from the archive date, then deleted. This period exists in case a transferred student re-enrolls, and reflects the Data Privacy Act's principle of not keeping personal information longer than necessary.
+- Audit log records are kept separately from clinic records, for accountability. Their retention period is stated here once the school confirms it.
 
 ## 6. How CLINIQ protects this information
 
@@ -56,6 +56,8 @@ No role can view information for a student they have not specifically looked up 
 ## 7. Minors' information
 
 Most of the information CLINIQ holds is about students who are minors. It is collected and used only for the clinic-care and safety purposes described above, is restricted to the roles described in Section 4, and is not shared outside the school except as described in this policy.
+
+**Teachers and school staff (PROVISIONAL).** The clinic may also record visits, incidents and medicines given for teachers, non-teaching staff and utility workers, with their allergies and medical conditions if they choose to give them. This health information is kept only with the staff member's knowledge and consent, is seen only by the School Clinician, and is protected in the same way as students' records. This wording is provisional until the school's privacy officer approves it.
 
 ## 8. Information sharing
 

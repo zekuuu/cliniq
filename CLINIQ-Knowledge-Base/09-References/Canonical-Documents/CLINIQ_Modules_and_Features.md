@@ -1,6 +1,6 @@
 # CLINIQ — Full Module & Submodule List (Complete Feature Breakdown)
 
-Modules 1 to 5 are the baseline (from the Software Engineering I Technical Documentation); Modules 7 to 11 are team-proposed enhancements added during Software Engineering II planning (Module 6, QR, was removed, ADR-027); Module 2a covers teachers and school staff as patients (ADR-043). Every module is broken down to individual operations, each tagged with who can access it. Brought up to date with ADR-001 to ADR-053 on Thursday, October 29, 2026. This document says what the system should do; it does not say what is already built (see the repository README for that).
+Modules 1 to 5 are the baseline (from the Software Engineering I Technical Documentation); Modules 7 to 11 are team-proposed enhancements added during Software Engineering II planning (Module 6, QR, was removed, ADR-027); Module 2a covers teachers and school staff as patients (ADR-043). Every module is broken down to individual operations, each tagged with who can access it. Brought up to date with ADR-001 to ADR-056 on Saturday, October 31, 2026. This document says what the system should do; it does not say what is already built (see the repository README for that).
 
 **Words used.** "Staff" in this document is the clinician role, called **School Clinician** in the app. Teachers and other employees who are seen at the clinic as patients are "staff patients" (ADR-043).
 
@@ -30,13 +30,13 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 - Edit user account (name, username, role)
 - Optionally add, replace, or remove a staff-account profile picture (JPEG, PNG, or WebP, client-cropped/resized to a 256 px square); show an initials avatar when absent, keep the role badge visible, and audit the change by field name only
 - Disable or re-enable a user account (never deleted: a disabled account stays listed and in the audit history, and can't sign in)
-- Reset a password to a temporary one that must be changed at the next sign-in (no self-service recovery; a lost Admin password is fixed outside the app)
+- Reset a password to a temporary one that must be changed at the next sign-in (a lost Admin password is fixed outside the app)
 - Never disable or demote the last active Admin/Principal, including one's own account
 - View list of all user accounts
 - Search/filter user accounts
 
 **Password Management** *(Staff, Admin/Principal — self-service for whoever is logged in)*
-- Change password (self-service)
+- Change password (self-service): the signed-in user gives the current password first
 - Force password change on first login
 - Prevent reuse of last 5 passwords
 - Enforce minimum 8-character password length
@@ -54,7 +54,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 **Student Information Encoding**
 - Add new student record — *Staff*
 - Record the required **Sex** recorded by the school (Female or Male). Show it on the deliberate single-student profile and Student Health Record; audit changes by field name only, never the value.
-- Record the student's optional **Birthdate** (ADR-054), filled by the yearly import when the school's list has it and left empty for a student added by hand without one. It must be a real date and not in the future; when the age is more than 3 years away from the usual age for the grade (starting rule, to confirm), the form shows a soft note and still saves. The age is calculated from it, never stored. The student profile header shows the age (for example "9 years"); the full date shows only in the profile details, the Edit form and the profile printout, never in lists, pickers, the Dashboard, reports or other printouts. Audit changes by field name only, never the value
+- Record the student's optional **Birthdate** (ADR-054), filled by the yearly import when the school's list has it and left empty for a student added by hand without one. It must be a real date and not in the future; when the age is more than 3 years away from the usual age for the grade (starting rule, to confirm), the form shows a soft note and still saves. The age is calculated from it, never stored. The student profile header shows the age (for example "9 years old"); the full date shows only in the profile details, the Edit form and the profile printout, never in lists, pickers, the Dashboard, reports or other printouts. Audit changes by field name only, never the value
 - Record the student's LRN (Learner Reference Number, ADR-028), entered by Staff from the school records: exactly 12 digits, kept as text so leading zeros survive, required and unique (a repeat shows "This LRN is already used by another student record" without naming that student); spaces and dashes are removed when typed or pasted; a wrong LRN is corrected in Edit Student and audited as "Updated LRN" with neither value. Lists, pickers, the Dashboard, Reports and the Audit Trail show it masked to the last four digits (`●●●●●●●●1234`, read as "LRN ending in 1234"); a screen about one opened student, and its printout, show it in full (ADR-040); only the Student Profile and the edit form show it in full; addresses carry the internal id, never the LRN
 - Edit student record — *Staff*. The LRN is locked once the record exists (read-only on Edit Student and refused by the data layer); a name correction stays possible but asks for a reason of at least 3 characters, which the audit entry records ("Name corrected; reason: ...") without the old or new name (Sir Rey, Sunday, October 25, 2026)
 - Admin/Principal opening a student profile is audit-logged once per record per sign-in session (ADR-038 item 4); visits on the profile show as text, not links, for the Admin
@@ -92,7 +92,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 - Confirm or cancel when a duplicate warning appears
 
 **Incomplete Record Handling**
-- Auto-flag records missing required fields (full name, grade level, sex, emergency contact, allergies, conditions)
+- Auto-flag records missing required fields (full name, grade level, sex, emergency contact)
 - View the incomplete-records review queue (feeds the expanded Dashboard, Module 9)
 - Resolve/complete a flagged record
 - Log which staff member resolved each flag
@@ -328,7 +328,7 @@ A dedicated screen to review the Audit Trail (below), not just write to it — a
 - Each entry: timestamp, who, action type, and the target record (masked LRN, not name, when the target is a student — per the display-privacy rule) — *Staff, Admin/Principal*
 - Export/print a filtered view, for handing to a DPO or during a compliance review — *Staff* (ADR-038). The printout states the filters in words and lists every matching entry (ADR-026)
 - The audit log is kept **10 years** (ADR-037, 051; not yet confirmed by the school or its privacy officer)
-- Operational lists (Visit Log, Incident Log, Audit Log) offer 10 or 20 rows per page; the choice lasts for the browser session (Sir Rey, Sunday, October 25, 2026)
+- Operational lists (Visit Log, Incident Log, Audit Log) offer 10, 20, 50 or 100 rows per page; the choice lasts for the browser session (Sir Rey, Sunday, October 25, 2026)
 - **No role can edit or delete an entry.** The log is read-only by design; that's what makes it a log.
 
 ---

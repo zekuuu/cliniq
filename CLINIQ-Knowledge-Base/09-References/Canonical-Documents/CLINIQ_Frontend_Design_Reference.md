@@ -154,7 +154,7 @@ A Weekly / Monthly / Yearly switch and a Calendar / Table switch with their own 
 
 **Layout, top to bottom:**
 0. **Allergy banner** — when allergies or conditions are recorded, a compact banner at the top lists them; otherwise nothing extra shows
-1. **Header** — full name (large), the full LRN (smaller, secondary; the profile is the one screen that shows it in full), grade level, the age when a birthdate is recorded (for example "9 years"; the full birthdate belongs in the details below, ADR-054), an archived-status badge if applicable
+1. **Header** — full name (large), the full LRN (smaller, secondary; the profile is the one screen that shows it in full), grade level, the age when a birthdate is recorded (for example "9 years old"; the full birthdate belongs in the details below, ADR-054), an archived-status badge if applicable
 2. **Sectioned content** (tabs or stacked sections, designer's call, but pick one pattern and reuse it everywhere else this applies): Overview (demographics, emergency contact), Medical History (allergies and conditions as tag/chip components; an empty field reads "None recorded" in plain text, ADR-049, 051), Visit History (chronological list), Incident History (chronological list, including which are Stage 1/incomplete vs complete)
 3. **Actions** (Staff only) — Edit, Print, Archive. Archive should visually read as a lower-emphasis, non-destructive action (it's reversible and doesn't delete anything) — don't style it like a destructive button
 

@@ -9,8 +9,8 @@
 
 | Field | Detail |
 |---|---|
-| Document Revision No. | 2.8 |
-| Date of Issue | October 30, 2026 |
+| Document Revision No. | 2.9 |
+| Date of Issue | October 31, 2026 |
 | Project Manager | Ghenly B. Tinapay |
 | System Analyst | Christian John C. Lugami |
 | Developer / Tester | Zean Kurt G. Balboa |
@@ -42,6 +42,7 @@
 | 2.6 | September 30, 2026 | Ghenly B. Tinapay, Christian John C. Lugami, Zean Kurt G. Balboa | Added Module 11: Audit Log Viewer (Screen #35) — Staff and Admin/Principal can view the audit log the system already writes to, filtered by date range, user, action type, and target/module; previously nothing let anyone actually read it back. Updated the Modularity & Scalability NFR's module count. Full reasoning: Obsidian vault, ADR-016. |
 | 2.7 | October 1, 2026 | Ghenly B. Tinapay, Christian John C. Lugami, Zean Kurt G. Balboa | Recorded Prof. Kryss Coleen Creus as the Software Engineering II Course Adviser. |
 | 2.8 | October 30, 2026 | Zean Kurt G. Balboa (updated with AI assistance; for the team to review) | Brought the plan in line with the decisions recorded in the team's knowledge base (ADR-001 to ADR-053) since Revision 2.7. **Scope and access:** removed the QR Digital Health ID and the generated Student Number (the LRN identifies each student, ADR-027, ADR-028); no account for PE/Sports Instructors (ADR-029); the system runs on the clinic computer only and the Principal signs in there; the Admin/Principal reads the Dashboard, reports, student profiles and incident reports on screen, manages accounts, acknowledges incident reports, never prints and is signed out after 30 idle minutes (ADR-029, 033, 038, 048); teachers and school employees can be clinic patients (ADR-043). **Features:** school-events calendar and national holidays now in scope (ADR-019, 020, 042); inventory held in received batches (ADR-030); Sports Report (ADR-034); visits and incidents stay separate with Escalate to incident (ADR-036); yearly list import and automatic yearly archive (ADR-047, 051); cluster alert, weekly breakdown and monthly inventory print (ADR-050); backup locations chosen in the system (ADR-052). **Technology and policy:** database named "MariaDB (XAMPP), MySQL-compatible"; backup stays local with no cloud (ADR-039); retention is 5 years from the archive date for student records and 10 years for the audit log (ADR-051); every printout is an A4 document (ADR-026, 044, 045, 046). **Budget:** removed the QR sticker line and recomputed the subtotal (Section 7). The schedule dates are unchanged. |
+| 2.9 | October 31, 2026 | Zean Kurt G. Balboa (updated with AI assistance; for the team to review) | Deployment wording: hosted on the clinic computer and served over the LAN (Zean, October 31, 2026; note on ADR-029). Sanctum in SPA cookie mode (ADR-056). |
 
 ---
 
@@ -146,7 +147,7 @@ At the same time, the SWOT analysis identified real opportunities the project ca
 - Reports Generation (monthly reports with a weekly breakdown, incident reports, complaint summaries, a monthly inventory print, and Sports Reports for PE instructors)
 - The team-proposed enhancements described in Section 5.3: First-aid checklist quick-reference, Medicine & Supply Inventory Tracker, Clinic Overview Dashboard with an Activity calendar (school events and national holidays), and Backup Verification Assistant
 - An Audit Log Viewer that lets Staff and the Admin/Principal read back the audit trail
-- Deployment on the clinic's existing single computer using XAMPP (Apache, PHP and MariaDB), used on that computer; the Admin/Principal signs in at the clinic computer
+- Deployment on the clinic's existing single computer using XAMPP (Apache, PHP and MariaDB), served over the clinic's local network (LAN); the Admin/Principal signs in at the clinic computer
 - RA 10173 (Data Privacy Act of 2012)–aligned data handling, audit logging, and daily backups kept on the clinic computer and an external drive
 - Staff training and a User Acceptance Testing (UAT) phase at the client site
 
@@ -288,9 +289,9 @@ The team also revised the original plain HTML/CSS/JS + PHP stack to **React + Ty
 | Styling | Tailwind CSS | Free |
 | Backend | Laravel (PHP) | Free |
 | Database | **MariaDB (XAMPP), MySQL-compatible** — the database XAMPP installs; Laravel reaches it through its MySQL driver | Free |
-| Authentication | **Laravel Sanctum** (SPA-mode token/cookie auth, built specifically for a React+Laravel pairing) | Free |
+| Authentication | **Laravel Sanctum** (SPA cookie mode, ADR-056, built specifically for a React+Laravel pairing) | Free |
 | Local development environment | **XAMPP**, standardized across all dev machines (matches the client's production environment exactly) | Free |
-| Deployment (current phase) | Local, on the clinic's existing computer (one machine); no internet-facing hosting | Free |
+| Deployment (current phase) | Hosted on the clinic's existing computer, served over the LAN; no internet-facing hosting | Free |
 | Deployment (future phase) | Remote server / cloud — deferred, see Section 1.4 | Deferred, cost TBD if pursued |
 | Dashboard charts | **Chart.js** (via `react-chartjs-2`) — chosen over Recharts specifically for the smaller bundle and Canvas rendering, both of which matter more here than Recharts' nicer JSX composability given the 4GB RAM target and the Dashboard's fairly simple chart needs | Free |
 | ERD / diagramming | Lucidchart (free tier) | Free |
@@ -326,7 +327,7 @@ This stack replaces the original plain HTML/CSS/JS + PHP approach documented in 
 **Non-Functional Requirements:**
 - **Performance:** must run acceptably on the existing minimum-spec workstation (Intel Core i3 or equivalent, 4GB RAM) with no perceptible lag during data entry. The React frontend is compiled into optimized static assets at build time, so the workstation only ever serves and renders a finished bundle — it does not need to run the heavier Node.js build tooling in production, only during development
 - **Security & Privacy:** Laravel Sanctum (bcrypt password hashing, session/token handling), a 1-week session lifetime for Staff (the token expires after 7 days; there is no idle timeout, so urgent work is never interrupted, ADR-015), a 30-minute idle sign-out for the Admin/Principal (ADR-048), account lockout for 30 minutes after 5 failed logins, passwords reset by the Admin with a temporary password and, when the computer is online, by an email link (ADR-048), and handling aligned with RA 10173 (legitimate purpose, consent, purpose limitation, and a defined data retention policy — see Section 5.3)
-- **Availability:** must function fully offline from the public internet, on the clinic computer; it does not depend on the school's network (ADR-029). In an emergency the nurse helps the student first, uses paper, and enters the record afterwards
+- **Availability:** must function fully offline from the public internet, hosted on the clinic computer and served over the local network (LAN) only (ADR-029). In an emergency the nurse helps the student first, uses paper, and enters the record afterwards
 - **Usability:** must be learnable by non-technical clinic staff within a single training session
 - **Maintainability:** codebase and database schema documented clearly enough for the school's outsourced IT provider to support after the team's academic involvement ends
 - **Modularity & Scalability:** each of the system's modules must be a loosely-coupled, independently developable and testable unit in the actual code, not just at the planning level — reduces cross-module breakage with 3 developers (and AI agents) working concurrently, and lets the system grow without a structural rewrite. Full architectural detail: Obsidian vault, `06-Decisions/ADR-008` (frontend) and `ADR-009` (backend)
@@ -335,13 +336,13 @@ This stack replaces the original plain HTML/CSS/JS + PHP approach documented in 
 
 **Human Resources:** the three-person development team (Section 2.3), Ms. Jennesse Baas as primary client validator, the school's outsourced IT provider for network/hardware support, and the CvSU–CEIT adviser for milestone review.
 
-**Hardware Resources (reused, not purchased):** the client's existing Windows 11 workstation, its existing inkjet/laser printer (for reports and excuse letters), and an external drive for backups. CLINIQ itself does not need the school network to run. The only genuinely new hardware items are low-cost consumables (see Section 7). Node.js and Composer, needed to build the React frontend and install Laravel's dependencies, run on the **development team's own machines**, not the client's workstation — the client only ever receives the finished, compiled application.
+**Hardware Resources (reused, not purchased):** the client's existing Windows 11 workstation, its existing inkjet/laser printer (for reports and excuse letters), and an external drive for backups. CLINIQ runs on that computer and is served over the local network. The only genuinely new hardware items are low-cost consumables (see Section 7). Node.js and Composer, needed to build the React frontend and install Laravel's dependencies, run on the **development team's own machines**, not the client's workstation — the client only ever receives the finished, compiled application.
 
 **Software Resources:** all items listed in Section 4.3 — every one free or already in use by the client.
 
 ### 5.3 System Overview
 
-CLINIQ is a three-tier local application: a React + TypeScript single-page frontend styled with Tailwind CSS, a Laravel (PHP) backend exposing a REST API and handling authentication and business logic, and a MariaDB (XAMPP), MySQL-compatible, data layer. The stack runs on XAMPP on every development machine (ADR-007); for production it is deployed on the clinic's single computer and used on that computer, where the Admin/Principal also signs in (ADR-029). Because the frontend talks to the backend only through an API, moving to a remote server or cloud host later — the "Future Deployment" already noted in the tech stack — is a deployment change, not a redesign, though it stays outside this semester's scope (Section 1.4).
+CLINIQ is a three-tier local application: a React + TypeScript single-page frontend styled with Tailwind CSS, a Laravel (PHP) backend exposing a REST API and handling authentication and business logic, and a MariaDB (XAMPP), MySQL-compatible, data layer. The stack runs on XAMPP on every development machine (ADR-007); for production it is deployed on the clinic's single computer and served over the clinic's local network (LAN); the Admin/Principal signs in at the clinic computer (ADR-029). Because the frontend talks to the backend only through an API, moving to a remote server or cloud host later — the "Future Deployment" already noted in the tech stack — is a deployment change, not a redesign, though it stays outside this semester's scope (Section 1.4).
 
 **Baseline modules** (carried forward from the Software Engineering I Technical Documentation): User Management, Student Records, Clinic Visit Monitoring, Emergency Response, and Reports Generation.
 
