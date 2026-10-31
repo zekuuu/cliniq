@@ -3,14 +3,16 @@ import {
   DUPLICATE_LRN_MESSAGE,
   DuplicateLrnError,
   getGradeLevels,
+  getMockToday,
   getStudent,
+  getUnusualAgeYears,
   NAME_CORRECTION_REASON_MIN,
   saveStudent,
   type DuplicateMatch,
   type SessionUser,
   type StudentDuplicateCheck,
 } from '../../../lib/mock-db'
-import type { EmergencyContact, Student, StudentSex } from '../../../types/entities'
+import type { EmergencyContact, ISODate, Student, StudentSex } from '../../../types/entities'
 import { isNoneRecorded } from '../../../lib/patients'
 
 export { checkStudentDuplicates, DUPLICATE_LRN_MESSAGE, DuplicateLrnError, NAME_CORRECTION_REASON_MIN }
@@ -23,7 +25,8 @@ export interface StudentFormValues {
   fullName: string
   gradeLevel: string
   sex: StudentSex | ''
-  contactInfo: string
+  /** `YYYY-MM-DD`, or '' when not given. Optional (ADR-054). */
+  birthDate: string
   emergencyContacts: Array<Pick<EmergencyContact, 'name' | 'relationship' | 'phone' | 'verified'>>
   allergies: string
   medicalConditions: string
@@ -33,6 +36,8 @@ export interface StudentFormContext {
   mode: StudentFormMode
   gradeLevels: string[]
   student: Student | null
+  today: ISODate
+  unusualAgeYears: number
 }
 
 export type StudentFormSubmitResult =
@@ -49,11 +54,12 @@ function parseList(value: string): string[] {
 
 /** Edit mode when `studentId` is given (`/students/:studentId/edit`); add mode otherwise. */
 export async function fetchStudentFormContext(studentId?: string): Promise<StudentFormContext> {
-  const [student, gradeLevels] = await Promise.all([
+  const [student, gradeLevels, unusualAgeYears] = await Promise.all([
     studentId ? getStudent(studentId) : Promise.resolve(null),
     getGradeLevels(),
+    getUnusualAgeYears(),
   ])
-  return { mode: studentId ? 'edit' : 'add', gradeLevels, student }
+  return { mode: studentId ? 'edit' : 'add', gradeLevels, student, today: getMockToday(), unusualAgeYears }
 }
 
 export async function submitStudentForm(
@@ -66,7 +72,7 @@ export async function submitStudentForm(
       fullName: values.fullName,
       gradeLevel: values.gradeLevel,
       sex: values.sex as StudentSex,
-      contactInfo: values.contactInfo,
+      birthDate: values.birthDate || null,
       allergies: parseList(values.allergies),
       medicalConditions: parseList(values.medicalConditions),
       emergencyContacts: values.emergencyContacts

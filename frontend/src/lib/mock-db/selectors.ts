@@ -15,6 +15,7 @@ import type {
   PersonnelSearchResult,
   Student,
   StudentListRef,
+  StudentListRow,
   StudentSearchResult,
   UserRole,
 } from '../../types/entities'
@@ -241,6 +242,13 @@ export function toStudent(student: SeedStudent): Student {
   return { ...student, sex: student.sex ?? 'female', recordComplete: missingRequiredFields(student).length === 0 }
 }
 
+/** `toStudent` for a multi-student screen: the birthdate never leaves the data layer on a list (ADR-054). */
+export function toStudentRow(student: SeedStudent): StudentListRow {
+  const { birthDate, ...row } = toStudent(student)
+  void birthDate
+  return row
+}
+
 export function toListRef(student: Pick<Student, 'id' | 'lrn'>): StudentListRef {
   // Only id + LRN leave this function. The name is dropped on purpose (ADR-004).
   return { id: student.id, lrn: student.lrn }
@@ -358,7 +366,7 @@ export function gradeLevels(state: DbState): string[] {
 // ---- Incomplete Records Review Queue (#9) ---------------------------------------------------
 
 export interface IncompleteRecordRow {
-  student: Student
+  student: StudentListRow
   missingFields: string[]
   review: RecordReview | null
   status: 'open' | 'resolved'
@@ -376,7 +384,7 @@ export function incompleteRecordQueue(state: DbState): IncompleteRecordRow[] {
     const review = reviews.get(student.id) ?? null
     const resolved = Boolean(review?.resolvedAt)
     if (!missingFields.length && !resolved) return []
-    return [{ student: toStudent(student), missingFields, review, status: resolved ? 'resolved' : 'open' }]
+    return [{ student: toStudentRow(student), missingFields, review, status: resolved ? 'resolved' : 'open' }]
   })
 }
 

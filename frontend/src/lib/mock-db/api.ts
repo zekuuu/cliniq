@@ -26,6 +26,7 @@ import type {
   Report,
   ReportType,
   Student,
+  StudentListRow,
   StudentSearchResult,
   User,
   UserRole,
@@ -36,7 +37,7 @@ import type { Patient, PatientNumber } from '../patients'
 import { incidentCompletionBlocker } from '../itemsGiven'
 import { DISPOSITION_LABELS } from '../dispositions'
 import { EXCUSE_LETTER_RECIPIENT, excuseLetterBody } from '../excuseLetter'
-import { addDays, endOfMonth, monthWeeks, parseISODate, toISODate, type MonthWeek } from '../dates'
+import { addDays, endOfMonth, isRealDate, monthWeeks, toISODate, type MonthWeek } from '../dates'
 import type { BackupAlert, CalendarDay, CalendarDayEvent, DashboardQuery, DashboardSummary, Holiday, HolidayFeed } from '../../types/dashboard'
 import holidayData from './holidays-ph.json'
 import type { FollowUpDueState } from '../../components/status/followUp'
@@ -63,6 +64,7 @@ import {
   searchStudents as searchStudentRecords,
   studentsById,
   toStudent,
+  toStudentRow,
   type BackupStatus,
   type AuditLogList,
   type AuditLogQuery,
@@ -467,6 +469,11 @@ export function getMedicalCertificateAfterDays(): Promise<number> {
   return read('medical certificate limit', (s) => s.config.medicalCertificateAfterDays)
 }
 
+/** How far from the usual age for the grade the form's soft note starts (ADR-054). */
+export function getUnusualAgeYears(): Promise<number> {
+  return read('unusual age', (s) => s.config.unusualAgeYears)
+}
+
 export function getGradeLevels(): Promise<string[]> {
   return read('grade levels', gradeLevels)
 }
@@ -615,7 +622,7 @@ export interface StudentQuery {
   limit?: number
 }
 
-export function listStudents(query: StudentQuery = {}): Promise<Student[]> {
+export function listStudents(query: StudentQuery = {}): Promise<StudentListRow[]> {
   return read('students', (s) => {
     const search = query.search?.trim().toLowerCase() ?? ''
     return s.students
@@ -627,7 +634,7 @@ export function listStudents(query: StudentQuery = {}): Promise<Student[]> {
       )
       .sort((a, b) => a.fullName.localeCompare(b.fullName))
       .slice(0, query.limit ?? Infinity)
-      .map(toStudent)
+      .map(toStudentRow)
   })
 }
 
@@ -679,7 +686,7 @@ export function getStudentHistory(studentId: string, limit = 8): Promise<Student
 
 export type StudentInput = Pick<
   Student,
-  'lrn' | 'fullName' | 'gradeLevel' | 'sex' | 'contactInfo' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
+  'lrn' | 'fullName' | 'gradeLevel' | 'sex' | 'birthDate' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
 >
 
 export interface DuplicateMatch {
@@ -767,13 +774,17 @@ export function saveStudent(
       .map((st) => ({ id: st.id, fullName: st.fullName, lrn: st.lrn, gradeLevel: st.gradeLevel }))
     if (!options.studentId && matches.length && !options.confirmDuplicate) return { status: 'duplicate', matches }
 
+    const birthDate = input.birthDate || null
+    if (birthDate && !isRealDate(birthDate)) throw new Error('Enter a real birthdate.')
+    if (birthDate && birthDate > s.today) throw new Error("The birthdate can't be in the future.")
+
     const existing = options.studentId ? studentOf(s, options.studentId) : null
     const fields = {
       lrn,
       fullName: input.fullName.trim(),
       gradeLevel: input.gradeLevel,
       sex: input.sex,
-      contactInfo: input.contactInfo.trim(),
+      birthDate,
       allergies: input.allergies,
       medicalConditions: input.medicalConditions,
       emergencyContacts: input.emergencyContacts,
@@ -2581,8 +2592,6 @@ export interface CalendarEventInput {
 }
 
 export type CalendarEventErrors = Partial<Record<keyof CalendarEventInput, string>>
-
-const isRealDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && toISODate(parseISODate(value)) === value
 
 /** Field messages for an event form; empty when the input is valid. The writes below enforce the same rules. */
 export function validateCalendarEvent(input: CalendarEventInput): CalendarEventErrors {

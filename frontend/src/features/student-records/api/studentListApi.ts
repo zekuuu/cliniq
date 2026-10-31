@@ -1,5 +1,5 @@
 import { getGradeLevels, listStudents } from '../../../lib/mock-db'
-import type { Student } from '../../../types/entities'
+import type { StudentListRow } from '../../../types/entities'
 
 export interface StudentListQuery {
   search: string
@@ -7,7 +7,7 @@ export interface StudentListQuery {
   includeArchived: boolean
 }
 
-export function fetchStudentList(query: StudentListQuery): Promise<Student[]> {
+export function fetchStudentList(query: StudentListQuery): Promise<StudentListRow[]> {
   return listStudents({ ...query, limit: 80 })
 }
 

@@ -29,6 +29,7 @@ export type {
   SportsReport,
   SportsReportWindow,
   VitalRange,
+  VitalsUsualRanges,
   VitalsWarningRanges,
 } from './types'
 export type { AuditLogList, AuditLogQuery, AuditLogRow, AuditTargetType, BackupStatus, ClusterAlert, FrequentVisitor, IncompleteRecordRow, InventoryStatus } from './selectors'
