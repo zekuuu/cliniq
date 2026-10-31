@@ -26,7 +26,7 @@ His answers to Claude's three questions: the ERD is **reviewed first, with no mi
 ## Changes Made
 What the repository holds today (checked first): `backend/` has only a README and `.env.example` (SPA-cookie settings already in it); the phases B0 to B10 exist in `Development-Phases.md`; the Backend Readiness Checklist lists the blockers; `Frontend-Loop-Engineering.md` said there was no backend equivalent; the mock API now exports about 100 functions in about 3,000 lines (the readiness checklist still says 64 and about 1,500, which the documentation pass is asked to correct); no CI workflow exists.
 
-What was decided (ADR-056): Sanctum SPA cookie mode; a branch named `backend`; backend side only; nothing wired to the frontend; foundation only in the first round; no migrations, seeders or models with columns before the ERD is approved.
+What was decided (ADR-056): Sanctum SPA cookie mode; a branch named `backend`; backend side only; nothing wired to the frontend and the mock data layer kept untouched (Zean, 18:36 PHT); foundation only in the first round; no migrations, seeders or models with columns before the ERD is approved.
 
 What was written:
 1. **`Backend-Loop-Engineering.md`**, the counterpart of the frontend manual: the six ground rules, Phase 0 (read), Phase 1 (build, test first), Phase 2 (countercheck against the mock API, audit, simulate, confirm), deterministic checks, "integration is not part of this loop", and a resumable checklist (P1 to P3, B0.1 to B0.10, then B1 to B10 waiting for the ERD).
