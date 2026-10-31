@@ -223,6 +223,12 @@ function OverviewCard({ student }: { student: Student }) {
           <p className="text-xs font-semibold text-text-secondary">Grade level</p>
           <p className="text-sm font-semibold text-text-primary">{student.gradeLevel}</p>
         </div>
+        {student.section && (
+          <div>
+            <p className="text-xs font-semibold text-text-secondary">Section</p>
+            <p className="text-sm font-semibold text-text-primary">{student.section}</p>
+          </div>
+        )}
         <div>
           <p className="text-xs font-semibold text-text-secondary">LRN</p>
           <p className="text-sm font-semibold text-text-primary tabular-nums">{student.lrn}</p>
@@ -299,7 +305,7 @@ function VisitHistoryCard({ visits }: { visits: Visit[] }) {
               primary={complaintWithExtras(visit)}
               secondary={visitCareSummary(visit)}
               // The grade the student was in at the time (ADR-047), not today's.
-              meta={[formatDateTime(visit.dateTime), visit.gradeLevelAtTime].filter(Boolean).join(' · ')}
+              meta={[formatDateTime(visit.dateTime), visit.gradeLevelAtTime, visit.sectionAtTime].filter(Boolean).join(' · ')}
               trailing={
                 <Badge tone={dispositionTone[visit.disposition]} variant="soft" icon="checkCircle">
                   {dispositionLabel[visit.disposition]}
@@ -399,7 +405,7 @@ function IncidentHistoryCard({ incidents }: { incidents: Incident[] }) {
                   </span>
                 </>
               }
-              meta={[formatDateTime(incident.time), incident.gradeLevelAtTime].filter(Boolean).join(' · ')}
+              meta={[formatDateTime(incident.time), incident.gradeLevelAtTime, incident.sectionAtTime].filter(Boolean).join(' · ')}
               trailing={<StatusBadge status={String(incident.stage) as '1' | '2'} map={incidentStageMap} />}
             />
           ))}
@@ -436,6 +442,7 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
             { label: 'Full name', value: student.fullName },
             { label: 'LRN', value: student.lrn },
             { label: 'Grade level', value: student.gradeLevel },
+            ...(student.section ? [{ label: 'Section', value: student.section }] : []),
             { label: 'Sex', value: student.sex === 'female' ? 'Female' : 'Male' },
             ...(student.birthDate ? [{ label: 'Birthdate', value: formatDate(student.birthDate) }] : []),
             {

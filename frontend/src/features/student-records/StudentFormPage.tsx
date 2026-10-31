@@ -49,6 +49,7 @@ const EMPTY_VALUES: StudentFormValues = {
   lrn: '',
   fullName: '',
   gradeLevel: '',
+  section: '',
   sex: '',
   birthDate: '',
   emergencyContacts: [{ name: '', relationship: '', phone: '', verified: false }],
@@ -68,6 +69,7 @@ function valuesFromStudent(student: Student | null): StudentFormValues {
     lrn: student.lrn,
     fullName: student.fullName,
     gradeLevel: student.gradeLevel,
+    section: student.section ?? '',
     sex: student.sex,
     birthDate: student.birthDate ?? '',
     emergencyContacts: student.emergencyContacts.length
@@ -446,6 +448,7 @@ function StudentFormEditor({
                 error={errors.gradeLevel}
                 onChange={(value) => setField('gradeLevel', value)}
               />
+              <Input label="Section (optional)" value={values.section} onChange={(event) => setField('section', event.target.value)} />
               <Select
                 label="Sex"
                 required
