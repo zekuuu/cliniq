@@ -6,7 +6,7 @@ import { Icon } from '../icons/Icon'
 /**
  * Turns a widget's own name (stat-card label, list-card title) into its drill-down link. It keeps
  * the name's color at rest and shows the open-link icon so touch users can still see it's a link;
- * hover adds an underline and shifts color. `darken` suits tinted/grey labels; `brand` turns
+ * hover adds an underline that runs under the icon too, and shifts color. `darken` suits tinted/grey labels; `brand` turns
  * near-black titles (which can't get visibly darker) brand green, never grey.
  */
 export function TitleLink({
@@ -35,7 +35,10 @@ export function TitleLink({
       {children.slice(0, split)}
       <span className="whitespace-nowrap">
         {children.slice(split)}
-        <Icon name="externalLink" size={12} strokeWidth={3} className="ml-1 inline-block align-[-1px]" />
+        {/* Underline skips an SVG, so a spaced-out no-break space in ::after carries it beneath the icon. */}
+        <span className="relative after:tracking-[13px] after:content-['\00a0']">
+          <Icon name="externalLink" size={12} strokeWidth={3} className="absolute right-0 top-1/2 -translate-y-1/2" />
+        </span>
       </span>
     </Link>
   )
