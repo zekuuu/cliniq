@@ -21,8 +21,8 @@ export function BrandLogo({ compact = false }: { compact?: boolean }) {
         alt="Mendez Christian Academy logo"
         className={cn('shrink-0 object-contain', compact ? 'size-9' : 'size-11')}
       />
-      <span className={cn('flex flex-col leading-tight', compact && 'max-sm:hidden')}>
-        <span className="text-xl font-bold tracking-tight text-brand-green-dark">CLINIQ</span>
+      <span className={cn('flex flex-col leading-tight', compact && 'max-lg:hidden')}>
+        <span className="font-brand text-xl font-bold tracking-wide text-brand-green-dark">CLINIQ</span>
         <span className="text-xs leading-tight font-medium tracking-tight whitespace-nowrap text-text-secondary">
           Mendez Christian Academy
         </span>

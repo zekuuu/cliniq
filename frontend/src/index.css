@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 /* Inter, self-hosted from node_modules and bundled into the build, so it works offline on the LAN. */
 @import '@fontsource-variable/inter';
+@import '@fontsource-variable/cinzel/wght.css';
 
 /*
  * CLINIQ design tokens: the single source of truth for every color, radius, and type size.
@@ -46,6 +47,7 @@
 
   --font-sans:
     'Inter Variable', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --font-brand: 'Cinzel Variable', Georgia, 'Times New Roman', serif;
 
   /* Small-to-medium, compact scale (Design-System.md, Typography). Body = sm (14px). */
   --text-xs: 0.75rem;
