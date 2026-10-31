@@ -24,8 +24,8 @@ describe('ageOn (ADR-054)', () => {
   })
 
   it('reads as whole years', () => {
-    expect(ageText(9)).toBe('9 years')
-    expect(ageText(1)).toBe('1 year')
+    expect(ageText(9)).toBe('9 years old')
+    expect(ageText(1)).toBe('1 year old')
   })
 })
 

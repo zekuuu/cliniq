@@ -128,7 +128,7 @@ describe('Student Profile', () => {
     renderWithRouter(<StudentProfilePage viewer={viewer} studentId="student-0002" />)
     await screen.findByRole('heading', { name: 'Overview' })
 
-    expect(header()).toHaveTextContent(`· ${age} years`)
+    expect(header()).toHaveTextContent(`· ${age} years old`)
     expect(header()).not.toHaveTextContent(formatDate('2019-03-04'))
     const overview = screen.getByRole('region', { name: 'Overview' })
     expect(within(overview).getByText('Birthdate')).toBeInTheDocument()
