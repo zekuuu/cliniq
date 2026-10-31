@@ -80,12 +80,12 @@ If your viewer does not draw Mermaid, the same picture is exported as an image: 
 
 | From | To | What passes | Where it is written |
 |---|---|---|---|
-| Registrar's list | Student Records | The yearly import adds new students, updates continuing ones and archives those missing from the new list (the import waits for the school's data privacy agreement) | ADR-047, ADR-051 |
+| Registrar's list | Student Records | The yearly import adds new students, updates continuing ones and archives those missing from the new list. Not built yet: the import waits for the school's data privacy agreement | ADR-047, ADR-051 |
 | Student Records | Clinic Visit, Emergency Response | The patient is picked by LRN or name (a staff patient by name or Staff No.); allergies and conditions show beside the form and the medicine picker | Modules 2, 3, 4; ADR-018, ADR-043 |
 | First-aid checklist | Clinic Visit | Suggested steps for the complaint chosen | Module 7 |
 | Clinic Visit | Emergency Response | "Escalate to incident"; an escalated visit counts once, as the incident | ADR-036 |
 | Clinic Visit | Excuse letter | Sent home or Referred prepares a draft; the clinician approves it | Module 3, ADR-049 |
-| Clinic Visit | Follow-up | A return date; due, then overdue, then closed automatically after 7 days | ADR-051 |
+| Clinic Visit | Follow-up | A return date; due, then overdue after 3 days, then read as Missed after 7 days | ADR-051 |
 | Emergency Response | Incident Report | A completed Stage 2 record can be approved; the Admin / Principal can Acknowledge it | Module 4, ADR-048 |
 | Clinic Visit, Emergency Response | Inventory | Medicines given lower the stock, earliest-expiry batch first; editing the lines returns the stock | Module 8, ADR-018, ADR-030 |
 | Inventory | Clinic Visit, Emergency Response | An "avoid if allergic to" warning at the medicine picker; it never blocks | ADR-049 |
@@ -97,7 +97,7 @@ If your viewer does not draw Mermaid, the same picture is exported as an image: 
 | Student Records, visits, incidents | Sports Report | The students the clinician picks and their visits and incidents in the chosen window; the Admin cannot open it | ADR-034 |
 | User Management | every module | Accounts and roles decide who may see and do what; the Admin / Principal is signed out after 30 idle minutes | ADR-033, ADR-038, ADR-048 |
 | every module | Audit Log | Every save, approval, print and opened profile or incident report is recorded with who and when; Staff and the Admin read it | Audit Trail section, ADR-016 |
-| Backup | the whole database | Copies it to each backup location chosen in the system; local only, no cloud | ADR-039, ADR-052 |
+| Backup | the whole database | Copies it to each backup location chosen in the system; local only, no cloud. In the frontend phase the mock only records the run | ADR-039, ADR-052 |
 
 ## What is not connected, on purpose
 

@@ -1,6 +1,6 @@
 # Activity Diagrams
 
-**Status: first draft, built from already-documented requirements.** These three flows were identified (in this same file, before this draft existed) as the highest-priority candidates — the ones with the most non-obvious branching logic already written out in prose across the Frontend Context Brief, Frontend Design Reference, and Modules & Features. Built directly from that prose, not invented.
+**Status: first draft, built from already-documented requirements.** These flows (two remain) were identified (in this same file, before this draft existed) as the highest-priority candidates — the ones with the most non-obvious branching logic already written out in prose across the Frontend Context Brief, Frontend Design Reference, and Modules & Features. Built directly from that prose, not invented.
 
 ## 1. (Removed)
 
@@ -22,7 +22,7 @@ stateDiagram-v2
 
     Stage2_InProgress --> Stage2_InProgress: Add readings as needed,<br/>treatment notes,<br/>hospital referral,<br/>parent notification attempts
 
-    Stage2_InProgress --> Complete: All required fields<br/>present, save
+    Stage2_InProgress --> Complete: Treatment, medicine, notification<br/>or referral recorded, or<br/>Nothing further with a reason
 
     NeedsCompletion --> [*]: (record remains open<br/>indefinitely until completed —<br/>no forced deadline)
     Complete --> [*]
@@ -61,6 +61,7 @@ flowchart TD
     STAFFCHECK -->|Student returned,<br/>monitored| COMPLETED[Mark: Completed]
     STAFFCHECK -->|Student never<br/>returned| MISSED[Mark: Missed]
     STAFFCHECK -->|No longer<br/>needed| CANCELLED[Mark: Cancelled]
+    DASHBOARD -->|7 days past the date,<br/>still Pending| MISSED
 
     COMPLETED --> DONE2([End])
     MISSED --> DONE2
@@ -71,5 +72,5 @@ flowchart TD
 
 ## Notes
 
-- These three aren't the *only* flows in the system — they're the three worth diagramming first because they're the ones with real branching/state logic. Most other flows (a standard CRUD form, a report generation) are straightforward enough that a diagram would just restate the obvious.
+- These two aren't the *only* flows in the system — they're the ones worth diagramming first because they're the ones with real branching/state logic. Most other flows (a standard CRUD form, a report generation) are straightforward enough that a diagram would just restate the obvious.
 - If a new flow gets added later with comparable complexity (the barcode-scanner proposal, if it's ever approved, likely qualifies), add it here rather than leaving it undiagrammed.

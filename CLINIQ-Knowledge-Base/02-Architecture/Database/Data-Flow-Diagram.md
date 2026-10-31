@@ -1,6 +1,6 @@
 # Data Flow Diagram
 
-**Status: first draft, built from already-documented requirements.** External entities come directly from the Project Plan's External Interfaces table (§2.1); processes map directly to the modules already fully specified in Modules & Features (Module 6 was removed, ADR-027). Not waiting on an external SRS — this is that artifact's first draft.
+**Status: first draft, built from already-documented requirements.** External entities come directly from the Project Plan's External Interfaces table (§2.1); processes map directly to the modules already fully specified in Modules & Features (Module 6 was removed, ADR-027). Not waiting on an external SRS — this is that artifact's first draft. Which module feeds which, with batches, staff patients and the Activity calendar, is in [Module-Linkage-Diagram.md](./Module-Linkage-Diagram.md). The roster import is decided, not built (ADR-047).
 
 ## Level 0 — Context Diagram
 
@@ -44,7 +44,7 @@ flowchart TD
     P3(("3.0<br/>Clinic Visit<br/>Monitoring"))
     P4(("4.0<br/>Emergency<br/>Response"))
     P5(("5.0<br/>Reports<br/>Generation"))
-    P7(("7.0<br/>Smart<br/>Triage"))
+    P7(("7.0<br/>First-aid<br/>Checklist"))
     P8(("8.0<br/>Inventory<br/>Tracker"))
     P9(("9.0<br/>Clinic Overview<br/>Dashboard"))
     P10(("10.0<br/>Backup<br/>Verification"))
@@ -59,6 +59,7 @@ flowchart TD
     DS8[("D8: Backup Log")]
 
     STAFF -->|login| P1
+    ADMIN -->|login, manage accounts| P1
     P1 <-->|account data| DS1
 
     REGISTRAR -->|roster import| P2
@@ -75,6 +76,8 @@ flowchart TD
     DS5 <-.->|follow-up prompt| P4
 
     STAFF -->|dispense/restock| P8
+    P3 -->|medicines given| P8
+    P4 -->|medicines given| P8
     P8 <-->|stock levels| DS6
 
     STAFF -->|generate| P5
@@ -90,7 +93,8 @@ flowchart TD
     P9 -->|reads| DS5
     P9 -->|reads| DS6
 
-    STAFF -->|check status| P10
+    STAFF -->|check status, back up now| P10
+    ADMIN -->|check status, back up now| P10
     P10 <-->|backup records| DS8
 
     P1 -.->|logs every action| DS7

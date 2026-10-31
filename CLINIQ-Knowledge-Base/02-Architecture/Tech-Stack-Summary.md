@@ -1,6 +1,6 @@
 # Tech Stack Summary
 
-CLINIQ is designed as three connected parts: a browser-based screen for users, a server that applies the clinic's rules and protects access, and a database that stores records. The system is meant to run on the school's local network, so its core work does not depend on the public internet.
+CLINIQ is designed as three connected parts: a browser-based screen for users, a server that applies the clinic's rules and protects access, and a database that stores records. The system is meant to be hosted on the clinic computer and served over the local network (LAN), so its core work does not depend on the public internet.
 
 ## What users see
 
@@ -12,7 +12,7 @@ For information on a screen, the app uses the existing useAsyncData helper and f
 
 ## Where records and rules live
 
-Laravel, a PHP web framework, provides the server side: it receives requests, applies clinic rules, and connects to MySQL, the database that keeps student, visit, incident, and inventory records. Laravel Sanctum handles sign-in for the browser app so access can be limited by role.
+Laravel, a PHP web framework, provides the server side: it receives requests, applies clinic rules, and connects to MariaDB (installed by XAMPP, MySQL-compatible), the database that keeps student, visit, incident, and inventory records. Laravel Sanctum handles sign-in for the browser app so access can be limited by role.
 
 XAMPP is the shared local setup for the school and development computers. During preparation, Vite can pass requests to Laravel; when deployed, Laravel and Apache serve the finished browser files and the clinic service from the same local address.
 
