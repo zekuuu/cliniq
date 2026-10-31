@@ -29,7 +29,7 @@ The backend is a blank slate. A [proposed ERD and data dictionary](../02-Archite
 
 ## 2. Blockers: do these before any migration
 
-- [ ] **ERD and data dictionary review/approval.** A proposed draft now exists; do not tick this item or build migrations until the team reviews and approves it. Before approval, settle every provisional field in one pass:
+- [ ] **ERD and data dictionary review/approval.** The drafts now carry the accepted decisions up to ADR-056; what remains is the team's approval of the open choices in `02-Architecture/Database/ERD-Review.md`. Do not tick this item or build migrations until then. Before approval, settle every provisional field in one pass:
   - excuse-letter draft and approval fields (excused period, teacher note)
   - `Visit.referredTo`
   - `Incident.generalNotes` (optional Stage 1 notes)

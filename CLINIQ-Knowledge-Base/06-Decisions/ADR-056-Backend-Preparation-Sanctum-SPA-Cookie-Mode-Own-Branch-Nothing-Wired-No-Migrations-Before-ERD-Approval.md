@@ -3,6 +3,8 @@
 **Date:** Saturday, October 31, 2026 — 18:20 PHT
 **Status:** Accepted (Zean, in chat, Saturday, October 31, 2026 — 18:10 PHT, with his answers to Claude's three questions the same evening). Settles the "Sanctum mode" item that ADR-015 left to Phase B2. Does not change ADR-015's session lifetime, the lockout, ADR-048's Admin sign-out or ADR-009's folder structure.
 
+**Note (Saturday, October 31, 2026 — 20:31 PHT):** Zean: the ERD, Data Dictionary, Reference Schema and ERD diagrams are drafts that had fallen behind the decisions (the birthdate and others). Rule 6 is narrowed: the drafts are kept up to date with accepted decisions and the frontend's real data shapes from now on, as documents only. What still waits for the team's approval is every design choice no decision settles (id types, provisional fields, the audit retention figure, indexes) and, as before, any migration, seeder or model with columns. The drafts stay marked as a proposed draft, not final or approved.
+
 ## Context
 The frontend is built on the mock data layer. The backend has never been started: `backend/` holds a README and an `.env.example`. Zean wants to prepare for backend development: a backend operating manual, a written API contract, an ERD review, and the backend foundation (routes, middleware, CORS and similar), with the documents first checked against the code so the backend starts from accurate records. He asked that the backend be built on its own branch, touch only the backend side, and not be connected to the frontend yet.
 
