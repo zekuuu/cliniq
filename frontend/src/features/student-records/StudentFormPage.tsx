@@ -8,6 +8,7 @@ import {
   CardBody,
   CardHeader,
   Combobox,
+  DatePicker,
   ErrorState,
   Icon,
   Input,
@@ -24,7 +25,7 @@ import { isPhilippinePhone, PHONE_ERROR } from '../../lib/phone'
 import { paths } from '../../routes/paths'
 import type { SessionUser } from '../../lib/mock-db'
 import { getMockSessionUser } from '../../lib/mock-db'
-import type { Student } from '../../types/entities'
+import type { ISODate, Student } from '../../types/entities'
 import {
   checkStudentDuplicates,
   DUPLICATE_LRN_MESSAGE,
@@ -38,6 +39,7 @@ import {
   type StudentFormMode,
   type StudentFormValues,
 } from './api/studentFormApi'
+import { unusualAgeNote } from '../../lib/age'
 import { isLrn, maskLrn, normalizeLrn } from '../../lib/lrn'
 import { NONE_RECORDED } from '../../lib/patients'
 
@@ -48,7 +50,7 @@ const EMPTY_VALUES: StudentFormValues = {
   fullName: '',
   gradeLevel: '',
   sex: '',
-  contactInfo: '',
+  birthDate: '',
   emergencyContacts: [{ name: '', relationship: '', phone: '', verified: false }],
   allergies: '',
   medicalConditions: '',
@@ -67,7 +69,7 @@ function valuesFromStudent(student: Student | null): StudentFormValues {
     fullName: student.fullName,
     gradeLevel: student.gradeLevel,
     sex: student.sex,
-    contactInfo: student.contactInfo,
+    birthDate: student.birthDate ?? '',
     emergencyContacts: student.emergencyContacts.length
       ? student.emergencyContacts.map(({ name, relationship, phone, verified }) => ({ name, relationship, phone, verified }))
       : [{ name: '', relationship: '', phone: '', verified: false }],
@@ -150,13 +152,14 @@ function contactErrorKey(index: number, field: 'name' | 'relationship' | 'phone'
   return `emergencyContacts.${index}.${field}`
 }
 
-function validate(values: StudentFormValues): StudentFormErrors {
+function validate(values: StudentFormValues, today: ISODate): StudentFormErrors {
   const errors: StudentFormErrors = {}
   if (!values.lrn) errors.lrn = 'Enter the 12-digit LRN.'
   else if (!isLrn(values.lrn)) errors.lrn = 'The LRN must be exactly 12 digits.'
   if (!values.fullName.trim()) errors.fullName = 'Enter the student full name.'
   if (!values.gradeLevel) errors.gradeLevel = 'Select the grade level.'
   if (!values.sex) errors.sex = 'Select the sex recorded by the school.'
+  if (values.birthDate > today) errors.birthDate = "The birthdate can't be in the future."
   values.emergencyContacts.forEach((contact, index) => {
     const started = index === 0 || [contact.name, contact.relationship, contact.phone].some((value) => value.trim())
     if (!started) return
@@ -200,6 +203,7 @@ function StudentFormEditor({
     data.student ? paths.studentProfile(data.student.id) : paths.students,
     JSON.stringify(values) !== JSON.stringify(baseline),
   )
+  const ageNote = unusualAgeNote(values.birthDate, values.gradeLevel, data.today, data.unusualAgeYears)
   const title = mode === 'edit' ? 'Edit Student' : 'Add Student'
   const description =
     mode === 'edit'
@@ -207,8 +211,8 @@ function StudentFormEditor({
       : 'Encode a new student record with the LRN from the school records.'
 
   const requiredCount = useMemo(
-    () => Object.keys(validate(values)).length,
-    [values],
+    () => Object.keys(validate(values, data.today)).length,
+    [values, data.today],
   )
 
   // Add only: say while typing whether the LRN is taken or the name is already listed.
@@ -273,7 +277,7 @@ function StudentFormEditor({
   }
 
   async function save(confirmDuplicate = false) {
-    const nextErrors = validate(values)
+    const nextErrors = validate(values, data.today)
     if (nameChanged && nameReason.trim().length < NAME_CORRECTION_REASON_MIN)
       nextErrors.nameCorrectionReason = `Enter why the name is being corrected (at least ${NAME_CORRECTION_REASON_MIN} characters).`
     setErrors(nextErrors)
@@ -454,13 +458,24 @@ function StudentFormEditor({
                 error={errors.sex}
                 onChange={(value) => setField('sex', value as StudentFormValues['sex'])}
               />
-              <Input
-                label="Student's mobile number (optional)"
-                hint="The student's own phone, if any. Parents and guardians go in the emergency contacts below."
-                value={values.contactInfo}
-                error={errors.contactInfo}
-                onChange={(event) => setField('contactInfo', event.target.value)}
-              />
+              <div className="flex flex-col gap-2">
+                <DatePicker
+                  label="Birthdate (optional)"
+                  value={values.birthDate}
+                  max={data.today}
+                  error={errors.birthDate}
+                  onChange={(value) => setField('birthDate', value)}
+                />
+                {ageNote && !errors.birthDate && (
+                  <p
+                    role="status"
+                    className="flex items-start gap-2 rounded-md border border-warning bg-warning/10 px-3 py-2 text-xs text-text-primary"
+                  >
+                    <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning" />
+                    {ageNote}
+                  </p>
+                )}
+              </div>
             </section>
 
             <section aria-labelledby="emergency-contact-title">

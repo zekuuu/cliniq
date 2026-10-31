@@ -25,9 +25,10 @@ import {
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { formatDateRange, formatDateTime } from '../../lib/dates'
+import { ageOn, ageText } from '../../lib/age'
+import { formatDate, formatDateRange, formatDateTime } from '../../lib/dates'
 import { complaintWithExtras, incidentCareSummary, visitCareSummary } from '../../lib/itemsGiven'
-import { getMockSessionUser, type SessionUser, type StudentExcuseLetter } from '../../lib/mock-db'
+import { getMockSessionUser, getMockToday, type SessionUser, type StudentExcuseLetter } from '../../lib/mock-db'
 import type { Incident, Student, Visit } from '../../types/entities'
 import { DISPOSITION_LABELS as dispositionLabel, DISPOSITION_TONES as dispositionTone } from '../../lib/dispositions'
 import { paths } from '../../routes/paths'
@@ -110,6 +111,7 @@ function ProfileHeader({
   const staffCanAct = viewer.role === 'staff'
   const [confirmingArchive, setConfirmingArchive] = useState(false)
   const [archiving, setArchiving] = useState(false)
+  const age = ageOn(student.birthDate, getMockToday())
 
   async function archive() {
     setArchiving(true)
@@ -138,6 +140,7 @@ function ProfileHeader({
           </div>
           <p className="mt-1 text-sm text-text-secondary">
             LRN {student.lrn} · {student.gradeLevel}
+            {age !== null && ` · ${ageText(age)}`}
           </p>
         </div>
         {/* ADR-038: the Admin reads the profile; Print stays visible but disabled for the Admin. */}
@@ -228,10 +231,12 @@ function OverviewCard({ student }: { student: Student }) {
           <p className="text-xs font-semibold text-text-secondary">Sex</p>
           <p className="text-sm font-semibold text-text-primary">{student.sex === 'female' ? 'Female' : 'Male'}</p>
         </div>
-        <div>
-          <p className="text-xs font-semibold text-text-secondary">Student&apos;s mobile number</p>
-          <p className="text-sm font-semibold text-text-primary">{student.contactInfo || 'Not recorded'}</p>
-        </div>
+        {student.birthDate && (
+          <div>
+            <p className="text-xs font-semibold text-text-secondary">Birthdate</p>
+            <p className="text-sm font-semibold text-text-primary">{formatDate(student.birthDate)}</p>
+          </div>
+        )}
         <div>
           <p className="text-xs font-semibold text-text-secondary">Record status</p>
           <Badge tone={student.recordComplete ? 'info' : 'warning'} variant="soft">
@@ -432,7 +437,7 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
             { label: 'LRN', value: student.lrn },
             { label: 'Grade level', value: student.gradeLevel },
             { label: 'Sex', value: student.sex === 'female' ? 'Female' : 'Male' },
-            { label: "Student's mobile number", value: student.contactInfo || 'Not recorded' },
+            ...(student.birthDate ? [{ label: 'Birthdate', value: formatDate(student.birthDate) }] : []),
             {
               label: 'Emergency contacts',
               value: contact || 'No emergency contact recorded.',

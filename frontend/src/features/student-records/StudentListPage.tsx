@@ -21,7 +21,7 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { paths } from '../../routes/paths'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
-import type { Student } from '../../types/entities'
+import type { StudentListRow } from '../../types/entities'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { fetchGradeLevels, fetchStudentList } from './api/studentListApi'
 import { MaskedLrn } from '../../components/ui/MaskedLrn'
@@ -74,7 +74,7 @@ function GradeSelect({
 
 type StudentSortKey = 'name' | 'number' | 'grade' | 'status'
 
-const baseColumns: Array<DataTableColumn<Student>> = [
+const baseColumns: Array<DataTableColumn<StudentListRow>> = [
   {
     key: 'name',
     header: 'Full name',
@@ -181,7 +181,7 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
     direction: sort.key === key ? sort.direction : undefined,
     onSort: () => setSort((current) => toggleTableSort(current, key)),
   })
-  const columns: Array<DataTableColumn<Student>> = baseColumns.map((column) => {
+  const columns: Array<DataTableColumn<StudentListRow>> = baseColumns.map((column) => {
     if (column.key === 'name') return { ...column, sort: sortColumn('name', 'Full name') }
     if (column.key === 'number') return { ...column, sort: sortColumn('number', 'LRN') }
     if (column.key === 'grade') return { ...column, sort: sortColumn('grade', 'Grade level') }
