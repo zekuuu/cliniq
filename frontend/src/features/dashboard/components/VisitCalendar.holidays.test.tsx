@@ -63,7 +63,7 @@ describe('Dashboard calendar holiday layer (ADR-020)', () => {
     await user.click(screen.getByRole('radio', { name: 'Weekly' }))
     expect(await screen.findByText('Holiday: Christmas Eve')).toBeInTheDocument()
     await user.click(screen.getByRole('radio', { name: 'Yearly' }))
-    expect(await screen.findByText(/Holiday: Araw ng Kagitingan/)).toBeInTheDocument()
+    expect(await screen.findByTitle(/holiday: Araw ng Kagitingan/i)).toBeInTheDocument()
     await user.click(screen.getByRole('radio', { name: 'Table' }))
     const table = await screen.findByRole('table')
     expect(within(table).getByRole('columnheader', { name: /Holidays/ })).toBeInTheDocument()

@@ -23,4 +23,33 @@ describe('Activity calendar', () => {
     expect(within(dialog).getByRole('button', { name: /add event/i })).toBeInTheDocument()
     expect(within(dialog).queryByRole('link', { name: /view visits/i })).not.toBeInTheDocument()
   })
+
+  it('keeps every monthly date card the same height when events are present', async () => {
+    renderWithRouter(<CalendarPage />)
+
+    const grid = await screen.findByRole('region', { name: /calendar grid/i })
+    const dateCells = within(grid)
+      .getAllByRole('cell')
+      .filter((cell) => cell.textContent?.trim())
+
+    expect(dateCells.length).toBeGreaterThan(0)
+    for (const cell of dateCells) expect(cell).toHaveClass('h-24', 'max-h-24', 'overflow-hidden')
+  })
+
+  it('shows readable date numbers in yearly mini calendars', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<CalendarPage />)
+
+    await user.click(screen.getByRole('radio', { name: 'Yearly' }))
+
+    const january = await screen.findByText('January')
+    const monthCard = january.closest('li')
+    expect(monthCard).not.toBeNull()
+    expect(within(monthCard as HTMLElement).getByText('1', { exact: true })).toHaveClass(
+      'size-5',
+      'text-xs',
+      'justify-center',
+    )
+  })
+
 })
