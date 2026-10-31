@@ -256,7 +256,7 @@ The student record. The LRN identifies the student to people (masked on lists, A
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
 | `id` **PK** | `bigint unsigned` | no |  |  |
-| `lrn` | `char(12)` | no |  | Learner Reference Number, entered by Staff: exactly 12 digits, stored as text so leading zeros survive, unique, editable (a correction is audited as "Updated LRN", no values). Never in a URL or an audit entry (ADR-028). |
+| `lrn` | `char(12)` | no |  | Learner Reference Number, entered by Staff: exactly 12 digits, stored as text so leading zeros survive, unique, set once and not changed after the record is created (ADR-028 note). Never in a URL or an audit entry (ADR-028). |
 | `full_name` | `varchar(150)` | no |  | Required and non-blank. Single field for now; splitting into last/first/middle waits for the registrar file format (D-15). Accent- and case-insensitive matching comes from the collation. |
 | `grade_level_id` | `bigint unsigned` | yes | NULL | Nullable on purpose: an imported record may lack it and is then flagged "incomplete". Never nullable for a completed record (rule in the app). |
 | `section` | `varchar(60)` | yes | NULL | Optional until the yearly import fills it (ADR-047). Shown on the Student Profile and its printout only. |

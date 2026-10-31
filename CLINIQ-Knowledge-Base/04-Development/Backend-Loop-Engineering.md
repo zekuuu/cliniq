@@ -86,12 +86,12 @@ Each item has a **Build** and an **Audit** box, each with its own Resume Note. L
 
 ### Prepare (documents and checks only, no backend code)
 
-- [ ] Build / [ ] Audit — **P1. Environment check**: PHP version and extensions in the target XAMPP, Composer, MariaDB version, the Laravel version that fits, all pinned in `Environment-Setup.md`
-  Build note: · Audit note:
-- [ ] Build / [ ] Audit — **P2. API contract** (`04-Development/API-Contract.md`): every mock function mapped to an endpoint with URL, method, allowed roles, request and response shape, errors, audit event and the mock behaviour it copies; the single error format
-  Build note: · Audit note:
-- [ ] Build / [ ] Audit — **P3. ERD review** (`02-Architecture/Database/ERD-Review.md`): the draft checked against the mock functions, the entity types and the ADRs; gaps, provisional fields and the approval checklist. The ERD, Data Dictionary and Reference Schema are not edited until Zean approves the changes
-  Build note: · Audit note:
+- [x] Build / [ ] Audit — **P1. Environment check**: PHP version and extensions in the target XAMPP, Composer, MariaDB version, the Laravel version that fits, all pinned in `Environment-Setup.md`
+  Build note: pinned from the development machine's XAMPP; the clinic computer still needs the same check. · Audit note:
+- [x] Build / [ ] Audit — **P2. API contract** (`04-Development/API-Contract.md`): every mock function mapped to an endpoint with URL, method, allowed roles, request and response shape, errors, audit event and the mock behaviour it copies; the single error format
+  Build note: 103 entries, 95 of 104 functions mapped, coverage proved by script; 20 questions open. · Audit note:
+- [x] Build / [ ] Audit — **P3. ERD review** (`02-Architecture/Database/ERD-Review.md`): the draft checked against the mock functions, the entity types and the ADRs; gaps, provisional fields and the approval checklist. The ERD, Data Dictionary and Reference Schema are not edited until Zean approves the changes
+  Build note: 30 gaps, matrix, recommendations and checklist additions written; only decided facts corrected in the drafts. · Audit note:
 
 ### Phase B0 — Scaffold and foundation (code in `backend/`)
 

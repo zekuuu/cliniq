@@ -36,7 +36,7 @@ Important fact worth stating early: **XAMPP ships MariaDB.** Laravel connects to
 **Keys**
 
 - **K-1.** Every table has `id BIGINT UNSIGNED AUTO_INCREMENT` as its primary key. It is internal: the UI never shows it (display rules already forbid internal ids). The API may return it as a string. Exceptions: `system_settings` (key is `setting_key`) and `number_sequences` (composite key).
-- **K-2.** A student is *identified to people* by `lrn` (Learner Reference Number, ADR-028): 12 digits stored as text, unique, required, and editable so a wrong LRN can be corrected (the change is audited by field name only). A staff patient (ADR-043) is identified by `personnel.staff_number`. Foreign keys and addresses use `students.id`, never the LRN, so a correction never cascades and an LRN never reaches a URL or a log.
+- **K-2.** A student is *identified to people* by `lrn` (Learner Reference Number, ADR-028): 12 digits stored as text, unique, required, and set once: it cannot be changed after the record is created (ADR-028 note, Sir Rey, October 25, 2026). A staff patient (ADR-043) is identified by `personnel.staff_number`. Foreign keys and addresses use `students.id`, never the LRN, so an LRN never reaches a URL or a log.
 - **K-3.** If the project ever needs offline sync or multi-site merging, switch ids to ULIDs; nothing else in the design depends on the id type.
 
 **Time**
@@ -772,7 +772,7 @@ Each row is a real situation and where the design handles it. "DB" = enforced by
 | Student transfers or graduates | Archived by the yearly import or the clinician, no reason asked (ADR-047); kept 5 years; purge afterwards (DB + App). |
 | Name has an accent or different capitalization ("Nuñez") | Collation matches accent- and case-insensitively (DB, tested). |
 | Two staff save the same LRN at the same instant | The UNIQUE key on `lrn` rejects the second save (DB). |
-| An LRN is mistyped on a student record | It is corrected in Edit Student; the change is audited as "Updated LRN", with neither value (App). The CHECK guarantees 12 digits (DB). |
+| An LRN is mistyped on a student record | Refused after creation: Edit Student shows it read-only and the service rejects a change (App, ADR-028 note). The CHECK guarantees 12 digits (DB). |
 | Registrar import row has no grade or birthdate | `grade_level_id` and `birth_date` are nullable; a review row flags a missing grade; "record complete" is derived (DB + App). |
 | Same masterlist file imported twice | `source_file_sha256` is unique, so the second apply is refused (DB). |
 | Student has no allergies vs. was never asked | `health_reviewed_at` can tell the two apart once decided (D-03). |
@@ -813,8 +813,8 @@ Each row is a real situation and where the design handles it. "DB" = enforced by
 | Hospital referral edited | One referral per incident (unique); edit in place; the audit summary records the change (DB + App). |
 | Referral status tracking (Module 4 asks for it) | No status values are defined anywhere; a nullable `status` column is a one-line migration once decided (D-05). |
 | Incident report signed, then incident edited | `snapshot_text` freezes what was signed (D-08). |
-| Medicines changed after Stage 2 is complete | Currently rejected by the mock; kept as is until decided (D-06). |
-| Stage 1 incident signed off | Allowed by the mock; the app rule is open (D-07). |
+| Medicines changed after Stage 2 is complete | Rejected (App, ADR-049). |
+| Stage 1 incident signed off | Rejected: only a completed record is signed off (App). |
 
 ### Inventory
 

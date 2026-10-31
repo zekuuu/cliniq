@@ -41,8 +41,8 @@ The backend is a blank slate. A [proposed ERD and data dictionary](../02-Archite
   - record reviews
   - vitals (an open key/value shape, so decide which fields exist)
 - [ ] **Frontend-only data needs a real home.** `devAccounts` becomes the users table, which also needs `password_hash`, `must_change_password`, `failed_attempts`, and `locked_until`. None of these are in the `User` type today. The complaint types with first-aid checklist steps are clinical content, so they need a table and a nurse's sign-off.
-- [x] **Foreign-key decision.** Settled by ADR-028 and built in the mock: records link by the internal student id; the LRN is a unique, editable attribute that never appears in a URL or an audit entry.
-- [ ] **API contract.** Turn the 104 mock functions into endpoint specs: URL, method, allowed role, request and response shape, error cases. Use one error format (for example 422 with field errors, plus a separate shape for business rejections such as "Medicines on a completed incident can't be changed"). This is the cheapest document to produce, because the code is already the draft.
+- [x] **Foreign-key decision.** Settled by ADR-028 and built in the mock: records link by the internal student id; the LRN is a unique attribute, set once (ADR-028 note), that never appears in a URL or an audit entry.
+- [x] **API contract.** Written as a proposal in `API-Contract.md` (Saturday, October 31, 2026, Part 1); its 20 questions are open. Turn the 104 mock functions into endpoint specs: URL, method, allowed role, request and response shape, error cases. Use one error format (for example 422 with field errors, plus a separate shape for business rejections such as "Medicines on a completed incident can't be changed"). This is the cheapest document to produce, because the code is already the draft.
 - [x] **Sanctum mode.** Development-Phases B2 says to confirm which mechanism applies. ADR-015 requires a 7-day lifetime but explicitly leaves API-token versus SPA-cookie configuration to B2; `.env.example` currently contains SPA-cookie settings. Choose with project approval before implementation; this checklist does not create or amend an ADR. **Settled Saturday, October 31, 2026 — 18:20 PHT: SPA cookie mode ([ADR-056](../06-Decisions/ADR-056-Backend-Preparation-Sanctum-SPA-Cookie-Mode-Own-Branch-Nothing-Wired-No-Migrations-Before-ERD-Approval.md)).**
 - [ ] **Audit-log design.** Define the table, which events are logged, how `summary` is produced (field names only, never values, per ADR-017), and a retention number. Retention is 10 years (ADR-037, ADR-051), not yet confirmed by the school. No role can edit or delete an entry (ADR-016).
 
@@ -62,8 +62,8 @@ The backend is a blank slate. A [proposed ERD and data dictionary](../02-Archite
 ## 4. Environment and deployment (not documented anywhere)
 
 - [ ] **HTTPS on the LAN.** No feature needs camera access since the QR feature was removed (ADR-027), but sign-ins and health records now cross the LAN (ADR-029 note). Decide whether the LAN needs a local certificate.
-- [ ] **PHP version.** Check the XAMPP PHP version before picking Laravel (Laravel 11 needs PHP 8.2 or newer).
-- [ ] **Pinned versions** for XAMPP, PHP, MariaDB, and Laravel, so every dev machine matches.
+- [ ] **PHP version.** The development XAMPP has PHP 8.5.12 and Laravel 13 fits it (`Environment-Setup.md`). The clinic computer is still to be checked.
+- [ ] **Pinned versions** for XAMPP, PHP, MariaDB, and Laravel, so every dev machine matches. Pinned in `Environment-Setup.md`; waits for the same check.
 - [ ] **Backup plan.** Locations, folders and the 60-per-location limit are decided (ADR-052). The `mysqldump` plus Task Scheduler design is not agreed with the client yet. Also decide how a backup run reports back to Laravel (a log row or a status file), since the Backup screen reads it.
 - [ ] **Holiday source.** Still unvalidated (ADR-020). Lowest priority.
 
