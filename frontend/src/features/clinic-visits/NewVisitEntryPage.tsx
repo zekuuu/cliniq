@@ -759,7 +759,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
               onOpenChange={setMoreOpen}
               ranges={data.vitalsRanges}
               timeOutRef={timeOutRef}
-              ageGroup={identified.student ? ageGroupOf(identified.student) : null}
+              ageGroup={identified.student ? ageGroupOf(identified.student, visitDate || today, data.vitalsRanges.usual) : null}
             />
 
             {/* The note gets its own line so the actions stay together instead of Save wrapping alone. */}

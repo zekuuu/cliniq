@@ -477,7 +477,7 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
                   onOpenChange={setMoreOpen}
                   ranges={visit.vitalsRanges}
                   timeOutRef={timeOutRef}
-                  ageGroup={ageGroupOf(visit.student)}
+                  ageGroup={ageGroupOf(visit.student, values.visitDate || visit.dateTime.slice(0, 10), visit.vitalsRanges.usual)}
                 />
                 <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
                   {!values.treatment.trim() && !lines.length && (

@@ -332,6 +332,8 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const [stage, setStage] = useState<ScreenStage>(existing ? 'stage2' : 'stage1')
   const [incident, setIncident] = useState<Incident | null>(existing)
   const [completed, setCompleted] = useState(existing?.stage === 2)
+  // The vitals note reads the age on the incident's own day (ADR-054), not today's.
+  const incidentDate = (incident?.time ?? data.escalation?.time)?.slice(0, 10) ?? today
   const [complaint, setComplaint] = useState(existing?.complaint ?? start.complaint)
   const [readings, setReadings] = useState<ReadingValues>(() =>
     existing ? savedReadings(existing) : { ...savedReadings(null), temperatureC: start.temperatureC },
@@ -637,7 +639,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                 onChange={setReading}
                 error={errors.oxygenSaturationPct}
                 ranges={data.vitalsRanges}
-                ageGroup={student ? ageGroupOf(student) : null}
+                ageGroup={student ? ageGroupOf(student, incidentDate, data.vitalsRanges.usual) : null}
               />
               <TextareaField label="Additional notes (optional)" value={generalNotes} onChange={setGeneralNotes} rows={3} />
               <div className="flex flex-wrap justify-end gap-2 pt-2">
@@ -698,7 +700,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     onChange={setReading}
                     error={errors.oxygenSaturationPct}
                     ranges={data.vitalsRanges}
-                    ageGroup={student ? ageGroupOf(student) : null}
+                    ageGroup={student ? ageGroupOf(student, incidentDate, data.vitalsRanges.usual) : null}
                   />
                   <TextareaField
                     label="Treatment notes"
