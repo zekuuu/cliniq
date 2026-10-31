@@ -322,7 +322,7 @@ function ExcuseLettersCard({ letters }: { letters: StudentExcuseLetter[] }) {
         titleId="excuse-letters"
         title="Excuse Letters"
         icon={<Icon name="fileText" />}
-        description="Approved letters and drafts awaiting approval, with the dates excused. For cross-checking attendance; not linked to the attendance system."
+        description="Approved letters and drafts, with the dates excused."
       />
       {letters.length ? (
         <RowList labelledBy="excuse-letters">
