@@ -217,3 +217,7 @@ Up to 3 extra complaint tags on a visit (reports count the main complaint); the 
 ### ADR-054: The student's own number is dropped, an optional birthdate is added, and the age group follows the age
 
 The school's masterlist has no student phone number but has birthdates, so the student's own number is removed (parents stay reachable through the emergency contacts; staff keep theirs) and an optional birthdate is added. The profile header shows the age, the full date only appears in the profile details, the Edit form and the profile printout. The vitals age group follows the age (under 6, 6 to 12, 13 and over) and falls back to the grade when there is no birthdate. Zean, in chat, Friday, October 30, 2026 — 21:03 PHT. [ADR-054](ADR-054-Student-Own-Number-Dropped-Birthdate-Added-Age-Group-By-Age.md)
+
+### ADR-055: The Monthly Report's weeks run Sunday to Saturday
+
+The weekly breakdown now follows the Activity calendar: Sunday to Saturday, clipped to the month, so October 2026 reads 1-3, 4-10, 11-17, 18-24 and 25-31.
