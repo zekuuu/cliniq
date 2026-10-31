@@ -42,10 +42,10 @@ function LiveClock() {
   return (
     <time
       dateTime={now.toISOString()}
-      className="hidden text-sm font-semibold lg:text-base whitespace-nowrap text-text-secondary tabular-nums sm:block"
+      className="hidden whitespace-nowrap font-mono text-base font-medium tracking-[0.015em] text-text-secondary tabular-nums sm:block lg:text-lg"
     >
       {now.toLocaleDateString('en-PH', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
-      {' · '}
+      {' | '}
       {now.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
     </time>
   )
