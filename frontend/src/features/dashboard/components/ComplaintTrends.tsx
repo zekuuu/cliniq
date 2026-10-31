@@ -519,7 +519,7 @@ function VisitsTrendCard({
             'Visits trend'
           )
         }
-        description={comparison ? `Monday to Sunday: ${comparison.currentLabel} compared with ${comparison.previousLabel}.` : `Visits and incidents per ${trends.granularity}.`}
+        description={comparison ? `Sunday to Saturday: ${comparison.currentLabel} compared with ${comparison.previousLabel}.` : `Visits and incidents per ${trends.granularity}.`}
         actions={
           <SegmentedControl
             label="Show trend as"

@@ -339,11 +339,11 @@ export function buildDemographicAnalysis(
   }
 }
 
-const WEEKDAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+const WEEKDAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 function weekdayIndex(date: ISODate): number {
-  // JavaScript Sunday is zero; the chart deliberately starts the school week on Monday.
-  return (parseISODate(date).getDay() + 6) % 7
+  // Sunday first, like the Activity calendar and the Monthly Report (ADR-055).
+  return parseISODate(date).getDay()
 }
 
 function isMonthRange(range: Pick<DateRange, 'preset' | 'from' | 'to'>): boolean {
