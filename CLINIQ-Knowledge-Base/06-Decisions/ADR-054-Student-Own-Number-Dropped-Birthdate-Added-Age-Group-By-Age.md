@@ -1,7 +1,7 @@
 # ADR-054: The student's own number is dropped, an optional birthdate is added, and the age group follows the age
 
 **Date:** Friday, October 30, 2026 — 21:14 PHT
-**Status:** Accepted (Zean, in chat, Friday, October 30, 2026 — 21:03 PHT, with his answers to Claude's four questions the same evening). Amends ADR-049 (the "Student's mobile number") and ADR-051 (item 5, the age group for the usual vitals ranges). **Not built yet.**
+**Status:** Accepted (Zean, in chat, Friday, October 30, 2026 — 21:03 PHT, with his answers to Claude's four questions the same evening). Amends ADR-049 (the "Student's mobile number") and ADR-051 (item 5, the age group for the usual vitals ranges). **Built** Saturday, October 31, 2026 — 00:07 PHT ([session](../08-Logs/Agent-Sessions/2026-10-31-student-birthdate-build.md)).
 
 ## Context
 The school's masterlist has no column for a student's own phone number, but it has each student's birthdate. ADR-049 renamed "Student contact information" to "Student's mobile number" and made it optional. ADR-051 picked the age group for the usual vitals ranges from the grade level, because student records had no birth date. A field that the school's list can never fill would stay empty for every imported student, while the birthdate that the list does carry was thrown away.
