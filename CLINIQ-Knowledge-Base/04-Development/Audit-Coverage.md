@@ -19,7 +19,7 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | Admin edits an account (name, username, role, picture) | `update` | user | changed field names | `features/user-management/profilePicture.test.ts` |
 | Admin disables / enables an account | `update` | user | "Disabled account" / "Enabled account" | `features/backup/AccessAndBackup.test.tsx` |
 | Admin resets a password | `update` | user | "Reset password" | `features/user-management/accounts.test.ts` |
-| Adds / edits a student record | `create` / `update` | student | changed field names ("Updated grade level"); a name correction adds "Name corrected; reason: <reason>", never the old or new name. The LRN can't change after creation (Sunday, October 25, 2026) | `features/student-records/StudentFormPage.test.tsx` |
+| Adds / edits a student record | `create` / `update` | student | changed field names ("Updated grade level"; a birthdate change reads "Updated birth date", never the value, ADR-054); a name correction adds "Name corrected; reason: <reason>", never the old or new name. The LRN can't change after creation (Sunday, October 25, 2026) | `features/student-records/StudentFormPage.test.tsx` |
 | Archives a student record | `archive` | student | — | `features/ui-review-regressions.test.tsx` |
 | Adds / edits a staff record (ADR-043, Staff Form) | `create` / `update` | staff | changed field names ("Updated allergies"); the Staff No. is assigned and never edited | `lib/mock-db/personnel.test.ts` |
 | Archives a staff record (ADR-043) | `archive` | staff | — | `lib/mock-db/personnel.test.ts` |

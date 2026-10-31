@@ -54,7 +54,7 @@ These were decided on Thursday, October 29, 2026. None of them is in the app yet
 
 - "Save and approve now" on an Excuse Letter, and a warning when a letter covers more than 3 days (ADR-049).
 - Allergies and medical conditions read "None recorded" when empty (ADR-049, ADR-051). Some views already show "None recorded"; the student form still offers "None".
-- The student's own phone field renamed "Student's mobile number" (ADR-051).
+- The student's own number removed; an optional birthdate added, the age shown on the Student Profile, and the usual-vitals age group picked by age (ADR-054).
 - Each visit and incident keeps the grade and section it had when saved; grade and section come from a yearly import of the registrar's list; students missing from it are archived after a review list, and records are kept 5 years from the archive date (ADR-047, ADR-051).
 - The Admin / Principal is signed out after 30 idle minutes, can Acknowledge an incident report, and passwords can be reset by email when online (ADR-048).
 - The School Clinician opening a profile or an incident report is written to the audit log (ADR-048). Today only the Admin / Principal's opens are logged.

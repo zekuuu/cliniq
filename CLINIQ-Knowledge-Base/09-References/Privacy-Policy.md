@@ -13,7 +13,7 @@ This policy covers CLINIQ, the clinic tracking and monitoring system used by Men
 
 ## 2. What information CLINIQ collects
 
-- **Student information:** name, LRN (Learner Reference Number), grade level, section, date of birth, gender, contact information, emergency contact details, allergies, and medical conditions.
+- **Student information:** name, LRN (Learner Reference Number), grade level, section, date of birth (when the school provides it), gender, emergency contact details, allergies, and medical conditions.
 - **Clinic records:** visit records (date, complaint, treatment, outcome), incident/emergency records (including hospital referral and parent-notification details where applicable), and follow-up records.
 - **Inventory records:** medicine and supply stock levels and usage history. This does not identify students except where a specific dispensing is linked to a visit record.
 - **Account information:** name, username, and role, for every Staff and Admin/Principal account.

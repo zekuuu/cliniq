@@ -79,7 +79,8 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - Add/edit one or more emergency contacts — *Staff*. At least one is required; the ordered list has no fixed maximum, its first contact is primary, and Staff can move another contact to the top.
 - View all emergency contacts, primary first, with each contact's verification state — *Staff*
 - Mark each contact number as verified/unverified — *Staff*
-- The student's own phone is **"Student's mobile number (optional)"** (ADR-051; the stored field is still `contactInfo`). A blank one never makes a record incomplete.
+- A student has **no number of their own** on the record (ADR-054): families are reached through the emergency contacts. Staff records keep theirs.
+- **Birthdate (optional)** (ADR-054): a real date, never in the future. The form shows a soft note when the age is more than `config.unusualAgeYears` (3, to confirm) from the usual age for the grade (Kinder 5, Grade n is n + 5), and still saves. The age is calculated, never stored; the Student Profile header shows it. The date shows only in the profile details, the Add/Edit Student form and the profile printout, never on a list, picker, Dashboard, report or other printout.
 
 **Duplicate Detection**
 - Auto-check for name + grade-level match on save
@@ -271,7 +272,7 @@ Staff identify a student through Students search or each form's student picker. 
 
 - **Starting numbers** in `config`, each a starting value for the nurse to confirm: frequent visitor 3 visits in 14 days (the panel is on), follow-up reminder window 7 days, expiry warning 30 days, top 5 complaints; stock exactly at the threshold counts as low.
 - **Follow-ups:** Upcoming before the date, "Due today" on it, "Due" for the next 3 days, then Overdue; 7 days after the date a pending follow-up reads as Missed with "No response (closed automatically after 7 days)". The Follow-Up List and the Dashboard use the same rule. (Before: Overdue started the day after the date, and nothing closed by itself.)
-- **Vitals:** a reading outside the usual range for the patient's age group (by grade: Kinder, Grades 1 to 6, Grades 7 to 12; staff adult) adds "Outside the usual range for this age (starting range, nurse to confirm): …" on the Visit and Incident forms; temperature below 36.0 °C and oximeter below 95% are noted too. Never blocks. The "looks unusual" sanity note stays the stronger message, and the fever flag stays at 37.0 °C.
+- **Vitals:** a reading outside the usual range for the patient's age group (by the age on the visit's or incident's own date when the student has a birthdate: under 6, 6 to 12, 13 and over, ADR-054; otherwise by grade: Kinder, Grades 1 to 6, Grades 7 to 12; staff adult) adds "Outside the usual range for this age (starting range, nurse to confirm): …" on the Visit and Incident forms; temperature below 36.0 °C and oximeter below 95% are noted too. Never blocks. The "looks unusual" sanity note stays the stronger message, and the fever flag stays at 37.0 °C.
 - **Which form:** a one-line hint on the Visit form ("Visit: a common, routine case. A worse case that needs fast two-stage capture is an Incident.") and the Incident form; Escalate to incident stays.
 - **Sports Report:** each visit and incident in the window has a tick, all ticked to start; only ticked entries print; the screen says how many are included.
 - **Monthly Report:** visits by sex (Female, Male, All students), with staff patients counted apart, on screen and in the A4 printout.

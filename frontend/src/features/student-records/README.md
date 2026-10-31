@@ -1,7 +1,7 @@
 # Student Records
 
 ## What it is
-Encoding, medical history, allergies, contact info, the LRN, duplicate detection, archive/deactivate. See CLINIQ-Knowledge-Base/01-Requirements/Features/Module-Overview.md.
+Encoding, medical history, allergies, emergency contacts, the optional birthdate, the LRN, duplicate detection, archive/deactivate. See CLINIQ-Knowledge-Base/01-Requirements/Features/Module-Overview.md.
 
 ## Screens and who can use them
 - Student List and Student Profile: School Clinician and Admin / Principal (reads only, ADR-038).
@@ -21,4 +21,4 @@ The Student Profile prints a "Student Health Record" sheet with the whole visit 
 Decided, not built:
 - Grade and section from a yearly import of the registrar's list; students missing from it are archived after a review list, and records are kept 5 years from the archive date (ADR-047, ADR-051).
 - Allergies and medical conditions read "None recorded" when empty (ADR-049, ADR-051); the form still offers "None".
-- The student's own phone field renamed "Student's mobile number" (ADR-051).
+- The student's own number removed; an optional birthdate added, the age shown on the Student Profile header (ADR-054).
