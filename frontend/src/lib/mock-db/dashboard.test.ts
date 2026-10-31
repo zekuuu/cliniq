@@ -298,7 +298,7 @@ describe('complaint trends', () => {
     expect(trends.series[0].counts).toEqual([0, 0, 1, 0, 0, 0, 0, 0, 0])
   })
 
-  it('compares a completed calendar month by Monday through Sunday with its prior month', () => {
+  it('compares a completed calendar month by Sunday through Saturday with its prior month', () => {
     const trends = buildComplaintTrends(
       [
         { date: '2024-01-05', complaint: 'Headache' }, // Friday, prior month
@@ -320,6 +320,7 @@ describe('complaint trends', () => {
       currentPeak: { date: '2024-02-02', count: 2, annotations: ['Foundation practice'] },
     })
     expect(trends.weekdayComparison?.rows.find((row) => row.label === 'Sunday')).toMatchObject({ current: 1, previous: 0 })
+    expect(trends.weekdayComparison?.rows[0].label).toBe('Sunday')
   })
 
   it('uses December as the prior month for a January weekday comparison', () => {
