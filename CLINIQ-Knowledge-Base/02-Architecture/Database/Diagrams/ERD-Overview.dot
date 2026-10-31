@@ -2,7 +2,7 @@ digraph ERD {
 rankdir=LR; compound=true; fontname="Helvetica"; nodesep=0.35; ranksep=1.3; splines=true;
 node [shape=box,style="rounded,filled",fontname="Helvetica",fontsize=11,margin="0.12,0.06"];
 edge [fontname="Helvetica",fontsize=8,color="#6b7280",arrowsize=0.7];
-labelloc=t; fontsize=18; label="CLINIQ database: all 35 tables (PROPOSED v1, NOT FINAL)\nclusters = owning backend module; dashed box = Spec table (not in the frontend contract yet); arrow = foreign key, pointing at the parent; same student = composite key that forces the record and its parent to be for the same student\n";
+labelloc=t; fontsize=18; label="CLINIQ database: all 44 tables (PROPOSED v1, NOT FINAL)\nclusters = owning backend module; dashed box = Spec table (not in the frontend contract yet); arrow = foreign key, pointing at the parent; same patient = composite key that forces the record and its parent to be for the same patient\n";
 subgraph cluster_0 { label="UserManagement"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
   users [fillcolor="#e8e3fb", style="rounded,filled"];
   password_histories [fillcolor="#e8e3fb", style="rounded,filled"];
@@ -15,7 +15,7 @@ subgraph cluster_1 { label="Shared"; style="rounded,filled"; color="#9ca3af"; fi
   issue_reports [fillcolor="#eceff1", style="rounded,filled"];
   audit_logs [fillcolor="#eceff1", style="rounded,filled"];
 }
-subgraph cluster_2 { label="SmartTriage"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
+subgraph cluster_2 { label="FirstAidChecklist"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
   complaint_types [fillcolor="#fde9d9", style="rounded,filled"];
   triage_steps [fillcolor="#fde9d9", style="rounded,filled"];
   triage_checks [fillcolor="#fde9d9", style="rounded,filled,dashed"];
@@ -28,8 +28,14 @@ subgraph cluster_3 { label="StudentRecords"; style="rounded,filled"; color="#9ca
   emergency_contact_verifications [fillcolor="#dcefe3", style="rounded,filled,dashed"];
   student_record_reviews [fillcolor="#dcefe3", style="rounded,filled"];
 }
+subgraph cluster_11 { label="StaffPatients"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
+  personnel [fillcolor="#dcefe3", style="rounded,filled"];
+  personnel_health_entries [fillcolor="#dcefe3", style="rounded,filled"];
+  personnel_emergency_contacts [fillcolor="#dcefe3", style="rounded,filled"];
+}
 subgraph cluster_5 { label="ClinicVisits"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
   visits [fillcolor="#fff3c4", style="rounded,filled"];
+  visit_extra_complaints [fillcolor="#fff3c4", style="rounded,filled"];
   excuse_letters [fillcolor="#fff3c4", style="rounded,filled"];
   pe_referrals [fillcolor="#fff3c4", style="rounded,filled"];
 }
@@ -42,8 +48,11 @@ subgraph cluster_6 { label="EmergencyResponse"; style="rounded,filled"; color="#
 }
 subgraph cluster_7 { label="InventoryTracker"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
   inventory_items [fillcolor="#e4f0d0", style="rounded,filled"];
+  inventory_item_allergy_words [fillcolor="#e4f0d0", style="rounded,filled"];
+  inventory_batches [fillcolor="#e4f0d0", style="rounded,filled"];
   treatment_item_lines [fillcolor="#e4f0d0", style="rounded,filled"];
   inventory_transactions [fillcolor="#e4f0d0", style="rounded,filled"];
+  inventory_transaction_batches [fillcolor="#e4f0d0", style="rounded,filled"];
 }
 subgraph cluster_8 { label="ReportsGeneration"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
   reports [fillcolor="#e9e0d4", style="rounded,filled"];
@@ -52,6 +61,8 @@ subgraph cluster_8 { label="ReportsGeneration"; style="rounded,filled"; color="#
 }
 subgraph cluster_9 { label="BackupVerification"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
   backup_logs [fillcolor="#e9e0d4", style="rounded,filled"];
+  backup_location_results [fillcolor="#e9e0d4", style="rounded,filled"];
+  backup_locations [fillcolor="#e9e0d4", style="rounded,filled"];
 }
 subgraph cluster_10 { label="Dashboard"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
   holidays [fillcolor="#dbe9f9", style="rounded,filled"];
@@ -62,24 +73,24 @@ emergency_contacts -> students [label=""];
 emergency_contact_verifications -> emergency_contacts [label=""];
 emergency_contact_verifications -> incidents [label=""];
 excuse_letters -> visits [label=""];
-follow_ups -> incidents [label="same student"];
+follow_ups -> incidents [label="same patient"];
 follow_ups -> students [label=""];
-follow_ups -> visits [label="same student"];
+follow_ups -> visits [label="same patient"];
 hospital_referrals -> incidents [label=""];
 incidents -> students [label=""];
 incident_report_approvals -> incidents [label=""];
 incident_vital_readings -> incidents [label=""];
-inventory_transactions -> incidents [label="same student"];
+inventory_transactions -> incidents [label="same patient"];
 inventory_transactions -> inventory_items [label=""];
 inventory_transactions -> students [label=""];
-inventory_transactions -> visits [label="same student"];
+inventory_transactions -> visits [label="same patient"];
 parent_notification_attempts -> emergency_contacts [label=""];
 parent_notification_attempts -> incidents [label=""];
-pe_referrals -> incidents [label="same student"];
+pe_referrals -> incidents [label="same patient"];
 pe_referrals -> students [label=""];
 sports_report_students -> sports_reports [label=""];
 sports_report_students -> students [label=""];
-pe_referrals -> visits [label="same student"];
+pe_referrals -> visits [label="same patient"];
 students -> student_import_batches [label=""];
 students -> grade_levels [label=""];
 student_health_entries -> students [label=""];
@@ -93,6 +104,21 @@ triage_checks -> visits [label=""];
 triage_steps -> complaint_types [label=""];
 visits -> complaint_types [label=""];
 visits -> students [label=""];
-users_note [shape=note,style=filled,fillcolor="#ffffff",fontsize=9,label="Left out for readability:\nmost tables also point at users\n(created_by / logged_by /\napproved_by ...). 26 tables do."];
+personnel_health_entries -> personnel [label=""];
+personnel_emergency_contacts -> personnel [label=""];
+visits -> personnel [label=""];
+incidents -> personnel [label=""];
+follow_ups -> personnel [label=""];
+inventory_transactions -> personnel [label=""];
+visit_extra_complaints -> visits [label=""];
+visits -> incidents [label="escalated to"];
+incidents -> visits [label="source visit"];
+inventory_batches -> inventory_items [label=""];
+inventory_item_allergy_words -> inventory_items [label=""];
+inventory_transaction_batches -> inventory_transactions [label=""];
+inventory_transaction_batches -> inventory_batches [label=""];
+backup_location_results -> backup_logs [label=""];
+backup_location_results -> backup_locations [label=""];
+users_note [shape=note,style=filled,fillcolor="#ffffff",fontsize=9,label="Left out for readability:\nmost tables also point at users\n(created_by / logged_by /\napproved_by ...). 27 tables do."];
 users_note -> users [style=dotted,arrowhead=none];
 }
