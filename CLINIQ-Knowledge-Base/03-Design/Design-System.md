@@ -14,7 +14,7 @@ Modern, minimalist, clean, professional, approachable, consistent, easy to scan,
 ### Typography
 Small-to-medium sizing throughout — not so small it strains readability, not so large it wastes screen space. Build hierarchy through font weight, spacing, and placement rather than simply bumping font size. Keep body text comfortable to read, and keep headings, labels, body text, supporting text, and important/status information clearly distinct from each other. The overall feel should be compact and information-efficient while still comfortable to read.
 
-The interface font is Inter. The one exception is the `CLINIQ` name as a wordmark or title (sidebar, login, Privacy Policy heading), set in Cinzel (`font-brand`), Zean's request of October 31, 2026.
+The interface font is Inter. The `CLINIQ` name as a wordmark or title (sidebar, login, Privacy Policy heading) is set in Cinzel (`font-brand`), Zean's request of October 31, 2026. The live workstation date and time in the top bar uses a larger monospaced treatment (`font-mono` with tabular numbers), so its changing values scan like a clock rather than body copy; a vertical bar cleanly separates the date from the time (Zean's requests, Saturday, October 31, 2026 — 12:30 and 12:35 PHT).
 
 **Minimum size: no rendered text below 12px (`text-xs`).** This covers sidebar group labels, the brand subtitle, badges, and calendar event tags. The stated audience includes non-technical and possibly older users who have difficulty reading small text, so this is a floor, not a style preference. Build compactness with weight and spacing, never with a smaller size.
 

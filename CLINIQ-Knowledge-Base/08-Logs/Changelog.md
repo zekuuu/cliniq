@@ -1,4 +1,6 @@
 # Changelog
+| Saturday, October 31, 2026 — 12:35 PHT | Replaced the top-bar clock's centered dot with a vertical divider, so the date and time read as distinct values. See [Agent session](Agent-Sessions/2026-10-31-topbar-clock-divider.md). |
+| Saturday, October 31, 2026 — 12:30 PHT | Top-bar live date and time now use a larger professional monospaced treatment with tabular numbers, while retaining the existing responsive visibility and live update. See [Agent session](Agent-Sessions/2026-10-31-topbar-clock-typeface.md). |
 | Saturday, October 31, 2026 — 12:18 PHT | Monthly Report weeks now run Sunday to Saturday, matching the Activity calendar (ADR-055). See [Agent session](Agent-Sessions/2026-10-31-monthly-report-weeks-and-layout.md). |
 | Saturday, October 31, 2026 — 12:14 PHT | Monthly Report tidied on screen (Zean's request): week columns read "Oct 12–16", zeros recede, the All complaints row is bold, and visits by sex are four tiles instead of a half-width table. The printout keeps its paper format. |
 | Saturday, October 31, 2026 — 12:10 PHT | Cinzel applied to the `CLINIQ` wordmark on the login page and the Privacy Policy heading (Zean's request); sentences that mention CLINIQ stay in Inter. |
