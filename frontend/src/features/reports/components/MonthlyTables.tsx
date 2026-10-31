@@ -1,4 +1,5 @@
 import { DataTable, EmptyState, PrintTable } from '../../../components'
+import { formatDate } from '../../../lib/dates'
 import type { MonthlyInventoryRow } from '../../../lib/mock-db'
 import type { MonthlyReportData } from '../api/reportsApi'
 
@@ -13,7 +14,20 @@ type WeeklyRow = { complaint: string; counts: number[]; total: number }
 /** The complaint rows plus an "All complaints" row, so the week columns can be checked against the total. */
 function weeklyRows(weekly: Weekly): WeeklyRow[] {
   const total = weekly.totals.reduce((sum, count) => sum + count, 0)
-  return [...weekly.rows, { complaint: 'All complaints', counts: weekly.totals, total }]
+  return [...weekly.rows, { complaint: ALL_COMPLAINTS, counts: weekly.totals, total }]
+}
+
+const ALL_COMPLAINTS = 'All complaints'
+
+/** Zeros recede and the "All complaints" row stands out, so the real counts are what the eye finds. */
+function weekCell(row: WeeklyRow, count: number) {
+  if (row.complaint === ALL_COMPLAINTS) return <span className="font-semibold">{count}</span>
+  return count === 0 ? <span className="text-text-secondary">0</span> : count
+}
+
+/** "Oct 11–17" on screen; the printout keeps the shorter "11-17" under its month title. */
+function weekHeader(week: Weekly['weeks'][number]) {
+  return `${formatDate(week.from, { month: 'short' })} ${week.label.replace('-', '–')}`
 }
 
 export function WeeklyComplaintsTable({ weekly }: { weekly: Weekly }) {
@@ -23,14 +37,14 @@ export function WeeklyComplaintsTable({ weekly }: { weekly: Weekly }) {
       caption="Clinic visits by complaint and week"
       columns={[
         { key: 'complaint', header: 'Complaint', rowHeader: true, width: '12rem', cell: (row: WeeklyRow) => row.complaint },
-        ...weekly.weeks.map((week, index) => ({ key: week.from, header: week.label, align: 'right' as const, width: '5rem', cell: (row: WeeklyRow) => row.counts[index] })),
+        ...weekly.weeks.map((week, index) => ({ key: week.from, header: weekHeader(week), align: 'right' as const, width: '6rem', cell: (row: WeeklyRow) => weekCell(row, row.counts[index]) })),
         { key: 'total', header: 'Total', align: 'right', width: '5rem', cell: (row: WeeklyRow) => <span className="font-semibold">{row.total}</span> },
       ]}
       rows={weeklyRows(weekly)}
       rowKey={(row) => row.complaint}
       fixedLayout
       stickyFirstColumn
-      minTableWidth={`${12 + 5 * (weekly.weeks.length + 1)}rem`}
+      minTableWidth={`${12 + 6 * (weekly.weeks.length + 1)}rem`}
     />
   )
 }
@@ -100,17 +114,16 @@ function sexRows(bySex: BySex) {
   ]
 }
 
-export function VisitsBySexTable({ bySex }: { bySex: BySex }) {
+export function VisitsBySexSummary({ bySex }: { bySex: BySex }) {
   return (
-    <DataTable
-      caption="Clinic visits by sex"
-      columns={[
-        { key: 'group', header: 'Group', rowHeader: true, cell: (row: { label: string; count: number }) => row.label },
-        { key: 'visits', header: 'Visits', align: 'right', width: '6rem', cell: (row: { label: string; count: number }) => row.count },
-      ]}
-      rows={sexRows(bySex)}
-      rowKey={(row) => row.label}
-    />
+    <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {sexRows(bySex).map((row) => (
+        <div key={row.label} className="rounded-md border border-border bg-surface px-4 py-3">
+          <dt className="text-xs font-semibold text-text-secondary">{row.label}</dt>
+          <dd className="mt-1 text-xl font-bold text-text-primary tabular-nums">{row.count}</dd>
+        </div>
+      ))}
+    </dl>
   )
 }
 
