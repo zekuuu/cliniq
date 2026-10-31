@@ -2,6 +2,8 @@
 
 **Status: PROPOSED v1, NOT FINAL.** Open decisions in `ERD.md` section 11 can still change tables and columns; do not build migrations from this until the team approves the design. Generated Friday, October 09, 2026 — 02:11 PHT from the reference schema (`Reference-Schema.sql`) after it was loaded into MariaDB 10.11 and passed 107 constraint tests, so the types, keys, indexes and constraints below are exactly what the database accepted. Purposes, mappings and notes are hand-written. If you change the schema, regenerate this file instead of editing it.
 
+**Updated to the decisions up to ADR-056 on Saturday, October 31, 2026 — 20:28 PHT.** Still a proposed draft, not final or approved. This update was written by hand and compared with `Reference-Schema.sql`; what no decision settles is in `ERD-Review.md`.
+
 How to read it: **Tier** is `Core` (a built screen or the mock already needs it) or `Spec` (the requirements ask for it but the frontend contract does not carry it yet). **Module** is the backend module that owns the table (ADR-009, extended in `ERD.md`). **Frontend** says how the table maps to today's `types/entities.ts`, which is what the API layer must translate. Conventions (keys, times, FK policy) are in `ERD.md` section 2.
 
 ## Tables at a glance
@@ -13,8 +15,8 @@ How to read it: **Tier** is `Core` (a built screen or the mock already needs it)
 | 3 | [`system_settings`](#system_settings) | Shared | Core | Tunable thresholds and policy numbers that the requirements leave open, so changing one is a data change, not a deployment. |
 | 4 | [`number_sequences`](#number_sequences) | Shared | Core | Collision-free counters for reference numbers on printed documents. |
 | 5 | [`grade_levels`](#grade_levels) | Shared | Core | Ordered list of grade levels. |
-| 6 | [`complaint_types`](#complaint_types) | SmartTriage | Core | Predefined complaint labels. |
-| 7 | [`triage_steps`](#triage_steps) | SmartTriage | Core | Ordered first-aid checklist steps per complaint type. |
+| 6 | [`complaint_types`](#complaint_types) | FirstAidChecklist | Core | Predefined complaint labels. |
+| 7 | [`triage_steps`](#triage_steps) | FirstAidChecklist | Core | Ordered first-aid checklist steps per complaint type. |
 | 8 | [`student_import_batches`](#student_import_batches) | StudentRecords | Core | One row per registrar masterlist import, for traceability and for "which import flagged this record". |
 | 9 | [`students`](#students) | StudentRecords | Core | The student record. |
 | 10 | [`student_health_entries`](#student_health_entries) | StudentRecords | Core | Allergies, food restrictions, conditions, past illnesses and family history, one row each. |
@@ -24,7 +26,7 @@ How to read it: **Tier** is `Core` (a built screen or the mock already needs it)
 | 14 | [`inventory_items`](#inventory_items) | InventoryTracker | Core | Medicines and supplies with a maintained stock count. |
 | 15 | [`visits`](#visits) | ClinicVisits | Core | A routine clinic visit. |
 | 16 | [`excuse_letters`](#excuse_letters) | ClinicVisits | Core | One excuse letter per visit: a draft while Staff prepare it, then permanent once approved. |
-| 17 | [`triage_checks`](#triage_checks) | SmartTriage | Spec | Which checklist items were ticked during a visit ("save checklist completion with the visit record", Module 7). |
+| 17 | [`triage_checks`](#triage_checks) | FirstAidChecklist | Spec | Which checklist items were ticked during a visit ("save checklist completion with the visit record", Module 7). |
 | 18 | [`incidents`](#incidents) | EmergencyResponse | Core | An emergency incident, captured in two stages. |
 | 19 | [`incident_vital_readings`](#incident_vital_readings) | EmergencyResponse | Core | Timestamped vital-sign readings. |
 | 20 | [`hospital_referrals`](#hospital_referrals) | EmergencyResponse | Core | Hospital referral details for an incident (at most one per incident). |
@@ -43,6 +45,15 @@ How to read it: **Tier** is `Core` (a built screen or the mock already needs it)
 | 33 | [`audit_logs`](#audit_logs) | Shared (AuditLog) | Core | Append-only record of who did what and when (RA 10173 accountability). |
 | 34 | [`sports_reports`](#sports_reports) | ReportsGeneration | Core | A saved Sports Report for a PE or sports instructor (ADR-034). |
 | 35 | [`sports_report_students`](#sports_report_students) | ReportsGeneration | Core | The students on a Sports Report and the clinician's note for each. |
+| 36 | [`personnel`](#personnel) | StaffPatients | Core | Teachers and school staff seen as patients (ADR-043). |
+| 37 | [`personnel_health_entries`](#personnel_health_entries) | StaffPatients | Core | A staff patient's allergies and conditions. |
+| 38 | [`personnel_emergency_contacts`](#personnel_emergency_contacts) | StaffPatients | Core | A staff patient's emergency contacts. |
+| 39 | [`visit_extra_complaints`](#visit_extra_complaints) | ClinicVisits | Core | Up to 3 extra complaint tags on a visit (ADR-053). |
+| 40 | [`inventory_batches`](#inventory_batches) | InventoryTracker | Core | Received batches, the source of all stock (ADR-030). |
+| 41 | [`inventory_item_allergy_words`](#inventory_item_allergy_words) | InventoryTracker | Core | "Avoid if allergic to" words on an item (ADR-049). |
+| 42 | [`inventory_transaction_batches`](#inventory_transaction_batches) | InventoryTracker | Core | Which batches a stock movement touched (ADR-030). |
+| 43 | [`backup_locations`](#backup_locations) | BackupVerification | Core | Where backups go (ADR-052). |
+| 44 | [`backup_location_results`](#backup_location_results) | BackupVerification | Core | One backup run's result per location (ADR-052). |
 
 The Sanctum `personal_access_tokens` table is created by Sanctum's own migration and is not redefined here (set `expires_at` to 7 days, ADR-015). Laravel's `migrations` table is also standard.
 
@@ -59,6 +70,7 @@ Accounts for Staff and Admin/Principal. Never hard-deleted: a leaver is deactiva
 | `id` **PK** | `bigint unsigned` | no |  |  |
 | `name` | `varchar(120)` | no |  |  |
 | `username` | `varchar(50)` | no |  | Case-insensitive unique (collation). Login looks up by username, so a duplicate could never sign in. Stays reserved after deactivation. |
+| `email` | `varchar(190)` | yes | NULL | For the email password reset (ADR-048). Whether it is unique is in `ERD-Review.md`. |
 | `password_hash` | `varchar(255)` | no |  | bcrypt/argon hash from Laravel `Hash`. Never returned by any API. |
 | `role` | `varchar(12)` | no |  | `staff` / `admin`. PE/Sports Instructors have no account (ADR-029). A further value (`canteen`) is an additive CHECK change later. |
 | `is_head_nurse` | `tinyint(1)` | no | 0 | OPEN (D-04). Module 7 and Module 10 reserve some actions to the "Head Nurse" within Staff. Only meaningful when role = staff. |
@@ -158,7 +170,7 @@ Ordered list of grade levels. A table, not free text, so a spelling variant can 
 
 ## complaint_types
 
-**Module:** SmartTriage  |  **Tier:** Core
+**Module:** FirstAidChecklist  |  **Tier:** Core
 
 Predefined complaint labels. Suggestions for the free-text complaint field, and the owner of triage checklists.
 
@@ -179,7 +191,7 @@ Predefined complaint labels. Suggestions for the free-text complaint field, and 
 
 ## triage_steps
 
-**Module:** SmartTriage  |  **Tier:** Core
+**Module:** FirstAidChecklist  |  **Tier:** Core
 
 Ordered first-aid checklist steps per complaint type. Clinical content: edited by the Head Nurse only (Module 7).
 
@@ -239,7 +251,7 @@ One row per registrar masterlist import, for traceability and for "which import 
 
 The student record. The LRN identifies the student to people (masked on lists, ADR-028); `id` is internal, never shown, and the only key used in URLs and foreign keys.
 
-**Frontend:** `Student` (id, lrn, fullName, gradeLevel, contactInfo, archived). `allergies`, `medicalConditions`, `emergencyContact` move to child tables; `recordComplete` is derived.
+**Frontend:** `Student` (id, lrn, fullName, gradeLevel, section, sex, birthDate, archived). `allergies`, `medicalConditions`, `emergencyContact` move to child tables; `recordComplete` is derived.
 
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
@@ -247,14 +259,13 @@ The student record. The LRN identifies the student to people (masked on lists, A
 | `lrn` | `char(12)` | no |  | Learner Reference Number, entered by Staff: exactly 12 digits, stored as text so leading zeros survive, unique, editable (a correction is audited as "Updated LRN", no values). Never in a URL or an audit entry (ADR-028). |
 | `full_name` | `varchar(150)` | no |  | Required and non-blank. Single field for now; splitting into last/first/middle waits for the registrar file format (D-15). Accent- and case-insensitive matching comes from the collation. |
 | `grade_level_id` | `bigint unsigned` | yes | NULL | Nullable on purpose: an imported record may lack it and is then flagged "incomplete". Never nullable for a completed record (rule in the app). |
+| `section` | `varchar(60)` | yes | NULL | Optional until the yearly import fills it (ADR-047). Shown on the Student Profile and its printout only. |
 | `sex` | `varchar(6)` | yes | NULL | `female` or `male`, as recorded by the school. Required for a completed record (ADR-031); nullable during an incomplete import. |
-| `contact_number` | `varchar(60)` | yes | NULL | Nullable for the same reason. "Student contact information" in the requirements. Optional for every grade (Zean, October 26, 2026; previously optional only for Kinder, panel review part 7, D8). |
+| `birth_date` | `date` | yes | NULL | Optional (ADR-054). The age is calculated, never stored. Never on a list, picker, Dashboard, report or other printout. |
 | `health_reviewed_at` | `datetime` | yes | NULL | OPEN (D-03). Lets "no allergies recorded" mean "asked and none" instead of "never asked". Unused until the team decides. |
 | `health_reviewed_by_user_id` | `bigint unsigned` | yes | NULL |  |
 | `archived_at` | `datetime` | yes | NULL | Non-null = archived (hidden from default lists). Starts the 5-year retention clock. |
 | `archived_by_user_id` | `bigint unsigned` | yes | NULL |  |
-| `archive_reason` | `varchar(12)` | yes | NULL | `transferred` / `graduated` / `other`. |
-| `archive_note` | `varchar(255)` | yes | NULL |  |
 | `import_batch_id` | `bigint unsigned` | yes | NULL | Set when the record was created by a registrar import. |
 | `created_by_user_id` | `bigint unsigned` | yes | NULL |  |
 | `created_at` | `datetime` | no | current_timestamp() |  |
@@ -266,8 +277,6 @@ The student record. The LRN identifies the student to people (masked on lists, A
 
 **Checks:**
 
-- `chk_students_archive_pair`: `archived_at is null and archive_reason is null and archived_by_user_id is null or archived_at is not null`
-- `chk_students_archive_reason`: `archive_reason is null or archive_reason in ('transferred','graduated','other')`
 - `chk_students_name`: `char_length(trim(full_name)) >= 1`
 - `chk_students_lrn`: `lrn regexp '^[0-9]{12}$'`
 - `chk_students_sex`: `sex is null or sex in ('female','male')`
@@ -399,10 +408,8 @@ Medicines and supplies with a maintained stock count. Stock changes only through
 | `name` | `varchar(120)` | no |  |  |
 | `category` | `varchar(10)` | no |  |  |
 | `unit` | `varchar(30)` | no |  |  |
-| `current_stock` | `int` | no | 0 | Signed: it can go negative because over-stock dispensing warns but never blocks (Module 8). Updated in the same transaction as the ledger row, under a row lock. |
 | `low_stock_threshold` | `int unsigned` | no | 0 |  |
 | `brand` | `varchar(8)` | yes | null | **PROVISIONAL** (Sunday, October 25, 2026, Sir Rey): `generic` or `branded`; null reads "Not specified". Optional on the item form. |
-| `expiration_date` | `date` | yes | NULL | One date per item (not per batch), changed only by Restock. Null = never expires. |
 | `archived_at` | `datetime` | yes | NULL | Soft-archive. Referenced items can never be hard-deleted. |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
@@ -419,7 +426,7 @@ Medicines and supplies with a maintained stock count. Stock changes only through
 
 **Module:** ClinicVisits  |  **Tier:** Core
 
-A routine clinic visit. Cannot be deleted or voided anywhere in the product (edit only).
+A routine clinic visit, about a student or a staff patient, exactly one (ADR-043). Never deleted; a mistaken visit is marked "Entered in error".
 
 **Frontend:** `Visit`. `treatment` -> `treatment_notes`; `studentId` -> `student_id`; `excuseLetterDraft` -> a row in `excuse_letters`; `itemsGiven` -> `treatment_item_lines`.
 
@@ -427,6 +434,9 @@ A routine clinic visit. Cannot be deleted or voided anywhere in the product (edi
 |---|---|---|---|---|
 | `id` **PK** | `bigint unsigned` | no |  |  |
 | `student_id` | `bigint unsigned` | no |  |  |
+| `personnel_id` | `bigint unsigned` | yes | NULL | A staff patient (ADR-043). Exactly one of `student_id` and `personnel_id`. |
+| `grade_level_at_time` | `varchar(40)` | yes | NULL | The grade when saved (ADR-047). Null for a staff patient. |
+| `section_at_time` | `varchar(60)` | yes | NULL | The section when saved, when the student had one (ADR-047). |
 | `visited_at` | `datetime` | no |  | Philippine time. Editable (back-dated entry is real), but the service rejects a future time. `created_at` still records when it was typed. |
 | `complaint` | `varchar(150)` | no |  | Free text, stored in a known suggestion's spelling. Case-insensitive collation also keeps GROUP BY from splitting "Headache" / "headache". |
 | `complaint_type_id` | `bigint unsigned` | yes | NULL | Set when the text matches a predefined type (drives the triage checklist). Nullable. |
@@ -434,6 +444,14 @@ A routine clinic visit. Cannot be deleted or voided anywhere in the product (edi
 | `disposition` | `varchar(22)` | no |  | `returned_to_class`, `resting_in_clinic` (panel review part 2, PROVISIONAL), `sent_home`, `referred_to_hospital`. |
 | `referred_to` | `varchar(150)` | yes | NULL | Only when disposition = referred_to_hospital (CHECK). |
 | `event_tag` | `varchar(80)` | yes | NULL | Free text such as "Intramurals". Deliberately not a managed list. |
+| `temperature_c` | `decimal(4,1)` | yes | NULL | Logbook field, optional. |
+| `time_out` | `time` | yes | NULL | Logbook field, on the visit's date. |
+| `assisted_by` | `varchar(120)` | yes | NULL | Logbook field, free text. |
+| `parent_guardian` | `varchar(120)` | yes | NULL | Logbook field, free text. |
+| `remarks` | `text` | yes | NULL | Logbook field, free text. |
+| `collected_by_name` | `varchar(120)` | yes | NULL | Sent home or Referred only (ADR-049). |
+| `collected_by_relationship` | `varchar(40)` | yes | NULL | ADR-049. |
+| `collected_by_time` | `time` | yes | NULL | ADR-049. |
 | `late_entry` | `tinyint(1)` | no | 0 | PROVISIONAL (panel review part 2). Set when `visited_at` is more than 30 minutes before `created_at`. |
 | `late_entry_reason` | `varchar(200)` | yes | NULL | PROVISIONAL. Optional reason for a late entry. |
 | `entered_in_error_at` | `datetime` | yes | NULL | PROVISIONAL. Set by "Entered in error"; the row is kept and excluded from lists, counts and reports. |
@@ -455,6 +473,8 @@ A routine clinic visit. Cannot be deleted or voided anywhere in the product (edi
 - `chk_visits_disposition`: `disposition in ('returned_to_class','resting_in_clinic','sent_home','referred_to_hospital')`
 - `chk_visits_referred_to`: `referred_to is null or disposition = 'referred_to_hospital'`
 
+**Update:** `chk_visits_one_patient`, `chk_visits_error`, `uq_visits_id_personnel`, `idx_visits_personnel_time`, `fk_visits_personnel`, `fk_visits_error_by` and `fk_visits_escalated_incident` (added after `incidents`). Extra complaint tags: `visit_extra_complaints`.
+
 ## excuse_letters
 
 **Module:** ClinicVisits  |  **Tier:** Core
@@ -471,15 +491,25 @@ One excuse letter per visit: a draft while Staff prepare it, then permanent once
 | `excused_from` | `date` | no |  |  |
 | `excused_until` | `date` | no |  |  |
 | `teacher_note` | `varchar(500)` | yes | NULL | Optional note printed for the teacher. 500-character cap is a proposal. |
+| `stay_home_until_cleared` | `tinyint(1)` | no | 0 | ADR-049. |
+| `stay_home_note` | `varchar(255)` | yes | NULL | ADR-049. |
+| `recipient` | `varchar(150)` | yes | NULL | Stored at approval with the wording in `snapshot_text` (ADR-049). |
 | `prepared_by_user_id` | `bigint unsigned` | no |  |  |
 | `reference_no` | `varchar(20)` | yes | NULL | Human-facing number for the printed letter (e.g. EL-2026-0001), assigned at approval from `number_sequences`. |
 | `approved_by_user_id` | `bigint unsigned` | yes | NULL |  |
 | `approved_at` | `datetime` | yes | NULL |  |
 | `snapshot_text` | `mediumtext` | yes | NULL | The rendered letter at approval (student name, grade, period, note, approver). Reprints use this, so a later rename or grade change cannot alter a permanent document. |
+| `voided_at` | `datetime` | yes | NULL | Set when the visit is entered in error. |
+| `voided_by_user_id` | `bigint unsigned` | yes | NULL |  |
+| `voided_reason` | `varchar(300)` | yes | NULL |  |
+| `superseded_at` | `datetime` | yes | NULL | Set by "Issue a replacement". |
+| `superseded_by_user_id` | `bigint unsigned` | yes | NULL |  |
+| `superseded_reason` | `varchar(300)` | yes | NULL |  |
+| `live_visit_id` | `bigint unsigned` | yes | generated | `visit_id` while `draft` or `approved`: one live letter per visit. |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
 
-**Indexes:** `idx_letters_status` (`status`); UNIQUE `uq_letters_reference` (`reference_no`); UNIQUE `uq_letters_visit` (`visit_id`)
+**Indexes:** `idx_letters_status` (`status`); UNIQUE `uq_letters_reference` (`reference_no`); UNIQUE `uq_letters_live_visit` (`live_visit_id`); `idx_letters_visit` (`visit_id`)
 
 **Foreign keys:** `approved_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `prepared_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `visit_id` -> `visits`(`id`) ON DELETE RESTRICT
 
@@ -489,9 +519,11 @@ One excuse letter per visit: a draft while Staff prepare it, then permanent once
 - `chk_letters_period`: `excused_until >= excused_from`
 - `chk_letters_status`: `status in ('draft','approved')`
 
+**Update:** `status` is `varchar(10)`: `draft`, `approved`, `voided`, `superseded`; `chk_letters_approved` covers the two new statuses.
+
 ## triage_checks
 
-**Module:** SmartTriage  |  **Tier:** Spec
+**Module:** FirstAidChecklist  |  **Tier:** Spec
 
 Which checklist items were ticked during a visit ("save checklist completion with the visit record", Module 7).
 
@@ -522,6 +554,9 @@ An emergency incident, captured in two stages. Stage 1 is the fast save; Stage 2
 |---|---|---|---|---|
 | `id` **PK** | `bigint unsigned` | no |  |  |
 | `student_id` | `bigint unsigned` | no |  |  |
+| `personnel_id` | `bigint unsigned` | yes | NULL | A staff patient (ADR-043). Exactly one of `student_id` and `personnel_id`. |
+| `grade_level_at_time` | `varchar(40)` | yes | NULL | The grade when Stage 1 was saved (ADR-047). |
+| `section_at_time` | `varchar(60)` | yes | NULL | The section at the same moment (ADR-047). |
 | `occurred_at` | `datetime` | no |  | When it happened (Philippine time). |
 | `complaint` | `varchar(150)` | no |  |  |
 | `stage` | `tinyint` | no | 1 | 1 = fast capture, 2 = complete. CHECK: stage 2 requires `completed_at` and `completed_by_user_id`. |
@@ -530,6 +565,7 @@ An emergency incident, captured in two stages. Stage 1 is the fast save; Stage 2
 | `source_visit_id` | `bigint unsigned` | yes | NULL | PROVISIONAL (ADR-036). The visit this incident was escalated from. |
 | `no_further_action_reason` | `varchar(200)` | yes | NULL | PROVISIONAL (panel review part 1). Set only when "Nothing further was needed or done" is ticked; completing and approving need it, treatment notes, a treatment item line, a notification attempt or a referral. |
 | `event_tag` | `varchar(80)` | yes | NULL |  |
+| `general_notes` | `text` | yes | NULL | Additional notes; correctable until approval (ADR-049). |
 | `created_by_user_id` | `bigint unsigned` | no |  |  |
 | `completed_by_user_id` | `bigint unsigned` | yes | NULL |  |
 | `completed_at` | `datetime` | yes | NULL |  |
@@ -545,6 +581,8 @@ An emergency incident, captured in two stages. Stage 1 is the fast save; Stage 2
 - `chk_incidents_complaint`: `char_length(trim(complaint)) >= 1`
 - `chk_incidents_completed`: `stage = 2 = (completed_at is not null and completed_by_user_id is not null)`
 - `chk_incidents_stage`: `stage in (1,2)`
+
+**Update:** `chk_incidents_one_patient`, `uq_incidents_id_personnel`, `idx_incidents_personnel_time`, `fk_incidents_personnel`, `fk_incidents_source_visit`.
 
 ## incident_vital_readings
 
@@ -648,6 +686,8 @@ The nurse's sign-off on an incident report. Stored as a real record because the 
 | `approved_by_user_id` | `bigint unsigned` | no |  |  |
 | `approved_at` | `datetime` | no |  |  |
 | `snapshot_text` | `mediumtext` | yes | NULL | Frozen report content at sign-off (D-08). |
+| `acknowledged_by_user_id` | `bigint unsigned` | yes | NULL | The Admin who pressed Acknowledge (ADR-048). Never undone. |
+| `acknowledged_at` | `datetime` | yes | NULL | Both or neither (`chk_report_acknowledged`). |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 
 **Indexes:** UNIQUE `uq_report_approvals_incident` (`incident_id`); UNIQUE `uq_report_approvals_reference` (`reference_no`)
@@ -666,6 +706,7 @@ A return-for-monitoring instruction attached to a visit or an incident. One feat
 |---|---|---|---|---|
 | `id` **PK** | `bigint unsigned` | no |  |  |
 | `student_id` | `bigint unsigned` | no |  |  |
+| `personnel_id` | `bigint unsigned` | yes | NULL | A staff patient (ADR-043). Exactly one of `student_id` and `personnel_id`. |
 | `visit_id` | `bigint unsigned` | yes | NULL | Composite FK (visit_id, student_id): the DB itself refuses a follow-up whose visit belongs to another student. |
 | `incident_id` | `bigint unsigned` | yes | NULL |  |
 | `follow_up_date` | `date` | no |  |  |
@@ -675,6 +716,8 @@ A return-for-monitoring instruction attached to a visit or an incident. One feat
 | `status_updated_at` | `datetime` | yes | NULL | When the status last changed, and by whom. |
 | `status_updated_by_user_id` | `bigint unsigned` | yes | NULL |  |
 | `status_reason` | `varchar(300)` | yes | NULL | PROVISIONAL (panel review part 3). Required when the status becomes `missed` or `cancelled`. |
+| `stay_home_until_cleared` | `tinyint(1)` | no | 0 | ADR-049. |
+| `stay_home_note` | `varchar(255)` | yes | NULL | ADR-049. |
 | `created_by_user_id` | `bigint unsigned` | no |  |  |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
@@ -687,6 +730,8 @@ A return-for-monitoring instruction attached to a visit or an incident. One feat
 
 - `chk_followups_one_source`: `(visit_id is not null) + (incident_id is not null) = 1`
 - `chk_followups_status`: `status in ('pending','completed','missed','cancelled')`
+
+**Update:** `chk_followups_one_patient`, `fk_followups_personnel`, and `fk_followups_visit_staff` and `fk_followups_incident_staff` for the same-patient guarantee on a staff patient.
 
 ## pe_referrals
 
@@ -764,11 +809,11 @@ Insert-only ledger of every stock movement. History is never rewritten: a correc
 | `item_id` | `bigint unsigned` | no |  |  |
 | `type` | `varchar(10)` | no |  | `opening` (initial stock, new), `dispense`, `restock`, `adjustment`. |
 | `quantity_delta` | `int` | no |  | Signed. dispense < 0, restock > 0, opening >= 0, adjustment <> 0 (CHECK). |
-| `stock_after` | `int` | no |  | Running balance after this row. Lets a reconciliation job prove `current_stock` matches the ledger. |
-| `expiration_date_after` | `date` | yes | NULL | Set by Restock: the expiry confirmed at that moment. |
+| `stock_after` | `int` | no |  | Running balance after this row. Lets a reconciliation job prove the batch quantities match the ledger. |
 | `occurred_at` | `datetime` | no |  |  |
 | `user_id` | `bigint unsigned` | no |  |  |
 | `student_id` | `bigint unsigned` | yes | NULL | Null = "Not for a student (general use)". Never shown by name (display-privacy). |
+| `personnel_id` | `bigint unsigned` | yes | NULL | A staff patient (ADR-043). At most one of the two; neither means general use. |
 | `visit_id` | `bigint unsigned` | yes | NULL | Composite FK with student_id, so the visit must be that student's. |
 | `incident_id` | `bigint unsigned` | yes | NULL |  |
 | `reason` | `varchar(20)` | yes | NULL | Adjustments only (CHECK). `visit_edited` is written only by a visit edit and needs a visit. |
@@ -788,6 +833,8 @@ Insert-only ledger of every stock movement. History is never rewritten: a correc
 - `chk_txn_sign`: `type = 'opening' and quantity_delta >= 0 or type = 'dispense' and quantity_delta < 0 or type = 'restock' and quantity_delta > 0 or type = 'adjustment' and quantity_delta <> 0`
 - `chk_txn_type`: `type in ('opening','dispense','restock','adjustment')`
 - `chk_txn_visit_edit`: `reason is null or reason <> 'visit_edited' or visit_id is not null`
+
+**Update (ADR-030, ADR-043):** `chk_txn_link_has_student` is now `chk_txn_link_has_patient`, plus `chk_txn_one_patient`; `fk_txn_visit_staff` and `fk_txn_incident_staff` give a staff patient the same-patient guarantee. Batches moved: `inventory_transaction_batches`.
 
 ## reports
 
@@ -1031,3 +1078,199 @@ Append-only record of who did what and when (RA 10173 accountability). **Kept 10
   - **PROVISIONAL addition (Sunday, October 25, 2026, ADR-038 item 4):** the frontend mock also writes `view` when the Admin/Principal opens a student profile or an incident report, once per record per session. Add `'view'` (and `'print'`, which the mock already writes) here before the migration is built.
 - `chk_audit_actor`: `actor_user_id is not null or actor_role is null`
 - `chk_audit_role`: `actor_role is null or actor_role in ('staff','admin')`
+
+**Update:** `chk_audit_action` adds `print` and `view` (ADR-026, ADR-038, ADR-048). Kept 10 years (ADR-037, ADR-051), not yet confirmed by the school.
+
+## personnel
+
+**Module:** StaffPatients  |  **Tier:** Core
+
+A teacher, non-teaching staff member or utility worker seen at the clinic (ADR-043, ADR-053).
+
+**Frontend:** `Personnel` (`staffNumber` -> `staff_number`, `contactInfo` -> `contact_number`).
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` **PK** | `bigint unsigned` | no |  |  |
+| `staff_number` | `varchar(20)` | no |  |  |
+| `full_name` | `varchar(150)` | no |  |  |
+| `type` | `varchar(30)` | no |  |  |
+| `department` | `varchar(60)` | yes | NULL |  |
+| `contact_number` | `varchar(60)` | yes | NULL |  |
+| `archived_at` | `datetime` | yes | NULL |  |
+| `archived_by_user_id` | `bigint unsigned` | yes | NULL |  |
+| `created_by_user_id` | `bigint unsigned` | yes | NULL |  |
+| `created_at` | `datetime` | no | current_timestamp() |  |
+| `updated_at` | `datetime` | no | current_timestamp() |  |
+
+**Indexes:** UNIQUE KEY uq_personnel_staff_number (staff_number); KEY idx_personnel_name (full_name); KEY idx_personnel_archived_at (archived_at)
+
+**Checks:**
+
+- `chk_personnel_name`: `CHAR_LENGTH(TRIM(full_name)) >= 1`
+
+## personnel_health_entries
+
+**Module:** StaffPatients  |  **Tier:** Core
+
+A staff patient's allergies and conditions, optional.
+
+**Frontend:** `Personnel.allergies`, `Personnel.medicalConditions`.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` **PK** | `bigint unsigned` | no |  |  |
+| `personnel_id` | `bigint unsigned` | no |  |  |
+| `kind` | `varchar(16)` | no |  |  |
+| `label` | `varchar(150)` | no |  |  |
+| `created_by_user_id` | `bigint unsigned` | yes | NULL |  |
+| `created_at` | `datetime` | no | current_timestamp() |  |
+| `updated_at` | `datetime` | no | current_timestamp() |  |
+
+**Indexes:** UNIQUE KEY uq_personnel_health_entry (personnel_id, kind, label)
+
+**Checks:**
+
+- `chk_personnel_health_kind`: `kind IN ('allergy','condition')`
+
+## personnel_emergency_contacts
+
+**Module:** StaffPatients  |  **Tier:** Core
+
+A staff patient's emergency contacts, ordered; may be empty.
+
+**Frontend:** `Personnel.emergencyContacts`.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` **PK** | `bigint unsigned` | no |  |  |
+| `personnel_id` | `bigint unsigned` | no |  |  |
+| `name` | `varchar(120)` | no |  |  |
+| `relationship` | `varchar(40)` | yes | NULL |  |
+| `phone` | `varchar(30)` | no |  |  |
+| `is_primary` | `tinyint(1)` | no | 1 |  |
+| `is_verified` | `tinyint(1)` | no | 0 |  |
+| `created_at` | `datetime` | no | current_timestamp() |  |
+| `updated_at` | `datetime` | no | current_timestamp() |  |
+| `primary_personnel_id` | `bigint unsigned` | yes | generated |  |
+
+**Indexes:** UNIQUE KEY uq_personnel_contacts_one_primary (primary_personnel_id); KEY idx_personnel_contacts_personnel (personnel_id)
+
+## visit_extra_complaints
+
+**Module:** ClinicVisits  |  **Tier:** Core
+
+Up to 3 extra complaint tags. Reports and the Dashboard count the main complaint only (ADR-053).
+
+**Frontend:** `Visit.extraComplaints`.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` **PK** | `bigint unsigned` | no |  |  |
+| `visit_id` | `bigint unsigned` | no |  |  |
+| `complaint` | `varchar(150)` | no |  |  |
+| `sort_order` | `tinyint` | no | 0 |  |
+
+**Indexes:** UNIQUE KEY uq_extra_complaint (visit_id, complaint)
+
+## inventory_batches
+
+**Module:** InventoryTracker  |  **Tier:** Core
+
+One received batch. Usable, expired and total stock are derived from these rows (ADR-030).
+
+**Frontend:** `InventoryItem.batches`.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` **PK** | `bigint unsigned` | no |  |  |
+| `item_id` | `bigint unsigned` | no |  |  |
+| `quantity` | `int` | no |  |  |
+| `expiration_date` | `date` | yes | NULL |  |
+| `received_date` | `date` | no |  |  |
+| `created_at` | `datetime` | no | current_timestamp() |  |
+| `updated_at` | `datetime` | no | current_timestamp() |  |
+
+**Indexes:** KEY idx_batches_item_expiry (item_id, expiration_date)
+
+## inventory_item_allergy_words
+
+**Module:** InventoryTracker  |  **Tier:** Core
+
+Optional "avoid if allergic to" words; a match warns and never blocks (ADR-049).
+
+**Frontend:** `InventoryItem.avoidIfAllergicTo`.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` **PK** | `bigint unsigned` | no |  |  |
+| `item_id` | `bigint unsigned` | no |  |  |
+| `word` | `varchar(60)` | no |  |  |
+
+**Indexes:** UNIQUE KEY uq_item_allergy_word (item_id, word)
+
+## inventory_transaction_batches
+
+**Module:** InventoryTracker  |  **Tier:** Core
+
+Which batches one stock movement touched, so a visit edit returns stock to the same batch (ADR-030).
+
+**Frontend:** `InventoryTransaction.batchAllocations`.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` **PK** | `bigint unsigned` | no |  |  |
+| `transaction_id` | `bigint unsigned` | no |  |  |
+| `batch_id` | `bigint unsigned` | no |  |  |
+| `quantity` | `int unsigned` | no |  |  |
+
+**Indexes:** UNIQUE KEY uq_txn_batch (transaction_id, batch_id); KEY idx_txn_batch_batch (batch_id)
+
+## backup_locations
+
+**Module:** BackupVerification  |  **Tier:** Core
+
+A place backups are written to. Never deleted, only disabled (ADR-052).
+
+**Frontend:** `BackupLocation`.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` **PK** | `bigint unsigned` | no |  |  |
+| `label` | `varchar(80)` | no |  |  |
+| `path` | `varchar(255)` | no |  |  |
+| `enabled` | `tinyint(1)` | no | 1 |  |
+| `status` | `varchar(12)` | no | 'not_found' |  |
+| `last_backup_at` | `datetime` | yes | NULL |  |
+| `last_result` | `varchar(6)` | yes | NULL |  |
+| `created_at` | `datetime` | no | current_timestamp() |  |
+| `updated_at` | `datetime` | no | current_timestamp() |  |
+
+**Indexes:** none beyond the primary key
+
+**Checks:**
+
+- `chk_locations_status`: `status IN ('found','not_found','not_writable')`
+- `chk_locations_result`: `last_result IS NULL OR last_result IN ('ok','failed')`
+
+## backup_location_results
+
+**Module:** BackupVerification  |  **Tier:** Core
+
+One backup run's result at one location (ADR-052).
+
+**Frontend:** None yet: the mock keeps only the last result on the location.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` **PK** | `bigint unsigned` | no |  |  |
+| `backup_log_id` | `bigint unsigned` | no |  |  |
+| `backup_location_id` | `bigint unsigned` | no |  |  |
+| `status` | `varchar(6)` | no |  |  |
+| `error_message` | `varchar(500)` | yes | NULL |  |
+
+**Indexes:** UNIQUE KEY uq_backup_location_result (backup_log_id, backup_location_id)
+
+**Checks:**
+
+- `chk_location_result_status`: `status IN ('ok','failed')`
