@@ -157,6 +157,27 @@ describe('App Shell / Navigation', () => {
     expect(screen.getByRole('button', { name: 'Show keyboard shortcuts' })).not.toHaveTextContent('?')
   })
 
+  it('uses a readable monospaced treatment for the live workstation clock', () => {
+    renderWithRouter(
+      <AppShell
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        active="dashboard"
+        onLogout={() => {}}
+      >
+        <div>Screen</div>
+      </AppShell>,
+    )
+
+    const clock = screen.getByText(/\d{1,2}:\d{2}:\d{2}/).closest('time')
+    expect(clock).toHaveTextContent('|')
+    expect(clock).toHaveClass(
+      'font-mono',
+      'text-base',
+      'lg:text-lg',
+      'tabular-nums',
+    )
+  })
+
   it('opens the Report an Issue modal from the footer', async () => {
     const user = userEvent.setup()
     renderWithRouter(
