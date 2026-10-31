@@ -45,6 +45,7 @@ describe('Student and incident records', () => {
       lrn: student.lrn,
       fullName: student.fullName,
       gradeLevel: student.gradeLevel,
+      section: '',
       sex: student.sex,
       birthDate: '',
       emergencyContacts: student.emergencyContacts,
