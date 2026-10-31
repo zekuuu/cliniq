@@ -10,15 +10,14 @@ All School Clinician only: Inventory, Add / Edit Inventory Item, Dispense Medici
 - Each received batch retains its quantity, received date and nullable expiry; restock adds a batch, usable stock excludes expired batches, and expired stock stays visible until an explicit disposal (ADR-030).
 - Restock requires an expiry decision (ADR-035).
 - Medicines given on a visit or incident come out of real stock (ADR-018).
+- An item's optional "avoid if allergic to" tag warns at the medicine pickers, never blocks (ADR-049).
 - An item's brand (generic, branded or not specified) is optional and PROVISIONAL.
 
 ## Data and API files
 `api/inventoryApi.ts`; status sorting in `inventoryStatusSort.ts`.
 
 ## Printouts and tests
-No printout yet. Tests: `InventoryListPage.test.tsx`, `StockActions.test.tsx`, `BrandAndPaging.test.tsx`, `InventoryPanelReview.test.tsx`, `api/inventoryApi.test.ts`.
+No printout on these screens; the monthly Inventory sheet is on Reports (ADR-050). Tests: `InventoryListPage.test.tsx`, `StockActions.test.tsx`, `BrandAndPaging.test.tsx`, `InventoryPanelReview.test.tsx`, `api/inventoryApi.test.ts`.
 
 ## Not built yet
-Decided, not built:
-- An "avoid if allergic to" tag on medicines that warns, never blocks (ADR-049).
-- A monthly inventory printout (ADR-050).
+Nothing decided is waiting here.

@@ -1,6 +1,6 @@
 # CLINIQ Knowledge Base
 
-Last checked against the code on Thursday, October 29, 2026 (commit dde64408).
+Last checked against the code on Saturday, October 31, 2026 (commit 9b4861db).
 
 **Current state:** the browser app (frontend) is built and runs on sample (mock) data, the server side (backend) is not built, and the database design is a proposed draft awaiting team approval. The full status list is in the root [README.md](../README.md#current-state).
 

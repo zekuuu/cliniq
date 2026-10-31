@@ -9,5 +9,6 @@ Generic shared hooks not tied to one feature (e.g. auth state, session handling)
 - `useDateRangeEntryParams` reads a one-time `from`/`to` entry filter from the URL.
 - `usePatientFilter` keeps the Everyone / Students / Staff filter in `?patient=` (ADR-043).
 - `usePageSize` holds the shared `Pagination`'s rows-per-page choice (10, 20, 50 or 100) for the browser session.
+- `useIdleSignOut` signs the Admin / Principal out after `config.adminIdleMinutes` idle minutes, with a notice a minute before (ADR-048).
 - `useCapsLock` warns when Caps Lock is on in a password field.
 - `usePrinting` reports when the browser is printing, so print-only documents mount only then (ADR-026, `cliniq-print-patterns`).

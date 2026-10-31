@@ -1,6 +1,6 @@
 # mock-db: the frontend's single source of mock data
 
-Last checked against the code on Thursday, October 29, 2026 (commit dde64408).
+Last checked against the code on Saturday, October 31, 2026 (commit 9b4861db).
 
 Every CLINIQ screen reads and writes data through this folder during the frontend-first phases
 (ADR-006). Edit `mock-db.json` and every page changes with it. Decision record:
@@ -108,7 +108,7 @@ on every record. Every screen now reads both kinds of patient; lists show the St
 One account per role, plus `demo.new` (a second School Clinician), which has `mustChangePassword: true` for the Force Password
 Change screen (#2). Passwords are in `frontendOnly.devAccounts` and are deliberately fake
 (`demo-…` / `dev-only-…`). The mock session (`session.ts`) exists only after a successful Login with one of
-these accounts. It lasts one week, like the planned Sanctum token, and Log out ends it.
+these accounts. It lasts one week, like the planned Sanctum session (ADR-015, ADR-056), and Log out ends it.
 
 | Role | Username | Password | Password change required |
 |---|---|---|---|

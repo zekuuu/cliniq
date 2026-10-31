@@ -78,7 +78,7 @@ routes such as `/`, `/visits/new`, and `/students`.
 
 `?mode=edit` was also part of the earlier scaffold. Inventory editing now uses
 `/inventory/new?item=<item-id>`, while student editing uses the path
-`/students/<student-number>/edit`. Do not add `mode=edit` to new links.
+`/students/<student-id>/edit`. Do not add `mode=edit` to new links.
 
 ### Documented examples that are not implemented yet
 

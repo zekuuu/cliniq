@@ -9,7 +9,10 @@ Encoding, medical history, allergies, emergency contacts, the optional birthdate
 
 ## Rules that matter
 - The LRN is entered by the School Clinician, unique, and masked on lists (ADR-028); single-student screens and printouts show it in full (ADR-040).
-- Multi-student screens never show a name (ADR-004).
+- Multi-student screens never show a name (ADR-004), except the Student List and Staff List, which are deliberate masterlists.
+- Section is optional (ADR-047); a visit or incident keeps the section it had when saved.
+- Empty allergies and conditions read "None recorded" (ADR-049, ADR-051).
+- A student has no own number; the optional birthdate gives the age in the Profile header, and the full date shows only in the profile details, the Edit form and the printout (ADR-054).
 
 ## Data and API files
 `api/studentListApi.ts`, `api/studentProfileApi.ts`, `api/studentFormApi.ts`, `api/incompleteRecordsApi.ts`.
@@ -20,5 +23,3 @@ The Student Profile prints a "Student Health Record" sheet with the whole visit 
 ## Not built yet
 Decided, not built:
 - Grade and section from a yearly import of the registrar's list; students missing from it are archived after a review list, and records are kept 5 years from the archive date (ADR-047, ADR-051).
-- Allergies and medical conditions read "None recorded" when empty (ADR-049, ADR-051); the form still offers "None".
-- The student's own number removed; an optional birthdate added, the age shown on the Student Profile header (ADR-054).
