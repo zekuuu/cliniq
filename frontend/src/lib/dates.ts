@@ -18,6 +18,8 @@ export function toISODate(date: Date): ISODate {
   return `${y}-${m}-${d}`
 }
 
+export const isRealDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && toISODate(parseISODate(value)) === value
+
 export function todayISO(now: Date = new Date()): ISODate {
   return toISODate(now)
 }

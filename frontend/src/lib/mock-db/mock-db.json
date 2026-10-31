@@ -7,7 +7,7 @@
     "schema": "Frontend-facing shapes from CLINIQ_Frontend_Context_Brief.md §5. This is NOT a database design; the ERD is a proposed draft, not final or approved."
   },
   "config": {
-    "_note": "Starting values, nurse to confirm (ADR-051): none of these is defined in the requirements. The frequent-visitor numbers (3 visits in 14 days), the follow-up reminder window (7 days), the expiry warning (30 days), the top complaints (5), the follow-up overdue and closing days (3 and 7), the usual vitals ranges and the cluster alert (3 students in 3 days) were chosen by the team on Thursday, October 29, 2026. Stock exactly at an item's threshold counts as low. See ADR-014 and ADR-051.",
+    "_note": "Starting values, nurse to confirm (ADR-051): none of these is defined in the requirements. The frequent-visitor numbers (3 visits in 14 days), the follow-up reminder window (7 days), the expiry warning (30 days), the top complaints (5), the follow-up overdue and closing days (3 and 7), the usual vitals ranges and the cluster alert (3 students in 3 days) were chosen by the team on Thursday, October 29, 2026. unusualAgeYears (3): a birthdate this far from the usual age for the grade gets a soft note, to confirm (ADR-054). Stock exactly at an item's threshold counts as low. See ADR-014 and ADR-051.",
     "showFrequentVisitors": true,
     "frequentVisitorMinVisits": 3,
     "frequentVisitorWindowDays": 14,
@@ -33,10 +33,13 @@
     "followUpOverdueAfterDays": 3,
     "followUpAutoCloseDays": 7,
     "backupKeepLast": 60,
+    "unusualAgeYears": 3,
     "vitalsUsualRanges": {
-      "_note": "Starting ranges, nurse to confirm (ADR-051): common normal ranges by age group, picked by grade because students have no birth date (Kinder ages 3 to 5, Grades 1 to 6 ages 6 to 12, Grades 7 to 12 teenagers; staff adults). A reading outside them gets a soft note on the Visit and Incident forms and never blocks. The fever flag stays at vitalsWarningRanges.feverFromC.",
+      "_note": "Starting ranges, nurse to confirm (ADR-051): common normal ranges by age group. The group follows the age when the student has a birthdate (ADR-054): grades1to6FromAge and grades7to12FromAge are starting values, nurse to confirm. With no birthdate the grade picks it; staff are adults. A reading outside them gets a soft note on the Visit and Incident forms and never blocks. The fever flag stays at vitalsWarningRanges.feverFromC.",
       "temperatureMinC": 36,
       "oxygenSaturationMinPct": 95,
+      "grades1to6FromAge": 6,
+      "grades7to12FromAge": 13,
       "byAgeGroup": {
         "kinder": { "pulseBpm": { "min": 80, "max": 110 }, "systolic": { "min": 95, "max": 110 }, "diastolic": { "min": 60, "max": 75 } },
         "grades1to6": { "pulseBpm": { "min": 70, "max": 100 }, "systolic": { "min": 100, "max": 120 }, "diastolic": { "min": 60, "max": 75 } },
@@ -74,7 +77,7 @@
       "lrn": "000000260001",
       "fullName": "Gian Quizon",
       "gradeLevel": "Kinder",
-      "contactInfo": "0900-000-1000",
+      "birthDate": "2021-09-22",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -92,7 +95,7 @@
       "lrn": "000000200002",
       "fullName": "Oliver Valdez",
       "gradeLevel": "Grade 1",
-      "contactInfo": "0900-000-1001",
+      "birthDate": "2020-08-16",
       "allergies": ["Peanuts"],
       "medicalConditions": ["Allergic rhinitis"],
       "emergencyContacts": [
@@ -110,7 +113,7 @@
       "lrn": "000000260003",
       "fullName": "Erica Umali",
       "gradeLevel": "Grade 2",
-      "contactInfo": "0900-000-1002",
+      "birthDate": "2019-07-11",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -128,7 +131,7 @@
       "lrn": "000000220004",
       "fullName": "Marco Quizon",
       "gradeLevel": "Grade 3",
-      "contactInfo": "0900-000-1003",
+      "birthDate": "2018-06-04",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -146,7 +149,7 @@
       "lrn": "000000210005",
       "fullName": "Patricia Fajardo",
       "gradeLevel": "Grade 4",
-      "contactInfo": "0900-000-1004",
+      "birthDate": null,
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -164,7 +167,7 @@
       "lrn": "000000230006",
       "fullName": "Marco Umali",
       "gradeLevel": "Grade 5",
-      "contactInfo": "0900-000-1005",
+      "birthDate": "2016-03-22",
       "allergies": ["Penicillin"],
       "medicalConditions": ["Asthma"],
       "emergencyContacts": [],
@@ -175,7 +178,7 @@
       "lrn": "000000260007",
       "fullName": "Warren Rivera",
       "gradeLevel": "Grade 6",
-      "contactInfo": "0900-000-1006",
+      "birthDate": "2015-02-14",
       "allergies": ["Shrimp"],
       "medicalConditions": ["Allergic rhinitis"],
       "emergencyContacts": [
@@ -193,7 +196,7 @@
       "lrn": "000000200008",
       "fullName": "Francine Ocampo",
       "gradeLevel": "Grade 7",
-      "contactInfo": "0900-000-1007",
+      "birthDate": "2014-09-05",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -211,7 +214,7 @@
       "lrn": "000000220009",
       "fullName": "Vina Quizon",
       "gradeLevel": "Grade 8",
-      "contactInfo": "0900-000-1008",
+      "birthDate": "2013-07-30",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -229,7 +232,7 @@
       "lrn": "000000220010",
       "fullName": "Santi Quizon",
       "gradeLevel": "Grade 9",
-      "contactInfo": "0900-000-1009",
+      "birthDate": "2012-06-23",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -247,7 +250,7 @@
       "lrn": "000000240011",
       "fullName": "Erica Panganiban",
       "gradeLevel": "Grade 10",
-      "contactInfo": "0900-000-1010",
+      "birthDate": "2011-05-18",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -265,7 +268,7 @@
       "lrn": "000000230012",
       "fullName": "Danica Cabrera",
       "gradeLevel": "Grade 11",
-      "contactInfo": "0900-000-1011",
+      "birthDate": "2010-04-11",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -289,7 +292,7 @@
       "lrn": "000000140013",
       "fullName": "Elijah Buenaventura",
       "gradeLevel": "Grade 12",
-      "contactInfo": "0900-000-1012",
+      "birthDate": "2009-03-05",
       "allergies": [],
       "medicalConditions": ["Allergic rhinitis"],
       "emergencyContacts": [
@@ -307,7 +310,7 @@
       "lrn": "000000240014",
       "fullName": "Dominic Jimenez",
       "gradeLevel": "Kinder",
-      "contactInfo": "0900-000-1013",
+      "birthDate": null,
       "allergies": ["Dust mites"],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -325,7 +328,7 @@
       "lrn": "000000260015",
       "fullName": "Zach Valdez",
       "gradeLevel": "Grade 1",
-      "contactInfo": "0900-000-1014",
+      "birthDate": "2020-08-15",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -343,7 +346,7 @@
       "lrn": "000000200016",
       "fullName": "Warren Katigbak",
       "gradeLevel": "Grade 2",
-      "contactInfo": "0900-000-1015",
+      "birthDate": "2019-07-10",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -361,7 +364,7 @@
       "lrn": "000000230017",
       "fullName": "Marco Nepomuceno",
       "gradeLevel": "Grade 3",
-      "contactInfo": "0900-000-1016",
+      "birthDate": "2018-06-03",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -379,7 +382,7 @@
       "lrn": "000000230018",
       "fullName": "Gian Ilagan",
       "gradeLevel": "Grade 4",
-      "contactInfo": "0900-000-1017",
+      "birthDate": "2017-04-27",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [],
@@ -390,7 +393,7 @@
       "lrn": "000000220019",
       "fullName": "Danica Lacson",
       "gradeLevel": "Grade 5",
-      "contactInfo": "0900-000-1018",
+      "birthDate": "2016-03-21",
       "allergies": [],
       "medicalConditions": ["Eczema"],
       "emergencyContacts": [
@@ -408,7 +411,7 @@
       "lrn": "000000260020",
       "fullName": "Danica Tuazon",
       "gradeLevel": "Grade 6",
-      "contactInfo": "0900-000-1019",
+      "birthDate": "2015-02-13",
       "allergies": ["Peanuts"],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -426,7 +429,7 @@
       "lrn": "000000260021",
       "fullName": "Oliver Katigbak",
       "gradeLevel": "Grade 7",
-      "contactInfo": "0900-000-1020",
+      "birthDate": "2014-09-04",
       "allergies": ["Shrimp"],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -444,7 +447,7 @@
       "lrn": "000000210022",
       "fullName": "Andrei Buenaventura",
       "gradeLevel": "Grade 8",
-      "contactInfo": "0900-000-1021",
+      "birthDate": "2013-07-29",
       "allergies": ["Shrimp"],
       "medicalConditions": ["Asthma"],
       "emergencyContacts": [
@@ -462,7 +465,7 @@
       "lrn": "000000250023",
       "fullName": "Francine Yap",
       "gradeLevel": "Grade 9",
-      "contactInfo": "0900-000-1022",
+      "birthDate": null,
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -480,7 +483,7 @@
       "lrn": "000000230024",
       "fullName": "Uriel Tuazon",
       "gradeLevel": "Grade 10",
-      "contactInfo": "",
+      "birthDate": "2011-05-17",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -498,7 +501,7 @@
       "lrn": "000000220025",
       "fullName": "Erica Dimaculangan",
       "gradeLevel": "Grade 11",
-      "contactInfo": "0900-000-1024",
+      "birthDate": "2010-04-10",
       "allergies": ["Peanuts"],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -516,7 +519,7 @@
       "lrn": "000000140026",
       "fullName": "Bryan Salazar",
       "gradeLevel": "Grade 12",
-      "contactInfo": "0900-000-1025",
+      "birthDate": "2009-03-04",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -534,7 +537,7 @@
       "lrn": "000000230027",
       "fullName": "Jasmine Hernandez",
       "gradeLevel": "Kinder",
-      "contactInfo": "0900-000-1026",
+      "birthDate": "2021-09-20",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -552,7 +555,7 @@
       "lrn": "000000230028",
       "fullName": "Hannah Macaraeg",
       "gradeLevel": "Grade 1",
-      "contactInfo": "0900-000-1027",
+      "birthDate": "2020-08-14",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -570,7 +573,7 @@
       "lrn": "000000260029",
       "fullName": "Patricia Yap",
       "gradeLevel": "Grade 2",
-      "contactInfo": "0900-000-1028",
+      "birthDate": "2019-07-09",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -588,7 +591,7 @@
       "lrn": "000000240030",
       "fullName": "Carlo Zamora",
       "gradeLevel": "Grade 3",
-      "contactInfo": "0900-000-1029",
+      "birthDate": "2018-06-02",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -606,7 +609,7 @@
       "lrn": "000000240031",
       "fullName": "Ivan Yap",
       "gradeLevel": "Grade 4",
-      "contactInfo": "0900-000-1030",
+      "birthDate": "2017-04-26",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -624,7 +627,7 @@
       "lrn": "000000250032",
       "fullName": "Trisha Tuazon",
       "gradeLevel": "Grade 5",
-      "contactInfo": "",
+      "birthDate": null,
       "allergies": ["Peanuts"],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -642,7 +645,7 @@
       "lrn": "000000200033",
       "fullName": "Bryan Yap",
       "gradeLevel": "Grade 6",
-      "contactInfo": "0900-000-1032",
+      "birthDate": "2015-02-12",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -660,7 +663,7 @@
       "lrn": "000000200034",
       "fullName": "Rhea Quizon",
       "gradeLevel": "Grade 7",
-      "contactInfo": "0900-000-1033",
+      "birthDate": "2014-09-03",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -678,7 +681,7 @@
       "lrn": "000000210035",
       "fullName": "Ivan Hernandez",
       "gradeLevel": "Grade 8",
-      "contactInfo": "0900-000-1034",
+      "birthDate": "2013-07-28",
       "allergies": ["Penicillin"],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -696,7 +699,7 @@
       "lrn": "000000200036",
       "fullName": "Bryan Buenaventura",
       "gradeLevel": "Grade 9",
-      "contactInfo": "0900-000-1035",
+      "birthDate": "2012-06-21",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -714,7 +717,7 @@
       "lrn": "000000200037",
       "fullName": "Kian Quizon",
       "gradeLevel": "Grade 10",
-      "contactInfo": "0900-000-1036",
+      "birthDate": "2011-05-16",
       "allergies": [],
       "medicalConditions": ["Eczema"],
       "emergencyContacts": [
@@ -732,7 +735,7 @@
       "lrn": "000000210038",
       "fullName": "Warren Tuazon",
       "gradeLevel": "Grade 11",
-      "contactInfo": "0900-000-1037",
+      "birthDate": "2010-04-09",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -750,7 +753,7 @@
       "lrn": "000000230039",
       "fullName": "Hannah Lacson",
       "gradeLevel": "Grade 12",
-      "contactInfo": "0900-000-1038",
+      "birthDate": "2009-03-03",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -768,7 +771,7 @@
       "lrn": "000000200040",
       "fullName": "Uriel Estrella",
       "gradeLevel": "Kinder",
-      "contactInfo": "0900-000-1039",
+      "birthDate": "2021-09-19",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -786,7 +789,7 @@
       "lrn": "000000210041",
       "fullName": "Santi Jimenez",
       "gradeLevel": "Grade 1",
-      "contactInfo": "0900-000-1040",
+      "birthDate": null,
       "allergies": ["Peanuts"],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -804,7 +807,7 @@
       "lrn": "000000240042",
       "fullName": "Dominic Nepomuceno",
       "gradeLevel": "Grade 2",
-      "contactInfo": "0900-000-1041",
+      "birthDate": "2019-07-08",
       "allergies": ["Peanuts"],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -822,7 +825,7 @@
       "lrn": "000000210043",
       "fullName": "Francine Nepomuceno",
       "gradeLevel": "Grade 3",
-      "contactInfo": "0900-000-1042",
+      "birthDate": "2018-06-01",
       "allergies": ["Shrimp"],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -840,7 +843,7 @@
       "lrn": "000000220044",
       "fullName": "Francine Lacson",
       "gradeLevel": "Grade 4",
-      "contactInfo": "0900-000-1043",
+      "birthDate": "2017-04-25",
       "allergies": [],
       "medicalConditions": ["Allergic rhinitis"],
       "emergencyContacts": [
@@ -858,7 +861,7 @@
       "lrn": "000000210045",
       "fullName": "Francine Rivera",
       "gradeLevel": "Grade 5",
-      "contactInfo": "0900-000-1044",
+      "birthDate": "2016-03-19",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -876,7 +879,7 @@
       "lrn": "000000200046",
       "fullName": "Zach Panganiban",
       "gradeLevel": "Grade 6",
-      "contactInfo": "0900-000-1045",
+      "birthDate": "2015-02-11",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -894,7 +897,7 @@
       "lrn": "000000250047",
       "fullName": "Czarina Valdez",
       "gradeLevel": "Grade 7",
-      "contactInfo": "0900-000-1046",
+      "birthDate": "2014-09-02",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -912,7 +915,7 @@
       "lrn": "000000230048",
       "fullName": "Uriel Abalos",
       "gradeLevel": "Grade 8",
-      "contactInfo": "0900-000-1047",
+      "birthDate": "2013-07-27",
       "allergies": ["Penicillin"],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -930,7 +933,7 @@
       "lrn": "000000230049",
       "fullName": "Erica Lacson",
       "gradeLevel": "Grade 9",
-      "contactInfo": "0900-000-1048",
+      "birthDate": "2012-06-20",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -948,7 +951,7 @@
       "lrn": "000000260050",
       "fullName": "Hannah Umali",
       "gradeLevel": "Grade 10",
-      "contactInfo": "0900-000-1049",
+      "birthDate": null,
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -966,7 +969,7 @@
       "lrn": "000000220051",
       "fullName": "Oliver Cabrera",
       "gradeLevel": "Grade 11",
-      "contactInfo": "0900-000-1050",
+      "birthDate": "2010-04-08",
       "allergies": ["Peanuts"],
       "medicalConditions": [],
       "emergencyContacts": [
@@ -984,7 +987,7 @@
       "lrn": "000000220052",
       "fullName": "Althea Lacson",
       "gradeLevel": "Grade 12",
-      "contactInfo": "0900-000-1051",
+      "birthDate": "2009-03-02",
       "allergies": [],
       "medicalConditions": [],
       "emergencyContacts": [

@@ -137,6 +137,8 @@ export interface MockDbConfig {
   vitalsUsualRanges: VitalsUsualRanges
   /** Backups kept per location, oldest removed first (ADR-052). The backend prunes; the mock only shows it. */
   backupKeepLast: number
+  /** An age this many years from the usual age for the grade gets a soft note (ADR-054). Starting value, to confirm. */
+  unusualAgeYears: number
 }
 
 /**
@@ -161,6 +163,10 @@ export interface VitalsUsualRanges {
   temperatureMinC: number
   /** An oximeter reading below this is noted. */
   oxygenSaturationMinPct: number
+  /** From this age a student is in the Grades 1 to 6 group; younger is the Kinder group (ADR-054). Nurse to confirm. */
+  grades1to6FromAge: number
+  /** From this age a student is in the Grades 7 to 12 group (ADR-054). Nurse to confirm. */
+  grades7to12FromAge: number
   byAgeGroup: Record<AgeGroup, { pulseBpm: VitalRange; systolic: VitalRange; diastolic: VitalRange }>
 }
 

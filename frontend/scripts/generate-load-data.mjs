@@ -51,7 +51,7 @@ export function expandState(saved, { students = 600, years = 5, visitsPerDay = 9
       fullName: `${pick(FIRST)} ${last}`,
       gradeLevel: pick(GRADES),
       sex: i % 2 ? 'male' : 'female',
-      contactInfo: `0917-${pad(i % 1000, 3)}-${pad(i, 4)}`,
+      birthDate: null,
       allergies: rand() < 0.08 ? ['Peanuts'] : [],
       medicalConditions: rand() < 0.06 ? ['Asthma'] : [],
       emergencyContacts: [{ name: `${pick(FIRST)} ${last}`, relationship: 'Mother', phone: `0918-${pad(i % 1000, 3)}-${pad(i, 4)}`, verified: true }],

@@ -28,7 +28,8 @@ export interface Student {
   fullName: string
   gradeLevel: string
   sex: StudentSex
-  contactInfo: string
+  /** Optional (ADR-054). The age is calculated from it, never stored. Single-student screens only. PROVISIONAL, pending the ERD. */
+  birthDate: ISODate | null
   allergies: string[]
   medicalConditions: string[]
   /** Ordered contacts; the first is the student's primary emergency contact. */
@@ -44,6 +45,9 @@ export interface Student {
  * ADR-004). There's no `fullName` here on purpose, so a list row can't render a name by accident.
  */
 export type StudentListRef = Pick<Student, 'id' | 'lrn'>
+
+/** A student as a multi-student screen may hold it: never the birthdate (ADR-054). */
+export type StudentListRow = Omit<Student, 'birthDate'>
 
 /**
  * One result of a deliberate student search (a single lookup, so the name is shown): enough to

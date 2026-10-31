@@ -85,6 +85,11 @@ export function migratePersistedState(saved: Saved): Saved {
     if (student.sex === 'male' || student.sex === 'female') continue
     student.sex = index % 2 === 0 ? 'female' : 'male'
   }
+  // ADR-054: a student's own number is gone and the birthdate is new. Staff keep their number.
+  for (const student of saved.state.students as unknown as Array<Record<string, unknown>>) {
+    delete student.contactInfo
+    student.birthDate ??= null
+  }
   // Panel review IN-6 (D6): the outcome list was reworded. These old values exist only here, so a
   // browser that saved them before the change reads the new ones.
   const renamedOutcomes: Record<string, string> = {
@@ -113,6 +118,10 @@ export function migratePersistedState(saved: Saved): Saved {
     if (typeof config[key] !== 'number') config[key] = seed.config[key]
   // ADR-051: the usual vitals ranges, and the frequent-visitor window's new starting value.
   if (!config.vitalsUsualRanges) config.vitalsUsualRanges = structuredClone(seed.config.vitalsUsualRanges)
+  // ADR-054: the age limits of the usual-range groups, and the unusual-age note.
+  const usual = config.vitalsUsualRanges as Record<string, unknown>
+  for (const key of ['grades1to6FromAge', 'grades7to12FromAge'] as const) usual[key] ??= seed.config.vitalsUsualRanges[key]
+  if (typeof config.unusualAgeYears !== 'number') config.unusualAgeYears = seed.config.unusualAgeYears
   // ADR-052 and ADR-053: backup locations, how many backups to keep, and the staff type "Other".
   if (typeof config.backupKeepLast !== 'number') config.backupKeepLast = seed.config.backupKeepLast
   const types = config.personnelTypes as string[]

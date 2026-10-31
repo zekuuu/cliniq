@@ -1,3 +1,4 @@
+import { isRealDate, todayISO } from '../dates'
 import { isRelativeDate, isRelativeDateTime } from './relativeDates'
 import type { MockDbSeed } from './types'
 
@@ -24,9 +25,9 @@ export const CALENDAR_EVENT_TITLE_MAX = 60
 
 const FIELDS = {
   top: ['meta', 'config', 'users', 'students', 'personnel', 'visits', 'incidents', 'followUps', 'inventoryItems', 'reports', 'backupLogs', 'auditLog', 'frontendOnly'],
-  config: ['_note', 'showFrequentVisitors', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'personnelTypes', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges', 'medicalCertificateAfterDays', 'adminIdleMinutes', 'clusterMinStudents', 'clusterWindowDays', 'followUpOverdueAfterDays', 'followUpAutoCloseDays', 'vitalsUsualRanges', 'backupKeepLast'],
+  config: ['_note', 'showFrequentVisitors', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'personnelTypes', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges', 'medicalCertificateAfterDays', 'adminIdleMinutes', 'clusterMinStudents', 'clusterWindowDays', 'followUpOverdueAfterDays', 'followUpAutoCloseDays', 'vitalsUsualRanges', 'backupKeepLast', 'unusualAgeYears'],
   users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture', 'deactivatedAt'],
-  students: ['id', 'lrn', 'fullName', 'gradeLevel', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
+  students: ['id', 'lrn', 'fullName', 'gradeLevel', 'birthDate', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
   personnel: ['id', 'staffNumber', 'fullName', 'type', 'department', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived'],
   emergencyContact: ['name', 'relationship', 'phone', 'verified'],
   visits: ['id', 'studentId', 'dateTime', 'complaint', 'treatment', 'disposition', 'loggedByUserId', 'eventTag', 'itemsGiven', 'excuseLetterDraft', 'referredTo', 'temperatureC', 'timeOut', 'assistedBy', 'parentGuardian', 'remarks'],
@@ -136,7 +137,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
       }
     } else if (key === 'vitalsUsualRanges') {
       const usual = (value ?? {}) as Rec
-      checkFields('config.vitalsUsualRanges', usual, ['_note', 'temperatureMinC', 'oxygenSaturationMinPct', 'byAgeGroup'])
+      checkFields('config.vitalsUsualRanges', usual, ['_note', 'temperatureMinC', 'oxygenSaturationMinPct', 'grades1to6FromAge', 'grades7to12FromAge', 'byAgeGroup'])
       const groups = (usual.byAgeGroup ?? {}) as Rec
       checkFields('config.vitalsUsualRanges.byAgeGroup', groups, ['kinder', 'grades1to6', 'grades7to12', 'adult'])
       for (const [group, ranges] of Object.entries(groups))
@@ -202,6 +203,10 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     else st.emergencyContacts.forEach((contact, contactIndex) => checkFields(`${w}.emergencyContacts[${contactIndex}]`, contact, FIELDS.emergencyContact))
     if (typeof st.archived !== 'boolean') fail(`${w}.archived: must be true or false`)
     if (st.sex !== undefined) oneOf(`${w}.sex`, st.sex, ENUMS.sex)
+    if (st.birthDate !== null) {
+      if (typeof st.birthDate !== 'string' || !isRealDate(st.birthDate)) fail(`${w}.birthDate: expected a real "YYYY-MM-DD" date or null`)
+      else if (st.birthDate > todayISO()) fail(`${w}.birthDate: can't be in the future`)
+    }
   })
   const studentRef = (where: string, id: unknown, nullable = false) => {
     if (nullable && id === null) return
