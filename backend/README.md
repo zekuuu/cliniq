@@ -1,6 +1,6 @@
 # backend
 
-Last checked against the code on Thursday, October 29, 2026 (commit dde64408).
+Last checked against the code on Saturday, October 31, 2026 (commit 9b4861db).
 
 ## Purpose
 
@@ -8,7 +8,7 @@ The planned Laravel API for CLINIQ, with Sanctum for sign-in (ADR-007) and Maria
 
 ## Current state
 
-**Not started.** This folder holds only this README and an `.env.example`. `composer create-project laravel/laravel .` will generate the standard `app/`, `database/`, `routes/`, `config/` structure here once environment setup is approved and executed (CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md). The database design is a proposed draft awaiting team approval, so no migrations exist.
+**Not started.** This folder holds only this README and an `.env.example`. All backend work happens on a branch called `backend`, changes only this folder, and connects nothing to the frontend yet (ADR-056). `composer create-project laravel/laravel .` will generate the standard `app/`, `database/`, `routes/`, `config/` structure here once environment setup is approved and executed (CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md). The database design is a proposed draft awaiting team approval, so no migrations exist.
 
 ## Planned structure
 
@@ -38,7 +38,7 @@ Mapped to what's already designed:
 - Controllers — one per feature, inside `app/Modules/<Module>/Controllers/`, mirroring `frontend/src/features/`
 - `database/migrations/` — schema, only after team approval of the [proposed ERD](../CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md); the draft is not final or approved, so do not build migrations from it yet
 - `routes/api.php` — all API routes, consumed by the frontend's `src/features/*/api/` folders
-- Auth via Sanctum (CLINIQ-Knowledge-Base/06-Decisions/ADR-007-Stack-Finalization.md)
+- Auth via Sanctum (CLINIQ-Knowledge-Base/06-Decisions/ADR-007-Stack-Finalization.md), in SPA cookie mode (ADR-056)
 
 ## If you are copying a zip export
 
