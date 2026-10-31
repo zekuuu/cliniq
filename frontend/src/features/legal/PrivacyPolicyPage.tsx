@@ -70,7 +70,7 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             <ul className={listClass}>
               <li>
                 <strong>Student information:</strong> name, LRN (Learner Reference Number), grade level, section,
-                date of birth, gender, contact information, emergency contact details, allergies,
+                date of birth (when the school provides it), gender, emergency contact details, allergies,
                 and medical conditions.
               </li>
               <li>
