@@ -191,7 +191,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   list('students').forEach((st, i) => {
     const w = `students[${i}] (${String(st.id)})`
     // Pre-Part 3B seed exports omit Sex; `resolveSeed` supplies a clearly synthetic migration value.
-    checkFields(w, st, FIELDS.students, ['sex'])
+    checkFields(w, st, FIELDS.students, ['sex', 'section'])
     const lrn = String(st.lrn)
     if (!LRN_PATTERN.test(lrn)) fail(`${w}.lrn: "${lrn}" isn't 12 digits (ADR-028)`)
     if (lrns.has(lrn)) fail(`${w}.lrn: duplicate "${lrn}"`)
@@ -295,7 +295,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   const draftVisits = new Set<string>()
   list('visits').forEach((v, i) => {
     const w = `visits[${i}] (${String(v.id)})`
-    checkFields(w, v, FIELDS.visits, ['personnelId'])
+    checkFields(w, v, FIELDS.visits, ['personnelId', 'sectionAtTime'])
     const patient = patientRef(w, v)
     relDateTime(`${w}.dateTime`, v.dateTime)
     oneOf(`${w}.disposition`, v.disposition, ENUMS.disposition)
@@ -334,7 +334,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   const incidentPatient = new Map<string, string>()
   list('incidents').forEach((inc, i) => {
     const w = `incidents[${i}] (${String(inc.id)})`
-    checkFields(w, inc, FIELDS.incidents, ['personnelId'])
+    checkFields(w, inc, FIELDS.incidents, ['personnelId', 'sectionAtTime'])
     const patient = patientRef(w, inc)
     relDateTime(`${w}.time`, inc.time)
     oneOf(`${w}.stage`, inc.stage, ENUMS.stage)
