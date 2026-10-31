@@ -1,4 +1,6 @@
-import type { AgeGroup, VitalRange, VitalsWarningRanges } from './mock-db'
+import type { ISODate } from '../types/entities'
+import { ageOn } from './age'
+import type { AgeGroup, VitalRange, VitalsUsualRanges, VitalsWarningRanges } from './mock-db'
 import { formatDecimal } from './numbers'
 
 /** Readings as typed into a form; a blank or missing one is simply not checked. */
@@ -88,12 +90,18 @@ export function readingText(key: string, value: string | number): string {
 }
 
 /**
- * The usual-range age group (ADR-051), picked by grade because student records have no birth date:
- * Kinder (3 to 5), Grades 1 to 6 (6 to 12), Grades 7 to 12 (teenagers); a staff patient is an adult.
- * Null when the grade isn't one of these, so no usual-range note is shown.
+ * The usual-range age group: by the age on `onDate` (the visit's or incident's own date, ADR-054), with
+ * the limits from config. With no birthdate the grade picks it (ADR-051); a staff patient is an adult.
+ * Null when neither gives a group, so no usual-range note is shown.
  */
-export function ageGroupOf(patient: { kind: 'student'; gradeLevel: string } | { kind: 'personnel' }): AgeGroup | null {
+export function ageGroupOf(
+  patient: { kind: 'student'; gradeLevel: string; birthDate?: ISODate | null } | { kind: 'personnel' },
+  onDate: ISODate,
+  usual?: VitalsUsualRanges,
+): AgeGroup | null {
   if (patient.kind === 'personnel') return 'adult'
+  const age = ageOn(patient.birthDate, onDate)
+  if (usual && age !== null) return age < usual.grades1to6FromAge ? 'kinder' : age < usual.grades7to12FromAge ? 'grades1to6' : 'grades7to12'
   if (patient.gradeLevel === 'Kinder') return 'kinder'
   const grade = Number(patient.gradeLevel.match(/\d+/)?.[0])
   return grade >= 1 && grade <= 6 ? 'grades1to6' : grade >= 7 && grade <= 12 ? 'grades7to12' : null
