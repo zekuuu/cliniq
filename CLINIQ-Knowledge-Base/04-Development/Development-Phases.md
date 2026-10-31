@@ -17,15 +17,17 @@ Both choices are now recorded in ADR-012 and ADR-013. They were implemented duri
 
 ## Frontend Phases
 
+**Status (Saturday, October 31, 2026):** F0 to F3 are built on the mock data layer; the checklist is in `Frontend-Loop-Engineering.md`, and only its F3 exit check stays open. No backend phase has started.
+
 Built first, per the interface-construction-first methodology (ADR-006) — shown to the client for feedback before backend logic is finalized. Uses mock/stub data throughout until the matching backend phase lands.
 
 ### Phase F0 — Environment, Design Foundation, Shared Components
 1. Resolve the two blocking decisions above.
-2. Run the actual Vite scaffold into the already-organized `frontend/` skeleton (`CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md` has the exact commands — still not executed as of this writing).
+2. Run the actual Vite scaffold into the already-organized `frontend/` skeleton (`CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md` has the commands; done).
 3. Install confirmed dependencies: Tailwind, `chart.js` + `react-chartjs-2`, Vitest + RTL, plus whatever Phase 0's two decisions resolved to.
 4. Encode the design tokens from `03-Design/Design-System.md` into Tailwind config / CSS custom properties — the sampled, contrast-verified colors (`brand-green #039935`, `brand-green-dark #035419`, `brand-yellow #EAEA09`, the semantic set), not placeholder values.
 5. Build the generic shared components in `src/components/` — Button (with the primary/secondary/cancel/destructive hierarchy already specified), Card, Badge (with the icon+color+label pattern, never color alone), Input, Modal — the actual design-system-level pieces every screen will reuse.
-6. Build `src/layouts/` — the role-aware App Shell/Nav (Staff sees everything, Admin sees only Reports+Dashboard).
+6. Build `src/layouts/` — the role-aware App Shell/Nav (Staff sees everything, Admin sees the screens listed in `Screen-Inventory.md` #3).
 
 **Definition of done:** a blank app shell renders, role-aware nav switches correctly with mock auth state, and every shared component from `components/` exists and matches the sampled color tokens — nothing screen-specific yet.
 
@@ -53,7 +55,7 @@ Follow the mapping table already defined in `03-Design/Reference-Screens.md` (§
 **Definition of done per module:** screens match their mapped reference pattern, the display-privacy rule is applied correctly (check against `.claude/skills/cliniq-display-privacy/`), and an `08-Logs/Agent-Sessions/` entry exists per the standard format.
 
 ### Phase F3 — Polish & Client Demo Prep
-Keyboard shortcuts (`04-Development/Keyboard-Shortcuts-and-Efficiency.md`) wired up for the highest-frequency actions (jump to New Visit, jump to student search, save-and-new). Full accessibility sweep (`interface-review` skill) across every screen, not just the 5 references. Responsive check on the phone screens specifically — the rest of the app is desktop-primary by design, not by oversight.
+Keyboard shortcuts (`04-Development/Keyboard-Shortcuts-and-Efficiency.md`) wired up for the highest-frequency actions (jump to New Visit, jump to student search, save-and-new). Full accessibility sweep (`interface-review` skill) across every screen, not just the 5 references. The phone-only screens were removed (ADR-033); the app is desktop-primary by design, with a phone navigation menu (ADR-022).
 
 ---
 
@@ -70,10 +72,10 @@ Run the actual Laravel scaffold into `backend/` (commands in `Environment-Setup.
 See `04-Development/Backend-Readiness-Checklist.md` for the current pre-migration readiness checklist.
 
 ### Phase B2 — Auth & RBAC
-Sanctum SPA authentication. Two roles (Staff, Admin/Principal; PE/Sports Instructors have no account, ADR-029) with the specific per-module permission matrix already fully documented in `01-Requirements/Features/Module-Overview.md`'s Access Summary table — this is a direct implementation target, not a design task. Consider a Spatie `laravel-permission`-based approach (flagged in `Skills-Setup.md`) given how closely CLINIQ's access model matches that package's shape. Session lifetime is **1 week until the token expires, with no idle timeout** (`06-Decisions/ADR-015`) — set the expiry accordingly (**ADR-056 chose SPA cookie mode**, so this is the session lifetime, 10080 minutes, and not a token `expiration`).
+Sanctum SPA authentication. Two roles (Staff, Admin/Principal; PE/Sports Instructors have no account, ADR-029) with the specific per-module permission matrix already fully documented in `01-Requirements/Features/Module-Overview.md`'s Access Summary table — this is a direct implementation target, not a design task. Consider a Spatie `laravel-permission`-based approach (flagged in `Skills-Setup.md`) given how closely CLINIQ's access model matches that package's shape. Session lifetime is **1 week**, with no idle timeout for Staff (`06-Decisions/ADR-015`) and a 30-minute idle sign-out for the Admin/Principal (ADR-048) — set the expiry accordingly (**ADR-056 chose SPA cookie mode**, so this is the session lifetime, 10080 minutes, and not a token `expiration`).
 
 ### Phase B3 — Audit Trail Infrastructure (Build Early, Not Late)
-Build this as reusable middleware/service/trait *before* the module APIs below, so each subsequent phase hooks into existing infrastructure instead of retrofitting logging afterward. Must capture: who, what action type, what target record, when — for every login, scan, submission, approval, and create/update/delete/archive, across every module (`Modules-and-Features`, "Audit Trail" section; `.claude/skills/cliniq-audit-trail/`).
+Build this as reusable middleware/service/trait *before* the module APIs below, so each subsequent phase hooks into existing infrastructure instead of retrofitting logging afterward. Must capture: who, what action type, what target record, when — for every login, submission, approval, print, opened profile or incident report, and create/update/delete/archive, across every module (`Modules-and-Features`, "Audit Trail" section; `.claude/skills/cliniq-audit-trail/`).
 
 ### Phase B4 — Student Records API
 CRUD, LRN validation (12 digits, unique; ADR-028), duplicate detection (name + grade level), archive (not delete) semantics.
@@ -88,15 +90,15 @@ The QR Digital Health ID API was removed with the feature (ADR-027). The phase n
 Two-stage incident endpoints (Stage 1 minimal-fields save; Stage 2 completion). Hospital referral, parent-notification log (multi-attempt, timestamped). Follow-Up Handling endpoints (shared with B5).
 
 ### Phase B8 — Inventory API
-The stock-flow logic exactly as specified in `Modules-and-Features` §8: dispense decrements + auto threshold-check; restock is a separate action, increments + updates the one expiration date tracked per item; a dispense that would go negative warns but does not block the save (a deliberate, already-decided behavior — don't "fix" this into a hard block).
+The stock-flow logic exactly as specified in `Modules-and-Features` §8: dispense decrements + auto threshold-check; stock is held in received batches, dispensed earliest-expiring usable batch first (ADR-030); restock is a separate action that adds a batch (ADR-035); a dispense that would go negative warns but does not block the save (a deliberate, already-decided behavior — don't "fix" this into a hard block).
 
 ### Phase B9 — Dashboard & Reports API
-Aggregation queries for the Clinic Overview Dashboard (counts, trends, frequent-visitor flags by masked LRN, due/upcoming follow-ups computed on request — not a background job, since none exists in this architecture). Monthly/Incident/Health Summary report generation.
+Aggregation queries for the Clinic Overview Dashboard (counts, trends, frequent-visitor flags by masked LRN, due/upcoming follow-ups computed on request — not a background job, since none exists in this architecture). Monthly/Incident/Complaint summary report generation, and the monthly inventory sheet.
 
 **Holiday sync job (ADR-020).** A monthly scheduled job fetches this year's and next year's nationwide Philippine holidays when internet is available, stores them for `getHolidays`, keeps the last good data on failure, updates `lastUpdated`, and raises a warning when the last successful sync is stale (about 45 days) or next year's list is still missing in December. This is the one scheduled job in this architecture, and it never blocks a page load. The source is still open (ADR-020 lists two candidates); before choosing, read the source code, call it, compare its current-year output with the official proclamation, check Islamic and special days, test failure cases (site down, empty result, layout change), pin versions, and keep last-good data.
 
 ### Phase B10 — User Management & Backup Verification API
-Account CRUD for all three roles. Backup-status endpoint reading whatever the `mysqldump`-based backup mechanism (Project Plan §5.3) actually produces — this is the same tracked-file-size signal that Modules & Features already names as the future trigger for building retention-purge tooling (`02-Architecture/Database/Data-Retention-Policy.md`).
+Account CRUD for both roles. Backup-status endpoint reading whatever the `mysqldump`-based backup mechanism (Project Plan §5.3) actually produces — this is the same tracked-file-size signal that Modules & Features already names as the future trigger for building retention-purge tooling (`02-Architecture/Database/Data-Retention-Policy.md`).
 
 ---
 
@@ -107,8 +109,8 @@ Per ADR-006, frontend leads and backend follows *per feature*, not "all frontend
 | Frontend phase | Matching backend phase | Notes |
 |---|---|---|
 | F0 | B0 | Can run in parallel — no dependency |
-| — | B1 (schema) | Blocked independently on the SRS; doesn't block F0/F1, since F1 runs on mock data |
-| — | B2, B3 (auth, audit) | Should land *before* F2 gets far, since F2's screens increasingly assume real login state, not mocked |
+| — | B1 (schema) | Blocked on the team's approval of the ERD (ADR-056); doesn't block the frontend, which runs on mock data |
+| — | B2, B3 (auth, audit) | Planned to land before F2 got far; F2 finished on mocks first, so these come before any module API |
 | F1 (5 reference screens) | — | Runs entirely on mock data — this is the point; client feedback happens before backend logic is finalized |
 | F2, module by module | B4–B10, matching module | Once a module's frontend is validated with the client, wire it to its real backend phase rather than leaving it on mocks indefinitely |
 | F3 (polish) | — | No backend equivalent; purely frontend quality |

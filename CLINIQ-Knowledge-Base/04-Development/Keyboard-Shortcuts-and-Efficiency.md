@@ -8,7 +8,7 @@ This maps to Nielsen's usability heuristic **"Flexibility and efficiency of use"
 ## How this is different from what's already built
 This requirement covers **in-app keyboard navigation**: the desktop workstation is used constantly, so frequent actions should be reachable without the mouse.
 
-## Candidate shortcuts (to refine during frontend construction, not finalized)
+## Candidate shortcuts (the first list; see Status for what was built)
 - Jump to New Visit Entry
 - Jump to student search
 - Save-and-new (submit the current form, immediately open a blank one of the same type) — likely the single highest-value shortcut given how repetitive visit logging is
@@ -20,4 +20,4 @@ This requirement covers **in-app keyboard navigation**: the desktop workstation 
 - **Consistent across the app** — the same shortcut always does the same kind of thing, matching the existing Consistency principle in the Design & UX Guidelines.
 
 ## Status
-Requirement confirmed; specific key bindings not yet finalized — this is frontend-construction-phase work, to be settled once the 5 reference screens (see `03-Design/Reference-Screens.md`) are built and there's a real UI to bind shortcuts to.
+Built (`frontend/src/components/KeyboardShortcuts.tsx`): `Alt + N` New Visit, `Alt + I` Report Incident, `Alt + K` Student Search, `Alt + D` Dashboard, `Shift + Alt + N` save the visit and start another, `?` for the list.

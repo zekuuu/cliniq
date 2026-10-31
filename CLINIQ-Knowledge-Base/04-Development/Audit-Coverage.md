@@ -14,7 +14,7 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | Signs in | `login` | user | — | `lib/mock-db/auth.test.ts` |
 | Signs out | `logout` | — | — | `layouts/AppShell.test.tsx` |
 | Gets locked out (5 wrong passwords in a row at sign-in; locked 30 minutes) | `login` | user | "Account locked for 30 minutes after 5 wrong passwords (sign-in)" | `features/backup/AccessAndBackup.test.tsx` |
-| Changes their password (first sign-in) | `update` | user | "Changed password" | — |
+| Changes their password (first sign-in, or Change Password) | `update` | user | "Changed password" | — |
 | Admin creates an account | `create` | user | — | `features/user-management/accounts.test.ts` |
 | Admin edits an account (name, username, role, picture) | `update` | user | changed field names | `features/user-management/profilePicture.test.ts` |
 | Admin disables / enables an account | `update` | user | "Disabled account" / "Enabled account" | `features/backup/AccessAndBackup.test.tsx` |
