@@ -414,6 +414,12 @@ export async function changeMockPassword(userId: string, nextPassword: string): 
   })
 }
 
+/** Self-service change: the signed-in user proves the current password first. */
+export async function changeOwnPassword(userId: string, currentPassword: string, nextPassword: string): Promise<void> {
+  if (fakePasswordHistory(view(), userId)[0] !== currentPassword) throw new Error('Your current password is incorrect.')
+  await changeMockPassword(userId, nextPassword)
+}
+
 function userName(state: DbState, id: string | null): string | null {
   if (!id) return null
   return state.users.find((u) => u.id === id)?.name ?? 'Unknown user'
@@ -440,8 +446,10 @@ function patientOf(state: DbState, input: { studentId?: string | null; personnel
 const samePatient = (a: PatientRef, b: PatientRef) => a.studentId === b.studentId && a.personnelId === b.personnelId
 
 /** ADR-047: a student's visit or incident keeps the grade they were in when it was saved. Staff have none. */
-function gradeAtTime(s: DbState, patient: PatientRef): Pick<Visit, 'gradeLevelAtTime'> {
-  return patient.studentId ? { gradeLevelAtTime: studentOf(s, patient.studentId).gradeLevel } : {}
+function gradeAtTime(s: DbState, patient: PatientRef): Pick<Visit, 'gradeLevelAtTime' | 'sectionAtTime'> {
+  if (!patient.studentId) return {}
+  const student = studentOf(s, patient.studentId)
+  return { gradeLevelAtTime: student.gradeLevel, ...(student.section ? { sectionAtTime: student.section } : {}) }
 }
 
 // ---- reference vocabularies (frontendOnly, mock-only) ---------------------------------------
@@ -686,7 +694,7 @@ export function getStudentHistory(studentId: string, limit = 8): Promise<Student
 
 export type StudentInput = Pick<
   Student,
-  'lrn' | 'fullName' | 'gradeLevel' | 'sex' | 'birthDate' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
+  'lrn' | 'fullName' | 'gradeLevel' | 'section' | 'sex' | 'birthDate' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
 >
 
 export interface DuplicateMatch {
@@ -779,10 +787,13 @@ export function saveStudent(
     if (birthDate && birthDate > s.today) throw new Error("The birthdate can't be in the future.")
 
     const existing = options.studentId ? studentOf(s, options.studentId) : null
+    const section = input.section?.trim() || null
     const fields = {
       lrn,
       fullName: input.fullName.trim(),
       gradeLevel: input.gradeLevel,
+      // A record that never had a section stays without the field, so an unrelated edit isn't audited.
+      ...(section || existing?.section ? { section } : {}),
       sex: input.sex,
       birthDate,
       allergies: input.allergies,

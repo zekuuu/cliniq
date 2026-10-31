@@ -27,6 +27,8 @@ export interface Student {
   lrn: string
   fullName: string
   gradeLevel: string
+  /** Optional until the yearly import fills it (ADR-047). PROVISIONAL, pending the ERD. */
+  section?: string | null
   sex: StudentSex
   /** Optional (ADR-054). The age is calculated from it, never stored. Single-student screens only. PROVISIONAL, pending the ERD. */
   birthDate: ISODate | null
@@ -172,9 +174,11 @@ export interface Visit extends PatientRef {
   extraComplaints?: string[]
   /**
    * The student's grade level when the visit was saved (ADR-047), so an old Grade 7 visit stays Grade 7
-   * after promotion. Student records have no section, so none is kept. Staff visits have none. PROVISIONAL.
+   * after promotion. Staff visits have none. PROVISIONAL.
    */
   gradeLevelAtTime?: string | null
+  /** The section at the same moment, when the student had one (ADR-047). PROVISIONAL. */
+  sectionAtTime?: string | null
 }
 
 /** Who collected a student who was sent home or referred. Every part is optional. PROVISIONAL, pending the ERD. */
@@ -272,6 +276,7 @@ export interface Incident extends PatientRef {
   sourceVisitId?: string | null
   /** The student's grade level when Stage 1 was saved (ADR-047). Staff incidents have none. PROVISIONAL, pending the ERD. */
   gradeLevelAtTime?: string | null
+  sectionAtTime?: string | null
   /** The Admin's Acknowledge on an approved report (ADR-048): who and when. Never undone. PROVISIONAL, pending the ERD. */
   acknowledged?: { byUserId: string; at: ISODateTime } | null
   /** Optional free text with suggestions, Stage 2 only (D11). Absent on older records. PROVISIONAL, pending the ERD. */

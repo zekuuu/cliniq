@@ -24,6 +24,8 @@ export interface StudentFormValues {
   lrn: string
   fullName: string
   gradeLevel: string
+  /** Optional (ADR-047). */
+  section: string
   sex: StudentSex | ''
   /** `YYYY-MM-DD`, or '' when not given. Optional (ADR-054). */
   birthDate: string
@@ -71,6 +73,7 @@ export async function submitStudentForm(
       lrn: values.lrn,
       fullName: values.fullName,
       gradeLevel: values.gradeLevel,
+      section: values.section,
       sex: values.sex as StudentSex,
       birthDate: values.birthDate || null,
       allergies: parseList(values.allergies),
