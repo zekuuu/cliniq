@@ -30,7 +30,7 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             id="privacy-policy-title"
             className="mt-6 text-2xl font-bold leading-9 tracking-tight text-text-primary"
           >
-            CLINIQ Privacy Policy — Draft
+            <span className="font-brand tracking-wide">CLINIQ</span> Privacy Policy — Draft
           </h1>
 
           <p className="mt-5">

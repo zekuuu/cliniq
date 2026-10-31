@@ -75,7 +75,7 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
           <div className="flex items-center gap-3">
             <img src="/MCA_Logo.png" alt="Mendez Christian Academy logo" className="size-14 shrink-0 object-contain" />
             <span className="flex flex-col gap-1">
-              <span className="text-[1.75rem] leading-none font-bold tracking-tight whitespace-nowrap text-brand-green-dark">CLINIQ</span>
+              <span className="font-brand text-[1.75rem] leading-none font-bold tracking-wide whitespace-nowrap text-brand-green-dark">CLINIQ</span>
               <span className="text-sm leading-tight font-medium whitespace-nowrap text-text-secondary">Mendez Christian Academy</span>
             </span>
           </div>
