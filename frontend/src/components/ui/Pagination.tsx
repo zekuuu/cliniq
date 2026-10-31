@@ -9,7 +9,7 @@ export interface PaginationProps {
   pageSize: number
   onPageChange: (page: number) => void
   itemLabel: string
-  /** Shows the "Rows per page" choice (10 or 20); the caller returns to page 1 when it changes. */
+  /** Shows the "Rows per page" choice; the caller returns to page 1 when it changes. */
   onPageSizeChange?: (size: PageSize) => void
 }
 
