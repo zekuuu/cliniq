@@ -11,9 +11,9 @@ export function ageOn(birthDate: ISODate | null | undefined, onDate: ISODate): n
   return onDate.slice(5) < birthDate.slice(5) ? years - 1 : years
 }
 
-/** "9 years", "1 year". */
+/** "9 years old", "1 year old". */
 export function ageText(age: number): string {
-  return `${age} year${age === 1 ? '' : 's'}`
+  return `${age} year${age === 1 ? '' : 's'} old`
 }
 
 /** The usual age for a grade: Kinder 5, Grade n is n + 5. Null for any other grade label. */
