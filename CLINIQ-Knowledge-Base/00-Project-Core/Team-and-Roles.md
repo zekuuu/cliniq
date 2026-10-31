@@ -11,9 +11,9 @@ Kept in sync with the canonical Project Plan, Section 2. If you edit one, edit b
 | Party | Role in the Project |
 |---|---|
 | Ms. Jennesse Baas, School Head Nurse | Primary client contact and product owner; validates requirements, participates in UAT, receives training |
-| Mendez Christian Academy Administration / Principal | Sponsor of the digitalization effort; consumer of complaint summary reports |
-| Registrar's Office | Source of authoritative student information used to populate Student Records |
-| PE/Sports Department | Source of injury referrals, logged by Staff (Section 5.3) |
+| Mendez Christian Academy Administration / Principal | Sponsor of the digitalization effort; signs in at the clinic computer to read the Dashboard, reports, student profiles and incident reports on screen, acknowledge incident reports and manage accounts; does not print (ADR-029, 033, 038, 048) |
+| Registrar's Office | Source of authoritative student information used to populate Student Records, including the yearly student list that sets each student's grade and section (ADR-047); the import waits for the data privacy agreement |
+| PE/Sports Department | Source of injury referrals, logged by Staff (Section 5.3); asks the clinician for a printed Sports Report (ADR-034); no account (ADR-029) |
 | School's Outsourced IT Provider | Maintains the existing workstation and network; partner for quarterly backup-recovery testing and major hardware issues |
 | Prof. Kryss Coleen Creus, CvSU–CEIT Course Adviser | Academic oversight, milestone review, and grading |
 

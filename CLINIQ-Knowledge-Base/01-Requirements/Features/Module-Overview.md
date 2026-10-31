@@ -5,16 +5,16 @@ This is the complete module/submodule breakdown, kept in sync with the canonical
 ---
 
 
-Ten modules total: five baseline (from the Software Engineering I Technical Documentation) and five team-proposed enhancements (added during Software Engineering II planning). Every module is broken down to individual operations, each tagged with who can access it. Updated after the September 19, 2026 team meeting to bring PE/Sports Instructor access back into current scope, expand the dashboard, add a two-stage emergency flow, and add a screen-context display rule for student names.
+Modules 1 to 5 are the baseline (from the Software Engineering I Technical Documentation); Modules 7 to 11 are team-proposed enhancements added during Software Engineering II planning (Module 6, QR, was removed, ADR-027); Module 2a covers teachers and school staff as patients (ADR-043). Every module is broken down to individual operations, each tagged with who can access it. This copy carries build notes the canonical document leaves out; it does say what is built, and items not built are marked.
 
 **Roles in the system (current scope):**
-- **Staff** — School Head Nurse / clinic assistants. Full read/write access.
-- **Admin/Principal** — School Administration. Read-only access to reports and health summaries, and read-only access to the Student List, Student Profile, Incident Log and Incident Report (ADR-038), plus account management (ADR-033): creates, edits, disables and resets accounts. The Admin/Principal never prints or saves as PDF (ADR-038); the clinician prints.
+- **Staff** (School Clinician in the app) — School Head Nurse / clinic assistants. Full read/write access.
+- **Admin/Principal** — School Administration. Read-only access to reports and health summaries, and read-only access to the Student List, Student Profile, Incident Log and Incident Report (ADR-038), plus account management (ADR-033): creates, edits, disables and resets accounts. The Admin/Principal can also Acknowledge an approved incident report (ADR-048), never prints or saves as PDF (ADR-038); the clinician prints. The Admin/Principal signs in at the clinic computer and is signed out after 30 idle minutes (ADR-029, 048).
 - **PE/Sports Instructor** — No account and no access (ADR-029). An instructor asks the clinician, who decides what to share.
 
 **Role documented for future development (not built this phase):** Canteen Staff — see "Future Development" at the end of this document.
 
-**Display-privacy rule (applies across the whole system):** the actual privacy risk isn't a single deliberate lookup — it's a **desktop screen showing a list or pattern across multiple students at once** (a visit log, an incident log, or a "frequent visitor" flag) being glanced at by a passerby, who can then attach a specific named student to a health pattern ("he visits a lot, what's going on?"). So: the **Visit Log List, Incident Log List, and the Dashboard's frequent-visitor section default to the masked LRN**, not full name, since these are rolling, multi-student, glanceable-by-bystanders screens. A **single deliberate lookup of one specific student — the full profile page, search results, and the masterlist/directory — shows the full name normally**, since at that point someone has already identified and is looking at one particular student for a legitimate reason. The masterlist shows names freely (it's just a roster of who's enrolled) but should not show medical/confidential fields inline — allergies, conditions, or visit reasons still require opening the individual profile.
+**Display-privacy rule (applies across the whole system):** the actual privacy risk isn't a single deliberate lookup — it's a **desktop screen showing a list or pattern across multiple students at once** (a visit log, an incident log, or a "frequent visitor" flag) being glanced at by a passerby, who can then attach a specific named student to a health pattern ("he visits a lot, what's going on?"). So: the **Visit Log List, Incident Log List, and the Dashboard's frequent-visitor section default to the masked LRN**, not full name, since these are rolling, multi-student, glanceable-by-bystanders screens. A **single deliberate lookup of one specific student — the full profile page, search results, and the masterlist/directory — shows the full name normally**, since at that point someone has already identified and is looking at one particular student for a legitimate reason. The masterlist shows names freely (it's just a roster of who's enrolled) but should not show medical/confidential fields inline — allergies, conditions, or visit reasons still require opening the individual profile. On paper, a printout about one opened student shows the full LRN (ADR-040), and the Clinic Overview Report and the Monthly Report's incident tables print the full LRN with no names (ADR-044).
 
 ---
 
@@ -25,7 +25,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - **Admin idle sign-out (ADR-048, built Friday, October 30, 2026 — 00:17 PHT):** the Admin/Principal is signed out after `config.adminIdleMinutes` (30) without pointer, key or scroll activity; a "Still there?" notice appears a minute before, and Login then says "You were signed out after 30 minutes of inactivity." The clinician has no idle timeout (ADR-015).
 - Log in (username/password)
 - Log out
-- Session lasts 1 week, until the login token expires — there is no idle timeout. One session lifetime applies to every role (Staff, Admin/Principal)
+- A session lasts 1 week, until the login token expires. Staff have no idle timeout, so urgent work is never interrupted (ADR-015); the Admin/Principal has the 30-minute idle sign-out above (ADR-048)
 - Account lockout after 5 consecutive failed attempts (30-minute lock)
 - Every login logged with who and when (see Audit Trail, below)
 
@@ -40,10 +40,12 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - Search/filter user accounts
 
 **Password Management** *(Staff, Admin/Principal — self-service for whoever is logged in)*
-- Change password (self-service)
+- Change password (self-service): the signed-in user gives the current password first (`/account/password`, from the top bar)
 - Force password change on first login
 - Prevent reuse of last 5 passwords
 - Enforce minimum 8-character password length
+- Recover a forgotten password by an email reset link when the computer is online, with the Admin's temporary-password reset as the fallback; this needs an email address on each account and a mail service (ADR-048). **Not built yet**
+- Disabling an account ends its open sessions (ADR-048). **Not built yet** (backend)
 
 **Role-Based Access** *(Admin/Principal only)*
 - Assign role (Staff / Admin-Principal). Add Account starts with **no role selected** ("Select a role", required), so the smallest role needed is chosen on purpose (panel review AC-4)
@@ -59,7 +61,7 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - Record the student's LRN (Learner Reference Number, ADR-028), entered by Staff from the school records: exactly 12 digits, kept as text so leading zeros survive, required and unique (a repeat shows "This LRN is already used by another student record" without naming that student); spaces and dashes are removed when typed or pasted; a wrong LRN is corrected in Edit Student and audited as "Updated LRN" with neither value. Lists, pickers, the Dashboard, Reports and the Audit Trail show it masked to the last four digits (`●●●●●●●●1234`, read as "LRN ending in 1234"); a screen about one opened student, and its printout, show it in full (ADR-040); only the Student Profile and the edit form show it in full; addresses carry the internal id, never the LRN
 - Edit student record — *Staff*. The LRN is locked once the record exists (read-only on Edit Student and refused by the data layer); a name correction stays possible but asks for a reason of at least 3 characters, which the audit entry records ("Name corrected; reason: ...") without the old or new name (Sir Rey, Sunday, October 25, 2026)
 - Admin/Principal opening a student profile is audit-logged once per record per sign-in session (ADR-038 item 4); visits on the profile show as text, not links, for the Admin
-- The student's own contact number is optional for every grade (Zean, October 26, 2026; it was optional only for Kinder under panel review ST-3, D8); the emergency contacts stay required for every grade, and no record is "incomplete" for lacking it
+- The student's own phone number is not recorded (ADR-054; the school's list has no such column). Parents and guardians are reached through the emergency contacts, which stay required for every grade, and no record is "incomplete" for lacking a birthdate or any other optional field
 - View student profile/detail — *Staff*. When allergies or medical conditions are recorded, a compact banner at the top of the profile lists them; otherwise nothing extra shows (panel review ST-9)
 - View list of all students (masterlist, shown with full names) — *Staff*
 - Search/filter students (name, grade level, status, or LRN) — *Staff*
@@ -82,12 +84,20 @@ Ten modules total: five baseline (from the Software Engineering I Technical Docu
 - A student has **no number of their own** on the record (ADR-054): families are reached through the emergency contacts. Staff records keep theirs.
 - **Birthdate (optional)** (ADR-054): a real date, never in the future. The form shows a soft note when the age is more than `config.unusualAgeYears` (3, to confirm) from the usual age for the grade (Kinder 5, Grade n is n + 5), and still saves. The age is calculated, never stored; the Student Profile header shows it. The date shows only in the profile details, the Add/Edit Student form and the profile printout, never on a list, picker, Dashboard, report or other printout.
 
+**Yearly List and Archiving (ADR-047, ADR-051) — not built yet**
+- Grade level and section come from one yearly import of the registrar's student list; there is no bulk promotion button. The import adds new students, updates continuing ones (and fills each student's birthdate when the list has one, ADR-054) and flags students missing from the new list. It waits for the school's data privacy agreement
+- Before the import is applied, the clinician sees the list of students that would be archived. A student missing from the new list is then archived automatically, without a reason; a returning student is restored, not re-created
+- The clinician can also archive a single record at any time (built)
+- A student's record is kept **5 years from the archive date**, then deleted; the audit log is kept 10 years
+
+**Forms.** A field shows the required mark only when saving is blocked without it; a field that can be saved empty shows no mark (ADR-051).
+
 **Duplicate Detection**
 - Auto-check for name + grade-level match on save
 - Confirm or cancel when a duplicate warning appears
 
 **Incomplete Record Handling**
-- Auto-flag records missing required fields (full name, grade level, sex, emergency contact, allergies, conditions)
+- Auto-flag records missing required fields (full name, grade level, sex, emergency contact)
 - View the incomplete-records review queue (feeds the expanded Dashboard, Module 9)
 - Resolve/complete a flagged record
 - Log which staff member resolved each flag
@@ -108,7 +118,7 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 
 ### 3. Clinic Visit Monitoring — *Access: Staff only*
 
-**Grade at the time (ADR-047, built Friday, October 30, 2026 — 00:02 PHT):** a student's visit and incident store the grade level the student had when it was saved; the Visit and Incident Logs, the Student Profile history and the Dashboard trends by grade read it, so promotion never moves old records. Student records have no section, so none is kept; staff records have no grade. Records from before the field existed take the student's current grade, once.
+**Grade at the time (ADR-047, built Friday, October 30, 2026 — 00:02 PHT):** a student's visit and incident store the grade level the student had when it was saved; the Visit and Incident Logs, the Student Profile history and the Dashboard trends by grade read it, so promotion never moves old records. Section is optional on the student record (`sectionAtTime` keeps it when there is one, built Saturday, October 31, 2026); staff records have no grade. Records from before the field existed take the student's current grade, once.
 
 **Daily Visit Logging**
 - Add new visit entry. A visit opened without an identified student finds one by LRN or student name (results appear from the first character typed, at most 8 active students, each shown with masked LRN, full name, and grade). Incident Stage 1, PE/Sports Referral, and Dispense use the same search.
@@ -119,7 +129,7 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 - Search visits by student
 - **Visit date and time** (panel review part 2, Thursday, October 22, 2026): defaults to now and is editable, never in the future. A visit dated more than 30 minutes before it is saved is a **late entry** (ADR-029: records are often entered afterwards): an optional "Reason for late entry" appears, and the visit detail and the audit entry say "Entered late"
 - **Entered in error**: a visit recorded by mistake is never deleted. "Entered in error" on Visit Details asks for a required reason; the visit then leaves every list, count and report (the Visit Log's "Include entered in error" shows it), its medicines go back to stock through the same "visit edited" adjustments, its excuse letter (draft or approved) is voided, its pending follow-ups are cancelled with the same reason, and it can't be edited afterwards. Audit-logged
-- **Escalate to incident** (ADR-036): on Visit Details, and as a shortcut on New Visit (nothing saved). It opens Incident Stage 1 with the student, complaint, the visit's time and the temperature. A saved visit and its incident are linked both ways; the visit is kept with an "Escalated" chip, its medicines stay on the visit (shown on the incident as "Given at the visit", never copied), and the event counts once, as the incident, in visit totals, the calendar, the Dashboard and reports. An emergency-type complaint on a visit (one on the incident complaint list) shows a non-blocking "This looks like an emergency. Escalate to an incident?" hint. The one-line Visit-versus-Incident rule waits for the clinician's wording
+- **Escalate to incident** (ADR-036): on Visit Details, and as a shortcut on New Visit (nothing saved). It opens Incident Stage 1 with the student, complaint, the visit's time and the temperature. A saved visit and its incident are linked both ways; the visit is kept with an "Escalated" chip, its medicines stay on the visit (shown on the incident as "Given at the visit", never copied), and the event counts once, as the incident, in visit totals, the calendar, the Dashboard and reports. An emergency-type complaint on a visit (one on the incident complaint list) shows a non-blocking "This looks like an emergency. Escalate to an incident?" hint. A one-line hint on both forms gives the Visit-versus-Incident rule (ADR-051); the clinician's own wording is still to be confirmed
 
 **Complaint Monitoring**
 - Record complaint/symptom for the visit: free text with suggestions (the predefined complaint types plus complaints already recorded, most used first). "Other (type your own)" is always the first option; it clears and focuses the free-text field and is never stored as a complaint. Text matching a suggestion is stored in that suggestion's spelling, so counts don't split by capitalization. The first-aid checklist appears when the complaint matches a predefined type. Editing a visit uses the same field and the same normalization
@@ -145,13 +155,13 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 - **Issue a replacement** (approved letter of a still-valid visit, e.g. the fever lasted longer): asks for a reason, marks the old letter **Superseded** (kept, never valid again) and opens a new draft with the same period and note. A letter whose visit was entered in error shows **Voided**, can't be approved, and prints marked VOID. Every letter, including superseded and voided ones, stays in the student's record. A superseded or voided letter opens on its own from the student's record ("View letter"): read-only, marked Superseded or Voided with the reason, with a link to the current letter, and its printout is stamped SUPERSEDED or VOID (decided Friday, October 23, 2026)
 - Excused periods ("Excused from" / "Excused until") are recorded so teachers and the registrar can cross-check attendance, and there is no attendance integration.
 - On the visit form (new or edit), fields follow the disposition: none for Returned to class; for Sent home, an "Excuse letter" section ("Prepare an excuse letter", on by default; Excused from, default today; Excused until, required while ticked; optional note for the teacher); for Referred to hospital, the same section plus an optional "Referred to (hospital or clinic)". Fields clear when the disposition changes and are validated only while shown. Saving stores these as a draft with the visit, not an approved letter; "Review excuse letter" opens the letter prefilled, and approval moves the period and note onto the letter and clears the draft. Once a letter is approved, editing the visit (even to another disposition) never changes or removes it, and the form says so
-- Drafts awaiting approval are findable without remembering the visit: the Student Profile's Staff-only Excuse Letters card lists them with a "Pending approval" badge and a "Review letter" link, and the Dashboard shows Staff an "Excuse letters awaiting approval" list (masked LRN, excused period, visit time; oldest first), shown only while drafts exist
+- Drafts awaiting approval are findable without remembering the visit: the Student Profile's Staff-only Excuse Letters card lists them with a "Pending approval" badge and a "Review letter" link, and the Dashboard's Staff-only "Pending excuse letters" card opens the Visit Log filtered to visits whose letter awaits approval (ADR-011 amendment)
 - Visit detail (Staff only) shows an "Excuse letter" section: Not prepared, Pending approval, or Approved, with the excused period, the teacher note, and a link to the letter; and "Referred to" when recorded
 - **ADR-049 (built Thursday, October 29, 2026 — 23:49 PHT):** "Save and approve now" beside Save on New Visit and the Visit Details edit form saves the visit and approves its prepared letter in one step (both audit entries); the letter page keeps its tick-then-"Approve and Store" path. An excused period longer than `config.medicalCertificateAfterDays` (3, both dates counted) shows "More than 3 days: a medical certificate is usually needed." on the visit form and the letter page; it never blocks. Approval stores the final recipient and body, and the letter prints from that stored text; letters approved earlier get their wording from the template once, on load. An approved letter whose visit is no longer Sent home or Referred shows "Outcome changed since approval" on Visit Details and the Student Profile. An optional "Stay home until cleared" tick and note on the letter prints "Stay home until cleared by the school clinic."
 - **Out of scope:** medical certificates are hospital-issued documents, not generated by CLINIQ — the excuse letter is a distinct, clinic-issued document and the system should never conflate the two
 
 **PE/Sports Injury Referral Logging**
-- Log a referral submitted by a PE instructor
+- Log a referral submitted by a PE instructor (the referral wording is editable starting text, marked "to confirm" on screen, ADR-053)
 - Record clinical assessment
 - **Who collected the student** (ADR-049): for Sent home and Referred to hospital, optional Collected by, Relationship (suggestions Parent, Guardian, Relative, Other; free text) and Time collected (now by default, never in the future). Shown on Visit Details. Not asked for a staff patient. "Show more fields" (body temperature) opens by itself when the complaint is Fever, Headache or Chills (matched like the first-aid checklist; "Chills" was added to the complaint types); it can be closed. A follow-up (visit or incident) can carry "Stay home until cleared" with a note; the Follow-Up List shows it under the reason.
 - Record disposition (returned to class / resting in clinic / sent home / referred to hospital). **Resting in clinic** (panel review VS-1) is a student kept for observation; today's resting visits with no Time out are "in the clinic now" and show as a Dashboard chip that opens the filtered Visit Log. Only Sent home and Referred get an excuse letter. The default stays Returned to class (open `DECIDE`)
@@ -160,13 +170,13 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 **Follow-Up Handling** — for cases where a student is told to return for monitoring or reassessment (e.g., "return tomorrow for monitoring"). Can originate from a visit here or from an incident in Emergency Response.
 - Prompted inline at the end of Record Visit or Log Emergency — "Does this student need a follow-up?" — rather than a separate step Staff has to remember to do afterward
 - Record: student, related visit/incident record, follow-up date, reason/monitoring instruction, notes
-- Status lifecycle: Pending → Completed / Missed / Cancelled
+- Status lifecycle: Pending → Completed / Missed / Cancelled. A follow-up is overdue 3 days after its date and reads as Missed with a "No response" note after 7 days (ADR-051)
 - View list of all follow-ups (filterable by status)
 - View due/upcoming follow-ups — surfaced on the Clinic Overview Dashboard (Module 9), computed fresh each time the page loads by comparing today's date to the follow-up date, not a background or push-based alert (the system has no external SMS/push service — see Module 9 and the Out of Scope notes)
 - Mark a follow-up Completed, Missed, or Cancelled
 - Missed and Cancelled ask for a confirmation **and a required reason**, kept on the follow-up and shown in the list; afterwards "Set a new date" offers to create a new pending follow-up for the same student, record and reason (panel review FU-4). Audit-logged
 
-### 4. Emergency Response — *Access: Staff; Admin/Principal reads the Incident Log and Incident Report only (ADR-038), audit-logged once per report per session*
+### 4. Emergency Response — *Access: Staff; Admin/Principal reads the Incident Log and Incident Report and can Acknowledge an approved report (ADR-038, 048), audit-logged once per report per session*
 
 **Acknowledge (ADR-048, built Friday, October 30, 2026 — 00:17 PHT):** on an approved incident report the Admin/Principal has an Acknowledge button (with a confirmation); it records "Acknowledged by <name> on <date>" on the report and its printout, writes an audit entry, and can't be undone. It is the Admin's only write. The clinician's opening of a student or staff profile or an incident report is now audit-logged once per record per session, like the Admin's. The clinician's Dashboard Overview shows a **"Possible cluster"** row when 3 or more students with the same complaint and grade (grade at the time) were seen in the last 3 days (`config.clusterMinStudents`, `clusterWindowDays`; ADR-050); students only, never for the Admin, nothing sent.
 
@@ -174,7 +184,8 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 - **Stage 1 (fast capture):** open a prefilled emergency form (student picked on the form), complete only the essential field (the complaint) plus whichever readings the case needs (temperature, pulse, blood pressure, oximeter; none is required, "don't force all 4 if not relevant to the case"), and save immediately — speed matters more than completeness in the first moment. An optional Additional notes field is offered but never required; it stays editable on Stage 2 until the incident report is approved (ADR-049; each change is an audited edit), then shows read-only in the Stage 1 summary and on the Incident Report. Once the student is picked, a read-only card shows the student's allergies, medical conditions and emergency contacts (an empty list reads “None recorded”, never “No allergies”); it adds no input
 - **Complaint:** chosen from the incident complaint types, or "Other (type your own)" to type one (at most 60 characters; Zean, Monday, October 26, 2026).
 - **Stage 2 (complete later):** return to the same incident record to fill in remaining details (any further readings, still all optional, and referral specifics) once the immediate situation is handled. Treatment notes and medicines/supplies given are both optional; when neither is recorded, views show “No treatment recorded.” An optional **Body part affected** (free text with suggestions) is recorded at Stage 2 and printed on the report when filled. The record can be **completed and approved** only when it has at least one of treatment notes, a medicine line, a parent notification attempt or a hospital referral; otherwise the nurse ticks “Nothing further was needed or done” and writes a one-line reason, printed on the report as “No treatment or notification: <reason>”. No reading is ever required (panel review part 1, Thursday, October 22, 2026)
-- Edit incident entry
+- Edit incident entry. Additional notes can be corrected until the incident is approved; medicines cannot be edited after Stage 2 (ADR-049)
+- Readings outside the common range for the student's age group show a warning and never block (ADR-051)
 - View incident detail (full name shown — a deliberately opened single record)
 - View list of incidents, including which are still in Stage 1 (incomplete) vs fully completed — shows **masked LRN**, not full name, per the display-privacy rule
 
@@ -190,21 +201,25 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 - Flag for re-verification if the contact is unreachable
 - View full notification history for an incident
 
+**Not part of an incident (ADR-049, 053):** no head-injury watch list, no "parents unreachable" or "released to" fields, no emergency-medicine fields, no severity levels, and no safety rule engine for doses, ages, weights or repeat intervals — the clinician decides and the system records and keeps a trail.
+
 **Follow-Up Handling** — same feature as Clinic Visit Monitoring's Follow-Up Handling (Module 3); an incident can originate a follow-up the same way a routine visit can (prompted inline at the end of Log Emergency)
 
 ### 5. Reports Generation — *Access: Staff (generates) + Admin/Principal (views, read-only)*
 
-**Decisions build (ADR-050, built Friday, October 30, 2026 — 00:26 PHT):** reports group complaints after trimming, collapsing spaces and ignoring case and trailing punctuation, matched to the complaint types ("head ache" and "Headache." count as Headache; an unmatched complaint keeps its own cleaned text; no merge screen). The Monthly Report adds visits by complaint per week (Monday weeks clipped to the month, weekend days in the week before, a last week of three weekdays or fewer joined to the one before, labelled like the paper report, "1-4, 7-11, 14-18, 21-30"), with a total column, on screen and on paper. A new **Inventory sheet** (one A4 page per month) lists each item's New Purchase, Total Available and Ending Inventory, all computed from the stock movements. The Calendar is renamed **Activity calendar**.
+**Decisions build (ADR-050, built Friday, October 30, 2026 — 00:26 PHT):** reports group complaints after trimming, collapsing spaces and ignoring case and trailing punctuation, matched to the complaint types ("head ache" and "Headache." count as Headache; an unmatched complaint keeps its own cleaned text; no merge screen). The Monthly Report adds visits by complaint per week (Sunday to Saturday, clipped to the month, ADR-055, so October 2026 reads 1-3, 4-10, 11-17, 18-24 and 25-31), with a total column, on screen and on paper. A new **Inventory sheet** (one A4 page per month) lists each item's New Purchase, Total Available and Ending Inventory, all computed from the stock movements. The Calendar is renamed **Activity calendar**.
 
 **Monthly Reports**
 - Generate monthly report — *Staff*
 - View monthly report — *Staff, Admin/Principal*
 - Print/export monthly report as PDF — *Staff* (the Admin/Principal reads it on screen; ADR-038)
+- Exact counts with no masking of small groups; there is no "Finalize month": reports are computed live (ADR-050)
 
 **Incident Reports**
 - Generate incident report from an incident record — *Staff*
 - Route for nurse review and sign-off — *Staff*. Only a completed (Stage 2) record can be approved
 - Print incident report — *Staff* (ADR-038)
+- **Acknowledge** an approved incident report — *Admin/Principal*: records who and when, shows on the report and is audit-logged; the printed signature line stays (ADR-048)
 - The month's **Incident register** (renamed from "Incident Report Archive", panel review RP-4: it holds unfinished incidents, so it isn't an archive) lists every incident of the month by masked LRN; for Staff each row opens its report, or "Complete Stage 2" for a Stage 1 record; for the Admin/Principal every row opens the report read-only (ADR-038)
 
 **Complaint summary** (renamed from "Health Summaries", panel review RP-7: it holds complaint counts only)
@@ -216,6 +231,7 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 - Build a saved, reusable list of students for a PE or sports activity: title, activity, requested by (the instructor's name), look-back window (30, 60 or 90 days or the school year; default 90), "Include recorded conditions and allergies" (off by default) — *Staff*
 - Add students by name or LRN search or a whole grade level at once, with an optional note per student; shown by full name and grade level, a decided exception to the display-privacy rule — *Staff*
 - Edit, duplicate and archive a saved report — *Staff*
+- The clinician chooses which entries to include (ADR-051). Archived students stay on the saved list but are left out of the printout with a count; the school year starts June 15
 - Print the report (A4): each student's visits and incidents in the window (date, what happened, outcome), the note, and conditions only if ticked; never notes, vitals, medicines, contacts or the LRN; signature lines for the clinician and the receiving instructor; every print audited — *Staff*
 
 ---
@@ -237,17 +253,18 @@ Staff identify a student through Students search or each form's student picker. 
 ### 8. Medicine & Supply Inventory Tracker — *Access: Staff only*
 
 **Stock Flow — how a number actually moves (previously undocumented, added here):**
-1. Every item starts with a **current stock count**, a **low-stock threshold**, and a **single expiration date** — deliberately tracked per item, not per batch. A more accurate pharmaceutical system would track expiration per batch (since newly restocked units may expire later than what's already on the shelf), but that adds real complexity a single small clinic doesn't need; when Staff restocks, they confirm/update the one expiration date on record for that item, assuming older stock is used first.
-2. **Dispensing (stock decreases):** happens either directly from the Inventory List, or — more commonly — as the "Dispense Medicine" quick-action linked to a visit or incident (see Modules 3, 4, 6). Staff selects the item and quantity; the system decrements stock by that amount and logs the dispensation (item, quantity, linked visit/incident if any, staff, timestamp). If dispensing would take stock below zero, the system **warns but does not block the save** — a software constraint should never get in the way of actually recording that care was given.
+1. Every item has a **low-stock threshold** and is held in **received batches**, each with a quantity, an expiration date and a received date (ADR-030, which replaced the earlier one-expiration-date-per-item design). The **usable** (not expired) stock, the **expired** stock and the **total on hand** are worked out from the batches, and low stock uses usable stock only. A stock count exactly at the threshold counts as low (ADR-051).
+2. **Dispensing (stock decreases):** happens either directly from the Inventory List, or — more commonly — as the "Dispense Medicine" quick-action linked to a visit or incident (see Modules 3 and 4). Staff selects the item and quantity; the system takes the quantity from the **earliest-expiring usable batch first**, records which batches it came from, and logs the dispensation (item, quantity, linked visit/incident if any, staff, timestamp). If dispensing would take stock below zero, the system **warns but does not block the save** — a software constraint should never get in the way of actually recording that care was given.
 3. **Threshold check (automatic):** immediately after any decrement, the system checks the new stock level against that item's low-stock threshold. Crossing it auto-flags the item — this flag is what surfaces on the Staff Dashboard, the Inventory List itself, and the Clinic Overview Dashboard (Module 9).
-4. **Restocking (stock increases):** a separate, manually-initiated action — Staff enters the quantity received and the new batch's expiration date, or explicitly confirms that the batch has no manufacturer expiration date. The system increments stock accordingly and logs the restock event (item, quantity, expiration choice, staff). This also clears a low-stock flag if the new total is back above threshold.
-5. **Expiration check (automatic):** runs independently of stock level — an item can be well-stocked and still flagged as nearing expiration. Both flags (low-stock, nearing-expiration) can be active on the same item at once and are shown as distinct badges, not merged into one generic "attention needed" indicator.
+4. **Restocking (stock increases):** a separate, manually-initiated action — Staff enters the quantity received and the **new batch's** expiration date, or explicitly confirms that the batch has no manufacturer expiration date. The system adds a batch (earlier batches are never overwritten) and logs the restock event (item, quantity, expiration choice, staff). This also clears a low-stock flag if the usable total is back above threshold.
+5. **Expiration check (automatic):** runs independently of stock level — an item can be well-stocked and still flagged as nearing expiration (the warning window starts at 30 days, a setting, ADR-051). Expired units stay visible until Staff records a disposal against that batch. Both flags (low-stock, nearing-expiration) can be active on the same item at once and are shown as distinct badges, not merged into one generic "attention needed" indicator.
 
 **Inventory Item Management**
 - Add inventory item
 - Optional "Generic or branded" tag on an item (Generic, Branded, or Not specified, the default), shown on the item form, the item's Batches details and the Dispense picker, not as a list column (Sir Rey, Sunday, October 25, 2026)
 - An expiration date can't be in the past, on Add Item or Restock; today is allowed (Zean, Sunday, October 25, 2026 — 23:55 PHT).
 - On Add Item the first batch follows Restock's rule (ADR-035, panel review IV-2): an expiration date, or an explicit "This item has no expiration date" confirmation; a blank date alone can't be saved (also enforced in the data layer). A non-blocking warning appears when the name and unit match an existing item (case, spacing and a trailing "s" ignored: "Paracetamol 500mg tablet already exists. Restock it instead?", with a link); the unit is free text with suggestions from the units already used (panel review IV-3)
+- An item can carry an optional **"avoid if allergic to"** tag; see Module 2 (ADR-049, ADR-018)
 - Edit inventory item
 - Delete/archive inventory item
 - View inventory list
@@ -265,8 +282,9 @@ Staff identify a student through Students search or each form's student picker. 
 **Alerts & Thresholds**
 - Set/edit the low-stock threshold per item
 - Auto-flag items below the low-stock threshold
-- Track expiration date per item
+- Track the expiration date of each batch
 - Auto-flag items nearing expiration
+- The monthly inventory print (Module 5) reads from the same stock records (ADR-050)
 
 ### Clinic settings and rules (ADR-051, built Friday, October 30, 2026 — 03:21 PHT)
 
@@ -279,22 +297,22 @@ Staff identify a student through Students search or each form's student picker. 
 - **Required marks:** a field shows the mark only when saving is blocked without it. The audit found every remaining mark already blocking; Allergies and Medical conditions lost theirs in Part 2.
 
 ### 9. Clinic Overview Dashboard *(expanded from "Health Trends Dashboard")* — *Access: Staff + Admin/Principal (view-only, except that Staff and the Admin maintain calendar events; ADR-019, ADR-042)*
-Broadened from complaint trends alone into an overall operational snapshot, per the September 19 meeting.
+Broadened from complaint trends alone into an overall operational snapshot, per the September 19 meeting. The Dashboard has two views, Overview and Trends; the calendar is its own screen, the **Activity calendar** (ADR-025, 032, 050). Counts are exact, with no masking of small groups (ADR-050).
 
 - View total clinic counts (visits, incidents, active students)
 - View pending/incomplete records (pulled from the Student Records review queue, Module 2)
 - *Staff only:* the "Pending excuse letters" stat card opens the Visit Log filtered to visits whose letter awaits approval, each with a "Review Letter" link (ADR-011 amendment, October 19, 2026; the separate Overview list was removed). Navigation only, so the dashboard stays view-only (ADR-011)
 - View common-complaint aggregation by week/month
 - View aggregate-only Sex and grade-level Trend counts, in one card with a Sex / Grade level switch (Sir Rey, Sunday, October 25, 2026). The Trends view uses at most four hues: brand green, a neutral, the warning color, and the female/male pair. Selecting either dimension filters only the Trend charts and complaint/weekday statistics; no student name appears and the Overview totals stay unfiltered. A production minimum-group-size rule remains open.
-- View symptom-clustering alerts (possible outbreak early warning)
+- **Possible-cluster alert** (clinician only): 3 or more students with the same complaint and the same grade within 3 days (the numbers are settings); students only; nothing is sent to the Principal (ADR-050)
 - Every total says what it counts (panel review DB-8): the Clinic visits figure is visits only, the sex and grade-level charts and the calendar count visits and incidents, and a visit escalated to an incident counts once, as the incident (ADR-036). A stat card's change against the prior period shows both counts ("4 vs 1 in the prior 22 days") when the prior count is under `config.percentMinPriorCount` (5), and a percentage from there up (DB-2). The number on the Overview tab counts urgent items only: expired stock, overdue follow-ups and incidents awaiting Stage 2 (DB-4); low stock, expiring soon, incomplete records and frequent visitors keep their own chips
-- View frequent-visitor flags (the Overview lists the five students with the most visits, with "Show all" for the rest; the count badge shows the total; the config switch `showFrequentVisitors` can hide it; Zean, Sunday, October 25, 2026), shown by **masked LRN** per the display-privacy rule, not full name — **a warning only**, never a diagnosis or suggested action; it exists to help the nurse decide what to do next, not to decide for her
+- View frequent-visitor flags (the Overview lists the five students with the most visits, with "Show all" for the rest; the count badge shows the total; the config switch `showFrequentVisitors` can hide it; Zean, Sunday, October 25, 2026; starting value 3 or more visits in 14 days, for the nurse to confirm, ADR-051), shown by **masked LRN** per the display-privacy rule, not full name — **a warning only**, never a diagnosis or suggested action; it exists to help the nurse decide what to do next, not to decide for her
 - **Due/upcoming follow-ups** (Module 3/4's Follow-Up Handling) — this is the system's internal reminder mechanism, since there's no external SMS/push service; computed fresh on page load by comparing today's date to each follow-up's date, not a background alert
-- **Calendar view** of visit and incident counts, toggleable weekly / monthly / yearly, for spotting patterns at a glance (e.g., a calendar-style heatmap of how many visits happened each day). It also surfaces any free-text event tag Staff applied when logging a visit or incident (e.g., "MCA Dance Program") on the relevant day, so clinic activity can be read in context
+- **Activity calendar** (renamed from "Calendar", ADR-050): visit and incident counts, toggleable weekly / monthly / yearly, for spotting patterns at a glance (e.g., a calendar-style heatmap of how many visits happened each day). It also surfaces any free-text event tag Staff applied when logging a visit or incident (e.g., "MCA Dance Program") on the relevant day, so clinic activity can be read in context
 - **School events, maintained by Staff and the Admin** (ADR-019, ADR-042): Staff and the Admin click any calendar day (past, today, or future) to open that day's panel: its visit and incident counts (past and today only), its events with edit and delete, Add event, and, for Staff only, a "View visits" link to the Visit Log filtered to that day. An event has a title (up to 60 characters), a start date, and an optional end date for multi-day events. Each event shows as a yellow chip on every day it covers (up to 2 chips per day, then "+N more"); a visit/incident tag with the same text on the same day shows once. Create, edit, and delete are audit-logged. Admin/Principal sees the same chips but can't open or change anything
 - **National holidays, read-only** (ADR-020): nationwide Philippine holidays (regular, special non-working, special working, Islamic) appear as gray "Holiday: <name>" chips in the Month, Week, Year, and Table views, including future days; long names truncate with the full name in a tooltip, and an unconfirmed date shows "(estimated)". A no-class holiday (anything but a special working day) with zero visits gets faint stripes, so it reads as "no class", not "no illness". Staff's day panel lists the date's holidays with no edit or delete controls. A line under the calendar shows "Holidays updated <date> · Source <name>" to Staff and Admin, with a warning if no holidays are loaded for the current year. Holidays come from a source through the data layer (a bundled 2026 list for now); no role edits them. Local town/province days and class suspensions are entered by Staff as events. Automatic yearly updating is a backend task (Phase B9); the source is still open
 - Filter any of the above by custom date range
-- Export/print the dashboard view
+- **Print the open tab** (Staff only; the Admin/Principal does not print, ADR-038): Overview prints the Clinic Overview Report (the stat cards, chip counts, a written summary and the lists behind them); Trends prints the Clinic Trends Report (the sex and grade-level tables, complaints and visit activity). Every printout is an A4 document with the page number as its only footer, and the Clinic Overview Report prints full LRNs with no names (ADR-026, 044, 045, 046)
 
 ### Staff wording and extra complaints (ADR-053, built Friday, October 30, 2026 — 03:36 PHT)
 
@@ -313,7 +331,7 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 - **Backup locations** (ADR-052, built Friday, October 30, 2026 — 03:36 PHT): the clinician adds, edits, disables and enables locations (label such as Internal drive or External drive, a path, a status of found, not found or not writable, the last backup time and result). A location is never deleted; each change is audit-logged; the screen warns when none is enabled. A preview shows the folders created on each location (`<location>\.cliniq\cliniq.json`, `backups\YYYY\MM\cliniq-YYYY-MM-DD_HHmm.zip`, `logs\backup-YYYY-MM.log`; the latest `config.backupKeepLast` (60) kept). The stale-backup alert reads the newest successful backup across enabled locations. The Admin sees the list read-only.
 - **Stale-backup alert** for both roles: a Dashboard chip "Last backup was more than 48 hours ago" (`config.staleBackupHours`), "The latest backup failed" or "No successful backup yet", linking to Backup; it also counts in the Overview tab's urgent number
 - View backup history/log
-- **Open item:** a backup layer beyond the local workstation and the external USB/network-folder copy is still being evaluated by the team as of this writing — see "Recommendations for Future Consideration" below. Nothing about the current mysqldump-based backup changes because of this; it's an addition still being decided, not a redesign
+- **Decided (ADR-039, 052):** backups stay local on the clinic computer's internal drive and an external drive. There is no cloud copy (off-site health data needs the parents' consent and a provider agreement, and the school has no IT staff), and a second copy held by the Principal was suggested and withdrawn. Whether an extra layer is ever needed remains an open question
 
 ---
 
@@ -323,7 +341,8 @@ A dedicated screen to review the Audit Trail (below), not just write to it — a
 
 - View the audit log, filtered by date range, user, action type (login/logout/submit/approve/create/update/delete/archive/print/viewed by the Admin), and target/module type — *Staff, Admin/Principal*
 - Each entry: timestamp, who, action type, and the target record (masked LRN, not name, when the target is a student — per the display-privacy rule) — *Staff, Admin/Principal*
-- Export/print a filtered view, for handing to a DPO or during a compliance review — *Staff* (ADR-038)
+- Export/print a filtered view, for handing to a DPO or during a compliance review — *Staff* (ADR-038). The printout states the filters in words and lists every matching entry (ADR-026)
+- The audit log is kept **10 years** (ADR-037, 051; not yet confirmed by the school or its privacy officer)
 - Operational lists (Visit Log, Incident Log, Audit Log) offer 10, 20, 50 or 100 rows per page; the choice lasts for the browser session (Sir Rey, Sunday, October 25, 2026; 50 and 100 added Saturday, October 31, 2026)
 - **No role can edit or delete an entry.** The log is read-only by design; that's what makes it a log.
 
@@ -335,6 +354,7 @@ Applies to every module above. Every one of the following gets logged with **who
 - Every form submission (new visit, new incident, inventory dispense/restock, etc.)
 - Every approval (excuse letter sign-off, incident report sign-off)
 - Every create/update/delete/archive action on a record
+- Opening a student or staff profile or an incident report, by the clinician or the Admin/Principal, once per record per sign-in session (ADR-038, 048); lists and searches are not logged
 - Every Print / Save as PDF of a page containing student or clinic health information: one entry with the signed-in user, real time, and document title; log from shared `beforeprint` handling so buttons and Ctrl+P are covered.
 This satisfies RA 10173 (Data Privacy Act) alignment and is the mechanism that makes every access accountable — each action is attributable to a signed-in account and timestamped. **Module 11, Audit Log Viewer, is the read side of this same requirement** — see `ADR-016`.
 
@@ -348,7 +368,7 @@ This satisfies RA 10173 (Data Privacy Act) alignment and is the mechanism that m
 | 2. Student Records | Full | Read Student List and Profile (ADR-038) |
 | 2a. Staff Patients (ADR-043) | Full | — (no Staff screens; staff incidents left out of the Incident Log) |
 | 3. Clinic Visit Monitoring | Full | — |
-| 4. Emergency Response | Full | Read Incident Log and Report (ADR-038) |
+| 4. Emergency Response | Full | Read Incident Log and Report, and Acknowledge (ADR-038, 048) |
 | 5. Reports Generation | Full | View only, no printing (ADR-038) |
 | 7. First-aid Checklist Quick-Reference | Full | — |
 | 8. Medicine & Supply Inventory Tracker | Full | — |
@@ -365,7 +385,7 @@ PE/Sports Instructors have no account (ADR-029).
 These came out of the September 19 meeting as good ideas worth flagging, but they are **recommendations**, not committed deliverables for this phase — no budget or timeline currently accounts for them.
 
 - **UPS (Uninterruptible Power Supply).** Power loss, not just data loss, was identified as the main operational risk — it can take down the router/server, not just interrupt a save. Recommended for the client to source (or for the team to price into a future budget revision) so a brief outage doesn't take the whole system offline.
-- **An additional backup layer beyond local + external drive.** The team is still evaluating what this should be (possible off-site/cloud destination, or another mechanism) — not yet decided, so nothing is implemented against it yet. Revisit once a specific approach is chosen.
+- **An additional backup layer beyond local + external drive.** Not planned: ADR-039 keeps backups on the clinic computer and its external drive with no cloud copy. The question of whether an extra layer is ever needed stays open.
 
 ---
 
@@ -385,8 +405,11 @@ A second external role, **Canteen Staff**, was also designed but remains deferre
 - **Auditability:** Same per-view logging pattern as everything else in this document.
 - **Why still deferred:** It stays a documented future addition. Note that a local-only deployment cannot reach canteen staff either (ADR-029).
 
+### Considered and deliberately not added (ADR-049, 053)
+Immunization tracking, a clinic pass, a queue, Excel export and SMS were suggested during planning and are deferred. There is no head-injury watch list, no incident severity levels, no safety rule engine, and no first-visit prompt. PE/Sports Instructor accounts and QR stickers were removed (ADR-027, 029).
+
 ### Future Decision: Full School-Events Calendar — *resolved Wednesday, October 07, 2026 (ADR-019)*
-**Resolved:** Staff maintain school events from the calendar's day panel; since ADR-042 ({TS}) the Admin/Principal can too (see Module 9). The original note is kept below for history.
+**Resolved:** Staff maintain school events from the calendar's day panel; since ADR-042 (Sunday, October 25, 2026 — 23:55 PHT) the Admin/Principal can too (see Module 9). National holidays are shown read-only (ADR-020). The original note is kept below for history.
 
 The Dashboard's calendar (Module 9) currently supports only a lightweight, free-text event tag on visits/incidents — deliberately kept minimal for this phase. A fuller calendar, where school events (academic, sports, performances, assemblies, field trips) are their own managed entries plotted alongside clinic activity, was discussed but the two real open questions were left for a future decision rather than guessed at:
 - **Who maintains the events** — Staff manually (adds data-entry work to the one role this whole project is trying to reduce workload for), or Admin/Principal (would require giving that role its first write permission, since it's 100% read-only today)?

@@ -2,7 +2,7 @@
 
 **What it is:** A clinic tracking and monitoring system for Mendez Christian Academy (MCA), Asis III, Mendez, Cavite — a private K-12 school serving 900+ students.
 
-**The constraint that shapes everything:** one School Head Nurse, one shared clinic workstation (Windows 11, Intel i3/4GB RAM), no budget for new hardware beyond low-cost consumables, non-technical end users, LAN-only deployment (no public internet dependency for core operation).
+**The constraint that shapes everything:** one School Head Nurse, one shared clinic workstation (Windows 11, Intel i3/4GB RAM), no budget for new hardware beyond low-cost consumables, non-technical end users, LAN-only deployment hosted on the clinic computer (no public internet dependency for core operation, ADR-029).
 
 **Course context:** CvSU–CEIT, Software Engineering II (COSC 75). Software Engineering I (SWOT analysis, problem prioritization, Technical Documentation) completed May 2026.
 
