@@ -179,8 +179,7 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
       <Card className="p-5">
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">{reportId ? 'Edit Sports Report' : 'New Sports Report'}</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          List the students an instructor asked about. The printout shows their recent visits and incidents and your note;
-          it is read from the records each time you print, so nothing medical is saved with the list.
+          List the students an instructor asked about. Their recent visits and incidents print with your note.
         </p>
       </Card>
       <form ref={formRef} className="flex flex-col gap-4" onSubmit={submit} noValidate>
