@@ -64,7 +64,7 @@ All sample records live in one central file and are accessed through one shared 
 
 ## 015 One-week sessions without an idle timer
 
-Every role stays signed in for up to one week, then must sign in again; there is no automatic sign-out just because someone is inactive. The team chose this to avoid interrupting urgent work, while recognizing that users must still sign out on a shared workstation.
+Every role stays signed in for up to one week, then must sign in again; there is no automatic sign-out just because someone is inactive. The team chose this to avoid interrupting urgent work, while recognizing that users must still sign out on a shared workstation. Amended by 048: the Admin is signed out after 30 idle minutes.
 
 ## 016 Audit Log Viewer
 
@@ -144,11 +144,11 @@ Every newly restocked batch needs an expiration date unless the clinician explic
 
 ## 036 Visits and incidents stay separate, with an "Escalate to incident" button
 
-Two forms stay, matching the clinic's two logbooks. A visit can be escalated to an incident from Visit Details or from the New Visit form, carrying the student, complaint, time and temperature; the visit is kept, linked, and its medicines are not copied, so stock is deducted once, and the event counts once, as the incident. Emergency-type complaints on a visit show a hint, not a block. The nurse's rule for what counts as an emergency is still open. Decided Thursday, October 22, 2026; not built yet.
+Two forms stay, matching the clinic's two logbooks. A visit can be escalated to an incident from Visit Details or from the New Visit form, carrying the student, complaint, time and temperature; the visit is kept, linked, and its medicines are not copied, so stock is deducted once, and the event counts once, as the incident. Emergency-type complaints on a visit show a hint, not a block. The nurse's rule for what counts as an emergency is still open. Decided and built Thursday, October 22, 2026.
 
 ## 037 Backup and the Audit Log for both roles, 10-year audit retention, password re-entry
 
-The Principal and the clinician can both see the Audit Log and Backup (the review's advice to hide them from the clinician is declined and its risk accepted). The audit log is kept 10 years (Zean's answer; the school has not confirmed it). The Backup page gets "Back up now" and the Dashboard warns when the last good backup is over 48 hours old. A "Confirm it's you" password re-entry guards archiving a student, disabling or enabling an account, resetting a password, changing a role and approving an incident report. Decided Thursday, October 22, 2026; not built yet.
+The Principal and the clinician can both see the Audit Log and Backup (the review's advice to hide them from the clinician is declined and its risk accepted). The audit log is kept 10 years (Zean's answer; the school has not confirmed it). The Backup page gets "Back up now" and the Dashboard warns when the last good backup is over 48 hours old. A "Confirm it's you" password re-entry guards archiving a student, disabling or enabling an account, resetting a password, changing a role and approving an incident report (removed by 041). Decided Thursday, October 22, 2026; built.
 
 ## 038 Admin reads student profiles and incidents but cannot print; a draft letter cannot be printed
 
@@ -172,7 +172,7 @@ On the Calendar screen the Admin opens any day and manages its events like Staff
 
 ### ADR-043: Teachers and school staff are clinic patients, with their own Staff screens
 
-Teachers, non-teaching staff and utility workers (called personnel in documents and code, because "Staff" is the clinician role) can be patients (Zean, Monday, October 26, 2026 — 02:56 PHT). They get their own Staff List, Profile and Form under a sidebar group renamed Patient Care. A record has name, type, department or role, contact, emergency contacts, allergies and conditions, and a system-assigned Staff No.; no LRN, grade or sex. Visits, incidents, follow-ups and medicine given are about a student or a staff member, exactly one. Lists show the Staff No., not the name. No excuse letter, PE referral or Sports Report for staff. The School Clinician only; the Admin does not see staff. Zean approved the defaults and reported the clinician's yes on Monday, October 26, 2026 — 03:07 PHT. Not built yet; wanted for the presentation on October 27. [ADR-043](ADR-043-Teachers-And-School-Staff-Are-Clinic-Patients-With-Their-Own-Screens.md)
+Teachers, non-teaching staff and utility workers (called personnel in documents and code, because "Staff" is the clinician role) can be patients (Zean, Monday, October 26, 2026 — 02:56 PHT). They get their own Staff List, Profile and Form under a sidebar group renamed Patient Care. A record has name, type, department or role, contact, emergency contacts, allergies and conditions, and a system-assigned Staff No.; no LRN, grade or sex. Visits, incidents, follow-ups and medicine given are about a student or a staff member, exactly one. Lists show the Staff No., not the name. No excuse letter, PE referral or Sports Report for staff. The School Clinician only; the Admin does not see staff. Zean approved the defaults and reported the clinician's yes on Monday, October 26, 2026 — 03:07 PHT. Built Monday, October 26, 2026. [ADR-043](ADR-043-Teachers-And-School-Staff-Are-Clinic-Patients-With-Their-Own-Screens.md)
 
 ### ADR-044: Full LRN on the Dashboard printout
 
@@ -220,7 +220,7 @@ The school's masterlist has no student phone number but has birthdates, so the s
 
 ### ADR-055: The Monthly Report's weeks run Sunday to Saturday
 
-The weekly breakdown now follows the Activity calendar: Sunday to Saturday, clipped to the month, so October 2026 reads 1-3, 4-10, 11-17, 18-24 and 25-31.
+The weekly breakdown now follows the Activity calendar: Sunday to Saturday, clipped to the month, so October 2026 reads 1-3, 4-10, 11-17, 18-24 and 25-31. The Dashboard Trends month chart is to follow it (Zean, Saturday, October 31, 2026; built).
 
 ### ADR-056: Backend preparation: Sanctum SPA cookie mode, a separate `backend` branch, nothing wired to the frontend, and no migrations before the ERD is approved
 

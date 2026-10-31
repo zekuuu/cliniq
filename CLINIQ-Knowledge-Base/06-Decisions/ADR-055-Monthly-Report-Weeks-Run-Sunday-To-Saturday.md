@@ -2,6 +2,7 @@
 
 **Date:** Saturday, October 31, 2026 — 12:18
 **Status:** Accepted (Zean, in chat, Saturday, October 31, 2026 — 12:18 PHT). Refines ADR-050 item 4.
+**Note (Saturday, October 31, 2026 — 19:28 PHT):** Zean: the Dashboard Trends month chart must match too. Built Saturday, October 31, 2026 — 19:46 PHT: it runs Sunday to Saturday.
 
 ## Context
 The weekly breakdown (ADR-050 item 4) used Monday-start weeks labelled to the last weekday, with a short last week merged into the one before it. October 2026 therefore read 1-2, 5-9, 12-16, 19-23 and 26-30, which left visible gaps and did not match the Activity calendar, which shows Sunday to Saturday.
