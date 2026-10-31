@@ -12,16 +12,12 @@ const STATUS = {
 
 const LABEL_SUGGESTIONS = ['Internal drive', 'External drive']
 
-/** The folders the backend creates on each location (ADR-052). Shown as a preview; a browser can't write to a drive. */
-function folderPreview(keepLast: number) {
-  return [
-    '<location>\\.cliniq\\',
-    '    cliniq.json                                 marker: app, school, structure version, created on',
-    '    backups\\YYYY\\MM\\cliniq-YYYY-MM-DD_HHmm.zip   database, uploaded files, manifest with a checksum',
-    '    logs\\backup-YYYY-MM.log',
-    `Keeps the latest ${keepLast} backups per location; older ones are removed.`,
-  ].join('\n')
-}
+/** What the backend creates on each location (ADR-052). Shown as a preview; a browser can't write to a drive. */
+const BACKUP_FOLDERS = [
+  { name: 'Backups', path: '.cliniq\\backups\\YYYY\\MM\\cliniq-YYYY-MM-DD_HHmm.zip', holds: 'Database, uploaded files, and a manifest with a checksum' },
+  { name: 'Marker file', path: '.cliniq\\cliniq.json', holds: 'App, school, structure version, and date created' },
+  { name: 'Logs', path: '.cliniq\\logs\\backup-YYYY-MM.log', holds: 'One log for each month' },
+]
 
 /**
  * Backup locations (ADR-052): the clinician chooses, adds and edits where backups go; a location is
@@ -118,8 +114,16 @@ export function BackupLocationsPanel({
         </ul>
         <section aria-labelledby="backup-folders-title" className="rounded-md border border-border bg-surface p-4">
           <h2 id="backup-folders-title" className="text-sm font-semibold text-text-primary">Folders created on each location</h2>
-          {/* Scrolls sideways on a phone, so it takes keyboard focus. */}
-          <pre tabIndex={0} aria-labelledby="backup-folders-title" className="mt-2 overflow-x-auto rounded-sm text-xs whitespace-pre text-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green">{folderPreview(settings.keepLast)}</pre>
+          <dl className="mt-3 flex flex-col gap-3">
+            {BACKUP_FOLDERS.map((folder) => (
+              <div key={folder.name}>
+                <dt className="text-sm font-semibold text-text-primary">{folder.name}</dt>
+                <dd className="text-sm text-text-secondary">{folder.holds}</dd>
+                <dd className="mt-0.5 font-mono text-xs break-all text-text-secondary">{folder.path}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-3 text-sm text-text-secondary">Keeps the latest {settings.keepLast} backups per location; older ones are removed.</p>
         </section>
       </CardBody>
       <Modal open={editing !== null} title={editing === 'new' ? 'Add a backup location' : 'Edit backup location'} onClose={() => setEditing(null)}>
