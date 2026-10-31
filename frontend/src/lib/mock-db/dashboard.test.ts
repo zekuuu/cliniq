@@ -37,9 +37,12 @@ const CONFIG: MockDbConfig = {
   followUpOverdueAfterDays: 3,
   followUpAutoCloseDays: 7,
   backupKeepLast: 60,
+  unusualAgeYears: 3,
   vitalsUsualRanges: {
     temperatureMinC: 36,
     oxygenSaturationMinPct: 95,
+    grades1to6FromAge: 6,
+    grades7to12FromAge: 13,
     byAgeGroup: {
       kinder: { pulseBpm: { min: 80, max: 110 }, systolic: { min: 95, max: 110 }, diastolic: { min: 60, max: 75 } },
       grades1to6: { pulseBpm: { min: 70, max: 100 }, systolic: { min: 100, max: 120 }, diastolic: { min: 60, max: 75 } },
@@ -57,7 +60,7 @@ const student = (id: string, n: string, extra: Partial<SeedStudent> = {}): SeedS
   fullName: `SECRET NAME ${id}`,
   gradeLevel: 'Grade 5',
   sex: 'female',
-  contactInfo: '0900-000-0000',
+  birthDate: null,
   allergies: [],
   medicalConditions: [],
   emergencyContacts: [{ name: 'Guardian', relationship: 'Parent', phone: '0900-111-0000', verified: true }],

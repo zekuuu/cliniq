@@ -95,7 +95,7 @@ describe('Clinic settings and rules', () => {
 
   it('notes a pulse of 130 for a Grade 3 student as outside the usual range, and still lets the visit save', async () => {
     const ranges = await getVitalsWarningRanges()
-    expect(ageGroupOf({ kind: 'student', gradeLevel: 'Grade 3' })).toBe('grades1to6')
+    expect(ageGroupOf({ kind: 'student', gradeLevel: 'Grade 3' }, '2026-10-30')).toBe('grades1to6')
     render(<VitalsWarning readings={{ pulseBpm: '130' }} ranges={ranges} ageGroup="grades1to6" />)
     expect(screen.getByRole('status')).toHaveTextContent('Outside the usual range for this age (starting range, nurse to confirm): pulse 130 bpm (usual 70 to 100).')
     expect(screen.getByRole('status')).toHaveTextContent('You can still save.')

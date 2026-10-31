@@ -46,7 +46,7 @@ describe('Student and incident records', () => {
       fullName: student.fullName,
       gradeLevel: student.gradeLevel,
       sex: student.sex,
-      contactInfo: '',
+      birthDate: '',
       emergencyContacts: student.emergencyContacts,
     }
     for (const [allergies, medicalConditions] of [['None recorded', 'None'], ['', '']]) {
@@ -55,9 +55,9 @@ describe('Student and incident records', () => {
     }
   })
 
-  it('keeps a record complete with no student mobile number', async () => {
+  it('keeps a record complete with no birthdate', async () => {
     const student = await getStudent('student-0001')
-    const result = await saveStudent({ ...student, contactInfo: '' }, { studentId: student.id })
+    const result = await saveStudent({ ...student, birthDate: null }, { studentId: student.id })
     expect(result.status === 'saved' && result.student.recordComplete).toBe(true)
   })
 

@@ -16,7 +16,6 @@ async function fillRequiredStudentFields() {
   await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
   await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
   await selectOption(user, screen.getByLabelText(/^sex/i), 'Female')
-  await user.type(screen.getByLabelText(/student's mobile number/i), '09XX-111-2222')
   await user.type(screen.getByLabelText(/contact name/i), 'Marisol Santos')
   await user.type(screen.getByLabelText(/relationship/i), 'Mother')
   await user.type(screen.getByLabelText(/contact phone/i), '0917-333-4444')
@@ -188,7 +187,6 @@ describe('Student Form', () => {
     await user.type(screen.getByLabelText(/full name/i), existing.fullName)
     await selectOption(user, screen.getByLabelText(/grade level/i), existing.gradeLevel)
     await selectOption(user, screen.getByLabelText(/^sex/i), 'Female')
-    await user.type(screen.getByLabelText(/student's mobile number/i), '09XX-111-2222')
     await user.type(screen.getByLabelText(/contact name/i), 'Parent Guardian')
     await user.type(screen.getByLabelText(/relationship/i), 'Parent')
     await user.type(screen.getByLabelText(/contact phone/i), '0917-333-4444')
@@ -255,8 +253,7 @@ describe('Student Form', () => {
     )
 
     expect(await screen.findByRole('heading', { name: 'Edit Student' })).toBeInTheDocument()
-    await user.clear(screen.getByLabelText(/student's mobile number/i))
-    await user.type(screen.getByLabelText(/student's mobile number/i), '09XX-999-0000')
+    await user.type(screen.getByLabelText(/contact name/i), ' Jr')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
     expect(await screen.findByText(`Student record updated for ${existing.fullName}.`)).toBeInTheDocument()

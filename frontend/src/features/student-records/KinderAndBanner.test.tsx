@@ -12,7 +12,7 @@ const base = {
   lrn: '000000260999',
   fullName: 'Test Pupil',
   sex: 'female' as const,
-  contactInfo: '',
+  birthDate: null,
   allergies: [],
   medicalConditions: [],
   emergencyContacts: [{ name: 'Maria Pupil', relationship: 'Mother', phone: '0917-000-0000', verified: true }],
