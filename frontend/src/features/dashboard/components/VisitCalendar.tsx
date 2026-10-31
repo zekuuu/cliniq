@@ -46,7 +46,7 @@ const WEEKDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', '
 const NO_HOLIDAYS: Holiday[] = []
 
 // Today: a dashed brand-green outline 2px outside the cell, plus a "Today" label, never the outline
-// alone. Dashed sets it apart from every solid edge in the grid and from the black "has an event"
+// alone. Dashed sets it apart from every solid edge in the grid and from the event marker
 // outline (dotted was too faint on narrow cells). An outline takes no space, so the cell's content and
 // padding are unchanged; the grid's 6px spacing leaves room for it.
 const TODAY_BORDER = 'outline-2 outline-dashed outline-offset-2 outline-brand-green-dark'
@@ -303,7 +303,7 @@ function MonthView({
                     key={date}
                     title={day ? describeDay(day, today, holidays) : undefined}
                     className={cn(
-                      'h-16 rounded-md p-0 align-top',
+                      'h-24 max-h-24 overflow-hidden rounded-md p-0 align-top',
                       future || !day ? heatClasses[0] : heatClasses[heatLevel(total, scale)],
                       noClassEmpty(holidays, total) && noClassDayClass,
                       date === today ? TODAY_BORDER : 'border-border',
@@ -315,7 +315,7 @@ function MonthView({
                       today={today}
                       canEdit={canEdit}
                       onSelectDay={onSelectDay}
-                      className="flex h-full min-h-16 flex-col rounded-md p-2"
+                      className="flex h-24 max-h-24 flex-col overflow-hidden rounded-md p-2"
                     >
                       <span className="flex items-start justify-between gap-1">
                         {date === today ? (
@@ -359,26 +359,18 @@ function YearView({
   holidaysOn,
   scale,
   today,
-  canEdit,
-  onSelectDay,
 }: {
   year: string
   byDate: Map<ISODate, CalendarDay>
   holidaysOn: Map<ISODate, Holiday[]>
   scale: HeatScale
   today: ISODate
-  canEdit: boolean
-  onSelectDay: (date: ISODate) => void
 }) {
   const months = Array.from(
     { length: 12 },
     (_, m) => `${year}-${String(m + 1).padStart(2, '0')}-01`,
   )
   const holidaysFor = (date: ISODate) => holidaysOn.get(date) ?? NO_HOLIDAYS
-  // The day list is long, so it opens on request; it is the grid's accessible equivalent, so it
-  // stays one keyboard step away and always prints in full.
-  const [showDays, setShowDays] = useState(false)
-  const dayListId = useId()
   const activeDays = [...byDate.values()].filter(
     (d) => d.visits + d.incidents > 0 || dayLabels(d).length > 0 || holidaysFor(d.date).length > 0,
   )
@@ -401,13 +393,13 @@ function YearView({
                   {incidents === 1 ? 'incident' : 'incidents'}
                 </span>
               </p>
-              {/* The mini grid is a visual summary only. The line above, the tagged-day list, and
-                  the Table view carry the same information for screen readers. */}
+              {/* The mini grid is a visual summary only. The line above and the Table view carry
+                  the same information for screen readers. */}
               <div aria-hidden="true" className="grid w-fit grid-cols-7 gap-0.5">
                 {monthGrid(monthStart)
                   .flat()
                   .map((date, i) => {
-                    if (!date) return <span key={`blank-${i}`} className="size-3" />
+                    if (!date) return <span key={`blank-${i}`} className="size-5" />
                     const day = byDate.get(date)
                     const total = day ? day.visits + day.incidents : 0
                     const future = date > today
@@ -417,16 +409,18 @@ function YearView({
                         key={date}
                         title={day ? describeDay(day, today, holidays) : undefined}
                         className={cn(
-                          'size-3 rounded-[2px] border',
+                          'inline-flex size-5 items-center justify-center rounded-[3px] border text-xs leading-none',
                           future ? heatClasses[0] : heatClasses[heatLevel(total, scale)],
                           noClassEmpty(holidays, total) && noClassDayClass,
                           date === today
                             ? 'border-2 border-brand-green'
                             : day && dayLabels(day).length
-                              ? 'border-text-primary'
+                              ? 'border-brand-yellow-dark'
                               : 'border-border',
                         )}
-                      />
+                      >
+                        {parseISODate(date).getDate()}
+                      </span>
                     )
                   })}
               </div>
@@ -445,45 +439,9 @@ function YearView({
         {activeDays.length === 0 ? (
           <p className="text-xs text-text-secondary">No clinic activity, events, or holidays this year.</p>
         ) : (
-          <>
-            <button
-              type="button"
-              aria-expanded={showDays}
-              aria-controls={dayListId}
-              onClick={() => setShowDays((open) => !open)}
-              className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-sm text-xs font-semibold text-brand-green-dark transition-colors hover:text-brand-green hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none print:hidden"
-            >
-              <Icon name="chevronDown" size={14} className={cn('transition-transform motion-reduce:transition-none', showDays && 'rotate-180')} />
-              {showDays ? 'Hide day list' : 'Show day list'} ({activeDays.length} {activeDays.length === 1 ? 'day' : 'days'})
-            </button>
-            <ul
-              id={dayListId}
-              className={cn('mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-primary', !showDays && 'hidden print:flex')}
-            >
-              {activeDays.map((d) => (
-                <li key={d.date}>
-                  {canEdit ? (
-                    <button
-                      type="button"
-                      aria-label={`${describeDay(d, today, holidaysFor(d.date))}. Open day`}
-                      onClick={() => onSelectDay(d.date)}
-                      className="inline-flex items-center gap-1 font-semibold text-brand-green-dark underline decoration-brand-green-dark/40 underline-offset-2 cursor-pointer transition-colors hover:text-brand-green hover:decoration-brand-green focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
-                    >
-                      {formatDate(d.date, { month: 'short', day: 'numeric' })}
-                      <Icon name="chevronRight" size={12} />
-                    </button>
-                  ) : (
-                    <time dateTime={d.date} className="font-semibold">
-                      {formatDate(d.date, { month: 'short', day: 'numeric' })}
-                    </time>
-                  )}{' '}
-                  {d.date <= today ? casesLabel(d.visits + d.incidents) : 'Upcoming'}
-                  {holidaysFor(d.date).map((h) => ` · Holiday: ${holidayName(h)}`).join('')}
-                  {dayLabels(d).length ? ` · ${dayLabels(d).join(', ')}` : ''}
-                </li>
-              ))}
-            </ul>
-          </>
+          <p className="text-xs text-text-secondary">
+            {activeDays.length} active {activeDays.length === 1 ? 'day' : 'days'} are marked above. Switch to Table view for the full date, count, event, and holiday details.
+          </p>
         )}
       </div>
     </div>
@@ -656,9 +614,11 @@ function CalendarSkeleton({ view, periodFrom }: { view: CalendarView; periodFrom
                     .flat()
                     .map((date, i) =>
                       date ? (
-                        <span key={date} className="size-3 rounded-[2px] bg-border" />
+                        <span key={date} className="inline-flex size-5 items-center justify-center rounded-[3px] bg-border text-xs leading-none text-text-muted">
+                          {parseISODate(date).getDate()}
+                        </span>
                       ) : (
-                        <span key={`blank-${i}`} className="size-3" />
+                        <span key={`blank-${i}`} className="size-5" />
                       ),
                     )}
                 </div>
@@ -688,7 +648,7 @@ function CalendarSkeleton({ view, periodFrom }: { view: CalendarView; periodFrom
               <tr key={wi}>
                 {week.map((date, di) =>
                   date ? (
-                    <td key={date} className="h-16 rounded-md bg-surface p-2 align-top">
+                    <td key={date} className="h-24 max-h-24 overflow-hidden rounded-md bg-surface p-2 align-top">
                       <div className="flex items-start justify-between gap-1">
                         <span className="text-xs text-text-secondary">
                           {parseISODate(date).getDate()}
@@ -926,8 +886,6 @@ export function VisitCalendar({
                     holidaysOn={holidaysOn}
                     scale={scale}
                     today={today}
-                    canEdit={canNavigate}
-                    onSelectDay={setSelectedDate}
                   />
                 )}
                 <Legend scale={scale} />
