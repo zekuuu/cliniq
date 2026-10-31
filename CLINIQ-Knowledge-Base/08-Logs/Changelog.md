@@ -1,4 +1,7 @@
 # Changelog
+| Saturday, October 31, 2026 — 12:18 PHT | Monthly Report weeks now run Sunday to Saturday, matching the Activity calendar (ADR-055). See [Agent session](Agent-Sessions/2026-10-31-monthly-report-weeks-and-layout.md). |
+| Saturday, October 31, 2026 — 12:14 PHT | Monthly Report tidied on screen (Zean's request): week columns read "Oct 12–16", zeros recede, the All complaints row is bold, and visits by sex are four tiles instead of a half-width table. The printout keeps its paper format. |
+| Saturday, October 31, 2026 — 12:10 PHT | Cinzel applied to the `CLINIQ` wordmark on the login page and the Privacy Policy heading (Zean's request); sentences that mention CLINIQ stay in Inter. |
 | Saturday, October 31, 2026 — 11:44 PHT | Top-bar date and time enlarged, sidebar wordmark set in Cinzel, seal only in the top bar below `lg` (the 768px overlap `FIX` resolved), backup folders card made a readable list. See [Agent session](Agent-Sessions/2026-10-31-topbar-brand-and-backup-card.md). |
 | Saturday, October 31, 2026 — 11:38 PHT | Shortened the New and Edit Sports Report description (Zean's request; copy only). |
 | Saturday, October 31, 2026 — 11:37 PHT | Reports moved to the shared `Tabs`, the Sports Report student list compacted to one row per student, and the Sports Reports description shortened with its ADR number removed. See [Agent session](Agent-Sessions/2026-10-31-reports-tabs-and-compact-sports-list.md). |
