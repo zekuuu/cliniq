@@ -42,7 +42,7 @@ function LiveClock() {
   return (
     <time
       dateTime={now.toISOString()}
-      className="hidden text-sm font-semibold whitespace-nowrap text-text-secondary tabular-nums sm:block"
+      className="hidden text-sm font-semibold lg:text-base whitespace-nowrap text-text-secondary tabular-nums sm:block"
     >
       {now.toLocaleDateString('en-PH', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
       {' · '}
