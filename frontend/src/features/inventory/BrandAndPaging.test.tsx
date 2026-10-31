@@ -42,7 +42,7 @@ describe('Generic or branded (optional)', () => {
 })
 
 describe('Rows per page', () => {
-  it('shows 10 or 20 rows, returns to page 1 on a change, and keeps the choice for the session', async () => {
+  it('offers 10, 20, 50 or 100 rows, returns to page 1 on a change, and keeps the choice for the session', async () => {
     const user = userEvent.setup()
     const view = renderWithRouter(<VisitLogListPage />, { route: '/visits?from=2000-01-01&to=2100-12-31' })
     const table = await screen.findByRole('table')
@@ -56,6 +56,10 @@ describe('Rows per page', () => {
     expect(rows()).toBe(20)
     expect(screen.getByText(/^Page 1 of/)).toBeInTheDocument()
     expect(screen.getByText(/^Showing 1–20 of/)).toBeInTheDocument()
+
+    await user.click(size)
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['10', '20', '50', '100'])
+    await user.keyboard('{Escape}')
 
     view.unmount()
     renderWithRouter(<VisitLogListPage />, { route: '/visits?from=2000-01-01&to=2100-12-31' })
