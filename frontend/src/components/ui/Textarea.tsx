@@ -4,6 +4,8 @@ import { cn } from '../../lib/cn'
 export interface TextareaProps
   extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'id' | 'onChange' | 'value'> {
   label: string
+  /** Keeps the label for screen readers only, for a repeated field in a compact row. */
+  hideLabel?: boolean
   value: string
   onChange: (value: string) => void
   error?: string
@@ -14,6 +16,7 @@ export interface TextareaProps
 /** Multi-line field with the same label, border, hover, and error treatment as `Input`. */
 export function Textarea({
   label,
+  hideLabel = false,
   value,
   onChange,
   error,
@@ -28,7 +31,7 @@ export function Textarea({
   const errorId = error ? `${fieldId}-error` : undefined
   return (
     <div className={cn('flex flex-col gap-1', className)}>
-      <label htmlFor={fieldId} className="text-xs font-semibold text-text-primary">
+      <label htmlFor={fieldId} className={hideLabel ? 'sr-only' : 'text-xs font-semibold text-text-primary'}>
         {label}
         {required && (
           <span className="text-error" aria-hidden="true">

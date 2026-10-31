@@ -272,30 +272,37 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
               </p>
             )}
             {students.length ? (
-              <ul className="flex flex-col gap-3">
+              // Compact rows, so a whole grade stays reviewable: one line each, scrolling past about ten.
+              <ul className="-m-1 flex max-h-[34rem] scroll-py-1 flex-col divide-y divide-border overflow-y-auto p-1 scrollbar-thin">
                 {students.map((student) => (
-                  <li key={student.studentId} className="flex flex-col gap-2 rounded-md border border-border p-3">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="font-semibold wrap-break-word text-text-primary">{student.fullName ?? 'Student record not found'}</p>
-                        {student.gradeLevel && <p className="text-sm text-text-secondary">{student.gradeLevel}</p>}
-                        {student.status !== 'active' && (
-                          <Badge tone="warning" variant="soft" className="mt-1">
-                            {student.status === 'archived' ? 'Archived: left out of the printout' : 'No longer in CLINIQ: left out of the printout'}
-                          </Badge>
-                        )}
-                      </div>
-                      <Button type="button" size="sm" variant="neutral" onClick={() => remove(student)} aria-label={`Remove ${studentName(student)} from this report`}>
-                        Remove
-                      </Button>
+                  <li key={student.studentId} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-2 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto]">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold wrap-break-word text-text-primary">{student.fullName ?? 'Student record not found'}</p>
+                      {student.gradeLevel && <p className="text-xs text-text-secondary">{student.gradeLevel}</p>}
+                      {student.status !== 'active' && (
+                        <Badge tone="warning" variant="soft" className="mt-1">
+                          {student.status === 'archived' ? 'Archived: left out of the printout' : 'No longer in CLINIQ: left out of the printout'}
+                        </Badge>
+                      )}
                     </div>
                     <Textarea
                       label={`Note for ${studentName(student)}`}
-                      rows={2}
+                      hideLabel
+                      rows={1}
+                      placeholder="Add a note"
                       maxLength={SPORTS_REPORT_NOTE_MAX}
                       value={student.note ?? ''}
+                      className="order-last col-span-2 sm:order-none sm:col-span-1 [&_textarea]:max-h-24 [&_textarea]:resize-none [&_textarea]:[field-sizing:content] [&_textarea]:placeholder:text-text-secondary"
                       onChange={(note) => setNote(student.studentId, note)}
                     />
+                    <button
+                      type="button"
+                      onClick={() => remove(student)}
+                      aria-label={`Remove ${studentName(student)} from this report`}
+                      className="inline-flex cursor-pointer rounded-sm text-error transition-[filter] hover:brightness-75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
+                    >
+                      <Icon name="trash" size={18} />
+                    </button>
                   </li>
                 ))}
               </ul>
