@@ -1,4 +1,6 @@
 # Changelog
+| Saturday, October 31, 2026 — 11:44 PHT | Top-bar date and time enlarged, sidebar wordmark set in Cinzel, seal only in the top bar below `lg` (the 768px overlap `FIX` resolved), backup folders card made a readable list. See [Agent session](Agent-Sessions/2026-10-31-topbar-brand-and-backup-card.md). |
+| Saturday, October 31, 2026 — 11:38 PHT | Shortened the New and Edit Sports Report description (Zean's request; copy only). |
 | Saturday, October 31, 2026 — 11:37 PHT | Reports moved to the shared `Tabs`, the Sports Report student list compacted to one row per student, and the Sports Reports description shortened with its ADR number removed. See [Agent session](Agent-Sessions/2026-10-31-reports-tabs-and-compact-sports-list.md). |
 | Saturday, October 31, 2026 — 11:30 PHT | Rows per page now offers 10, 20, 50 or 100 on `build/student-birthdate`, and the Dashboard widget link's hover underline runs under its icon (`cliniq-pagination-patterns` and `cliniq-interactive-states` updated). See [Agent session](Agent-Sessions/2026-10-31-rows-per-page-and-link-underline.md). |
 | Saturday, October 31, 2026 — 11:26 PHT | Shortened the Excuse Letters description on the Student Profile to "Approved letters and drafts, with the dates excused." (Zean's request; copy only). |
