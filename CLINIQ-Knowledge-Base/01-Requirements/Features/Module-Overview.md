@@ -324,7 +324,7 @@ A dedicated screen to review the Audit Trail (below), not just write to it — a
 - View the audit log, filtered by date range, user, action type (login/logout/submit/approve/create/update/delete/archive/print/viewed by the Admin), and target/module type — *Staff, Admin/Principal*
 - Each entry: timestamp, who, action type, and the target record (masked LRN, not name, when the target is a student — per the display-privacy rule) — *Staff, Admin/Principal*
 - Export/print a filtered view, for handing to a DPO or during a compliance review — *Staff* (ADR-038)
-- Operational lists (Visit Log, Incident Log, Audit Log) offer 10 or 20 rows per page; the choice lasts for the browser session (Sir Rey, Sunday, October 25, 2026)
+- Operational lists (Visit Log, Incident Log, Audit Log) offer 10, 20, 50 or 100 rows per page; the choice lasts for the browser session (Sir Rey, Sunday, October 25, 2026; 50 and 100 added Saturday, October 31, 2026)
 - **No role can edit or delete an entry.** The log is read-only by design; that's what makes it a log.
 
 ---

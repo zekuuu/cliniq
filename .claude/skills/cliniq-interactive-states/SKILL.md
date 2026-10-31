@@ -26,7 +26,7 @@ row a silent click target signaled only by cursor/hover. A widget's drill-down l
 widget's own name, via the shared `TitleLink` (`frontend/src/components/ui/TitleLink.tsx`): the stat
 card label or list-card title (pass `titleTo` to `ListCard`) becomes the link, keeps its own color at
 rest, and carries a small (12px), bold (stroke 3) open-link icon (square with an arrow leaving its corner) that stays
-glued to the last word so it never wraps alone. Hover adds an underline plus a color shift: tinted
+glued to the last word so it never wraps alone. Hover adds an underline, running under the icon too, plus a color shift: tinted
 or grey labels darken (`hover="darken"`, the default); near-black list titles turn
 `brand-green-dark` (`hover="brand"`) — never grey. No separate `View all` link, and the stat card's
 tone-icon chip stays a plain icon. A list card's count badge stays outside the link. Individual list
