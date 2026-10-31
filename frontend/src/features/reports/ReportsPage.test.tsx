@@ -39,6 +39,7 @@ describe('Reports', () => {
     vi.spyOn(window, 'print').mockImplementation(() => {})
     renderReports({ id: 'usr-nurse', name: 'Nurse', role: 'staff' })
     expect(await screen.findByRole('heading', { name: 'Monthly Report' })).toBeInTheDocument()
+    expect((await screen.findAllByRole('columnheader')).map((header) => header.textContent)).toContainEqual(expect.stringMatching(/^[A-Z][a-z]{2} \d+–\d+$/))
     await user.click(screen.getByRole('tab', { name: 'Incident register' }))
     expect(screen.getByRole('heading', { name: 'Incident register' })).toBeInTheDocument()
     await user.click(screen.getByRole('tab', { name: 'Complaint summary' }))

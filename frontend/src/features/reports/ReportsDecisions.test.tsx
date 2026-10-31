@@ -35,12 +35,12 @@ describe('Reports and calendar', () => {
     expect(report.complaintCounts.some((row) => /head ache|Headache\./.test(row.complaint))).toBe(false)
   })
 
-  it('writes the weeks as the clinic does: Monday weeks clipped to the month, a short last week merged', () => {
-    expect(monthWeeks('2026-09').map((week) => week.label)).toEqual(['1-4', '7-11', '14-18', '21-30'])
-    // October 2026 starts on a Thursday and has five weeks.
-    expect(monthWeeks('2026-10').map((week) => week.label)).toEqual(['1-2', '5-9', '12-16', '19-23', '26-30'])
-    // August 2026 starts on a Saturday: that weekend joins the first week.
-    expect(monthWeeks('2026-08')[0]).toMatchObject({ from: '2026-08-01', to: '2026-08-09', label: '1-7' })
+  it('writes the weeks as the Activity calendar shows them: Sunday to Saturday, clipped to the month (ADR-055)', () => {
+    expect(monthWeeks('2026-09').map((week) => week.label)).toEqual(['1-5', '6-12', '13-19', '20-26', '27-30'])
+    // October 2026 starts on a Thursday, so its first week is Thursday to Saturday.
+    expect(monthWeeks('2026-10').map((week) => week.label)).toEqual(['1-3', '4-10', '11-17', '18-24', '25-31'])
+    // August 2026 starts on a Saturday: a one-day first week.
+    expect(monthWeeks('2026-08')[0]).toMatchObject({ from: '2026-08-01', to: '2026-08-01', label: '1' })
     for (const month of ['2026-02', '2026-08', '2026-09', '2026-10']) {
       const weeks = monthWeeks(month)
       expect(weeks[0].from).toBe(`${month}-01`)
