@@ -156,6 +156,9 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
               <span className="text-sm font-semibold text-text-primary">{user.name}</span>
               <span className="text-xs text-text-secondary">{ROLE_LABELS[user.role]}</span>
             </span>
+            <Link to={paths.changePassword} aria-label="Change password" title="Change password" className="inline-flex shrink-0 cursor-pointer rounded-sm text-text-secondary transition-colors hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green">
+              <Icon name="lock" />
+            </Link>
             <button
               type="button"
               aria-label={isLoggingOut ? 'Logging out' : 'Log out'}

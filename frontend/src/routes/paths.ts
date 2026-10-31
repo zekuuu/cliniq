@@ -55,6 +55,7 @@ export const paths = {
   sportsReportEdit: (reportId: string) => `/reports/sports/${seg(reportId)}/edit`,
   auditLog: '/audit-log',
   privacyPolicy: '/privacy-policy',
+  changePassword: '/account/password',
   incidentNotifications: (incidentId?: string) =>
     incidentId
       ? `/incidents/${encodeURIComponent(incidentId)}/notifications`

@@ -110,6 +110,7 @@ const BackupStatusPage = page(
   'BackupStatusPage',
 )
 const AuditLogPage = page(() => import('../features/audit-log/AuditLogPage'), 'AuditLogPage')
+const ChangePasswordPage = page(() => import('../features/auth/ChangePasswordPage'), 'ChangePasswordPage')
 const PrivacyPolicyPage = page(
   () => import('../features/legal/PrivacyPolicyPage'),
   'PrivacyPolicyPage',
@@ -434,6 +435,13 @@ const APP_ROUTES: AppRoute[] = [
     roles: ['staff', 'admin'],
     nav: 'auditLog',
     render: (viewer) => <AuditLogPage viewer={viewer} />,
+  },
+  {
+    path: paths.changePassword,
+    title: 'Change Password',
+    roles: ['staff', 'admin'],
+    nav: null,
+    render: (viewer) => <ChangePasswordPage viewer={viewer} />,
   },
   {
     path: paths.privacyPolicy,
