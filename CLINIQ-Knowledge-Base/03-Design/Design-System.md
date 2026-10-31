@@ -78,6 +78,12 @@ Restrained, cohesive palette. Prioritize strong text/background contrast, consis
 - Per the Accessibility guidance already in this document: pair every semantic color with an icon or label, never color alone — this matters even more here since `brand-green` is both the brand's primary identity color *and* the family `success` is drawn from.
 
 ### Layout & Spacing
+**Activity calendar yearly details (Saturday, October 31, 2026 — 12:56 PHT):** the yearly view stays a visual summary of numbered date squares and marker cues. Detailed date, count, event, and holiday rows belong in the dedicated Table view rather than an expanded active-day list.
+
+**Activity calendar yearly view (Saturday, October 31, 2026 — 12:51 PHT):** each month keeps a readable 7-column mini-calendar with visible day numbers inside enlarged 20px date squares. Heat colors, restrained brand-yellow event outlines, holiday stripes, and today's green ring remain secondary cues to the numbers.
+
+**Activity calendar date cards (Saturday, October 31, 2026 — 12:48 PHT):** monthly date cards use one fixed height, including when a date has no events. The card clips excess labels after the shared event-label limit so event content cannot make one week taller than another.
+
 Clean, organized, compact, comfortable, uncluttered — avoid both extremes: crowded/hard-to-interact-with, and so much whitespace the system feels inefficient. Use consistent spacing and alignment to show relationships between elements; group related information and visually separate unrelated information.
 
 **Two page containers, and only two** — both are real tokens in `frontend/src/index.css`, centered in the content area:
