@@ -1,16 +1,16 @@
 # API Contract
 
-**Status: proposed, not built.** Written Saturday, October 31, 2026 — 22:05 PHT on the `backend` branch, from `frontend/src/lib/mock-db/api.ts` at commit `b0a0fed7`. No endpoint here exists yet except the two in the Foundation list (ADR-056). Line numbers are that commit's. The contract was generated against the file, and every exported function is either an entry or listed in [Not endpoints](#not-endpoints).
+**Status: the agreed contract, not built.** Written Saturday, October 31, 2026 — 22:05 PHT on the `backend` branch, from `frontend/src/lib/mock-db/api.ts` at commit `b0a0fed7`; questions closed Sunday, November 1, 2026 — 01:55 PHT (ADR-057). No endpoint here exists yet except the two in the Foundation list (ADR-056). Line numbers are that commit's. The contract was generated against the file, and every exported function is either an entry or listed in [Not endpoints](#not-endpoints).
 
-The mock API is the executable spec (ADR-056). This file adds the HTTP layer: URLs, roles, status codes. It adds no behaviour of its own: where the mock and a decision disagree, the point is listed under [Questions](#questions), and the entry says which one it follows until answered.
+The mock API is the executable spec (ADR-056). This file adds the HTTP layer: URLs, roles, status codes. It adds no behaviour of its own: where the mock and a decision disagreed, the answer is under [Questions](#questions), and the entry follows it. "Mock differs" marks a change the frontend fix branch makes.
 
-**Counts:** 104 exported functions: 95 map to endpoints, 9 are not endpoints. 103 entries: 99 from the mock and 4 additions (one entry holds the two email-reset routes). A function can back more than one entry (create and update), and two password functions share one.
+**Counts:** 104 exported functions: 94 map to endpoints, 10 are not endpoints. 102 entries: 98 from the mock and 4 additions (one entry holds the two email-reset routes). A function can back more than one entry (create and update), and two password functions share one.
 
 ## Conventions
 
 ### Sign-in
 
-Sanctum SPA cookie mode (ADR-056). The browser first calls `GET /sanctum/csrf-cookie`, then sends `POST /api/auth/login` with its credentials and the `X-XSRF-TOKEN` header. Every later request sends the session cookie, and every write echoes the header. No API tokens are issued. The session lasts 7 days from sign-in, fixed, for both roles (ADR-015, ADR-056; see Q4). The Admin is also signed out after `adminIdleMinutes` (30) without a request (ADR-048; see Q5). Disabling an account ends its sessions (ADR-048): every authenticated request re-reads the account and refuses a disabled one, which needs no list of sessions and so works with the `file` driver. While `mustChangePassword` is true, every route except the password change, sign-out and `GET /api/auth/me` answers 403 `password_change_required`.
+Sanctum SPA cookie mode (ADR-056). The browser first calls `GET /sanctum/csrf-cookie`, then sends `POST /api/auth/login` with its credentials and the `X-XSRF-TOKEN` header. Every later request sends the session cookie, and every write echoes the header. No API tokens are issued. The session ends 7 days after sign-in, however active the user is, for both roles (ADR-015, ADR-056, ADR-057): Laravel's lifetime slides, so the sign-in time is stored in the session and a middleware ends it. The Admin is also signed out after `adminIdleMinutes` (30) without a request (ADR-048, Q5). Disabling an account ends its sessions (ADR-048): every authenticated request re-reads the account and refuses a disabled one, which needs no list of sessions and so works with the `file` driver. While `mustChangePassword` is true, every route except the password change, sign-out and `GET /api/auth/me` answers 403 `password_change_required`.
 
 ### Format
 
@@ -18,7 +18,9 @@ Sanctum SPA cookie mode (ADR-056). The browser first calls `GET /sanctum/csrf-co
 - **Keys are camelCase and shapes match `frontend/src/types/` and the mock's return types**, so a feature `api/` file can swap to HTTP without reshaping. The entries below name the type instead of repeating it.
 - **Ids are opaque strings** ("internal ids only"). An LRN never goes in a URL, a query string or an audit entry (ADR-028, ADR-040). A lookup that can carry typed LRN digits is therefore a `POST` with the value in its body, even though it reads. Those are `POST /api/students/query`, `POST /api/students/search`, `POST /api/students/check-duplicates` and `POST /api/patients/search`. Request bodies are never logged (D10).
 - **Time** (D6): timestamps are ISO 8601 with `+08:00`, calendar dates `YYYY-MM-DD`, months `YYYY-MM`, clock times `HH:MM`. "Now" and "today" come from the server, never the client.
-- **Text limits.** Where the mock sets no length, the ERD draft's column size is the limit, answered as 422. These are not approved yet (`ERD-Review.md`).
+- **Text limits.** Where the mock sets no length, the approved column size is the limit, answered as 422. The same goes for a number the column cannot hold.
+- **A missing value is null.** The API never fills one in. A student with no recorded sex returns null, where the mock reads it as `female` (G4).
+- **Stored shapes the API bridges:** ids as strings; one merged `vitals` object, latest value of each reading (G13); the Sports Report `lookBack` values (G23); a medicine line's `batchAllocations`, read from its movements (ADR-057).
 - **Trimming.** Blank optional text is stored as null, as the mock does.
 - **Writes are all-or-nothing.** Each write endpoint runs in one database transaction, audit entries included, like `write()` at `api.ts:144`.
 
@@ -28,14 +30,15 @@ The mock has no pagination: it returns whole lists and the screens page them. Li
 
 ### Display privacy
 
-- **A response that lists several people carries the masked LRN and never a birthdate or an age** (ADR-004, ADR-040, ADR-054). The field stays `lrn` and holds `●●●●●●●●1234`. `maskLrn` gives the same text when applied again, so a screen needs no change. The mock sends the full LRN and masks on screen; this is a deliberate difference (Q1).
+- **A response that lists several people carries the masked LRN and never a birthdate or an age** (ADR-004, ADR-040, ADR-054). The field stays `lrn` and holds `●●●●●●●●1234`. `maskLrn` gives the same text when applied again, so a screen needs no change. The mock sends the full LRN and masks on screen; this is a deliberate difference.
+- **`fullLrn=1`, Staff only, for the printouts of ADR-044.** It returns the full LRN on `GET /api/dashboard/summary`, the pending letters and `GET /api/reports/monthly`, and each such request writes a `print` audit entry naming the document, never the LRN (ADR-057). From an Admin it is 403, since the Admin never prints.
 - A single-student response carries the full LRN (ADR-040).
 - A staff patient appears on lists by Staff No., never by name (ADR-043).
 - An internal id is never shown to a person; the printed reference number is an ERD question.
 
 ### Admin read-only (ADR-038)
 
-The Admin writes only: accounts (ADR-033), calendar events (ADR-042), Backup (ADR-037), Acknowledge (ADR-048), own password, and issue reports. Any other write answers 403. The Admin never prints (ADR-038 item 3). Staff-patient incidents do not exist for the Admin: reading one answers 404, not 403, as the mock does (`visibleTo`, `api.ts:1543`). Most of these role rules are route rules in the mock's frontend, not checks in `api.ts`; the backend enforces all of them.
+The Admin writes only: accounts (ADR-033), calendar events (ADR-042), Backup (ADR-037), Acknowledge (ADR-048), own password, and issue reports. Any other write answers 403. The Admin never prints (ADR-038 item 3). The detail of a staff patient's incident does not exist for the Admin: reading one answers 404, not 403, as the mock does (`visibleTo`, `api.ts:1543`). The Admin's totals leave staff incidents out (ADR-053). Calendar counts, the monthly report, the incident trail and approved-report ids may include them (ADR-057). Most of these role rules are route rules in the mock's frontend, not checks in `api.ts`; the backend enforces all of them.
 
 **Roles** in the entries: `S` Staff, `A` Admin/Principal, `—` no sign-in. They come from the Access Summary in `Module-Overview.md`, checked against `AppRoutes.tsx` and the mock's role checks.
 
@@ -53,7 +56,7 @@ One body for every failure:
 
 `rule` appears only on 409 and `errors` only on 422. `message` is the mock's exact text, which the screens show. A 500 carries no trace, query or record.
 
-This is D5 adjusted to the mock. Added: `invalid_credentials`, `account_locked`, `password_change_required`.
+This is D5 adjusted to the mock. Added by ADR-057: `invalid_credentials`, `account_locked` (423), `password_change_required`.
 
 | Status | `code` | When | Mock equivalent |
 |---|---|---|---|
@@ -67,7 +70,9 @@ This is D5 adjusted to the mock. Added: `invalid_credentials`, `account_locked`,
 | 419 | `csrf_mismatch` | Missing or stale CSRF token | None |
 | 422 | `validation_failed` | The request itself is wrong, whatever is stored | `CalendarEventValidationError`, `SportsReportValidationError`, and plain `Error` about a field's own value |
 | 423 | `account_locked` | Locked; adds `locked_until` | `MockAuthError('locked', lockedUntil)` |
+| 405 | `method_not_allowed` | Wrong method on a real route | None |
 | 429 | `too_many_requests` | Throttled | None |
+| 4xx | `bad_request` | Any other refusal by the framework, such as a body too large | None |
 | 500 | `server_error` | Anything else | None |
 
 **422 or 409.** If the answer can be decided from the request alone, it is 422. If it depends on a stored record, it is 409 with a `rule`.
@@ -83,6 +88,7 @@ Values of `rule`, each with its mock error:
 | `visit_entered_in_error` | Plain `Error`, `api.ts:1265`, `:1329`, `:1482`, `:1582` | `excuse_letter` | Plain `Error`, letter state, `api.ts:1143`, `:1381`, `:1382`, `:1486`, `:1508` |
 | `incident_stage` | Plain `Error`, `api.ts:1583`, `:1787`, and the completion blocker | `follow_up_state` | Plain `Error`, `api.ts:1836` |
 | `password_reuse` | Plain `Error`, `api.ts:407` | `wrong_patient` | Plain `Error`, `api.ts:1205`, `:1481`, `:1581` |
+| `backup_failed` | None: mock differs (Q10) | `duplicate_item_name` | None: mock differs (Q11) |
 
 `NameCorrectionReasonError` and `ExtraComplaintsError` are 422: the request alone shows them.
 
@@ -216,7 +222,7 @@ All read-only, no audit. Text-only lists, safe for both roles.
 #### `POST /api/students/query`
 - Roles: S, A. A read, sent as `POST` because `search` can hold LRN digits.
 - Request: `search`, `gradeLevel`, `includeArchived`, `limit`.
-- Response: `StudentListRow[]`, by name; masked LRN; no birthdate (Q2).
+- Response: `StudentListRow[]`, by name; masked LRN; no birthdate, no health fields, no contacts (Q2).
 - Copies: `listStudents` (`api.ts:633`); tests: `AppRoutes`, `AuditLogPage`, `Birthdate`, `ClinicRulesDecisions` and 2 more. Name contains, or an all-digit search matches the LRN prefix.
 
 #### `POST /api/students/search`
@@ -255,7 +261,7 @@ All read-only, no audit. Text-only lists, safe for both roles.
 - Request: `StudentInput`, `nameCorrectionReason?`.
 - Response: `{ status: "saved", student, action: "update" }`.
 - Errors: 404; 409 `lrn_locked`; 422 name-correction reason under 3 characters; 409 `duplicate_lrn`; the birthdate 422s.
-- Audit: `update student`, changed. A name correction adds "Name corrected"; the mock also adds the reason text (Q3).
+- Audit: `update student`, changed. A name correction adds "Name corrected". The reason stays in `name_correction_reason`, never in the audit. Mock differs, fixed by the frontend fix branch (Q3).
 - Copies: `saveStudent` (`api.ts:765`); tests: `Birthdate`, `LettersAndVisitsDecisions`, `RecordsDecisions`, `StudentFormPage` and 2 more. Completing a flagged record resolves its review, crediting the saver.
 
 #### `POST /api/students/{id}/archive`
@@ -398,7 +404,7 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 - Roles: S.
 - Query: `status`.
 - Response: `FollowUpView[]`, by date; masked number; `dueState`.
-- Copies: `listFollowUps` (`api.ts:1805`); tests: `Birthdate`, `ClinicRulesDecisions`, `ExcuseLettersAndFollowUps`, `FollowUpListPage` and 3 more. Past the auto-close limit reads as Missed (Q7).
+- Copies: `listFollowUps` (`api.ts:1805`); tests: `Birthdate`, `ClinicRulesDecisions`, `ExcuseLettersAndFollowUps`, `FollowUpListPage` and 3 more. Past the auto-close limit reads as Missed; a daily job also writes it (Q7).
 
 #### `PUT /api/follow-ups/{id}/status`
 - Roles: S.
@@ -412,9 +418,9 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 - Roles: S.
 - Request: `followUpDate`.
 - Response: 201 `FollowUp`.
-- Errors: 404; 409 `follow_up_state`; 422 date in the past.
+- Errors: 404; 409 `follow_up_state`, unless the follow-up is missed, cancelled, or reads as Missed; 422 date in the past.
 - Audit: `create follow-up`.
-- Copies: `rescheduleFollowUp` (`api.ts:1833`); tests: `ExcuseLettersAndFollowUps`. Keeps patient, record, reason and notes, not the stay-home flag (Q7).
+- Copies: `rescheduleFollowUp` (`api.ts:1833`); tests: `ExcuseLettersAndFollowUps`. Keeps patient, record, reason and notes. A follow-up that reads as Missed can be rescheduled: mock differs, fixed by the frontend fix branch (Q7). The stay-home flag and its note carry over to the new follow-up until the clinician clears them (Q7b). Mock differs, same fix branch.
 
 ## Emergency Response (Module 4)
 
@@ -455,19 +461,19 @@ Every read applies `visibleTo`: staff patients' incidents do not exist for the A
 - Copies: `addParentNotification` (`api.ts:1703`); tests: `IncidentSafety`, `auditCoverage`.
 
 #### `GET /api/incidents/approved-ids`
-- Roles: S, A. Response: `string[]`. The Admin's list leaves out staff incidents (Q8).
+- Roles: S, A. Response: `string[]`. May include staff incidents: ids, no detail (Q8).
 - Copies: `listApprovedIncidentReportIds` (`api.ts:1725`); tests: none.
 
 #### `GET /api/incidents/{id}/trail`
-- Roles: S, A. Response: `IncidentTrail`. 404 for an incident the Admin may not see (Q8).
+- Roles: S, A. Response: `IncidentTrail`, field names only. May cover a staff incident (Q8).
 - Copies: `getIncidentTrail` (`api.ts:1745`); tests: none.
 
 #### `POST /api/incidents/{id}/approve`
 - Roles: S.
 - Response: 204.
-- Errors: 404; 409 `incident_stage` Stage 1, or the blocker text.
+- Errors: 404; 409 `incident_stage` Stage 1, the blocker text, or already approved (Q9).
 - Audit: `approve incident-report`.
-- Copies: `approveIncidentReport` (`api.ts:1783`); tests: `AdminAuditDashboardDecisions`, `IncidentSafety`, `RecordsDecisions`, `auditCoverage`. A second approval: Q9.
+- Copies: `approveIncidentReport` (`api.ts:1783`); tests: `AdminAuditDashboardDecisions`, `IncidentSafety`, `RecordsDecisions`, `auditCoverage`.
 
 #### `POST /api/incidents/{id}/acknowledge`
 - Roles: A.
@@ -538,13 +544,8 @@ Every endpoint is Staff only. The database row lock of `ERD.md` section 9 replac
 #### `GET /api/reports/monthly`
 - Roles: S, A (view; no printing).
 - Query: `month`, `YYYY-MM`; 422 otherwise.
-- Response: `MonthlyReportData`, computed on each call, masked (Q1, Q8).
+- Response: `MonthlyReportData`, computed on each call, masked; `fullLrn=1` for the Staff print. May include staff incidents (Q8).
 - Copies: `getMonthlyReport` (`api.ts:2358`); tests: `Birthdate`, `ClinicRulesDecisions`, `ReportsDecisions`, `ReportsPage` and 5 more.
-
-#### `GET /api/reports`
-- Roles: S, A.
-- Response: `Report[]`, `data` regenerated.
-- Copies: `listReports` (`api.ts:2399`); tests: none. No screen calls it today (`ERD-Review.md`).
 
 ## Sports Reports (ADR-034)
 
@@ -595,7 +596,7 @@ Staff only; the Admin gets 403 with "Only the clinic staff can open Sports Repor
 - Copies: `listClusterAlerts` (`api.ts:2557`); tests: `AdminAuditDashboardDecisions`.
 
 #### `GET /api/calendar/days`
-- Roles: S, A. Query: `from`, `to`. Response: `CalendarDay[]` (Q8).
+- Roles: S, A. Query: `from`, `to`. Response: `CalendarDay[]`. Counts may include staff incidents (Q8).
 - Copies: `getCalendarDays` (`api.ts:2561`); tests: `calendarEvents`, `countsAndSeed`, `staff-counts`.
 
 #### `GET /api/calendar/holidays`
@@ -633,7 +634,7 @@ Both roles, the same abilities (ADR-037).
 #### `POST /api/backups/verify-latest`
 - Roles: S, A.
 - Response: `BackupStatusView`.
-- Errors: 404 no backup; a failed latest run: Q10.
+- Errors: 404 no backup; 409 `backup_failed` when the latest run failed (Q10).
 - Audit: `update backup`, "Verified backup".
 - Copies: `verifyLatestBackup` (`api.ts:2426`); tests: `auditCoverage`.
 
@@ -681,10 +682,10 @@ Both roles, the same abilities (ADR-037).
 
 #### `POST /api/audit/prints`
 - Roles: S. The Admin gets 403 (ADR-038 item 3).
-- Request: `documentTitle`; `record?` `{ type, id, summary? }`.
+- Request: a fixed document key; `record?` `{ type, id }`. The server builds the title (Q18).
 - Response: 204.
 - Audit: `print`.
-- Copies: `recordPrint` (`api.ts:265`); tests: `AuditLogPage`, `auditCoverage`. See Q18.
+- Copies: `recordPrint` (`api.ts:265`); tests: `AuditLogPage`, `auditCoverage`.
 
 #### `POST /api/issue-reports`
 - Roles: S, A.
@@ -695,7 +696,7 @@ Both roles, the same abilities (ADR-037).
 - Copies: `createIssueReport` (`api.ts:2959`); tests: `auditCoverage`, `issueReportApi`.
 
 #### `GET /api/issue-reports`
-- Roles: to confirm, Q12.
+- Roles: S, A (Q12).
 - Response: `IssueReport[]`, newest first.
 - Copies: `listIssueReports` (`api.ts:2979`); tests: `ReportIssueModal`, `issueReportApi`.
 
@@ -711,6 +712,7 @@ Both roles, the same abilities (ADR-037).
 | `validateCalendarEvent` (`api.ts:2608`) | A form helper. The event endpoints enforce the same rules. |
 | `validateSportsReport` (`api.ts:2715`) | A form helper. The Sports Report endpoints enforce the same rules. |
 | `sportsReportWindowStart` (`api.ts:2697`) | A date helper, used inside the report content. |
+| `listReports` (`api.ts:2399`) | No screen calls it, and reports are computed live (ADR-050). The `reports` table is dropped. |
 | `getAuditLog` (`api.ts:2949`) | Raw log with no screen, replaced by `GET /api/audit-log`; returning raw entries would skip the privacy-safe labels. |
 
 ## Rules to port
@@ -764,7 +766,7 @@ Each one is business logic the backend must copy exactly, with its source. Tests
 | Outcome changed since approval flag | `api.ts:1466` |
 | Follow-up due state: upcoming, due today, due, overdue after 3 days | `selectors.ts` `followUpDueState` |
 | Follow-up closes as Missed 7 days past its date | `selectors.ts` `withAutoClosedFollowUps` |
-| Missed and Cancelled need a reason; reschedule rules | `api.ts:1819`, `:1833` |
+| Missed and Cancelled need a reason; reschedule rules, including a follow-up that reads as Missed (Q7) | `api.ts:1819`, `:1833` |
 
 **Incidents**
 
@@ -825,7 +827,7 @@ None of these exist in the mock. Each is an addition, and none is built before i
 | Sign-in, sign-out, the signed-in user, CSRF | B2 | Entries above |
 | Forced password change gate | B2 | 403 `password_change_required` on every other route |
 | Lockout stored on the account | B2 | `failed_login_count`, `locked_until` |
-| Fixed 7-day session, Admin idle sign-out, disabled account check | B0, B2 | Q4, Q5 |
+| Fixed 7-day session, Admin idle sign-out, disabled account check | B0.5, B2. B0.5 gains the session middleware | Q4, Q5 |
 | Health route | B0 | D15 |
 | Holiday sync job and the stale warning | B9 | ADR-020; fills `GET /api/calendar/holidays` |
 | Follow-up auto-close job | B5 | Q7 |
@@ -838,27 +840,28 @@ None of these exist in the mock. Each is an addition, and none is built before i
 
 ## Questions
 
-These need an answer from Zean. Each entry follows the stated default until answered.
+Answered by Zean, Sunday, November 1, 2026 — 01:23 PHT, or by the best approach he asked for: an ADR first, then the mock, then the safer choice for privacy and data integrity (ADR-057). "Mock differs" marks a change the frontend fix branch makes.
 
-| # | Question | Default used here |
+| Question | Answer | Why |
 |---|---|---|
-| Q1 | The mock sends the full LRN on every list and masks on screen. ADR-040 and the backend manual want lists masked in the response, but ADR-044 prints the full LRN on the Clinic Overview Report and the Monthly Report. | Lists are masked. Add `fullLrn=1`, honoured for Staff only, on the Dashboard summary, pending letters and the monthly report, for the print path, and audit the print. |
-| Q2 | `StudentListRow` carries allergies, conditions and emergency contacts for every student, to the Admin as well. No list column shows them. | Follow the mock now. Recommended: cut it to the columns the list needs. |
-| Q3 | Mock line `api.ts:804` writes the free-text name-correction reason into the audit summary. ADR-017 and the B0.7 validator allow field names only. The reason can hold a name. | Write "Name corrected", and keep the reason on the student record. This needs a column (`ERD-Review.md`). |
-| Q4 | **D4 proposes `SESSION_LIFETIME=10080`, but Laravel's session lifetime slides: each request renews it.** ADR-015 and ADR-056 say a fixed 7 days from sign-in, and the mock's `session.ts` does that. A used session would never end. | Keep `SESSION_LIFETIME=10080`, store the sign-in time in the session, and add a middleware that ends the session 7 days after it. Part 2 item B0.5 gains one middleware. |
-| Q5 | The mock's Admin timer counts pointer, key and scroll activity. D8 counts requests. An Admin reading one long report without a request is active to the frontend and idle to the server. | D8 as written. At integration, either the frontend sends a keep-alive while active, or the wording changes. |
-| Q6 | The mock locks unknown usernames too, in memory. `ERD.md` D-10 stores nothing for them. An unknown name that never locks tells an attacker which usernames exist. | Count unknown usernames in the cache, by the normalized name, so both answer alike. Nothing is written to a table. |
-| Q7 | The mock computes auto-close on read (`view()`), but writes use raw state. So `rescheduleFollowUp` on a follow-up shown as Missed by auto-close is refused at `api.ts:1836`, with "Only a missed or cancelled follow-up gets a new date." It also drops the stay-home flag. | A daily job writes Missed, so the case disappears. Keep dropping the flag. Confirm both. |
-| Q8 | ADR-043 item 9 and ADR-053 item 4 hide staff incidents from the Admin on the Incident Log and the Dashboard. The mock does not filter the monthly report (`api.ts:2358`), calendar counts (`:2561`), `listApprovedIncidentReportIds` (`:1725`) or `getIncidentTrail` (`:1745`). | Filter the last two, because they name records. Leave the report and calendar totals unfiltered, as the mock does, until answered. |
-| Q9 | `approveIncidentReport` has no duplicate check and no role check. The draft's `uq_report_approvals_incident` refuses a second approval. | Staff only. A second approval is 409 `incident_stage`. |
-| Q10 | `verifyLatestBackup` verifies a failed run. The draft's `chk_backup_verify_ok` refuses it, and the `needsVerification` flag implies only good runs. | 409 `backup_failed`, added to the rule list when confirmed. |
-| Q11 | The draft keeps item names unique among active items. The mock allows duplicates. | Follow the mock until `ERD-Review.md` is settled. |
-| Q12 | `listIssueReports` has no screen and no route. Who reads issue reports? | Both roles, read-only. |
-| Q13 | The mock never updates `lastLogin`, though the User List shows it. | The backend sets it at sign-in. |
-| Q14 | The mock's `changeMockPassword` needs no current password, for Force Password Change. A real endpoint must not allow that outside that state. | `currentPassword` is required unless `mustChangePassword` is true. |
-| Q15 | The mock accepts an empty complaint, any disposition string and any vitals key. | Required and enumerated at the boundary (422). `vitals` takes the four reading keys plus `treatmentNotes`. |
-| Q16 | `dispenseInventoryItem` accepts a `visitId` with no patient. The draft's `chk_txn_link_has_patient` refuses it. The screen always sends a patient. | 422 when `visitId` comes without a patient. |
-| Q17 | ADR-048 needs an email on each account. `UserInput` has none and the form has no field. | Add `email?` to the account endpoints with the reset work, not before. |
-| Q18 | `recordPrint` stores a client-sent title and summary in the audit log, and B0.7 refuses free text. | Accept a fixed document key plus record type and id; the server builds the title. The key list comes from `usePrinting` callers at B3. |
-| Q19 | The mock has no server pagination, and the Audit Log may reach 12,000 rows or more. | Optional `page` and `perPage` on the four long lists; whole lists otherwise. Choose at integration. |
-| Q20 | How is the built frontend served, and does the LAN get HTTPS? It sets `SESSION_SECURE_COOKIE`, CORS and the cookie domain. | Separate origin in development (D4, B0.4). Production is open (`Environment-Setup.md`). |
+| **Q1.** Lists mask the LRN, but ADR-044 prints it in full. | Masked in lists. `fullLrn=1`, Staff only, for the printouts of ADR-044, audited. | Zean; ADR-040, ADR-044. Those printouts list several students; a single-student response already carries the full LRN. |
+| **Q2.** `StudentListRow` carries allergies, conditions and emergency contacts for every student, to the Admin as well. | The row is `id`, `lrn` (masked), `fullName`, `gradeLevel`, `archived`, `recordComplete`, also inside `IncompleteRecord.student`. Mock differs. | Zean; privacy: every reader of the row in `frontend/src` was checked, and none reads the health fields or contacts. |
+| **Q3.** The mock writes the name-correction reason into the audit log. | The summary names fields only. The reason stays on the record, in `students.name_correction_reason`. Mock differs. | Zean; ADR-017. The reason can hold a name. |
+| **Q4.** Laravel's session lifetime slides. | The session ends 7 days after sign-in. The sign-in time is stored; one middleware in B0.5. | Zean; ADR-015, ADR-056, ADR-057. |
+| **Q5.** The mock's Admin timer counts activity; the server counts requests. | The server counts requests. At integration, the frontend sends a keep-alive while the Admin is active. | ADR-048's meaning holds, and the rule still lives on the server. |
+| **Q6.** The mock locks unknown usernames too. | Count them in the cache, by normalized name, so both answer alike. Nothing goes in a table. | Mock behaviour, `ERD.md` D-10. An unknown name that never locks reveals which names exist. |
+| **Q7.** A follow-up that reads as Missed is refused at `api.ts:1836`. | It must be reschedulable. A daily job also writes Missed. Mock differs. | Zean. |
+| **Q7b.** Rescheduling drops the "Stay home until cleared" flag, which a clinician set (ADR-049). | Keep the flag and its note on the new follow-up until the clinician clears them. Mock differs. | Zean; patient safety: a reschedule must not silently lift a stay-home instruction. |
+| **Q8.** The Admin and staff incidents. | Totals leave them out. Calendar counts, the monthly report, the trail and approved ids may include them. Detail stays Staff-only. | Zean; ADR-053, ADR-057. Counts and ids are not health detail. The Privacy Policy wording is the frontend prompt's. |
+| **Q9.** `approveIncidentReport` has no role or duplicate check. | Staff only. A second approval is 409 `incident_stage`. | ADR-038; `uq_report_approvals_incident`. |
+| **Q10.** `verifyLatestBackup` verifies a failed run. | 409 `backup_failed`. Mock differs. | `chk_backup_verify_ok`; the `needsVerification` flag covers good runs only. A failed backup marked verified is false assurance. |
+| **Q11.** Item names: unique among active items, or not? | Unique: 409 `duplicate_item_name`. Mock differs; the seed has no duplicates. | Data integrity: two items of one name split stock and confuse dispensing. |
+| **Q12.** Who reads issue reports? | Both roles, read-only. | Both roles file them (ADR-038 lets the Admin write them). |
+| **Q13.** The mock never updates `lastLogin`. | The backend sets it at sign-in. | The User List shows it. |
+| **Q14.** `changeMockPassword` needs no current password. | `currentPassword` is required unless `mustChangePassword` is true. | Security. |
+| **Q15.** The mock accepts an empty complaint, any disposition and any vitals key. | Required and enumerated at the boundary (422). `vitals` takes the four reading keys plus `treatmentNotes`. Reading values still only warn. | Data integrity; ADR-051 for the values. |
+| **Q16.** `dispenseInventoryItem` accepts a `visitId` with no patient. | 422. | `chk_txn_link_has_patient`. The screen always sends a patient. |
+| **Q17.** ADR-048 needs an email; `UserInput` has none. | Add `email?` with the reset work, not before. | ADR-048 item 3 is not built. `users.email` is ready. |
+| **Q18.** `recordPrint` stores a client-sent title. | A fixed document key plus record type and id. The server builds the title, into `target_label`. | ADR-017. The key list comes from `usePrinting` callers at B3. |
+| **Q19.** The mock has no server pagination. | Optional `page` and `perPage` on the four long lists; whole lists otherwise. | Keeps the mock's shape, and the Audit Log may reach 12,000 rows. |
+| **Q20.** How is the frontend served, and does the LAN get HTTPS? | Deferred to a deployment with real data. Plain HTTP on localhost for development. Origins, the `secure` flag and stateful domains stay in the environment. | Zean; ADR-057. |

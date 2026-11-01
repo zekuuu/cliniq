@@ -4,7 +4,7 @@ Verified Friday, October 09, 2026 — 00:11 PHT. Based on `main` at commit `4c3c
 
 ## Summary
 
-The backend is a blank slate. A [proposed ERD and data dictionary](../02-Architecture/Database/ERD.md) now exist, but they are not final or approved and must not be used for migrations. The frontend has already written much of the spec: the mock API, the entity types, the access matrix, and the ADRs.
+The backend foundation is built: no tables or feature endpoints yet. The [ERD and data dictionary](../02-Architecture/Database/ERD.md) are approved (ADR-057), and migrations are built from them in phase B1. The frontend has already written much of the spec: the mock API, the entity types, the access matrix, and the ADRs.
 
 **Suggested order of work**
 
@@ -20,8 +20,8 @@ The backend is a blank slate. A [proposed ERD and data dictionary](../02-Archite
 
 | Area | Current state |
 |---|---|
-| `backend/` | Only a README and `.env.example`. Laravel is not scaffolded, and `Environment-Setup.md` still says "not yet executed". |
-| `ERD.md` | Proposed draft with a data dictionary and reference schema; it is not final or approved. Development-Phases B1 still prohibits migrations until team approval. |
+| `backend/` | Laravel 13 foundation: Sanctum SPA mode, CORS, middleware, error format, audit contract, helpers, 79 tests. Two routes, no tables. |
+| `ERD.md` | Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057), with a data dictionary, reference schema and constraint tests. |
 | Mock API (`api.ts`) | 104 exported functions and 10 exported constants, about 2,990 lines. It holds real business rules: stock integrity, excused-period checks, duplicate-student detection, LRN validation and uniqueness, incident stage rules. It is a working but unwritten API contract. |
 | Auth and roles | The access matrix in `Module-Overview.md` covers 11 rows (Modules 1 to 5 and 7 to 11, plus 2a) × 2 roles. ADR-015 sets a 7-day session lifetime and lockout after 5 failed attempts for 30 minutes; ADR-048 signs the Admin out after 30 idle minutes; ADR-056 chose SPA cookie mode. |
 
@@ -29,7 +29,7 @@ The backend is a blank slate. A [proposed ERD and data dictionary](../02-Archite
 
 ## 2. Blockers: do these before any migration
 
-- [ ] **ERD and data dictionary review/approval.** The drafts now carry the accepted decisions up to ADR-056; what remains is the team's approval of the open choices in `02-Architecture/Database/ERD-Review.md`. Do not tick this item or build migrations until then. Before approval, settle every provisional field in one pass:
+- [x] **ERD and data dictionary review/approval.** Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057): the schema loads and 191 of 191 constraint tests pass. Every provisional field below is settled in `02-Architecture/Database/ERD-Review.md`:
   - excuse-letter draft and approval fields (excused period, teacher note)
   - `Visit.referredTo`
   - `Incident.generalNotes` (optional Stage 1 notes)
@@ -61,9 +61,9 @@ The backend is a blank slate. A [proposed ERD and data dictionary](../02-Archite
 
 ## 4. Environment and deployment (not documented anywhere)
 
-- [ ] **HTTPS on the LAN.** No feature needs camera access since the QR feature was removed (ADR-027), but sign-ins and health records now cross the LAN (ADR-029 note). Decide whether the LAN needs a local certificate.
-- [ ] **PHP version.** The development XAMPP has PHP 8.5.12 and Laravel 13 fits it (`Environment-Setup.md`). The clinic computer is still to be checked.
-- [ ] **Pinned versions** for XAMPP, PHP, MariaDB, and Laravel, so every dev machine matches. Pinned in `Environment-Setup.md`; waits for the same check.
+- [ ] **HTTPS on the LAN.** Deferred to a deployment with real data (ADR-057, `LATER`): development runs on Zean's machine on localhost, so nothing crosses the LAN yet. Real data must not cross it until HTTPS exists.
+- [ ] **PHP version.** The development XAMPP has PHP 8.5.12 and Laravel 13 fits it (`Environment-Setup.md`). The clinic computer's check is deferred to deployment (ADR-057, `LATER`), because development and testing stay on Zean's machine.
+- [ ] **Pinned versions** for XAMPP, PHP, MariaDB, and Laravel. Pinned in `Environment-Setup.md`; the clinic computer is matched at deployment (ADR-057, `LATER`).
 - [ ] **Backup plan.** Locations, folders and the 60-per-location limit are decided (ADR-052). The `mysqldump` plus Task Scheduler design is not agreed with the client yet. Also decide how a backup run reports back to Laravel (a log row or a status file), since the Backup screen reads it.
 - [ ] **Holiday source.** Still unvalidated (ADR-020). Lowest priority.
 
@@ -93,10 +93,10 @@ The backend is a blank slate. A [proposed ERD and data dictionary](../02-Archite
 1. **The plan has slipped.** The phase table says auth (B2) and audit (B3) should land before F2 gets far, but F2 is nearly complete on mocks. The mock auth hides how much the screens assume real login state, so do B2 and B3 first, before any module API.
 2. **Logic lives in two places for now.** `api.ts` has real business rules. The backend must copy them exactly, or the two will drift. Treat `api.ts` as the executable spec and port it function by function.
 3. **Module list.** The backend README follows ADR-009: 8 feature modules plus a shared AuditLog. The ERD (rule M-1) adds the first-aid checklist and the Audit Log Viewer, and staff patients (ADR-043) have no module yet. The NFR no longer states a number. Settle the list before creating the folder structure.
-4. **Don't approve the ERD by inspection alone.** Review the proposed Mermaid diagrams in `ERD.md` against the 104 mock functions to catch missing columns.
+4. **Changes to the approved ERD go through a new decision** (ADR-057), and `02-Architecture/Database/Checks/` is run again with them.
 
 ---
 
 ## Next step
 
-Team review of the proposed ERD and a full endpoint table from the repo are the next documentation steps before migrations.
+Part 2 (the Laravel foundation), then the B1 migrations from the approved ERD.
