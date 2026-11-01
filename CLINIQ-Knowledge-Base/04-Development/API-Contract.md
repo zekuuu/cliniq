@@ -476,7 +476,24 @@ Every read applies `visibleTo`: staff patients' incidents do not exist for the A
 - Audit: `approve incident-report`.
 - Copies: `approveIncidentReport` (`api.ts:1783`); tests: `AdminAuditDashboardDecisions`, `IncidentSafety`, `RecordsDecisions`, `auditCoverage`.
 
+## Yearly student list (Module 2, ADR-047)
+
+Added by the frontend clean-up, Part 2. The real import waits for the signed data privacy agreement.
+
+#### `POST /api/students/import/preview`
+- Roles: S. Request: mapped rows. Response: `StudentImportPreview`; writes nothing.
+- Copies: `previewStudentImport`; tests: `StudentImportPage`.
+
+#### `POST /api/students/import`
+- Roles: S. Request: mapped rows, file name, `archiveIds`. Response: `StudentImportResult`.
+- Audit: `submit student-import`, counts only. A list that changes nothing writes no batch and no audit entry.
+- Copies: `applyStudentImport`; tests: `StudentImportPage`.
+
 ## Inventory (Module 8)
+
+#### `GET /api/inventory/movements`
+- Roles: S. Query: `from`, `to`, `itemId`, `type`. Response: `InventoryMovementRow[]`; the patient is a masked number, never a name.
+- Copies: `listInventoryMovements`; tests: `InventoryHistoryPage`.
 
 Every endpoint is Staff only. The database row lock of `ERD.md` section 9 replaces the mock's single-threaded store.
 
