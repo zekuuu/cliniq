@@ -11,12 +11,16 @@ export function ErrorState({
   description = 'Check that the clinic server is running, then try again.',
   onRetry,
   className,
+  asPageTitle = false,
 }: {
   title?: string
   description?: string
   onRetry?: () => void
   className?: string
+  /** The screen failed before its own heading rendered, so this title is its `h1`. */
+  asPageTitle?: boolean
 }) {
+  const Title = asPageTitle ? 'h1' : 'p'
   return (
     <div
       role="alert"
@@ -26,7 +30,7 @@ export function ErrorState({
       )}
     >
       <Icon name="alertOctagon" size={20} className="text-error" />
-      <p className="text-sm font-semibold text-text-primary">{title}</p>
+      <Title className="text-sm font-semibold text-text-primary">{title}</Title>
       <p className="text-xs text-text-secondary">{description}</p>
       {onRetry && (
         <Button variant="primary" size="sm" icon="refresh" onClick={onRetry}>

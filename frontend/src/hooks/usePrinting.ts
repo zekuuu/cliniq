@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { recordPrint, type PrintAuditRecord, type SessionUser } from '../lib/mock-db'
 
@@ -25,7 +25,8 @@ export function usePrinting(documentTitle?: string, viewer?: SessionUser, record
   const recordId = record?.id
   const recordSummary = record?.summary
   const allowed = canPrint(viewer)
-  useEffect(() => {
+  // A layout effect: the page is printable from the moment it paints, with no gap for Ctrl+P.
+  useLayoutEffect(() => {
     if (!allowed) return
     printListeners += 1
     const before = () => {

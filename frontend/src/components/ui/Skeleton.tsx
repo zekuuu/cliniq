@@ -11,6 +11,7 @@ export function Skeleton({ className, style }: { className?: string; style?: CSS
   return (
     <div
       aria-hidden="true"
+      data-skeleton
       style={style}
       className={cn('animate-pulse rounded-md bg-border motion-reduce:animate-none', className)}
     />
