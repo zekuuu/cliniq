@@ -12,7 +12,7 @@ vi.mock('react-chartjs-2', () => {
 import { renderWithRouter } from '../test/renderWithRouter'
 import { selectOption } from '../test/selectOption'
 import { incidentCompletionBlocker } from '../lib/itemsGiven'
-import { getGradeLevels, getStudent, listIncidents, listVisits, resetMockDb } from '../lib/mock-db'
+import { getGradeLevels, getMockToday, getStudent, listIncidents, listVisits, resetMockDb } from '../lib/mock-db'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
 import { IncidentReportPage } from './emergency-response/IncidentReportPage'
 import { UserFormPage } from './user-management/UserFormPage'
@@ -93,7 +93,8 @@ describe('UI/UX review regressions', () => {
   it('paginates the visit log and reaches every visit, not only the first 120', async () => {
     const user = userEvent.setup()
     const total = (await listVisits()).length
-    renderWithRouter(<VisitLogListPage />)
+    // The log opens on today (the default range); a date deep link reaches the whole history.
+    renderWithRouter(<VisitLogListPage />, { route: `/visits?from=2000-01-01&to=${getMockToday()}` })
 
     expect(await screen.findByText(`${total} records shown`)).toBeInTheDocument()
     expect(screen.getByText(`Showing 1–10 of ${total} visits`)).toBeInTheDocument()
@@ -199,20 +200,17 @@ describe('UI/UX review follow-up fixes', () => {
 describe('UI/UX review Group B decisions', () => {
   beforeEach(() => resetMockDb())
 
-  it('gives Staff a New Visit shortcut and backup indicator on the Dashboard, and Admin neither', async () => {
+  it('gives Staff a New Visit shortcut on the Dashboard, and Admin none; a healthy backup raises no chip', async () => {
     const staff = renderWithRouter(<DashboardPage viewer={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} />)
     expect(await screen.findByRole('link', { name: 'New Visit' })).toHaveAttribute('href', '/visits/new')
-    // Header shows the short date ("Oct 14"); the full last-backup date and time stay in the link's name.
-    const backup = await screen.findByRole('link', {
-      name: /^Backup status: .+\. Last backup \w{3} \d{1,2}, \d{4} · \d{1,2}:\d{2} [AP]M\. Open Backup\.$/,
-    })
-    expect(backup).toHaveAttribute('href', '/backup')
-    expect(within(backup).getByText(/^\w{3} \d{1,2}$/)).toBeInTheDocument()
+    // The always-on backup indicator gave way to AttentionChips, which speak up only when a backup is
+    // stale, failed or missing (those cases: AccessAndBackup.test.tsx).
+    expect(screen.queryByRole('link', { name: /backup/i })).not.toBeInTheDocument()
     staff.unmount()
 
     renderWithRouter(<DashboardPage viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }} />)
     await screen.findByRole('heading', { name: 'Clinic Overview' })
-    expect(screen.queryByRole('link', { name: /backup status/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /backup/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'New Visit' })).not.toBeInTheDocument()
   })
 
@@ -222,7 +220,7 @@ describe('UI/UX review Group B decisions', () => {
 
     await screen.findByRole('heading', { name: 'New Visit' })
     expect(screen.getByText(/not identified yet/i)).toBeInTheDocument()
-    await user.type(screen.getByRole('combobox', { name: /complaint/i }), 'Headache{Escape}')
+    await selectOption(user, screen.getByLabelText(/^complaint/i), 'Headache')
     await user.type(screen.getByLabelText(/treatment/i), 'Rested in clinic.')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
     expect(screen.getByText(/choose the student/i)).toBeInTheDocument()
@@ -262,6 +260,6 @@ describe('UI/UX review Group B decisions', () => {
 
     const table = await screen.findByRole('table', { name: 'Filtered audit log' })
     expect(table.textContent).not.toMatch(/\b(visit|incident|item|student|user|followup)-(staff-|admin-)?\d{2,4}\b/)
-    expect(table.textContent).toMatch(/(Visit|Incident)•{8}\d{4}/)
+    expect(table.textContent).toMatch(/(Visit|Incident)●{8}\d{4}/)
   })
 })
