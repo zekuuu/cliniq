@@ -46,7 +46,7 @@ export function defaultVisitLogRange(today = todayISO()): { from: ISODate; to: I
 export async function fetchVisitLog(query: VisitLogQuery): Promise<VisitLogRow[]> {
   const [visits, students, personnel, users] = await Promise.all([
     listVisits({ from: query.from, to: query.to }, { includeEnteredInError: query.includeEnteredInError }),
-    listStudents({ includeArchived: true }),
+    listStudents({ includeArchived: true, fullLrn: true }),
     listPersonnel({ includeArchived: true }),
     listUsers(),
   ])

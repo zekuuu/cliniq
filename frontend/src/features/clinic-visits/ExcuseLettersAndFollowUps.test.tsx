@@ -99,8 +99,8 @@ describe('Missed and Cancelled need a reason (FU-4)', () => {
   it('refuses a missing reason, keeps it on the follow-up, and "Set a new date" creates a pending copy', async () => {
     const [pending] = await listFollowUps({ status: 'pending' })
     await expect(setFollowUpStatus(pending.id, 'missed')).rejects.toThrow(/reason/)
-    await setFollowUpStatus(pending.id, 'cancelled', undefined, 'Student transferred section')
-    expect((await listFollowUps({ status: 'cancelled' })).find((f) => f.id === pending.id)?.statusReason).toBe('Student transferred section')
+    await setFollowUpStatus(pending.id, 'missed', undefined, 'Student transferred section')
+    expect((await listFollowUps({ status: 'missed' })).find((f) => f.id === pending.id)?.statusReason).toBe('Student transferred section')
     await expect(rescheduleFollowUp(pending.id, addDays(getMockToday(), -1))).rejects.toThrow(/past/)
     const next = await rescheduleFollowUp(pending.id, addDays(getMockToday(), 3))
     expect(next).toMatchObject({ status: 'pending', studentId: pending.studentId, reason: pending.reason, relatedRecord: pending.relatedRecord })

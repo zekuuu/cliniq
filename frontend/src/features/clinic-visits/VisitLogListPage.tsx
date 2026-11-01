@@ -97,7 +97,7 @@ export function VisitLogListPage() {
   const [disposition, setDisposition] = useState<DispositionFilter>('all')
   // `?letter=pending` (the Dashboard's "Pending excuse letters" card) applies only on arrival.
   const [letter, setLetter] = useState<LetterFilter>(searchParams.get('letter') === 'pending' ? 'pending' : '')
-  // `?inClinic=1` (the Dashboard's "In clinic now" chip) applies only on arrival.
+  // `?inClinic=1` applies only on arrival; no screen links to it (Zean removed the Dashboard chip).
   const [inClinicNow, setInClinicNow] = useState(searchParams.get('inClinic') === '1')
   const [includeEnteredInError, setIncludeEnteredInError] = useState(false)
   const [patient, setPatient] = usePatientFilter()
@@ -159,7 +159,7 @@ export function VisitLogListPage() {
     return (
       <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
         {back}
-        <ErrorState title="Unable to load visit log." onRetry={reload} />
+        <ErrorState asPageTitle title="Unable to load visit log." onRetry={reload} />
       </div>
     )
   }
@@ -209,6 +209,7 @@ export function VisitLogListPage() {
     {
       key: 'student',
       header: 'LRN or Staff No.',
+      width: '14rem',
       sort: sortColumn('lrn', 'LRN or Staff No.'),
       cell: (row) => (
         <div>
@@ -355,7 +356,7 @@ export function VisitLogListPage() {
                   rows={pageRows}
                   rowKey={(row) => row.id}
                   fixedLayout
-                  minTableWidth="48rem"
+                  minTableWidth="56rem"
                 />
                 <Pagination
                   page={currentPage}
