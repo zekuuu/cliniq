@@ -18,6 +18,7 @@ import {
   FrequentVisitorsAlert,
 } from './components/AlertLists'
 import { AttentionChips } from './components/AttentionChips'
+import { FullReportLink } from './components/FullReportLink'
 import { ClusterAlerts } from './components/ClusterAlerts'
 import { urgentCount } from './lib/urgentCount'
 import { ComplaintTrends, ComplaintTrendsSkeleton } from './components/ComplaintTrends'
@@ -173,7 +174,6 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           label="Dashboard view"
           value={view}
           onChange={changeView}
-          printAll
           actions={viewer.role === 'staff' && <NewVisitLink className="self-start md:self-auto" />}
           // Beside the tabs, so it stays in view; the filter only narrows Trends.
           status={
@@ -225,6 +225,9 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                       pendingLetterCount={letters.data?.length ?? 0}
                     />
                     <AttentionChips summary={d} canNavigate={canNavigate} />
+                    <div>
+                      <FullReportLink report="Monthly Report" view="monthly" month={range.to.slice(0, 7)} />
+                    </div>
                     {viewer.role === 'staff' && <ClusterAlerts alerts={clusters.data ?? []} />}
                     {d.showFrequentVisitors && (
                       <section aria-label="Frequent visitor warnings">
@@ -240,7 +243,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
               label: 'Trends',
               icon: 'activity',
               panel: summaryPanel('Loading trends…', <ComplaintTrendsSkeleton />, (d) => (
-                <ComplaintTrends trends={d.complaintTrends} demographics={d.demographics} filters={demographicFilters} onFiltersChange={changeDemographicFilters} />
+                <ComplaintTrends reportMonth={range.to.slice(0, 7)} trends={d.complaintTrends} demographics={d.demographics} filters={demographicFilters} onFiltersChange={changeDemographicFilters} />
               )),
             },
           ]}

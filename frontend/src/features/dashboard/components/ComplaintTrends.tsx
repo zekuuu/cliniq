@@ -17,6 +17,7 @@ import {
 import { cn } from '../../../lib/cn'
 import { formatDate, formatShortDate } from '../../../lib/dates'
 import { bucketName, bucketTotals, findClusters, type ClusterNote } from '../lib/trends'
+import { FullReportLink } from './FullReportLink'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../../lib/tableSort'
 import { colorToken } from '../../../lib/tokens'
 import { usePrefersReducedMotion } from '../../../hooks/usePrefersReducedMotion'
@@ -587,7 +588,7 @@ function VisitsTrendCard({
   )
 }
 
-function CommonComplaintsCard({ trends, clusters }: { trends: Trends; clusters: ClusterNote[] }) {
+function CommonComplaintsCard({ trends, clusters, reportMonth }: { trends: Trends; clusters: ClusterNote[]; reportMonth?: string }) {
   const headingId = useId()
   const max = Math.max(1, ...trends.series.map((s) => s.total))
   const otherTotal = trends.otherComplaints.reduce((sum, s) => sum + s.total, 0)
@@ -598,6 +599,7 @@ function CommonComplaintsCard({ trends, clusters }: { trends: Trends; clusters: 
         icon={<Icon name="barChart" />}
         title="Common complaints"
         description="Top complaints in this period."
+        actions={reportMonth && <FullReportLink report="Complaint summary" view="health" month={reportMonth} />}
       />
       <CardBody>
         {trends.series.length === 0 ? (
@@ -657,6 +659,8 @@ export interface ComplaintTrendsProps {
   demographics?: DemographicAnalysis
   filters?: { sex: 'female' | 'male' | null; gradeLevel: string | null }
   onFiltersChange?: (filters: { sex: 'female' | 'male' | null; gradeLevel: string | null }) => void
+  /** The month "View full report" opens; no link when it's left out. */
+  reportMonth?: string
 }
 
 function percent(value: number) {
@@ -768,14 +772,14 @@ function DemographicCharts({
   )
 }
 
-export function ComplaintTrends({ trends, demographics, filters, onFiltersChange }: ComplaintTrendsProps) {
+export function ComplaintTrends({ trends, demographics, filters, onFiltersChange, reportMonth }: ComplaintTrendsProps) {
   const clusters = useMemo(() => findClusters(trends), [trends])
   return (
     <section aria-label="Trends" className="flex flex-col gap-4">
       {demographics && filters && onFiltersChange && <DemographicCharts demographics={demographics} filters={filters} onFiltersChange={onFiltersChange} />}
       <div className={TRENDS_GRID}>
         <VisitsTrendCard trends={trends} clusters={clusters} />
-        <CommonComplaintsCard trends={trends} clusters={clusters} />
+        <CommonComplaintsCard trends={trends} clusters={clusters} reportMonth={reportMonth} />
       </div>
     </section>
   )

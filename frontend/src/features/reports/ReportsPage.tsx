@@ -90,9 +90,10 @@ function IncidentArchiveTable({ rows, sort, setSort, canOpen }: { rows: ArchiveR
 
 export function ReportsPage({ viewer }: { viewer: SessionUser }) {
   const location = useLocation()
-  const initialView = (location.state as { reportView?: ReportView } | null)?.reportView ?? 'monthly'
+  const opened = location.state as { reportView?: ReportView; reportMonth?: string } | null
+  const initialView = opened?.reportView ?? 'monthly'
   const [view, setView] = useState<ReportView>(initialView)
-  const [month, setMonth] = useState(todayISO().slice(0, 7))
+  const [month, setMonth] = useState(opened?.reportMonth ?? todayISO().slice(0, 7))
   // Kept here so the archive printout lists incidents in the order the screen shows.
   const [archiveSort, setArchiveSort] = useState<TableSortState<ArchiveSortKey>>({ key: 'date', direction: 'descending' })
   const { data, status, isRefetching, reload } = useAsyncData(`report|${month}`, () => fetchMonthlyReport(month))
