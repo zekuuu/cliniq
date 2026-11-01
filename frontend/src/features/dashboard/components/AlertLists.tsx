@@ -10,6 +10,8 @@ import {
   StatusBadge,
 } from '../../../components'
 import { useState } from 'react'
+import { PatientFilterSelect } from '../../../components/forms/PatientFilterSelect'
+import { matchesPatientFilter, type PatientFilter } from '../../../lib/patients'
 import { describeRange, type DateRange } from '../../../lib/dateRange'
 import { paths } from '../../../routes/paths'
 import type { DashboardSummary } from '../../../types/dashboard'
@@ -61,13 +63,15 @@ export function FollowUpsAlert({
   summary: DashboardSummary
   canNavigate: boolean
 }) {
-  const rows = summary.dueFollowUps
+  const [patient, setPatient] = useState<PatientFilter>('everyone')
+  const rows = summary.dueFollowUps.filter((row) => matchesPatientFilter(row.patient.kind, patient))
   return (
     <ListCard
       title={LISTS.followUps.title}
       icon={LISTS.followUps.icon}
       count={rows.length}
       titleTo={canNavigate ? paths.followUps : undefined}
+      actions={<PatientFilterSelect inline value={patient} onChange={setPatient} />}
       maxHeightClass={ALERT_LIST_HEIGHT}
       description={`Overdue, due today, or due in the next ${summary.upcomingWindowDays} days. Counted from today.`}
       empty={{
