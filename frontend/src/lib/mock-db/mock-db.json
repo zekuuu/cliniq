@@ -34,6 +34,7 @@
     "followUpAutoCloseDays": 7,
     "backupKeepLast": 60,
     "unusualAgeYears": 3,
+    "largeWriteOffPercent": 25,
     "vitalsUsualRanges": {
       "_note": "Starting ranges, nurse to confirm (ADR-051): common normal ranges by age group. The group follows the age when the student has a birthdate (ADR-054): grades1to6FromAge and grades7to12FromAge are starting values, nurse to confirm. With no birthdate the grade picks it; staff are adults. A reading outside them gets a soft note on the Visit and Incident forms and never blocks. The fever flag stays at vitalsWarningRanges.feverFromC.",
       "temperatureMinC": 36,
