@@ -2,7 +2,7 @@
   "meta": {
     "notice": "Real nationwide Philippine holidays, not synthetic data, and kept out of mock-db.json because the dates are fixed by proclamation (ADR-014's relative-date rule cannot apply). Read only through the data layer (getHolidays). Local town or province days and class suspensions are not listed here; Staff enter them as calendar events (ADR-020).",
     "source": "Official Gazette (bundled list)",
-    "lastUpdated": "2026-10-07",
+    "lastUpdated": "2026-11-01",
     "proclamations": [
       {
         "ref": "Proclamation No. 1006, s. 2025",
@@ -21,6 +21,12 @@
         "signed": "2026-05-21",
         "covers": "Eid'l Adha, Wednesday 27 May 2026, regular holiday",
         "readAt": "https://lawphil.net/executive/proc/proc2026/proc_1264_2026.html"
+      },
+      {
+        "ref": "Proclamation No. 1427, s. 2026",
+        "signed": "2026-09-08",
+        "covers": "Regular holidays, special (non-working) days, the special (working) day, and additional special (non-working) days for 2027. Eid'l Fitr and Eid'l Adha are proclaimed separately and are not listed yet.",
+        "readAt": "https://lawphil.net/executive/proc/proc2026/proc_1427_2026.html"
       }
     ],
     "verification": "Checked Wednesday, October 07, 2026. officialgazette.gov.ph blocked automated access (Cloudflare challenge, HTTP 403), so Proclamation No. 1006 was read in full from the Supreme Court E-Library copy, and Nos. 1189 and 1264 from Lawphil. Every date and name below matches those texts. A person should still confirm them against the Official Gazette pages in a browser."
@@ -46,6 +52,25 @@
     { "date": "2026-12-24", "name": "Christmas Eve", "kind": "special-non-working", "confirmed": true },
     { "date": "2026-12-25", "name": "Christmas Day", "kind": "regular", "confirmed": true },
     { "date": "2026-12-30", "name": "Rizal Day", "kind": "regular", "confirmed": true },
-    { "date": "2026-12-31", "name": "Last Day of the Year", "kind": "special-non-working", "confirmed": true }
+    { "date": "2026-12-31", "name": "Last Day of the Year", "kind": "special-non-working", "confirmed": true },
+    { "date": "2027-01-01", "name": "New Year's Day", "kind": "regular", "confirmed": true },
+    { "date": "2027-02-06", "name": "Chinese New Year", "kind": "special-non-working", "confirmed": true },
+    { "date": "2027-02-25", "name": "EDSA People Power Revolution Anniversary", "kind": "special-working", "confirmed": true },
+    { "date": "2027-03-25", "name": "Maundy Thursday", "kind": "regular", "confirmed": true },
+    { "date": "2027-03-26", "name": "Good Friday", "kind": "regular", "confirmed": true },
+    { "date": "2027-03-27", "name": "Black Saturday", "kind": "special-non-working", "confirmed": true },
+    { "date": "2027-04-09", "name": "Araw ng Kagitingan", "kind": "regular", "confirmed": true },
+    { "date": "2027-05-01", "name": "Labor Day", "kind": "regular", "confirmed": true },
+    { "date": "2027-06-12", "name": "Independence Day", "kind": "regular", "confirmed": true },
+    { "date": "2027-08-21", "name": "Ninoy Aquino Day", "kind": "special-non-working", "confirmed": true },
+    { "date": "2027-08-30", "name": "National Heroes Day", "kind": "regular", "confirmed": true },
+    { "date": "2027-11-01", "name": "All Saints' Day", "kind": "special-non-working", "confirmed": true },
+    { "date": "2027-11-02", "name": "All Souls' Day", "kind": "special-non-working", "confirmed": true },
+    { "date": "2027-11-30", "name": "Bonifacio Day", "kind": "regular", "confirmed": true },
+    { "date": "2027-12-08", "name": "Feast of the Immaculate Conception of Mary", "kind": "special-non-working", "confirmed": true },
+    { "date": "2027-12-24", "name": "Christmas Eve", "kind": "special-non-working", "confirmed": true },
+    { "date": "2027-12-25", "name": "Christmas Day", "kind": "regular", "confirmed": true },
+    { "date": "2027-12-30", "name": "Rizal Day", "kind": "regular", "confirmed": true },
+    { "date": "2027-12-31", "name": "Last Day of the Year", "kind": "special-non-working", "confirmed": true }
   ]
 }
