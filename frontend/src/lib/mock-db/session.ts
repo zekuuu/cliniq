@@ -82,6 +82,11 @@ export function beginPasswordChange(userId: string): void {
   storage()?.setItem(PENDING_PASSWORD_KEY, userId)
 }
 
+/** Leaving Force Password Change without finishing: the next person must not inherit the verified step. */
+export function clearPendingPasswordChange(): void {
+  storage()?.removeItem(PENDING_PASSWORD_KEY)
+}
+
 export function getPendingPasswordChangeUser(): SessionUser | null {
   const userId = storage()?.getItem(PENDING_PASSWORD_KEY)
   return userId ? sessionUserById(userId) : null

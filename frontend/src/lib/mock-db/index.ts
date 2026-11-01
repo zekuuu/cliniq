@@ -7,6 +7,7 @@ export * from './api'
 export type { SessionUser } from './session'
 export {
   beginPasswordChange,
+  clearPendingPasswordChange,
   clearMockSession,
   getAuthenticatedUser,
   getMockSessionUser,

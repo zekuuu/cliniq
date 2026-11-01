@@ -1,5 +1,5 @@
 import rawSeed from './mock-db.json'
-import type { ISODate } from '../../types/entities'
+import type { ISODate, ISODateTime } from '../../types/entities'
 import { EXCUSE_LETTER_RECIPIENT, excuseLetterBody } from '../excuseLetter'
 import { resolveDate, resolveDateTime, resolveSchoolDate, resolveSchoolDateTime } from './relativeDates'
 import type { DbState, MockDbSeed } from './types'
@@ -36,10 +36,29 @@ const shapeChecked: Widen<MockDbSeed> = rawSeed
 export const seed = shapeChecked as unknown as MockDbSeed
 
 /**
+ * Moving a past visit off a weekend (or keeping it before "now") can land it on a minute another visit
+ * holds. Each stamp claims its own minute, stepping back one minute at a time: a visit stays on its day
+ * and never moves into the future.
+ */
+function minuteClaimer() {
+  const taken = new Set<string>()
+  return (stamp: ISODateTime): ISODateTime => {
+    let at = stamp
+    while (taken.has(at.slice(0, 16))) {
+      const minutes = Number(at.slice(11, 13)) * 60 + Number(at.slice(14, 16)) - 1
+      at = `${at.slice(0, 11)}${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}${at.slice(16)}`
+    }
+    taken.add(at.slice(0, 16))
+    return at
+  }
+}
+
+/**
  * Resolves every relative date into the in-memory store. Clinic activity lands on school days
  * (`resolveSchoolDate`); backups, inventory expiry and calendar events keep their real days.
  */
 export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
+  const uniqueMinute = minuteClaimer()
   const config = { ...source.config }
   delete config._note
   const fo = source.frontendOnly
@@ -62,7 +81,7 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
     visits: source.visits.map((v) => ({
       ...v,
       personnelId: v.personnelId ?? null,
-      dateTime: resolveSchoolDateTime(v.dateTime, today),
+      dateTime: uniqueMinute(resolveSchoolDateTime(v.dateTime, today)),
       excuseLetterDraft: v.excuseLetterDraft
         ? {
             ...v.excuseLetterDraft,

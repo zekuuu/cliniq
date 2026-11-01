@@ -48,8 +48,8 @@ export interface Student {
  */
 export type StudentListRef = Pick<Student, 'id' | 'lrn'>
 
-/** A student as a multi-student screen may hold it: never the birthdate (ADR-054). */
-export type StudentListRow = Omit<Student, 'birthDate'>
+/** A student as a multi-student screen may hold it: no birthdate, health fields or contacts (ADR-054, API contract Q2). */
+export type StudentListRow = Pick<Student, 'id' | 'lrn' | 'fullName' | 'gradeLevel' | 'archived' | 'recordComplete'>
 
 /**
  * One result of a deliberate student search (a single lookup, so the name is shown): enough to
@@ -277,8 +277,6 @@ export interface Incident extends PatientRef {
   /** The student's grade level when Stage 1 was saved (ADR-047). Staff incidents have none. PROVISIONAL, pending the ERD. */
   gradeLevelAtTime?: string | null
   sectionAtTime?: string | null
-  /** The Admin's Acknowledge on an approved report (ADR-048): who and when. Never undone. PROVISIONAL, pending the ERD. */
-  acknowledged?: { byUserId: string; at: ISODateTime } | null
   /** Optional free text with suggestions, Stage 2 only (D11). Absent on older records. PROVISIONAL, pending the ERD. */
   bodyPart?: string | null
   /**

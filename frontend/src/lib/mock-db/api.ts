@@ -53,6 +53,7 @@ import {
   dateOf,
   followUpDueState,
   gradeLevels,
+  hasLaterFollowUp,
   withAutoClosedFollowUps,
   incompleteRecordQueue,
   inventoryStatusFor,
@@ -628,6 +629,8 @@ export interface StudentQuery {
   gradeLevel?: string
   includeArchived?: boolean
   limit?: number
+  /** Mock only: for the screens that join or search on the client. The backend does that work itself. */
+  fullLrn?: boolean
 }
 
 export function listStudents(query: StudentQuery = {}): Promise<StudentListRow[]> {
@@ -642,7 +645,7 @@ export function listStudents(query: StudentQuery = {}): Promise<StudentListRow[]
       )
       .sort((a, b) => a.fullName.localeCompare(b.fullName))
       .slice(0, query.limit ?? Infinity)
-      .map(toStudentRow)
+      .map((st) => toStudentRow(st, query.fullLrn))
   })
 }
 
@@ -760,7 +763,7 @@ export type SaveStudentResult =
  * Create or update a student. On create, a name + grade-level match against an active record blocks
  * the save until `confirmDuplicate` is passed (Frontend Context Brief §6, duplicate detection).
  * On update the LRN can't change, and a changed name needs `nameCorrectionReason`; the audit entry
- * records that the name was corrected and why, never the old or new name.
+ * records that the name was corrected and why, never the old or new name (ADR-058).
  */
 export function saveStudent(
   input: StudentInput,
@@ -804,7 +807,7 @@ export function saveStudent(
     const summary = nameChanged ? `${changed}. Name corrected; reason: ${reason}` : changed
     const wasIncomplete = existing ? missingRequiredFields(existing).length > 0 : false
     let record: SeedStudent
-    if (existing) record = Object.assign(existing, fields)
+    if (existing) record = Object.assign(existing, fields, nameChanged && { nameCorrectionReason: reason })
     else {
       record = { id: nextId('student', s.students), archived: false, ...fields }
       s.students.push(record)
@@ -838,9 +841,9 @@ export function archiveStudent(studentId: string, actor?: SessionUser): Promise<
 
 export type IncompleteRecord = IncompleteRecordRow & { resolvedByName: string | null }
 
-export function getIncompleteRecordQueue(): Promise<IncompleteRecord[]> {
+export function getIncompleteRecordQueue(options: { fullLrn?: boolean } = {}): Promise<IncompleteRecord[]> {
   return read('incomplete records', (s) =>
-    incompleteRecordQueue(s).map((row) => ({ ...row, resolvedByName: userName(s, row.review?.resolvedByUserId ?? null) })),
+    incompleteRecordQueue(s, options.fullLrn).map((row) => ({ ...row, resolvedByName: userName(s, row.review?.resolvedByUserId ?? null) })),
   )
 }
 
@@ -1734,8 +1737,6 @@ export interface IncidentTrail {
   recorded: { by: string; at: ISODateTime } | null
   completed: { by: string; at: ISODateTime } | null
   approved: { by: string; at: ISODateTime } | null
-  /** The Admin's Acknowledge (ADR-048), from the incident itself. */
-  acknowledged: { by: string; at: ISODateTime } | null
 }
 
 /**
@@ -1750,33 +1751,11 @@ export function getIncidentTrail(incidentId: string): Promise<IncidentTrail> {
       )
       return entry ? { by: userName(s, entry.userId) ?? 'Unknown user', at: entry.timestamp } : null
     }
-    const acknowledged = s.incidents.find((i) => i.id === incidentId)?.acknowledged
     return {
       recorded: find('submit', ['incident', 'incident-stage-1']),
       completed: find('update', ['incident-stage-2']),
       approved: find('approve', ['incident-report']),
-      acknowledged: acknowledged ? { by: userName(s, acknowledged.byUserId) ?? 'Unknown user', at: acknowledged.at } : null,
     }
-  })
-}
-
-/** ADR-048: only the Admin acknowledges, only an approved report, and only once. */
-export class AcknowledgeError extends Error {}
-
-/**
- * The Admin's Acknowledge on an approved incident report (ADR-048, amends ADR-038): records who and
- * when, writes an audit entry, and is never undone. It changes nothing else on the report.
- */
-export function acknowledgeIncidentReport(incidentId: string, actor?: SessionUser): Promise<Incident> {
-  return write('acknowledge incident report', (s) => {
-    const by = actorOr(actor)
-    if (by.role !== 'admin') throw new AcknowledgeError('Only the Admin/Principal acknowledges an incident report.')
-    const incident = must(s.incidents.find((i) => i.id === incidentId && visibleTo(by)(i)), 'Incident')
-    if (!incidentApproved(s, incidentId)) throw new AcknowledgeError('Only an approved incident report can be acknowledged.')
-    if (incident.acknowledged) throw new AcknowledgeError('This incident report is already acknowledged.')
-    incident.acknowledged = { byUserId: by.id, at: now(s) }
-    audit(s, by, 'update', { type: 'incident-report', id: incidentId }, 'Acknowledged')
-    return incident
   })
 }
 
@@ -1806,6 +1785,8 @@ export function listFollowUps(query: { status?: FollowUpStatus | '' } = {}): Pro
   return read('follow-ups', (s) => {
     return s.followUps
       .filter((f) => !query.status || f.status === query.status)
+      // A Missed follow-up given a new date leaves the list; the record stays (Zean, November 1, 2026).
+      .filter((f) => !(f.status === 'missed' && hasLaterFollowUp(s.followUps, f)))
       .sort((a, b) => a.followUpDate.localeCompare(b.followUpDate))
       .map((f) => ({
         ...f,
@@ -1829,13 +1810,26 @@ export function setFollowUpStatus(id: string, status: FollowUpStatus, actor?: Se
   })
 }
 
-/** "Set a new date" after Missed or Cancelled: a new pending follow-up for the same student, record and reason. */
+/**
+ * "Set a new date" after Missed, or once a pending follow-up reads as Missed (ADR-051): a new pending
+ * follow-up for the same patient, record and reason. A stay-home instruction carries over until the
+ * clinician clears it (ADR-049). A follow-up that only read as Missed is closed for good here.
+ */
 export function rescheduleFollowUp(id: string, followUpDate: ISODate, actor?: SessionUser): Promise<FollowUp> {
   return write('reschedule follow-up', (s) => {
     const old = must(s.followUps.find((f) => f.id === id), 'Follow-up')
-    if (old.status !== 'missed' && old.status !== 'cancelled') throw new Error('Only a missed or cancelled follow-up gets a new date.')
+    const [effective] = withAutoClosedFollowUps([old], s.today, s.config.followUpAutoCloseDays)
+    if (effective.status !== 'missed') throw new Error('Only a missed follow-up gets a new date.')
+    if (hasLaterFollowUp(s.followUps, old)) throw new Error('This follow-up already has a new date.')
     if (!followUpDate || followUpDate < s.today) throw new Error("The new date can't be in the past.")
-    return createFollowUp(s, actorOr(actor), old, old.relatedRecord, { followUpDate, reason: old.reason, notes: old.notes })
+    Object.assign(old, { status: effective.status, statusReason: effective.statusReason })
+    return createFollowUp(s, actorOr(actor), old, old.relatedRecord, {
+      followUpDate,
+      reason: old.reason,
+      notes: old.notes,
+      stayHomeUntilCleared: old.stayHomeUntilCleared,
+      stayHomeNote: old.stayHomeNote,
+    })
   })
 }
 
