@@ -145,3 +145,19 @@ describe('Excuse Letter', () => {
   })
 })
 
+describe('Draft watermark (Professor, October 16)', () => {
+  beforeEach(() => resetMockDb())
+
+  it('marks a draft on screen only, behind a boxed DRAFT notice, and an approved letter has neither', async () => {
+    const draft = renderWithRouter(<ExcuseLetterPage visitId="visit-0151" />)
+    await screen.findByRole('heading', { name: 'Excuse Letter' })
+    expect(screen.getByTestId('draft-watermark')).toHaveClass('print:hidden')
+    expect(screen.getByTestId('draft-watermark')).toHaveAttribute('alt', '')
+    expect(screen.getByText('DRAFT. Not valid until approved.')).toHaveClass('print:hidden')
+    draft.unmount()
+    renderWithRouter(<ExcuseLetterPage visitId="visit-0141" />)
+    await screen.findByRole('heading', { name: 'Excuse Letter' })
+    expect(screen.queryByTestId('draft-watermark')).not.toBeInTheDocument()
+    expect(screen.queryByText('DRAFT. Not valid until approved.')).not.toBeInTheDocument()
+  })
+})

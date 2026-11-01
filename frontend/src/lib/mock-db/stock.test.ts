@@ -228,12 +228,12 @@ describe('Adjust Stock', () => {
 
   it('disposes of an expired batch and records the adjustment, leaving the expiry date for Restock', async () => {
     const before = await getInventoryItem(ORS)
-    const after = await adjustInventoryStock(ORS, { countedQuantity: 0, reason: 'expired_disposed' })
+    const after = await adjustInventoryStock(ORS, { countedQuantity: 0, reason: 'expired_disposed', note: 'Whole batch past its expiry date' })
     expect(after.currentStock).toBe(0)
     expect(after.expirationDate).toBe(before.expirationDate)
     expect(after.flags).toContain('low_stock')
     expect(transactions().at(-1)).toMatchObject({ type: 'adjustment', itemId: ORS, quantity: -25, reason: 'expired_disposed', studentId: null, visitId: null })
-    expect(getRecordedAuditEntries().at(-1)).toMatchObject({ actionType: 'submit', targetRecord: { type: 'inventory-adjustment' }, summary: 'Expired - disposed' })
+    expect(getRecordedAuditEntries().at(-1)).toMatchObject({ actionType: 'submit', targetRecord: { type: 'inventory-adjustment' }, summary: 'Expired - disposed · Large write-off' })
     const restocked = await restockInventoryItem(ORS, 30, '2099-12-31')
     expect(restocked.flags).not.toContain('expired')
   })

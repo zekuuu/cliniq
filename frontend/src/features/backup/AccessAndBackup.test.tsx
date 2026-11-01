@@ -10,6 +10,7 @@ import {
   resetMockAuth,
   resetMockDb,
   type SessionUser,
+  verifyLatestBackup,
 } from '../../lib/mock-db'
 import { db } from '../../lib/mock-db/store'
 import { AppRoutes } from '../../routes/AppRoutes'
@@ -67,6 +68,14 @@ describe('stale-backup alert (BK-2, D5)', () => {
     db().backupLogs = []
     for (const location of db().frontendOnly.backupLocations) Object.assign(location, { lastBackupAt: null, lastResult: null })
     expect((await summary()).backupAlert?.kind).toBe('never')
+  })
+})
+
+describe('verifying a backup', () => {
+  it('refuses a failed run (Q10)', async () => {
+    db().backupLogs.push({ lastRun: new Date().toISOString(), fileSizeBytes: 0, status: 'failed', verifiedByUserId: null })
+    await expect(verifyLatestBackup()).rejects.toThrow('cannot be verified')
+    expect(db().backupLogs.at(-1)?.verifiedByUserId).toBeNull()
   })
 })
 

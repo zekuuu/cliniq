@@ -1,7 +1,8 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { getInventoryItem, getStudent, resetMockDb } from '../../lib/mock-db'
+import { adjustInventoryStock, getInventoryItem, getRecordedAuditEntries, getStudent, isLargeWriteOff, listInventory, resetMockDb } from '../../lib/mock-db'
+import { db } from '../../lib/mock-db/store'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { pickDate } from '../../test/pickDate'
 import { selectOption } from '../../test/selectOption'
@@ -51,6 +52,7 @@ describe('Adjust Stock', () => {
     await user.click(within(dialog).getByRole('radio', { name: 'Set to counted quantity' }))
     await user.type(within(dialog).getByLabelText(/counted quantity/i), '0')
     await selectOption(user, within(dialog).getByLabelText(/^reason/i), 'Expired - disposed')
+    await user.type(within(dialog).getByLabelText(/^note/i), 'Whole batch past its expiry date')
     await user.click(within(dialog).getByRole('button', { name: 'Save Adjustment' }))
     expect(await screen.findByText(/Oral Rehydration Salts adjusted \(Expired - disposed\)\. Usable stock is now 0 sachets/)).toBeInTheDocument()
     expect(await stock('item-0004')).toBe(0)
@@ -162,5 +164,59 @@ describe('Standalone Dispense', () => {
     await user.type(await screen.findByRole('combobox', { name: 'Item' }), 'oral')
     await user.click(screen.getByRole('option', { name: /Oral Rehydration Salts/ }))
     expect(screen.getByRole('combobox', { name: 'Item' })).toBeInTheDocument()
+  })
+})
+
+describe('Large write-off rule (panel review IV-7)', () => {
+  const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
+  const ADMIN = { id: 'user-admin-01', name: 'Principal', role: 'admin' } as const
+  const LONG_NOTE = 'Water damage in the supply cabinet'
+  beforeEach(() => resetMockDb())
+
+  it('draws the line at the percent, and at an empty item', () => {
+    expect(isLargeWriteOff(-24, 100, 25)).toBe(false)
+    expect(isLargeWriteOff(-25, 100, 25)).toBe(true)
+    expect(isLargeWriteOff(-26, 100, 25)).toBe(true)
+    expect(isLargeWriteOff(-1, 1, 25)).toBe(true)
+    expect(isLargeWriteOff(5, 10, 25)).toBe(false)
+  })
+
+  async function target() {
+    const items = await listInventory()
+    const onHandOf = (item: (typeof items)[number]) => item.batches.reduce((sum, batch) => sum + batch.quantity, 0)
+    const item = items.find((candidate) => onHandOf(candidate) >= 8)!
+    return { item, onHand: onHandOf(item), batch: [...item.batches].sort((a, b) => b.quantity - a.quantity)[0] }
+  }
+
+  it('refuses a short note on a large removal, and flags the saved one in the audit without the note', async () => {
+    const { item, onHand, batch } = await target()
+    const change = -Math.min(batch.quantity, Math.ceil(onHand / 4))
+    db().config.largeWriteOffPercent = 1
+    await expect(adjustInventoryStock(item.id, { batchId: batch.id, change, reason: 'damaged_spilled', note: 'too short' }, STAFF)).rejects.toThrow('at least 20 characters')
+    await adjustInventoryStock(item.id, { batchId: batch.id, change, reason: 'damaged_spilled', note: LONG_NOTE }, STAFF)
+    expect(getRecordedAuditEntries().at(-1)!.summary).toBe('Damaged or spilled · Large write-off')
+  })
+
+  it('follows the setting', async () => {
+    const { item, batch } = await target()
+    db().config.largeWriteOffPercent = 100
+    await adjustInventoryStock(item.id, { batchId: batch.id, change: -1, reason: 'damaged_spilled' }, STAFF)
+    db().config.largeWriteOffPercent = 1
+    await expect(adjustInventoryStock(item.id, { batchId: batch.id, change: -1, reason: 'damaged_spilled' }, STAFF)).rejects.toThrow('large write-off')
+  })
+
+  it('does not let the Admin adjust stock', async () => {
+    const { item, batch } = await target()
+    await expect(adjustInventoryStock(item.id, { batchId: batch.id, change: -1, reason: 'damaged_spilled' }, ADMIN)).rejects.toThrow('Only the School Clinician')
+  })
+
+  it('makes the note required on the form once the removal is large', async () => {
+    const user = userEvent.setup()
+    db().config.largeWriteOffPercent = 1
+    renderWithRouter(<InventoryListPage />)
+    await selectOption(user, await screen.findByRole('button', { name: /^Manage Gauze Pads/ }), 'Adjust Stock')
+    const dialog = screen.getByRole('dialog', { name: 'Adjust Stock: Gauze Pads' })
+    await user.type(within(dialog).getByLabelText(/quantity to remove/i), '1')
+    expect(await within(dialog).findByText(/Large write-off: explain it/)).toBeInTheDocument()
   })
 })

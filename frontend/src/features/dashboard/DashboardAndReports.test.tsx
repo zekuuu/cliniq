@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { getDashboardSummary, getMockToday, resetMockDb, type SessionUser } from '../../lib/mock-db'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { ReportsPage } from '../reports/ReportsPage'
+import { selectOption } from '../../test/selectOption'
+import { FollowUpsAlert } from './components/AlertLists'
 import { trendFor } from './lib/statTrend'
 import { urgentCount } from './lib/urgentCount'
 
@@ -66,5 +68,21 @@ describe('Incident register and Complaint summary (RP-4, RP-7)', () => {
     const links = screen.getAllByRole('link', { name: /^Open report:/ })
     for (const link of links) expect(link.getAttribute('href')).toMatch(/\/report$/)
     expect(screen.getByRole('button', { name: /print/i })).toHaveAttribute('aria-disabled', 'true')
+  })
+})
+
+describe('Due follow-ups: Patient filter (D11)', () => {
+  it('narrows the list and its count, Everyone by default', async () => {
+    const user = userEvent.setup()
+    resetMockDb()
+    const today = getMockToday()
+    const summary = await getDashboardSummary({ range: { preset: 'today', from: today, to: today } })
+    const staffOnly = summary.dueFollowUps.filter((row) => row.patient.kind !== 'student').length
+    renderWithRouter(<FollowUpsAlert summary={summary} canNavigate />)
+    const filter = screen.getByLabelText('Patient')
+    expect(filter).toHaveTextContent('Everyone')
+    await selectOption(user, filter, 'Staff')
+    const rows = screen.queryAllByRole('listitem')
+    expect(rows).toHaveLength(staffOnly)
   })
 })
