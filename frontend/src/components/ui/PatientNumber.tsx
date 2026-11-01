@@ -8,7 +8,7 @@ import { MaskedLrn } from './MaskedLrn'
  */
 export function PatientNumber({ patient, chip = true }: { patient: PatientNumberValue; chip?: boolean }) {
   return (
-    <span className="inline-flex flex-wrap items-center gap-1.5">
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
       {patient.kind === 'student' ? (
         <MaskedLrn lrn={patient.number} />
       ) : (

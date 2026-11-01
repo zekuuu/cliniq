@@ -123,7 +123,7 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   if (viewer.role !== 'staff') {
     return (
       <div className="mx-auto max-w-page-wide px-4 pt-10 pb-8 sm:px-8">
-        <ErrorState title="Staff access required." />
+        <ErrorState asPageTitle title="Staff access required." />
       </div>
     )
   }
@@ -131,7 +131,7 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
     return (
       <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
         {back}
-        <ErrorState title="Unable to load staff records." onRetry={reload} />
+        <ErrorState asPageTitle title="Unable to load staff records." onRetry={reload} />
       </div>
     )
   }
