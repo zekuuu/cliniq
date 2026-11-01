@@ -2,13 +2,14 @@ digraph ERD {
 rankdir=LR; compound=true; fontname="Helvetica"; nodesep=0.35; ranksep=1.3; splines=true;
 node [shape=box,style="rounded,filled",fontname="Helvetica",fontsize=11,margin="0.12,0.06"];
 edge [fontname="Helvetica",fontsize=8,color="#6b7280",arrowsize=0.7];
-labelloc=t; fontsize=18; label="CLINIQ database: all 44 tables (PROPOSED v1, NOT FINAL)\nclusters = owning backend module; dashed box = Spec table (not in the frontend contract yet); arrow = foreign key, pointing at the parent; same patient = composite key that forces the record and its parent to be for the same patient\n";
+labelloc=t; fontsize=18; label="CLINIQ database: all 44 tables (approved, ADR-057)\nclusters = owning backend module; dashed box = Spec table (not in the frontend contract yet); arrow = foreign key, pointing at the parent; same patient = composite key that forces the record and its parent to be for the same patient\n";
 subgraph cluster_0 { label="UserManagement"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
   users [fillcolor="#e8e3fb", style="rounded,filled"];
   password_histories [fillcolor="#e8e3fb", style="rounded,filled"];
 }
 subgraph cluster_1 { label="Shared"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
   system_settings [fillcolor="#eceff1", style="rounded,filled"];
+  reference_settings [fillcolor="#eceff1", style="rounded,filled"];
   number_sequences [fillcolor="#eceff1", style="rounded,filled"];
   grade_levels [fillcolor="#eceff1", style="rounded,filled"];
   follow_ups [fillcolor="#eceff1", style="rounded,filled"];
@@ -55,7 +56,6 @@ subgraph cluster_7 { label="InventoryTracker"; style="rounded,filled"; color="#9
   inventory_transaction_batches [fillcolor="#e4f0d0", style="rounded,filled"];
 }
 subgraph cluster_8 { label="ReportsGeneration"; style="rounded,filled"; color="#9ca3af"; fillcolor="#fafafa"; fontsize=13;
-  reports [fillcolor="#e9e0d4", style="rounded,filled"];
   sports_reports [fillcolor="#e9e0d4", style="rounded,filled"];
   sports_report_students [fillcolor="#e9e0d4", style="rounded,filled"];
 }
@@ -84,7 +84,6 @@ inventory_transactions -> incidents [label="same patient"];
 inventory_transactions -> inventory_items [label=""];
 inventory_transactions -> students [label=""];
 inventory_transactions -> visits [label="same patient"];
-parent_notification_attempts -> emergency_contacts [label=""];
 parent_notification_attempts -> incidents [label=""];
 pe_referrals -> incidents [label="same patient"];
 pe_referrals -> students [label=""];
@@ -119,6 +118,7 @@ inventory_transaction_batches -> inventory_transactions [label=""];
 inventory_transaction_batches -> inventory_batches [label=""];
 backup_location_results -> backup_logs [label=""];
 backup_location_results -> backup_locations [label=""];
+reference_settings -> users [label=""];
 users_note [shape=note,style=filled,fillcolor="#ffffff",fontsize=9,label="Left out for readability:\nmost tables also point at users\n(created_by / logged_by /\napproved_by ...). 27 tables do."];
 users_note -> users [style=dotted,arrowhead=none];
 }
