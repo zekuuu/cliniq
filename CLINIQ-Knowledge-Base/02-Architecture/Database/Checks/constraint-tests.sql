@@ -251,7 +251,6 @@ CALL t_rejects('chk_notifications_source', "INSERT INTO parent_notification_atte
 CALL t_accepts('a call for a staff patient keeps its snapshot', "INSERT INTO parent_notification_attempts (incident_id, called_name, called_relationship, phone_dialed, called_source, outcome, attempted_at, logged_by_user_id) VALUES (3, 'Kin One', 'Spouse', '0920', 'emergency_contact', 'reached', NOW(), 1)");
 CALL t_rejects('uq_report_approvals_incident', "INSERT INTO incident_report_approvals (incident_id, reference_no, approved_by_user_id, approved_at) VALUES (1, 'IR-2026-00002', 1, NOW())");
 CALL t_rejects('uq_report_approvals_reference', "INSERT INTO incident_report_approvals (incident_id, reference_no, approved_by_user_id, approved_at) VALUES (2, 'IR-2026-00001', 1, NOW())");
-CALL t_rejects('chk_report_acknowledged', "UPDATE incident_report_approvals SET acknowledged_at = NOW() WHERE incident_id = 1");
 
 -- ---------------------------------------------------------------------------------
 -- Follow-ups, PE referrals, medicine lines

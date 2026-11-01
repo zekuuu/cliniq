@@ -4,7 +4,7 @@
 
 ## Now in the drafts
 
-Staff patients and the exactly-one-patient rule (ADR-043, ADR-053); batches and allocations (ADR-030, ADR-035); `birth_date`, no student `contact_number` (ADR-054); `section`, `grade_level_at_time`, `section_at_time` (ADR-047); `resting_in_clinic`; extra complaint tags (ADR-053); collected-by, stay-home, stored wording, voided and superseded letters (ADR-049); avoid-if-allergic words and brand; Acknowledge (ADR-048); backup locations and a result per location (ADR-052); `print` and `view` audit actions; the 10-year audit retention setting; the starting values in `system_settings` (ADR-051); the visit logbook fields and the panel-review columns that were in the dictionary but missing from the SQL; `users.email` (ADR-048); archiving without a reason (ADR-047).
+Staff patients and the exactly-one-patient rule (ADR-043, ADR-053); batches and allocations (ADR-030, ADR-035); `birth_date`, no student `contact_number` (ADR-054); `section`, `grade_level_at_time`, `section_at_time` (ADR-047); `resting_in_clinic`; extra complaint tags (ADR-053); collected-by, stay-home, stored wording, voided and superseded letters (ADR-049); avoid-if-allergic words and brand; backup locations and a result per location (ADR-052); `print` and `view` audit actions; the 10-year audit retention setting; the starting values in `system_settings` (ADR-051); the visit logbook fields and the panel-review columns that were in the dictionary but missing from the SQL; `users.email` (ADR-048); archiving without a reason (ADR-047).
 
 ## Questions for the team's approval
 
@@ -41,7 +41,7 @@ Each entity and each group of mock functions against the tables that hold it. Ga
 | `Visit` | `listVisits`, `getVisit`, `recordVisit`, `updateVisit`, `markVisitEnteredInError` | `visits`, `visit_extra_complaints`, `treatment_item_lines` | G9, G10 |
 | `ExcuseLetterApproval`, draft | `getExcuseLetterApproval`, `getExcuseLetterById`, `getStudentExcuseLetters`, `listPendingExcuseLetters`, `approveExcuseLetter`, `issueReplacementExcuseLetter` | `excuse_letters` | G11 |
 | `PeReferral` | `submitPeReferral` | `pe_referrals` | G12 |
-| `Incident` | `listIncidents`, `getIncident`, `saveIncidentStageOne`, `completeIncidentStageTwo`, `getIncidentTrail`, `listApprovedIncidentReportIds`, `approveIncidentReport`, `acknowledgeIncidentReport` | `incidents`, `incident_vital_readings`, `hospital_referrals`, `incident_report_approvals`, `treatment_item_lines` | G13, G14, G15 |
+| `Incident` | `listIncidents`, `getIncident`, `saveIncidentStageOne`, `completeIncidentStageTwo`, `getIncidentTrail`, `listApprovedIncidentReportIds`, `approveIncidentReport` | `incidents`, `incident_vital_readings`, `hospital_referrals`, `incident_report_approvals`, `treatment_item_lines` | G13, G14, G15 |
 | `ParentNotificationAttempt` | `addParentNotification`, `completeIncidentStageTwo` | `parent_notification_attempts` | G16 |
 | `FollowUp` | `listFollowUps`, `setFollowUpStatus`, `rescheduleFollowUp` | `follow_ups` | G17 |
 | `InventoryItem`, batches | `listInventory`, `getInventoryItem`, `saveInventoryItem`, `restockInventoryItem` | `inventory_items`, `inventory_batches`, `inventory_item_allergy_words` | G18, G19 |

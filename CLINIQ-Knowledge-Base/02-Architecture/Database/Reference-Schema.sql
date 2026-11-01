@@ -603,16 +603,12 @@ CREATE TABLE incident_report_approvals (
   approved_by_user_id  BIGINT UNSIGNED NOT NULL,
   approved_at          DATETIME        NOT NULL,
   snapshot_text        MEDIUMTEXT      NULL,
-  acknowledged_by_user_id BIGINT UNSIGNED NULL,
-  acknowledged_at      DATETIME        NULL,
   created_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_report_approvals_incident (incident_id),
   UNIQUE KEY uq_report_approvals_reference (reference_no),
   CONSTRAINT fk_report_approvals_incident FOREIGN KEY (incident_id) REFERENCES incidents (id) ON DELETE CASCADE,
-  CONSTRAINT chk_report_acknowledged CHECK ((acknowledged_at IS NULL) = (acknowledged_by_user_id IS NULL)),
-  CONSTRAINT fk_report_approvals_user FOREIGN KEY (approved_by_user_id) REFERENCES users (id),
-  CONSTRAINT fk_report_approvals_ack_by FOREIGN KEY (acknowledged_by_user_id) REFERENCES users (id)
+  CONSTRAINT fk_report_approvals_user FOREIGN KEY (approved_by_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------------

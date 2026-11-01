@@ -287,7 +287,7 @@ The student record. The LRN identifies the student to people (masked on lists, A
 | `section` | `varchar(60)` | yes | NULL | Optional until the yearly import fills it (ADR-047). Shown on the Student Profile and its printout only. |
 | `sex` | `varchar(6)` | yes | NULL | `female` or `male`, as recorded by the school. Required for a completed record (ADR-031); nullable during an incomplete import. |
 | `birth_date` | `date` | yes | NULL | Optional (ADR-054). The age is calculated, never stored. Never on a list, picker, Dashboard, report or other printout. |
-| `name_correction_reason` | `varchar(300)` | yes | NULL | The reason given for the latest name correction (at least 3 characters). Stays on the record, never in the audit summary (ADR-017, contract Q3). |
+| `name_correction_reason` | `varchar(300)` | yes | NULL | The reason given for the latest name correction (at least 3 characters). Also written in the audit summary (ADR-058). |
 | `archived_at` | `datetime` | yes | NULL | Non-null = archived (hidden from default lists). Starts the 5-year retention clock. |
 | `archived_by_user_id` | `bigint unsigned` | yes | NULL |  |
 | `import_batch_id` | `bigint unsigned` | yes | NULL | Set when the record was created by a registrar import. |
@@ -713,8 +713,6 @@ The nurse's sign-off on an incident report. Stored as a real record because the 
 | `approved_by_user_id` | `bigint unsigned` | no |  |  |
 | `approved_at` | `datetime` | no |  |  |
 | `snapshot_text` | `mediumtext` | yes | NULL | Frozen report content at sign-off (D-08). |
-| `acknowledged_by_user_id` | `bigint unsigned` | yes | NULL | The Admin who pressed Acknowledge (ADR-048). Never undone. |
-| `acknowledged_at` | `datetime` | yes | NULL | Both or neither (`chk_report_acknowledged`). |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 
 **Indexes:** UNIQUE `uq_report_approvals_incident` (`incident_id`); UNIQUE `uq_report_approvals_reference` (`reference_no`)
