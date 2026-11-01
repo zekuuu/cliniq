@@ -969,6 +969,7 @@ INSERT INTO system_settings (setting_key, setting_value, value_type, description
   ('stale_backup_hours',            '48', 'int', 'Hours after the last good backup before the Dashboard warns (ADR-037)'),
   ('backup_keep_last',              '60', 'int', 'Backups kept per location (ADR-052)'),
   ('unusual_age_years',             '3',  'int', 'Years from the usual age for the grade that raise a soft note (ADR-054)'),
+  ('large_write_off_percent',       '25', 'int', 'Share of an item on hand at which a stock removal needs a written note (ADR-061)'),
   ('percent_min_prior_count',       '5',  'int', 'Prior-period count below which a stat card shows both counts (panel review DB-2)');
 
 INSERT INTO reference_settings (setting_key, value_format, setting_value, description) VALUES
