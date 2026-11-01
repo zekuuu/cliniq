@@ -3,6 +3,7 @@ import { screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { addDays, formatDateRange } from '../../lib/dates'
 import { getMockToday } from '../../lib/mock-db'
+import { toSchoolDay } from '../../lib/mock-db/relativeDates'
 import { StudentProfilePage } from './StudentProfilePage'
 
 describe('Student Profile', () => {
@@ -47,7 +48,7 @@ describe('Student Profile', () => {
     expect(await screen.findByRole('heading', { name: 'Excuse Letters' })).toBeInTheDocument()
     const today = getMockToday()
     expect(
-      screen.getByText(`${formatDateRange(addDays(today, -9), addDays(today, -7))} · Sent home`),
+      screen.getByText(`${formatDateRange(toSchoolDay(addDays(today, -9), today), toSchoolDay(addDays(today, -7), today))} · Sent home`),
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'View visit' })).toHaveAttribute('href', '/visits/visit-0139')
   })

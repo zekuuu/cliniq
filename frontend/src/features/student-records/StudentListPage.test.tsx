@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { StudentListPage } from './StudentListPage'
 import { fetchStudentList } from './api/studentListApi'
+import { getStudent, listStudents } from '../../lib/mock-db'
 import { lrnLabel } from '../../lib/lrn'
 
 describe('Student List', () => {
@@ -34,11 +35,11 @@ describe('Student List', () => {
 
   it('searches by LRN', async () => {
     const user = userEvent.setup()
-    const [student] = await fetchStudentList({
+    const student = await getStudent((await fetchStudentList({
       search: '',
       gradeLevel: '',
       includeArchived: false,
-    })
+    }))[0].id)
 
     renderWithRouter(<StudentListPage />)
     await screen.findByRole('heading', { name: 'Student List' })
@@ -55,9 +56,8 @@ describe('Student List', () => {
 
   it('keeps archived records hidden until requested', async () => {
     const user = userEvent.setup()
-    const archivedStudent = (
-      await fetchStudentList({ search: '', gradeLevel: '', includeArchived: true })
-    ).find((student) => student.archived)
+    const rows = await listStudents({ includeArchived: true, fullLrn: true })
+    const archivedStudent = rows.find((student) => student.archived)
 
     expect(archivedStudent).toBeDefined()
     renderWithRouter(<StudentListPage />)

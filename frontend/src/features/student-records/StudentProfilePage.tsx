@@ -22,8 +22,9 @@ import {
   StatusBadge,
   type StatusMap,
 } from '../../components'
-import { useState, type ReactNode } from 'react'
-import { Link, useLocation } from 'react-router'
+import { useEffect, useState, type ReactNode } from 'react'
+import { Link } from 'react-router'
+import { clearSavedMessage, peekSavedMessage } from '../../lib/savedMessage'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { ageOn, ageText } from '../../lib/age'
 import { formatDate, formatDateRange, formatDateTime } from '../../lib/dates'
@@ -528,14 +529,15 @@ export function StudentProfilePage({
     fetchStudentProfile(studentId, viewer),
   )
   // Set by Edit Student after a successful save, which returns here.
-  const savedMessage = (useLocation().state as { savedMessage?: string } | null)?.savedMessage
+  const [savedMessage] = useState(peekSavedMessage)
+  useEffect(clearSavedMessage, [])
   const back = <BackButton fallback={paths.students} />
 
   if (status === 'error') {
     return (
       <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
         {back}
-        <ErrorState title="Unable to load the student profile." onRetry={reload} />
+        <ErrorState asPageTitle title="Unable to load the student profile." onRetry={reload} />
       </div>
     )
   }

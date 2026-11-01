@@ -35,7 +35,7 @@ function toRecord(row: QueueRow): IncompleteRecord {
 }
 
 export async function fetchIncompleteRecords(): Promise<IncompleteRecord[]> {
-  const rows = await getIncompleteRecordQueue()
+  const rows = await getIncompleteRecordQueue({ fullLrn: true })
   return rows
     .map(toRecord)
     .sort((a, b) => (b.importedAt ?? '').localeCompare(a.importedAt ?? '') || a.fullName.localeCompare(b.fullName))
