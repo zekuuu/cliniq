@@ -262,7 +262,7 @@ Staff identify a student through Students search or each form's student picker. 
 - Add inventory item
 - Optional "Generic or branded" tag on an item (Generic, Branded, or Not specified, the default), shown on the item form, the item's Batches details and the Dispense picker, not as a list column (Sir Rey, Sunday, October 25, 2026)
 - An expiration date can't be in the past, on Add Item or Restock; today is allowed (Zean, Sunday, October 25, 2026 — 23:55 PHT).
-- On Add Item the first batch follows Restock's rule (ADR-035, panel review IV-2): an expiration date, or an explicit "This item has no expiration date" confirmation; a blank date alone can't be saved (also enforced in the data layer). A non-blocking warning appears when the name and unit match an existing item (case, spacing and a trailing "s" ignored: "Paracetamol 500mg tablet already exists. Restock it instead?", with a link); the unit is free text with suggestions from the units already used (panel review IV-3)
+- On Add Item the first batch follows Restock's rule (ADR-035, panel review IV-2): an expiration date, or an explicit "This item has no expiration date" confirmation; a blank date alone can't be saved (also enforced in the data layer). Item names are unique (API contract Q11): an exact name match, ignoring case and outer spaces, is refused on save whatever the unit. A warning appears while typing when the name matches an existing item (case, spacing and a trailing "s" ignored: "Paracetamol 500mg tablet already exists. Restock it instead?", with a link); the unit is free text with suggestions from the units already used (panel review IV-3)
 - An item can carry an optional **"avoid if allergic to"** tag; see Module 2 (ADR-049, ADR-018)
 - Edit inventory item
 - Delete/archive inventory item
@@ -276,7 +276,8 @@ Staff identify a student through Students search or each form's student picker. 
 - Expired batches can't be dispensed (rejected by the data layer, not just the UI); items with no expiration date are always dispensable. Dispensing uses the earliest-expiry usable batch first and records the allocation so visit edits return stock to its original batch.
 - Restock/add stock (row action: quantity received + the **new batch's** required expiration date, or an explicit **no expiration date** confirmation; adds a batch; logs the restock). It never overwrites earlier batches; the dialog warns when expired stock remains. Edit Item no longer edits stock or expiry.
 - **Adjust Stock** (Staff, under the row's **Manage** menu with Batches and Edit; Restock stays the one visible row action, with the help line "Restock when new stock arrives. Adjust Stock to correct a count.", panel review IV-1): choose a batch, then **Add** or **Remove** a positive quantity (no typed minus sign; the batch's resulting stock shows before saving, panel review IV-7) or "set to counted quantity", with a required reason (Expired - disposed / Damaged or spilled / Miscount correction / Other with a required note). The selected batch cannot go below 0. Writes an adjustment transaction and audit entry; a disposal remains in batch movement history.
-- View inventory usage history/log — not built yet; when built, it shows the masked LRN, never the name
+- View inventory usage history/log (`/inventory/history`, from the row's Manage menu) — Staff only; shows the masked LRN, never the name
+- A removal of 25% or more of an item on hand, or one that leaves it at zero, needs a written note of at least 20 characters and is flagged "Large write-off" in the Audit Log (ADR-061)
 
 **Alerts & Thresholds**
 - Set/edit the low-stock threshold per item
@@ -414,3 +415,5 @@ The Dashboard's calendar (Module 9) currently supports only a lightweight, free-
 - **Who maintains the events** — Staff manually (adds data-entry work to the one role this whole project is trying to reduce workload for), or Admin/Principal (would require giving that role its first write permission, since it's 100% read-only today)?
 - **What the management screens look like** — a full add/edit/delete events interface, versus importing from an existing school calendar source, if one exists digitally.
 Nothing about the current lightweight tagging needs to change to support this later — it's an additive upgrade, not a redesign.
+
+**Added by the frontend clean-up, Part 2 (Sunday, November 1, 2026 — 13:03 PHT):** the mock-level yearly list import, Inventory Usage History, the large write-off rule (ADR-061), the Visit Details printout, the draft letter watermark, and the unsaved-input guard on every route (ADR-021).

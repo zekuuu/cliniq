@@ -105,3 +105,5 @@ but the current code does not read `dateRange`. It is not an active parameter ye
 - Patient filter: `frontend/src/hooks/usePatientFilter.ts`
 - Other screen-state parameters: the page that reads them under `frontend/src/features/`
   (Visit Log, Report Incident, New Visit, Inventory, Excuse Letter, Dashboard)
+
+- `/inventory/history?item=<id>`: opens Inventory Usage History on one item.
