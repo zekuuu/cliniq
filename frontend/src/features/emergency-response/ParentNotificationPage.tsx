@@ -28,7 +28,7 @@ export function ParentNotificationPage({ viewer = getMockSessionUser(), incident
   const [calledErrors, setCalledErrors] = useState<CalledContactErrors>({})
 
   const back = <BackButton fallback={paths.incidents} />
-  if (status === 'error') return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState title="Unable to load this incident." onRetry={reload} /></div>
+  if (status === 'error') return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState asPageTitle title="Unable to load this incident." onRetry={reload} /></div>
   if (data === undefined) return <><p className="sr-only" role="status">Loading parent notification log...</p><NotificationSkeleton back={back} /></>
   if (data === null) return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<EmptyState icon="activity" title="No incident selected" description="Open this screen from an incident record to log a parent notification." /></div>
   const { incident, student } = data

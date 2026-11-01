@@ -4,7 +4,7 @@
 The two-stage (fast-capture then complete-later) incident flow, hospital referral, parent-notification log, and Follow-Up Handling (shared with clinic-visits).
 
 ## Screens and who can use them
-- Incident Log and Incident Report: School Clinician and Admin / Principal. The Admin / Principal reads only, can Acknowledge an approved report (ADR-048), and each report opened is audit-logged once per session (ADR-038, ADR-048).
+- Incident Log and Incident Report: School Clinician and Admin / Principal. The Admin / Principal reads only (ADR-060), and each report opened is audit-logged once per session (ADR-038, ADR-048).
 - Report Incident (Stage 1 and Stage 2), Emergency Contact Notification Log, Follow-Ups: School Clinician only.
 
 ## Rules that matter
