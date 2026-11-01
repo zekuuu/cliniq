@@ -35,7 +35,7 @@ export function InventoryFormPage() {
   const invalidRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(invalidRef)
   const back = <BackButton fallback={paths.inventory} />
-  if (status === 'error') return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState title="Unable to load inventory item." onRetry={reload} /></div>
+  if (status === 'error') return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState asPageTitle title="Unable to load inventory item." onRetry={reload} /></div>
   if (!data) return <><p className="sr-only" role="status">Loading inventory form...</p><InventoryFormSkeleton back={back} /></>
   const initial = values ?? (data.item ? { name: data.item.name, category: data.item.category, currentStock: String(data.item.currentStock), unit: data.item.unit, expirationDate: data.item.expirationDate ?? '', lowStockThreshold: String(data.item.lowStockThreshold), noExpirationConfirmed: false, brand: data.item.brand ?? '', avoidIfAllergicTo: (data.item.avoidIfAllergicTo ?? []).join(', ') } : EMPTY)
   const duplicate = findDuplicateItem(data.items, initial.name, initial.unit, itemId)

@@ -10,7 +10,7 @@ function pageNameFromTitle(pathname: string): string {
   return title || pathname
 }
 
-export function buildIssueMailto(report: {
+function buildIssueMailto(report: {
   description: string
   pageName: string
   route: string

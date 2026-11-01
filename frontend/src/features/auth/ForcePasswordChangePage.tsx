@@ -1,9 +1,9 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import { BackButton, Button, Card, Input } from '../../components'
 import { BrandLogo } from '../../layouts/Sidebar'
 import { LoginBackdrop } from './LoginBackdrop'
-import { changeMockPassword, getPendingPasswordChangeUser, getUser, type SessionUser } from '../../lib/mock-db'
+import { changeMockPassword, clearPendingPasswordChange, getPendingPasswordChangeUser, getUser, type SessionUser } from '../../lib/mock-db'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCapsLock } from '../../hooks/useCapsLock'
 import { paths } from '../../routes/paths'
@@ -16,6 +16,7 @@ export function ForcePasswordChangePage({ onComplete }: { onComplete: (user: Ses
   // Read once: completing the change starts the session and clears the pending marker, and this
   // screen must not bounce to Login in the moment before it navigates on.
   const [pending] = useState(() => getPendingPasswordChangeUser())
+  useEffect(() => clearPendingPasswordChange, [])
   if (!pending) return <Navigate to={paths.login} replace />
   return <ForcePasswordChangeForm userId={pending.id} onComplete={onComplete} />
 }

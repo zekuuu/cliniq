@@ -200,8 +200,8 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
                 necessary.
               </li>
               <li>
-                Audit log records are kept separately from clinic records, for accountability. Their
-                retention period is stated here once the school confirms it.
+                Audit log records are kept separately from clinic records, for accountability, for 10
+                years.
               </li>
             </ul>
           </section>
@@ -242,8 +242,8 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
               <strong>Teachers and school staff (PROVISIONAL).</strong> The clinic may also record visits,
               incidents and medicines given for teachers, non-teaching staff and utility workers, with their
               allergies and medical conditions if they choose to give them. This health information is kept
-              only with the staff member&apos;s knowledge and consent, is seen only by the School Clinician,
-              and is protected in the same way as students&apos; records. This wording is provisional until
+              only with the staff member&apos;s knowledge and consent. Details are seen only by the School
+              Clinician; the Principal sees counts, never names or details. It is protected in the same way as students&apos; records. This wording is provisional until
               the school&apos;s privacy officer approves it.
             </p>
           </section>

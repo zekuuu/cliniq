@@ -19,7 +19,7 @@ export function UserFormPage({ userId, viewer = getMockSessionUser() }: { userId
     return (
       <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
         {back}
-        <ErrorState title="Unable to load this account." onRetry={reload} />
+        <ErrorState asPageTitle title="Unable to load this account." onRetry={reload} />
       </div>
     )
   if (existing === undefined) return <FormSkeleton back={back} />
