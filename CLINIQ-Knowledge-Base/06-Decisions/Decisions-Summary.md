@@ -192,7 +192,7 @@ No bulk promotion: grade and section come from one yearly import of the registra
 
 ### ADR-048: Admin sign-out, Acknowledge on an incident report, email password reset, and logging who opens a record
 
-The Admin is signed out after 30 idle minutes (amends ADR-015); the Admin can Acknowledge an incident report (amends ADR-038); passwords can be reset by email when online, with the Admin reset as fallback; disabling an account ends its sessions; the clinician opening a profile or an incident report is audit-logged. Zean, decisions sheet, Thursday, October 29, 2026 — 12:33 PHT. [ADR-048](ADR-048-Admin-Sign-Out-Acknowledge-Email-Reset-And-Logging-Record-Opens.md)
+The Admin is signed out after 30 idle minutes (amends ADR-015); the Admin can Acknowledge an incident report (amends ADR-038; reversed by ADR-060); passwords can be reset by email when online, with the Admin reset as fallback; disabling an account ends its sessions; the clinician opening a profile or an incident report is audit-logged. Zean, decisions sheet, Thursday, October 29, 2026 — 12:33 PHT. [ADR-048](ADR-048-Admin-Sign-Out-Acknowledge-Email-Reset-And-Logging-Record-Opens.md)
 
 ### ADR-049: Clinical record rules: letters, allergies, notes and what the clinic does not add
 
@@ -229,3 +229,15 @@ The backend signs the browser app in with Sanctum's cookie mode (7-day session, 
 ### ADR-057: Backend answers: fixed 7-day session, new error codes, deferred HTTPS, masked LRN, retention, and the ERD approved
 
 The session ends 7 days after sign-in however active the user is. Three error codes join the envelope. Development stays on Zean's machine, and HTTPS on the LAN waits for a deployment with real data. Lists carry the masked LRN, with a Staff-only flag for the printouts of ADR-044. Staff-patient records are kept 5 years, and the audit log 10 years, settled. The ERD approval checklist is answered, and the ERD, Data Dictionary, Reference Schema and diagrams are approved, which releases migrations. The audit log stores the actor's role (amends ADR-017), list rows carry no health fields, and a reschedule keeps the stay-home flag. Zean, in chat, Sunday, November 1, 2026 — 01:23, 01:39 and 02:15 PHT. [ADR-057](ADR-057-Backend-Answers-Fixed-Session-Retention-And-ERD-Approval.md)
+
+### ADR-058: The name-correction reason goes in the audit log
+
+The audit summary of a name correction carries the reason, never the old or new name. It reverses API contract Q3 and is the one exception to ADR-017.
+
+### ADR-059: A student's emergency contact is optional at saving
+
+A student saves with no emergency contact; a started contact must be complete. The record stays flagged Incomplete until one is added.
+
+### ADR-060: The Principal signs the printed report; no on-screen Acknowledge
+
+The system has no Principal acknowledgement of reports. The clinician approves and prints, and the Principal signs the paper copy. Reverses item 2 of ADR-048. Zean, in chat, Sunday, November 1, 2026 — 12:09 PHT. [ADR-060](ADR-060-Principal-Signs-The-Printed-Report-No-On-Screen-Acknowledge.md)

@@ -7,6 +7,8 @@
 
 **Note (Sunday, November 1, 2026 — 02:16 PHT):** amended by [ADR-057](ADR-057-Backend-Answers-Fixed-Session-Retention-And-ERD-Approval.md) item 12: the backend stores the actor's role on each audit row (`audit_logs.actor_role`) instead of deriving it at read time. The decision text below is not edited.
 
+**Note (Sunday, November 1, 2026 — 11:48 PHT):** [ADR-058](ADR-058-Name-Correction-Reason-In-The-Audit-Log.md) makes one exception to "fields or states only": the name-correction reason. The decision text below is not edited.
+
 ## Context
 The Audit Log Viewer (ADR-016) showed timestamp, who, action, and target record. Reviewing it, the user felt information was missing but couldn't name it. Two gaps came out of that:
 1. **Which record** — briefly lost when target labels were replaced by a bare "View" link. Restored in short form ("Incident · 2022-00001 ›").
