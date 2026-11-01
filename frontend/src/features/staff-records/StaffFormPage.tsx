@@ -82,7 +82,7 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
   const location = useLocation()
   const formRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(formRef)
-  const { cancel, discardDialog } = useCancelNavigation(
+  const { cancel, discardDialog, allowLeave } = useCancelNavigation(
     data.personnel ? paths.staffProfile(data.personnel.id) : paths.staff,
     JSON.stringify(values) !== JSON.stringify(initial),
   )
@@ -118,6 +118,7 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
       const { personnel, action } = await submitStaffForm(values, { personnelId: data.personnel?.id, actor: viewer })
       setSavedMessage(`Staff record ${action === 'create' ? 'created' : 'updated'} for ${personnel.fullName}.`)
       // An edit returns through history, so the next Back leaves the profile instead of showing it again.
+      allowLeave()
       if (action === 'update' && location.key !== 'default') void navigate(-1)
       else void navigate(paths.staffProfile(personnel.id), { replace: true })
     } catch (cause) {

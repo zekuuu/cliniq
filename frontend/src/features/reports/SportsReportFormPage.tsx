@@ -114,7 +114,7 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
     students: (initial?.students ?? []).map(({ studentId, note }) => ({ studentId, note: note ?? '' })),
   }
   const dirty = JSON.stringify(values) !== JSON.stringify(initialValues)
-  const { cancel, discardDialog } = useCancelNavigation(reportId ? paths.sportsReport(reportId) : paths.sportsReports, dirty)
+  const { cancel, discardDialog, allowLeave } = useCancelNavigation(reportId ? paths.sportsReport(reportId) : paths.sportsReports, dirty)
 
   function addStudents(picked: StudentSearchResult[]) {
     const known = new Set(students.map((student) => student.studentId))
@@ -166,6 +166,7 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
     setSaving(true)
     try {
       const saved = await saveSportsReport(values, { reportId, viewer })
+      allowLeave()
       navigate(paths.sportsReport(saved.id), { replace: !reportId })
     } finally {
       setSaving(false)

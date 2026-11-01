@@ -207,7 +207,7 @@ function StudentFormEditor({
   const mode: StudentFormMode = data.mode
   // What the form last matched in storage: the loaded record, then a newly created one.
   const [baseline, setBaseline] = useState<StudentFormValues>(() => valuesFromStudent(data.student))
-  const { cancel, discardDialog } = useCancelNavigation(
+  const { cancel, discardDialog, allowLeave } = useCancelNavigation(
     data.student ? paths.studentProfile(data.student.id) : paths.students,
     JSON.stringify(values) !== JSON.stringify(baseline),
   )
@@ -315,6 +315,7 @@ function StudentFormEditor({
       setDuplicateMatches([])
       if (result.action === 'update' && returnTo) {
         // Back through history, not a new entry, so Back on the queue doesn't show the queue again.
+        allowLeave()
         goBackToReturn()
         return
       }
@@ -322,6 +323,7 @@ function StudentFormEditor({
         // An edit ends on the record it changed, like Visit Details; the profile shows the confirmation.
         // Back through history, so the next Back leaves the profile instead of showing it again.
         setSavedMessage(`Student record updated for ${result.student.fullName}.`)
+        allowLeave()
         if (location.key === 'default') void navigate(paths.studentProfile(result.student.id), { replace: true })
         else void navigate(-1)
         return

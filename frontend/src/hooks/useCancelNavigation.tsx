@@ -1,6 +1,5 @@
-import { useState, type ReactNode } from 'react'
-import { Button } from '../components/ui/Button'
-import { Modal } from '../components/ui/Modal'
+import { useRef, useState, type ReactNode } from 'react'
+import { DiscardChangesDialog, UnsavedChangesGuard } from '../components/forms/UnsavedChanges'
 import { useGoBack } from './useGoBack'
 
 /**
@@ -9,31 +8,32 @@ import { useGoBack } from './useGoBack'
  * never leaves the app.
  *
  * When `isDirty` (something typed or chosen that isn't saved yet), Cancel asks first, because leaving
- * can't be undone from the form (`cliniq-modal-patterns`). Render `discardDialog` in the form.
+ * can't be undone from the form (`cliniq-modal-patterns`), and so does any other way out of the route.
+ * Render `discardDialog` in the form. Call `allowLeave` just before a navigation that follows a save.
  */
 export function useCancelNavigation(
   fallback: string,
   isDirty = false,
-): { cancel: () => void; discardDialog: ReactNode } {
-  const leave = useGoBack(fallback)
+): { cancel: () => void; discardDialog: ReactNode; allowLeave: () => void } {
+  const goBack = useGoBack(fallback)
   const [asking, setAsking] = useState(false)
+  const allowed = useRef(false)
+  const allowLeave = () => {
+    allowed.current = true
+  }
+  const leave = () => {
+    allowLeave()
+    goBack()
+  }
 
   return {
     cancel: () => (isDirty ? setAsking(true) : leave()),
+    allowLeave,
     discardDialog: (
-      <Modal open={asking} title="Discard unsaved changes?" onClose={() => setAsking(false)}>
-        <p className="text-sm text-text-secondary">
-          What you entered on this form hasn't been saved. If you leave now, it will be lost.
-        </p>
-        <div className="mt-5 flex flex-wrap justify-end gap-2">
-          <Button variant="neutral" data-autofocus onClick={() => setAsking(false)}>
-            Keep Editing
-          </Button>
-          <Button variant="primary" onClick={leave}>
-            Discard Changes
-          </Button>
-        </div>
-      </Modal>
+      <>
+        <DiscardChangesDialog open={asking} onKeep={() => setAsking(false)} onDiscard={leave} />
+        <UnsavedChangesGuard dirty={isDirty} allowed={allowed} />
+      </>
     ),
   }
 }
