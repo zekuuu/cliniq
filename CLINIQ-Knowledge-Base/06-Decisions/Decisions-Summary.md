@@ -225,3 +225,19 @@ The weekly breakdown now follows the Activity calendar: Sunday to Saturday, clip
 ### ADR-056: Backend preparation: Sanctum SPA cookie mode, a separate `backend` branch, nothing wired to the frontend, and no migrations before the ERD is approved
 
 The backend signs the browser app in with Sanctum's cookie mode (7-day session, CORS from one explicit origin with credentials). All backend work happens on a branch called `backend`, changes only `backend/`, and is not connected to the frontend yet. The first round is the foundation only (scaffold, modular folders, configuration, CORS, middleware, one error format, the audit-log service contract, a health route, tests); the ERD is reviewed first and no migration is built until the team approves it. Zean, in chat, Saturday, October 31, 2026 — 18:10 PHT. [ADR-056](ADR-056-Backend-Preparation-Sanctum-SPA-Cookie-Mode-Own-Branch-Nothing-Wired-No-Migrations-Before-ERD-Approval.md)
+
+### ADR-058: The name-correction reason goes in the audit log
+
+The audit summary of a name correction carries the reason, never the old or new name. It reverses API contract Q3 and is the one exception to ADR-017.
+
+### ADR-059: A student's emergency contact is optional at saving
+
+A student saves with no emergency contact; a started contact must be complete. The record stays flagged Incomplete until one is added.
+
+### ADR-060: The Principal signs the printed report; no on-screen Acknowledge
+
+The system has no Principal acknowledgement of reports. The clinician approves and prints, and the Principal signs the paper copy. Reverses item 2 of ADR-048. Zean, in chat, Sunday, November 1, 2026 — 12:09 PHT. [ADR-060](ADR-060-Principal-Signs-The-Printed-Report-No-On-Screen-Acknowledge.md)
+
+### ADR-061: A large stock write-off needs a written note
+
+A removal of 25% or more of an item on hand, or one that empties it, needs a note of at least 20 characters and is flagged in the audit. Sunday, November 1, 2026 — 13:03 PHT. [ADR-061](ADR-061-Large-Stock-Write-Off-Needs-A-Written-Note.md)
