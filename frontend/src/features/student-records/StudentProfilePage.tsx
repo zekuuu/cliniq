@@ -445,7 +445,7 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
             { label: 'Grade level', value: student.gradeLevel },
             ...(student.section ? [{ label: 'Section', value: student.section }] : []),
             { label: 'Sex', value: student.sex === 'female' ? 'Female' : 'Male' },
-            ...(student.birthDate ? [{ label: 'Birthdate', value: formatDate(student.birthDate) }] : []),
+            ...(student.birthDate ? [{ label: 'Birthdate', value: `${formatDate(student.birthDate)} (age ${ageOn(student.birthDate, getMockToday())})` }] : []),
             {
               label: 'Emergency contacts',
               value: contact || 'No emergency contact recorded.',
