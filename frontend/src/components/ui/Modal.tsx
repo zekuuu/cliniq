@@ -43,7 +43,9 @@ export function Modal({ open, title, children, onClose, className }: { open: boo
     document.addEventListener('keydown', onKeyDown)
     return () => {
       document.removeEventListener('keydown', onKeyDown)
+      // The opener can be gone (a row that changed status); never drop a keyboard user at the top of the page.
       if (opener?.isConnected) opener.focus()
+      else document.getElementById('main-content')?.focus()
     }
   }, [open])
 

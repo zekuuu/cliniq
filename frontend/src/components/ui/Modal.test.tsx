@@ -28,4 +28,21 @@ describe('Modal', () => {
     fireEvent.mouseDown(screen.getByRole('dialog').parentElement!)
     expect(onClose).toHaveBeenCalledOnce()
   })
+
+  it('falls back to the main content when the control that opened it is gone', () => {
+    const page = (open: boolean, opener: boolean) => (
+      <main id="main-content" tabIndex={-1}>
+        {opener && <button>Open</button>}
+        <Modal open={open} title="Check" onClose={vi.fn()}>
+          <p>Body</p>
+        </Modal>
+      </main>
+    )
+    const { rerender } = render(page(false, true))
+    screen.getByRole('button', { name: 'Open' }).focus()
+    rerender(page(true, true))
+    rerender(page(true, false))
+    rerender(page(false, false))
+    expect(screen.getByRole('main')).toHaveFocus()
+  })
 })
