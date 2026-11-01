@@ -13,6 +13,7 @@ import { InventoryListPage } from '../../features/inventory/InventoryListPage'
 import { fetchStudentList } from '../../features/student-records/api/studentListApi'
 import { fetchStudentProfile } from '../../features/student-records/api/studentProfileApi'
 import { StudentProfilePage } from '../../features/student-records/StudentProfilePage'
+import { getStudent } from './api'
 import { getMockSessionUser } from './session'
 import type { MockDbSeed } from './types'
 
@@ -44,7 +45,7 @@ vi.mock('./mock-db.json', async (importOriginal) => {
 })
 
 async function editedStudent() {
-  const [student] = await fetchStudentList({ search: EDITED_NAME, gradeLevel: '', includeArchived: false })
+  const student = await getStudent((await fetchStudentList({ search: EDITED_NAME, gradeLevel: '', includeArchived: false }))[0].id)
   return student
 }
 
@@ -55,7 +56,7 @@ describe('editing mock-db.json changes every screen consistently', () => {
 
     // Student List: found by the new name and filtered under the new grade.
     const grade12 = await fetchStudentList({ search: '', gradeLevel: EDITED_GRADE, includeArchived: false })
-    expect(grade12.map((s) => s.lrn)).toContain(student.lrn)
+    expect(grade12.map((s) => s.id)).toContain(student.id)
 
     // Student Profile + its visit history.
     const profile = await fetchStudentProfile(student.id)
@@ -63,7 +64,7 @@ describe('editing mock-db.json changes every screen consistently', () => {
     expect(profile.visits.length).toBeGreaterThan(0)
 
     // Visit Log List: every row for this student carries the new grade (and never the name).
-    const visitRows = (await fetchVisitLog({ ...defaultVisitLogRange(), search: student.lrn, disposition: 'all' }))
+    const visitRows = (await fetchVisitLog({ from: '2000-01-01', to: defaultVisitLogRange().to, search: student.lrn, disposition: 'all' }))
     expect(visitRows.length).toBeGreaterThan(0)
     expect(new Set(visitRows.map((r) => r.gradeLevel))).toEqual(new Set([EDITED_GRADE]))
     expect(JSON.stringify(visitRows)).not.toContain(EDITED_NAME)

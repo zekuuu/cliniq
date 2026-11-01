@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
+  getMockToday,
   adjustInventoryStock,
   completeIncidentStageTwo,
   getIncident,
@@ -112,7 +113,7 @@ describe('recording a visit with medicines and supplies', () => {
     const after = await getInventoryItem(ORS)
     expect(after).toMatchObject({ currentStock: 6, expiredStock: 25, totalOnHand: 31 })
     expect(after.batches.find((batch) => batch.expirationDate === '2099-12-31')?.quantity).toBe(6)
-    expect(after.batches.find((batch) => batch.expirationDate !== null && batch.expirationDate < '2026-10-17')?.quantity).toBe(25)
+    expect(after.batches.find((batch) => batch.expirationDate !== null && batch.expirationDate < getMockToday())?.quantity).toBe(25)
   })
 
   it('requires explicit confirmation before adding a batch with no expiration date', async () => {

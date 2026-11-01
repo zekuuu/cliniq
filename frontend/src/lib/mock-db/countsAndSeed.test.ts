@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { addDays, parseISODate } from '../dates'
 import { itemsNamedInNotes } from '../itemsGiven'
 import {
@@ -12,6 +12,7 @@ import {
   listVisits,
   resetMockDb,
 } from './index'
+import { resolveSchoolDateTime } from './relativeDates'
 import { seed, resolveSeed } from './seed'
 
 /**
@@ -80,10 +81,28 @@ describe('a believable seed (5.3)', () => {
     }
   })
 
-  it('has no two visits at the same minute', async () => {
-    const visits = await listVisits()
-    const minutes = visits.map((v) => v.dateTime.slice(0, 16))
-    expect(new Set(minutes).size).toBe(minutes.length)
+  it.each(['2026-10-19', '2026-10-20', '2026-10-21', '2026-10-22', '2026-10-23', '2026-10-24', '2026-10-25'])(
+    'has no two visits at the same minute with today %s',
+    (today) => {
+      for (const clock of [`${today}T00:30:00+08:00`, `${today}T08:00:00+08:00`, `${today}T23:30:00+08:00`]) {
+        vi.setSystemTime(new Date(clock))
+        const visits = resolveSeed(seed, today).visits
+        const minutes = visits.map((v) => v.dateTime.slice(0, 16))
+        expect(new Set(minutes).size, clock).toBe(minutes.length)
+        expect(minutes.filter((m) => m.slice(0, 10) === today && m > clock.slice(0, 16)), clock).toEqual([])
+      }
+      vi.useRealTimers()
+    },
+  )
+
+  it('moves a colliding seed visit by minutes only, on the same day', () => {
+    const today = '2026-10-23'
+    vi.setSystemTime(new Date(`${today}T23:30:00+08:00`))
+    const resolved = resolveSeed(seed, today).visits
+    seed.visits.forEach((visit, i) => {
+      expect(resolved[i].dateTime.slice(0, 10)).toBe(resolveSchoolDateTime(visit.dateTime, today).slice(0, 10))
+    })
+    vi.useRealTimers()
   })
 
   it('has no visit whose notes name a stocked medicine that its list lacks', async () => {
