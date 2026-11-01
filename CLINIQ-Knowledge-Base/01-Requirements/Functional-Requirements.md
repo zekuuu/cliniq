@@ -5,7 +5,7 @@ Kept in sync with the canonical Project Plan, Section 5.1. If you edit one, edit
 ---
 
 **Functional Requirements** (grouped by module — see Section 5.3 for full module list):
-- Role-based login for Staff (full read/write) and Admin/Principal (reads the Dashboard, reports, student profiles and incident reports; acknowledges incident reports; manages accounts; never prints; ADR-033, 038, 048); PE/Sports Instructors have no account (ADR-029)
+- Role-based login for Staff (full read/write) and Admin/Principal (reads the Dashboard, reports, student profiles and incident reports; manages accounts; never prints; ADR-033, 038); PE/Sports Instructors have no account (ADR-029)
 - Student record encoding with duplicate detection and mandatory-field enforcement; a yearly import of the registrar's list sets grade and section, and a student missing from the new list is archived after a review list is shown (ADR-047, 051); a visit or incident keeps the grade and section the student had when it was saved
 - Teachers and school employees recorded as clinic patients with their own screens, identified by a Staff No. (ADR-043)
 - Daily clinic visit logging with complaint (one main complaint and up to 3 extra tags), treatment, medicines and supplies taken from inventory, and disposition tracking; a visit recorded by mistake is marked "Entered in error", never deleted; a visit can be escalated to an incident (ADR-036, 053)

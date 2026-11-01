@@ -28,6 +28,8 @@ const USERS: Record<UserRole, SessionUser> = {
 const NO_BACK: Record<string, string> = {
   'staff /': 'Dashboard: Staff home screen, nothing above it.',
   'admin /': 'Dashboard: Admin home screen, nothing above it.',
+  'staff /calendar': 'Top-level sidebar destination (ADR-032).',
+  'admin /calendar': 'Top-level sidebar destination (ADR-032).',
   'staff /students': 'Top-level sidebar destination; Back only after a drill-through link.',
   'staff /staff': 'Top-level sidebar destination; Back only after a drill-through link (ADR-043).',
   'staff /visits': 'Top-level sidebar destination; Back only after a drill-through link.',

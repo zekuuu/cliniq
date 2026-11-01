@@ -109,7 +109,7 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
   if (status === 'error')
     return (
       <div className="mx-auto max-w-page-wide px-4 pt-10 pb-8 sm:px-8">
-        <ErrorState title="Unable to load user accounts." onRetry={reload} />
+        <ErrorState asPageTitle title="Unable to load user accounts." onRetry={reload} />
       </div>
     )
   if (!users)

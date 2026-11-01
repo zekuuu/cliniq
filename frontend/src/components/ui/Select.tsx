@@ -240,6 +240,11 @@ export function Select({
             id={listboxId}
             role="listbox"
             aria-labelledby={labelId}
+            // In the tab order so a keyboard can scroll it (axe scrollable-region-focusable); focus goes on to the option.
+            tabIndex={0}
+            onFocus={(event) => {
+              if (event.target === event.currentTarget) optionRefs.current[focusIndex]?.focus()
+            }}
             className={cn(DROPDOWN_PANEL, 'fixed overflow-y-auto scrollbar-thin')}
           >
             {items.map((item, index) => {

@@ -57,7 +57,7 @@ afterEach(() => {
 
 describe('Add/Edit Student', () => {
   it('saves a student without a birthdate, and has no mobile number field', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<StudentFormPage />)
     await screen.findByRole('heading', { name: 'Add Student' })
     expect(screen.queryByLabelText(/mobile number/i)).not.toBeInTheDocument()
@@ -77,7 +77,7 @@ describe('Add/Edit Student', () => {
   }, SLOW)
 
   it('refuses a future birthdate on the form', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     storeBirthDate('student-0002', '2999-01-01')
     renderWithRouter(<StudentFormPage studentId="student-0002" />)
     await screen.findByRole('heading', { name: 'Edit Student' })
@@ -94,7 +94,7 @@ describe('Add/Edit Student', () => {
   })
 
   it('shows the unusual-age note and still saves', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     const year = Number(getMockToday().slice(0, 4)) - 16
     const birthDate = `${year}-01-15`
     renderWithRouter(<StudentFormPage studentId="student-0002" />)

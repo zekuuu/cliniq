@@ -107,7 +107,7 @@ export function IncidentLogListPage({ viewer = getMockSessionUser() }: { viewer?
 
   // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
   const back = <BackButton fallback={paths.dashboard} drillThroughOnly />
-  if (status === 'error') return <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState title="Unable to load incident log." onRetry={reload} /></div>
+  if (status === 'error') return <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState asPageTitle title="Unable to load incident log." onRetry={reload} /></div>
   if (!data) return <><p className="sr-only" role="status">Loading incident log...</p><IncidentLogSkeleton back={back} /></>
   function changeSort(key: IncidentSortKey) {
     setSort((current) => toggleTableSort(current, key))

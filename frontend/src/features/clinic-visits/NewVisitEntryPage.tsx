@@ -287,7 +287,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
   const approveNowRef = useRef(false)
   const preparingLetter = hasExcuseLetter(disposition) && letterValues.prepareLetter && !isStaffPatient
   // The next visit in this open form starts with the last successfully saved disposition.
-  const lastSavedDisposition = useRef<Disposition>('returned_to_class')
+  const [lastSavedDisposition, setLastSavedDisposition] = useState<Disposition>('returned_to_class')
   // Anything typed or chosen beyond the defaults; a save clears the form back to them.
   const { cancel, discardDialog } = useCancelNavigation(
     paths.visits,
@@ -295,7 +295,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
       treatment.trim() !== '' ||
       lines.length > 0 ||
       triageSteps.length > 0 ||
-      disposition !== lastSavedDisposition.current ||
+      disposition !== lastSavedDisposition ||
       needsFollowUp ||
       whenEdited ||
       filledLogbookCount(logbook) > 0,
@@ -427,8 +427,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
       setComplaint('')
       setExtraComplaints([])
       setTreatment('')
-      lastSavedDisposition.current = disposition
-      setDisposition(disposition)
+      setLastSavedDisposition(disposition)
       setDispositionValues(emptyDispositionValues(today))
       setTriageSteps([])
       setNeedsFollowUp(false)
@@ -461,7 +460,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
     return (
       <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
         {back}
-        <ErrorState title="Unable to load the visit form." onRetry={reload} />
+        <ErrorState asPageTitle title="Unable to load the visit form." onRetry={reload} />
       </div>
     )
   }

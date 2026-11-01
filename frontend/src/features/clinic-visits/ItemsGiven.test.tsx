@@ -32,7 +32,7 @@ describe('New Visit: medicines and supplies given', () => {
   beforeEach(() => resetMockDb())
 
   it('records two items with only lines (no notes) and takes them from stock', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     await openNewVisit(user)
     await pick(user, 'para', /Paracetamol 500mg/)
     await user.click(screen.getByRole('button', { name: 'Increase Paracetamol 500mg' }))
@@ -46,7 +46,7 @@ describe('New Visit: medicines and supplies given', () => {
   })
 
   it('shows expired items disabled with an Expired badge, and never adds them by click or keyboard', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     await openNewVisit(user)
     const picker = screen.getByRole('combobox', { name: 'Add medicine or supply' })
     await user.type(picker, 'oral')
@@ -59,7 +59,7 @@ describe('New Visit: medicines and supplies given', () => {
   })
 
   it('adds to the existing line when the same item is picked again, and works by keyboard', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     await openNewVisit(user)
     const picker = screen.getByRole('combobox', { name: 'Add medicine or supply' })
     for (let i = 0; i < 2; i++) {
@@ -71,7 +71,7 @@ describe('New Visit: medicines and supplies given', () => {
   })
 
   it('warns, without blocking, when the quantity is above current stock', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     await openNewVisit(user)
     await pick(user, 'para', /Paracetamol 500mg/)
     const quantity = screen.getByLabelText('Quantity of Paracetamol 500mg')
@@ -85,7 +85,7 @@ describe('New Visit: medicines and supplies given', () => {
 
   it("shows the student's recorded allergies beside the picker", async () => {
     const student = await getStudent('student-0002')
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<NewVisitEntryPage />)
     await pickStudent(user, student.lrn)
     await screen.findByRole('heading', { name: 'New Visit' })
@@ -97,7 +97,7 @@ describe('Visit Detail: medicines and supplies given', () => {
   beforeEach(() => resetMockDb())
 
   it('shows the lines, and lowering a quantity returns stock', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<VisitDetailPage visitId="visit-0159" />)
     expect(await screen.findByText('Adhesive Bandages × 1 pieces (Change the bandage tomorrow)')).toBeInTheDocument()
     expect(screen.getByText('Gauze Pads × 2 pieces')).toBeInTheDocument()
@@ -125,7 +125,7 @@ describe('Incident: medicines and supplies given', () => {
   beforeEach(() => resetMockDb())
 
   it('keeps Stage 1 fast with no medicine entry', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<IncidentEntryPage />)
     await pickStudent(user, '000000260001')
     await screen.findByRole('heading', { name: 'Report Incident' })
@@ -133,7 +133,7 @@ describe('Incident: medicines and supplies given', () => {
   })
 
   it('records lines at Stage 2 and takes them from stock', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
     await screen.findByRole('heading', { name: 'Complete Incident Record' })
     await user.type(screen.getByLabelText(/blood pressure/i), '110/70')

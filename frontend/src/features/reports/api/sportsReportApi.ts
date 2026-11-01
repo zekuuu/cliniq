@@ -57,6 +57,6 @@ export function fetchGradeLevels(): Promise<string[]> {
 
 /** Active students of one grade level, for "add a whole grade". Names and grade only. */
 export async function fetchGradeStudents(gradeLevel: string): Promise<StudentSearchResult[]> {
-  const students = await listStudents({ gradeLevel })
+  const students = await listStudents({ gradeLevel, fullLrn: true })
   return students.map(({ id, lrn, fullName, gradeLevel: grade }) => ({ id, lrn, fullName, gradeLevel: grade }))
 }

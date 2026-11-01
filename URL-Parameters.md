@@ -38,11 +38,11 @@ Useful combinations include:
 | Parameter | Used on | Accepted value | Effect | Example |
 |---|---|---|---|---|
 | `item` | Add/Edit Inventory Item | An inventory item ID | Opens the inventory form in edit mode for that item. Without it, the form is for a new item. | `/inventory/new?item=item-0001` |
-| `focus` | Student List | `search` | Meant to focus the student search field; `Alt + K` links here. **Does not work at present:** on Thursday, October 29, 2026 the field was not focused when the page opened (see the `FIX` in Issues-and-TODOs). | `/students?focus=search` |
+| `focus` | Student List | `search` | Focuses the student search field once the list has loaded; `Alt + K` links here. | `/students?focus=search` |
 | `search` | Inventory | Any text | Opens Inventory with this text in the search box. Read only on arrival. Built by Add Item's duplicate warning. | `/inventory?search=Paracetamol` |
 | `letter` | Visit Log | `pending` | Opens the Visit Log on visits with a pending excuse letter, over a range that includes older outstanding letters. Read only on arrival. Built by the Dashboard's Pending excuse letters card (`paths.visitsWithPendingLetter`). | `/visits?letter=pending` |
 | `letter` | Excuse Letter | A letter ID | Opens that version of the visit's excuse letter (`paths.excuseLetterVersion`). | `/visits/visit-0001/excuse-letter?letter=<letter-id>` |
-| `inClinic` | Visit Log | `1` | Opens the Visit Log filtered to patients still in the clinic. Read only on arrival. No screen links to it at present. | `/visits?inClinic=1` |
+| `inClinic` | Visit Log | `1` | Opens the Visit Log filtered to patients still in the clinic. Read only on arrival. No screen links to it: the Visit Log's "In clinic now only" filter does the same (Zean removed the Dashboard chip, Sunday, November 1, 2026 — 11:40 PHT). | `/visits?inClinic=1` |
 | `patient` | Visit Log, Incident Log, Follow-Ups | `students`, `staff` | The Everyone / Students / Staff filter (ADR-043). Everyone is the default and leaves the address clean. Changes use replace navigation. | `/visits?patient=staff` |
 | `staff` | New Visit, Report Incident | A staff patient ID | Opens the form with that staff member chosen. Built by the Staff Profile's Record a visit and Record an incident (`paths.visitNewForStaff`, `paths.incidentNewForStaff`). | `/visits/new?staff=personnel-0001` |
 | `fromVisit` | Report Incident | A visit ID | Escalate to incident (ADR-036): carries the patient, complaint, time and temperature over from that visit. Built by Visit Details. | `/incidents/new?fromVisit=visit-0001` |

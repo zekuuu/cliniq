@@ -47,7 +47,7 @@ describe('App Shell / Navigation', () => {
     expect(screen.getByText('Backup')).toBeInTheDocument()
     const privacyPolicyLink = screen.getByRole('link', { name: 'Privacy Policy' })
     expect(privacyPolicyLink).toHaveAttribute('href', '/privacy-policy')
-    expect(privacyPolicyLink).toHaveClass('text-[11px]', 'text-text-secondary')
+    expect(privacyPolicyLink).toHaveClass('text-xs', 'text-text-secondary')
     expect(privacyPolicyLink).not.toHaveClass('bg-brand-green-dark')
     expect(privacyPolicyLink).toHaveClass('inline')
     expect(privacyPolicyLink).not.toHaveClass('min-h-10')

@@ -7,10 +7,7 @@ import { formatDateTime } from '../../lib/dates'
 import { formatItemGiven, incidentCareSummary, incidentCompletionBlocker } from '../../lib/itemsGiven'
 import { getMockSessionUser, ROLE_LABELS, type SessionUser } from '../../lib/mock-db'
 import { READING_LABELS, readingText, takenReadings } from '../../lib/vitals'
-import { acknowledgeReport, approveReport, fetchIncidentRecord, type IncidentRecord } from './api/incidentRecordApi'
-
-/** "Acknowledged by Ma'am Cruz on Oct 30, 2026 · 9:05 AM" (ADR-048). */
-const acknowledgedText = (step: { by: string; at: string }) => `Acknowledged by ${step.by} on ${formatDateTime(step.at)}`
+import { approveReport, fetchIncidentRecord, type IncidentRecord } from './api/incidentRecordApi'
 import { calledContactText, OUTCOME_LABELS } from './notificationOutcomes'
 import { FromVisit } from './FromVisit'
 
@@ -125,7 +122,6 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
               { label: 'Recorded by', value: signed(trail.recorded) },
               { label: 'Completed by', value: incident.stage === 1 ? 'Not yet completed' : signed(trail.completed) },
               { label: 'Approved by', value: approved ? signed(trail.approved) : 'Not yet approved' },
-              ...(trail.acknowledged ? [{ label: 'Acknowledged', value: acknowledgedText(trail.acknowledged) }] : []),
             ]}
           />
         </PrintSection>
@@ -168,11 +164,9 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
   const [justApproved, setJustApproved] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [approving, setApproving] = useState(false)
-  const [confirmingAcknowledge, setConfirmingAcknowledge] = useState(false)
-  const [acknowledging, setAcknowledging] = useState(false)
 
   const back = <BackButton fallback={paths.incidents} />
-  if (status === 'error') return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState title="Unable to load the incident report." onRetry={reload} /></div>
+  if (status === 'error') return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState asPageTitle title="Unable to load the incident report." onRetry={reload} /></div>
   if (data === undefined) return <><p className="sr-only" role="status">Loading incident report...</p><ReportSkeleton back={back} /></>
   if (data === null) return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<Card><CardBody>No incident report is pending sign-off.</CardBody></Card></div>
 
@@ -197,17 +191,6 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
     }
   }
 
-  async function acknowledge() {
-    setAcknowledging(true)
-    try {
-      await acknowledgeReport(incident.id, viewer)
-      setConfirmingAcknowledge(false)
-      reload()
-    } finally {
-      setAcknowledging(false)
-    }
-  }
-
   function selectIncident(id: string) {
     setJustApproved(false)
     setSelectedId(id)
@@ -225,8 +208,6 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
           <div className="flex flex-wrap justify-end gap-2">
             <PrintButton viewer={viewer} />
             {isStaff && <Button variant="primary" onClick={() => setConfirming(true)} disabled={approved || approvalBlocker !== null} aria-describedby={approvalBlocker ? 'approve-report-blocker' : undefined}>{approved ? 'Approved' : 'Approve Report'}</Button>}
-            {/* ADR-048: the Admin's one write, on an approved report, once. */}
-            {!isStaff && approved && !data.trail.acknowledged && <Button variant="primary" icon="checkCircle" onClick={() => setConfirmingAcknowledge(true)}>Acknowledge</Button>}
           </div>
         </div>
         {!isStaff ? null : approvalBlocker ? (
@@ -264,7 +245,6 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
             <Field label="Complaint">{incident.complaint}</Field>
             {incident.bodyPart && <Field label="Body part affected">{incident.bodyPart}</Field>}
             <Field label="Sign-off">{approved ? 'Approved' : 'Pending sign-off'}</Field>
-            {data.trail.acknowledged && <Field label="Acknowledged">{acknowledgedText(data.trail.acknowledged)}</Field>}
             {incident.generalNotes && (
               <Field label="Additional notes" className="sm:col-span-2">
                 <span className="whitespace-pre-line">{incident.generalNotes}</span>
@@ -353,15 +333,6 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
           <Button variant="neutral" data-autofocus onClick={() => setConfirming(false)}>Cancel</Button>
           {/* Panel review AC-7: approving asks for the password first. */}
           <Button variant="primary" loading={approving} onClick={() => { setConfirming(false); void approve() }}>Approve Report</Button>
-        </div>
-      </Modal>
-      <Modal open={confirmingAcknowledge} title="Acknowledge this incident report?" onClose={() => setConfirmingAcknowledge(false)}>
-        <p className="text-sm text-text-secondary">
-          Records that you read the report for {student.fullName}, {patientIdText(student)} ({incident.complaint}, {formatDateTime(incident.time)}), with your name and the time, in the report and the audit log. It changes nothing else and can&apos;t be undone.
-        </p>
-        <div className="mt-5 flex flex-wrap justify-end gap-2">
-          <Button variant="neutral" data-autofocus onClick={() => setConfirmingAcknowledge(false)}>Cancel</Button>
-          <Button variant="primary" loading={acknowledging} onClick={() => void acknowledge()}>Acknowledge</Button>
         </div>
       </Modal>
       <IncidentReportPrint record={data} viewer={viewer} />

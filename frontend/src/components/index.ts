@@ -36,7 +36,6 @@ export { Pagination } from './ui/Pagination'
 export { Textarea } from './ui/Textarea'
 export {
   FollowUpPrompt,
-  validateFollowUp,
   type FollowUpDraft,
   type FollowUpErrors,
 } from './forms/FollowUpPrompt'

@@ -15,15 +15,6 @@ export interface FollowUpErrors {
   reason?: string
 }
 
-/** Validation shared by every screen that embeds the prompt. */
-export function validateFollowUp(draft: FollowUpDraft): FollowUpErrors {
-  if (!draft.needed) return {}
-  const errors: FollowUpErrors = {}
-  if (!draft.followUpDate) errors.followUpDate = 'Choose a follow-up date.'
-  if (!draft.reason.trim()) errors.reason = 'Enter the follow-up reason.'
-  return errors
-}
-
 /**
  * Screen Inventory #18b: the inline "Does this student need a follow-up?" prompt at the end of New
  * Visit Entry (#11) and Incident Entry (#16). One component, so both flows capture the same fields

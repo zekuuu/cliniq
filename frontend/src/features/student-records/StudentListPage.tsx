@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import {
   BackButton,
   Badge,
@@ -148,11 +148,12 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
     fetchStudentList({ search, gradeLevel, includeArchived }),
   )
 
+  // The field renders once the list has loaded; Alt + K can also arrive while the page is already open.
+  const listReady = Boolean(data)
+  const { search: urlSearch } = useLocation()
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('focus') === 'search') {
-      searchInputRef.current?.focus()
-    }
-  }, [])
+    if (listReady && new URLSearchParams(urlSearch).get('focus') === 'search') searchInputRef.current?.focus()
+  }, [listReady, urlSearch])
 
   // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
   const back = <BackButton fallback={paths.dashboard} drillThroughOnly />
@@ -160,7 +161,7 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
     return (
       <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
         {back}
-        <ErrorState title="Unable to load student records." onRetry={reload} />
+        <ErrorState asPageTitle title="Unable to load student records." onRetry={reload} />
       </div>
     )
   }

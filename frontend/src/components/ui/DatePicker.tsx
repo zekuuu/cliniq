@@ -378,7 +378,7 @@ export function DatePicker({
             className: 'w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green',
           })}
         >
-          <span id={valueId} className={cn('min-w-0 flex-1 truncate text-left', !selected && 'font-normal text-text-muted')}>
+          <span id={valueId} className={cn('min-w-0 flex-1 truncate text-left', !selected && 'font-normal text-text-secondary')}>
             {display}
           </span>
         </button>

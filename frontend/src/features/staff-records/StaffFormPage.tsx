@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { BackButton, Button, Card, CardBody, CardHeader, Combobox, ErrorState, Icon, Input, Select, SelectWithOther, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
@@ -8,6 +8,7 @@ import { isPhilippinePhone, PHONE_ERROR } from '../../lib/phone'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
 import { NONE_RECORDED } from '../../lib/patients'
+import { setSavedMessage } from '../../lib/savedMessage'
 import type { Personnel } from '../../types/entities'
 import { fetchStaffFormContext, submitStaffForm, type StaffFormContext, type StaffFormValues } from './api/staffApi'
 
@@ -78,6 +79,7 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const navigate = useNavigate()
+  const location = useLocation()
   const formRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(formRef)
   const { cancel, discardDialog } = useCancelNavigation(
@@ -114,10 +116,10 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
     setSaveError('')
     try {
       const { personnel, action } = await submitStaffForm(values, { personnelId: data.personnel?.id, actor: viewer })
-      void navigate(paths.staffProfile(personnel.id), {
-        replace: true,
-        state: { savedMessage: `Staff record ${action === 'create' ? 'created' : 'updated'} for ${personnel.fullName}.` },
-      })
+      setSavedMessage(`Staff record ${action === 'create' ? 'created' : 'updated'} for ${personnel.fullName}.`)
+      // An edit returns through history, so the next Back leaves the profile instead of showing it again.
+      if (action === 'update' && location.key !== 'default') void navigate(-1)
+      else void navigate(paths.staffProfile(personnel.id), { replace: true })
     } catch (cause) {
       setSaveError(cause instanceof Error ? cause.message : 'The staff record could not be saved.')
     } finally {
@@ -278,7 +280,7 @@ export function StaffFormPage({ viewer = getMockSessionUser(), personnelId }: { 
   if (viewer.role !== 'staff') {
     return (
       <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8">
-        <ErrorState title="Staff access required." />
+        <ErrorState asPageTitle title="Staff access required." />
       </div>
     )
   }
@@ -286,7 +288,7 @@ export function StaffFormPage({ viewer = getMockSessionUser(), personnelId }: { 
     return (
       <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
         {back}
-        <ErrorState title="Unable to load the staff form." onRetry={reload} />
+        <ErrorState asPageTitle title="Unable to load the staff form." onRetry={reload} />
       </div>
     )
   }

@@ -51,7 +51,7 @@ export function InventoryDispensePage() {
   )
 
   const back = <BackButton fallback={paths.inventory} />
-  if (status === 'error') return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState title="Unable to load inventory items." onRetry={reload} /></div>
+  if (status === 'error') return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState asPageTitle title="Unable to load inventory items." onRetry={reload} /></div>
   if (!items) return <><p className="sr-only" role="status">Loading inventory items...</p><DispenseSkeleton back={back} /></>
   if (!items.length) return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<EmptyState icon="package" title="No inventory items available" description="Add an item on the Inventory page before recording a dispensation." /></div>
 

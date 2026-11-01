@@ -9,7 +9,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 
 **Roles in the system (current scope):**
 - **Staff** (School Clinician in the app) — School Head Nurse / clinic assistants. Full read/write access.
-- **Admin/Principal** — School Administration. Read-only access to reports and health summaries, and read-only access to the Student List, Student Profile, Incident Log and Incident Report (ADR-038), plus account management (ADR-033): creates, edits, disables and resets accounts. The Admin/Principal can also Acknowledge an approved incident report (ADR-048), never prints or saves as PDF (ADR-038); the clinician prints. The Admin/Principal signs in at the clinic computer and is signed out after 30 idle minutes (ADR-029, 048).
+- **Admin/Principal** — School Administration. Read-only access to reports and health summaries, and read-only access to the Student List, Student Profile, Incident Log and Incident Report (ADR-038), plus account management (ADR-033): creates, edits, disables and resets accounts. The Admin/Principal never prints or saves as PDF (ADR-038); the clinician prints, and the Principal signs the printed report by hand (ADR-060). The Admin/Principal signs in at the clinic computer and is signed out after 30 idle minutes (ADR-029, 048).
 - **PE/Sports Instructor** — No account and no access (ADR-029). An instructor asks the clinician, who decides what to share.
 
 **Role documented for future development (not built this phase):** Canteen Staff — see "Future Development" at the end of this document.
@@ -61,7 +61,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 - Record the student's LRN (Learner Reference Number, ADR-028), entered by Staff from the school records: exactly 12 digits, kept as text so leading zeros survive, required and unique (a repeat shows "This LRN is already used by another student record" without naming that student); spaces and dashes are removed when typed or pasted; a wrong LRN is corrected in Edit Student and audited as "Updated LRN" with neither value. Lists, pickers, the Dashboard, Reports and the Audit Trail show it masked to the last four digits (`●●●●●●●●1234`, read as "LRN ending in 1234"); a screen about one opened student, and its printout, show it in full (ADR-040); only the Student Profile and the edit form show it in full; addresses carry the internal id, never the LRN
 - Edit student record — *Staff*. The LRN is locked once the record exists (read-only on Edit Student and refused by the data layer); a name correction stays possible but asks for a reason of at least 3 characters, which the audit entry records ("Name corrected; reason: ...") without the old or new name (Sir Rey, Sunday, October 25, 2026)
 - Admin/Principal opening a student profile is audit-logged once per record per sign-in session (ADR-038 item 4); visits on the profile show as text, not links, for the Admin
-- The student's own phone number is not recorded (ADR-054; the school's list has no such column). Parents and guardians are reached through the emergency contacts, which stay required for every grade, and no record is "incomplete" for lacking a birthdate or any other optional field
+- The student's own phone number is not recorded (ADR-054; the school's list has no such column). Parents and guardians are reached through the emergency contacts, which can be added later (ADR-059), and no record is "incomplete" for lacking a birthdate or any other optional field
 - View student profile/detail — *Staff*. When allergies or medical conditions are recorded, a compact banner at the top of the profile lists them; otherwise nothing extra shows (panel review ST-9)
 - View list of all students (masterlist, shown with full names) — *Staff*
 - Search/filter students (name, grade level, status, or LRN) — *Staff*
@@ -78,7 +78,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 - An inventory item can carry optional **"avoid if allergic to"** words (ADR-049). At the visit, incident and Dispense medicine pickers, a word that the patient's allergy entries mention (any case) shows "Avoid if allergic to penicillin: this patient lists penicillin." beside the allergies; it never blocks (ADR-018).
 
 **Contact Information Management**
-- Add/edit one or more emergency contacts — *Staff*. At least one is required; the ordered list has no fixed maximum, its first contact is primary, and Staff can move another contact to the top.
+- Add/edit one or more emergency contacts — *Staff*. Optional at saving, and the record shows as Incomplete until one is added (ADR-059); the ordered list has no fixed maximum, its first contact is primary, and Staff can move another contact to the top.
 - View all emergency contacts, primary first, with each contact's verification state — *Staff*
 - Mark each contact number as verified/unverified — *Staff*
 - A student has **no number of their own** on the record (ADR-054): families are reached through the emergency contacts. Staff records keep theirs.
@@ -174,11 +174,11 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 - View list of all follow-ups (filterable by status)
 - View due/upcoming follow-ups — surfaced on the Clinic Overview Dashboard (Module 9), computed fresh each time the page loads by comparing today's date to the follow-up date, not a background or push-based alert (the system has no external SMS/push service — see Module 9 and the Out of Scope notes)
 - Mark a follow-up Completed, Missed, or Cancelled
-- Missed and Cancelled ask for a confirmation **and a required reason**, kept on the follow-up and shown in the list; afterwards "Set a new date" offers to create a new pending follow-up for the same student, record and reason (panel review FU-4). Audit-logged
+- Missed and Cancelled ask for a confirmation **and a required reason**, kept on the follow-up and shown in the list; after Missed (or once a follow-up reads as Missed, ADR-051), "Set a new date" offers to create a new pending follow-up for the same patient, record and reason, keeping any "Stay home until cleared" (panel review FU-4; a cancelled follow-up gets no new date, Zean, Sunday, November 1, 2026 — 11:05 PHT). Once given a new date, the Missed row leaves the Follow-Ups list; the record stays in the data (Zean, Sunday, November 1, 2026 — 11:58 PHT). Audit-logged
 
-### 4. Emergency Response — *Access: Staff; Admin/Principal reads the Incident Log and Incident Report and can Acknowledge an approved report (ADR-038, 048), audit-logged once per report per session*
+### 4. Emergency Response — *Access: Staff; Admin/Principal reads the Incident Log and Incident Report (ADR-038), audit-logged once per report per session*
 
-**Acknowledge (ADR-048, built Friday, October 30, 2026 — 00:17 PHT):** on an approved incident report the Admin/Principal has an Acknowledge button (with a confirmation); it records "Acknowledged by <name> on <date>" on the report and its printout, writes an audit entry, and can't be undone. It is the Admin's only write. The clinician's opening of a student or staff profile or an incident report is now audit-logged once per record per session, like the Admin's. The clinician's Dashboard Overview shows a **"Possible cluster"** row when 3 or more students with the same complaint and grade (grade at the time) were seen in the last 3 days (`config.clusterMinStudents`, `clusterWindowDays`; ADR-050); students only, never for the Admin, nothing sent.
+**The Principal's acknowledgement is on paper (ADR-060):** the Admin/Principal only reads the report on screen; the clinician prints it and the Principal signs the printed copy.
 
 **Incident Recording — two-stage flow**
 - **Stage 1 (fast capture):** open a prefilled emergency form (student picked on the form), complete only the essential field (the complaint) plus whichever readings the case needs (temperature, pulse, blood pressure, oximeter; none is required, "don't force all 4 if not relevant to the case"), and save immediately — speed matters more than completeness in the first moment. An optional Additional notes field is offered but never required; it stays editable on Stage 2 until the incident report is approved (ADR-049; each change is an audited edit), then shows read-only in the Stage 1 summary and on the Incident Report. Once the student is picked, a read-only card shows the student's allergies, medical conditions and emergency contacts (an empty list reads “None recorded”, never “No allergies”); it adds no input
@@ -219,7 +219,6 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 - Generate incident report from an incident record — *Staff*
 - Route for nurse review and sign-off — *Staff*. Only a completed (Stage 2) record can be approved
 - Print incident report — *Staff* (ADR-038)
-- **Acknowledge** an approved incident report — *Admin/Principal*: records who and when, shows on the report and is audit-logged; the printed signature line stays (ADR-048)
 - The month's **Incident register** (renamed from "Incident Report Archive", panel review RP-4: it holds unfinished incidents, so it isn't an archive) lists every incident of the month by masked LRN; for Staff each row opens its report, or "Complete Stage 2" for a Stage 1 record; for the Admin/Principal every row opens the report read-only (ADR-038)
 
 **Complaint summary** (renamed from "Health Summaries", panel review RP-7: it holds complaint counts only)
@@ -368,7 +367,7 @@ This satisfies RA 10173 (Data Privacy Act) alignment and is the mechanism that m
 | 2. Student Records | Full | Read Student List and Profile (ADR-038) |
 | 2a. Staff Patients (ADR-043) | Full | — (no Staff screens; staff incidents left out of the Incident Log) |
 | 3. Clinic Visit Monitoring | Full | — |
-| 4. Emergency Response | Full | Read Incident Log and Report, and Acknowledge (ADR-038, 048) |
+| 4. Emergency Response | Full | Read Incident Log and Report (ADR-038) |
 | 5. Reports Generation | Full | View only, no printing (ADR-038) |
 | 7. First-aid Checklist Quick-Reference | Full | — |
 | 8. Medicine & Supply Inventory Tracker | Full | — |

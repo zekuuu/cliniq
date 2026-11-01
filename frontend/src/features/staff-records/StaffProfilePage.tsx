@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from 'react'
-import { Link, useLocation } from 'react-router'
+import { useEffect, useState, type ReactNode } from 'react'
+import { Link } from 'react-router'
+import { clearSavedMessage, peekSavedMessage } from '../../lib/savedMessage'
 import {
   BackButton,
   Badge,
@@ -317,13 +318,14 @@ function FollowUps({ followUps }: { followUps: FollowUp[] }) {
  */
 export function StaffProfilePage({ viewer = getMockSessionUser(), personnelId }: { viewer?: SessionUser; personnelId: string }) {
   const { data, status, reload } = useAsyncData(`staff-profile|${personnelId}`, () => fetchStaffProfile(personnelId, viewer))
-  const savedMessage = (useLocation().state as { savedMessage?: string } | null)?.savedMessage
+  const [savedMessage] = useState(peekSavedMessage)
+  useEffect(clearSavedMessage, [])
   const back = <BackButton fallback={paths.staff} />
 
   if (viewer.role !== 'staff') {
     return (
       <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8">
-        <ErrorState title="Staff access required." />
+        <ErrorState asPageTitle title="Staff access required." />
       </div>
     )
   }
@@ -331,7 +333,7 @@ export function StaffProfilePage({ viewer = getMockSessionUser(), personnelId }:
     return (
       <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
         {back}
-        <ErrorState title="Unable to load the staff profile." onRetry={reload} />
+        <ErrorState asPageTitle title="Unable to load the staff profile." onRetry={reload} />
       </div>
     )
   }

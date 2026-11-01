@@ -102,7 +102,7 @@ export function InventoryListPage() {
   const { data, status, isRefetching, reload } = useAsyncData(key, () => fetchInventory(filters))
   // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
   const back = <BackButton fallback={paths.dashboard} drillThroughOnly />
-  if (status === 'error') return <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState title="Unable to load inventory." onRetry={reload} /></div>
+  if (status === 'error') return <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState asPageTitle title="Unable to load inventory." onRetry={reload} /></div>
   if (!data) return <><p className="sr-only" role="status">Loading inventory...</p><InventorySkeleton back={back} /></>
   const sortColumn = (key: InventorySortKey, label: string) => ({
     label,

@@ -55,7 +55,7 @@ export function SportsReportFormPage({ reportId, viewer }: { reportId?: string; 
     return (
       <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
         {back}
-        <ErrorState title="Unable to load this Sports Report." onRetry={reload} />
+        <ErrorState asPageTitle title="Unable to load this Sports Report." onRetry={reload} />
       </div>
     )
   if (existing === undefined) return <FormSkeleton back={back} />

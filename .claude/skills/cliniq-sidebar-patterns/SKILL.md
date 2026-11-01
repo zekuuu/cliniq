@@ -22,6 +22,7 @@ description: Apply when building or changing CLINIQ's shared application sidebar
 ## Sidebar footer links
 
 - Put legal/support destinations in a dedicated footer block after the scrollable nav groups, kept at the bottom of the sidebar without a separator line.
+- Footer links, their separators and the version are 12px (`text-xs`), the Design System floor.
 - Footer links are visually lightweight legal/support text rather than filled nav buttons: in the expanded sidebar, their hit area is the text itself, with a label-only underline or color shift on hover and a subtle text-only active treatment. Keep visible keyboard focus. In the collapsed sidebar, retain the 40px icon target.
 - A footer item may navigate to a route or open a modal. Modal actions use a button styled with the same lightweight text treatment, expose `aria-haspopup="dialog"`, and leave the current page in place so the report keeps its context.
 - In the collapsed sidebar, retain an accessible label and tooltip/title while using the existing icon treatment so the link does not become an unlabeled control.

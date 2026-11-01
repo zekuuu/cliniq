@@ -98,7 +98,7 @@ The QR Scan/Lookup Hub reference screen was removed with the QR feature (ADR-027
 2. **Additional fields unlocked:** full vitals, treatment notes, hospital referral group (destination, transport mode, departure time)
 3. **Parent Notification log** — a repeatable list of attempts, each with an outcome (Reached / No answer / Left message or voicemail / Wrong number), who was called, and a timestamp — this is a multi-attempt log pattern, not a single field
 4. Status badge changes to "Complete" once saved with at least one of treatment notes, a medicine line, a notification attempt or a hospital referral, or with "Nothing further was needed or done" ticked and a one-line reason
-5. On the Incident Report screen the Admin/Principal can **Acknowledge** a completed report (who and when, ADR-048); the printed signature line stays
+5. The Incident Report screen is read-only for the Admin/Principal; the Principal signs the printed report by hand (ADR-060)
 
 **Components this exercises:** urgency-styled primary button, stage/status badge (three states: Needs completion → In progress → Complete), multi-attempt log list, timestamped entries, hospital-referral field group.
 

@@ -35,7 +35,7 @@ export function defaultIncidentLogRange(today = todayISO()): { from: ISODate; to
 export async function fetchIncidentLog(query: IncidentLogQuery, viewer?: SessionUser): Promise<IncidentLogRow[]> {
   const [incidents, students, personnel] = await Promise.all([
     listIncidents({ from: query.from, to: query.to }, viewer),
-    listStudents({ includeArchived: true }),
+    listStudents({ includeArchived: true, fullLrn: true }),
     listPersonnel({ includeArchived: true }),
   ])
   const studentsById = new Map(students.map((student) => [student.id, student]))

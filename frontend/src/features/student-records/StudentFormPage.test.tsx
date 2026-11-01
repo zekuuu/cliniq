@@ -11,7 +11,7 @@ import { fetchStudentList } from './api/studentListApi'
 import { renderWithRouter } from '../../test/renderWithRouter'
 
 async function fillRequiredStudentFields() {
-  const user = userEvent.setup()
+  const user = userEvent.setup({ delay: null })
   await user.type(screen.getByLabelText(/^LRN/), '1234 5678-9012')
   await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
   await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
@@ -57,7 +57,7 @@ describe('Student Form', () => {
   })
 
   it('keeps only digits in the LRN and requires exactly 12', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<StudentFormPage />)
 
     await screen.findByRole('heading', { name: 'Add Student' })
@@ -71,7 +71,7 @@ describe('Student Form', () => {
   })
 
   it('refuses an LRN another student already has, without naming that student', async () => {
-    const [existing] = await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false })
+    const existing = await getStudent((await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id)
     renderWithRouter(<StudentFormPage />)
     await screen.findByRole('heading', { name: 'Add Student' })
     const user = await fillRequiredStudentFields()
@@ -85,8 +85,8 @@ describe('Student Form', () => {
   })
 
   it('says while typing that an LRN is taken or a name is already listed, before any save', async () => {
-    const user = userEvent.setup()
-    const [existing] = await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false })
+    const user = userEvent.setup({ delay: null })
+    const existing = await getStudent((await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id)
     renderWithRouter(<StudentFormPage />)
     await screen.findByRole('heading', { name: 'Add Student' })
 
@@ -102,7 +102,7 @@ describe('Student Form', () => {
   })
 
   it('suggests None recorded when Allergies or Medical conditions is focused (ADR-051)', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<StudentFormPage />)
     await screen.findByRole('heading', { name: 'Add Student' })
     await user.click(screen.getByRole('combobox', { name: /^Allergies/ }))
@@ -114,7 +114,7 @@ describe('Student Form', () => {
   })
 
   it('locks the LRN on Edit Student, in the form and in the data layer (ADR-028, Sir Rey)', async () => {
-    const [existing] = await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false })
+    const existing = await getStudent((await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id)
     renderWithRouter(<StudentFormPage studentId={existing.id} />)
 
     await screen.findByRole('heading', { name: 'Edit Student' })
@@ -129,9 +129,9 @@ describe('Student Form', () => {
     expect(getRecordedAuditEntries()).toHaveLength(0)
   })
 
-  it('asks for a reason before saving a name correction, and audits the reason without the names', async () => {
-    const user = userEvent.setup()
-    const [existing] = await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false })
+  it('asks for a reason before saving a name correction, and audits the reason without the names (ADR-058)', async () => {
+    const user = userEvent.setup({ delay: null })
+    const existing = await getStudent((await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id)
     renderWithRouter(<StudentFormPage studentId={existing.id} />)
 
     await screen.findByRole('heading', { name: 'Edit Student' })
@@ -158,8 +158,24 @@ describe('Student Form', () => {
     expect((await getStudent(existing.id)).fullName).toBe('Corrected Surname')
   })
 
+  it('saves with no emergency contact, and finishes a started one (ADR-059)', async () => {
+    const user = userEvent.setup({ delay: null })
+    renderWithRouter(<StudentFormPage />)
+    await screen.findByRole('heading', { name: 'Add Student' })
+    await user.type(screen.getByLabelText(/^LRN/), '123456789012')
+    await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
+    await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
+    await selectOption(user, screen.getByLabelText(/^sex/i), 'Female')
+    await user.type(screen.getByLabelText(/contact name/i), 'Marisol')
+    await user.click(screen.getByRole('button', { name: 'Save Student' }))
+    expect(await screen.findByText('Enter the emergency contact phone.')).toBeInTheDocument()
+    await user.clear(screen.getByLabelText(/contact name/i))
+    await user.click(screen.getByRole('button', { name: 'Save Student' }))
+    expect(await screen.findByText('Student record created for Lara Santos.')).toBeInTheDocument()
+  })
+
   it('validates required fields inline', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<StudentFormPage />)
 
     await screen.findByRole('heading', { name: 'Add Student' })
@@ -174,12 +190,12 @@ describe('Student Form', () => {
   })
 
   it('warns before creating a possible duplicate and records the confirmed create', async () => {
-    const user = userEvent.setup()
-    const [existing] = await fetchStudentList({
+    const user = userEvent.setup({ delay: null })
+    const existing = await getStudent((await fetchStudentList({
       search: '',
       gradeLevel: '',
       includeArchived: false,
-    })
+    }))[0].id)
     renderWithRouter(<StudentFormPage />)
 
     await screen.findByRole('heading', { name: 'Add Student' })
@@ -235,8 +251,8 @@ describe('Student Form', () => {
   })
 
   it('supports edit mode, records an update audit entry, and returns to the profile', async () => {
-    const user = userEvent.setup()
-    const [existing] = await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false })
+    const user = userEvent.setup({ delay: null })
+    const existing = await getStudent((await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id)
     render(
       <MemoryRouter initialEntries={[paths.studentEdit(existing.id)]}>
         <Routes>
@@ -263,8 +279,8 @@ describe('Student Form', () => {
   })
 
   it('rejects an emergency contact phone with letters, in plain words', async () => {
-    const user = userEvent.setup()
-    const [existing] = await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false })
+    const user = userEvent.setup({ delay: null })
+    const existing = await getStudent((await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id)
     renderWithRouter(<StudentFormPage studentId={existing.id} />)
 
     await screen.findByRole('heading', { name: 'Edit Student' })
@@ -278,7 +294,7 @@ describe('Student Form', () => {
   })
 
   it('moves focus to the first invalid field and announces the count after a failed save', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<StudentFormPage />)
 
     await screen.findByRole('heading', { name: 'Add Student' })
@@ -286,13 +302,14 @@ describe('Student Form', () => {
     await user.click(screen.getByRole('button', { name: 'Save Student' }))
 
     expect(screen.getByLabelText(/^LRN/)).toHaveFocus()
-    // Allergies and conditions are optional now (ADR-051), so two fewer than before.
-    expect(screen.getByText('6 fields need attention.')).toBeInTheDocument()
+    // LRN, grade level and sex: allergies, conditions (ADR-051) and the emergency contact (ADR-059) are optional.
+    expect(screen.getByText('3 fields need attention.')).toBeInTheDocument()
   })
 
   it('requires Sex and audits an edit to it without storing a value in the audit summary', async () => {
-    const user = userEvent.setup()
-    const [existing] = await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false })
+    const user = userEvent.setup({ delay: null })
+    const [row] = await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false })
+    const existing = await getStudent(row.id)
     renderWithRouter(<StudentFormPage studentId={existing.id} />)
 
     await screen.findByRole('heading', { name: 'Edit Student' })

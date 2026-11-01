@@ -225,7 +225,7 @@ export function Sidebar({
             aria-current={privacyPolicyActive ? 'page' : undefined}
             title={collapsed ? 'Privacy Policy' : undefined}
             className={cn(
-              'cursor-pointer rounded-sm text-[11px] transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none',
+              'cursor-pointer rounded-sm text-xs transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none',
               collapsed ? 'flex size-10 items-center justify-center' : 'inline',
               collapsed && !privacyPolicyActive && 'hover:text-text-primary',
               privacyPolicyActive
@@ -243,7 +243,7 @@ export function Sidebar({
               Privacy Policy
             </span>
           </Link>
-          {!collapsed && <span aria-hidden="true" className="text-[10px] text-text-muted">·</span>}
+          {!collapsed && <span aria-hidden="true" className="text-xs text-text-muted">·</span>}
           <button
             type="button"
             aria-label={collapsed ? 'Report an Issue' : undefined}
@@ -251,7 +251,7 @@ export function Sidebar({
             title={collapsed ? 'Report an Issue' : undefined}
             onClick={onReportIssue}
             className={cn(
-              'cursor-pointer rounded-sm text-[11px] text-text-secondary transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none',
+              'cursor-pointer rounded-sm text-xs text-text-secondary transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none',
               collapsed ? 'flex size-10 items-center justify-center' : 'inline',
               collapsed && 'hover:text-text-primary',
             )}
@@ -261,8 +261,8 @@ export function Sidebar({
               Report an Issue
             </span>
           </button>
-          {!collapsed && <span aria-hidden="true" className="text-[10px] text-text-muted">·</span>}
-          <span className="whitespace-nowrap text-[10px] leading-4 text-text-secondary">
+          {!collapsed && <span aria-hidden="true" className="text-xs text-text-muted">·</span>}
+          <span className="whitespace-nowrap text-xs leading-4 text-text-secondary">
             v{APP_VERSION}
           </span>
         </div>

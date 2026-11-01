@@ -269,7 +269,7 @@ export function IncidentEntryPage({
     return (
       <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
         {back}
-        <ErrorState title="Unable to load the incident form." onRetry={reload} />
+        <ErrorState asPageTitle title="Unable to load the incident form." onRetry={reload} />
       </div>
     )
   }
@@ -340,11 +340,12 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   )
   const [generalNotes, setGeneralNotes] = useState(existing?.generalNotes ?? start.notes)
   const [treatmentNotes, setTreatmentNotes] = useState(vital(existing, 'treatmentNotes'))
-  const [referToHospital, setReferToHospital] = useState(false)
-  const [referralDestination, setReferralDestination] = useState('')
-  const [transportMode, setTransportMode] = useState('')
-  const [departureDate, setDepartureDate] = useState('')
-  const [departureClock, setDepartureClock] = useState('')
+  const savedReferral = existing?.hospitalReferral ?? null
+  const [referToHospital, setReferToHospital] = useState(Boolean(savedReferral))
+  const [referralDestination, setReferralDestination] = useState(savedReferral?.destination ?? '')
+  const [transportMode, setTransportMode] = useState(savedReferral?.transportMode ?? '')
+  const [departureDate, setDepartureDate] = useState(savedReferral?.departureTime.slice(0, 10) ?? '')
+  const [departureClock, setDepartureClock] = useState(savedReferral?.departureTime.slice(11, 16) ?? '')
   const [notificationOutcome, setNotificationOutcome] = useState<ParentNotificationOutcome>('reached')
   const [notificationDetail, setNotificationDetail] = useState('')
   // null means the default: the primary contact of the student picked so far, or "Other" when none.

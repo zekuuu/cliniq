@@ -123,7 +123,7 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
       </Modal>
       <div className="relative h-36 shrink-0 md:h-auto md:flex-1">
         <LoginBackdrop className="absolute inset-0" />
-        <DemoAccounts />
+        {import.meta.env.DEV && <DemoAccounts />}
       </div>
     </main>
   )

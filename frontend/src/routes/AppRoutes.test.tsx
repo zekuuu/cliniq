@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { configure, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
@@ -30,6 +30,10 @@ function renderAt(route: string, user: SessionUser = STAFF) {
     </MemoryRouter>,
   )
 }
+
+// The first render of each lazy screen imports its chunk; under the parallel suite that alone took 1.2 s,
+// past the 1 s default. BackNavigation.test.tsx gives its lazy screens the same 5 s.
+configure({ asyncUtilTimeout: 5000 })
 
 describe('App routes', () => {
   it('opens a screen by path inside the shell and marks its nav item current', async () => {

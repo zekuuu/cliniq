@@ -178,7 +178,7 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
   if (viewer.role !== 'staff') {
     return (
       <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8">
-        <ErrorState title="Staff access required." />
+        <ErrorState asPageTitle title="Staff access required." />
       </div>
     )
   }
@@ -189,7 +189,7 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
     return (
       <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
         {back}
-        <ErrorState title="Unable to load PE/Sports referral." onRetry={reload} />
+        <ErrorState asPageTitle title="Unable to load PE/Sports referral." onRetry={reload} />
       </div>
     )
   }

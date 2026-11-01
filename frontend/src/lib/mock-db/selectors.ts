@@ -242,11 +242,10 @@ export function toStudent(student: SeedStudent): Student {
   return { ...student, sex: student.sex ?? 'female', recordComplete: missingRequiredFields(student).length === 0 }
 }
 
-/** `toStudent` for a multi-student screen: the birthdate never leaves the data layer on a list (ADR-054). */
-export function toStudentRow(student: SeedStudent): StudentListRow {
-  const { birthDate, ...row } = toStudent(student)
-  void birthDate
-  return row
+/** A student on a multi-student screen: the list's columns and the masked LRN, nothing else (API contract Q2, ADR-038, ADR-057). */
+export function toStudentRow(student: SeedStudent, fullLrn = false): StudentListRow {
+  const { id, lrn, fullName, gradeLevel, archived, recordComplete } = toStudent(student)
+  return { id, lrn: fullLrn ? lrn : maskLrn(lrn), fullName, gradeLevel, archived, recordComplete }
 }
 
 export function toListRef(student: Pick<Student, 'id' | 'lrn'>): StudentListRef {
@@ -377,14 +376,14 @@ export interface IncompleteRecordRow {
  * marked resolved. "Open" = incomplete and not yet resolved. The Dashboard's pending-records card
  * counts exactly these open rows, so the two screens can't disagree.
  */
-export function incompleteRecordQueue(state: DbState): IncompleteRecordRow[] {
+export function incompleteRecordQueue(state: DbState, fullLrn = false): IncompleteRecordRow[] {
   const reviews = new Map(state.frontendOnly.recordReviews.map((r) => [r.studentId, r]))
   return activeStudents(state).flatMap((student) => {
     const missingFields = missingRequiredFields(student)
     const review = reviews.get(student.id) ?? null
     const resolved = Boolean(review?.resolvedAt)
     if (!missingFields.length && !resolved) return []
-    return [{ student: toStudentRow(student), missingFields, review, status: resolved ? 'resolved' : 'open' }]
+    return [{ student: toStudentRow(student, fullLrn), missingFields, review, status: resolved ? 'resolved' : 'open' }]
   })
 }
 
@@ -441,6 +440,22 @@ export const AUTO_CLOSED_REASON = (days: number) => `No response (closed automat
  * "no response" note. Computed on every read in the mock (the backend will need a daily job, `LATER`),
  * so the stored record stays pending and nothing is written by reading.
  */
+/**
+ * A follow-up rescheduled from this one exists: same patient, record and reason, created later. There
+ * is no link field (the approved ERD has none).
+ */
+export function hasLaterFollowUp(followUps: FollowUp[], followUp: FollowUp): boolean {
+  const after = followUps.slice(followUps.findIndex((f) => f.id === followUp.id) + 1)
+  return after.some(
+    (f) =>
+      f.reason === followUp.reason &&
+      f.studentId === followUp.studentId &&
+      f.personnelId === followUp.personnelId &&
+      f.relatedRecord?.type === followUp.relatedRecord?.type &&
+      f.relatedRecord?.id === followUp.relatedRecord?.id,
+  )
+}
+
 export function withAutoClosedFollowUps(followUps: FollowUp[], today: ISODate, autoCloseDays: number): FollowUp[] {
   return followUps.map((f) =>
     f.status === 'pending' && diffDays(f.followUpDate, today) > autoCloseDays

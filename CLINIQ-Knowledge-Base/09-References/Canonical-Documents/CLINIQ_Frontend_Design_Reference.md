@@ -13,7 +13,7 @@ CLINIQ is a clinic tracking and monitoring system for Mendez Christian Academy, 
 | Role | Can do |
 |---|---|
 | **Staff** (nurse/clinic assistant; School Clinician in the app) | Full read/write on students, staff patients, visits, incidents, inventory; generates and prints reports and Sports Reports; backup; own password |
-| **Admin/Principal** | Reads the Clinic Overview Dashboard and Activity calendar (and keeps school events, ADR-042), reports, the Student List and Profile, the Incident Log and Report (ADR-038); can Acknowledge a completed incident report (ADR-048); reads the Audit Log and Backup (ADR-037); manages every account (ADR-033). Never prints; does not see staff patients |
+| **Admin/Principal** | Reads the Clinic Overview Dashboard and Activity calendar (and keeps school events, ADR-042), reports, the Student List and Profile, the Incident Log and Report (ADR-038); reads the Audit Log and Backup (ADR-037); manages every account (ADR-033). Never prints; does not see staff patients |
 | **PE/Sports Instructor** | No account and no access (ADR-029). An instructor asks the clinician, who decides what to share |
 
 **Display-privacy rule — affects how student names appear across the system:** a screen showing a **list of multiple students at once** (visit logs, incident logs, the dashboard's frequent-visitor section) shows the **masked LRN**, not the name — these are the screens a bystander could glance at on a desktop monitor. A screen showing **one specific, deliberately-identified student** (the full profile, search results, the masterlist) shows the **full name** normally. Design both list rows and detail views with this in mind — a list row template should have no name field at all; a detail/card template should lead with the name prominently. The same applies to the LRN: lists show it masked to the last four digits, and a screen about one opened student, and its printout, show it in full (ADR-040). Lists that include staff patients show the Staff No. instead of a name (ADR-043).
@@ -187,7 +187,7 @@ The QR Scan/Lookup Hub reference screen was removed with the QR feature (ADR-027
 2. **Additional fields unlocked:** full vitals, treatment notes, hospital referral group (destination, transport mode, departure time)
 3. **Parent Notification log** — a repeatable list of attempts, each with an outcome (Reached / No answer / Left message or voicemail / Wrong number), who was called, and a timestamp — this is a multi-attempt log pattern, not a single field
 4. Status badge changes to "Complete" once saved with at least one of treatment notes, a medicine line, a notification attempt or a hospital referral, or with "Nothing further was needed or done" ticked and a one-line reason
-5. On the Incident Report screen the Admin/Principal can **Acknowledge** a completed report (who and when, ADR-048); the printed signature line stays
+5. The Incident Report screen is read-only for the Admin/Principal; the Principal signs the printed report by hand (ADR-060)
 
 **Components this exercises:** urgency-styled primary button, stage/status badge (three states: Needs completion → In progress → Complete), multi-attempt log list, timestamped entries, hospital-referral field group.
 

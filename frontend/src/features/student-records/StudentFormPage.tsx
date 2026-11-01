@@ -41,6 +41,7 @@ import {
 } from './api/studentFormApi'
 import { unusualAgeNote } from '../../lib/age'
 import { isLrn, maskLrn, normalizeLrn } from '../../lib/lrn'
+import { setSavedMessage } from '../../lib/savedMessage'
 import { NONE_RECORDED } from '../../lib/patients'
 
 type StudentFormErrors = Partial<Record<string, string>>
@@ -150,6 +151,11 @@ function DuplicateDialog({
 
 const RELATIONSHIP_SUGGESTIONS = ['Mother', 'Father', 'Guardian', 'Sister or brother', 'Relative', 'Other']
 
+/** Saving needs no contact (ADR-059; the record shows as Incomplete until one is added), but a started one must be complete. */
+function contactStarted(contact: StudentFormValues['emergencyContacts'][number]): boolean {
+  return [contact.name, contact.relationship, contact.phone].some((value) => value.trim())
+}
+
 function contactErrorKey(index: number, field: 'name' | 'relationship' | 'phone') {
   return `emergencyContacts.${index}.${field}`
 }
@@ -163,8 +169,7 @@ function validate(values: StudentFormValues, today: ISODate): StudentFormErrors 
   if (!values.sex) errors.sex = 'Select the sex recorded by the school.'
   if (values.birthDate > today) errors.birthDate = "The birthdate can't be in the future."
   values.emergencyContacts.forEach((contact, index) => {
-    const started = index === 0 || [contact.name, contact.relationship, contact.phone].some((value) => value.trim())
-    if (!started) return
+    if (!contactStarted(contact)) return
     if (!contact.name.trim()) errors[contactErrorKey(index, 'name')] = 'Enter the emergency contact name.'
     if (!contact.relationship.trim()) errors[contactErrorKey(index, 'relationship')] = 'Enter the contact relationship.'
     if (!contact.phone.trim()) errors[contactErrorKey(index, 'phone')] = 'Enter the emergency contact phone.'
@@ -193,7 +198,8 @@ function StudentFormEditor({
   const nameChanged = data.mode === 'edit' && values.fullName.trim() !== (data.student?.fullName ?? '')
   const navigate = useNavigate()
   // Set by the Incomplete Records queue's Edit Record, so a save goes back there instead of to the profile.
-  const returnTo = (useLocation().state as { returnTo?: string } | null)?.returnTo
+  const location = useLocation()
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo
   const goBackToReturn = useGoBack(returnTo ?? paths.students)
   const invalidRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(invalidRef)
@@ -314,10 +320,10 @@ function StudentFormEditor({
       }
       if (result.action === 'update') {
         // An edit ends on the record it changed, like Visit Details; the profile shows the confirmation.
-        void navigate(paths.studentProfile(result.student.id), {
-          replace: true,
-          state: { savedMessage: `Student record updated for ${result.student.fullName}.` },
-        })
+        // Back through history, so the next Back leaves the profile instead of showing it again.
+        setSavedMessage(`Student record updated for ${result.student.fullName}.`)
+        if (location.key === 'default') void navigate(paths.studentProfile(result.student.id), { replace: true })
+        else void navigate(-1)
         return
       }
       // A create clears the form for the next student; the banner says what was saved.
@@ -497,7 +503,7 @@ function StudentFormEditor({
                           label="Name"
                           icon="user"
                           aria-label={`${label} name`}
-                          required={index === 0}
+                          required={contactStarted(contact)}
                           value={contact.name}
                           error={errors[contactErrorKey(index, 'name')]}
                           onChange={(event) => setEmergencyContact(index, 'name', event.target.value)}
@@ -506,7 +512,7 @@ function StudentFormEditor({
                           label="Relationship"
                           icon="users"
                           aria-label={`${label} relationship`}
-                          required={index === 0}
+                          required={contactStarted(contact)}
                           value={contact.relationship}
                           options={RELATIONSHIP_SUGGESTIONS}
                           optionKey={(option) => option}
@@ -520,7 +526,7 @@ function StudentFormEditor({
                           icon="phone"
                           type="tel"
                           aria-label={`${label} phone`}
-                          required={index === 0}
+                          required={contactStarted(contact)}
                           value={contact.phone}
                           error={errors[contactErrorKey(index, 'phone')]}
                           onChange={(event) => setEmergencyContact(index, 'phone', event.target.value)}
@@ -612,7 +618,7 @@ export function StudentFormPage({
   if (viewer.role !== 'staff') {
     return (
       <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8">
-        <ErrorState title="Staff access required." />
+        <ErrorState asPageTitle title="Staff access required." />
       </div>
     )
   }
@@ -625,7 +631,7 @@ export function StudentFormPage({
     return (
       <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
         {back}
-        <ErrorState title="Unable to load student form." onRetry={reload} />
+        <ErrorState asPageTitle title="Unable to load student form." onRetry={reload} />
       </div>
     )
   }

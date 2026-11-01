@@ -60,7 +60,7 @@ describe('New Visit', () => {
   })
 
   it('shows the identified student and reveals the first-aid checklist for a case-insensitive complaint match', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<NewVisitEntryPage />)
     await pickStudent(user, '000000260001')
 
@@ -73,7 +73,7 @@ describe('New Visit', () => {
   })
 
   it('validates required fields inline, and whitespace is not a complaint', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<NewVisitEntryPage />)
     await pickStudent(user, '000000260001')
 
@@ -86,7 +86,7 @@ describe('New Visit', () => {
   })
 
   it('saves a visit with neither treatment notes nor a medicine', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<NewVisitEntryPage />)
     await pickStudent(user, '000000260001')
 
@@ -99,7 +99,7 @@ describe('New Visit', () => {
   })
 
   it('creates audit entries for visit submission and follow-up creation', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<NewVisitEntryPage />)
     await pickStudent(user, '000000260001')
 
@@ -117,7 +117,7 @@ describe('New Visit', () => {
   })
 
   it('lists a capped set of complaints and saves typed Other text with no checklist', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<NewVisitEntryPage />)
     await pickStudent(user, '000000260001')
 
@@ -137,7 +137,7 @@ describe('New Visit', () => {
   })
 
   it('selects Other and focuses an empty Other field', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<NewVisitEntryPage />)
     await pickStudent(user, '000000260001')
 
@@ -156,7 +156,7 @@ describe('New Visit', () => {
   })
 
   it('stores a selected complaint in its suggestion spelling', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<NewVisitEntryPage />)
     await pickStudent(user, '000000260001')
 
@@ -174,7 +174,7 @@ describe('New Visit student lookup', () => {
   beforeEach(() => resetMockDb())
 
   it('lists nothing on focus, finds from the first character, and shows number, name, and grade', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<NewVisitEntryPage />)
 
     const field = await screen.findByRole('combobox', { name: /student/i })
@@ -195,7 +195,7 @@ describe('New Visit student lookup', () => {
   })
 
   it('picks with Enter after a complete LRN, keyboard only', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<NewVisitEntryPage />)
 
     await user.click(await screen.findByRole('combobox', { name: /student/i }))
@@ -206,7 +206,7 @@ describe('New Visit student lookup', () => {
   })
 
   it('finds an LRN typed with spaces or dashes, leaves the text as typed, and picks on Enter', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<NewVisitEntryPage />)
 
     const field = await screen.findByRole('combobox', { name: /student/i })
@@ -218,7 +218,7 @@ describe('New Visit student lookup', () => {
   })
 
   it('says when nothing matches and offers Staff a link to add the student', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<NewVisitEntryPage />)
 
     await user.type(await screen.findByRole('combobox', { name: /student/i }), 'zzzz')
@@ -227,7 +227,7 @@ describe('New Visit student lookup', () => {
   })
 
   it('asks for a pick before saving', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<NewVisitEntryPage />)
 
     await screen.findByRole('combobox', { name: /student/i })
@@ -240,7 +240,7 @@ describe('New Visit: disposition-specific fields', () => {
   beforeEach(() => resetMockDb())
 
   async function openForm() {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithRouter(<NewVisitEntryPage />)
     await pickStudent(user, '000000260001')
     await screen.findByRole('heading', { name: 'New Visit' })

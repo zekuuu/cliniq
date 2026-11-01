@@ -87,7 +87,7 @@ describe('Cancel with unsaved changes asks first', () => {
   beforeEach(() => resetMockDb())
 
   it.each([
-    ['New Visit', <NewVisitEntryPage />, '/visits', /complaint/i],
+    ['New Visit', <NewVisitEntryPage />, '/visits', /treatment/i],
     [
       'Incident Stage 1',
       <IncidentEntryPage />,

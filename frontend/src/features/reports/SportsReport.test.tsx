@@ -67,7 +67,7 @@ async function studentWithNoEntries() {
   const visits = await listVisits()
   const incidents = await listIncidents()
   const seen = new Set([...visits.map((v) => v.studentId), ...incidents.map((i) => i.studentId)])
-  const student = (await listStudents()).find((s) => !seen.has(s.id))
+  const student = (await listStudents({ fullLrn: true })).find((s) => !seen.has(s.id))
   if (!student) throw new Error('seed has no student without history')
   return student
 }
@@ -170,7 +170,7 @@ describe('Sports Report data rules (ADR-034)', () => {
   })
 
   it('leaves an archived student out and counts it', async () => {
-    const [first, second] = await listStudents({ limit: 2 })
+    const [first, second] = await listStudents({ limit: 2, fullLrn: true })
     const report = await createSportsReport(input([first.id, second.id]), STAFF)
     await archiveStudent(second.id, STAFF)
     const content = await getSportsReportContent(report.id, STAFF)
@@ -180,7 +180,7 @@ describe('Sports Report data rules (ADR-034)', () => {
   })
 
   it('audits create, edit, duplicate and archive without naming a student', async () => {
-    const [student] = await listStudents({ limit: 1 })
+    const [student] = await listStudents({ limit: 1, fullLrn: true })
     const report = await createSportsReport(input([student.id]), STAFF)
     await updateSportsReport(report.id, input([student.id], { title: 'Palaro finals' }), STAFF)
     const copy = await duplicateSportsReport(report.id, STAFF)
@@ -306,8 +306,8 @@ describe('Sports Report screens', () => {
   })
 
   it('builds a report by keyboard: picks a student by LRN, labels the note with the name, and refuses a repeat', async () => {
-    const user = userEvent.setup()
-    const [student] = await listStudents({ limit: 1 })
+    const user = userEvent.setup({ delay: null })
+    const [student] = await listStudents({ limit: 1, fullLrn: true })
     render(
       <MemoryRouter initialEntries={['/reports/sports/new']}>
         <Routes>

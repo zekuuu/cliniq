@@ -200,7 +200,7 @@ export function AuditLogPage({ viewer }: { viewer: SessionUser }) {
     setPage(1)
   }
 
-  if (status === 'error') return <div className="mx-auto max-w-page-wide px-4 pt-10 pb-8 sm:px-8"><ErrorState title="Unable to load the audit log." onRetry={reload} /></div>
+  if (status === 'error') return <div className="mx-auto max-w-page-wide px-4 pt-10 pb-8 sm:px-8"><ErrorState asPageTitle title="Unable to load the audit log." onRetry={reload} /></div>
   if (!data) return <><p className="sr-only" role="status">Loading audit log...</p><AuditLogSkeleton /></>
 
   // Search matches only what the table already shows, so it never surfaces hidden student details.

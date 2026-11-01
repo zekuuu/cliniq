@@ -29,9 +29,9 @@ function ProfileRoute() {
 }
 
 /** Opens `screen` after "/previous", so Back has in-app history to return through. */
-function renderAfterPrevious(path: string, page: ReactElement) {
+function renderAfterPrevious(path: string, page: ReactElement, via: string[] = []) {
   return render(
-    <MemoryRouter initialEntries={['/previous', path]} initialIndex={1}>
+    <MemoryRouter initialEntries={['/previous', ...via, path]} initialIndex={1 + via.length}>
       <Routes>
         <Route path="/previous" element={<p>Previous screen</p>} />
         <Route path="/fallback" element={<p>Fallback screen</p>} />
@@ -49,11 +49,11 @@ describe('Back after a save never returns to the submitted form', () => {
   beforeEach(() => resetMockDb())
 
   it('New Visit: Save, Review excuse letter, Back skips the submitted form', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderAfterPrevious('/visits/new', <NewVisitEntryPage />)
     await pickStudent(user, STUDENT_LRN)
     await screen.findByRole('heading', { name: 'New Visit' })
-    await user.type(screen.getByRole('combobox', { name: /complaint/i }), 'Fever')
+    await selectOption(user, screen.getByLabelText(/^complaint/i), 'Fever')
     await user.click(screen.getByRole('radio', { name: 'Sent home' }))
     await pickDate(
       user,
@@ -69,8 +69,9 @@ describe('Back after a save never returns to the submitted form', () => {
   })
 
   it('Edit Student: Save Changes, then Back from the profile skips the edit form', async () => {
-    const user = userEvent.setup()
-    renderAfterPrevious(`/students/${STUDENT}/edit`, <StudentFormPage studentId={STUDENT} />)
+    const user = userEvent.setup({ delay: null })
+    // Edit opens from the profile, so the save returns through that same history entry.
+    renderAfterPrevious(`/students/${STUDENT}/edit`, <StudentFormPage studentId={STUDENT} />, [`/students/${STUDENT}`])
     await screen.findByRole('heading', { name: 'Edit Student' })
     await user.type(screen.getByLabelText(/contact name/i), 'x')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
@@ -81,7 +82,7 @@ describe('Back after a save never returns to the submitted form', () => {
   })
 
   it('Add Student: after Save Student, Back leaves without asking', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderAfterPrevious('/add-student', <StudentFormPage />)
     await screen.findByRole('heading', { name: 'Add Student' })
     await user.type(screen.getByLabelText(/^LRN/), '123456789012')
@@ -102,7 +103,7 @@ describe('Back after a save never returns to the submitted form', () => {
   })
 
   it('Add Inventory Item: after Add Item, Back leaves without asking', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderAfterPrevious('/inventory/new', <InventoryFormPage />)
     await screen.findByRole('heading', { name: 'Add Inventory Item' })
     await user.type(screen.getByLabelText(/item name/i), 'Saline solution')
@@ -121,11 +122,11 @@ describe('Back after a save never returns to the submitted form', () => {
   })
 
   it('Incident: Save Stage 1 opens Stage 2 in place, and Back leaves to the previous screen', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderAfterPrevious('/incidents/new', <IncidentEntryPage />)
     await pickStudent(user, STUDENT_LRN)
     await screen.findByRole('heading', { name: 'Report Incident' })
-    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await selectOption(user, screen.getByLabelText(/^complaint/i), 'Fainting')
     await user.type(screen.getByLabelText(/temperature/i), '37.2')
     await user.type(screen.getByLabelText(/pulse/i), '92')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
@@ -137,7 +138,7 @@ describe('Back after a save never returns to the submitted form', () => {
   })
 
   it('Excuse Letter: after Approve and Store, Back leaves to the previous screen', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderAfterPrevious('/letter', <ExcuseLetterPage />)
     await screen.findByRole('heading', { name: 'Excuse Letter' })
     await user.click(screen.getByLabelText(/I checked the letter/i))
@@ -153,14 +154,14 @@ describe('Back and Cancel behave identically on forms', () => {
   beforeEach(() => resetMockDb())
 
   it.each([
-    ['New Visit', <NewVisitEntryPage />, /complaint/i],
+    ['New Visit', <NewVisitEntryPage />, /treatment/i],
     ['Add Student', <StudentFormPage />, /full name/i],
     ['Add Inventory Item', <InventoryFormPage />, /item name/i],
     ['User form', <UserFormPage />, /full name/i],
   ])(
     '%s: both ask before discarding, save nothing, and leave the same way',
     async (_name, form, field) => {
-      const user = userEvent.setup()
+      const user = userEvent.setup({ delay: null })
       for (const control of ['Back', 'Cancel'] as const) {
         const { unmount } = renderAfterPrevious('/form', form)
         await user.type(await screen.findByLabelText(field), 'Unsaved')
