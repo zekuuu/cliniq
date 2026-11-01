@@ -1,20 +1,20 @@
 -- =====================================================================================
--- CLINIQ — Reference schema (design draft v1)
+-- CLINIQ — Reference schema
 --
--- STATUS: PROPOSED, NOT FINAL. Updated to the decisions up to ADR-056 and the frontend data shapes.
--- It records them; ERD-Review.md lists what still waits for the team's approval. Open decisions (ERD.md section 11) can still change this file.
--- Do not build Laravel migrations from it until the team has approved the design.
+-- STATUS: Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057); changes after this go through a new decision.
+-- Laravel migrations are built from it in phase B1.
 --
 -- NOT a migration source. Laravel migrations are the real thing; this file exists so the
 -- design can be loaded into a real database and tested (constraints, composite keys, checks).
--- Keep it in sync with ERD.md and Data-Dictionary.md (same folder).
+-- Keep it in sync with ERD.md and Data-Dictionary.md (same folder). Checks/ holds its constraint tests.
 --
--- Target engines : MariaDB 10.4+ (what XAMPP ships) and MySQL 8.0.16+. Nothing here needs more.
+-- Target engine  : MariaDB 10.4+ (what XAMPP ships). MySQL 8 refuses fk_lines_visit and fk_lines_incident (error 3823, ERD.md rule F-2).
 -- Time           : every DATETIME is Philippine time (UTC+8, no DST). See ERD.md rule C-3.
 -- Charset        : utf8mb4 / utf8mb4_unicode_ci (works on both engines; case- and accent-
 --                  insensitive, so "Nuñez" = "nunez" for matching and duplicate warnings).
--- FK policy      : RESTRICT everywhere except pure profile parts (CASCADE). Clinical records are
---                  never deleted by cascade; the retention purge service deletes in a fixed order.
+-- FK policy      : RESTRICT for shared references. CASCADE only for rows a parent owns (profile parts,
+--                  lines, letters, readings, allocations); no route deletes those parents, and the one
+--                  retention purge deletes in the order set out in ERD.md section 7.
 -- =====================================================================================
 
 SET NAMES utf8mb4;
@@ -29,6 +29,7 @@ CREATE TABLE users (
   name                  VARCHAR(120)    NOT NULL,
   username              VARCHAR(50)     NOT NULL,
   email                 VARCHAR(190)    NULL,
+  profile_picture       MEDIUMTEXT      NULL,
   password_hash         VARCHAR(255)    NOT NULL,
   role                  VARCHAR(12)     NOT NULL,
   is_head_nurse         TINYINT(1)      NOT NULL DEFAULT 0,
@@ -42,6 +43,7 @@ CREATE TABLE users (
   updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_users_username (username),
+  UNIQUE KEY uq_users_email (email),
   CONSTRAINT chk_users_role CHECK (role IN ('staff','admin')),
   CONSTRAINT chk_users_head_nurse CHECK (is_head_nurse = 0 OR role = 'staff'),
   CONSTRAINT chk_users_username_len CHECK (CHAR_LENGTH(TRIM(username)) >= 3),
@@ -68,6 +70,20 @@ CREATE TABLE system_settings (
   PRIMARY KEY (setting_key),
   CONSTRAINT chk_settings_type CHECK (value_type IN ('int','decimal','string','bool')),
   CONSTRAINT fk_settings_user FOREIGN KEY (updated_by_user_id) REFERENCES users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Settings that are text or structured, beside the plain values of system_settings.
+CREATE TABLE reference_settings (
+  setting_key         VARCHAR(80)  NOT NULL,
+  value_format        VARCHAR(4)   NOT NULL,
+  setting_value       TEXT         NOT NULL,
+  description         VARCHAR(255) NULL,
+  updated_by_user_id  BIGINT UNSIGNED NULL,
+  updated_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (setting_key),
+  CONSTRAINT chk_reference_settings_format CHECK (value_format IN ('text','json')),
+  CONSTRAINT chk_reference_settings_json CHECK (value_format <> 'json' OR JSON_VALID(setting_value)),
+  CONSTRAINT fk_reference_settings_user FOREIGN KEY (updated_by_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE number_sequences (
@@ -153,8 +169,7 @@ CREATE TABLE students (
   section                  VARCHAR(60)     NULL,
   sex                      VARCHAR(6)      NULL,
   birth_date               DATE            NULL,
-  health_reviewed_at       DATETIME        NULL,
-  health_reviewed_by_user_id BIGINT UNSIGNED NULL,
+  name_correction_reason   VARCHAR(300)    NULL,
   archived_at              DATETIME        NULL,
   archived_by_user_id      BIGINT UNSIGNED NULL,
   import_batch_id          BIGINT UNSIGNED NULL,
@@ -171,7 +186,6 @@ CREATE TABLE students (
   CONSTRAINT chk_students_sex CHECK (sex IS NULL OR sex IN ('female','male')),
   CONSTRAINT fk_students_grade FOREIGN KEY (grade_level_id) REFERENCES grade_levels (id),
   CONSTRAINT fk_students_archived_by FOREIGN KEY (archived_by_user_id) REFERENCES users (id),
-  CONSTRAINT fk_students_health_by FOREIGN KEY (health_reviewed_by_user_id) REFERENCES users (id),
   CONSTRAINT fk_students_batch FOREIGN KEY (import_batch_id) REFERENCES student_import_batches (id),
   CONSTRAINT fk_students_created_by FOREIGN KEY (created_by_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -182,6 +196,7 @@ CREATE TABLE student_health_entries (
   kind                VARCHAR(16)     NOT NULL,
   label               VARCHAR(150)    NOT NULL,
   note                VARCHAR(500)    NULL,
+  sort_order          SMALLINT        NOT NULL DEFAULT 0,
   created_by_user_id  BIGINT UNSIGNED NULL,
   created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -200,6 +215,7 @@ CREATE TABLE emergency_contacts (
   relationship        VARCHAR(40)     NULL,
   phone               VARCHAR(30)     NOT NULL,
   is_primary          TINYINT(1)      NOT NULL DEFAULT 1,
+  sort_order          SMALLINT        NOT NULL DEFAULT 0,
   is_verified         TINYINT(1)      NOT NULL DEFAULT 0,
   verified_at         DATETIME        NULL,
   verified_by_user_id BIGINT UNSIGNED NULL,
@@ -261,6 +277,7 @@ CREATE TABLE personnel_health_entries (
   personnel_id        BIGINT UNSIGNED NOT NULL,
   kind                VARCHAR(16)     NOT NULL,
   label               VARCHAR(150)    NOT NULL,
+  sort_order          SMALLINT        NOT NULL DEFAULT 0,
   created_by_user_id  BIGINT UNSIGNED NULL,
   created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -278,6 +295,7 @@ CREATE TABLE personnel_emergency_contacts (
   relationship        VARCHAR(40)     NULL,
   phone               VARCHAR(30)     NOT NULL,
   is_primary          TINYINT(1)      NOT NULL DEFAULT 1,
+  sort_order          SMALLINT        NOT NULL DEFAULT 0,
   is_verified         TINYINT(1)      NOT NULL DEFAULT 0,
   created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -352,7 +370,7 @@ CREATE TABLE visits (
   disposition         VARCHAR(22)     NOT NULL,
   referred_to         VARCHAR(150)    NULL,
   event_tag           VARCHAR(80)     NULL,
-  temperature_c       DECIMAL(4,1)    NULL,
+  temperature_c       DECIMAL(5,2)    NULL,
   time_out            TIME            NULL,
   assisted_by         VARCHAR(120)    NULL,
   parent_guardian     VARCHAR(120)    NULL,
@@ -381,6 +399,7 @@ CREATE TABLE visits (
   CONSTRAINT chk_visits_referred_to CHECK (referred_to IS NULL OR disposition = 'referred_to_hospital'),
   CONSTRAINT chk_visits_complaint CHECK (CHAR_LENGTH(TRIM(complaint)) >= 1),
   CONSTRAINT chk_visits_one_patient CHECK ((student_id IS NOT NULL) + (personnel_id IS NOT NULL) = 1),
+  CONSTRAINT chk_visits_temperature CHECK (temperature_c IS NULL OR temperature_c >= 0),
   CONSTRAINT chk_visits_error CHECK ((entered_in_error_at IS NULL) = (entered_in_error_reason IS NULL)),
   CONSTRAINT fk_visits_student FOREIGN KEY (student_id) REFERENCES students (id),
   CONSTRAINT fk_visits_personnel FOREIGN KEY (personnel_id) REFERENCES personnel (id),
@@ -398,7 +417,7 @@ CREATE TABLE visit_extra_complaints (
   PRIMARY KEY (id),
   UNIQUE KEY uq_extra_complaint (visit_id, complaint),
   -- Up to 3 per visit (ADR-053), enforced by the service; a CHECK can't count rows.
-  CONSTRAINT fk_extra_complaints_visit FOREIGN KEY (visit_id) REFERENCES visits (id)
+  CONSTRAINT fk_extra_complaints_visit FOREIGN KEY (visit_id) REFERENCES visits (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE excuse_letters (
@@ -439,7 +458,7 @@ CREATE TABLE excuse_letters (
     (status = 'voided' AND voided_at IS NOT NULL) OR
     (status = 'superseded' AND superseded_at IS NOT NULL)
   ),
-  CONSTRAINT fk_letters_visit FOREIGN KEY (visit_id) REFERENCES visits (id),
+  CONSTRAINT fk_letters_visit FOREIGN KEY (visit_id) REFERENCES visits (id) ON DELETE CASCADE,
   CONSTRAINT fk_letters_prepared_by FOREIGN KEY (prepared_by_user_id) REFERENCES users (id),
   CONSTRAINT fk_letters_approved_by FOREIGN KEY (approved_by_user_id) REFERENCES users (id),
   CONSTRAINT fk_letters_voided_by FOREIGN KEY (voided_by_user_id) REFERENCES users (id),
@@ -455,7 +474,7 @@ CREATE TABLE triage_checks (
   sort_order       SMALLINT        NOT NULL DEFAULT 0,
   PRIMARY KEY (id),
   KEY idx_triage_checks_visit (visit_id, sort_order),
-  CONSTRAINT fk_triage_checks_visit FOREIGN KEY (visit_id) REFERENCES visits (id),
+  CONSTRAINT fk_triage_checks_visit FOREIGN KEY (visit_id) REFERENCES visits (id) ON DELETE CASCADE,
   CONSTRAINT fk_triage_checks_step FOREIGN KEY (triage_step_id) REFERENCES triage_steps (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -510,23 +529,18 @@ CREATE TABLE incident_vital_readings (
   stage               TINYINT         NOT NULL,
   recorded_at         DATETIME        NOT NULL,
   recorded_by_user_id BIGINT UNSIGNED NOT NULL,
-  temperature_c       DECIMAL(4,1)    NULL,
+  temperature_c       DECIMAL(5,2)    NULL,
   pulse_bpm           SMALLINT UNSIGNED NULL,
-  bp_systolic         SMALLINT UNSIGNED NULL,
-  bp_diastolic        SMALLINT UNSIGNED NULL,
+  blood_pressure      VARCHAR(20)     NULL,
   spo2_percent        TINYINT UNSIGNED NULL,
   note                VARCHAR(255)    NULL,
   PRIMARY KEY (id),
   KEY idx_vitals_incident (incident_id, recorded_at),
   CONSTRAINT chk_vitals_stage CHECK (stage IN (1,2)),
-  CONSTRAINT chk_vitals_temp  CHECK (temperature_c IS NULL OR temperature_c BETWEEN 25.0 AND 45.0),
-  CONSTRAINT chk_vitals_pulse CHECK (pulse_bpm IS NULL OR pulse_bpm BETWEEN 20 AND 300),
-  -- A CHECK passes when it evaluates to NULL, so "both or neither" is its own rule.
-  CONSTRAINT chk_vitals_bp_pair CHECK ((bp_systolic IS NULL) = (bp_diastolic IS NULL)),
-  CONSTRAINT chk_vitals_bp    CHECK (bp_systolic IS NULL OR
-                                     (bp_systolic BETWEEN 40 AND 300 AND bp_diastolic BETWEEN 20 AND 200 AND bp_systolic > bp_diastolic)),
-  CONSTRAINT chk_vitals_spo2  CHECK (spo2_percent IS NULL OR spo2_percent BETWEEN 30 AND 100),
-  CONSTRAINT fk_vitals_incident FOREIGN KEY (incident_id) REFERENCES incidents (id),
+  -- Sanity only: a reading out of the usual range warns and saves (ADR-051), so nothing else is checked here.
+  CONSTRAINT chk_vitals_temp  CHECK (temperature_c IS NULL OR temperature_c >= 0),
+  CONSTRAINT chk_vitals_spo2  CHECK (spo2_percent IS NULL OR spo2_percent <= 100),
+  CONSTRAINT fk_vitals_incident FOREIGN KEY (incident_id) REFERENCES incidents (id) ON DELETE CASCADE,
   CONSTRAINT fk_vitals_user FOREIGN KEY (recorded_by_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -541,15 +555,17 @@ CREATE TABLE hospital_referrals (
   updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_referrals_incident (incident_id),
-  CONSTRAINT fk_referrals_incident FOREIGN KEY (incident_id) REFERENCES incidents (id),
+  CONSTRAINT fk_referrals_incident FOREIGN KEY (incident_id) REFERENCES incidents (id) ON DELETE CASCADE,
   CONSTRAINT fk_referrals_user FOREIGN KEY (created_by_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE parent_notification_attempts (
   id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   incident_id         BIGINT UNSIGNED NOT NULL,
-  contact_id          BIGINT UNSIGNED NULL,
+  called_name         VARCHAR(120)    NULL,
+  called_relationship VARCHAR(40)     NULL,
   phone_dialed        VARCHAR(30)     NULL,
+  called_source       VARCHAR(17)     NULL,
   outcome             VARCHAR(30)     NOT NULL,
   attempted_at        DATETIME        NOT NULL,
   logged_by_user_id   BIGINT UNSIGNED NOT NULL,
@@ -558,8 +574,8 @@ CREATE TABLE parent_notification_attempts (
   PRIMARY KEY (id),
   KEY idx_notifications_incident (incident_id, attempted_at),
   CONSTRAINT chk_notifications_outcome CHECK (outcome IN ('reached','no_answer','left_message_or_voicemail','wrong_number')),
-  CONSTRAINT fk_notifications_incident FOREIGN KEY (incident_id) REFERENCES incidents (id),
-  CONSTRAINT fk_notifications_contact FOREIGN KEY (contact_id) REFERENCES emergency_contacts (id),
+  CONSTRAINT chk_notifications_source CHECK (called_source IS NULL OR called_source IN ('emergency_contact','other')),
+  CONSTRAINT fk_notifications_incident FOREIGN KEY (incident_id) REFERENCES incidents (id) ON DELETE CASCADE,
   CONSTRAINT fk_notifications_user FOREIGN KEY (logged_by_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -593,7 +609,7 @@ CREATE TABLE incident_report_approvals (
   PRIMARY KEY (id),
   UNIQUE KEY uq_report_approvals_incident (incident_id),
   UNIQUE KEY uq_report_approvals_reference (reference_no),
-  CONSTRAINT fk_report_approvals_incident FOREIGN KEY (incident_id) REFERENCES incidents (id),
+  CONSTRAINT fk_report_approvals_incident FOREIGN KEY (incident_id) REFERENCES incidents (id) ON DELETE CASCADE,
   CONSTRAINT chk_report_acknowledged CHECK ((acknowledged_at IS NULL) = (acknowledged_by_user_id IS NULL)),
   CONSTRAINT fk_report_approvals_user FOREIGN KEY (approved_by_user_id) REFERENCES users (id),
   CONSTRAINT fk_report_approvals_ack_by FOREIGN KEY (acknowledged_by_user_id) REFERENCES users (id)
@@ -613,7 +629,7 @@ CREATE TABLE follow_ups (
   reason                   VARCHAR(255)    NOT NULL,
   notes                    TEXT            NULL,
   status                   VARCHAR(10)     NOT NULL DEFAULT 'pending',
-  status_reason            VARCHAR(300)    NULL,
+  status_reason            VARCHAR(340)    NULL,
   stay_home_until_cleared  TINYINT(1)      NOT NULL DEFAULT 0,
   stay_home_note           VARCHAR(255)    NULL,
   status_updated_at        DATETIME        NULL,
@@ -682,8 +698,8 @@ CREATE TABLE treatment_item_lines (
   KEY idx_lines_item (item_id),
   CONSTRAINT chk_lines_one_source CHECK ((visit_id IS NOT NULL) + (incident_id IS NOT NULL) = 1),
   CONSTRAINT chk_lines_quantity CHECK (quantity >= 1),
-  CONSTRAINT fk_lines_visit FOREIGN KEY (visit_id) REFERENCES visits (id),
-  CONSTRAINT fk_lines_incident FOREIGN KEY (incident_id) REFERENCES incidents (id),
+  CONSTRAINT fk_lines_visit FOREIGN KEY (visit_id) REFERENCES visits (id) ON DELETE CASCADE,
+  CONSTRAINT fk_lines_incident FOREIGN KEY (incident_id) REFERENCES incidents (id) ON DELETE CASCADE,
   CONSTRAINT fk_lines_item FOREIGN KEY (item_id) REFERENCES inventory_items (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -721,7 +737,6 @@ CREATE TABLE inventory_transactions (
   CONSTRAINT chk_txn_one_link CHECK (visit_id IS NULL OR incident_id IS NULL),
   CONSTRAINT chk_txn_link_has_patient CHECK ((visit_id IS NULL AND incident_id IS NULL) OR (student_id IS NOT NULL) + (personnel_id IS NOT NULL) = 1),
   CONSTRAINT chk_txn_one_patient CHECK (student_id IS NULL OR personnel_id IS NULL),
-  CONSTRAINT chk_txn_visit_edit CHECK (reason IS NULL OR reason <> 'visit_edited' OR visit_id IS NOT NULL),
   CONSTRAINT fk_txn_item FOREIGN KEY (item_id) REFERENCES inventory_items (id),
   CONSTRAINT fk_txn_user FOREIGN KEY (user_id) REFERENCES users (id),
   CONSTRAINT fk_txn_student FOREIGN KEY (student_id) REFERENCES students (id),
@@ -736,11 +751,13 @@ CREATE TABLE inventory_transaction_batches (
   id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   transaction_id      BIGINT UNSIGNED NOT NULL,
   batch_id            BIGINT UNSIGNED NOT NULL,
-  quantity            INT UNSIGNED    NOT NULL,
+  -- Signed: a return or a write-off moves stock back, as a negative allocation.
+  quantity            INT             NOT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uq_txn_batch (transaction_id, batch_id),
   KEY idx_txn_batch_batch (batch_id),
-  CONSTRAINT fk_txn_batch_txn FOREIGN KEY (transaction_id) REFERENCES inventory_transactions (id),
+  CONSTRAINT chk_txn_batch_quantity CHECK (quantity <> 0),
+  CONSTRAINT fk_txn_batch_txn FOREIGN KEY (transaction_id) REFERENCES inventory_transactions (id) ON DELETE CASCADE,
   CONSTRAINT fk_txn_batch_batch FOREIGN KEY (batch_id) REFERENCES inventory_batches (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -748,21 +765,7 @@ CREATE TABLE inventory_transaction_batches (
 -- 8. Reports, backups, calendar, feedback
 -- ---------------------------------------------------------------------------------
 
-CREATE TABLE reports (
-  id                    BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  type                  VARCHAR(14)     NOT NULL,
-  period_from           DATE            NOT NULL,
-  period_to             DATE            NOT NULL,
-  generated_by_user_id  BIGINT UNSIGNED NOT NULL,
-  generated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY idx_reports_generated (generated_at),
-  CONSTRAINT chk_reports_type CHECK (type IN ('monthly','incident','health_summary')),
-  CONSTRAINT chk_reports_period CHECK (period_to >= period_from),
-  CONSTRAINT fk_reports_user FOREIGN KEY (generated_by_user_id) REFERENCES users (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Sports Reports (ADR-034), added Wednesday, October 21, 2026 — 07:19; not yet loaded into MariaDB.
+-- Sports Reports (ADR-034), added Wednesday, October 21, 2026 — 07:19.
 CREATE TABLE sports_reports (
   id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   title               VARCHAR(120)    NOT NULL,
@@ -793,7 +796,7 @@ CREATE TABLE sports_report_students (
   UNIQUE KEY uq_sports_report_student (sports_report_id, student_id),
   KEY idx_sports_report_students_student (student_id),
   CONSTRAINT fk_sports_report_students_report FOREIGN KEY (sports_report_id) REFERENCES sports_reports (id) ON DELETE CASCADE,
-  CONSTRAINT fk_sports_report_students_student FOREIGN KEY (student_id) REFERENCES students (id)
+  CONSTRAINT fk_sports_report_students_student FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE backup_logs (
@@ -914,7 +917,9 @@ CREATE TABLE audit_logs (
   action_type             VARCHAR(8)      NOT NULL,
   target_type             VARCHAR(40)     NULL,
   target_id               BIGINT UNSIGNED NULL,
+  target_label            VARCHAR(120)    NULL,
   subject_student_id      BIGINT UNSIGNED NULL,
+  subject_personnel_id    BIGINT UNSIGNED NULL,
   summary                 VARCHAR(255)    NULL,
   client_ip               VARBINARY(16)   NULL,
   PRIMARY KEY (id),
@@ -924,9 +929,12 @@ CREATE TABLE audit_logs (
   KEY idx_audit_target_time (target_type, occurred_at),
   KEY idx_audit_target (target_type, target_id),
   KEY idx_audit_subject (subject_student_id, occurred_at),
+  KEY idx_audit_subject_personnel (subject_personnel_id, occurred_at),
   CONSTRAINT chk_audit_action CHECK (action_type IN ('login','logout','submit','approve','create','update','delete','archive','print','view')),
   CONSTRAINT chk_audit_role CHECK (actor_role IS NULL OR actor_role IN ('staff','admin')),
   CONSTRAINT chk_audit_actor CHECK (actor_user_id IS NOT NULL OR actor_role IS NULL),
+  CONSTRAINT chk_audit_target CHECK (target_id IS NOT NULL OR target_label IS NOT NULL),
+  CONSTRAINT chk_audit_one_subject CHECK (subject_student_id IS NULL OR subject_personnel_id IS NULL),
   CONSTRAINT fk_audit_actor FOREIGN KEY (actor_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -953,9 +961,9 @@ INSERT INTO system_settings (setting_key, setting_value, value_type, description
   ('lockout_minutes',               '30', 'int', 'Lock duration in minutes (ADR-015)'),
   ('password_min_length',           '8',  'int', 'Minimum password length (Module 1)'),
   ('password_history_count',        '5',  'int', 'Previous passwords that cannot be reused (Module 1)'),
-  ('retention_years_after_archive', '5',  'int', 'Years an archived student record is kept before deletion (Data-Retention-Policy)'),
+  ('retention_years_after_archive', '5',  'int', 'Years an archived student or staff-patient record is kept before deletion (ADR-057)'),
   ('holiday_stale_days',            '45', 'int', 'Warn when the last successful holiday sync is older than this (ADR-020)'),
-  ('audit_retention_years',         '10', 'int', 'Years the audit log is kept (ADR-037, ADR-051); not yet confirmed by the school'),
+  ('audit_retention_years',         '10', 'int', 'Years the audit log is kept (ADR-037, ADR-057)'),
   ('admin_idle_minutes',            '30', 'int', 'Idle minutes before the Admin/Principal is signed out (ADR-048)'),
   ('medical_certificate_after_days','3',  'int', 'Excused days past which a letter warns about a medical certificate (ADR-049)'),
   ('cluster_min_students',          '3',  'int', 'Students with the same complaint and grade that raise the cluster alert (ADR-050)'),
@@ -966,3 +974,9 @@ INSERT INTO system_settings (setting_key, setting_value, value_type, description
   ('backup_keep_last',              '60', 'int', 'Backups kept per location (ADR-052)'),
   ('unusual_age_years',             '3',  'int', 'Years from the usual age for the grade that raise a soft note (ADR-054)'),
   ('percent_min_prior_count',       '5',  'int', 'Prior-period count below which a stat card shows both counts (panel review DB-2)');
+
+INSERT INTO reference_settings (setting_key, value_format, setting_value, description) VALUES
+  ('show_frequent_visitors', 'json', 'true', 'Show the frequent-visitor list on the Dashboard'),
+  ('personnel_types', 'json', '["Teacher","Non-teaching staff","Utility worker","Other"]', 'Groups offered for a staff patient; the service checks against this list'),
+  ('vitals_warning_ranges', 'json', '{"temperatureC":{"min":30,"max":43},"pulseBpm":{"min":30,"max":250},"oxygenSaturationPct":null,"feverFromC":37}', 'Sanity bounds that warn and never block (ADR-051); nurse to confirm'),
+  ('vitals_usual_ranges', 'json', '{"temperatureMinC":36,"oxygenSaturationMinPct":95,"grades1to6FromAge":6,"grades7to12FromAge":13,"byAgeGroup":{"kinder":{"pulseBpm":{"min":80,"max":110},"systolic":{"min":95,"max":110},"diastolic":{"min":60,"max":75}},"grades1to6":{"pulseBpm":{"min":70,"max":100},"systolic":{"min":100,"max":120},"diastolic":{"min":60,"max":75}},"grades7to12":{"pulseBpm":{"min":60,"max":100},"systolic":{"min":100,"max":120},"diastolic":{"min":70,"max":80}},"adult":{"pulseBpm":{"min":60,"max":100},"systolic":{"min":90,"max":120},"diastolic":{"min":60,"max":80}}}}', 'Usual ranges by age group, soft notes only (ADR-051); nurse to confirm');

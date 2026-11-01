@@ -1,8 +1,8 @@
 # Data Dictionary
 
-**Status: PROPOSED v1, NOT FINAL.** Open decisions in `ERD.md` section 11 can still change tables and columns; do not build migrations from this until the team approves the design. Generated Friday, October 09, 2026 — 02:11 PHT from the reference schema (`Reference-Schema.sql`) after it was loaded into MariaDB 10.11 and passed 107 constraint tests, so the types, keys, indexes and constraints below are exactly what the database accepted. Purposes, mappings and notes are hand-written. If you change the schema, regenerate this file instead of editing it.
+**Status: Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057); changes after this go through a new decision.** Generated Friday, October 09, 2026 — 02:11 PHT from the reference schema (`Reference-Schema.sql`). Purposes, mappings and notes are hand-written. If you change the schema, change this file with it.
 
-**Updated to the decisions up to ADR-056 on Saturday, October 31, 2026 — 20:28 PHT.** Still a proposed draft, not final or approved. This update was written by hand and compared with `Reference-Schema.sql`; what no decision settles is in `ERD-Review.md`.
+**Updated Sunday, November 1, 2026 — 01:55 PHT with the answers of ADR-057 and the gaps of `ERD-Review.md`.** Written by hand and compared with `Reference-Schema.sql`, which loads on MariaDB 10.11 and passes `Checks/constraint-tests.sql`.
 
 How to read it: **Tier** is `Core` (a built screen or the mock already needs it) or `Spec` (the requirements ask for it but the frontend contract does not carry it yet). **Module** is the backend module that owns the table (ADR-009, extended in `ERD.md`). **Frontend** says how the table maps to today's `types/entities.ts`, which is what the API layer must translate. Conventions (keys, times, FK policy) are in `ERD.md` section 2.
 
@@ -36,7 +36,7 @@ How to read it: **Tier** is `Core` (a built screen or the mock already needs it)
 | 24 | [`pe_referrals`](#pe_referrals) | ClinicVisits | Core | A PE/Sports injury referral logged by Staff, with the nurse's assessment and disposition. |
 | 25 | [`treatment_item_lines`](#treatment_item_lines) | InventoryTracker | Core | "Medicines & supplies given": one row per item per visit or incident (ADR-018). |
 | 26 | [`inventory_transactions`](#inventory_transactions) | InventoryTracker | Core | Insert-only ledger of every stock movement. |
-| 27 | [`reports`](#reports) | ReportsGeneration | Core | A log of which report was requested, for what period, by whom. |
+| 27 | [`reference_settings`](#reference_settings) | Shared | Core | Settings that are text or structured, beside the plain values of `system_settings`. |
 | 28 | [`backup_logs`](#backup_logs) | BackupVerification | Core | One row per backup run, filled by ingesting the status file that the scheduled backup script writes (so a failed run is still recorded when the database itself is the problem). |
 | 29 | [`holidays`](#holidays) | Dashboard | Core | Nationwide Philippine holidays, read-only reference data filled by the monthly sync job. |
 | 30 | [`holiday_sync_runs`](#holiday_sync_runs) | Dashboard | Core | History of holiday sync attempts. |
@@ -55,7 +55,7 @@ How to read it: **Tier** is `Core` (a built screen or the mock already needs it)
 | 43 | [`backup_locations`](#backup_locations) | BackupVerification | Core | Where backups go (ADR-052). |
 | 44 | [`backup_location_results`](#backup_location_results) | BackupVerification | Core | One backup run's result per location (ADR-052). |
 
-The Sanctum `personal_access_tokens` table is created by Sanctum's own migration and is not redefined here (set `expires_at` to 7 days, ADR-015). Laravel's `migrations` table is also standard.
+Sanctum's `personal_access_tokens` migration is not published, since no API tokens are issued (ADR-056). Laravel's own `migrations` table and `password_reset_tokens` table (`users.email` reset, ADR-048 item 3) are standard and not redefined here.
 
 ## users
 
@@ -71,6 +71,7 @@ Accounts for Staff and Admin/Principal. Never hard-deleted: a leaver is deactiva
 | `name` | `varchar(120)` | no |  |  |
 | `username` | `varchar(50)` | no |  | Case-insensitive unique (collation). Login looks up by username, so a duplicate could never sign in. Stays reserved after deactivation. |
 | `email` | `varchar(190)` | yes | NULL | For the email password reset (ADR-048). Whether it is unique is in `ERD-Review.md`. |
+| `profile_picture` | `mediumtext` | yes | NULL | Data URL, as the mock stores it (G2); a file path once uploads exist. Never on a list. |
 | `password_hash` | `varchar(255)` | no |  | bcrypt/argon hash from Laravel `Hash`. Never returned by any API. |
 | `role` | `varchar(12)` | no |  | `staff` / `admin`. PE/Sports Instructors have no account (ADR-029). A further value (`canteen`) is an additive CHECK change later. |
 | `is_head_nurse` | `tinyint(1)` | no | 0 | OPEN (D-04). Module 7 and Module 10 reserve some actions to the "Head Nurse" within Staff. Only meaningful when role = staff. |
@@ -83,7 +84,7 @@ Accounts for Staff and Admin/Principal. Never hard-deleted: a leaver is deactiva
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
 
-**Indexes:** UNIQUE `uq_users_username` (`username`)
+**Indexes:** UNIQUE `uq_users_username` (`username`); UNIQUE `uq_users_email` (`email`)
 
 **Checks:**
 
@@ -133,6 +134,30 @@ Tunable thresholds and policy numbers that the requirements leave open, so chang
 **Checks:**
 
 - `chk_settings_type`: `value_type in ('int','decimal','string','bool')`
+
+## reference_settings
+
+**Module:** Shared  |  **Tier:** Core
+
+Settings that are text or structured, beside the plain values of `system_settings` (ADR-057). Read through the same settings service.
+
+**Frontend:** `MockDbConfig`: `vitalsWarningRanges`, `vitalsUsualRanges`, `personnelTypes`, `showFrequentVisitors`.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `setting_key` **PK** | `varchar(80)` | no |  | Stable code identifier (snake_case). |
+| `value_format` | `varchar(4)` | no |  | `text` or `json`. |
+| `setting_value` | `text` | no |  | JSON is held as checked text, so nothing queries inside it. |
+| `description` | `varchar(255)` | yes | NULL |  |
+| `updated_by_user_id` | `bigint unsigned` | yes | NULL |  |
+| `updated_at` | `datetime` | no | current_timestamp() |  |
+
+**Foreign keys:** `updated_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
+
+**Checks:**
+
+- `chk_reference_settings_format`: `value_format in ('text','json')`
+- `chk_reference_settings_json`: `value_format <> 'json' or json_valid(setting_value)`
 
 ## number_sequences
 
@@ -262,8 +287,7 @@ The student record. The LRN identifies the student to people (masked on lists, A
 | `section` | `varchar(60)` | yes | NULL | Optional until the yearly import fills it (ADR-047). Shown on the Student Profile and its printout only. |
 | `sex` | `varchar(6)` | yes | NULL | `female` or `male`, as recorded by the school. Required for a completed record (ADR-031); nullable during an incomplete import. |
 | `birth_date` | `date` | yes | NULL | Optional (ADR-054). The age is calculated, never stored. Never on a list, picker, Dashboard, report or other printout. |
-| `health_reviewed_at` | `datetime` | yes | NULL | OPEN (D-03). Lets "no allergies recorded" mean "asked and none" instead of "never asked". Unused until the team decides. |
-| `health_reviewed_by_user_id` | `bigint unsigned` | yes | NULL |  |
+| `name_correction_reason` | `varchar(300)` | yes | NULL | The reason given for the latest name correction (at least 3 characters). Stays on the record, never in the audit summary (ADR-017, contract Q3). |
 | `archived_at` | `datetime` | yes | NULL | Non-null = archived (hidden from default lists). Starts the 5-year retention clock. |
 | `archived_by_user_id` | `bigint unsigned` | yes | NULL |  |
 | `import_batch_id` | `bigint unsigned` | yes | NULL | Set when the record was created by a registrar import. |
@@ -273,7 +297,7 @@ The student record. The LRN identifies the student to people (masked on lists, A
 
 **Indexes:** `idx_students_archived_at` (`archived_at`); `idx_students_grade_archived` (`grade_level_id`, `archived_at`); `idx_students_name` (`full_name`); UNIQUE `uq_students_lrn` (`lrn`)
 
-**Foreign keys:** `archived_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `import_batch_id` -> `student_import_batches`(`id`) ON DELETE RESTRICT; `created_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `grade_level_id` -> `grade_levels`(`id`) ON DELETE RESTRICT; `health_reviewed_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
+**Foreign keys:** `archived_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `import_batch_id` -> `student_import_batches`(`id`) ON DELETE RESTRICT; `created_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `grade_level_id` -> `grade_levels`(`id`) ON DELETE RESTRICT
 
 **Checks:**
 
@@ -296,6 +320,7 @@ Allergies, food restrictions, conditions, past illnesses and family history, one
 | `kind` | `varchar(16)` | no |  | `food_restriction` is what the deferred Canteen role would read, and nothing else. |
 | `label` | `varchar(150)` | no |  | Free text (no ingredient database exists). Unique per student + kind, case-insensitive. |
 | `note` | `varchar(500)` | yes | NULL | Optional detail such as a reaction. Not shown on glanceable lists. |
+| `sort_order` | `smallint` | no | 0 | Keeps the order of the list (G5, G6). |
 | `created_by_user_id` | `bigint unsigned` | yes | NULL |  |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
@@ -324,6 +349,7 @@ Guardians to call in an emergency. The requirements and mock have one; the table
 | `relationship` | `varchar(40)` | yes | NULL |  |
 | `phone` | `varchar(30)` | no |  | Required. A contact with no phone counts as incomplete. |
 | `is_primary` | `tinyint(1)` | no | 1 | At most one primary per student, enforced by the generated column `primary_student_id` + unique index. |
+| `sort_order` | `smallint` | no | 0 | Keeps the order of the list (G5, G6). |
 | `is_verified` | `tinyint(1)` | no | 0 | Denormalized latest state, maintained only by the verification service together with an `emergency_contact_verifications` row. |
 | `verified_at` | `datetime` | yes | NULL |  |
 | `verified_by_user_id` | `bigint unsigned` | yes | NULL |  |
@@ -444,7 +470,7 @@ A routine clinic visit, about a student or a staff patient, exactly one (ADR-043
 | `disposition` | `varchar(22)` | no |  | `returned_to_class`, `resting_in_clinic` (panel review part 2, PROVISIONAL), `sent_home`, `referred_to_hospital`. |
 | `referred_to` | `varchar(150)` | yes | NULL | Only when disposition = referred_to_hospital (CHECK). |
 | `event_tag` | `varchar(80)` | yes | NULL | Free text such as "Intramurals". Deliberately not a managed list. |
-| `temperature_c` | `decimal(4,1)` | yes | NULL | Logbook field, optional. |
+| `temperature_c` | `decimal(5,2)` | yes | NULL | Logbook field, optional. Two decimals, as the screens. Out of the usual range warns and saves (ADR-051). |
 | `time_out` | `time` | yes | NULL | Logbook field, on the visit's date. |
 | `assisted_by` | `varchar(120)` | yes | NULL | Logbook field, free text. |
 | `parent_guardian` | `varchar(120)` | yes | NULL | Logbook field, free text. |
@@ -472,6 +498,8 @@ A routine clinic visit, about a student or a staff patient, exactly one (ADR-043
 - `chk_visits_complaint`: `char_length(trim(complaint)) >= 1`
 - `chk_visits_disposition`: `disposition in ('returned_to_class','resting_in_clinic','sent_home','referred_to_hospital')`
 - `chk_visits_referred_to`: `referred_to is null or disposition = 'referred_to_hospital'`
+
+**Checks (added):** `chk_visits_temperature`: `temperature_c is null or temperature_c >= 0`
 
 **Update:** `chk_visits_one_patient`, `chk_visits_error`, `uq_visits_id_personnel`, `idx_visits_personnel_time`, `fk_visits_personnel`, `fk_visits_error_by` and `fk_visits_escalated_incident` (added after `incidents`). Extra complaint tags: `visit_extra_complaints`.
 
@@ -511,7 +539,7 @@ One excuse letter per visit: a draft while Staff prepare it, then permanent once
 
 **Indexes:** `idx_letters_status` (`status`); UNIQUE `uq_letters_reference` (`reference_no`); UNIQUE `uq_letters_live_visit` (`live_visit_id`); `idx_letters_visit` (`visit_id`)
 
-**Foreign keys:** `approved_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `prepared_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `visit_id` -> `visits`(`id`) ON DELETE RESTRICT
+**Foreign keys:** `approved_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `prepared_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `visit_id` -> `visits`(`id`) ON DELETE CASCADE
 
 **Checks:**
 
@@ -540,7 +568,7 @@ Which checklist items were ticked during a visit ("save checklist completion wit
 
 **Indexes:** `idx_triage_checks_visit` (`visit_id`, `sort_order`)
 
-**Foreign keys:** `triage_step_id` -> `triage_steps`(`id`) ON DELETE RESTRICT; `visit_id` -> `visits`(`id`) ON DELETE RESTRICT
+**Foreign keys:** `triage_step_id` -> `triage_steps`(`id`) ON DELETE RESTRICT; `visit_id` -> `visits`(`id`) ON DELETE CASCADE
 
 ## incidents
 
@@ -588,9 +616,9 @@ An emergency incident, captured in two stages. Stage 1 is the fast save; Stage 2
 
 **Module:** EmergencyResponse  |  **Tier:** Core
 
-Timestamped vital-sign readings. Stage 1 records temperature and pulse; Stage 2 adds blood pressure and oxygen; a recheck is just another row.
+Timestamped vital-sign readings. Any reading may be left out at either stage; a recheck is another row. A reading out of the usual range warns and saves (ADR-051), so the database only refuses what cannot be a reading.
 
-**Frontend:** `Incident.vitals` (`temperatureC`, `pulseBpm`, `bloodPressure` "110/70", `oxygenSaturation` "98%"). The API merges the latest value of each into the existing object.
+**Frontend:** `Incident.vitals` (`temperatureC`, `pulseBpm`, `bloodPressure` "110/70", `oxygenSaturationPct` 98). The API merges the latest value of each into the existing object.
 
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
@@ -599,25 +627,21 @@ Timestamped vital-sign readings. Stage 1 records temperature and pulse; Stage 2 
 | `stage` | `tinyint` | no |  | Which stage the reading came from. |
 | `recorded_at` | `datetime` | no |  |  |
 | `recorded_by_user_id` | `bigint unsigned` | no |  |  |
-| `temperature_c` | `decimal(4,1)` | yes | NULL | Sanity range 25.0-45.0 to catch typos (tunable). |
-| `pulse_bpm` | `smallint unsigned` | yes | NULL |  |
-| `bp_systolic` | `smallint unsigned` | yes | NULL | Parsed from "110/70" at the API boundary. Both BP values or neither. |
-| `bp_diastolic` | `smallint unsigned` | yes | NULL |  |
-| `spo2_percent` | `tinyint unsigned` | yes | NULL | Whole percent, 30-100. |
+| `temperature_c` | `decimal(5,2)` | yes | NULL | Not negative. A slip such as 370 saves, with the warning. |
+| `pulse_bpm` | `smallint unsigned` | yes | NULL | 0 is a real reading. |
+| `blood_pressure` | `varchar(20)` | yes | NULL | Text, as the mock: "110/70", or "90/P" by palpation. Only the usual-range note parses it (G14). |
+| `spo2_percent` | `tinyint unsigned` | yes | NULL | Whole percent, 0-100, as the mock. |
 | `note` | `varchar(255)` | yes | NULL |  |
 
 **Indexes:** `idx_vitals_incident` (`incident_id`, `recorded_at`)
 
-**Foreign keys:** `incident_id` -> `incidents`(`id`) ON DELETE RESTRICT; `recorded_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
+**Foreign keys:** `incident_id` -> `incidents`(`id`) ON DELETE CASCADE; `recorded_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
 
 **Checks:**
 
-- `chk_vitals_bp`: `bp_systolic is null or bp_systolic between 40 and 300 and bp_diastolic between 20 and 200 and bp_systolic > bp_diastolic`
-- `chk_vitals_bp_pair`: `bp_systolic is null = (bp_diastolic is null)`
-- `chk_vitals_pulse`: `pulse_bpm is null or pulse_bpm between 20 and 300`
-- `chk_vitals_spo2`: `spo2_percent is null or spo2_percent between 30 and 100`
+- `chk_vitals_spo2`: `spo2_percent is null or spo2_percent <= 100`
 - `chk_vitals_stage`: `stage in (1,2)`
-- `chk_vitals_temp`: `temperature_c is null or temperature_c between 25.0 and 45.0`
+- `chk_vitals_temp`: `temperature_c is null or temperature_c >= 0`
 
 ## hospital_referrals
 
@@ -640,7 +664,7 @@ Hospital referral details for an incident (at most one per incident).
 
 **Indexes:** UNIQUE `uq_referrals_incident` (`incident_id`)
 
-**Foreign keys:** `incident_id` -> `incidents`(`id`) ON DELETE RESTRICT; `created_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
+**Foreign keys:** `incident_id` -> `incidents`(`id`) ON DELETE CASCADE; `created_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
 
 ## parent_notification_attempts
 
@@ -648,14 +672,16 @@ Hospital referral details for an incident (at most one per incident).
 
 Every attempt to reach a parent/guardian for an incident, timestamped.
 
-**Frontend:** `ParentNotificationAttempt` (outcome, timestamp, calledContact). The mock keeps `calledContact` as a snapshot (name, relationship, phone, source `emergency_contact` or `other`) because it has no contact ids; here it maps to `contact_id` plus `phone_dialed`, and an "Other" person needs a name column (PROVISIONAL, not yet in this table).
+**Frontend:** `ParentNotificationAttempt` (outcome, timestamp, calledContact). `calledContact` is a snapshot here as in the mock (name, relationship, phone, source), so it works for a student, a staff patient or an "Other" person.
 
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
 | `id` **PK** | `bigint unsigned` | no |  |  |
 | `incident_id` | `bigint unsigned` | no |  |  |
-| `contact_id` | `bigint unsigned` | yes | NULL | Which guardian was called (nullable). |
+| `called_name` | `varchar(120)` | yes | NULL | Snapshot of who was called. |
+| `called_relationship` | `varchar(40)` | yes | NULL | Snapshot. |
 | `phone_dialed` | `varchar(30)` | yes | NULL | Snapshot of the number, in case the contact is edited later. |
+| `called_source` | `varchar(17)` | yes | NULL | `emergency_contact` or `other`. |
 | `outcome` | `varchar(30)` | no |  | `reached` / `no_answer` / `left_message_or_voicemail` / `wrong_number` (D6, panel review part 1). |
 | `attempted_at` | `datetime` | no |  |  |
 | `logged_by_user_id` | `bigint unsigned` | no |  |  |
@@ -664,11 +690,12 @@ Every attempt to reach a parent/guardian for an incident, timestamped.
 
 **Indexes:** `idx_notifications_incident` (`incident_id`, `attempted_at`)
 
-**Foreign keys:** `contact_id` -> `emergency_contacts`(`id`) ON DELETE RESTRICT; `incident_id` -> `incidents`(`id`) ON DELETE RESTRICT; `logged_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
+**Foreign keys:** `incident_id` -> `incidents`(`id`) ON DELETE CASCADE; `logged_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
 
 **Checks:**
 
 - `chk_notifications_outcome`: `outcome in ('reached','no_answer','left_message_or_voicemail','wrong_number')`
+- `chk_notifications_source`: `called_source is null or called_source in ('emergency_contact','other')`
 
 ## incident_report_approvals
 
@@ -692,7 +719,7 @@ The nurse's sign-off on an incident report. Stored as a real record because the 
 
 **Indexes:** UNIQUE `uq_report_approvals_incident` (`incident_id`); UNIQUE `uq_report_approvals_reference` (`reference_no`)
 
-**Foreign keys:** `incident_id` -> `incidents`(`id`) ON DELETE RESTRICT; `approved_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
+**Foreign keys:** `incident_id` -> `incidents`(`id`) ON DELETE CASCADE; `approved_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
 
 ## follow_ups
 
@@ -715,7 +742,7 @@ A return-for-monitoring instruction attached to a visit or an incident. One feat
 | `status` | `varchar(10)` | no | pending | `pending` -> `completed` / `missed` / `cancelled`. "Overdue" and "due today" are derived from date + status, never stored. |
 | `status_updated_at` | `datetime` | yes | NULL | When the status last changed, and by whom. |
 | `status_updated_by_user_id` | `bigint unsigned` | yes | NULL |  |
-| `status_reason` | `varchar(300)` | yes | NULL | PROVISIONAL (panel review part 3). Required when the status becomes `missed` or `cancelled`. |
+| `status_reason` | `varchar(340)` | yes | NULL | PROVISIONAL (panel review part 3). Required when the status becomes `missed` or `cancelled`. |
 | `stay_home_until_cleared` | `tinyint(1)` | no | 0 | ADR-049. |
 | `stay_home_note` | `varchar(255)` | yes | NULL | ADR-049. |
 | `created_by_user_id` | `bigint unsigned` | no |  |  |
@@ -788,7 +815,9 @@ A PE/Sports injury referral logged by Staff, with the nurse's assessment and dis
 
 **Indexes:** `idx_lines_item` (`item_id`); UNIQUE `uq_lines_incident_item` (`incident_id`, `item_id`); UNIQUE `uq_lines_visit_item` (`visit_id`, `item_id`)
 
-**Foreign keys:** `incident_id` -> `incidents`(`id`) ON DELETE RESTRICT; `item_id` -> `inventory_items`(`id`) ON DELETE RESTRICT; `visit_id` -> `visits`(`id`) ON DELETE RESTRICT
+**Batches:** a line holds no batch. The batches behind a line are read from the movements of the same visit or incident and item, in order, through `inventory_transaction_batches` (ADR-057).
+
+**Foreign keys:** `incident_id` -> `incidents`(`id`) ON DELETE CASCADE; `item_id` -> `inventory_items`(`id`) ON DELETE RESTRICT; `visit_id` -> `visits`(`id`) ON DELETE CASCADE
 
 **Checks:**
 
@@ -832,35 +861,8 @@ Insert-only ledger of every stock movement. History is never rewritten: a correc
 - `chk_txn_reason`: `type = 'adjustment' and reason is not null and reason in ('visit_edited','expired_disposed','damaged_spilled','miscount_correction','other') or type <> 'adjustment' and reason is null`
 - `chk_txn_sign`: `type = 'opening' and quantity_delta >= 0 or type = 'dispense' and quantity_delta < 0 or type = 'restock' and quantity_delta > 0 or type = 'adjustment' and quantity_delta <> 0`
 - `chk_txn_type`: `type in ('opening','dispense','restock','adjustment')`
-- `chk_txn_visit_edit`: `reason is null or reason <> 'visit_edited' or visit_id is not null`
 
 **Update (ADR-030, ADR-043):** `chk_txn_link_has_student` is now `chk_txn_link_has_patient`, plus `chk_txn_one_patient`; `fk_txn_visit_staff` and `fk_txn_incident_staff` give a staff patient the same-patient guarantee. Batches moved: `inventory_transaction_batches`.
-
-## reports
-
-**Module:** ReportsGeneration  |  **Tier:** Core
-
-A log of which report was requested, for what period, by whom. The report content is generated on demand from live records, not stored.
-
-**Frontend:** `Report` (type, dateRange); `data` is computed on read.
-
-| Column | Type | Null | Default | Notes |
-|---|---|---|---|---|
-| `id` **PK** | `bigint unsigned` | no |  |  |
-| `type` | `varchar(14)` | no |  | `monthly` / `incident` / `health_summary`. |
-| `period_from` | `date` | no |  | Inclusive. |
-| `period_to` | `date` | no |  |  |
-| `generated_by_user_id` | `bigint unsigned` | no |  |  |
-| `generated_at` | `datetime` | no | current_timestamp() |  |
-
-**Indexes:** `idx_reports_generated` (`generated_at`)
-
-**Foreign keys:** `generated_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
-
-**Checks:**
-
-- `chk_reports_period`: `period_to >= period_from`
-- `chk_reports_type`: `type in ('monthly','incident','health_summary')`
 
 ## sports_reports
 
@@ -910,7 +912,7 @@ The students on a Sports Report and the clinician's optional note for each. Hand
 
 **Indexes:** `uq_sports_report_student` UNIQUE (`sports_report_id`, `student_id`), `idx_sports_report_students_student` (`student_id`)
 
-**Foreign keys:** `sports_report_id` -> `sports_reports`(`id`) ON DELETE CASCADE; `student_id` -> `students`(`id`) ON DELETE RESTRICT
+**Foreign keys:** `sports_report_id` -> `sports_reports`(`id`) ON DELETE CASCADE; `student_id` -> `students`(`id`) ON DELETE CASCADE
 
 ## backup_logs
 
@@ -1051,7 +1053,7 @@ School events that Staff maintain on the Dashboard calendar (ADR-019).
 
 **Module:** Shared (AuditLog)  |  **Tier:** Core
 
-Append-only record of who did what and when (RA 10173 accountability). **Kept 10 years** (ADR-037; provisional until the school confirms). Written for every login, logout, submit, approve, create, update, delete and archive; reading the log is not logged (ADR-016).
+Append-only record of who did what and when (RA 10173 accountability). **Kept 10 years** (ADR-037, settled by ADR-057). Written for every login, logout, submit, approve, create, update, delete and archive; reading the log is not logged (ADR-016).
 
 **Frontend:** `AuditLogEntry` (+ `summary`, ADR-017).
 
@@ -1060,26 +1062,29 @@ Append-only record of who did what and when (RA 10173 accountability). **Kept 10
 | `id` **PK** | `bigint unsigned` | no |  |  |
 | `occurred_at` | `datetime` | no |  |  |
 | `actor_user_id` | `bigint unsigned` | yes | NULL | Null for system actions (backup ingest, holiday sync, retention purge). |
-| `actor_role` | `varchar(12)` | yes | NULL | Snapshot of the actor's role when the action happened. Proposed amendment to ADR-017, which derives it at read time and would show the wrong role after a role change (D-01). |
+| `actor_role` | `varchar(12)` | yes | NULL | Snapshot of the actor's role when the action happened. ADR-057 item 12 amends ADR-017, which derived it at read time and would show the wrong role after a role change (D-01). |
 | `action_type` | `varchar(8)` | no |  |  |
 | `target_type` | `varchar(40)` | yes | NULL | Controlled vocabulary kept in code (e.g. `student`, `visit`, `incident`, `excuse_letter`, `inventory_item`, `inventory_transaction`, `calendar_event`, `backup_log`). Not a CHECK, so adding a target needs no ALTER on the biggest table. |
 | `target_id` | `bigint unsigned` | yes | NULL | Id of the target row. NO foreign key on purpose: the log must outlive purged records. |
+| `target_label` | `varchar(120)` | yes | NULL | For a target with no record id: a backup run, a settings change, a printed document. Built by the server, never free text. |
 | `subject_student_id` | `bigint unsigned` | yes | NULL | Snapshot of the student the action concerned, by internal id: no FK, so it survives a purge. Never the LRN (ADR-028); the viewer shows the masked LRN while the student exists. |
-| `summary` | `varchar(255)` | yes | NULL | Field names or states only, never values (ADR-017). Max 255. |
+| `subject_personnel_id` | `bigint unsigned` | yes | NULL | The staff twin of `subject_student_id`: internal id, no FK. |
+| `summary` | `varchar(255)` | yes | NULL | Field names or states only, never values (ADR-017). Max 255; the service cuts a long list at a field boundary (G26). |
 | `client_ip` | `varbinary(16)` | yes | NULL | Optional. IPv4/IPv6 as 4 or 16 bytes; useful to tell the workstation from a phone. |
 
-**Indexes:** `idx_audit_action_time` (`action_type`, `occurred_at`); `idx_audit_actor_time` (`actor_user_id`, `occurred_at`); `idx_audit_subject` (`subject_student_id`, `occurred_at`); `idx_audit_target` (`target_type`, `target_id`); `idx_audit_target_time` (`target_type`, `occurred_at`); `idx_audit_time` (`occurred_at`)
+**Indexes:** `idx_audit_action_time` (`action_type`, `occurred_at`); `idx_audit_actor_time` (`actor_user_id`, `occurred_at`); `idx_audit_subject` (`subject_student_id`, `occurred_at`); `idx_audit_subject_personnel` (`subject_personnel_id`, `occurred_at`); `idx_audit_target` (`target_type`, `target_id`); `idx_audit_target_time` (`target_type`, `occurred_at`); `idx_audit_time` (`occurred_at`)
 
 **Foreign keys:** `actor_user_id` -> `users`(`id`) ON DELETE RESTRICT
 
 **Checks:**
 
-- `chk_audit_action`: `action_type in ('login','logout','submit','approve','create','update','delete','archive')`
-  - **PROVISIONAL addition (Sunday, October 25, 2026, ADR-038 item 4):** the frontend mock also writes `view` when the Admin/Principal opens a student profile or an incident report, once per record per session. Add `'view'` (and `'print'`, which the mock already writes) here before the migration is built.
+- `chk_audit_action`: `action_type in ('login','logout','submit','approve','create','update','delete','archive','print','view')`
 - `chk_audit_actor`: `actor_user_id is not null or actor_role is null`
 - `chk_audit_role`: `actor_role is null or actor_role in ('staff','admin')`
+- `chk_audit_target`: `target_id is not null or target_label is not null`
+- `chk_audit_one_subject`: `subject_student_id is null or subject_personnel_id is null`
 
-**Update:** `chk_audit_action` adds `print` and `view` (ADR-026, ADR-038, ADR-048). Kept 10 years (ADR-037, ADR-051), not yet confirmed by the school.
+**Update:** `chk_audit_action` adds `print` and `view` (ADR-026, ADR-038, ADR-048). Kept 10 years (ADR-037, ADR-051, ADR-057).
 
 ## personnel
 
@@ -1123,6 +1128,7 @@ A staff patient's allergies and conditions, optional.
 | `personnel_id` | `bigint unsigned` | no |  |  |
 | `kind` | `varchar(16)` | no |  |  |
 | `label` | `varchar(150)` | no |  |  |
+| `sort_order` | `smallint` | no | 0 | Keeps the order of the list (G5, G6). |
 | `created_by_user_id` | `bigint unsigned` | yes | NULL |  |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
@@ -1149,6 +1155,7 @@ A staff patient's emergency contacts, ordered; may be empty.
 | `relationship` | `varchar(40)` | yes | NULL |  |
 | `phone` | `varchar(30)` | no |  |  |
 | `is_primary` | `tinyint(1)` | no | 1 |  |
+| `sort_order` | `smallint` | no | 0 | Keeps the order of the list (G5, G6). |
 | `is_verified` | `tinyint(1)` | no | 0 |  |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
@@ -1172,6 +1179,8 @@ Up to 3 extra complaint tags. Reports and the Dashboard count the main complaint
 | `sort_order` | `tinyint` | no | 0 |  |
 
 **Indexes:** UNIQUE KEY uq_extra_complaint (visit_id, complaint)
+
+**Foreign keys:** `visit_id` -> `visits`(`id`) ON DELETE CASCADE
 
 ## inventory_batches
 
@@ -1215,16 +1224,22 @@ Optional "avoid if allergic to" words; a match warns and never blocks (ADR-049).
 
 Which batches one stock movement touched, so a visit edit returns stock to the same batch (ADR-030).
 
-**Frontend:** `InventoryTransaction.batchAllocations`.
+**Frontend:** `InventoryTransaction.batchAllocations`, and `ItemGivenLine.batchAllocations`, which the API derives (ADR-057).
 
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
 | `id` **PK** | `bigint unsigned` | no |  |  |
 | `transaction_id` | `bigint unsigned` | no |  |  |
 | `batch_id` | `bigint unsigned` | no |  |  |
-| `quantity` | `int unsigned` | no |  |  |
+| `quantity` | `int` | no |  | Signed: a return or write-off is negative, as the mock stores it (`api.ts:2190`). Never 0. |
 
 **Indexes:** UNIQUE KEY uq_txn_batch (transaction_id, batch_id); KEY idx_txn_batch_batch (batch_id)
+
+**Foreign keys:** `transaction_id` -> `inventory_transactions`(`id`) ON DELETE CASCADE; `batch_id` -> `inventory_batches`(`id`) ON DELETE RESTRICT
+
+**Checks:**
+
+- `chk_txn_batch_quantity`: `quantity <> 0`
 
 ## backup_locations
 
