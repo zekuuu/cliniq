@@ -10,7 +10,6 @@ import {
   listApprovedIncidentReportIds,
   listIncidents,
   recordView,
-  acknowledgeIncidentReport,
   type IncidentTrail,
   type SessionUser,
 } from '../../../lib/mock-db'
@@ -68,11 +67,6 @@ export async function fetchIncidentRecord(incidentId?: string, viewer?: SessionU
       label: `${formatDateTime(item.time)} · ${item.complaint}${approved.has(item.id) ? ' (approved)' : ''}`,
     })),
   }
-}
-
-/** The Admin's Acknowledge (ADR-048); the data layer refuses anyone else, an unapproved report, or a second time. */
-export async function acknowledgeReport(incidentId: string, actor?: SessionUser): Promise<void> {
-  await acknowledgeIncidentReport(incidentId, actor)
 }
 
 export async function approveReport(incidentId: string, actor?: SessionUser): Promise<void> {

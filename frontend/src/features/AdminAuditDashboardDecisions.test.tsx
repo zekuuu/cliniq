@@ -1,13 +1,9 @@
-import { act, render, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { act, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { todayISO } from '../lib/dates'
 import {
-  AcknowledgeError,
-  acknowledgeIncidentReport,
   approveIncidentReport,
-  getIncident,
   getRecordedAuditEntries,
   listClusterAlerts,
   recordVisit,
@@ -29,30 +25,10 @@ describe('Admin, audit and Dashboard', () => {
   beforeEach(() => resetMockDb())
   afterEach(() => vi.useRealTimers())
 
-  it('lets only the Admin acknowledge an approved incident report, once, with an audit entry', async () => {
-    const id = 'incident-0001'
-    await expect(acknowledgeIncidentReport(id, ADMIN)).rejects.toBeInstanceOf(AcknowledgeError)
-    await approveIncidentReport(id, STAFF)
-    await expect(acknowledgeIncidentReport(id, STAFF)).rejects.toThrow('Only the Admin/Principal acknowledges an incident report.')
-    await acknowledgeIncidentReport(id, ADMIN)
-    expect((await getIncident(id)).acknowledged).toMatchObject({ byUserId: ADMIN.id })
-    expect(getRecordedAuditEntries().at(-1)).toMatchObject({ userId: ADMIN.id, actionType: 'update', targetRecord: { type: 'incident-report', id }, summary: 'Acknowledged' })
-    await expect(acknowledgeIncidentReport(id, ADMIN)).rejects.toThrow('already acknowledged')
-  })
-
-  it('shows Acknowledge to the Admin on an approved report and "Acknowledged by" afterwards; the clinician never sees it', async () => {
-    const user = userEvent.setup()
+  it('gives the Admin no Acknowledge on an approved report: the Principal signs the printout (ADR-060)', async () => {
     await approveIncidentReport('incident-0001', STAFF)
-    const { unmount } = renderWithRouter(<IncidentReportPage viewer={STAFF} incidentId="incident-0001" />)
-    await screen.findByRole('heading', { name: 'Incident Report' })
-    expect(screen.queryByRole('button', { name: 'Acknowledge' })).not.toBeInTheDocument()
-    unmount()
-
     renderWithRouter(<IncidentReportPage viewer={ADMIN} incidentId="incident-0001" />)
-    await user.click(await screen.findByRole('button', { name: 'Acknowledge' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Acknowledge this incident report?' })
-    await user.click(within(dialog).getByRole('button', { name: 'Acknowledge' }))
-    expect(await screen.findByText(/^Acknowledged by .+ on /)).toBeInTheDocument()
+    await screen.findByRole('heading', { name: 'Incident Report' })
     expect(screen.queryByRole('button', { name: 'Acknowledge' })).not.toBeInTheDocument()
   })
 
