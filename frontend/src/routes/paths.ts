@@ -43,9 +43,11 @@ export const paths = {
   incidentNewForStaff: (personnelId: string) => `/incidents/new?staff=${seg(personnelId)}`,
   /** Reopens a saved Stage-1 incident to complete Stage 2 (Screen #16b). */
   incidentComplete: (incidentId: string) => `/incidents/${seg(incidentId)}/complete`,
+  studentImport: '/students/import',
   inventory: '/inventory',
   inventoryNew: '/inventory/new',
   inventoryDispense: '/inventory/dispense',
+  inventoryHistory: '/inventory/history',
   followUps: '/follow-ups',
   reports: '/reports',
   /** Sports Reports (ADR-034), Staff only. */

@@ -2,11 +2,13 @@ import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { formatDateRange, todayISO } from '../lib/dates'
-import { getDashboardSummary, getMonthlyReport, listAuditLog, listStudents } from '../lib/mock-db'
+import { getDashboardSummary, getMonthlyReport, getPatient, listAuditLog, listStudents, resetMockDb } from '../lib/mock-db'
+import { db } from '../lib/mock-db/store'
 import { rangeForPreset } from '../lib/dateRange'
 import { renderWithRouter } from '../test/renderWithRouter'
 import { AuditLogPage } from './audit-log/AuditLogPage'
 import { ExcuseLetterPage } from './clinic-visits/ExcuseLetterPage'
+import { VisitDetailPage } from './clinic-visits/VisitDetailPage'
 import { DashboardPage } from './dashboard/DashboardPage'
 import { IncidentReportPage } from './emergency-response/IncidentReportPage'
 import { ReportsPage } from './reports/ReportsPage'
@@ -245,5 +247,46 @@ describe('purpose-built printouts', () => {
       range: rangeForPreset('all', todayISO()),
     })
     expect(formatDateRange(oldestRecordDate!, todayISO())).not.toContain('1900')
+  })
+})
+
+describe('Visit Details printout (ADR-049, ADR-053)', () => {
+  const visible = () => renderWithRouter(<VisitDetailPage viewer={STAFF} visitId="visit-0151" />)
+
+  it('prints identity, complaints and who collected the child, Staff only', async () => {
+    resetMockDb()
+    const visit = db().visits.find((row) => row.id === 'visit-0151')!
+    visit.extraComplaints = ['Dizziness']
+    visit.collectedBy = { name: 'Maria Cruz', relationship: 'Mother', time: '10:30' }
+    visible()
+    await screen.findByRole('heading', { name: 'Visit Details' })
+    const doc = print()
+    expectDocument(doc, 'Visit Details')
+    const student = await getPatient(visit)
+    expect(doc).toHaveTextContent(student.fullName)
+    expect(doc).toHaveTextContent('Dizziness')
+    expect(doc).toHaveTextContent('Maria Cruz (Mother)')
+  })
+
+  it('gives the Admin no printout', async () => {
+    resetMockDb()
+    renderWithRouter(<VisitDetailPage viewer={ADMIN} visitId="visit-0151" />)
+    await screen.findByText('Staff access required.')
+    expect(screen.queryByRole('button', { name: 'Print / Save as PDF' })).not.toBeInTheDocument()
+  })
+})
+
+describe('Student Health Record printout', () => {
+  it('shows the section, sex and birth date with the age', async () => {
+    resetMockDb()
+    const student = db().students[0]
+    student.birthDate = '2012-03-04'
+    student.section = 'Sampaguita'
+    renderWithRouter(<StudentProfilePage viewer={STAFF} studentId={student.id} />)
+    await screen.findByRole('button', { name: 'Print / Save as PDF' })
+    const doc = print()
+    expect(doc).toHaveTextContent('Sampaguita')
+    expect(doc).toHaveTextContent(/Sex(Male|Female)/)
+    expect(doc).toHaveTextContent(/Birthdate.*2012.*\(age \d+\)/)
   })
 })

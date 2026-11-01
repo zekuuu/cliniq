@@ -1,4 +1,4 @@
-import { isLrn, normalizeLrn } from '../lrn'
+import { isLrn, maskLrn, normalizeLrn } from '../lrn'
 import type {
   AuditActionType,
   AuditLogEntry,
@@ -34,6 +34,8 @@ import type {
 } from '../../types/entities'
 import { normalizeComplaint, reportComplaint } from '../complaints'
 import type { Patient, PatientNumber } from '../patients'
+import type { ImportRow } from '../studentImport'
+import type { StudentSex } from '../../types/entities'
 import { incidentCompletionBlocker } from '../itemsGiven'
 import { DISPOSITION_LABELS } from '../dispositions'
 import { EXCUSE_LETTER_RECIPIENT, excuseLetterBody } from '../excuseLetter'
@@ -483,6 +485,11 @@ export function getUnusualAgeYears(): Promise<number> {
   return read('unusual age', (s) => s.config.unusualAgeYears)
 }
 
+/** The share of an item on hand at which a stock removal needs a written note (panel review IV-7). */
+export function getLargeWriteOffPercent(): Promise<number> {
+  return read('large write-off percent', (s) => s.config.largeWriteOffPercent)
+}
+
 export function getGradeLevels(): Promise<string[]> {
   return read('grade levels', gradeLevels)
 }
@@ -836,6 +843,135 @@ export function archiveStudent(studentId: string, actor?: SessionUser): Promise<
     record.archived = true
     audit(s, actorOr(actor), 'archive', { type: 'student', id: record.id })
     return toStudent(record)
+  })
+}
+
+// ---- yearly student list import (ADR-047, mock level) ----------------------------------------
+
+export interface ImportProblem {
+  /** The row in the file, counting the header as row 1. */
+  line: number
+  lrn: string
+  problem: string
+}
+
+export interface StudentImportPreview {
+  newCount: number
+  /** Students in the new list already on record, and how many of those change. */
+  continuingCount: number
+  changedCount: number
+  /** Active students not in the new list. Archived only after review. */
+  missing: Array<{ id: string; fullName: string; lrn: string; gradeLevel: string }>
+  problems: ImportProblem[]
+}
+
+const importFullName = (row: ImportRow) => [row.firstName, row.middleName, row.lastName].filter(Boolean).join(' ')
+const importSex = (value: string): StudentSex | null => (/^m(ale)?$/i.test(value) ? 'male' : /^f(emale)?$/i.test(value) ? 'female' : null)
+
+/** Sorts the rows into usable and flagged. A flagged row is left out of the import. */
+function checkImportRows(s: DbState, rows: ImportRow[]) {
+  const grades = new Set(s.students.map((student) => student.gradeLevel))
+  const seen = new Map<string, number>()
+  for (const row of rows) seen.set(row.lrn, (seen.get(row.lrn) ?? 0) + 1)
+  const problems: ImportProblem[] = []
+  const good: ImportRow[] = []
+  rows.forEach((row, index) => {
+    const line = index + 2
+    const problem = !isLrn(row.lrn)
+      ? 'The LRN must be exactly 12 digits.'
+      : (seen.get(row.lrn) ?? 0) > 1
+        ? 'This LRN appears more than once in the file.'
+        : !row.firstName || !row.lastName
+          ? 'The name is incomplete.'
+          : !grades.has(row.gradeLevel)
+            ? `"${row.gradeLevel}" is not a grade level.`
+            : !importSex(row.sex)
+              ? 'Sex must be Male or Female.'
+              : row.birthDate && (!isRealDate(row.birthDate) || row.birthDate > s.today)
+                ? 'The birth date is not a real past date (use YYYY-MM-DD).'
+                : null
+    if (problem) problems.push({ line, lrn: isLrn(row.lrn) ? maskLrn(row.lrn) : row.lrn, problem })
+    else good.push(row)
+  })
+  return { good, problems }
+}
+
+const importChanges = (record: SeedStudent, row: ImportRow) => record.gradeLevel !== row.gradeLevel || (record.section ?? '') !== row.section
+
+/** The preview before anything is applied. Reads only. */
+export function previewStudentImport(rows: ImportRow[], actor?: SessionUser): Promise<StudentImportPreview> {
+  return read('student import preview', (s) => {
+    if (actorOr(actor).role !== 'staff') throw new Error('Only the School Clinician imports the student list.')
+    const { good, problems } = checkImportRows(s, rows)
+    const listed = new Set(rows.map((row) => row.lrn))
+    const known = good.flatMap((row) => {
+      const record = s.students.find((student) => student.lrn === row.lrn)
+      return record ? [{ record, row }] : []
+    })
+    return {
+      newCount: good.length - known.length,
+      continuingCount: known.length,
+      changedCount: known.filter(({ record, row }) => importChanges(record, row)).length,
+      missing: s.students.filter((student) => !student.archived && !listed.has(student.lrn)).map((student) => ({ id: student.id, fullName: student.fullName, lrn: maskLrn(student.lrn), gradeLevel: student.gradeLevel })),
+      problems,
+    }
+  })
+}
+
+export interface StudentImportResult {
+  created: number
+  updated: number
+  archived: number
+  flagged: number
+}
+
+/**
+ * Applies a reviewed list: adds new students, updates the grade and section of continuing ones (the
+ * LRN stays locked, ADR-028), and archives only the missing students the clinician ticked. A list
+ * that changes nothing writes nothing. The audit entry holds counts, never names.
+ */
+export function applyStudentImport(rows: ImportRow[], options: { fileName: string; archiveIds: string[]; actor?: SessionUser }): Promise<StudentImportResult> {
+  return write('apply student import', (s) => {
+    const by = actorOr(options.actor)
+    if (by.role !== 'staff') throw new Error('Only the School Clinician imports the student list.')
+    const { good, problems } = checkImportRows(s, rows)
+    const result: StudentImportResult = { created: 0, updated: 0, archived: 0, flagged: problems.length }
+    for (const row of good) {
+      const record = s.students.find((student) => student.lrn === row.lrn)
+      if (record) {
+        if (!importChanges(record, row)) continue
+        record.gradeLevel = row.gradeLevel
+        record.section = row.section || null
+        result.updated += 1
+      } else {
+        s.students.push({
+          id: nextId('student', s.students),
+          archived: false,
+          lrn: row.lrn,
+          fullName: importFullName(row),
+          gradeLevel: row.gradeLevel,
+          ...(row.section ? { section: row.section } : {}),
+          sex: importSex(row.sex)!,
+          birthDate: row.birthDate || null,
+          allergies: [],
+          medicalConditions: [],
+          emergencyContacts: [],
+        })
+        result.created += 1
+      }
+    }
+    const listed = new Set(rows.map((row) => row.lrn))
+    for (const student of s.students) {
+      if (options.archiveIds.includes(student.id) && !student.archived && !listed.has(student.lrn)) {
+        student.archived = true
+        result.archived += 1
+      }
+    }
+    if (!result.created && !result.updated && !result.archived) return result
+    const id = nextId('import-batch', s.frontendOnly.studentImportBatches)
+    s.frontendOnly.studentImportBatches.push({ id, sourceFileName: options.fileName, rowsTotal: rows.length, rowsCreated: result.created, rowsUpdated: result.updated, rowsArchived: result.archived, rowsFlagged: result.flagged, importedByUserId: by.id, importedAt: now(s) })
+    audit(s, by, 'submit', { type: 'student-import', id }, `${result.created} added, ${result.updated} updated, ${result.archived} archived, ${result.flagged} flagged`)
+    return result
   })
 }
 
@@ -1883,6 +2019,55 @@ export function listInventoryHistory(itemId: string): Promise<InventoryHistoryRo
   )
 }
 
+/** One stock movement on Inventory Usage History (Module 8). The patient is a masked number, never a name (ADR-004, ADR-018). */
+export interface InventoryMovementRow {
+  id: string
+  timestamp: ISODateTime
+  itemId: string
+  itemName: string
+  unit: string
+  type: InventoryTransaction['type']
+  reason: AdjustmentReason | null
+  /** The change to stock: negative when stock left. */
+  change: number
+  /** The batches taken from, by expiry date; `null` for a batch with no expiration. */
+  batches: Array<{ expirationDate: ISODate | null; quantity: number }>
+  patientNumber: string | null
+  by: string
+}
+
+/** Every stock movement, newest first, for Staff (the Admin has no Inventory, ADR-038). */
+export function listInventoryMovements(query: { from?: ISODate; to?: ISODate; itemId?: string; type?: InventoryTransaction['type'] | '' } = {}, actor?: SessionUser): Promise<InventoryMovementRow[]> {
+  return read('inventory movements', (s) => {
+    if (actorOr(actor).role !== 'staff') throw new StockRuleError('Only the School Clinician sees stock movements.')
+    return s.frontendOnly.inventoryTransactions
+      .filter((t) => (!query.itemId || t.itemId === query.itemId) && (!query.type || t.type === query.type) && (!query.from || t.timestamp.slice(0, 10) >= query.from) && (!query.to || t.timestamp.slice(0, 10) <= query.to))
+      .sort((left, right) => right.timestamp.localeCompare(left.timestamp))
+      .map((t) => {
+        const item = s.inventoryItems.find((candidate) => candidate.id === t.itemId)
+        const student = t.studentId ? s.students.find((candidate) => candidate.id === t.studentId) : null
+        const staff = t.personnelId ? s.personnel.find((candidate) => candidate.id === t.personnelId) : null
+        return {
+          id: t.id,
+          timestamp: t.timestamp,
+          itemId: t.itemId,
+          itemName: item?.name ?? 'Unknown item',
+          unit: item?.unit ?? '',
+          type: t.type,
+          reason: t.reason ?? null,
+          // A dispense's quantity is the amount taken; an adjustment's is already signed.
+          change: t.type === 'dispense' ? -t.quantity : t.quantity,
+          batches: (t.batchAllocations ?? []).map((allocation) => ({
+            expirationDate: item?.batches.find((batch) => batch.id === allocation.batchId)?.expirationDate ?? null,
+            quantity: Math.abs(allocation.quantity),
+          })),
+          patientNumber: student ? maskLrn(student.lrn) : (staff?.staffNumber ?? null),
+          by: userName(s, t.userId) ?? 'Unknown user',
+        }
+      })
+  })
+}
+
 export type InventoryInput = Omit<InventoryItem, 'id' | 'batches'> & {
   currentStock: number
   expirationDate: ISODate | null
@@ -1912,6 +2097,9 @@ export function saveInventoryItem(input: InventoryInput, options: { itemId?: str
     if (!existing && expirationDate !== null && noExpirationConfirmed)
       throw new StockRuleError('Choose either an expiration date or no expiration date for this item.')
     if (!existing && expirationDate !== null && expirationDate < s.today) throw new StockRuleError(PAST_EXPIRY_RULE)
+    // API contract Q11: two items of one name split the stock and confuse dispensing.
+    const name = fields.name.trim().toLowerCase()
+    if (s.inventoryItems.some((i) => i !== existing && i.name.trim().toLowerCase() === name)) throw new DuplicateItemNameError()
     const summary = existing ? changedSummary(existing, fields) : undefined
     const item = existing
       ? Object.assign(existing, fields)
@@ -2014,6 +2202,18 @@ export const ADJUSTMENT_REASON_LABELS: Record<AdjustmentReason, string> = {
 export type StaffAdjustmentReason = Exclude<AdjustmentReason, 'visit_edited'>
 export const STAFF_ADJUSTMENT_REASONS: StaffAdjustmentReason[] = ['expired_disposed', 'damaged_spilled', 'miscount_correction', 'other']
 
+/** The shortest written note a large write-off accepts; a preset reason alone is not enough. */
+export const LARGE_WRITE_OFF_NOTE_MIN = 20
+
+/**
+ * Panel review IV-7: a removal of `percent` or more of the item on hand, or one that empties the
+ * item, is a large write-off. `onHand` is the whole item before the change, all batches.
+ */
+export function isLargeWriteOff(change: number, onHand: number, percent: number): boolean {
+  if (change >= 0) return false
+  return onHand + change <= 0 || -change * 100 >= onHand * percent
+}
+
 export interface StockAdjustmentInput {
   /** The batch being counted, corrected, or explicitly disposed. */
   batchId?: string
@@ -2035,6 +2235,7 @@ export interface StockAdjustmentInput {
 export function adjustInventoryStock(itemId: string, input: StockAdjustmentInput, actor?: SessionUser): Promise<InventoryItemView> {
   return write('adjust stock', (s) => {
     const by = actorOr(actor)
+    if (by.role !== 'staff') throw new StockRuleError('Only the School Clinician adjusts stock.')
     const item = must(s.inventoryItems.find((i) => i.id === itemId), 'Inventory item')
     if (!STAFF_ADJUSTMENT_REASONS.includes(input.reason)) throw new StockRuleError('Choose a reason for the adjustment.')
     const note = input.note?.trim() || null
@@ -2049,6 +2250,10 @@ export function adjustInventoryStock(itemId: string, input: StockAdjustmentInput
       throw new StockRuleError(`Stock can't go below 0. ${batch.quantity} ${item.unit} in this batch.`)
     if (input.reason === 'expired_disposed' && !(batch.expirationDate && batch.expirationDate < s.today))
       throw new StockRuleError('Choose an expired batch to record expired stock disposal.')
+    const onHand = item.batches.reduce((total, candidate) => total + candidate.quantity, 0)
+    const large = isLargeWriteOff(change, onHand, s.config.largeWriteOffPercent)
+    if (large && (note?.length ?? 0) < LARGE_WRITE_OFF_NOTE_MIN)
+      throw new StockRuleError(`This is a large write-off. Write a note of at least ${LARGE_WRITE_OFF_NOTE_MIN} characters.`)
     batch.quantity += change
     const txn: InventoryTransaction = {
       id: nextId('txn', s.frontendOnly.inventoryTransactions),
@@ -2065,7 +2270,7 @@ export function adjustInventoryStock(itemId: string, input: StockAdjustmentInput
       batchAllocations: [{ batchId: batch.id, quantity: change }],
     }
     s.frontendOnly.inventoryTransactions.push(txn)
-    audit(s, by, 'submit', { type: 'inventory-adjustment', id: txn.id }, ADJUSTMENT_REASON_LABELS[input.reason])
+    audit(s, by, 'submit', { type: 'inventory-adjustment', id: txn.id }, `${ADJUSTMENT_REASON_LABELS[input.reason]}${large ? ' · Large write-off' : ''}`)
     return inventoryView(s, item)
   })
 }
@@ -2082,6 +2287,12 @@ export const INSTRUCTIONS_MAX_LENGTH = 120
 
 /** A stock rule was broken (expired or unknown item, bad quantity). The write is rolled back. */
 export class StockRuleError extends Error {}
+
+export class DuplicateItemNameError extends StockRuleError {
+  constructor() {
+    super('An item with this name already exists. Restock it instead.')
+  }
+}
 
 const QUANTITY_RULE = 'Quantities must be whole numbers of at least 1.'
 
@@ -2421,11 +2632,18 @@ export function verifyLatestBackup(actor?: SessionUser): Promise<BackupStatusVie
   return write('verify backup', (s) => {
     const by = actorOr(actor)
     const latest = must(backupStatus(s).latest, 'Backup')
+    if (latest.status === 'failed') throw new BackupFailedError()
     const record = must(s.backupLogs.find((b) => b.lastRun === latest.lastRun), 'Backup')
     record.verifiedByUserId = by.id
     audit(s, by, 'update', { type: 'backup', id: record.lastRun }, 'Verified backup')
     return { ...backupStatus(s), verifiedByName: userName(s, by.id) }
   })
+}
+
+export class BackupFailedError extends Error {
+  constructor() {
+    super('The latest backup failed, so it cannot be verified.')
+  }
 }
 
 export class NoBackupLocationError extends Error {

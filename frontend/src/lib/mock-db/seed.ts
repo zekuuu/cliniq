@@ -154,6 +154,7 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
         createdAt: resolveDateTime(e.createdAt, today),
         updatedAt: resolveDateTime(e.updatedAt, today),
       })),
+      studentImportBatches: [],
       sportsReports: fo.sportsReports.map((r) => ({
         ...r,
         createdAt: resolveDateTime(r.createdAt, today),

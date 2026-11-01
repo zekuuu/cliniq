@@ -23,6 +23,9 @@ describe('Add Item expiry (IV-2, ADR-035, D10)', () => {
     expect((await getInventoryItem(item.id)).batches[0].expirationDate).toBeNull()
     // Editing an existing item never touches its expiry, so the rule doesn't apply there.
     await expect(saveInventoryItem({ ...NEW_ITEM, name: 'Saline 0.9%', expirationDate: null }, { itemId: item.id })).resolves.toBeTruthy()
+    // Q11: active item names are unique, whatever the unit; an edit may keep its own name.
+    await expect(saveInventoryItem({ ...NEW_ITEM, name: ' saline 0.9% ', unit: 'sachets', expirationDate: null, noExpirationConfirmed: true })).rejects.toBeInstanceOf(StockRuleError)
+    await expect(saveInventoryItem({ ...NEW_ITEM, name: 'SALINE 0.9%', expirationDate: null }, { itemId: item.id })).resolves.toBeTruthy()
   })
 
   it('rejects an expiration date in the past on Add Item and Restock; today is allowed (Zean, Sunday, October 25, 2026)', async () => {
@@ -53,11 +56,11 @@ describe('Add Item expiry (IV-2, ADR-035, D10)', () => {
 describe('duplicate warning and unit suggestions (IV-3, D9)', () => {
   beforeEach(() => resetMockDb())
 
-  it('matches name and unit ignoring case, spacing and a trailing "s", and suggests existing units', async () => {
+  it('matches the name ignoring case, spacing and a trailing "s", and suggests existing units', async () => {
     const items = await listInventory()
-    expect(findDuplicateItem(items, 'paracetamol  500MG', 'tablet')?.name).toBe('Paracetamol 500mg')
-    expect(findDuplicateItem(items, 'Paracetamol 500mg', 'bottles')).toBeNull()
-    expect(findDuplicateItem(items, 'Paracetamol 500mg', 'tablets', 'item-0001')).toBeNull()
+    expect(findDuplicateItem(items, 'paracetamol  500MG')?.name).toBe('Paracetamol 500mg')
+    expect(findDuplicateItem(items, 'No such item')).toBeNull()
+    expect(findDuplicateItem(items, 'Paracetamol 500mg', 'item-0001')).toBeNull()
     expect(unitSuggestions(items)).toEqual(expect.arrayContaining(['tablets', 'pieces']))
   })
 
@@ -82,7 +85,7 @@ describe('one main row action and a Manage menu (IV-1), Add or Remove (IV-7)', (
     expect(await screen.findByRole('button', { name: 'Restock Gauze Pads' })).toBeInTheDocument()
     expect(screen.getByText('Restock when new stock arrives. Adjust Stock to correct a count.')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /^Manage Gauze Pads/ }))
-    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['Adjust Stock', 'Batches', 'Edit'])
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['Adjust Stock', 'Batches', 'Usage history', 'Edit'])
   })
 
   it('adds a positive quantity with Add and shows the result before saving', async () => {

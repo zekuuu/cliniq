@@ -139,6 +139,8 @@ export interface MockDbConfig {
   backupKeepLast: number
   /** An age this many years from the usual age for the grade gets a soft note (ADR-054). Starting value, to confirm. */
   unusualAgeYears: number
+  /** A stock removal of this share of the item on hand needs a written note (panel review IV-7). Starting value, to confirm. */
+  largeWriteOffPercent: number
 }
 
 /**
@@ -372,7 +374,21 @@ export interface MockDbSeed {
 
 // ---- Resolved store: absolute dates, internal ids, §5 shapes. --------------------------------
 
+/** One applied student list (ADR-047), the draft's `student_import_batches`. Counts only. */
+export interface StudentImportBatch {
+  id: string
+  sourceFileName: string
+  rowsTotal: number
+  rowsCreated: number
+  rowsUpdated: number
+  rowsArchived: number
+  rowsFlagged: number
+  importedByUserId: string
+  importedAt: ISODateTime
+}
+
 export interface FrontendOnlyState {
+  studentImportBatches: StudentImportBatch[]
   devAccounts: DevAccount[]
   visitComplaintTypes: ComplaintType[]
   incidentComplaintTypes: string[]

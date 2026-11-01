@@ -3,6 +3,8 @@
 **Date:** Wednesday, October 14, 2026 — 17:59
 **Status:** Accepted (agent-decided, pending team review)
 
+**Note (Sunday, November 1, 2026 — 13:03 PHT):** the same dialog now also covers browser Back, sidebar links and Alt shortcuts, through `useBlocker` on a data router.
+
 ## Context
 The shared Cancel on entry and edit forms (`useCancelNavigation`, added in the October 11 fix sweep)
 returned to the previous screen at once, so a mistaken click threw away everything typed: a half-written

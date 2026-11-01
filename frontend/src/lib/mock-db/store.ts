@@ -122,6 +122,7 @@ export function migratePersistedState(saved: Saved): Saved {
   const usual = config.vitalsUsualRanges as Record<string, unknown>
   for (const key of ['grades1to6FromAge', 'grades7to12FromAge'] as const) usual[key] ??= seed.config.vitalsUsualRanges[key]
   if (typeof config.unusualAgeYears !== 'number') config.unusualAgeYears = seed.config.unusualAgeYears
+  if (typeof config.largeWriteOffPercent !== 'number') config.largeWriteOffPercent = seed.config.largeWriteOffPercent
   // ADR-052 and ADR-053: backup locations, how many backups to keep, and the staff type "Other".
   if (typeof config.backupKeepLast !== 'number') config.backupKeepLast = seed.config.backupKeepLast
   const types = config.personnelTypes as string[]
@@ -183,6 +184,7 @@ export function db(): DbState {
       // A copy saved before calendar events existed has no collection for them.
       state.frontendOnly.calendarEvents ??= []
       state.frontendOnly.sportsReports ??= []
+      state.frontendOnly.studentImportBatches ??= []
       seedAuditLength = migrated.seedAuditLength
     } else {
       state = build()

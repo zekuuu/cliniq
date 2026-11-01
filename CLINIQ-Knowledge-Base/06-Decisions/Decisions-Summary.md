@@ -241,3 +241,7 @@ A student saves with no emergency contact; a started contact must be complete. T
 ### ADR-060: The Principal signs the printed report; no on-screen Acknowledge
 
 The system has no Principal acknowledgement of reports. The clinician approves and prints, and the Principal signs the paper copy. Reverses item 2 of ADR-048. Zean, in chat, Sunday, November 1, 2026 — 12:09 PHT. [ADR-060](ADR-060-Principal-Signs-The-Printed-Report-No-On-Screen-Acknowledge.md)
+
+### ADR-061: A large stock write-off needs a written note
+
+A removal of 25% or more of an item on hand, or one that empties it, needs a note of at least 20 characters and is flagged in the audit. Sunday, November 1, 2026 — 13:03 PHT. [ADR-061](ADR-061-Large-Stock-Write-Off-Needs-A-Written-Note.md)

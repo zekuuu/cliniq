@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BrowserRouter, useNavigate } from 'react-router'
+import { createBrowserRouter, RouterProvider, useNavigate } from 'react-router'
 import { getAuthenticatedUser, startMockSession, type SessionUser } from './lib/mock-db'
 import { AppRoutes } from './routes/AppRoutes'
 import { KeyboardShortcuts } from './components/KeyboardShortcuts'
@@ -40,9 +40,7 @@ function AppContent() {
 }
 
 export default function App() {
-  return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
-  )
+  // A data router, so a dirty form can block leaving (ADR-021). The route table stays in `AppRoutes`.
+  const [router] = useState(() => createBrowserRouter([{ path: '*', element: <AppContent /> }]))
+  return <RouterProvider router={router} />
 }

@@ -38,6 +38,7 @@ const CONFIG: MockDbConfig = {
   followUpAutoCloseDays: 7,
   backupKeepLast: 60,
   unusualAgeYears: 3,
+  largeWriteOffPercent: 25,
   vitalsUsualRanges: {
     temperatureMinC: 36,
     oxygenSaturationMinPct: 95,
@@ -141,6 +142,7 @@ function dataset(partial: Partial<DbState>): DbState {
       issueReports: [],
       calendarEvents: [],
       sportsReports: [],
+    studentImportBatches: [],
       backupLocations: [],
     },
     ...partial,

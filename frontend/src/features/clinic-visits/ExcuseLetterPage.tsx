@@ -86,8 +86,11 @@ function PrintableLetter({
 }) {
   const periodValid = !excusedPeriodError(period)
   return (
-    <article className="rounded-md border border-border bg-background p-6 text-text-primary print:border-0 print:p-0">
-      <div className="border-b border-border pb-4 text-center print:pb-3">
+    <article className="relative overflow-hidden rounded-md border border-border bg-background p-6 text-text-primary print:border-0 print:p-0">
+      {/* A draft never prints (ADR-038 item 6), so the watermark and box are screen-only. 6% keeps the text's contrast. */}
+      {!approved && <img src="/MCA_Logo.png" alt="" aria-hidden="true" data-testid="draft-watermark" className="pointer-events-none absolute inset-0 m-auto w-2/3 max-w-sm opacity-[0.06] select-none print:hidden" />}
+      {!approved && <p className="relative mb-4 border-2 border-text-primary px-3 py-2 text-center text-sm font-bold print:hidden">DRAFT. Not valid until approved.</p>}
+      <div className="relative border-b border-border pb-4 text-center print:pb-3">
         <p className="text-xs font-semibold tracking-wide text-brand-green-dark uppercase">
           Mendez Christian Academy Clinic
         </p>
@@ -97,7 +100,7 @@ function PrintableLetter({
         </p>
       </div>
 
-      <div className="mt-6 flex flex-col gap-4 text-sm leading-6">
+      <div className="relative mt-6 flex flex-col gap-4 text-sm leading-6">
         <p>{formatDate(context.issuedAt.slice(0, 10))}</p>
         <p>To: {recipient}</p>
         <p className="font-semibold">

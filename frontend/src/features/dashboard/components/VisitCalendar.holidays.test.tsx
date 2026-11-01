@@ -35,7 +35,7 @@ describe('Dashboard calendar holiday layer (ADR-020)', () => {
     expect(chip).toHaveAttribute('title', 'Holiday: Christmas Day')
     const day = screen.getByRole('button', { name: /December 25: holiday: Christmas Day \(Regular holiday\)/ })
     expect(day.closest('td')).toHaveClass(noClassDayClass)
-    expect(screen.getByText(/Holidays updated Oct 7, 2026/)).toHaveTextContent(
+    expect(screen.getByText(/Holidays updated Nov 1, 2026/)).toHaveTextContent(
       'Source Official Gazette (bundled list)',
     )
     expect(screen.queryByText(/No holidays loaded/)).not.toBeInTheDocument()
@@ -77,9 +77,15 @@ describe('Dashboard calendar holiday layer (ADR-020)', () => {
     expect(screen.getByText(/Holidays updated/)).toBeInTheDocument()
   })
 
-  it('warns when no holidays are loaded for the current year', async () => {
+  it('has no missing-year warning in 2027', async () => {
     renderCalendar({ today: '2027-01-15' })
-    expect(await screen.findByText('No holidays loaded for 2027.')).toBeInTheDocument()
+    expect(await screen.findByText('Holiday: New Year\'s Day')).toBeInTheDocument()
+    expect(screen.queryByText(/No holidays loaded/)).not.toBeInTheDocument()
+  })
+
+  it('warns when no holidays are loaded for the current year', async () => {
+    renderCalendar({ today: '2028-01-15' })
+    expect(await screen.findByText('No holidays loaded for 2028.')).toBeInTheDocument()
     expect(screen.getByText(/Holidays updated/)).toBeInTheDocument()
   })
 })

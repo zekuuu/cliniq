@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { PATIENT_KIND_LABELS, patientLine } from '../../lib/patients'
+import { PATIENT_KIND_LABELS, patientGroup, patientIdText, patientLine } from '../../lib/patients'
 import { Link, useNavigate } from 'react-router'
 import {
   BackButton,
@@ -17,10 +17,15 @@ import {
   Modal,
   SegmentedControl,
   Textarea,
+  PrintButton,
+  PrintDocument,
+  PrintFields,
+  PrintSection,
   Skeleton,
   type ItemLineDraft,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { DiscardChangesDialog, UnsavedChangesGuard } from '../../components/forms/UnsavedChanges'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { cn } from '../../lib/cn'
 import { cleanComplaint } from '../../lib/complaints'
@@ -130,9 +135,76 @@ function TextareaField({
   )
 }
 
-function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
+/**
+ * The visit on A4 (ADR-049, ADR-053): one deliberately opened patient, so the full name and number
+ * are correct (ADR-004, ADR-044). Staff only, like the page; the Admin has none (ADR-038).
+ */
+function VisitPrint({ visit, viewer }: { visit: VisitDetail; viewer: SessionUser }) {
+  const { student } = visit
+  const letter = visit.approval ?? visit.excuseLetterDraft
+  const stayHome = letter?.stayHomeUntilCleared ? ['Stay home until cleared.', letter.stayHomeNote?.trim()].filter(Boolean).join(' ') : null
+  const collected = visit.collectedBy && [visit.collectedBy.name, visit.collectedBy.relationship && `(${visit.collectedBy.relationship})`, visit.collectedBy.time && formatClock(visit.collectedBy.time)].filter(Boolean).join(' ')
+  return (
+    <PrintDocument
+      title="Visit Details"
+      viewer={viewer}
+      scope={`${student.fullName} (${patientIdText(student)}), ${patientGroup(student).value}. Clinic visit on ${formatDateTime(visit.dateTime)}.`}
+    >
+      <PrintSection title={PATIENT_KIND_LABELS[student.kind]}>
+        <PrintFields
+          fields={[
+            { label: 'Full name', value: student.fullName },
+            { label: student.kind === 'student' ? 'LRN' : 'Staff No.', value: patientIdText(student).replace(/^LRN /, '') },
+            patientGroup(student),
+            { label: 'Logged by', value: visit.loggedBy },
+          ]}
+        />
+      </PrintSection>
+      <PrintSection title="Visit">
+        <PrintFields
+          fields={[
+            { label: 'Date and time', value: formatDateTime(visit.dateTime) },
+            ...(visit.timeOut ? [{ label: 'Time out', value: formatClock(visit.timeOut) }] : []),
+            { label: 'Complaint', value: visit.complaint },
+            ...(visit.extraComplaints.length ? [{ label: 'Other complaints', value: visit.extraComplaints.join(', ') }] : []),
+            ...(visit.temperatureC !== null ? [{ label: 'Body temperature', value: `${formatDecimal(visit.temperatureC)} °C` }] : []),
+            { label: 'Disposition', value: dispositionLabel(visit.disposition, student.kind) },
+            ...(visit.referredTo ? [{ label: 'Referred to', value: visit.referredTo }] : []),
+            ...(collected ? [{ label: 'Collected by', value: collected }] : []),
+            ...(stayHome ? [{ label: 'Stay home', value: stayHome, wide: true }] : []),
+          ]}
+        />
+      </PrintSection>
+      <PrintSection title="Treatment">
+        <p className="whitespace-pre-line">{visit.treatment.trim() || (visit.itemsGiven.length ? 'No treatment notes.' : 'No treatment recorded.')}</p>
+        {visit.itemsGiven.length > 0 && (
+          <>
+            <p className="mt-[2mm] font-semibold">Medicines and supplies given</p>
+            <ul className="list-disc pl-[5mm]">
+              {visit.itemsGiven.map((line) => <li key={line.itemId}>{formatItemGiven(line)}</li>)}
+            </ul>
+          </>
+        )}
+      </PrintSection>
+      {(visit.assistedBy || visit.parentGuardian || visit.remarks) && (
+        <PrintSection title="Other details">
+          <PrintFields
+            fields={[
+              ...(visit.assistedBy ? [{ label: 'Assisted by', value: visit.assistedBy }] : []),
+              ...(visit.parentGuardian ? [{ label: 'Parent or guardian', value: visit.parentGuardian }] : []),
+              ...(visit.remarks ? [{ label: 'Remarks', value: visit.remarks, wide: true }] : []),
+            ]}
+          />
+        </PrintSection>
+      )}
+    </PrintDocument>
+  )
+}
+
+function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail; viewer: SessionUser }) {
   const [visit, setVisit] = useState(initialVisit)
   const [editing, setEditing] = useState(false)
+  const [askingDiscard, setAskingDiscard] = useState(false)
   const [values, setValues] = useState<VisitDetailValues>(() => valuesFromVisit(initialVisit))
   const [lines, setLines] = useState<ItemLineDraft[]>(() => draftsFrom(initialVisit.itemsGiven))
   const [errors, setErrors] = useState<Errors>({})
@@ -235,12 +307,20 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
     }
   }
 
-  function cancelEdit() {
+  const unsaved = editing && (JSON.stringify(values) !== JSON.stringify(valuesFromVisit(visit)) || JSON.stringify(lines) !== JSON.stringify(draftsFrom(visit.itemsGiven)))
+
+  function discardEdit() {
+    setAskingDiscard(false)
     setValues(valuesFromVisit(visit))
     setLines(draftsFrom(visit.itemsGiven))
     setErrors({})
     setSaveError('')
     setEditing(false)
+  }
+
+  function cancelEdit() {
+    if (unsaved) setAskingDiscard(true)
+    else discardEdit()
   }
 
   return (
@@ -263,19 +343,20 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
             {formatDateTime(visit.dateTime)}
           </Badge>
         </div>
-        {!editing && !locked && (
+        {!editing && (
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button variant="secondary" icon="fileText" onClick={startEdit}>
+            <PrintButton viewer={viewer} />
+            {!locked && <Button variant="secondary" icon="fileText" onClick={startEdit}>
               Edit
-            </Button>
-            {!visit.escalatedIncidentId && (
+            </Button>}
+            {!locked && !visit.escalatedIncidentId && (
               <Button variant="secondary" icon="alertTriangle" onClick={() => navigate(`${paths.incidentNew}?fromVisit=${encodeURIComponent(visit.id)}`)}>
                 Escalate to incident
               </Button>
             )}
-            <Button variant="neutral" onClick={() => { setErrorReason(''); setErrorReasonMessage(''); setMarkingError(true) }}>
+            {!locked && <Button variant="neutral" onClick={() => { setErrorReason(''); setErrorReasonMessage(''); setMarkingError(true) }}>
               Entered in error
-            </Button>
+            </Button>}
           </div>
         )}
       </Card>
@@ -627,6 +708,9 @@ function VisitDetailEditor({ initialVisit }: { initialVisit: VisitDetail }) {
           </Button>
         </div>
       </Modal>
+      <DiscardChangesDialog open={askingDiscard} onKeep={() => setAskingDiscard(false)} onDiscard={discardEdit} />
+      <UnsavedChangesGuard dirty={unsaved} />
+      <VisitPrint visit={visit} viewer={viewer} />
     </div>
   )
 }
@@ -736,5 +820,5 @@ export function VisitDetailPage({
     )
   }
 
-  return <VisitDetailEditor initialVisit={data} />
+  return <VisitDetailEditor initialVisit={data} viewer={viewer} />
 }

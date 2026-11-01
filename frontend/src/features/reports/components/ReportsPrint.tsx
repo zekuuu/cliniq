@@ -34,7 +34,7 @@ function ComplaintBreakdown({ rows, empty }: { rows: ComplaintCount[]; empty: st
   const total = rows.reduce((sum, row) => sum + row.count, 0)
   if (!rows.length) return <PrintNote className="text-text-primary">{empty}</PrintNote>
   return (
-    <div className="grid grid-cols-2 items-start gap-[6mm]">
+    <div className="mt-[5mm] grid grid-cols-2 items-start gap-[6mm] [&>section]:mt-0">
       <PrintBars
         caption="Clinic visits by complaint"
         rows={rows.map((row) => ({ label: row.complaint, value: row.count }))}
@@ -191,7 +191,7 @@ export function ReportsPrint({
         <WeeklyComplaintsPrint weekly={data.weeklyComplaints} />
       </PrintSection>
 
-      <div className="grid grid-cols-2 items-start gap-[6mm]">
+      <div className="mt-[5mm] grid grid-cols-2 items-start gap-[6mm] [&>section]:mt-0">
         <PrintSection title="After the visit">
           <PrintTable
             caption="Visits by disposition"
