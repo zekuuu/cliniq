@@ -43,7 +43,7 @@ No role can view information for a student they have not specifically looked up 
 - Active student, visit, and incident records are kept for as long as the student is enrolled.
 - When a student leaves the school (graduates, transfers, or withdraws), their record is archived — hidden from active lists but not immediately deleted.
 - Archived records are kept for 5 years from the archive date, then deleted. This period exists in case a transferred student re-enrolls, and reflects the Data Privacy Act's principle of not keeping personal information longer than necessary.
-- Audit log records are kept separately from clinic records, for accountability. Their retention period is stated here once the school confirms it.
+- Audit log records are kept separately from clinic records, for accountability. They are kept for 10 years.
 
 ## 6. How CLINIQ protects this information
 
@@ -57,7 +57,7 @@ No role can view information for a student they have not specifically looked up 
 
 Most of the information CLINIQ holds is about students who are minors. It is collected and used only for the clinic-care and safety purposes described above, is restricted to the roles described in Section 4, and is not shared outside the school except as described in this policy.
 
-**Teachers and school staff (PROVISIONAL).** The clinic may also record visits, incidents and medicines given for teachers, non-teaching staff and utility workers, with their allergies and medical conditions if they choose to give them. This health information is kept only with the staff member's knowledge and consent, is seen only by the School Clinician, and is protected in the same way as students' records. This wording is provisional until the school's privacy officer approves it.
+**Teachers and school staff (PROVISIONAL).** The clinic may also record visits, incidents and medicines given for teachers, non-teaching staff and utility workers, with their allergies and medical conditions if they choose to give them. This health information is kept only with the staff member's knowledge and consent. Details are seen only by the School Clinician; the Principal sees counts, never names or details. It is protected in the same way as students' records. This wording is provisional until the school's privacy officer approves it.
 
 ## 8. Information sharing
 

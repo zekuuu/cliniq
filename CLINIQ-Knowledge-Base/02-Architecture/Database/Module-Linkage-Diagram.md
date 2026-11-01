@@ -16,7 +16,7 @@ flowchart LR
     ER["<b>4 · Emergency Response</b><br/>Stage 1 fast capture,<br/>Stage 2 completed later"]
     EX["<b>Excuse letter</b><br/>draft, then approved"]
     FU["<b>Follow-up</b><br/>return date"]
-    IR["<b>Incident Report</b><br/>approved, then Acknowledged"]
+    IR["<b>Incident Report</b><br/>approved, then printed"]
     INV["<b>8 · Inventory</b><br/>stock, batches,<br/>low and expiring flags"]
     J(("everything<br/>recorded"))
     DASH["<b>9 · Dashboard</b><br/>counts, trends,<br/>due follow-ups, low stock"]
@@ -86,7 +86,7 @@ If your viewer does not draw Mermaid, the same picture is exported as an image: 
 | Clinic Visit | Emergency Response | "Escalate to incident"; an escalated visit counts once, as the incident | ADR-036 |
 | Clinic Visit | Excuse letter | Sent home or Referred prepares a draft; the clinician approves it | Module 3, ADR-049 |
 | Clinic Visit | Follow-up | A return date; due, then overdue after 3 days, then read as Missed after 7 days | ADR-051 |
-| Emergency Response | Incident Report | A completed Stage 2 record can be approved; the Admin / Principal can Acknowledge it | Module 4, ADR-048 |
+| Emergency Response | Incident Report | A completed Stage 2 record can be approved, then printed for the Principal's signature | Module 4, ADR-060 |
 | Clinic Visit, Emergency Response | Inventory | Medicines given lower the stock, earliest-expiry batch first; editing the lines returns the stock | Module 8, ADR-018, ADR-030 |
 | Inventory | Clinic Visit, Emergency Response | An "avoid if allergic to" warning at the medicine picker; it never blocks | ADR-049 |
 | Clinic Visit, Emergency Response, Excuse letter | Student Records | Visit and incident history and approved letters show on the profile | Module 2 |

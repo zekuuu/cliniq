@@ -53,7 +53,6 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | Creates / edits / duplicates / archives / restores a Sports Report | `create` / `update` / `create` / `archive` / `update` | sports-report | "Duplicated from another Sports Report", "Restored from the archive" | `features/reports/SportsReport.test.tsx` |
 | Prints or saves as PDF | `print` | the printed record, or print-document | the document's title or scope. Never written for the Admin, who can't print, or for a draft excuse letter (ADR-038) | `components/print/Print.test.tsx` |
 | Admin/Principal or the clinician opens a student or staff profile or an incident report | `view` ("Viewed a record") | student / staff / incident | "Opened student profile" / "Opened staff profile" / "Opened incident report". Once per record per sign-in session (ADR-038 item 4; the clinician's since ADR-048, Friday, October 30, 2026 — 00:17 PHT). Lists and searches are not logged | `features/admin-read-only.test.tsx`, `features/AdminAuditDashboardDecisions.test.tsx` |
-| Admin/Principal acknowledges an approved incident report (ADR-048) | `update` | incident-report | "Acknowledged" | `features/AdminAuditDashboardDecisions.test.tsx` |
 | The Admin is signed out after the idle limit (ADR-048) | `logout` | — | "Signed out after 30 minutes of inactivity" | `features/AdminAuditDashboardDecisions.test.tsx` |
 | Reports an issue | `create` | issue-report | — | `features/issue-reports/api/issueReportApi.test.ts` |
 

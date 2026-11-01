@@ -6,7 +6,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 
 **Roles in the system (current scope):**
 - **Staff** (School Clinician in the app) — School Head Nurse / clinic assistants. Full read/write access.
-- **Admin/Principal** — School Administration. Read-only access to reports and health summaries, and read-only access to the Student List, Student Profile, Incident Log and Incident Report (ADR-038), plus account management (ADR-033): creates, edits, disables and resets accounts. The Admin/Principal can also Acknowledge a completed incident report (ADR-048), never prints or saves as PDF (ADR-038); the clinician prints. The Admin/Principal signs in at the clinic computer and is signed out after 30 idle minutes (ADR-029, 048).
+- **Admin/Principal** — School Administration. Read-only access to reports and health summaries, and read-only access to the Student List, Student Profile, Incident Log and Incident Report (ADR-038), plus account management (ADR-033): creates, edits, disables and resets accounts. The Admin/Principal never prints or saves as PDF (ADR-038); the clinician prints, and the Principal signs the printed report by hand (ADR-060). The Admin/Principal signs in at the clinic computer and is signed out after 30 idle minutes (ADR-029, 048).
 - **PE/Sports Instructor** — No account and no access (ADR-029). An instructor asks the clinician, who decides what to share.
 
 **Role documented for future development (not built this phase):** Canteen Staff — see "Future Development" at the end of this document.
@@ -178,7 +178,7 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 - Mark a follow-up Completed, Missed, or Cancelled
 - Missed and Cancelled ask for a confirmation **and a required reason**, kept on the follow-up and shown in the list; afterwards "Set a new date" offers to create a new pending follow-up for the same student, record and reason (panel review FU-4). Audit-logged
 
-### 4. Emergency Response — *Access: Staff; Admin/Principal reads the Incident Log and Incident Report and can Acknowledge a completed report (ADR-038, 048), audit-logged once per report per session*
+### 4. Emergency Response — *Access: Staff; Admin/Principal reads the Incident Log and Incident Report (ADR-038), audit-logged once per report per session*
 
 **Incident Recording — two-stage flow**
 - **Stage 1 (fast capture):** open a prefilled emergency form (student picked on the form), complete only the essential field (the complaint) plus whichever readings the case needs (temperature, pulse, blood pressure, oximeter; none is required, "don't force all 4 if not relevant to the case"), and save immediately — speed matters more than completeness in the first moment. An optional Additional notes field is offered but never required; when filled, the notes show in Stage 2's Stage 1 summary and on the Incident Report. Once the student is picked, a read-only card shows the student's allergies, medical conditions and emergency contacts (an empty list reads “None recorded”, never “No allergies”); it adds no input
@@ -219,7 +219,6 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 - Generate incident report from an incident record — *Staff*
 - Route for nurse review and sign-off — *Staff*. Only a completed (Stage 2) record can be approved
 - Print incident report — *Staff* (ADR-038)
-- **Acknowledge** a completed incident report — *Admin/Principal*: records who and when, shows on the report and is audit-logged; the printed signature line stays (ADR-048)
 - The month's **Incident register** (renamed from "Incident Report Archive", panel review RP-4: it holds unfinished incidents, so it isn't an archive) lists every incident of the month by masked LRN; for Staff each row opens its report, or "Complete Stage 2" for a Stage 1 record; for the Admin/Principal every row opens the report read-only (ADR-038)
 
 **Complaint summary** (renamed from "Health Summaries", panel review RP-7: it holds complaint counts only)
@@ -353,7 +352,7 @@ This satisfies RA 10173 (Data Privacy Act) alignment and is the mechanism that m
 | 2. Student Records | Full | Read Student List and Profile (ADR-038) |
 | 2a. Staff Patients (ADR-043) | Full | — (no Staff screens; staff incidents left out of the Incident Log) |
 | 3. Clinic Visit Monitoring | Full | — |
-| 4. Emergency Response | Full | Read Incident Log and Report, and Acknowledge (ADR-038, 048) |
+| 4. Emergency Response | Full | Read Incident Log and Report (ADR-038) |
 | 5. Reports Generation | Full | View only, no printing (ADR-038) |
 | 7. First-aid Checklist Quick-Reference | Full | — |
 | 8. Medicine & Supply Inventory Tracker | Full | — |

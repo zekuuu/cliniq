@@ -24,11 +24,10 @@ flowchart LR
         UC13(["Manage Staff Patients"])
         UC14(["Keep Calendar Events"])
         UC15(["View Audit Log"])
-        UC16(["Acknowledge<br/>Incident Report"])
     end
 
     STAFF --> UC2 & UC3 & UC4 & UC5 & UC7 & UC8 & UC9 & UC10 & UC11 & UC12 & UC13 & UC14 & UC15
-    ADMIN --> UC1 & UC5 & UC9 & UC10 & UC12 & UC14 & UC15 & UC16
+    ADMIN --> UC1 & UC5 & UC9 & UC10 & UC12 & UC14 & UC15
 ```
 
 ## Detailed Use Cases by Role
@@ -66,7 +65,7 @@ flowchart LR
 | Manage user accounts (add, edit, disable, enable, reset password; never the last active Admin) | User Management |
 | View monthly/complaint-summary reports and the inventory sheet, never print (ADR-038) | Reports Generation |
 | Read the Student List and Student Profile (ADR-038) | Student Records |
-| Read the Incident Log and Incident Report; Acknowledge an approved report (ADR-038, ADR-048) | Emergency Response |
+| Read the Incident Log and Incident Report (ADR-038) | Emergency Response |
 | View Clinic Overview Dashboard, keep calendar events (ADR-042) | Clinic Overview Dashboard |
 | Check/verify backup status, back up now (ADR-037) | Backup Verification Assistant |
 | View the audit log, never print (ADR-038) | Audit Log Viewer |
