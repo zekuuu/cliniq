@@ -289,7 +289,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
   // The next visit in this open form starts with the last successfully saved disposition.
   const [lastSavedDisposition, setLastSavedDisposition] = useState<Disposition>('returned_to_class')
   // Anything typed or chosen beyond the defaults; a save clears the form back to them.
-  const { cancel, discardDialog } = useCancelNavigation(
+  const { cancel, discardDialog, allowLeave } = useCancelNavigation(
     paths.visits,
     complaint.trim() !== '' ||
       treatment.trim() !== '' ||
@@ -317,6 +317,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
       time: whenEdited ? `${visitDate}T${visitClock}:00+08:00` : undefined,
       temperatureC: logbook.temperatureC.trim() && Number.isFinite(temperature) ? temperature : null,
     }
+    allowLeave()
     navigate(paths.incidentNew, { state: { escalate } })
   }
 
@@ -601,7 +602,10 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 onChange={(event) => setLateEntryReason(event.target.value)}
               />
             )}
+            {/* Remounts on the pick, so focus moves on to the next thing to fill in (D4: fewer clicks). */}
             <ComplaintField
+              key={identified.student?.id ?? 'none'}
+              autoFocus={Boolean(identified.student)}
               value={complaint}
               onChange={updateComplaint}
               suggestions={suggestions}
