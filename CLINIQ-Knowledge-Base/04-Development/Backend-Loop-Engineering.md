@@ -13,7 +13,7 @@ Written Saturday, October 31, 2026 — 18:15 PHT, with [ADR-056](../06-Decisions
 1. **All backend work happens on a branch named `backend`.** Create it from the newest branch (at last check `main`) and keep using it; a later session switches to it, never makes a second one. Nothing is committed, pushed, merged, rebased or reset unless Zean asks.
 2. **Only the backend side changes.** Code goes in `backend/` and nowhere else. Do not touch `frontend/`: no `.env` change, no API-client change, no `VITE_*` flag, no proxy setting, no test. The knowledge base may change only for what this file and `AGENTS.md` require: logs, the new backend documents, and the READMEs and checklists that describe the backend. If a backend task seems to need a frontend change, stop and write it down as an `Issues-and-TODOs.md` entry instead.
 3. **Nothing is connected yet, and the mock data layer stays.** The backend is prepared (routes, middleware, CORS, error format, audit service, tests) and proven with its own tests. The frontend keeps running on the mock data layer, and `frontend/src/lib/mock-db/` is **never removed, emptied, renamed or edited** by backend work: it is the executable spec (rule 5), the source of the future development seeder, and the fallback behind the per-module switch when integration happens (ADR-006). It stays as the reference for every backend phase, **even after the backend is integrated**. Deleting it is not part of any backend phase or of the integration; only Zean can decide that, later, with an ADR, once he is sure everything in the backend is good.
-4. **No migration, seeder or model with columns before the ERD is approved.** The ERD is a proposed draft (`02-Architecture/Database/ERD.md`). The drafts are kept in step with accepted decisions and the frontend's real data shapes, as documents; approval still gates every migration and every design choice no decision settles (`ERD-Review.md`). Code that needs a table (the users table for sign-in, the audit log table) is written against an interface and tested with in-memory fakes, and the real table waits.
+4. **The ERD is approved** (Zean, Sunday, November 1, 2026 — 01:39 PHT, ADR-057). Migrations, seeders and models with columns may be written in phase B1, in the order of `ERD.md` section 13, with the checks this file sets. Later changes to the approved design go through a new decision, and `02-Architecture/Database/Checks/` is run again. Before B1, code that needs a table is written against an interface and tested with in-memory fakes.
 5. **The mock API is the executable spec** (`frontend/src/lib/mock-db/api.ts`, with its types in `frontend/src/types/` and its tests in `frontend/src/lib/mock-db/`). The backend must copy its rules exactly, function by function. If you think a rule is wrong, say so and ask; do not "fix" it on one side only, or the two drift apart.
 6. **Auth mode is Sanctum SPA cookie** (ADR-056). Session lifetime and lockout follow ADR-015; the Admin idle sign-out follows ADR-048.
 7. **Backend has its own logs.** Backend issues and TODOs go in [`08-Logs/Backend-Issues-and-TODOs.md`](../08-Logs/Backend-Issues-and-TODOs.md) and backend changelog rows in [`08-Logs/Backend-Changelog.md`](../08-Logs/Backend-Changelog.md), never in the main `Issues-and-TODOs.md` and `Changelog.md`, so the `backend` branch and `main` never edit the same file. Same tags, counting rule and real timestamps as the main files. An entry that touches both sides goes in the main file and names the backend entry. Name backend session logs in `Agent-Sessions/` with `-backend-` in the file name.
@@ -25,7 +25,7 @@ Written Saturday, October 31, 2026 — 18:15 PHT, with [ADR-056](../06-Decisions
 Once per continuous session, not per item.
 
 1. Read `08-Logs/Backend-Changelog.md` and `08-Logs/Backend-Issues-and-TODOs.md` in full, then `08-Logs/Changelog.md` (the main one, for anything that changed the mock API, an ADR or the access matrix), `06-Decisions/` (every ADR, especially ADR-009, 015, 016, 017, 028, 029, 033, 038, 039, 043, 047, 048, 051, 052, 056), and the open items in the main `08-Logs/Issues-and-TODOs.md` that name the database, the audit trail or the integration.
-2. Read `04-Development/Backend-Readiness-Checklist.md`, `02-Architecture/Database/ERD.md` and `Data-Dictionary.md` (drafts), and `backend/README.md`.
+2. Read `04-Development/Backend-Readiness-Checklist.md`, `02-Architecture/Database/ERD.md` and `Data-Dictionary.md`, and `backend/README.md`.
 3. Read the cross-cutting skills in `.claude/skills/` (`cliniq-audit-trail`, `cliniq-display-privacy`, and any other the current `Skills-Setup.md` lists as cross-cutting). Component skills are frontend-only; skip them.
 4. Run the frontend's own checks once for a baseline (the frontend must still pass; you never change it), and note the commit you are building on.
 
@@ -86,39 +86,39 @@ Each item has a **Build** and an **Audit** box, each with its own Resume Note. L
 
 ### Prepare (documents and checks only, no backend code)
 
-- [x] Build / [ ] Audit — **P1. Environment check**: PHP version and extensions in the target XAMPP, Composer, MariaDB version, the Laravel version that fits, all pinned in `Environment-Setup.md`
-  Build note: pinned from the development machine's XAMPP; the clinic computer still needs the same check. · Audit note:
-- [x] Build / [ ] Audit — **P2. API contract** (`04-Development/API-Contract.md`): every mock function mapped to an endpoint with URL, method, allowed roles, request and response shape, errors, audit event and the mock behaviour it copies; the single error format
-  Build note: 103 entries, 95 of 104 functions mapped, coverage proved by script; 20 questions open. · Audit note:
-- [x] Build / [ ] Audit — **P3. ERD review** (`02-Architecture/Database/ERD-Review.md`): the draft checked against the mock functions, the entity types and the ADRs; gaps, provisional fields and the approval checklist. The ERD, Data Dictionary and Reference Schema are not edited until Zean approves the changes
-  Build note: 30 gaps, matrix, recommendations and checklist additions written; only decided facts corrected in the drafts. · Audit note:
+- [x] Build / [x] Audit — **P1. Environment check**: PHP version and extensions in the target XAMPP, Composer, MariaDB version, the Laravel version that fits, all pinned in `Environment-Setup.md`
+  Build note: pinned from the development machine's XAMPP. The clinic computer's check and HTTPS are deferred to deployment (ADR-057, `LATER`); MariaDB hardening is a checklist in `Environment-Setup.md`. · Audit note: Versions re-read from the install; the scaffold ran on them. The commands were corrected to what ran.
+- [x] Build / [x] Audit — **P2. API contract** (`04-Development/API-Contract.md`): every mock function mapped to an endpoint with URL, method, allowed roles, request and response shape, errors, audit event and the mock behaviour it copies; the single error format
+  Build note: 102 entries, 94 of 104 functions mapped, coverage proved by script. All questions closed by ADR-057, Q7b included. B0.5 gains the fixed-session middleware. · Audit note: All 98 mock line citations point at their function, 104 of 104 functions accounted for, every entry has roles or a stated reason.
+- [x] Build / [x] Audit — **P3. ERD review** (`02-Architecture/Database/ERD-Review.md`): the draft checked against the mock functions, the entity types and the ADRs; gaps, provisional fields and the approval checklist. The ERD, Data Dictionary and Reference Schema are not edited until Zean approves the changes
+  Build note: 30 of 30 gaps closed in the drafts (ADR-057), schema loaded, 191 of 191 constraint tests pass (`Checks/`), ERD approved. D-01 amends ADR-017 (ADR-057 item 12). · Audit note: Schema reloaded, 191 of 191 tests, dictionary against the loaded schema: 431 columns, no drift.
 
 ### Phase B0 — Scaffold and foundation (code in `backend/`)
 
-- [ ] Build / [ ] Audit — **B0.1 Scaffold**: Laravel installed into `backend/` without overwriting the README or `.env.example`; Pest, Pint, Larastan; composer scripts for test, lint and analyse
-  Build note: · Audit note:
-- [ ] Build / [ ] Audit — **B0.2 Modular structure** (ADR-009): `App\Modules\` and `App\Shared\` PSR-4 mapping, one folder per module, the module list reconciled with ADR-009 and the ERD rule M-1 (questions asked, not guessed)
-  Build note: · Audit note:
-- [ ] Build / [ ] Audit — **B0.3 Configuration**: timezone `Asia/Manila`; `config/cliniq.php` holding the business numbers (7-day session, 5 failed attempts then a 30-minute lock, Admin idle 30 minutes, LRN length 12) with their ADR named beside each; a complete `.env.example`
-  Build note: · Audit note:
-- [ ] Build / [ ] Audit — **B0.4 CORS and Sanctum SPA** (ADR-056): explicit allowed origin from the environment, credentials on, CSRF cookie route, stateful domains, session cookie settings, session lifetime from ADR-015
-  Build note: · Audit note:
-- [ ] Build / [ ] Audit — **B0.5 Middleware**: JSON-only API, request id, security headers, no-store cache headers on API responses, role middleware, Admin idle middleware, throttles
-  Build note: · Audit note:
-- [ ] Build / [ ] Audit — **B0.6 Error format**: one JSON envelope and a handler that maps every failure to it without leaking anything
-  Build note: · Audit note:
-- [ ] Build / [ ] Audit — **B0.7 Audit contract** (`app/Shared/AuditLog/`): the interface, the event names, the field-names-only rule, an in-memory implementation for tests; no table yet
-  Build note: · Audit note:
-- [ ] Build / [ ] Audit — **B0.8 Shared helpers**: masked LRN (identical output to the frontend helper), `Asia/Manila` date helpers, the age helper (ADR-054, calculated, never stored)
-  Build note: · Audit note:
-- [ ] Build / [ ] Audit — **B0.9 Health route and route surface test**: `GET /api/health`; a test that fails when an undocumented route appears
-  Build note: · Audit note:
-- [ ] Build / [ ] Audit — **B0.10 Backend documents**: `backend/README.md`, `Environment-Setup.md`, `Backend-Readiness-Checklist.md` ticks, session log, Changelog row, Issues entries
-  Build note: · Audit note:
+- [x] Build / [x] Audit — **B0.1 Scaffold**: Laravel installed into `backend/` without overwriting the README or `.env.example`; Pest, Pint, Larastan; composer scripts for test, lint and analyse
+  Build note: Laravel 13.39, Sanctum 4.3.3, Pest 5.3.4, Pint, Larastan; scripts test, lint, analyse, check. The skeleton's migrations, factory, seeder, `User` model and web assets left out (ADR-056). · Audit note: Lock file matches the pins; `composer audit` clean; root `.gitignore` covers the real folders, and the nested ignores keep `storage/` in a fresh clone. No fix needed.
+- [x] Build / [x] Audit — **B0.2 Modular structure** (ADR-009): `App\Modules\` and `App\Shared\` PSR-4 mapping, one folder per module, the module list reconciled with ADR-009 and the ERD rule M-1 (questions asked, not guessed)
+  Build note: 11 modules from ERD rule M-1 plus `Shared`, PSR-4 mapped. · Audit note: Differs from ADR-009 only as M-1 says (QR gone; checklist, staff patients, audit viewer added). `Shared` also gained `Auth`, `Http`, `Logging`, `Support`. Logged as a NOTE for Zean.
+- [x] Build / [x] Audit — **B0.3 Configuration**: timezone `Asia/Manila`; `config/cliniq.php` holding the business numbers (7-day session, 5 failed attempts then a 30-minute lock, Admin idle 30 minutes, LRN length 12) with their ADR named beside each; a complete `.env.example`
+  Build note: `config/cliniq.php`, timezone, complete `.env.example` with no secret. · Audit note: Numbers match ADR-015, ADR-028, ADR-048. `.env.example` uses `cliniq_app`, never root.
+- [x] Build / [x] Audit — **B0.4 CORS and Sanctum SPA** (ADR-056): explicit allowed origin from the environment, credentials on, CSRF cookie route, stateful domains, session cookie settings, session lifetime from ADR-015
+  Build note: CORS, stateful API, cookie settings. · Audit note: Found: with one allowed origin the CORS library named it to strangers. Fixed with `DropForeignCorsHeaders`. A wildcard in the environment is dropped. Checked with `config:show` and live curl.
+- [x] Build / [x] Audit — **B0.5 Middleware**: JSON-only API, request id, security headers, no-store cache headers on API responses, role middleware, Admin idle middleware, fixed 7-day session middleware (ADR-057), throttles
+  Build note: Force JSON, request id, headers, role, Admin idle, fixed session, throttles. · Audit note: Request id is pattern-checked, so it cannot forge a log line. Permissions: 401, 403 and each role tested. `session.fixed` and `admin.idle` wait for routes in B2.
+- [x] Build / [x] Audit — **B0.6 Error format**: one JSON envelope and a handler that maps every failure to it without leaking anything
+  Build note: One envelope for every failure. · Audit note: Found: messages differed from the screens. Sign-in, lock and idle wording now match `LoginPage.tsx`. `405` and `bad_request` added to the contract. A 500 leaks nothing, debug on or off.
+- [x] Build / [x] Audit — **B0.7 Audit contract** (`app/Shared/AuditLog/`): the interface, the event names, the field-names-only rule, an in-memory implementation for tests; no table yet
+  Build note: Interface, event, action and target names, validator, in-memory logger. · Audit note: All 10 actions and 20 target types match the mock. Two limits go to B3: no state summary yet, and one lowercase word passes as a field (`LATER`).
+- [x] Build / [x] Audit — **B0.8 Shared helpers**: masked LRN (identical output to the frontend helper), `Asia/Manila` date helpers, the age helper (ADR-054, calculated, never stored)
+  Build note: `Lrn`, `Age`, `ClinicTime`. · Audit note: Ported with the frontend's own cases; output identical. Age is never stored.
+- [x] Build / [x] Audit — **B0.9 Health route and route surface test**: `GET /api/health`; a test that fails when an undocumented route appears
+  Build note: `GET /api/health`, route surface test. · Audit note: `route:list` shows exactly 2 routes. Health works with no database and says nothing about one.
+- [x] Build / [x] Audit — **B0.10 Backend documents**: `backend/README.md`, `Environment-Setup.md`, `Backend-Readiness-Checklist.md` ticks, session log, Changelog row, Issues entries
+  Build note: README, Environment-Setup, checklist, logs. · Audit note: Readiness boxes ticked only where truly done. Scaffold commands corrected to the ones that ran.
 
 ### Phases B1 to B10 (not started; each waits for the item named)
 
-- [ ] Build / [ ] Audit — **B1. Database schema** — waits for the ERD approval (ADR-056 rule 4)
+- [ ] Build / [ ] Audit — **B1. Database schema** — the ERD is approved (ADR-057)
 - [ ] Build / [ ] Audit — **B2. Sign-in and roles** — waits for the users table (B1); lockout, forced password change, Admin idle sign-out
 - [ ] Build / [ ] Audit — **B3. Audit trail table and viewer API** — waits for B1
 - [ ] Build / [ ] Audit — **B4. Student Records API** (including staff patients, ADR-043, and the optional birthdate, ADR-054)
@@ -134,4 +134,4 @@ Each item has a **Build** and an **Audit** box, each with its own Resume Note. L
 
 ## Definition of done, every backend item
 
-A migration (once approved), the endpoint, a Pest test per role for its permission, a test per rejection, an audit entry, a contract entry, the box ticked with its note, a session log entry, and a row in `Backend-Changelog.md` (and any issue in `Backend-Issues-and-TODOs.md`). The frontend is not changed and not switched over.
+A migration, the endpoint, a Pest test per role for its permission, a test per rejection, an audit entry, a contract entry, the box ticked with its note, a session log entry, and a row in `Backend-Changelog.md` (and any issue in `Backend-Issues-and-TODOs.md`). The frontend is not changed and not switched over.
