@@ -38,7 +38,7 @@ The mock has no pagination: it returns whole lists and the screens page them. Li
 
 ### Admin read-only (ADR-038)
 
-The Admin writes only: accounts (ADR-033), calendar events (ADR-042), Backup (ADR-037), Acknowledge (ADR-048), own password, and issue reports. Any other write answers 403. The Admin never prints (ADR-038 item 3). The detail of a staff patient's incident does not exist for the Admin: reading one answers 404, not 403, as the mock does (`visibleTo`, `api.ts:1543`). The Admin's totals leave staff incidents out (ADR-053). Calendar counts, the monthly report, the incident trail and approved-report ids may include them (ADR-057). Most of these role rules are route rules in the mock's frontend, not checks in `api.ts`; the backend enforces all of them.
+The Admin writes only: accounts (ADR-033), calendar events (ADR-042), Backup (ADR-037), own password, and issue reports. Any other write answers 403. The Admin never prints (ADR-038 item 3). The detail of a staff patient's incident does not exist for the Admin: reading one answers 404, not 403, as the mock does (`visibleTo`, `api.ts:1543`). The Admin's totals leave staff incidents out (ADR-053). Calendar counts, the monthly report, the incident trail and approved-report ids may include them (ADR-057). Most of these role rules are route rules in the mock's frontend, not checks in `api.ts`; the backend enforces all of them.
 
 **Roles** in the entries: `S` Staff, `A` Admin/Principal, `—` no sign-in. They come from the Access Summary in `Module-Overview.md`, checked against `AppRoutes.tsx` and the mock's role checks.
 
@@ -63,7 +63,7 @@ This is D5 adjusted to the mock. Added by ADR-057: `invalid_credentials`, `accou
 | 401 | `unauthenticated` | No session, or it expired | `getMockSessionUser` |
 | 401 | `session_idle` | Admin idle (ADR-048) | Frontend timer |
 | 401 | `invalid_credentials` | Wrong password, unknown user, disabled account; one message for all three | `MockAuthError('invalid_credentials')` |
-| 403 | `forbidden` | Wrong role | `AccountPermissionError`, `PersonnelPermissionError`, `SportsReportPermissionError`, `AcknowledgeError` (role case) |
+| 403 | `forbidden` | Wrong role | `AccountPermissionError`, `PersonnelPermissionError`, `SportsReportPermissionError` |
 | 403 | `password_change_required` | Must change the password first | Force Password Change route guard |
 | 404 | `not_found` | Unknown id, or a record this role may not know of | `NotFoundError` |
 | 409 | `rule_violated` | A valid request refused by stored state, with `rule` | Named errors below, and plain `Error` that depends on the record |
@@ -82,7 +82,7 @@ Values of `rule`, each with its mock error:
 | `rule` | Mock error | `rule` | Mock error |
 |---|---|---|---|
 | `last_admin` | `LastAdminError` | `incident_approved` | `IncidentApprovedError` |
-| `duplicate_username` | `DuplicateUsernameError` | `acknowledge` | `AcknowledgeError` (state cases) |
+| `duplicate_username` | `DuplicateUsernameError` | | |
 | `duplicate_lrn` | `DuplicateLrnError` | `stock_rule` | `StockRuleError` |
 | `lrn_locked` | `LrnLockedError` | `no_backup_location` | `NoBackupLocationError` |
 | `visit_entered_in_error` | Plain `Error`, `api.ts:1265`, `:1329`, `:1482`, `:1582` | `excuse_letter` | Plain `Error`, letter state, `api.ts:1143`, `:1381`, `:1382`, `:1486`, `:1508` |
@@ -261,7 +261,7 @@ All read-only, no audit. Text-only lists, safe for both roles.
 - Request: `StudentInput`, `nameCorrectionReason?`.
 - Response: `{ status: "saved", student, action: "update" }`.
 - Errors: 404; 409 `lrn_locked`; 422 name-correction reason under 3 characters; 409 `duplicate_lrn`; the birthdate 422s.
-- Audit: `update student`, changed. A name correction adds "Name corrected". The reason stays in `name_correction_reason`, never in the audit. Mock differs, fixed by the frontend fix branch (Q3).
+- Audit: `update student`, changed. A name correction adds "Name corrected; reason: <reason>", never the old or new name. The reason is also kept in `name_correction_reason` (ADR-058, which reverses Q3).
 - Copies: `saveStudent` (`api.ts:765`); tests: `Birthdate`, `LettersAndVisitsDecisions`, `RecordsDecisions`, `StudentFormPage` and 2 more. Completing a flagged record resolves its review, crediting the saver.
 
 #### `POST /api/students/{id}/archive`
@@ -404,6 +404,7 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 - Roles: S.
 - Query: `status`.
 - Response: `FollowUpView[]`, by date; masked number; `dueState`.
+- A Missed follow-up that has a new date is left out of the list; the record stays (Zean, Sunday, November 1, 2026 — 11:58 PHT).
 - Copies: `listFollowUps` (`api.ts:1805`); tests: `Birthdate`, `ClinicRulesDecisions`, `ExcuseLettersAndFollowUps`, `FollowUpListPage` and 3 more. Past the auto-close limit reads as Missed; a daily job also writes it (Q7).
 
 #### `PUT /api/follow-ups/{id}/status`
@@ -418,9 +419,9 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 - Roles: S.
 - Request: `followUpDate`.
 - Response: 201 `FollowUp`.
-- Errors: 404; 409 `follow_up_state`, unless the follow-up is missed, cancelled, or reads as Missed; 422 date in the past.
+- Errors: 404; 409 `follow_up_state`, unless the follow-up is missed or reads as Missed (a cancelled or completed one is refused; Zean, Sunday, November 1, 2026 — 11:05 PHT), or if it already has a new date (a later follow-up with the same patient, record and reason); 422 date in the past.
 - Audit: `create follow-up`.
-- Copies: `rescheduleFollowUp` (`api.ts:1833`); tests: `ExcuseLettersAndFollowUps`. Keeps patient, record, reason and notes. A follow-up that reads as Missed can be rescheduled: mock differs, fixed by the frontend fix branch (Q7). The stay-home flag and its note carry over to the new follow-up until the clinician clears them (Q7b). Mock differs, same fix branch.
+- Copies: `rescheduleFollowUp` (`api.ts:1833`); tests: `ExcuseLettersAndFollowUps`. Keeps patient, record, reason and notes. A follow-up that reads as Missed can be rescheduled, and it is written Missed at that moment (Q7). The stay-home flag and its note carry over to the new follow-up until the clinician clears them (Q7b).
 
 ## Emergency Response (Module 4)
 
@@ -474,13 +475,6 @@ Every read applies `visibleTo`: staff patients' incidents do not exist for the A
 - Errors: 404; 409 `incident_stage` Stage 1, the blocker text, or already approved (Q9).
 - Audit: `approve incident-report`.
 - Copies: `approveIncidentReport` (`api.ts:1783`); tests: `AdminAuditDashboardDecisions`, `IncidentSafety`, `RecordsDecisions`, `auditCoverage`.
-
-#### `POST /api/incidents/{id}/acknowledge`
-- Roles: A.
-- Response: `Incident`.
-- Errors: 403 "Only the Admin/Principal acknowledges an incident report."; 404; 409 `acknowledge` not approved or already acknowledged.
-- Audit: `update incident-report`, "Acknowledged".
-- Copies: `acknowledgeIncidentReport` (`api.ts:1770`); tests: `AdminAuditDashboardDecisions`. Never undone.
 
 ## Inventory (Module 8)
 
@@ -776,7 +770,7 @@ Each one is business logic the backend must copy exactly, with its source. Tests
 | Escalation: same patient, not in error, once; time from the visit; counted once as the incident | `api.ts:1578-1584`, ADR-036, `selectors.ts` `countedVisits` |
 | Completion needs one of: treatment notes, a medicine, a notification, a referral, a no-further-action reason | `lib/itemsGiven.ts` `incidentCompletionBlocker` |
 | Medicines fixed after Stage 2; notes fixed after approval | `api.ts:1661-1669` |
-| Only a completed report is approved; Acknowledge rules | `api.ts:1770`, `:1783` |
+| Only a completed report is approved | `api.ts:1762` |
 | Admin sees no staff incidents | `api.ts:1543` |
 | Vitals warnings and fever flag: warn, never block | `lib/vitals.ts` |
 | Age group by age, else grade; staff are adult; usual-range notes | `lib/vitals.ts` `ageGroupOf`, `usualRangeNotes` |
@@ -846,7 +840,7 @@ Answered by Zean, Sunday, November 1, 2026 — 01:23 PHT, or by the best approac
 |---|---|---|
 | **Q1.** Lists mask the LRN, but ADR-044 prints it in full. | Masked in lists. `fullLrn=1`, Staff only, for the printouts of ADR-044, audited. | Zean; ADR-040, ADR-044. Those printouts list several students; a single-student response already carries the full LRN. |
 | **Q2.** `StudentListRow` carries allergies, conditions and emergency contacts for every student, to the Admin as well. | The row is `id`, `lrn` (masked), `fullName`, `gradeLevel`, `archived`, `recordComplete`, also inside `IncompleteRecord.student`. Mock differs. | Zean; privacy: every reader of the row in `frontend/src` was checked, and none reads the health fields or contacts. |
-| **Q3.** The mock writes the name-correction reason into the audit log. | The summary names fields only. The reason stays on the record, in `students.name_correction_reason`. Mock differs. | Zean; ADR-017. The reason can hold a name. |
+| **Q3.** The mock writes the name-correction reason into the audit log. | Reversed by ADR-058: the summary carries the reason, as the mock does, and `students.name_correction_reason` keeps it too. | Zean, Sunday, November 1, 2026 — 11:46 PHT. |
 | **Q4.** Laravel's session lifetime slides. | The session ends 7 days after sign-in. The sign-in time is stored; one middleware in B0.5. | Zean; ADR-015, ADR-056, ADR-057. |
 | **Q5.** The mock's Admin timer counts activity; the server counts requests. | The server counts requests. At integration, the frontend sends a keep-alive while the Admin is active. | ADR-048's meaning holds, and the rule still lives on the server. |
 | **Q6.** The mock locks unknown usernames too. | Count them in the cache, by normalized name, so both answer alike. Nothing goes in a table. | Mock behaviour, `ERD.md` D-10. An unknown name that never locks reveals which names exist. |
