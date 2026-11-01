@@ -28,6 +28,7 @@ function page<K extends string, P>(load: () => Promise<Record<K, ComponentType<P
 
 const DashboardPage = page(() => import('../features/dashboard/DashboardPage'), 'DashboardPage')
 const CalendarPage = page(() => import('../features/dashboard/CalendarPage'), 'CalendarPage')
+const StudentImportPage = page(() => import('../features/student-records/StudentImportPage'), 'StudentImportPage')
 const StudentListPage = page(
   () => import('../features/student-records/StudentListPage'),
   'StudentListPage',
@@ -79,6 +80,7 @@ const InventoryListPage = page(
   () => import('../features/inventory/InventoryListPage'),
   'InventoryListPage',
 )
+const InventoryHistoryPage = page(() => import('../features/inventory/InventoryHistoryPage'), 'InventoryHistoryPage')
 const InventoryFormPage = page(
   () => import('../features/inventory/InventoryFormPage'),
   'InventoryFormPage',
@@ -366,6 +368,13 @@ const APP_ROUTES: AppRoute[] = [
     render: (viewer) => <IncidentReportRoute viewer={viewer} />,
   },
   {
+    path: paths.studentImport,
+    title: 'Import Student List',
+    roles: ['staff'],
+    nav: 'students',
+    render: (viewer) => <StudentImportPage viewer={viewer} />,
+  },
+  {
     path: paths.inventory,
     title: 'Inventory',
     roles: ['staff'],
@@ -378,6 +387,13 @@ const APP_ROUTES: AppRoute[] = [
     roles: ['staff'],
     nav: 'inventory',
     render: () => <InventoryFormPage />,
+  },
+  {
+    path: paths.inventoryHistory,
+    title: 'Inventory Usage History',
+    roles: ['staff'],
+    nav: 'inventory',
+    render: () => <InventoryHistoryPage />,
   },
   {
     path: '/inventory/dispense',

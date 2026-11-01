@@ -212,10 +212,16 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
             </p>
           </div>
           {viewer.role === 'staff' && (
-            <Link className={buttonClassName({ variant: 'primary' })} to={paths.studentNew}>
-              <Icon name="plus" />
-              Add Student
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link className={buttonClassName({ variant: 'secondary' })} to={paths.studentImport}>
+                <Icon name="fileText" />
+                Import List
+              </Link>
+              <Link className={buttonClassName({ variant: 'primary' })} to={paths.studentNew}>
+                <Icon name="plus" />
+                Add Student
+              </Link>
+            </div>
           )}
         </div>
       </Card>
