@@ -1,8 +1,9 @@
 import { renderWithRouter } from '../../test/renderWithRouter'
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { getRecordedAuditEntries, listFollowUps, resetMockDb } from '../../lib/mock-db'
+import { getMockToday, getRecordedAuditEntries, listFollowUps, recordVisit, resetMockDb } from '../../lib/mock-db'
+import { addDays } from '../../lib/dates'
 import { selectOption } from '../../test/selectOption'
 import { FollowUpListPage } from './FollowUpListPage'
 import { maskLrn } from '../../lib/lrn'
@@ -18,8 +19,8 @@ describe('FollowUpListPage', () => {
   async function renderList() {
     const user = userEvent.setup()
     renderWithRouter(<FollowUpListPage />)
-    const firstFollowUp = (await listFollowUps()).find((f) => f.patient.kind === 'student')!
-    expect((await screen.findAllByText(maskLrn(firstFollowUp.patient.number))).length).toBeGreaterThan(0)
+    const [firstOnPage] = (await listFollowUps({ status: 'pending' })).filter((f) => f.patient.kind === 'student')
+    expect((await screen.findAllByText(maskLrn(firstOnPage.patient.number))).length).toBeGreaterThan(0)
     return user
   }
 
@@ -72,12 +73,33 @@ describe('FollowUpListPage', () => {
     expect(getRecordedAuditEntries()).toEqual([])
     await user.type(within(confirm).getByRole('textbox', { name: /reason/i }), 'Parent asked to reschedule')
     await user.click(within(confirm).getByRole('button', { name: confirmLabel }))
-    // Then "Set a new date" is offered; declining it creates nothing.
-    await user.click(within(await screen.findByRole('dialog', { name: 'Set a new date?' })).getByRole('button', { name: 'Not now' }))
+    // Missed then offers "Set a new date"; declining it creates nothing. Cancelled closes for good.
+    if (status === 'missed') await user.click(within(await screen.findByRole('dialog', { name: 'Set a new date?' })).getByRole('button', { name: 'Not now' }))
+    else await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(getRecordedAuditEntries()).toEqual([followUpUpdate])
     expect(await listFollowUps({ status: status as 'missed' | 'cancelled' })).toEqual(
       expect.arrayContaining([expect.objectContaining({ status, statusReason: 'Parent asked to reschedule' })]),
     )
     expect(await listFollowUps({ status: 'pending' })).toHaveLength(pendingBefore - 1)
+  })
+
+  it('pages the list', async () => {
+    await renderList()
+    expect(screen.getByRole('button', { name: 'Next' })).toBeInTheDocument()
+    expect(screen.getByText(/^Showing 1–/)).toBeInTheDocument()
+  })
+
+  it('offers "Set a new date" on a row that reads as Missed', async () => {
+    const reason = 'Recheck after the auto-close'
+    await recordVisit({ studentId: 'student-0001', complaint: 'Fever', treatment: '', disposition: 'returned_to_class', followUp: { followUpDate: addDays(getMockToday(), -8), reason, notes: null } })
+    const pendingBefore = (await listFollowUps({ status: 'pending' })).length
+    const user = await renderList()
+    await selectOption(user, screen.getByRole('button', { name: /^Status/ }), 'Missed')
+    const row = (await screen.findByText(/No response \(closed automatically/, { exact: false })).closest('tr')!
+    await user.click(within(row).getByRole('button', { name: 'Set a new date' }))
+    await user.click(within(await screen.findByRole('dialog', { name: 'Set a new date?' })).getByRole('button', { name: 'Set new date' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(await listFollowUps({ status: 'pending' })).toHaveLength(pendingBefore + 1)
+    await waitFor(() => expect(row).not.toBeInTheDocument())
   })
 })

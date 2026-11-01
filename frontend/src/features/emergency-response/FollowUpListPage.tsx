@@ -5,6 +5,7 @@ import {
   BackButton,
   Badge,
   Button,
+  Pagination,
   Card,
   CardBody,
   CardHeader,
@@ -20,6 +21,7 @@ import {
   type DataTableColumn,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { paths } from '../../routes/paths'
 import { getMockSessionUser } from '../../lib/mock-db'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
@@ -74,12 +76,18 @@ export function FollowUpListPage() {
   const [statusFilter, setStatusFilter] = useState<'' | FollowUpStatus>('')
   const [statusOverrides, setStatusOverrides] = useState<Record<string, FollowUpStatus>>({})
   const [confirming, setConfirming] = useState<null | { item: FollowUpRow; status: 'missed' | 'cancelled' }>(null)
-  // Panel review FU-4: Missed and Cancelled need a reason, then offer "Set a new date".
+  // Panel review FU-4: Missed and Cancelled need a reason; Missed then offers "Set a new date".
   const [reason, setReason] = useState('')
   const [reasonError, setReasonError] = useState('')
   const [rescheduling, setRescheduling] = useState<null | FollowUpRow>(null)
   const [newDate, setNewDate] = useState('')
   const [scheduling, setScheduling] = useState(false)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = usePageSize()
+  const changePageSize = (size: PageSize) => {
+    setPageSize(size)
+    setPage(1)
+  }
   const [sort, setSort] = useState<TableSortState<FollowUpSortKey>>({ key: 'status', direction: 'descending' })
   const { data, status, reload } = useAsyncData(statusFilter, () => fetchFollowUps(statusFilter))
   const [patientFilter, setPatientFilter] = usePatientFilter()
@@ -89,7 +97,7 @@ export function FollowUpListPage() {
     return (
       <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
         {back}
-        <ErrorState title="Unable to load follow-ups." onRetry={reload} />
+        <ErrorState asPageTitle title="Unable to load follow-ups." onRetry={reload} />
       </div>
     )
   if (!data)
@@ -115,16 +123,20 @@ export function FollowUpListPage() {
     if (key === 'due') return item.followUpDate
     return item.status
   })
+  const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize))
+  const currentPage = Math.min(page, pageCount)
+  const pageRows = sortedRows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   async function applyStatus(item: FollowUpRow, next: FollowUpStatus, why?: string) {
     // Optimistic: the row flips immediately; the data layer writes the status and its audit entry.
     setStatusOverrides((current) => ({ ...current, [item.id]: next }))
     setConfirming(null)
     await updateFollowUpStatus(item.id, next, getMockSessionUser(), why)
-    if (next === 'missed' || next === 'cancelled') {
-      reload()
-      setNewDate(addDays(todayISO(), 1))
-      setRescheduling(item)
-    }
+    if (next === 'missed' || next === 'cancelled') reload()
+    if (next === 'missed') offerNewDate(item)
+  }
+  function offerNewDate(item: FollowUpRow) {
+    setNewDate(addDays(todayISO(), 1))
+    setRescheduling(item)
   }
   function confirmClosing() {
     if (!confirming) return
@@ -159,7 +171,7 @@ export function FollowUpListPage() {
     {
       key: 'student',
       header: 'LRN or Staff No.',
-      width: '11rem',
+      width: '14rem',
       rowHeader: true,
       sort: sortColumn('student', 'LRN or Staff No.'),
       cell: (item) => <PatientNumber patient={item.patient} />,
@@ -209,6 +221,11 @@ export function FollowUpListPage() {
             options={OUTCOME_OPTIONS}
             onChange={(value) => chooseStatus(item, value)}
           />
+        ) : item.status === 'missed' ? (
+          // Also reaches a follow-up that reads as Missed (ADR-051), which never saw the dialog.
+          <Button variant="neutral" size="sm" onClick={() => offerNewDate(item)}>
+            Set a new date
+          </Button>
         ) : (
           '—'
         ),
@@ -231,7 +248,15 @@ export function FollowUpListPage() {
           icon={<Icon name="calendarClock" />}
           actions={
             <div className="flex flex-wrap items-center gap-3">
-            <PatientFilterSelect value={patientFilter} onChange={setPatientFilter} />
+            <PatientFilterSelect
+                value={patientFilter}
+                onChange={(next) => {
+                  setPatientFilter(next)
+                  setPage(1)
+                }}
+                className="w-full sm:w-auto"
+                inline
+              />
             <Select
               className="w-full sm:w-auto"
               label="Status"
@@ -245,21 +270,35 @@ export function FollowUpListPage() {
               ]}
               placeholder="All statuses"
               clearable
-              onChange={(value) => setStatusFilter(value as '' | FollowUpStatus)}
+              onChange={(value) => {
+                setStatusFilter(value as '' | FollowUpStatus)
+                setPage(1)
+              }}
             />
             </div>
           }
         />
         <CardBody>
           {rows.length ? (
-            <DataTable
-              caption="Follow-up tasks"
-              columns={columns}
-              rows={sortedRows}
-              rowKey={(item) => item.id}
-              fixedLayout
-              minTableWidth="60rem"
-            />
+            <>
+              <DataTable
+                caption="Follow-up tasks"
+                columns={columns}
+                rows={pageRows}
+                rowKey={(item) => item.id}
+                fixedLayout
+                minTableWidth="60rem"
+              />
+              <Pagination
+                page={currentPage}
+                pageCount={pageCount}
+                total={sortedRows.length}
+                pageSize={pageSize}
+                onPageSizeChange={changePageSize}
+                itemLabel="follow-ups"
+                onPageChange={setPage}
+              />
+            </>
           ) : (
             <EmptyState
               icon="calendarClock"
