@@ -61,9 +61,9 @@ function sameText(a: string, b: string) {
 }
 
 /** An existing item with the same name and unit, if any (never the item being edited). A warning only. */
-export function findDuplicateItem(items: InventoryItemView[], name: string, unit: string, exceptId?: string): InventoryItemView | null {
-  if (!name.trim() || !unit.trim()) return null
-  return items.find((item) => item.id !== exceptId && sameText(item.name, name) && sameText(item.unit, unit)) ?? null
+export function findDuplicateItem(items: InventoryItemView[], name: string, exceptId?: string): InventoryItemView | null {
+  if (!name.trim()) return null
+  return items.find((item) => item.id !== exceptId && sameText(item.name, name)) ?? null
 }
 
 /** The units already in use, for the free-text unit field's suggestions (D9). */
