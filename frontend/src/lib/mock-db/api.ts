@@ -1062,7 +1062,7 @@ export function getPersonnelHistory(personnelId: string, limit = 8): Promise<Per
 
 export type PersonnelInput = Pick<
   Personnel,
-  'fullName' | 'type' | 'department' | 'contactInfo' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
+  'fullName' | 'sex' | 'type' | 'department' | 'contactInfo' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
 >
 
 /** Staff records belong to the School Clinician (ADR-043 item 9). */
@@ -1084,7 +1084,7 @@ function nextStaffNumber(state: DbState): string {
 
 /**
  * Create or update a staff record. The Staff No. is assigned on create and never edited. No field
- * beyond the name and type is required: emergency contacts, allergies and conditions are optional (D5, D6).
+ * beyond the name, sex and type is required: emergency contacts, allergies and conditions are optional (D5, D6).
  */
 export function savePersonnel(
   input: PersonnelInput,
@@ -1095,12 +1095,14 @@ export function savePersonnel(
     requireClinician(by)
     const fullName = input.fullName.trim()
     if (!fullName) throw new Error('Enter the full name.')
+    if (input.sex !== 'female' && input.sex !== 'male') throw new Error('Choose the sex.')
     if (!s.config.personnelTypes.includes(input.type)) throw new Error('Choose the staff type.')
     const department = input.department?.trim() || null
     if (department && department.length > PERSONNEL_DEPARTMENT_MAX)
       throw new Error(`Department or role can be at most ${PERSONNEL_DEPARTMENT_MAX} characters.`)
     const fields = {
       fullName,
+      sex: input.sex,
       type: input.type,
       department,
       contactInfo: input.contactInfo.trim(),
@@ -2477,8 +2479,8 @@ export interface MonthlyReportData {
   weeklyComplaints: { weeks: MonthWeek[]; rows: Array<{ complaint: string; counts: number[]; total: number }>; totals: number[] }
   /** The monthly inventory sheet (ADR-050, D17), computed from the stock movements. */
   inventory: MonthlyInventoryRow[]
-  /** The month's visits by sex (ADR-051): students only; staff patients have no sex field and are counted apart (ADR-043). */
-  visitsBySex: { female: number; male: number; staff: number }
+  /** The month's visits by sex (ADR-051, ADR-063), with students and staff as the two parts. */
+  visitsBySex: { female: { students: number; staff: number }; male: { students: number; staff: number }; noSexRecorded: number }
   /** The active Admin/Principal account's name for the "Reviewed by" signature line, or null if none. */
   principalName: string | null
 }
@@ -2583,14 +2585,18 @@ export function getMonthlyReport(month: string): Promise<MonthlyReportData> {
         const visits = countedVisits(s).filter((v) => v.dateTime.startsWith(month))
         const groups = complaintCounts(s, visits)
         const students = studentsById(s)
-        const sexOf = (v: Visit) => (v.studentId ? (students.get(v.studentId)?.sex ?? 'female') : null)
+        const personnel = new Map(s.personnel.map((p) => [p.id, p]))
+        const parts = (sex: StudentSex) => ({
+          students: visits.filter((v) => v.studentId && (students.get(v.studentId)?.sex ?? 'female') === sex).length,
+          staff: visits.filter((v) => v.personnelId && personnel.get(v.personnelId)?.sex === sex).length,
+        })
         return {
           complaintCounts: groups,
           weeklyComplaints: weeklyComplaints(s, month, visits, groups),
           visitsBySex: {
-            female: visits.filter((v) => sexOf(v) === 'female').length,
-            male: visits.filter((v) => sexOf(v) === 'male').length,
-            staff: visits.filter((v) => v.personnelId).length,
+            female: parts('female'),
+            male: parts('male'),
+            noSexRecorded: visits.filter((v) => v.personnelId && !personnel.get(v.personnelId)?.sex).length,
           },
         }
       })(),

@@ -50,7 +50,7 @@ export function buildDashboardSummary(
   const visitsInRange = counted.filter((v) => isWithin(dateOf(v.dateTime), from, to))
   const incidentsInRange = state.incidents.filter((i) => isWithin(dateOf(i.time), from, to))
   const students = studentsById(state)
-  // Trends by sex and grade read the student, so staff records drop out here (ADR-043 item 8).
+  // Complaint and grade trends read the student, so staff records drop out here (ADR-043 item 8).
   const trendEvents = [
     ...counted.flatMap((v) => {
       const student = students.get(v.studentId ?? '')
@@ -62,6 +62,12 @@ export function buildDashboardSummary(
     }),
   ]
   const inRangeEvents = trendEvents.filter((event) => isWithin(event.date, from, to))
+  // The by-sex count alone takes staff too (ADR-063). The Admin's `state` already leaves staff incidents out (ADR-053).
+  const staffSex = new Map(state.personnel.map((p) => [p.id, p.sex]))
+  const staffEvents = [
+    ...visitsInRange.flatMap((v) => (v.personnelId ? [{ sex: staffSex.get(v.personnelId) ?? null, gradeLevel: null, kind: 'visit' as const, staff: true }] : [])),
+    ...incidentsInRange.flatMap((i) => (i.personnelId ? [{ sex: staffSex.get(i.personnelId) ?? null, gradeLevel: null, kind: 'incident' as const, staff: true }] : [])),
+  ]
   const filteredTrendEvents = trendEvents.filter((event) =>
     (!query.sex || event.sex === query.sex) && (!query.gradeLevel || event.gradeLevel === query.gradeLevel),
   )
@@ -103,7 +109,7 @@ export function buildDashboardSummary(
     backupAlert: null,
     inventoryAlerts: buildInventoryAlerts(state),
     complaintTrends: buildComplaintTrends(filteredTrendEvents, query.range, config, state.frontendOnly.calendarEvents),
-    demographics: buildDemographicAnalysis(inRangeEvents, query),
+    demographics: buildDemographicAnalysis([...inRangeEvents, ...staffEvents], query),
   }
 }
 
@@ -303,7 +309,7 @@ export function buildComplaintTrends(
   }
 }
 
-type DemographicEvent = { sex: 'male' | 'female'; gradeLevel: string; kind: 'visit' | 'incident' }
+type DemographicEvent = { sex: 'male' | 'female' | null; gradeLevel: string | null; kind: 'visit' | 'incident'; staff?: boolean }
 
 function demographicCounts(
   events: DemographicEvent[],
@@ -312,7 +318,7 @@ function demographicCounts(
 ): DemographicAnalysis['sex'] {
   const total = events.length
   return labels.map(([value, label]) => {
-    const group = events.filter((event) => event[key] === value)
+    const group = events.filter((event) => (event[key] ?? 'none') === value)
     const visits = group.filter((event) => event.kind === 'visit').length
     return {
       key: value,
@@ -332,10 +338,15 @@ export function buildDemographicAnalysis(
 ): DemographicAnalysis {
   const sexEvents = inRangeEvents.filter((event) => !query.gradeLevel || event.gradeLevel === query.gradeLevel)
   const gradeEvents = inRangeEvents.filter((event) => !query.sex || event.sex === query.sex)
-  const grades = [...new Set(inRangeEvents.map((event) => event.gradeLevel))].sort(compareGradeLevels)
+  const grades = [...new Set(inRangeEvents.flatMap((event) => event.gradeLevel ?? []))].sort(compareGradeLevels)
+  const sexLabels: Array<[string, string]> = [['female', 'Female'], ['male', 'Male']]
+  if (sexEvents.some((event) => !event.sex)) sexLabels.push(['none', 'No sex recorded'])
   return {
-    sex: demographicCounts(sexEvents, 'sex', [['female', 'Female'], ['male', 'Male']]),
-    gradeLevel: demographicCounts(gradeEvents, 'gradeLevel', grades.map((grade) => [grade, grade])),
+    sex: demographicCounts(sexEvents, 'sex', sexLabels).map((row) => {
+      const staff = sexEvents.filter((event) => event.staff && (event.sex ?? 'none') === row.key).length
+      return { ...row, staff, students: row.count - staff }
+    }),
+    gradeLevel: demographicCounts(gradeEvents.filter((event) => event.gradeLevel), 'gradeLevel', grades.map((grade) => [grade, grade])),
   }
 }
 

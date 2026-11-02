@@ -1,7 +1,7 @@
 import '../../../components/charts/chartSetup'
 import type { Chart, ChartOptions, Plugin, ScriptableContext } from 'chart.js'
 import { useId, useMemo, useState, type ReactNode } from 'react'
-import { Bar, Doughnut, Line } from 'react-chartjs-2'
+import { Bar, Line } from 'react-chartjs-2'
 import {
   Card,
   CARD_SURFACE,
@@ -116,7 +116,7 @@ const clusterMarker: Plugin<'line'> = {
       ctx.closePath()
       ctx.fillStyle = colorToken('warning')
       ctx.fill()
-      ctx.fillStyle = colorToken('white')
+      ctx.fillStyle = colorToken('text-primary')
       ctx.font = 'bold 10px system-ui'
       ctx.textAlign = 'center'
       ctx.fillText('!', x, top + 11.5)
@@ -431,7 +431,7 @@ export function TrendTable({ trends }: { trends: Trends }) {
         cell: (r: ComplaintSeries) =>
           r.clusterBuckets.includes(sourceIndex) ? (
             <span className="inline-flex items-center gap-1 font-semibold">
-              <Icon name="alertTriangle" size={12} className="text-warning" />
+              <Icon name="alertTriangle" size={12} className="text-warning-text" />
               {r.counts[sourceIndex]}
               <span className="sr-only"> (possible symptom cluster)</span>
             </span>
@@ -565,7 +565,7 @@ function VisitsTrendCard({
             {/* Weekday bars can't mark the day a cluster fell on, so the note carries it on month ranges. */}
             {clusters.length > 0 && (
               <div role="note" className="flex items-start gap-2 text-xs text-text-primary">
-                <Icon name="alertTriangle" size={14} className="mt-0.5 shrink-0 text-warning" />
+                <Icon name="alertTriangle" size={14} className="mt-0.5 shrink-0 text-warning-text" />
                 <p>
                   <span className="font-semibold">Possible symptom cluster: </span>
                   {clusters
@@ -615,7 +615,7 @@ function CommonComplaintsCard({ trends, clusters, reportMonth }: { trends: Trend
                       <span className="flex min-w-0 items-center gap-1.5 text-text-primary">
                         <span className="truncate">{s.complaint}</span>
                         {cluster && (
-                          <Icon name="alertTriangle" size={14} className="shrink-0 text-warning" />
+                          <Icon name="alertTriangle" size={14} className="shrink-0 text-warning-text" />
                         )}
                       </span>
                       <span aria-hidden="true" className="h-3 rounded-full bg-surface">
@@ -683,7 +683,7 @@ function casesText(count: number) {
 }
 
 function countsText(rows: DemographicAnalysis['sex']) {
-  return rows.map((row) => `${row.label} ${row.count} (${percent(row.share)})`).join('; ')
+  return rows.map((row) => `${row.label} ${row.count} (${percent(row.share)}): ${row.students ?? 0} students, ${row.staff ?? 0} staff`).join('; ')
 }
 
 function splitText(rows: DemographicAnalysis['gradeLevel']) {
@@ -704,11 +704,6 @@ function DemographicCharts({
     transitions: { active: { animation: { duration: prefersReducedMotion ? 0 : HOVER_MS, easing: 'easeInOutCubic' as const } } },
     tooltip: { enabled: false, external: (context: Parameters<typeof smoothTooltip>[0]) => smoothTooltip(context, HOVER_MS) },
   }
-  // The visible Female/Male labels carry the meaning; these documented colors make the datasets
-  // readily distinguishable without reusing status colors.
-  const sexColors = demographics.sex.map((row) =>
-    colorToken(row.key === 'female' ? 'chart-female' : 'chart-male'),
-  )
   const tick = colorToken('text-secondary')
   // Sir Rey (October 25, 2026): one card with a switch instead of two charts side by side.
   const [groupBy, setGroupBy] = useState<'sex' | 'grade'>('sex')
@@ -719,8 +714,8 @@ function DemographicCharts({
           // The title keeps at least 14rem, so on a phone "Filter by" drops below it instead of squeezing it.
           className="[&>div:first-child]:basis-56"
           title={`Visits and incidents by ${groupBy === 'sex' ? 'sex' : 'grade level'}`}
-          // Sex and grade level are a student's (ADR-043, D14), so staff records are left out and the caption says so.
-          description="Students' visits and incidents in the selected period; aggregated only. Staff are not included."
+          // Sex counts everyone with the split shown (ADR-063); grade level is a student's (ADR-043).
+          description={groupBy === 'sex' ? 'Students and staff in the selected period, shown as the two parts of each bar; aggregated only.' : "Students' visits and incidents in the selected period; aggregated only. Staff are not included."}
           icon={<Icon name="barChart" />}
           actions={
             // A visible label beside the switch, so it isn't mistaken for the chart's legend (Zean, October 25, 2026).
@@ -743,20 +738,23 @@ function DemographicCharts({
         <CardBody className="flex flex-col gap-3">
           {groupBy === 'sex' ? (
             <>
-              {/* Legend clicks would hide a segment while its count stays on the button below; filtering is the buttons' job. */}
-              <div className="relative h-56 lg:h-72"><Doughnut data={{ labels: demographics.sex.map((row) => row.label), datasets: [{ data: demographics.sex.map((row) => row.count), backgroundColor: sexColors, borderColor: colorToken('background'), borderWidth: 2 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick } } } }} aria-label={`Visits and incidents by Sex: ${countsText(demographics.sex)}.`} role="img" /></div>
+              {/* Legend clicks would hide a part while its count stays on the button below; filtering is the buttons' job. */}
+              <div className="relative h-56 lg:h-72"><Bar data={{ labels: demographics.sex.map((row) => row.label), datasets: [{ label: 'Students', data: demographics.sex.map((row) => row.students ?? 0), backgroundColor: colorToken('brand-green-dark'), borderColor: colorToken('background'), borderWidth: 1 }, { label: 'Staff', data: demographics.sex.map((row) => row.staff ?? 0), backgroundColor: colorToken('text-secondary'), borderColor: colorToken('background'), borderWidth: 1 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, interaction: { mode: 'index', axis: 'x', intersect: false }, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick, boxWidth: 14 } } }, scales: { x: { stacked: true, grid: { display: false }, ticks: { color: tick } }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0, color: tick } } } }} aria-label={`Visits and incidents by Sex: ${countsText(demographics.sex)}.`} role="img" /></div>
               <div className={FILTER_ROW}>
-                {demographics.sex.map((row) => (
+                {demographics.sex.filter((row) => row.key !== 'none').map((row) => (
                   <button key={row.key} type="button" aria-pressed={filters.sex === row.key} onClick={() => onFiltersChange({ ...filters, sex: filters.sex === row.key ? null : row.key as 'female' | 'male' })} className={FILTER_BUTTON}>
-                    <span className="block font-semibold text-text-primary">{row.label}</span>{' '}<span className="text-text-secondary">{casesText(row.count)} · {percent(row.share)}</span>
+                    <span className="block font-semibold text-text-primary">{row.label}</span>{' '}<span className="text-text-secondary">{casesText(row.count)} · {percent(row.share)}</span>{' '}<span className="block text-xs text-text-secondary">Students {row.students ?? 0} · Staff {row.staff ?? 0}</span>
                   </button>
                 ))}
               </div>
+              {demographics.sex.filter((row) => row.key === 'none').map((row) => (
+                <p key={row.key} className="text-center text-xs text-text-secondary">{row.label}: {casesText(row.count)}</p>
+              ))}
             </>
           ) : (
             <>
-              {/* Stacked, so each bar's height is still the grade's total; incidents use the neutral, so the Trends view keeps to four hues (October 25, 2026). */}
-              <div className="relative h-56"><Bar data={{ labels: demographics.gradeLevel.map((row) => row.label), datasets: [{ label: 'Visits', data: demographics.gradeLevel.map((row) => row.visits), backgroundColor: colorToken('brand-green-dark'), borderColor: colorToken('background'), borderWidth: 1 }, { label: 'Incidents', data: demographics.gradeLevel.map((row) => row.incidents), backgroundColor: colorToken('text-secondary'), borderColor: colorToken('background'), borderWidth: 1 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, interaction: { mode: 'index', axis: 'x', intersect: false }, layout: { padding: { right: 2 } }, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick, boxWidth: 14 } } }, scales: { x: { stacked: true, grid: { drawTicks: false }, ticks: { color: tick } }, y: { stacked: true, beginAtZero: true, border: { color: colorToken('text-muted') }, ticks: { precision: 0, color: tick } }, yRight: { display: true, position: 'right', stacked: true, grid: { drawOnChartArea: false, drawTicks: false }, border: { display: true, color: colorToken('text-muted') }, ticks: { display: false } } } }} aria-label={`Visits and incidents by grade level: ${splitText(demographics.gradeLevel)}.`} role="img" /></div>
+              {/* Stacked, so each bar's height is still the grade's total; incidents are red, as everywhere (ADR-062). */}
+              <div className="relative h-56"><Bar data={{ labels: demographics.gradeLevel.map((row) => row.label), datasets: [{ label: 'Visits', data: demographics.gradeLevel.map((row) => row.visits), backgroundColor: colorToken('brand-green-dark'), borderColor: colorToken('background'), borderWidth: 1 }, { label: 'Incidents', data: demographics.gradeLevel.map((row) => row.incidents), backgroundColor: colorToken('error'), borderColor: colorToken('background'), borderWidth: 1 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, interaction: { mode: 'index', axis: 'x', intersect: false }, layout: { padding: { right: 2 } }, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick, boxWidth: 14 } } }, scales: { x: { stacked: true, grid: { drawTicks: false }, ticks: { color: tick } }, y: { stacked: true, beginAtZero: true, border: { color: colorToken('text-muted') }, ticks: { precision: 0, color: tick } }, yRight: { display: true, position: 'right', stacked: true, grid: { drawOnChartArea: false, drawTicks: false }, border: { display: true, color: colorToken('text-muted') }, ticks: { display: false } } } }} aria-label={`Visits and incidents by grade level: ${splitText(demographics.gradeLevel)}.`} role="img" /></div>
               <div className={FILTER_ROW}>
                 {demographics.gradeLevel.map((row) => (
                   <button key={row.key} type="button" aria-pressed={filters.gradeLevel === row.key} onClick={() => onFiltersChange({ ...filters, gradeLevel: filters.gradeLevel === row.key ? null : row.key })} className={FILTER_BUTTON}>
@@ -776,11 +774,11 @@ export function ComplaintTrends({ trends, demographics, filters, onFiltersChange
   const clusters = useMemo(() => findClusters(trends), [trends])
   return (
     <section aria-label="Trends" className="flex flex-col gap-4">
-      {demographics && filters && onFiltersChange && <DemographicCharts demographics={demographics} filters={filters} onFiltersChange={onFiltersChange} />}
       <div className={TRENDS_GRID}>
-        <VisitsTrendCard trends={trends} clusters={clusters} />
         <CommonComplaintsCard trends={trends} clusters={clusters} reportMonth={reportMonth} />
+        <VisitsTrendCard trends={trends} clusters={clusters} />
       </div>
+      {demographics && filters && onFiltersChange && <DemographicCharts demographics={demographics} filters={filters} onFiltersChange={onFiltersChange} />}
     </section>
   )
 }
@@ -796,28 +794,6 @@ const TRENDS_GRID = 'grid grid-cols-1 items-start gap-4 lg:grid-cols-3'
 export function ComplaintTrendsSkeleton() {
   return (
     <div aria-hidden="true" className="flex flex-col gap-4">
-      <div data-skeleton="demographics" className="grid grid-cols-1 gap-4">
-        {['Visits and incidents by sex'].map((title) => (
-          <div key={title} className={CARD_SURFACE}>
-            <div className="flex items-start gap-2.5 px-5 pt-5 pb-3">
-              <span className="mt-0.5 text-brand-green-dark">
-                <Icon name="barChart" />
-              </span>
-              <div className="flex flex-col gap-1.5">
-                <span className="text-base font-semibold text-text-primary">{title}</span>
-                <Skeleton className="h-3 w-56" />
-              </div>
-            </div>
-            <div className="flex flex-col gap-3 px-5 pb-5">
-              <Skeleton className="h-56" />
-              <div className="flex gap-2">
-                <Skeleton className="h-14 flex-1" />
-                <Skeleton className="h-14 flex-1" />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
       <div data-skeleton="complaint-trends" className={TRENDS_GRID}>
         <div data-skeleton="trend-chart" className={cn(CARD_SURFACE, 'lg:col-span-2')}>
           <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-5 pt-5 pb-3">
@@ -877,6 +853,28 @@ export function ComplaintTrendsSkeleton() {
             ))}
           </ol>
         </div>
+      </div>
+      <div data-skeleton="demographics" className="grid grid-cols-1 gap-4">
+        {['Visits and incidents by sex'].map((title) => (
+          <div key={title} className={CARD_SURFACE}>
+            <div className="flex items-start gap-2.5 px-5 pt-5 pb-3">
+              <span className="mt-0.5 text-brand-green-dark">
+                <Icon name="barChart" />
+              </span>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-base font-semibold text-text-primary">{title}</span>
+                <Skeleton className="h-3 w-56" />
+              </div>
+            </div>
+            <div className="flex flex-col gap-3 px-5 pb-5">
+              <Skeleton className="h-56" />
+              <div className="flex gap-2">
+                <Skeleton className="h-14 flex-1" />
+                <Skeleton className="h-14 flex-1" />
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

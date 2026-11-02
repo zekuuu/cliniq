@@ -37,6 +37,9 @@ export interface DemographicCount {
   visits: number
   incidents: number
   share: number
+  /** By-sex rows only: the two parts of `count` (ADR-063). */
+  students?: number
+  staff?: number
 }
 
 /** Aggregate visit/incident counts for the interactive Trends demographic controls. */

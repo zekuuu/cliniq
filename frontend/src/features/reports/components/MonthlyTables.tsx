@@ -104,13 +104,12 @@ export function InventorySheetPrint({ rows }: { rows: MonthlyInventoryRow[] }) {
 
 type BySex = MonthlyReportData['visitsBySex']
 
-/** Visits by sex, as the Dashboard's Trends tables word it (ADR-045, ADR-051); staff patients apart. */
-function sexRows(bySex: BySex) {
+/** Visits by sex, as the Dashboard's Trends tables word it (ADR-045, ADR-051), students and staff as the two parts (ADR-063). */
+function sexRows({ female, male, noSexRecorded }: BySex) {
   return [
-    { label: 'Female', count: bySex.female },
-    { label: 'Male', count: bySex.male },
-    { label: 'All students', count: bySex.female + bySex.male },
-    { label: 'Staff (no sex recorded)', count: bySex.staff },
+    { label: 'Female', count: female.students + female.staff, parts: female },
+    { label: 'Male', count: male.students + male.staff, parts: male },
+    ...(noSexRecorded ? [{ label: 'No sex recorded', count: noSexRecorded, parts: { students: 0, staff: noSexRecorded } }] : []),
   ]
 }
 
@@ -121,6 +120,7 @@ export function VisitsBySexSummary({ bySex }: { bySex: BySex }) {
         <div key={row.label} className="rounded-md border border-border bg-surface px-4 py-3">
           <dt className="text-xs font-semibold text-text-secondary">{row.label}</dt>
           <dd className="mt-1 text-xl font-bold text-text-primary tabular-nums">{row.count}</dd>
+          <dd className="text-xs text-text-secondary">Students {row.parts.students} · Staff {row.parts.staff}</dd>
         </div>
       ))}
     </dl>
@@ -135,7 +135,9 @@ export function VisitsBySexPrint({ bySex }: { bySex: BySex }) {
       rowKey={(row) => row.label}
       empty=""
       columns={[
-        { header: 'Group', cell: (row) => row.label },
+        { header: 'Sex', cell: (row) => row.label },
+        { header: 'Students', width: '20%', align: 'right', cell: (row) => row.parts.students },
+        { header: 'Staff', width: '20%', align: 'right', cell: (row) => row.parts.staff },
         { header: 'Visits', width: '20%', align: 'right', cell: (row) => row.count },
       ]}
     />
