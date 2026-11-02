@@ -31,7 +31,7 @@ export function Textarea({
   const errorId = error ? `${fieldId}-error` : undefined
   return (
     <div className={cn('flex flex-col gap-1', className)}>
-      <label htmlFor={fieldId} className={hideLabel ? 'sr-only' : 'text-xs font-semibold text-text-primary'}>
+      <label htmlFor={fieldId} className={hideLabel ? 'sr-only' : 'text-sm font-semibold text-text-primary'}>
         {label}
         {required && (
           <span className="text-error" aria-hidden="true">

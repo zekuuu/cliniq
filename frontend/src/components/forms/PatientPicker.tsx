@@ -62,7 +62,7 @@ export function PatientPicker({
   if (selected && onClear) {
     return (
       <div className="flex flex-col gap-1">
-        <p className="text-xs font-semibold text-text-primary">{label}</p>
+        <p className="text-sm font-semibold text-text-primary">{label}</p>
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-surface px-3 py-2">
           <p className="flex flex-wrap items-center gap-x-1 text-sm text-text-primary">
             <span className="font-semibold">{selected.fullName}</span>

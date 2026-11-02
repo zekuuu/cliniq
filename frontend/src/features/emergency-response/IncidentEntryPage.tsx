@@ -133,7 +133,7 @@ function TextareaField({
   const errorId = error ? `${id}-error` : undefined
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-semibold text-text-primary">
+      <label htmlFor={id} className="text-sm font-semibold text-text-primary">
         {label}
         {required && <span className="text-error"> *</span>}
       </label>
@@ -199,7 +199,7 @@ function ReadingsFields({
 }) {
   return (
     <fieldset className="flex flex-col gap-3">
-      <legend className="mb-1 text-xs font-semibold text-text-primary">
+      <legend className="mb-1 text-sm font-semibold text-text-primary">
         Readings <span className="font-normal text-text-secondary">(optional; take what the case needs)</span>
       </legend>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

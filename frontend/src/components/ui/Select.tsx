@@ -184,7 +184,7 @@ export function Select({
       <label
         id={labelId}
         htmlFor={selectId}
-        className={cn('text-xs font-semibold text-text-primary', inline && 'sm:shrink-0', hideLabel && 'sr-only')}
+        className={cn('text-sm font-semibold text-text-primary', inline && 'sm:shrink-0', hideLabel && 'sr-only')}
       >
         {label}
         {required && (

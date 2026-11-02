@@ -105,7 +105,7 @@ function TextareaField({
   const hintId = hint ? `${id}-hint` : undefined
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-semibold text-text-primary">
+      <label htmlFor={id} className="text-sm font-semibold text-text-primary">
         {label} {required && <span className="text-error">*</span>}
       </label>
       <textarea
@@ -517,7 +517,7 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                   }}
                 />
                 <div>
-                  <p className="mb-1 text-xs font-semibold text-text-primary">Disposition</p>
+                  <p className="mb-1 text-sm font-semibold text-text-primary">Disposition</p>
                   <SegmentedControl
                     label="Disposition"
                     // Four options: two by two on a phone, one row from sm up (panel review VS-1 added Resting).
