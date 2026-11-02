@@ -6,16 +6,18 @@ import { Icon, type IconName } from '../icons/Icon'
  * Badge: always icon + label, never color alone (Design-System.md, Accessibility / Color System).
  *
  * Tone → token mapping (every combination is contrast-checked; see src/index.css):
- * - solid info/success/warning/error: semantic fill + white text (4.60–5.73:1, all pass for
- *   small text). Use when the state needs to be noticed at a glance.
+ * - solid info/success/error: semantic fill + white text (4.60–5.73:1, all pass for small text);
+ *   solid warning is orange with text-primary (6.65:1). Use when the state needs to be noticed at a glance.
  * - soft (default for statuses): a 10% tint of the semantic color, icon in the semantic color, and a
  *   text-primary label (≥ 12:1). This is the reference mockup's pale-pill look. The tone's own color is
  *   never used for the small label, because tinted-on-tint text drops below 4.5:1.
  * - outline: white fill, semantic border + icon, text-primary label.
  * - neutral: surface fill, text-secondary (5.68:1).
  * - accent: brand-yellow fill + text-primary (13.49:1). Brand highlight, not a status.
+ * - unfinished / letter: one meaning each (ADR-062), an unfinished incident record and a pending
+ *   excuse letter.
  */
-export type BadgeTone = 'neutral' | 'info' | 'success' | 'warning' | 'error' | 'accent'
+export type BadgeTone = 'neutral' | 'info' | 'success' | 'warning' | 'error' | 'accent' | 'unfinished' | 'letter'
 export type BadgeVariant = 'solid' | 'soft' | 'outline'
 
 const defaultIcons: Partial<Record<BadgeTone, IconName>> = {
@@ -23,33 +25,41 @@ const defaultIcons: Partial<Record<BadgeTone, IconName>> = {
   success: 'checkCircle',
   warning: 'alertTriangle',
   error: 'alertOctagon',
+  unfinished: 'alertTriangle',
+  letter: 'clock',
 }
 
 const solidClasses: Record<BadgeTone, string> = {
   neutral: 'bg-surface text-text-secondary border-border',
   info: 'bg-info text-white border-info',
   success: 'bg-success text-white border-success',
-  warning: 'bg-warning text-white border-warning',
+  warning: 'bg-warning text-text-primary border-warning',
   error: 'bg-error text-white border-error',
   accent: 'bg-brand-yellow text-text-primary border-brand-yellow-dark',
+  unfinished: 'bg-unfinished text-text-primary border-unfinished',
+  letter: 'bg-letter text-text-primary border-letter',
 }
 
 const softClasses: Record<BadgeTone, string> = {
   neutral: 'bg-surface text-text-secondary',
   info: 'bg-info/10 text-text-primary',
   success: 'bg-success/10 text-text-primary',
-  warning: 'bg-warning/10 text-text-primary',
+  warning: 'bg-warning-fill text-text-primary',
   error: 'bg-error/10 text-text-primary',
   accent: 'bg-brand-yellow/40 text-text-primary',
+  unfinished: 'bg-unfinished-fill text-text-primary',
+  letter: 'bg-letter-fill text-text-primary',
 }
 
 const outlineIconClasses: Record<BadgeTone, string> = {
   neutral: 'text-text-secondary',
   info: 'text-info',
   success: 'text-success',
-  warning: 'text-warning',
+  warning: 'text-warning-text',
   error: 'text-error',
   accent: 'text-text-primary',
+  unfinished: 'text-unfinished-text',
+  letter: 'text-letter-text',
 }
 
 const outlineBorderClasses: Record<BadgeTone, string> = {
@@ -59,6 +69,8 @@ const outlineBorderClasses: Record<BadgeTone, string> = {
   warning: 'border-warning',
   error: 'border-error',
   accent: 'border-brand-yellow-dark',
+  unfinished: 'border-unfinished',
+  letter: 'border-letter',
 }
 
 export interface BadgeProps {

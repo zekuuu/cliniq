@@ -10,10 +10,12 @@
  * that isn't a documented token fails to compile instead of slipping in unnoticed.
  *
  * Contrast rules (Design-System.md, "Contrast rules, stated plainly"):
- * - Small white text ONLY on brand-green-dark, success, warning, error, info.
+ * - Small white text ONLY on brand-green-dark, success, error, info. Solid warning orange takes text-primary.
  * - brand-green + white is for large text / non-text UI only (3.74:1). Button labels are small text:
  *   primary buttons are filled brand-green-dark.
- * - brand-green-light, brand-yellow(-dark), success-light, warning-light always take text-primary.
+ * - brand-green-light, brand-yellow(-dark), success-light always take text-primary.
+ * - Semantic colours (ADR-062): the bare token is the accent (bar, border, chart) and is never text;
+ *   `-fill` is the card tint; `-text` is the words and icons, 4.5:1 or better on its fill and on white.
  * - text-muted is 2.68:1 on white: use it for disabled/decorative only, never readable info text.
  */
 @theme static {
@@ -37,13 +39,32 @@
 
   --color-success: #20753a;
   --color-success-light: #2e9e4f;
-  --color-warning: #a85f00;
-  --color-warning-light: #ed8b00;
+  --color-warning: #e9882f;
+  --color-warning-fill: #f6efe6;
+  --color-warning-text: #9a4a00;
   --color-error: #d32f2f;
+  --color-error-fill: #fbeaea;
+  --color-error-text: #b71c1c;
   --color-info: #1976d2;
-  /* Demographic-chart datasets: Female and Male. Labels remain visible; color is supplementary. */
-  --color-chart-female: #c74375;
-  --color-chart-male: #3d7cbc;
+  --color-info-fill: #e8f1fa;
+  --color-info-text: #0d47a1;
+  --color-brand-green-fill: #e6f2e9;
+  /* Neutral-warm: a holiday day in the yearly calendar, apart from the green visit counts. */
+  --color-holiday: #efe3cf;
+  /* One meaning each (ADR-062): pending excuse letters, follow-ups to review, unfinished incident
+     records, active students. */
+  --color-letter: #f7d041;
+  --color-letter-fill: #fbfae8;
+  --color-letter-text: #7a5c00;
+  --color-follow-up: #976efe;
+  --color-follow-up-fill: #f4e8fb;
+  --color-follow-up-text: #5b2fc9;
+  --color-unfinished: #e95e90;
+  --color-unfinished-fill: #fbe8f4;
+  --color-unfinished-text: #b3185a;
+  --color-active: #0ccc6a;
+  --color-active-fill: #e8fbf4;
+  --color-active-text: #0a7a41;
 
   --font-sans:
     'Inter Variable', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
