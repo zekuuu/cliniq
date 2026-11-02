@@ -2,6 +2,8 @@
 
 > **STATUS: PROPOSED v1. NOT FINAL.** Drafted Friday, October 09, 2026 — 00:29 PHT; updated 02:11 PHT. This is a design for the team to review, **not** an accepted decision and **not** a licence to start migrations. Tables, columns and rules can still change once the open decisions in section 11 are answered. After the team reviews it, record the outcome as an ADR and change this banner to say which version was approved. Until then the old guidance still holds: do not build the backend schema from the frontend entity list, and do not treat anything here as settled.
 >
+> **Updated Sunday, November 1, 2026 — 22:36 PHT:** `personnel.sex` added by [ADR-063](../../06-Decisions/ADR-063-Staff-Patients-Record-Sex.md). Not yet loaded into MariaDB.
+>
 > **Updated to the decisions up to ADR-056 on Saturday, October 31, 2026 — 20:28 PHT.** Still a proposed draft, not final or approved. Choices no decision settles are in [`ERD-Review.md`](./ERD-Review.md); no migration, seeder or model with columns is built from this (ADR-056).
 
 This file replaces the old "TBA" placeholder. For the wider readiness picture (API contract, auth, backups, pinned versions and so on) see `04-Development/Backend-Readiness-Checklist.md`.
@@ -192,6 +194,7 @@ erDiagram
         bigint id PK
         varchar staff_number UK "STF-0001, assigned by CLINIQ"
         varchar full_name
+        varchar sex "female or male (ADR-063)"
         varchar type "Teacher, Non-teaching staff, Utility worker, Other"
         varchar department
         varchar contact_number "staff keep theirs (ADR-054)"

@@ -57,7 +57,7 @@ No role can view information for a student they have not specifically looked up 
 
 Most of the information CLINIQ holds is about students who are minors. It is collected and used only for the clinic-care and safety purposes described above, is restricted to the roles described in Section 4, and is not shared outside the school except as described in this policy.
 
-**Teachers and school staff (PROVISIONAL).** The clinic may also record visits, incidents and medicines given for teachers, non-teaching staff and utility workers, with their allergies and medical conditions if they choose to give them. This health information is kept only with the staff member's knowledge and consent. Details are seen only by the School Clinician; the Principal sees counts, never names or details. It is protected in the same way as students' records. This wording is provisional until the school's privacy officer approves it.
+**Teachers and school staff (PROVISIONAL).** The clinic may also record visits, incidents and medicines given for teachers, non-teaching staff and utility workers, with their sex, and their allergies and medical conditions if they choose to give them. This health information is kept only with the staff member's knowledge and consent. Details are seen only by the School Clinician; the Principal sees counts, never names or details. It is protected in the same way as students' records. This wording is provisional until the school's privacy officer approves it.
 
 ## 8. Information sharing
 
