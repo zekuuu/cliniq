@@ -47,12 +47,12 @@ describe('totals include staff and show the split (D14)', () => {
     expect(dayAfter.visits).toBe(dayBefore.visits + 1)
   })
 
-  it('leaves staff out of the sex and grade-level trends and the frequent-visitor panel', async () => {
+  it('leaves staff out of the grade-level trends and the frequent-visitor panel (ADR-063 moved by-sex to count them)', async () => {
     const before = await getDashboardSummary({ range: ALL })
     for (let i = 0; i < 4; i++)
       await recordVisit({ personnelId: 'personnel-0008', complaint: 'Headache', treatment: '', disposition: 'returned_to_class', followUp: null }, STAFF)
     const after = await getDashboardSummary({ range: ALL })
-    expect(after.demographics).toEqual(before.demographics)
+    expect(after.demographics.gradeLevel).toEqual(before.demographics.gradeLevel)
     expect(after.frequentVisitors).toEqual(before.frequentVisitors)
     expect(after.counts.split.visits.staff).toBe(before.counts.split.visits.staff + 4)
   })
@@ -74,7 +74,7 @@ describe('Audit Log and Privacy Policy', () => {
     const user = userEvent.setup()
     const { savePersonnel } = await import('../lib/mock-db')
     await savePersonnel(
-      { fullName: 'Audit Staff', type: 'Teacher', department: null, contactInfo: '', allergies: [], medicalConditions: [], emergencyContacts: [] },
+      { sex: 'female', fullName: 'Audit Staff', type: 'Teacher', department: null, contactInfo: '', allergies: [], medicalConditions: [], emergencyContacts: [] },
       { actor: STAFF },
     )
     render(

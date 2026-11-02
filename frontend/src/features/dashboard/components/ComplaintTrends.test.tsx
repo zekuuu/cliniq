@@ -37,7 +37,6 @@ interface LineProps {
 
 const lineMock = vi.hoisted(() => ({ props: undefined as unknown }))
 const barMock = vi.hoisted(() => ({ props: undefined as unknown }))
-const doughnutMock = vi.hoisted(() => ({ props: undefined as unknown }))
 
 vi.mock('react-chartjs-2', () => ({
   Line: (props: LineProps) => {
@@ -46,10 +45,6 @@ vi.mock('react-chartjs-2', () => ({
   },
   Bar: (props: LineProps) => {
     barMock.props = props
-    return <div role="img" aria-label={props['aria-label']} />
-  },
-  Doughnut: (props: LineProps) => {
-    doughnutMock.props = props
     return <div role="img" aria-label={props['aria-label']} />
   },
 }))
@@ -159,18 +154,18 @@ describe('TrendTable', () => {
     render(
       <ComplaintTrends
         trends={trends}
-        demographics={{ sex: [{ key: 'female', label: 'Female', count: 2, visits: 2, incidents: 0, share: 0.5 }, { key: 'male', label: 'Male', count: 2, visits: 2, incidents: 0, share: 0.5 }], gradeLevel: [] }}
+        demographics={{ sex: [{ key: 'female', label: 'Female', count: 2, visits: 2, incidents: 0, share: 0.5, students: 2, staff: 0 }, { key: 'male', label: 'Male', count: 2, visits: 2, incidents: 0, share: 0.5, students: 2, staff: 0 }], gradeLevel: [] }}
         filters={{ sex: 'female', gradeLevel: null }}
         onFiltersChange={() => {}}
       />,
     )
     expect(screen.getByRole('button', { name: /^Female/ })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: /^Female/ }).className).toContain('aria-pressed:ring-brand-green')
-    expect(screen.getByRole('img', { name: /by Sex: Female 2 \(50%\); Male 2 \(50%\)/ })).toBeInTheDocument()
-    expect((doughnutMock.props as LineProps).data?.datasets?.[0]?.backgroundColor).toEqual([
-      colorToken('chart-female'),
-      colorToken('chart-male'),
-    ])
+    expect(screen.getByRole('img', { name: /by Sex: Female 2 \(50%\): 2 students, 0 staff; Male 2 \(50%\): 2 students, 0 staff/ })).toBeInTheDocument()
+    // ADR-063: Students and Staff are the two parts of each bar, both named in the legend.
+    const sets = (barMock.props as { data: { datasets: Array<{ label: string; backgroundColor: string }> } }).data.datasets
+    expect(sets.map((set) => set.label)).toEqual(['Students', 'Staff'])
+    expect(sets.map((set) => set.backgroundColor)).toEqual([colorToken('brand-green-dark'), colorToken('text-secondary')])
   })
 
   it('lays out grade filters as fixed-width buttons in a centered row', async () => {
@@ -200,13 +195,13 @@ describe('TrendTable', () => {
     expect(firstGrade.parentElement).toHaveClass('flex', 'flex-wrap', 'justify-center')
   })
 
-  it('shapes the loading skeleton like the demographic cards above the trend row', () => {
+  it('shapes the loading skeleton with the demographic card below the trend row (R4)', () => {
     const { container } = render(<ComplaintTrendsSkeleton />)
     const demographics = container.querySelector('[data-skeleton="demographics"]')
     // One card with a Sex / Grade level switch (Sir Rey, October 25, 2026); it opens on Sex.
     expect(demographics?.textContent).toContain('Visits and incidents by sex')
     expect(demographics?.textContent).not.toContain('Visits and incidents by grade level')
-    expect(demographics?.compareDocumentPosition(container.querySelector('[data-skeleton="complaint-trends"]')!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(demographics?.compareDocumentPosition(container.querySelector('[data-skeleton="complaint-trends"]')!)).toBe(Node.DOCUMENT_POSITION_PRECEDING)
   })
 
   it('keeps a genuinely empty multi-bucket range as a zero chart', () => {
@@ -260,7 +255,7 @@ describe('TrendTable', () => {
     expect(screen.getByRole('radiogroup', { name: 'Filter by' })).toBeInTheDocument()
     expect(screen.getByText('Filter by')).toBeVisible()
     expect(screen.getByRole('img', { name: /by Sex/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Female 3 cases · 75%' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Female 3 cases · 75%/ })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /Male.*1.*25%/i }))
     expect(onFiltersChange).toHaveBeenCalledWith({ sex: 'male', gradeLevel: null })
 

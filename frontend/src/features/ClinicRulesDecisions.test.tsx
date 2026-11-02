@@ -139,13 +139,13 @@ describe('Clinic settings and rules', () => {
     expect(printedEntries).toBe(ticks.length - 1)
   })
 
-  it('counts the Monthly Report visits by sex, adding up to the student total, with staff apart', async () => {
+  it('counts the Monthly Report visits by sex, adding up to the total, with students and staff as the parts (ADR-063)', async () => {
     const month = todayISO().slice(0, 7)
     await recordVisit({ personnelId: 'personnel-0001', complaint: 'Fever', treatment: '', disposition: 'returned_to_class', followUp: null })
     const report = await getMonthlyReport(month)
-    const studentVisits = report.complaintCounts.reduce((sum, row) => sum + row.count, 0) - report.visitsBySex.staff
-    expect(report.visitsBySex.female + report.visitsBySex.male).toBe(studentVisits)
-    expect(report.visitsBySex.staff).toBeGreaterThanOrEqual(1)
+    const { female, male, noSexRecorded } = report.visitsBySex
+    expect(female.students + female.staff + male.students + male.staff + noSexRecorded).toBe(report.complaintCounts.reduce((sum, row) => sum + row.count, 0))
+    expect(female.staff + male.staff).toBeGreaterThanOrEqual(1)
   })
 
   /** Every empty field that carries the required mark must stop the save (ADR-051 item 10). */

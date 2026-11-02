@@ -80,8 +80,8 @@ describe('purpose-built printouts', () => {
     // The Dashboard opens on Today.
     const summary = await getDashboardSummary({ range: rangeForPreset('today', todayISO()) })
     const doc = print()
-    expectDocument(doc, 'Clinic Overview Report')
-    expect(doc.querySelector('[data-print-scope]')).toHaveTextContent('Dashboard tab: Overview')
+    expectDocument(doc, 'Clinic Overview')
+    expect(doc.querySelector('[data-print-scope]')).toHaveTextContent('Visits and incidents for today')
     expect(doc).not.toHaveTextContent('Complaints (visits and incidents)')
     expect(doc.querySelector('[data-print-scope]')).not.toHaveTextContent('1900')
     const figures = within(doc)
@@ -90,11 +90,10 @@ describe('purpose-built printouts', () => {
     for (const value of [
       summary.counts.visits,
       summary.counts.incidents,
-      summary.counts.pendingRecords,
-      summary.counts.lowStockItems,
       summary.counts.activeStudents,
     ])
       expect(figures).toContain(String(value))
+    expect(doc).toHaveTextContent(`${summary.counts.pendingRecords} incomplete records · ${summary.counts.lowStockItems} low stock`)
     for (const row of summary.dueFollowUps) expect(doc).toHaveTextContent(row.patient.number)
     expect(doc.textContent).not.toContain('●')
     expect(doc).toHaveTextContent('Excuse letters awaiting approval')

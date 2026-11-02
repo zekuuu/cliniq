@@ -399,8 +399,8 @@ describe('dashboard summary', () => {
   it('returns aggregate demographic counts and applies those filters only to Trends', () => {
     expect(summary.demographics).toEqual({
       sex: [
-        { key: 'female', label: 'Female', count: 4, visits: 4, incidents: 0, share: 1 },
-        { key: 'male', label: 'Male', count: 0, visits: 0, incidents: 0, share: 0 },
+        { key: 'female', label: 'Female', count: 4, visits: 4, incidents: 0, share: 1, students: 4, staff: 0 },
+        { key: 'male', label: 'Male', count: 0, visits: 0, incidents: 0, share: 0, students: 0, staff: 0 },
       ],
       gradeLevel: [{ key: 'Grade 5', label: 'Grade 5', count: 4, visits: 4, incidents: 0, share: 1 }],
     })

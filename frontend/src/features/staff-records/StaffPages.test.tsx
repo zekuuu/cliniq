@@ -70,7 +70,7 @@ describe('Staff Profile', () => {
 })
 
 describe('Staff Form', () => {
-  it('requires only the name and type, saves, assigns a Staff No. and logs it', async () => {
+  it('requires only the name, sex and type, saves, assigns a Staff No. and logs it', async () => {
     const user = userEvent.setup()
     renderAt('/staff/new')
     await screen.findByRole('heading', { level: 1, name: 'Add Staff' })
@@ -80,6 +80,7 @@ describe('Staff Form', () => {
     expect(screen.getByLabelText(/^Full name/)).toHaveFocus()
 
     await user.type(screen.getByLabelText(/^Full name/), 'Ana Test')
+    await user.click(screen.getByRole('radio', { name: 'Female' }))
     await selectOption(user, screen.getByLabelText(/^Type/), 'Teacher')
     await user.type(screen.getByRole('textbox', { name: /^Allergies/ }), 'None')
     // Department or role: a value in use, or Other to type a new one (D4).

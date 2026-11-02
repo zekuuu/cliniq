@@ -82,7 +82,7 @@ describe('App Shell / Navigation', () => {
       </AppShell>,
     )
 
-    expect(screen.getByRole('button', { name: 'Log out' })).toHaveClass('text-error')
+    expect(screen.getByRole('button', { name: 'Sign out' })).toHaveClass('text-error')
   })
 
   it('marks the Backup navigation item when it needs attention', async () => {
@@ -99,7 +99,7 @@ describe('App Shell / Navigation', () => {
     expect(await screen.findByRole('img', { name: 'Backup needs attention' })).toHaveClass(
       'rounded-md',
       'bg-warning',
-      'text-white',
+      'text-text-primary',
     )
     expect(screen.getByRole('link', { name: /backup.*needs attention/i })).toHaveAttribute(
       'href',
@@ -257,7 +257,8 @@ describe('App Shell / Navigation', () => {
       </AppShell>,
     )
 
-    await user.click(screen.getByRole('button', { name: 'Log out' }))
+    await user.click(screen.getByRole('button', { name: 'Sign out' }))
+    await user.click(await screen.findByRole('button', { name: 'Sign Out' }))
 
     await waitFor(() => expect(onLogout).toHaveBeenCalledOnce())
     expect(getRecordedAuditEntries()).toEqual([
@@ -281,9 +282,10 @@ describe('App Shell / Navigation', () => {
       </AppShell>,
     )
 
-    await user.click(screen.getByRole('button', { name: 'Log out' }))
+    await user.click(screen.getByRole('button', { name: 'Sign out' }))
+    await user.click(await screen.findByRole('button', { name: 'Sign Out' }))
 
-    expect(screen.getByRole('button', { name: 'Logging out' }).querySelector('svg')).not.toHaveClass(
+    expect(screen.getByRole('button', { name: 'Signing out' }).querySelector('svg')).not.toHaveClass(
       'animate-spin',
     )
   })
