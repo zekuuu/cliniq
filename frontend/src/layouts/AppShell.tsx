@@ -54,6 +54,7 @@ function LiveClock() {
 export function AppShell({ user, active, children, onLogout }: AppShellProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [isConfirmingSignOut, setIsConfirmingSignOut] = useState(false)
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const [isReportIssueOpen, setIsReportIssueOpen] = useState(false)
   const [reportIssueNotice, setReportIssueNotice] = useState<string | null>(null)
@@ -84,6 +85,7 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
   }
 
   async function handleLogout() {
+    setIsConfirmingSignOut(false)
     setIsLoggingOut(true)
     try {
       await logoutMockSession(user)
@@ -156,16 +158,16 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
               <span className="text-sm font-semibold text-text-primary">{user.name}</span>
               <span className="text-xs text-text-secondary">{ROLE_LABELS[user.role]}</span>
             </span>
-            <Link to={paths.changePassword} aria-label="Change password" title="Change password" className="inline-flex shrink-0 cursor-pointer rounded-sm text-text-secondary transition-colors hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green">
+            <Link to={paths.changePassword} aria-label="Change password" title="Change password" className="inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-sm text-text-secondary transition-colors hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green">
               <Icon name="lock" />
             </Link>
             <button
               type="button"
-              aria-label={isLoggingOut ? 'Logging out' : 'Log out'}
-              title="Log out"
+              aria-label={isLoggingOut ? 'Signing out' : 'Sign out'}
+              title="Sign out"
               disabled={isLoggingOut}
-              onClick={() => void handleLogout()}
-              className="inline-flex shrink-0 cursor-pointer rounded-sm text-error transition-[filter] hover:brightness-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100 motion-reduce:transition-none"
+              onClick={() => setIsConfirmingSignOut(true)}
+              className="ml-4 inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-sm text-error transition-[filter] hover:brightness-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100 motion-reduce:transition-none"
             >
               <Icon name="logout" />
             </button>
@@ -230,6 +232,17 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
             </button>
           </div>
         </nav>
+      </Modal>
+      <Modal open={isConfirmingSignOut} title="Sign out of CLINIQ?" onClose={() => setIsConfirmingSignOut(false)}>
+        <p className="text-sm text-text-secondary">Anything not yet saved on this screen will be lost.</p>
+        <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <Button variant="neutral" data-autofocus onClick={() => setIsConfirmingSignOut(false)}>
+            Cancel
+          </Button>
+          <Button variant="secondary" onClick={() => void handleLogout()}>
+            Sign Out
+          </Button>
+        </div>
       </Modal>
       <Modal open={idleWarning} title="Still there?" onClose={() => {}}>
         <p className="text-sm text-text-secondary">

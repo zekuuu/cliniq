@@ -172,7 +172,7 @@ export function Sidebar({
                               title="Backup needs attention"
                               className={cn(
                                 'flex size-5 shrink-0 items-center justify-center rounded-md',
-                                isActive ? 'bg-[#c69214] text-brand-green-dark' : 'bg-warning text-white',
+                                isActive ? 'bg-[#c69214] text-brand-green-dark' : 'bg-warning text-text-primary',
                                 collapsed ? 'absolute -top-1 -right-1' : 'ml-auto',
                               )}
                             >

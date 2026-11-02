@@ -52,7 +52,8 @@ describe('login gate', () => {
     expect(window.location.pathname).toBe('/students')
     expect(getAuthenticatedUser()?.role).toBe('staff')
 
-    await user.click(screen.getByRole('button', { name: 'Log out' }))
+    await user.click(screen.getByRole('button', { name: 'Sign out' }))
+    await user.click(await screen.findByRole('button', { name: 'Sign Out' }))
     expect(await screen.findByRole('heading', { name: 'Sign In' })).toBeInTheDocument()
     expect(getAuthenticatedUser()).toBeNull()
   })
@@ -60,7 +61,8 @@ describe('login gate', () => {
   it('keeps a logged-out browser out of the Student List on the next visit', async () => {
     const first = openAt('/students')
     const user = await signIn('demo.nurse', 'demo-nurse')
-    await user.click(await screen.findByRole('button', { name: 'Log out' }))
+    await user.click(await screen.findByRole('button', { name: 'Sign out' }))
+    await user.click(await screen.findByRole('button', { name: 'Sign Out' }))
     await screen.findByRole('heading', { name: 'Sign In' })
     first.unmount()
 

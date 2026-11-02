@@ -137,10 +137,10 @@ export function InventoryDispensePage() {
             </div>
           )}
           {item && lookup?.patient && allergyMatches(item, lookup.patient.allergies).map((tag) => (
-            <p key={tag} role="note" className="flex items-start gap-1 rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm font-semibold text-text-primary"><Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning" />{allergyWarningText(tag)} You can still record it.</p>
+            <p key={tag} role="note" className="flex items-start gap-1 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm font-semibold text-text-primary"><Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning-text" />{allergyWarningText(tag)} You can still record it.</p>
           ))}
           <Input label="Quantity" required type="number" min="1" step="1" value={quantity} error={errors.quantity} hint={item ? `In ${item.unit}.` : undefined} onChange={(event) => { setQuantity(event.target.value); clear('quantity') }} />
-          {overStock && <p className="flex items-start gap-1 text-xs font-semibold text-warning"><Icon name="alertTriangle" size={14} className="mt-px shrink-0" />Only {item.currentStock} {item.unit} in stock. Recording this takes stock below zero; recount and restock.</p>}
+          {overStock && <p className="flex items-start gap-1 text-xs font-semibold text-warning-text"><Icon name="alertTriangle" size={14} className="mt-px shrink-0" />Only {item.currentStock} {item.unit} in stock. Recording this takes stock below zero; recount and restock.</p>}
           {errors.save && <p role="alert" className="text-sm font-semibold text-error">{errors.save}</p>}
           {success && <p role="status" className="text-sm font-semibold text-success">{success}</p>}
           <div className="flex flex-wrap justify-end gap-2"><Button variant="neutral" onClick={cancel}>Cancel</Button><Button type="submit" variant="primary" icon="checkCircle" loading={saving}>Record Dispensation</Button></div>

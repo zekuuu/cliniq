@@ -10,7 +10,7 @@ export interface DataTableColumn<Row> {
   cell: (row: Row) => ReactNode
   /** Fixed column width used when the table opts into `fixedLayout`. */
   width?: string
-  align?: 'left' | 'right'
+  align?: 'left' | 'center' | 'right'
   /** Marks the column that names each row (rendered as a row header, `<th scope="row">`). */
   rowHeader?: boolean
   /** Optional accessible sort control for a column header. */
@@ -110,7 +110,7 @@ export function DataTable<Row>({
                 aria-sort={col.sort?.direction}
                 className={cn(
                   'px-2 py-1.5 text-xs font-semibold whitespace-nowrap text-text-secondary',
-                  col.align === 'right' ? 'text-right' : 'text-left',
+                  col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
                   stickyFirstColumn &&
                     columnIndex === 0 &&
                     'sticky left-0 z-20 border-r border-border bg-background',
@@ -158,7 +158,7 @@ export function DataTable<Row>({
                     className={cn(
                       'px-2 py-1.5 text-text-primary tabular-nums',
                       col.rowHeader ? 'font-semibold' : 'font-normal',
-                      col.align === 'right' ? 'text-right' : 'text-left',
+                      col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
                       stickyFirstColumn &&
                         columnIndex === 0 &&
                         'sticky left-0 z-10 border-r border-border bg-background',

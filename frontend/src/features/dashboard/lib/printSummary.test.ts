@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { DashboardSummary } from '../../../types/dashboard'
-import { activityRows, overviewSentences, periodPhrase } from './printSummary'
+import { activityRows, overviewSentence, periodPhrase } from './printSummary'
 
 function summary(overrides: Partial<DashboardSummary> = {}): DashboardSummary {
   return {
@@ -59,10 +59,8 @@ describe('Dashboard printout summary', () => {
     )
   })
 
-  it('says only that nothing was recorded for an empty period', () => {
-    expect(overviewSentences(summary(), 'on Oct 15, 2026')).toEqual([
-      'No clinic visits or incidents were recorded on Oct 15, 2026.',
-    ])
+  it('says only the zero counts for an empty period', () => {
+    expect(overviewSentence(summary())).toBe('0 visits and 0 incidents this period.')
   })
 
   it('reads naturally for one of each', () => {
@@ -87,15 +85,10 @@ describe('Dashboard printout summary', () => {
       dueFollowUps: [followUp('overdue')],
       inventoryAlerts: [{ flags: ['expired'] } as DashboardSummary['inventoryAlerts'][number]],
     })
-    expect(overviewSentences(s, 'so far')).toEqual([
-      'The clinic recorded 1 visit and 1 incident so far.',
-      'The most common complaint was Headache (2 of 2 visits and incidents).',
-      'Needing attention: 1 follow-up overdue.',
-      'Inventory: 1 item below the low-stock threshold and 1 item expiring or expired.',
-    ])
+    expect(overviewSentence(s)).toBe('1 visit and 1 incident this period. Most common complaint: Headache (2 of 2).')
   })
 
-  it('handles ties and mixed follow-ups', () => {
+  it('handles ties', () => {
     const s = summary({
       counts: {
         visits: 5,
@@ -116,10 +109,7 @@ describe('Dashboard printout summary', () => {
       },
       dueFollowUps: [followUp('overdue'), followUp('upcoming'), followUp('due_today')],
     })
-    expect(overviewSentences(s, 'so far').slice(1)).toEqual([
-      'The most common complaints were Fever and Cough (2 each).',
-      'Needing attention: 1 follow-up overdue and 2 follow-ups due today or in the next 7 days.',
-    ])
+    expect(overviewSentence(s)).toBe('5 visits and 0 incidents this period. Most common complaints: Fever and Cough (2 each).')
   })
 
   it('sums a daily trend into weeks without losing a visit', () => {

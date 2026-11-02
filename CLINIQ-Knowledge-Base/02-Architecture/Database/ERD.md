@@ -2,7 +2,10 @@
 
 > **STATUS: Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057); changes after this go through a new decision.** Drafted Friday, October 09, 2026 — 00:29 PHT. Migrations are built from it in phase B1, in the order of section 13.
 >
-> **Updated Sunday, November 1, 2026 — 01:55 PHT** with the answers of ADR-057 and the 30 gaps of [`ERD-Review.md`](./ERD-Review.md).
+
+> **Updated Sunday, November 1, 2026 — 22:36 PHT:** `personnel.sex` added by [ADR-063](../../06-Decisions/ADR-063-Staff-Patients-Record-Sex.md). Not yet loaded into MariaDB.
+>
+> **Updated to the decisions up to ADR-056 on Saturday, October 31, 2026 — 20:28 PHT.** Still a proposed draft, not final or approved. Choices no decision settles are in [`ERD-Review.md`](./ERD-Review.md); no migration, seeder or model with columns is built from this (ADR-056).
 
 This file replaces the old "TBA" placeholder. For the wider readiness picture (API contract, auth, backups, pinned versions and so on) see `04-Development/Backend-Readiness-Checklist.md`.
 
@@ -191,6 +194,7 @@ erDiagram
         bigint id PK
         varchar staff_number UK "STF-0001, assigned by CLINIQ"
         varchar full_name
+        varchar sex "female or male (ADR-063)"
         varchar type "Teacher, Non-teaching staff, Utility worker, Other"
         varchar department
         varchar contact_number "staff keep theirs (ADR-054)"

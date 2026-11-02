@@ -60,13 +60,15 @@ export type StudentSearchResult = Pick<Student, 'id' | 'lrn' | 'fullName' | 'gra
 /**
  * A teacher, non-teaching staff member or utility worker seen at the clinic (ADR-043). Called
  * "personnel" in code because "staff" already names the clinician role; labelled "Staff" on screen.
- * No LRN, grade, section or sex, and no record-completeness status. PROVISIONAL, pending the ERD.
+ * No LRN, grade or section, and no record-completeness status. PROVISIONAL, pending the ERD.
  */
 export interface Personnel {
   id: string
   /** System-assigned, unique, `STF-0001`. Stands in for the masked LRN on lists (ADR-004). PROVISIONAL: the school may have its own employee number. */
   staffNumber: string
   fullName: string
+  /** Required on the form (ADR-063). Null only on a record saved before the field existed: "Sex not recorded". */
+  sex: StudentSex | null
   /** One of `config.personnelTypes`. PROVISIONAL: the clinic and registrar give the real groups. */
   type: string
   /** Optional department or role, free text, at most 60 characters. */

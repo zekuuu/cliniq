@@ -60,19 +60,31 @@ Restrained, cohesive palette. Prioritize strong text/background contrast, consis
 |---|---|---|---|---|
 | `success` | `#20753A` | Active, verified, approved, or go states; confirmation messages and badges carrying white text | 5.73:1 — passes normal text | The original brighter green idea (`#2E9E4F`) only reaches 3.43:1 — fine for a large icon or bold label, not safe for a small white-text badge, so this darker shade is the one to actually build with |
 | `success-light` | `#2E9E4F` | Icon color, or badge/accent paired with dark text, where a slightly brighter green reads better | — (used with dark text, not white) | |
-| `warning` | `#A85F00` | Pending, in-progress, due-soon, nearing-expiration, or review-needed states — anywhere carrying white text | 4.88:1 — passes normal text | The first candidate (`#ED8B00`) measured **2.53:1 — an outright fail**, not just borderline. Genuinely don't use that shade with white text anywhere |
-| `warning-light` | `#ED8B00` | Badge/icon backgrounds paired with dark text only | — (used with dark text, not white) | |
+| `warning` | `#E9882F` | Pending, in-progress, due-soon, nearing-expiration, or review-needed states: borders, bars and solid fills only (ADR-062) | Never carries white text. Solid fill takes `text-primary` (6.65:1) | Words use `warning-text` `#9A4A00` (5.49:1 on `warning-fill`). The former `#A85F00` looked brown |
 | `error` / `destructive` | `#D32F2F` | Incidents, expired or critically low stock, overdue/missed work, delete/irreversible actions, and validation errors | 4.98:1 — passes | Outside the brand palette entirely — unambiguous |
 | `info` | `#1976D2` | Completed, closed, resolved, and neutral informational states | 4.60:1 — passes | The one cool hue in the palette, reserved for completion and informational context |
 
-**Demographic-chart colors:** The Visits by Sex chart uses `chart-female` pink (`#C74375`) for Female and `chart-male` blue (`#3D7CBC`) for Male. These are dataset colors, not status colors; the chart legend and filters retain the written labels, so color is supplementary.
+**Semantic colours by meaning (Sunday, November 1, 2026 — 22:36 PHT, ADR-062):** from the groupmate's review, with darker text shades because her pale text failed contrast. The accent goes on the left bar, border and charts, the fill on the card, and the text shade on the words and icons. The accents are too pale to carry an icon on their own fill. Tailwind tokens: `<name>`, `<name>-fill`, `<name>-text`.
 
-**Chart hues, at most four per screen (Sunday, October 25, 2026 — Sir Rey):** a chart on the Dashboard, Trends or Reports uses only brand green (`brand-green` / `brand-green-dark`), one neutral (`text-secondary`), the warning color (`warning`, clusters), and the female/male pair above. The grade-level chart's Incidents series moved from `error` red to the neutral. Every series keeps a visible label or legend and a text alternative, so nothing is carried by color alone; the brand greens already match the logo's green, so no token changed.
+| Meaning | Accent | Fill | Text | Text on fill |
+|---|---|---|---|---|
+| Pending excuse letter (`letter`) | `#F7D041` | `#FBFAE8` | `#7A5C00` | 5.94:1 |
+| Follow-ups to review (`follow-up`) | `#976EFE` | `#F4E8FB` | `#5B2FC9` | 6.60:1 |
+| Unfinished incident record (`unfinished`) | `#E95E90` | `#FBE8F4` | `#B3185A` | 5.62:1 |
+| Incidents, Expired, other danger (`error`) | `#D32F2F` | `#FBEAEA` | `#B71C1C` | 5.65:1 |
+| Clinic visits, Complete (`brand-green`) | `#035419` | `#E6F2E9` | `#035419` | 7.98:1 |
+| Active students (`active`) | `#0CCC6A` | `#E8FBF4` | `#0A7A41` | 5.04:1 |
+| Warning, Low stock (`warning`) | `#E9882F` | `#F6EFE6` | `#9A4A00` | 5.49:1 |
+| Resolved, resting (`info`) | `#1976D2` | `#E8F1FA` | `#0D47A1` | 7.56:1 |
 
-**Status mapping (Sunday, October 18, 2026 — 17:26 PHT):** use `error` red for incidents, expired or low stock, and overdue/critical states; `success` green for active, verified, approved, or go states; `warning` yellow for pending, in-progress, due-soon, and review-needed states; `info` blue for completed, closed, resolved, and informational states; and `neutral` gray for archived, inactive, and no-state labels. Use the soft variant for statuses inside cards and rows. Icons and text labels remain required; color never carries the meaning alone.
+No shade needed adjusting. Supporting `text-secondary` is at least 5.24:1 on every fill. Expired is solid red with white text (4.98:1).
+
+**Chart hues, at most four in one chart (Sir Rey, Sunday, October 25, 2026; Sunday, November 1, 2026 — 22:36 PHT, ADR-062):** a chart on the Dashboard, Trends or Reports uses brand green (`brand-green` / `brand-green-dark`), one neutral (`text-secondary`), the warning color (`warning`, clusters) and `error` red for incidents. The by-sex chart shows Students in `brand-green-dark` and Staff in the neutral (ADR-063). Every series keeps a visible label or legend and a text alternative, so nothing is carried by color alone.
+
+**Status mapping (Sunday, October 18, 2026 — 17:26 PHT; updated Sunday, November 1, 2026 — 22:36 PHT, ADR-062):** use `error` red for incidents, expired stock, and overdue/critical states; `success` green for complete, active, verified, approved, or go states; `warning` orange for low stock, pending, in-progress, due-soon, and review-needed states; `info` blue for resolved, resting, and informational states; the pink `unfinished` for an incident record awaiting Stage 2; the yellow `letter` for a pending excuse letter; and `neutral` gray for archived, inactive, and no-state labels. Use the soft variant for statuses inside cards and rows. Icons and text labels remain required; color never carries the meaning alone.
 
 **Contrast rules, stated plainly:**
-- Small white text: only ever on `brand-green-dark`, `success`, `warning`, `error`, or `info` — never on `brand-green`, `brand-yellow`, `brand-yellow-dark`, `brand-green-light`, `success-light`, or `warning-light`.
+- Small white text: only ever on `brand-green-dark`, `success`, `error`, or `info` — never on `brand-green`, `brand-yellow`, `brand-yellow-dark`, `brand-green-light`, `success-light`, or `warning`.
 - Large text (≈18pt+, or 14pt+ bold) and non-text UI such as icons and borders: `brand-green` becomes usable with white on top of the above list. A button's label is text, not a UI component, so a button fill follows the small-text rule above: primary buttons are `brand-green-dark`.
 - The `-light` variants and `brand-green-light` exist specifically for badge/accent backgrounds — always pair them with `text-primary`, never white.
 - Per the Accessibility guidance already in this document: pair every semantic color with an icon or label, never color alone — this matters even more here since `brand-green` is both the brand's primary identity color *and* the family `success` is drawn from.

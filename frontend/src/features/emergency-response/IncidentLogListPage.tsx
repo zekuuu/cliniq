@@ -48,8 +48,8 @@ const completionOptions = [
 ] satisfies Array<{ value: CompletionFilter; label: string }>
 
 const completionMeta: Record<IncidentCompletion, { label: string; tone: BadgeTone }> = {
-  needs_completion: { label: 'Needs completion', tone: 'warning' },
-  complete: { label: 'Complete', tone: 'info' },
+  needs_completion: { label: 'Needs completion', tone: 'unfinished' },
+  complete: { label: 'Complete', tone: 'success' },
 }
 
 function IncidentLogSkeleton({ back }: { back: ReactNode }) {
@@ -81,7 +81,8 @@ export function IncidentLogListPage({ viewer = getMockSessionUser() }: { viewer?
   const { initialRange, clearDateParams } = useDateRangeEntryParams(defaultRange)
   const [range, setRange] = useState<DateRange>(initialRange)
   const [search, setSearch] = useState('')
-  const [completion, setCompletion] = useState<CompletionFilter>('all')
+  // The Dashboard's Unfinished incident records card opens the log on this filter.
+  const [completion, setCompletion] = useState<CompletionFilter>(() => (new URLSearchParams(window.location.search).get('completion') === 'needs_completion' ? 'needs_completion' : 'all'))
   const [patientFilter, setPatientFilter] = usePatientFilter()
   // The Admin's log has no staff incidents (ADR-043, D15), so it keeps the LRN alone and no filter.
   const patient: PatientFilter = isStaff ? patientFilter : 'everyone'

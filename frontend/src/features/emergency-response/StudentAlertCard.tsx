@@ -35,9 +35,9 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
  */
 export function StudentAlertCard({ student }: { student: Pick<Student, 'allergies' | 'medicalConditions' | 'emergencyContacts'> }) {
   return (
-    <section aria-labelledby="student-alert-title" className="rounded-md border border-warning bg-warning/10 p-3">
+    <section aria-labelledby="student-alert-title" className="rounded-md border border-warning bg-warning-fill p-3">
       <h2 id="student-alert-title" className="flex items-center gap-1.5 text-sm font-semibold text-text-primary">
-        <Icon name="alertTriangle" size={16} className="text-warning" />
+        <Icon name="alertTriangle" size={16} className="text-warning-text" />
         Check before treating
       </h2>
       <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-3">

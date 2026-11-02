@@ -28,7 +28,7 @@ const FIELDS = {
   config: ['_note', 'showFrequentVisitors', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'personnelTypes', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges', 'medicalCertificateAfterDays', 'adminIdleMinutes', 'clusterMinStudents', 'clusterWindowDays', 'followUpOverdueAfterDays', 'followUpAutoCloseDays', 'vitalsUsualRanges', 'backupKeepLast', 'unusualAgeYears', 'largeWriteOffPercent'],
   users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture', 'deactivatedAt'],
   students: ['id', 'lrn', 'fullName', 'gradeLevel', 'birthDate', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
-  personnel: ['id', 'staffNumber', 'fullName', 'type', 'department', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived'],
+  personnel: ['id', 'staffNumber', 'fullName', 'sex', 'type', 'department', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived'],
   emergencyContact: ['name', 'relationship', 'phone', 'verified'],
   visits: ['id', 'studentId', 'dateTime', 'complaint', 'treatment', 'disposition', 'loggedByUserId', 'eventTag', 'itemsGiven', 'excuseLetterDraft', 'referredTo', 'temperatureC', 'timeOut', 'assistedBy', 'parentGuardian', 'remarks'],
   excuseLetterDraft: ['excusedFrom', 'excusedUntil', 'note'],
@@ -213,7 +213,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     if (!studentIds.has(String(id))) fail(`${where}: student "${String(id)}" doesn't exist`)
   }
 
-  // Personnel: staff patients (ADR-043). No LRN, grade or sex, and no completeness status.
+  // Personnel: staff patients (ADR-043, ADR-063). No LRN or grade, and no completeness status.
   const personnelIds = new Set<string>()
   const staffNumbers = new Set<string>()
   const personnelTypes = ((s.config as Rec | undefined)?.personnelTypes ?? []) as unknown[]
@@ -227,6 +227,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     staffNumbers.add(number)
     if (!String(pe.fullName ?? '').trim()) fail(`${w}.fullName: must not be empty`)
     oneOf(`${w}.type`, pe.type, personnelTypes)
+    if (pe.sex !== null) oneOf(`${w}.sex`, pe.sex, ENUMS.sex)
     if (pe.department !== null && (typeof pe.department !== 'string' || !pe.department.trim() || pe.department.length > PERSONNEL_DEPARTMENT_MAX))
       fail(`${w}.department: must be null or text of at most ${PERSONNEL_DEPARTMENT_MAX} characters`)
     if (!Array.isArray(pe.allergies) || !Array.isArray(pe.medicalConditions))

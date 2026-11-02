@@ -1097,6 +1097,7 @@ A teacher, non-teaching staff member or utility worker seen at the clinic (ADR-0
 | `id` **PK** | `bigint unsigned` | no |  |  |
 | `staff_number` | `varchar(20)` | no |  |  |
 | `full_name` | `varchar(150)` | no |  |  |
+| `sex` | `varchar(6)` | no |  | `female` or `male` (ADR-063, a change after the ADR-057 approval). |
 | `type` | `varchar(30)` | no |  |  |
 | `department` | `varchar(60)` | yes | NULL |  |
 | `contact_number` | `varchar(60)` | yes | NULL |  |
@@ -1111,6 +1112,7 @@ A teacher, non-teaching staff member or utility worker seen at the clinic (ADR-0
 **Checks:**
 
 - `chk_personnel_name`: `CHAR_LENGTH(TRIM(full_name)) >= 1`
+- `chk_personnel_sex`: `sex in ('female','male')`
 
 ## personnel_health_entries
 

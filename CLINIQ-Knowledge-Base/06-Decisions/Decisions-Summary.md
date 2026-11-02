@@ -245,3 +245,11 @@ The system has no Principal acknowledgement of reports. The clinician approves a
 ### ADR-061: A large stock write-off needs a written note
 
 A removal of 25% or more of an item on hand, or one that empties it, needs a note of at least 20 characters and is flagged in the audit. Sunday, November 1, 2026 — 13:03 PHT. [ADR-061](ADR-061-Large-Stock-Write-Off-Needs-A-Written-Note.md)
+
+### ADR-062: One colour for each meaning, with a darker shade for text
+
+Each meaning has an accent, a fill and a darker text shade; icons use the text shade. Warning is now `#E9882F` and never carries text. Complete is green, low stock is warning and Expired is solid red. Sunday, November 1, 2026 — 22:36 PHT. [ADR-062](ADR-062-One-Colour-For-Each-Meaning.md)
+
+### ADR-063: Staff patients record sex, and the by-sex counts include them
+
+Sex is required on the staff form. By-sex counts cover everyone, with Students and Staff as the two parts; the Admin's incident counts still leave staff out. Amends ADR-043 and changes the ERD after its approval. Zean, Monday, November 2, 2026 — 04:53 PHT. [ADR-063](ADR-063-Staff-Patients-Record-Sex.md)

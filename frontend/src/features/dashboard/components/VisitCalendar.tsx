@@ -81,7 +81,7 @@ function noClassEmpty(holidays: Holiday[], total: number): boolean {
   return total === 0 && holidays.some(isNoClassHoliday)
 }
 
-function Legend({ scale }: { scale: HeatScale }) {
+function Legend({ scale, showHoliday }: { scale: HeatScale; showHoliday: boolean }) {
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
       <span>Cases per day (visits + incidents):</span>
@@ -98,6 +98,12 @@ function Legend({ scale }: { scale: HeatScale }) {
             {step.label}
           </li>
         ))}
+        {showHoliday && (
+          <li className="flex items-center gap-1">
+            <span aria-hidden="true" className="inline-block size-3.5 rounded-sm border border-border bg-holiday" />
+            Holiday
+          </li>
+        )}
       </ul>
     </div>
   )
@@ -383,6 +389,7 @@ function YearView({
           )
           const visits = days.reduce((s, d) => s + d.visits, 0)
           const incidents = days.reduce((s, d) => s + d.incidents, 0)
+          const monthHolidays = days.flatMap((d) => holidaysFor(d.date).map((h) => `${formatDate(d.date, { month: 'short', day: 'numeric' })} ${holidayName(h)}`))
           return (
             <li key={monthStart} className="flex flex-col gap-1">
               <p className="text-xs font-semibold text-text-primary">
@@ -393,7 +400,8 @@ function YearView({
                   {incidents === 1 ? 'incident' : 'incidents'}
                 </span>
               </p>
-              {/* The mini grid is a visual summary only. The line above and the Table view carry
+              {monthHolidays.length > 0 && <p className="sr-only">Holidays: {monthHolidays.join(', ')}</p>}
+              {/* The mini grid is a visual summary only. The lines above and the Table view carry
                   the same information for screen readers. */}
               <div aria-hidden="true" className="grid w-fit grid-cols-7 gap-0.5">
                 {monthGrid(monthStart)
@@ -410,7 +418,7 @@ function YearView({
                         title={day ? describeDay(day, today, holidays) : undefined}
                         className={cn(
                           'inline-flex size-5 items-center justify-center rounded-[3px] border text-xs leading-none',
-                          future ? heatClasses[0] : heatClasses[heatLevel(total, scale)],
+                          holidays.length && total === 0 ? 'bg-holiday text-text-primary' : future ? heatClasses[0] : heatClasses[heatLevel(total, scale)],
                           noClassEmpty(holidays, total) && noClassDayClass,
                           date === today
                             ? 'border-2 border-brand-green'
@@ -433,8 +441,8 @@ function YearView({
           Activity, event, and holiday days in {year}
         </p>
         <p className="text-xs text-text-secondary">
-          Outlined squares above mark days with an event; today has a green ring. Striped squares mark no-class holidays
-          with no visits.
+          Outlined squares above mark days with an event; today has a green ring. Tan squares mark holidays, striped when
+          there is no class.
         </p>
         {activeDays.length === 0 ? (
           <p className="text-xs text-text-secondary">No clinic activity, events, or holidays this year.</p>
@@ -495,11 +503,11 @@ function CalendarTable({
         width: '9rem',
         rowHeader: true,
         sort: sortColumn('month', 'Month'),
-        cell: (r) => formatDate(`${r.key}-01`, { month: 'long', year: 'numeric' }),
+        cell: (r) => formatDate(`${r.key}-01`, { month: 'long' }),
       },
-      { key: 'visits', header: 'Visits', width: '4.5rem', align: 'right', sort: sortColumn('visits', 'Visits'), cell: (r) => r.visits },
-      { key: 'incidents', header: 'Incidents', width: '6rem', align: 'right', sort: sortColumn('incidents', 'Incidents'), cell: (r) => r.incidents },
-      { key: 'total', header: 'Total', width: '4.5rem', align: 'right', sort: sortColumn('total', 'Total'), cell: (r) => r.visits + r.incidents },
+      { key: 'visits', header: 'Visits', width: '4.5rem', sort: sortColumn('visits', 'Visits'), cell: (r) => r.visits },
+      { key: 'incidents', header: 'Incidents', width: '6rem', sort: sortColumn('incidents', 'Incidents'), cell: (r) => r.incidents },
+      { key: 'total', header: 'Total', width: '5.5rem', align: 'center', sort: sortColumn('total', 'Total'), cell: (r) => r.visits + r.incidents },
       { key: 'holidays', header: 'Holidays', sort: sortColumn('holidays', 'Holidays'), cell: (r) => r.holidays.join(', ') || '—' },
       { key: 'tags', header: 'Events', sort: sortColumn('tags', 'Events'), cell: (r) => r.tags.join(', ') || '—' },
     ]
@@ -690,7 +698,7 @@ function HolidaySourceLine({
     <p
       className={cn(
         'flex flex-wrap items-center gap-1 text-xs',
-        missing ? 'font-semibold text-warning' : 'text-text-secondary',
+        missing ? 'font-semibold text-warning-text' : 'text-text-secondary',
       )}
     >
       {missing && <Icon name="alertTriangle" size={14} />}
@@ -888,7 +896,7 @@ export function VisitCalendar({
                     today={today}
                   />
                 )}
-                <Legend scale={scale} />
+                <Legend scale={scale} showHoliday={view === 'year'} />
               </>
             )}
             {scale.max === 0 && (

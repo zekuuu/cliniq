@@ -299,7 +299,7 @@ function ExcuseLetterEditor({
               {formatDateTime(context.visit.dateTime)}
             </p>
           </div>
-          <Badge tone={voided ? 'error' : superseded ? 'neutral' : approved ? 'success' : 'warning'} variant="soft">
+          <Badge tone={voided ? 'error' : superseded ? 'neutral' : approved ? 'success' : 'letter'} variant="soft">
             {voided ? 'Voided' : superseded ? 'Superseded' : approved ? 'Approved' : 'Draft'}
           </Badge>
         </div>
@@ -407,7 +407,7 @@ function ExcuseLetterEditor({
                 </p>
               )}
             </div>
-            <div className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-text-primary">
+            <div className="rounded-md border border-warning/40 bg-warning-fill px-3 py-2 text-sm text-text-primary">
               This tool generates clinic excuse letters only. It must not be used as a medical
               certificate.
             </div>

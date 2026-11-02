@@ -17,12 +17,12 @@
 
 ## Open work at a glance
 
-Open: FIX 0 · AUDIT 0 · DOC 18 · DECIDE 2 · LATER 20 | Notes: NOTE 78 · VERIFY 25 | Done: 448 (all in `Issues-Done-Archive.md`)
+Open: FIX 0 · AUDIT 0 · DOC 20 · DECIDE 2 · LATER 20 | Notes: NOTE 78 · VERIFY 25 | Done: 457 (all in `Issues-Done-Archive.md`)
 
 **Open `FIX` items:** none.
 
 - **AUDIT** (0): none. The final audit of the frontend clean-up, Part 3, superseded all ten.
-- **DOC** (18): Groupmate system review; Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; Panel-style system review; Feedback from Sir Mina and Sir Rey; Decisions sheet answers; Decisions sheet follow-up answers; Canonical documents updated to the ADRs; Known gaps
+- **DOC** (20): Frontend review round 2, Part 1; Groupmate system review; Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; Panel-style system review; Feedback from Sir Mina and Sir Rey; Decisions sheet answers; Decisions sheet follow-up answers; Canonical documents updated to the ADRs; Known gaps
 - **DECIDE** (2): Open decisions, waiting on someone outside the dev team; Known gaps
 - **LATER** (20): Known gaps; Reported UI/UX follow-ups; Medicines & supplies given (ADR-018); Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); README sync; Professor consultation and team meeting, October 16; Panel-style system review; Feedback from Sir Mina and Sir Rey; Staff and teachers as clinic patients; System review fixes; Decisions sheet answers; Decisions sheet follow-up answers; Decisions answered after the list was resent; Birthdate instead of the student's own number
 
@@ -510,3 +510,10 @@ When you find or resolve something, add it here with a date and enough context t
 
 
 ## Frontend clean-up, Part 1
+
+
+## Frontend review round 2, Part 1
+
+- [ ] **[DOC]** **The canonical design documents still show the old warning colour** (found Sunday, November 1, 2026 — 22:36 PHT). `CLINIQ_Frontend_Context_Brief.md` and `CLINIQ_Frontend_Design_Reference.md` predate ADR-062, and the Context Brief predates ADR-063. [Agent session](Agent-Sessions/2026-11-01-frontend-review-round-2-part-1.md)
+- [ ] **[DOC]** **`personnel.sex` is not yet verified on MariaDB** (found Sunday, November 1, 2026 — 22:36 PHT). The ERD diagram images in `Diagrams/` are not regenerated, `Reference-Schema.sql` was not reloaded, and the two new constraint tests have not run, because this workstation has no MariaDB. [Agent session](Agent-Sessions/2026-11-01-frontend-review-round-2-part-1.md)
+

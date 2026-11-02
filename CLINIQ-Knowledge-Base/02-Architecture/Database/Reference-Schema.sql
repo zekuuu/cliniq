@@ -255,6 +255,7 @@ CREATE TABLE personnel (
   id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   staff_number        VARCHAR(20)     NOT NULL,
   full_name           VARCHAR(150)    NOT NULL,
+  sex                 VARCHAR(6)      NOT NULL,
   type                VARCHAR(30)     NOT NULL,
   department          VARCHAR(60)     NULL,
   contact_number      VARCHAR(60)     NULL,
@@ -268,6 +269,7 @@ CREATE TABLE personnel (
   KEY idx_personnel_name (full_name),
   KEY idx_personnel_archived_at (archived_at),
   CONSTRAINT chk_personnel_name CHECK (CHAR_LENGTH(TRIM(full_name)) >= 1),
+  CONSTRAINT chk_personnel_sex CHECK (sex IN ('female','male')),
   CONSTRAINT fk_personnel_archived_by FOREIGN KEY (archived_by_user_id) REFERENCES users (id),
   CONSTRAINT fk_personnel_created_by FOREIGN KEY (created_by_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

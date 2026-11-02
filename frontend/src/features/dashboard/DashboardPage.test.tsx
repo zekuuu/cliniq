@@ -21,12 +21,15 @@ describe('Clinic Overview Dashboard', () => {
   it('puts the requested operational totals before its lower-detail sections', async () => {
     renderWithRouter(<DashboardPage />)
     const summary = await screen.findByRole('region', { name: 'Summary counts' })
-    // Sidebar order: Students, Visits, Incidents, Follow-Ups.
-    const order = ['Active students', 'Clinic visits', 'Pending excuse letters', 'Incidents', 'Due & overdue follow-ups']
+    // Action cards first, then the totals (R2).
+    const order = ['Unfinished incident records', 'Follow-ups to review', 'Pending excuse letters', 'Clinic visits', 'Incidents', 'Active students']
+    const label = (text: string) => within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === text)
     expect(within(summary).getAllByText((_, element) => element?.tagName === 'P' && order.includes(element.textContent ?? '')).map((p) => p.textContent)).toEqual(order)
-    expect(within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === 'Active students')).toHaveClass('text-brand-green-dark')
-    expect(within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === 'Pending excuse letters')).toHaveClass('text-warning')
-    expect(within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === 'Due & overdue follow-ups')).toHaveClass('text-warning')
+    // One colour per meaning (ADR-062).
+    expect(label('Active students')).toHaveClass('text-active-text')
+    expect(label('Pending excuse letters')).toHaveClass('text-letter-text')
+    expect(label('Follow-ups to review')).toHaveClass('text-follow-up-text')
+    expect(label('Unfinished incident records')).toHaveClass('text-unfinished-text')
     expect(screen.getByRole('heading', { name: /frequent-visitor warnings/i })).toBeInTheDocument()
   })
 
@@ -60,7 +63,7 @@ describe('Clinic Overview Dashboard', () => {
       act(() => {
         window.dispatchEvent(new Event('beforeprint'))
       })
-      expect(document.body.querySelector('[data-print-document]')?.textContent).toMatch(/Clinic Overview Report/)
+      expect(document.body.querySelector('[data-print-document]')?.textContent).toMatch(/Clinic Overview/)
     })
     const doc = document.body.querySelector('[data-print-document]')
     expect(doc?.textContent?.includes('Frequent visitors')).toBe(on)

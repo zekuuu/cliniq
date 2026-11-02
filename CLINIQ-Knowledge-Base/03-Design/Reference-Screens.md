@@ -23,7 +23,7 @@ Design these five in full detail first. Everything else in the system should be 
    - Low-stock / nearing-expiration inventory items (item name — not student-linked)
    - **Pending excuse letters (Staff):** there is no separate list; the "Pending excuse letters" stat card opens the Visit Log filtered to pending letters (ADR-011 amendment), where each pending visit has "Review Letter". Admin/Principal sees the count without a link.
 4. **Trends** — common complaints by week/month (chart with a Chart/Table switch as the low-spec fallback), the Sex / Grade level card (aggregate counts only, no names; filters change the Trends charts but never the Overview totals, ADR-031), weekday patterns, and the symptom-clustering indicator. Counts are exact, with no masking of small groups (ADR-050).
-5. **Print** prints the open tab as an A4 report: Overview prints the **Clinic Overview Report** (the stat cards, chip counts, a written summary and the lists behind them, with full LRNs and no names, ADR-044) and Trends prints the **Clinic Trends Report** (ADR-045). The Admin/Principal does not print (ADR-038).
+5. **Print** prints the open tab as an A4 report: Overview prints the **Clinic Overview** report (the stat cards, chip counts, a written summary and the lists behind them, with full LRNs and no names, ADR-044) and Trends prints the **Clinic Trends Report** (ADR-045). The Admin/Principal does not print (ADR-038).
 
 **Components this exercises:** stat card, attention chip, list row with status badge, warning badge (with icon, not color alone), bar/line chart with a table fallback, tab strip, segmented toggle control, date-range picker, icon+text button.
 

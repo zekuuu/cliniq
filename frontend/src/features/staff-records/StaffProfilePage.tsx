@@ -30,8 +30,8 @@ import { paths } from '../../routes/paths'
 import { archiveStaffRecord, fetchStaffProfile } from './api/staffApi'
 
 const incidentStageMap = {
-  1: { label: 'Needs completion', tone: 'warning', icon: 'alertTriangle', variant: 'soft' },
-  2: { label: 'Complete', tone: 'info', icon: 'checkCircle', variant: 'soft' },
+  1: { label: 'Needs completion', tone: 'unfinished', icon: 'alertTriangle', variant: 'soft' },
+  2: { label: 'Complete', tone: 'success', icon: 'checkCircle', variant: 'soft' },
 } satisfies StatusMap<'1' | '2'>
 
 const FOLLOW_UP_STATUS: Record<FollowUp['status'], string> = {
@@ -161,8 +161,8 @@ function Header({ person, viewer, onArchived }: { person: Personnel; viewer: Ses
 function AllergyBanner({ person }: { person: Personnel }) {
   if (!person.allergies.length && !person.medicalConditions.length) return null
   return (
-    <section aria-label="Allergies and medical conditions" className="flex items-start gap-2 rounded-md border border-warning bg-warning/10 px-4 py-3 text-sm text-text-primary">
-      <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning" />
+    <section aria-label="Allergies and medical conditions" className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-4 py-3 text-sm text-text-primary">
+      <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning-text" />
       <div className="flex flex-col gap-0.5">
         {person.allergies.length > 0 && (
           <p>
@@ -198,6 +198,7 @@ function Overview({ person }: { person: Personnel }) {
         <Field label="Staff No.">
           <span className="tabular-nums">{person.staffNumber}</span>
         </Field>
+        <Field label="Sex">{person.sex === 'female' ? 'Female' : person.sex === 'male' ? 'Male' : 'Sex not recorded'}</Field>
         <Field label="Type">{person.type}</Field>
         <Field label="Department or role">{person.department ?? 'Not recorded'}</Field>
         <Field label="Contact number">{person.contactInfo || 'Not recorded'}</Field>

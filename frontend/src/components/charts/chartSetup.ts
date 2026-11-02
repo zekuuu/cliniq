@@ -1,7 +1,6 @@
 import {
   BarController,
   BarElement,
-  ArcElement,
   CategoryScale,
   Chart,
   Filler,
@@ -20,7 +19,6 @@ import {
 Chart.register(
   BarController,
   BarElement,
-  ArcElement,
   LineController,
   LineElement,
   PointElement,

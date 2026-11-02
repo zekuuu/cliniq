@@ -372,7 +372,7 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
       )}
 
       {visit.escalatedIncidentId && (
-        <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning bg-warning/10 px-4 py-3 text-sm font-semibold text-text-primary">
+        <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning bg-warning-fill px-4 py-3 text-sm font-semibold text-text-primary">
           Escalated to incident. The event counts once, as the incident.
           <Link to={paths.incidentReport(visit.escalatedIncidentId)} className={buttonClassName({ size: 'sm' })}>
             Open the incident
@@ -387,7 +387,7 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
         >
           Visit updated.
           {saved.belowZero.length > 0 && (
-            <span className="mt-1 block text-warning">
+            <span className="mt-1 block text-warning-text">
               Now below zero: {saved.belowZero.join(', ')}. Recount and restock.
             </span>
           )}

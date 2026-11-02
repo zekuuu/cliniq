@@ -150,7 +150,7 @@ export function BackupStatusPage() {
                         </div>
                     </dl>
                     {current.recentFailure && current.recentFailure.lastRun !== latest.lastRun && (
-                        <p className="rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm text-text-primary">
+                        <p className="rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary">
                             An earlier backup failed on {formatDateTime(current.recentFailure.lastRun)}. Later
                             backups completed.
                         </p>

@@ -36,8 +36,8 @@ import { paths } from '../../routes/paths'
 import { archiveStudentRecord, fetchStudentProfile, type StudentProfileData } from './api/studentProfileApi'
 
 const incidentStageMap = {
-  1: { label: 'Needs completion', tone: 'warning', icon: 'alertTriangle', variant: 'soft' },
-  2: { label: 'Complete', tone: 'info', icon: 'checkCircle', variant: 'soft' },
+  1: { label: 'Needs completion', tone: 'unfinished', icon: 'alertTriangle', variant: 'soft' },
+  2: { label: 'Complete', tone: 'success', icon: 'checkCircle', variant: 'soft' },
 } satisfies StatusMap<'1' | '2'>
 
 /** The screen lists the most recent records; the printout lists them all. */
@@ -195,8 +195,8 @@ function ProfileHeader({
 function AllergyBanner({ student }: { student: Student }) {
   if (!student.allergies.length && !student.medicalConditions.length) return null
   return (
-    <section aria-label="Allergies and medical conditions" className="flex items-start gap-2 rounded-md border border-warning bg-warning/10 px-4 py-3 text-sm text-text-primary">
-      <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning" />
+    <section aria-label="Allergies and medical conditions" className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-4 py-3 text-sm text-text-primary">
+      <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning-text" />
       <div className="flex flex-col gap-0.5">
         {student.allergies.length > 0 && (
           <p>
@@ -246,7 +246,7 @@ function OverviewCard({ student }: { student: Student }) {
         )}
         <div>
           <p className="text-xs font-semibold text-text-secondary">Record status</p>
-          <Badge tone={student.recordComplete ? 'info' : 'warning'} variant="soft">
+          <Badge tone={student.recordComplete ? 'success' : 'warning'} variant="soft">
             {student.recordComplete ? 'Complete' : 'Incomplete'}
           </Badge>
         </div>

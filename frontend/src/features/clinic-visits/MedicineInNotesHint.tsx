@@ -24,10 +24,10 @@ export function MedicineInNotesHint({
       {named.map((item) => (
         <li
           key={item.id}
-          className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm text-text-primary"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary"
         >
           <span className="flex min-w-0 items-start gap-2">
-            <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning" />
+            <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning-text" />
             <span>
               This looks like {item.name}. Add it under Medicines &amp; supplies given so stock stays correct.
             </span>

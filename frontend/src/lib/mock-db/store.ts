@@ -85,6 +85,8 @@ export function migratePersistedState(saved: Saved): Saved {
     if (student.sex === 'male' || student.sex === 'female') continue
     student.sex = index % 2 === 0 ? 'female' : 'male'
   }
+  // ADR-063: staff saved before the field show "Sex not recorded".
+  for (const person of (saved.state.personnel ?? []) as unknown as Array<Record<string, unknown>>) person.sex ??= null
   // ADR-054: a student's own number is gone and the birthdate is new. Staff keep their number.
   for (const student of saved.state.students as unknown as Array<Record<string, unknown>>) {
     delete student.contactInfo

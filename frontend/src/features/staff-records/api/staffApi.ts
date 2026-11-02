@@ -10,7 +10,7 @@ import {
   type PersonnelHistory,
   type SessionUser,
 } from '../../../lib/mock-db'
-import type { EmergencyContact, Personnel } from '../../../types/entities'
+import type { EmergencyContact, Personnel, StudentSex } from '../../../types/entities'
 import { isNoneRecorded } from '../../../lib/patients'
 
 /**
@@ -49,6 +49,7 @@ export function archiveStaffRecord(personnelId: string, actor: SessionUser): Pro
 
 export interface StaffFormValues {
   fullName: string
+  sex: StudentSex | ''
   type: string
   department: string
   contactInfo: string
@@ -86,6 +87,7 @@ export function submitStaffForm(values: StaffFormValues, options: { personnelId?
   return savePersonnel(
     {
       fullName: values.fullName,
+      sex: values.sex || null,
       type: values.type,
       department: values.department,
       contactInfo: values.contactInfo,

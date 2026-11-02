@@ -77,7 +77,7 @@ const incidentStatusMap = {
     variant: 'soft',
   },
   in_progress: { label: 'In progress', tone: 'info', icon: 'clock', variant: 'soft' },
-  complete: { label: 'Complete', tone: 'info', icon: 'checkCircle', variant: 'soft' },
+  complete: { label: 'Complete', tone: 'success', icon: 'checkCircle', variant: 'soft' },
 } satisfies StatusMap<IncidentStatus>
 
 /** Suggestions only; any text is accepted (D11). */
@@ -563,7 +563,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       {incident && (!existing || completed) && (
         <div
           role="status"
-          className="rounded-md border border-warning bg-warning/10 px-4 py-3 text-sm font-semibold text-text-primary"
+          className="rounded-md border border-warning bg-warning-fill px-4 py-3 text-sm font-semibold text-text-primary"
         >
           {completed
             ? 'Incident completed. Stage 2 details are now saved.'
@@ -650,7 +650,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                   variant="primary"
                   loading={savingStageOne}
                   disabled={Boolean(incident)}
-                  className="h-11 bg-warning text-white hover:bg-warning hover:brightness-90"
+                  className="h-11 bg-warning text-text-primary hover:bg-warning hover:brightness-90"
                 >
                   Save Stage 1
                 </Button>
