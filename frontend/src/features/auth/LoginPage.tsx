@@ -70,8 +70,8 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
     // DOM order is panel then photo so Tab reaches the form before Demo Accounts; the photo is
     // drawn first on phones (a band on top) and second from md (filling the right side).
     <main data-login-page className="relative isolate flex min-h-dvh flex-col-reverse md:h-dvh md:flex-row">
-      <div className="flex flex-1 flex-col bg-background px-4 py-8 md:w-[26rem] md:flex-none md:overflow-y-auto md:px-12 lg:w-[28rem] lg:px-16">
-        <div className="mx-auto flex w-full max-w-[20rem] flex-1 flex-col">
+      <div className="flex flex-1 flex-col bg-background px-4 py-8 md:w-[26rem] md:flex-none md:overflow-y-auto md:px-12 lg:w-1/3 lg:min-w-[28rem] lg:px-16">
+        <div className="mx-auto flex w-full max-w-[24rem] flex-1 flex-col">
           <div className="flex items-center gap-3">
             <img src="/MCA_Logo.png" alt="Mendez Christian Academy logo" className="size-14 shrink-0 object-contain" />
             <span className="flex flex-col gap-1">
@@ -90,17 +90,17 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
               <p role="status" className="sr-only">{invalid.announcement}</p>
               <Input label="Username" icon="user" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} error={fieldErrors.username} required />
               <Input label="Password" icon="lock" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} {...capsLock.handlers} hint={capsLock.hint} error={fieldErrors.password} required />
+              {error && <p role="alert" className="text-sm font-semibold text-error">{error}</p>}
+              <Button type="submit" variant="primary" className="mt-2 w-full" loading={loading}>Sign In</Button>
               {/* Help only: no reset flow until the team decides the recovery method (Issues-and-TODOs, "Forgot password" DECIDE). */}
               <button
                 type="button"
                 aria-haspopup="dialog"
                 onClick={() => setForgotOpen(true)}
-                className="-mt-2 min-h-6 cursor-pointer self-start rounded-sm text-sm font-semibold text-brand-green-dark underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark"
+                className="min-h-6 cursor-pointer self-center rounded-sm text-sm text-text-secondary underline-offset-2 hover:text-brand-green-dark hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark"
               >
                 Forgot password?
               </button>
-              {error && <p role="alert" className="text-sm font-semibold text-error">{error}</p>}
-              <Button type="submit" variant="primary" className="mt-2 w-full" loading={loading}>Sign In</Button>
             </form>
           </div>
           <p className="flex flex-wrap items-center gap-x-2 text-xs text-text-secondary">
