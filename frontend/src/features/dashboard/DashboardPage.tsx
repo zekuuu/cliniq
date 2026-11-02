@@ -25,7 +25,7 @@ import { ComplaintTrends, ComplaintTrendsSkeleton } from './components/Complaint
 import { DashboardPrint } from './components/DashboardPrint'
 import { DashboardHeader } from './components/DashboardHeader'
 import { NewVisitLink } from './components/StaffShortcuts'
-import { StatCardRow, StatCardRowSkeleton } from './components/StatCardRow'
+import { ActivityCards, AttentionCards, StatCardRowSkeleton } from './components/StatCardRow'
 
 type DashboardView = 'overview' | 'trends'
 
@@ -205,7 +205,7 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                   <>
                     <span
                       aria-hidden="true"
-                      className="inline-flex shrink-0 items-center gap-0.5 rounded-sm bg-warning px-1.5 text-xs leading-5 font-semibold text-white"
+                      className="inline-flex shrink-0 items-center gap-0.5 rounded-sm bg-warning px-1.5 text-xs leading-5 font-semibold text-text-primary"
                     >
                       <Icon name="alertTriangle" size={12} />
                       {alertCount}
@@ -218,13 +218,17 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                 <StatCardRowSkeleton />,
                 (d) => (
                   <>
-                    <StatCardRow
-                      summary={d}
-                      range={range}
-                      canNavigate={canNavigate}
-                      pendingLetterCount={letters.data?.length ?? 0}
-                    />
-                    <AttentionChips summary={d} canNavigate={canNavigate} />
+                    <section aria-label="Summary counts" className="flex flex-col gap-6">
+                      <section aria-labelledby="dashboard-attention" className="flex flex-col gap-3">
+                        <h2 id="dashboard-attention" className="text-base font-semibold text-text-primary">Needs attention now</h2>
+                        {canNavigate && <AttentionCards summary={d} pendingLetterCount={letters.data?.length ?? 0} />}
+                        <AttentionChips summary={d} canNavigate={canNavigate} />
+                      </section>
+                      <section aria-labelledby="dashboard-activity" className="flex flex-col gap-3">
+                        <h2 id="dashboard-activity" className="text-base font-semibold text-text-primary">Activity summary</h2>
+                        <ActivityCards summary={d} range={range} canNavigate={canNavigate} />
+                      </section>
+                    </section>
                     <div>
                       <FullReportLink report="Monthly Report" view="monthly" month={range.to.slice(0, 7)} />
                     </div>
