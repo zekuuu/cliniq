@@ -12,7 +12,7 @@ function CountChip({ label, count, to, canNavigate }: { label: string; count: nu
 /** A chip that states its alert in words instead of a count. */
 function CountChipText({ text, to, canNavigate }: { text: string; to: string; canNavigate: boolean }) {
   const content = <><Icon name="alertTriangle" size={16} />{text}</>
-  const className = 'inline-flex min-h-10 items-center gap-2 rounded-md border border-warning bg-warning/10 px-3 text-sm font-semibold text-text-primary'
+  const className = 'inline-flex min-h-10 items-center gap-2 rounded-md border border-warning bg-warning-fill px-3 text-sm font-semibold text-text-primary'
   return canNavigate ? <Link to={to} className={`${className} cursor-pointer hover:bg-warning/20`}>{content}</Link> : <span className={className}>{content}</span>
 }
 

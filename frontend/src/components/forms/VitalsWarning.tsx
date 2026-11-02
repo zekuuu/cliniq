@@ -15,9 +15,9 @@ export function VitalsWarning({ readings, ranges, ageGroup = null }: { readings:
   return (
     <div
       role="status"
-      className="flex items-start gap-2 rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm text-text-primary"
+      className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary"
     >
-      <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning" />
+      <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning-text" />
       <p>
         {[
           fever,

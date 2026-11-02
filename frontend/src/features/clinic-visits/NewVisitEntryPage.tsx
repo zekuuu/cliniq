@@ -505,7 +505,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
           {saved.given > 0 && `${saved.given} ${saved.given === 1 ? 'item was' : 'items were'} taken from inventory. `}
           {saved.withFollowUp ? 'A pending follow-up was created.' : 'No follow-up was created.'}
           {saved.belowZero.length > 0 && (
-            <span className="mt-1 block text-warning">
+            <span className="mt-1 block text-warning-text">
               Now below zero: {saved.belowZero.join(', ')}. Recount and restock.
             </span>
           )}
@@ -613,9 +613,9 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
             />
             <ExtraComplaintsField value={extraComplaints} onChange={setExtraComplaints} main={complaint} suggestions={suggestions} />
             {looksLikeEmergency && (
-              <div role="note" className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm text-text-primary">
+              <div role="note" className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary">
                 <span className="flex items-center gap-2">
-                  <Icon name="alertTriangle" size={16} className="shrink-0 text-warning" />
+                  <Icon name="alertTriangle" size={16} className="shrink-0 text-warning-text" />
                   This looks like an emergency. Escalate to an incident?
                 </span>
                 <Button size="sm" onClick={escalateToIncident}>

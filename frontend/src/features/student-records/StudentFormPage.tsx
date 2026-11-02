@@ -119,7 +119,7 @@ function DuplicateDialog({
   return (
     <Modal open title="Possible duplicate record" onClose={onCancel}>
         <div className="flex items-start gap-3">
-          <Icon name="alertTriangle" className="mt-1 shrink-0 text-warning" />
+          <Icon name="alertTriangle" className="mt-1 shrink-0 text-warning-text" />
           <div>
             <p className="text-sm text-text-secondary">
               A student with the same full name and grade level already exists. Confirm only if
@@ -416,9 +416,9 @@ function StudentFormEditor({
                 {mode === 'add' && liveDuplicates.nameMatches.length > 0 && (
                   <div
                     role="status"
-                    className="flex items-start gap-2 rounded-md border border-warning bg-warning/10 px-3 py-2 text-xs text-text-primary"
+                    className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-xs text-text-primary"
                   >
-                    <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning" />
+                    <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning-text" />
                     <div>
                       <p className="font-semibold">Already in the Student List:</p>
                       <ul>
@@ -480,9 +480,9 @@ function StudentFormEditor({
                 {ageNote && !errors.birthDate && (
                   <p
                     role="status"
-                    className="flex items-start gap-2 rounded-md border border-warning bg-warning/10 px-3 py-2 text-xs text-text-primary"
+                    className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-xs text-text-primary"
                   >
-                    <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning" />
+                    <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning-text" />
                     {ageNote}
                   </p>
                 )}

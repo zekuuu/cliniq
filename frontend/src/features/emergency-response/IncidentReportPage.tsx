@@ -211,11 +211,11 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
           </div>
         </div>
         {!isStaff ? null : approvalBlocker ? (
-          <p id="approve-report-blocker" role="status" className="mt-4 rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm font-semibold text-text-primary">
+          <p id="approve-report-blocker" role="status" className="mt-4 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm font-semibold text-text-primary">
             Can&apos;t be approved yet. {approvalBlocker}
           </p>
         ) : !approved && !hasTreatment && !incident.noFurtherActionReason && (
-          <p role="status" className="mt-4 rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm font-semibold text-text-primary">
+          <p role="status" className="mt-4 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm font-semibold text-text-primary">
             No treatment recorded. Check this is correct before approving.
           </p>
         )}
@@ -225,7 +225,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
         <CardHeader
           title="Incident summary"
           icon={<Icon name="fileText" />}
-          actions={<Badge tone={incident.stage === 1 ? 'warning' : 'info'} variant="soft">{incident.stage === 1 ? 'Needs completion' : 'Complete'}</Badge>}
+          actions={<Badge tone={incident.stage === 1 ? 'unfinished' : 'success'} variant="soft">{incident.stage === 1 ? 'Needs completion' : 'Complete'}</Badge>}
         />
         <CardBody className="flex flex-col gap-5">
           <div className="print:hidden">

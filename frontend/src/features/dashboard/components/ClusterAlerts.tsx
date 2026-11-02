@@ -15,10 +15,10 @@ export function ClusterAlerts({ alerts }: { alerts: ClusterAlert[] }) {
       {alerts.map((alert) => (
         <p
           key={`${alert.complaint}|${alert.gradeLevel}`}
-          className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-warning bg-warning/10 px-3 py-2 text-sm text-text-primary"
+          className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary"
         >
           <span className="flex items-start gap-2">
-            <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning" />
+            <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning-text" />
             <span>
               <span className="font-semibold">Possible cluster:</span> {alert.students} {alert.gradeLevel} students with {alert.complaint} ({formatDateRange(alert.from, alert.to)}).
             </span>

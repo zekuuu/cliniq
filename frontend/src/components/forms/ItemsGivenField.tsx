@@ -88,7 +88,7 @@ export function ItemsGivenField({
             'Allergies appear here once the student is identified.'
           ) : allergies.length ? (
             <>
-              <span className="flex items-center gap-1 font-semibold text-warning">
+              <span className="flex items-center gap-1 font-semibold text-warning-text">
                 <Icon name="alertTriangle" size={14} />
                 Allergies: {allergies.join(', ')}
               </span>
@@ -164,7 +164,7 @@ export function ItemsGivenField({
                   onChange={(event) => update(line.itemId, { instructions: event.target.value })}
                 />
                 {overStock && (
-                  <p className="mt-2 flex items-start gap-1 text-xs font-semibold text-warning">
+                  <p className="mt-2 flex items-start gap-1 text-xs font-semibold text-warning-text">
                     <Icon name="alertTriangle" size={14} className="mt-px shrink-0" />
                     Only {available} {unit} in stock. Saving takes stock below zero; recount and restock.
                   </p>
