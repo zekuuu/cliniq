@@ -55,6 +55,25 @@ describe('LoginPage', () => {
     expect(trigger).toHaveFocus()
   })
 
+  it('puts Sign In straight after the fields, with a quiet Forgot password below it', () => {
+    renderLogin()
+    const signIn = screen.getByRole('button', { name: 'Sign In' })
+    const forgot = screen.getByRole('button', { name: 'Forgot password?' })
+
+    expect(screen.getByLabelText(/^Password/).compareDocumentPosition(signIn)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(signIn.compareDocumentPosition(forgot)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(forgot).toHaveClass('text-text-secondary')
+    expect(forgot).not.toHaveClass('font-semibold')
+  })
+
+  it('sets field labels at 14px, the same as the typed value', () => {
+    const { container } = renderLogin()
+    const labels = container.querySelectorAll('label')
+
+    expect(labels).toHaveLength(2)
+    labels.forEach((label) => expect(label).toHaveClass('text-sm'))
+  })
+
   it('warns while Caps Lock is on in the password field', () => {
     renderLogin()
     const password = screen.getByLabelText(/^Password/)
