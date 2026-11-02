@@ -240,8 +240,8 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             {/* ADR-043 (D18): wording pending the school's privacy officer (open DECIDE in Issues-and-TODOs). */}
             <p className={paragraphClass}>
               <strong>Teachers and school staff (PROVISIONAL).</strong> The clinic may also record visits,
-              incidents and medicines given for teachers, non-teaching staff and utility workers, with their
-              allergies and medical conditions if they choose to give them. This health information is kept
+              incidents and medicines given for teachers, non-teaching staff and utility workers, with their sex,
+              and their allergies and medical conditions if they choose to give them. This health information is kept
               only with the staff member&apos;s knowledge and consent. Details are seen only by the School
               Clinician; the Principal sees counts, never names or details. It is protected in the same way as students&apos; records. This wording is provisional until
               the school&apos;s privacy officer approves it.

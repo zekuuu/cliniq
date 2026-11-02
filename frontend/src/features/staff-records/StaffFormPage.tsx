@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { BackButton, Button, Card, CardBody, CardHeader, Combobox, ErrorState, Icon, Input, Select, SelectWithOther, Skeleton } from '../../components'
+import { BackButton, Button, Card, CardBody, CardHeader, Combobox, ErrorState, Icon, Input, Select, SelectWithOther, SexRadios, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
@@ -20,9 +20,10 @@ const EMPTY_CONTACT = { name: '', relationship: '', phone: '', verified: false }
 type Errors = Partial<Record<string, string>>
 
 function valuesFrom(person: Personnel | null): StaffFormValues {
-  if (!person) return { fullName: '', type: '', department: '', contactInfo: '', emergencyContacts: [EMPTY_CONTACT], allergies: '', medicalConditions: '' }
+  if (!person) return { fullName: '', sex: '', type: '', department: '', contactInfo: '', emergencyContacts: [EMPTY_CONTACT], allergies: '', medicalConditions: '' }
   return {
     fullName: person.fullName,
+    sex: person.sex ?? '',
     type: person.type,
     department: person.department ?? '',
     contactInfo: person.contactInfo,
@@ -36,10 +37,11 @@ function valuesFrom(person: Personnel | null): StaffFormValues {
 
 const contactKey = (index: number, field: 'name' | 'relationship' | 'phone') => `emergencyContacts.${index}.${field}`
 
-/** Only the name and type are required (D3 to D6); a contact that is started must be complete. */
+/** Only the name, sex and type are required (D3 to D6, ADR-063); a contact that is started must be complete. */
 function validate(values: StaffFormValues): Errors {
   const errors: Errors = {}
   if (!values.fullName.trim()) errors.fullName = 'Enter the full name.'
+  if (!values.sex) errors.sex = 'Choose the sex.'
   if (!values.type) errors.type = 'Select the staff type.'
   if (values.department.trim().length > DEPARTMENT_MAX) errors.department = `Use at most ${DEPARTMENT_MAX} characters.`
   values.emergencyContacts.forEach((contact, index) => {
@@ -135,7 +137,7 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
       <Card className="p-5">
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">{editing ? 'Edit Staff' : 'Add Staff'}</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          A teacher, non-teaching staff member or utility worker seen at the clinic. Only the name and type are required.
+          A teacher, non-teaching staff member or utility worker seen at the clinic. Only the name, sex and type are required.
         </p>
       </Card>
 
@@ -165,6 +167,7 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                 />
               )}
               <Input label="Full name" required value={values.fullName} error={errors.fullName} onChange={(event) => setField('fullName', event.target.value)} />
+              <SexRadios value={values.sex} error={errors.sex} onChange={(value) => setField('sex', value)} />
               <Select
                 label="Type"
                 required
