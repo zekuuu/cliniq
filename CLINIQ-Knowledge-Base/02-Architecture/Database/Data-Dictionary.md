@@ -44,7 +44,7 @@ How to read it: **Tier** is `Core` (a built screen or the mock already needs it)
 | 32 | [`issue_reports`](#issue_reports) | Shared (Feedback) | Core | "Report an issue" feedback from any signed-in role. |
 | 33 | [`audit_logs`](#audit_logs) | Shared (AuditLog) | Core | Append-only record of who did what and when (RA 10173 accountability). |
 | 34 | [`sports_reports`](#sports_reports) | ReportsGeneration | Core | A saved Sports Report for a PE or sports instructor (ADR-034). |
-| 35 | [`sports_report_students`](#sports_report_students) | ReportsGeneration | Core | The students on a Sports Report and the clinician's note for each. |
+| 35 | [`sports_report_students`](#sports_report_students) | ReportsGeneration | Core | The students on a Sports Report. |
 | 36 | [`personnel`](#personnel) | StaffPatients | Core | Teachers and school staff seen as patients (ADR-043). |
 | 37 | [`personnel_health_entries`](#personnel_health_entries) | StaffPatients | Core | A staff patient's allergies and conditions. |
 | 38 | [`personnel_emergency_contacts`](#personnel_emergency_contacts) | StaffPatients | Core | A staff patient's emergency contacts. |
@@ -897,16 +897,15 @@ A saved Sports Report (ADR-034): a list of students the clinician prints for a P
 
 **Module:** ReportsGeneration  |  **Tier:** Core
 
-The students on a Sports Report and the clinician's optional note for each. Hand-written Wednesday, October 21, 2026 — 07:19; not yet loaded into MariaDB.
+The students on a Sports Report. Hand-written Wednesday, October 21, 2026 — 07:19; the note column removed Tuesday, November 03, 2026 — 20:16 PHT (ADR-034 note); not yet loaded into MariaDB.
 
-**Frontend:** `SportsReport.students` (studentId, note).
+**Frontend:** `SportsReport.students` (studentId).
 
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
 | `id` **PK** | `bigint unsigned` | no |  |  |
 | `sports_report_id` | `bigint unsigned` | no |  |  |
 | `student_id` | `bigint unsigned` | no |  | An archived student stays on the list and is left out of the printout. |
-| `note` | `varchar(500)` | yes | NULL | Printed beside the student. Never a system-made "fit to play". |
 
 **Indexes:** `uq_sports_report_student` UNIQUE (`sports_report_id`, `student_id`), `idx_sports_report_students_student` (`student_id`)
 

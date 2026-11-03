@@ -596,7 +596,6 @@ erDiagram
         bigint id PK
         bigint sports_report_id FK
         bigint student_id FK
-        varchar note "max 500, optional"
     }
     system_settings {
         varchar setting_key PK
@@ -630,7 +629,7 @@ erDiagram
     users |o--o{ reference_settings : edits
 ```
 
-`sports_report_students.student_id` points at `students` (section 3.2). A Sports Report (ADR-034) stores only the list, the clinician's notes and the two options; the visits and incidents it prints are read from `visits` and `incidents` when it is printed, never copied.
+`sports_report_students.student_id` points at `students` (section 3.2). A Sports Report (ADR-034) stores only the list and the two options (no note since Tuesday, November 03, 2026 — 20:16 PHT); the visits and incidents it prints are read from `visits` and `incidents` when it is printed, never copied.
 
 ---
 

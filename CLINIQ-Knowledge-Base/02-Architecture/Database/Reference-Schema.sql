@@ -783,13 +783,12 @@ CREATE TABLE sports_reports (
   CONSTRAINT fk_sports_reports_user FOREIGN KEY (created_by_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- The students on a Sports Report and the clinician's note for each (ADR-034). A list only: the
+-- The students on a Sports Report (ADR-034); no note since Tuesday, November 03, 2026 — 20:16 PHT (ADR-034 note). A list only: the
 -- visits and incidents it prints are read when it is printed, never copied here.
 CREATE TABLE sports_report_students (
   id                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   sports_report_id  BIGINT UNSIGNED NOT NULL,
   student_id        BIGINT UNSIGNED NOT NULL,
-  note              VARCHAR(500)    NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uq_sports_report_student (sports_report_id, student_id),
   KEY idx_sports_report_students_student (student_id),
