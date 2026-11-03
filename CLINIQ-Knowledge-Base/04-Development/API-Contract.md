@@ -674,6 +674,7 @@ Both roles, the same abilities (ADR-037).
 
 #### `PUT /api/backups/locations/{id}/enabled`
 - Roles: S, A. Request: `enabled`. Audit: `update backup-location`, "Enabled" or "Disabled"; nothing when unchanged.
+- Errors: 422 "Enable another backup location before disabling the last one." when it would leave no location enabled; nothing changes and nothing is logged. Note, Tuesday, November 03, 2026 — 20:16 PHT: frontend review round 2, R32 (Zean: "Block it"; "much better that they cannot both be disabled"; ADR-052 note).
 - Copies: `setBackupLocationEnabled` (`api.ts:2542`); tests: `StaffComplaintsBackupDecisions`. Never deleted.
 
 ## Audit and shared actions (Module 11)
@@ -681,7 +682,7 @@ Both roles, the same abilities (ADR-037).
 #### `GET /api/audit-log`
 - Roles: S, A.
 - Query: `from`, `to`, `userId`, `actionTypes[]`, `targetTypes[]`.
-- Response: `AuditLogList`, masked targets. Writes no entry (ADR-016). No route updates or deletes an entry.
+- Response: `AuditLogList`. A student-related target carries the full LRN, never the name (frontend review round 2, R33, Zean: "display it"; notes on ADR-040 and ADR-044; changed Tuesday, November 03, 2026 — 20:16 PHT). Writes no entry (ADR-016). No route updates or deletes an entry.
 - Copies: `listAuditLog` (`api.ts:2986`); tests: `print-documents`.
 
 #### `POST /api/audit/views`

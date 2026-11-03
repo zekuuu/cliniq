@@ -47,10 +47,10 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | Restocks | `submit` | inventory-restock | — | — |
 | Adjusts stock (or a visit edit moves stock) | `submit` | inventory-adjustment | the reason ("Visit edited", "Damaged or spilled", …) | `lib/mock-db/stock.test.ts` |
 | Starts a backup ("Back up now") | `create` | backup | "Backup started from the Backup page (2 locations)": the number of enabled locations (ADR-052) | `features/backup/AccessAndBackup.test.tsx` |
-| Adds, edits, disables or enables a backup location (ADR-052) | `create` / `update` | backup-location | — / "Updated label" / "Disabled" / "Enabled" | `features/StaffComplaintsBackupDecisions.test.tsx` |
+| Adds, edits, disables or enables a backup location (ADR-052) | `create` / `update` | backup-location | — / "Updated label" / "Disabled" / "Enabled". Disabling the last enabled location is refused and writes nothing (review round 2, R32) | `features/StaffComplaintsBackupDecisions.test.tsx`, `features/review-round-2-parts-2-3.test.tsx` |
 | Marks a backup verified | `update` | backup | "Verified backup" | — |
 | Adds / edits / deletes a calendar event | `create` / `update` / `delete` | calendar-event | changed field names on edit | `lib/mock-db/calendarEvents.test.ts` |
-| Creates / edits / duplicates / archives / restores a Sports Report | `create` / `update` / `create` / `archive` / `update` | sports-report | "Duplicated from another Sports Report", "Restored from the archive" | `features/reports/SportsReport.test.tsx` |
+| Creates / edits / duplicates / archives / restores a Sports Report | `create` / `update` / `create` / `archive` / `update` | sports-report | "Duplicated from another Sports Report", "Restored from the archive"; a report holds students only, no note (November 3, 2026) | `features/reports/SportsReport.test.tsx` |
 | Prints or saves as PDF | `print` | the printed record, or print-document | the document's title or scope. Never written for the Admin, who can't print, or for a draft excuse letter (ADR-038) | `components/print/Print.test.tsx` |
 | Admin/Principal or the clinician opens a student or staff profile or an incident report | `view` ("Viewed a record") | student / staff / incident | "Opened student profile" / "Opened staff profile" / "Opened incident report". Once per record per sign-in session (ADR-038 item 4; the clinician's since ADR-048, Friday, October 30, 2026 — 00:17 PHT). Lists and searches are not logged | `features/admin-read-only.test.tsx`, `features/AdminAuditDashboardDecisions.test.tsx` |
 | The Admin is signed out after the idle limit (ADR-048) | `logout` | — | "Signed out after 30 minutes of inactivity" | `features/AdminAuditDashboardDecisions.test.tsx` |
@@ -66,5 +66,7 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | Searching for a student (Student List, pickers) | No | Probably not: the opened record is the access worth logging. |
 | A single wrong password at sign-in | No | No: decided with the lockout below (Zean, Friday, October 23, 2026). Five in a row are logged as a lockout. |
 | Viewing the Dashboard, Calendar, Trends or lists | No | No: aggregate or masked (ADR-004, ADR-028). |
+
+**Review round 2, Parts 2 and 3 (Tuesday, November 03, 2026 — 20:16 PHT):** no audited action was added. The screens changed (Student List, Student and Staff forms, Student Profile, New Visit, Incident Stage 2, Inventory, Reports, Backup, Audit Log, Sports Report form) write the same entries as before. The Audit Log now shows a student target by full LRN (R33). [session](../08-Logs/Agent-Sessions/2026-11-03-backend-review-round-2-docs.md)
 | Reading the Audit Log | No | Decided (ADR-016). |
 | Dev-only resets and test data loads (`?mockReset=1`, `cliniqMockDb`) | No | No: development tools, not in a production build. |
