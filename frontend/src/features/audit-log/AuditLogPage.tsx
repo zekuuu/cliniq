@@ -129,15 +129,8 @@ function recordCell(row: AuditLogRow, viewer: SessionUser) {
   if (!row.target) return <span className="text-text-secondary">No record</span>
   const path = targetPath(row, viewer)
   if (!row.target.label) return path ? <ListItemLink to={path}>View<span className="sr-only"> {row.target.kind}</span></ListItemLink> : emptyCell
-  // A student-related record shows its masked LRN; a screen reader hears "LRN ending in 1234", not bullets.
-  const label = row.target.studentId ? (
-    <span>
-      <span aria-hidden="true">{row.target.label}</span>
-      <span className="sr-only">LRN ending in {row.target.label.slice(-4)}</span>
-    </span>
-  ) : (
-    row.target.label
-  )
+  // A student-related record shows its full LRN (review round 2, R33), never the name.
+  const label = row.target.studentId ? `LRN ${row.target.label}` : row.target.label
   return path ? <ListItemLink to={path}>{label}</ListItemLink> : label
 }
 

@@ -55,8 +55,14 @@ export interface InventoryFormContext {
 }
 
 /** "Paracetamol 500mg Tablets " and "paracetamol 500 mg tablet" compare equal: case, spacing and a trailing "s" are ignored. */
+/** Same name ignoring case, spaces, punctuation and the generic or branded wording (ADR-049, review round 2 R25). */
 function sameText(a: string, b: string) {
-  const norm = (value: string) => value.toLowerCase().replace(/\s+/g, '').replace(/s$/, '')
+  const norm = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/\b(generic|branded|brand)\b/g, '')
+      .replace(/[^a-z0-9]/g, '')
+      .replace(/s$/, '')
   return norm(a) === norm(b)
 }
 
