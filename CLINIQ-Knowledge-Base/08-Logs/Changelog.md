@@ -2,6 +2,7 @@
 
 **Backend changes are logged in [`Backend-Changelog.md`](./Backend-Changelog.md), not here** (ADR-056); this file covers the frontend, the documents and the project.
 
+| Tuesday, November 03, 2026 — 23:21 PHT | Masked LRN dots drawn as one SVG, level with the digits, on every screen (the duplicate warning and import preview included); `lrn-mask` removed; Student List actions right-aligned; `cliniq-display-privacy` updated, on `main` (not committed). See [Agent session](Agent-Sessions/2026-11-03-lrn-dots-drawn-and-student-list-actions.md). |
 | Tuesday, November 03, 2026 — 20:42 PHT | LRN mask bullets lifted to the digits' centre with Inter's case alternates (`lrn-mask`), on `main` (not committed). See [Agent session](Agent-Sessions/2026-11-03-lrn-bullets-aligned.md). |
 | Tuesday, November 03, 2026 — 20:34 PHT | Incomplete Records Queue Back reads "Back"; the Back underline starts at the chevron tip; the LRN mask uses small bullets; three skills updated, on `main` (not committed). See [Agent session](Agent-Sessions/2026-11-03-back-label-underline-and-lrn-bullets.md). |
 | Tuesday, November 03, 2026 — 20:28 PHT | Dashboard incomplete-records chip opens the Incomplete Records Queue; the queue's Back goes to the Student List; `cliniq-back-navigation-patterns` updated, on `main` (not committed). See [Agent session](Agent-Sessions/2026-11-03-incomplete-chip-to-queue.md). |
