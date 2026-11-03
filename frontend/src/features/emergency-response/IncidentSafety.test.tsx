@@ -75,10 +75,10 @@ describe('No empty completion or approval (IN-3)', () => {
     await user.click(screen.getByLabelText(/nothing further was needed or done/i))
     expect(complete).toBeEnabled()
     await user.click(complete)
-    expect(screen.getByText('Write one line on why nothing further was needed.')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /^Why was nothing further needed/ })).toHaveAccessibleDescription(/Write one line on why nothing further was needed/)
     expect(recordedWrites()).toEqual([])
 
-    await user.type(screen.getByRole('textbox', { name: /^reason/i }), 'Rested ten minutes; no complaint after.')
+    await user.type(screen.getByRole('textbox', { name: /^Why was nothing further needed/ }), 'Rested ten minutes; no complaint after.')
     await user.click(complete)
     expect(await screen.findByText(/incident completed/i)).toBeInTheDocument()
     expect((await getIncident('incident-0022')).noFurtherActionReason).toBe('Rested ten minutes; no complaint after.')
@@ -115,7 +115,7 @@ describe('No empty completion or approval (IN-3)', () => {
     renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
     await screen.findByRole('heading', { name: 'Complete Incident Record' })
     await user.click(screen.getByLabelText(/nothing further was needed or done/i))
-    await user.type(screen.getByRole('textbox', { name: /^reason/i }), 'Observed only.')
+    await user.type(screen.getByRole('textbox', { name: /^Why was nothing further needed/ }), 'Observed only.')
     await user.click(screen.getByRole('button', { name: 'Complete Incident' }))
     await screen.findByText(/incident completed/i)
 

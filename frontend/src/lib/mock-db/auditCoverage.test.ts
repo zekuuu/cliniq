@@ -183,7 +183,7 @@ describe('every audited event is written (AU-1)', () => {
   })
 
   it('Sports Reports: create, edit, duplicate, archive, restore', async () => {
-    const input = { title: 'Varsity', activity: 'Basketball', requestedBy: 'Coach', window: 90 as const, includeConditions: false, students: [{ studentId: 'student-0001', note: '' }] }
+    const input = { title: 'Varsity', activity: 'Basketball', requestedBy: 'Coach', window: 90 as const, includeConditions: false, students: [{ studentId: 'student-0001' }] }
     const report = await createSportsReport(input, STAFF)
     await updateSportsReport(report.id, { ...input, title: 'Varsity A' }, STAFF)
     await duplicateSportsReport(report.id, STAFF)

@@ -10,6 +10,7 @@ import {
   CardHeader,
   DataTable,
   EmptyState,
+  Pagination,
   ErrorState,
   Icon,
   Input,
@@ -21,6 +22,7 @@ import {
   type DataTableColumn,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import { paths } from '../../routes/paths'
 import { fetchInventory, type InventoryFilters, type InventoryItemView } from './api/inventoryApi'
@@ -100,6 +102,10 @@ export function InventoryListPage() {
   const [action, setAction] = useState<StockAction | null>(null)
   const [message, setMessage] = useState('')
   const key = `${filters.search}|${filters.category}|${filters.hasExpiredStock}|${filters.attention}`
+  // R26: paged like the other lists; a new search or filter starts again at page 1.
+  const [pageSize, setPageSize] = usePageSize()
+  const [paging, setPaging] = useState({ key, page: 1 })
+  const page = paging.key === key ? paging.page : 1
   const { data, status, isRefetching, reload } = useAsyncData(key, () => fetchInventory(filters))
   // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
   const back = <BackButton fallback={paths.dashboard} drillThroughOnly />
@@ -150,6 +156,8 @@ export function InventoryListPage() {
     if (key === 'expiry') return item.expirationDate
     return inventoryStatusSortValue(item)
   })
+  const pageCount = Math.max(1, Math.ceil(sortedData.length / pageSize))
+  const currentPage = Math.min(page, pageCount)
   return (
     <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {back}
@@ -158,7 +166,23 @@ export function InventoryListPage() {
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_14rem_14rem_auto] md:items-end"><Input label="Search" value={filters.search} placeholder="Item name" onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} /><Select label="Category" value={filters.category} options={[{ value: 'medicine', label: 'Medicine' }, { value: 'supply', label: 'Supply' }]} placeholder="All categories" clearable onChange={(value) => setFilters((current) => ({ ...current, category: value as InventoryFilters['category'] }))} /><Select label="Attention" value={filters.attention ?? ''} options={[{ value: 'low_stock', label: 'Low stock' }, { value: 'expiry', label: 'Expired or expiring' }, { value: 'has_expired', label: 'Has expired stock' }]} placeholder="All stock" clearable onChange={(value) => setFilters((current) => ({ ...current, attention: value === 'low_stock' || value === 'expiry' ? value : '', hasExpiredStock: value === 'has_expired' }))} /><Button variant="secondary" onClick={() => setFilters({ search: '', category: '', hasExpiredStock: false, attention: '' })}>Clear Filters</Button></div>
         <p className="text-sm text-text-secondary">Restock when new stock arrives. Adjust Stock to correct a count.</p>
         {message && <p role="status" className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary">{message}</p>}
-        <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>{data.length ? <DataTable caption="Inventory items" columns={columns} rows={sortedData} rowKey={(item) => item.id} fixedLayout minTableWidth="67rem" /> : <EmptyState icon="package" title="No inventory items found" description="Try a different search or category." />}</div>
+        <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>{data.length ? (
+          <>
+            <DataTable caption="Inventory items" columns={columns} rows={sortedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)} rowKey={(item) => item.id} fixedLayout minTableWidth="67rem" />
+            <Pagination
+              page={currentPage}
+              pageCount={pageCount}
+              total={sortedData.length}
+              pageSize={pageSize}
+              itemLabel="items"
+              onPageSizeChange={(size: PageSize) => {
+                setPageSize(size)
+                setPaging({ key, page: 1 })
+              }}
+              onPageChange={(next) => setPaging({ key, page: next })}
+            />
+          </>
+        ) : <EmptyState icon="package" title="No inventory items found" description="Try a different search or category." />}</div>
       </CardBody></Card>
       {action && (() => {
         if (action.kind === 'batches') return <BatchDetailsModal item={action.item} onClose={() => setAction(null)} />

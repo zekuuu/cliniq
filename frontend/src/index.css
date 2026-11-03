@@ -49,6 +49,9 @@
   --color-info-fill: #e8f1fa;
   --color-info-text: #0d47a1;
   --color-brand-green-fill: #e6f2e9;
+  /* The Trends sex bar only (Zean, November 2, 2026). Both carry white text: 4.68:1 and 5.63:1. */
+  --color-sex-female: #c74375;
+  --color-sex-male: #2f6aa6;
   /* Neutral-warm: a holiday day in the yearly calendar, apart from the green visit counts. */
   --color-holiday: #efe3cf;
   /* One meaning each (ADR-062): pending excuse letters, follow-ups to review, unfinished incident
@@ -111,6 +114,7 @@
   /* Elevation, reference-mockup style: cards separate from the page by a soft shadow, not an outline.
      Neutral near-black at low alpha (no new hue). */
   --shadow-card: 0 1px 2px 0 rgb(26 26 26 / 0.04), 0 2px 8px -2px rgb(26 26 26 / 0.06);
+  --shadow-clickable: 0 1px 2px 0 rgb(26 26 26 / 0.12), 0 6px 14px -3px rgb(26 26 26 / 0.22);
   --shadow-raised: 0 1px 2px 0 rgb(26 26 26 / 0.06), 0 4px 12px -2px rgb(26 26 26 / 0.1);
   /* A surface floating over a photo or backdrop (the Login card), where the soft page shadows vanish. */
   --shadow-overlay: 0 2px 6px -1px rgb(26 26 26 / 0.12), 0 24px 48px -12px rgb(26 26 26 / 0.45);
@@ -151,6 +155,66 @@
   :focus-visible {
     outline: 2px solid var(--color-brand-green-dark);
     outline-offset: 2px;
+  }
+  /* Every checkbox takes the CLINIQ look instead of OS chrome: a white box with a text-secondary
+     border (3:1 against white, WCAG 1.4.11), brand-green on hover, and a brand-green-dark fill with a
+     white tick (or dash, when indeterminate) once set. Size and margin stay with each call site's utilities. */
+  input[type='checkbox'] {
+    appearance: none;
+    display: inline-grid;
+    flex-shrink: 0;
+    place-content: center;
+    margin: 0;
+    border: 1.5px solid var(--color-text-secondary);
+    border-radius: 4px;
+    background: var(--color-background) center / 100% 100% no-repeat;
+    transition:
+      background-color 150ms,
+      border-color 150ms;
+  }
+  input[type='checkbox']:hover:not(:disabled) {
+    border-color: var(--color-brand-green);
+  }
+  input[type='checkbox']:checked,
+  input[type='checkbox']:indeterminate {
+    border-color: var(--color-brand-green-dark);
+    background-color: var(--color-brand-green-dark);
+  }
+  input[type='checkbox']:checked:hover:not(:disabled),
+  input[type='checkbox']:indeterminate:hover:not(:disabled) {
+    filter: brightness(1.25);
+  }
+  input[type='checkbox']:checked {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5'/%3E%3C/svg%3E");
+  }
+  input[type='checkbox']:indeterminate {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M4 8h8'/%3E%3C/svg%3E");
+  }
+  input[type='checkbox']:disabled {
+    border-color: var(--color-border);
+    background-color: var(--color-surface);
+  }
+  input[type='checkbox']:checked:disabled,
+  input[type='checkbox']:indeterminate:disabled {
+    border-color: var(--color-text-muted);
+    background-color: var(--color-text-muted);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    input[type='checkbox'] {
+      transition: none;
+    }
+  }
+  /* Windows High Contrast drops the fill and tick; hand the box back to the OS there. */
+  @media (forced-colors: active) {
+    input[type='checkbox'] {
+      appearance: auto;
+    }
+  }
+  @media print {
+    input[type='checkbox'] {
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
   }
   /* A hidden tab panel (Tabs.tsx) stays laid out at its full width, clipped to no height and
      invisible (so out of the tab order and accessibility tree), instead of display: none: a chart

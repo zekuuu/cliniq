@@ -70,7 +70,7 @@ export function MultiSelect({
       }}
       className={cn('relative flex flex-col gap-1', className)}
     >
-      <span id={`${id}-label`} className="text-xs font-semibold text-text-primary">
+      <span id={`${id}-label`} className="text-sm font-semibold text-text-primary">
         {label}
       </span>
       <button

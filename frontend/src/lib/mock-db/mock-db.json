@@ -6094,16 +6094,28 @@
         "includeConditions": false,
         "students": [
           {
-            "studentId": "student-0002",
-            "note": "Light drills only until the follow-up check."
+            "studentId": "student-0002"
           },
           {
-            "studentId": "student-0003",
-            "note": null
+            "studentId": "student-0003"
           },
           {
-            "studentId": "student-0044",
-            "note": null
+            "studentId": "student-0044"
+          },
+          {
+            "studentId": "student-0004"
+          },
+          {
+            "studentId": "student-0020"
+          },
+          {
+            "studentId": "student-0013"
+          },
+          {
+            "studentId": "student-0022"
+          },
+          {
+            "studentId": "student-0034"
           }
         ],
         "archived": false,

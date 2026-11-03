@@ -186,6 +186,8 @@ export function db(): DbState {
       // A copy saved before calendar events existed has no collection for them.
       state.frontendOnly.calendarEvents ??= []
       state.frontendOnly.sportsReports ??= []
+      // Sports Report notes were removed (Zean, November 3, 2026); drop any a saved copy still holds.
+      state.frontendOnly.sportsReports.forEach((report) => { report.students = report.students.map(({ studentId }) => ({ studentId })) })
       state.frontendOnly.studentImportBatches ??= []
       seedAuditLength = migrated.seedAuditLength
     } else {

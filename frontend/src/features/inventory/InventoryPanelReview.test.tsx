@@ -9,6 +9,9 @@ import { findDuplicateItem, unitSuggestions } from './api/inventoryApi'
 import { InventoryFormPage } from './InventoryFormPage'
 import { InventoryListPage } from './InventoryListPage'
 
+// The whole list on one page: these tests reach every item (Inventory is paged since review round 2, R26).
+beforeEach(() => window.sessionStorage.setItem('cliniq.pageSize', '50'))
+
 /** Panel review part 5: the Manage menu, expiry on Add Item, the duplicate warning, Add/Remove. */
 
 const NEW_ITEM = { name: 'Saline solution', category: 'supply' as const, currentStock: 10, unit: 'bottles', lowStockThreshold: 2 }

@@ -39,6 +39,7 @@ Useful combinations include:
 |---|---|---|---|---|
 | `item` | Add/Edit Inventory Item | An inventory item ID | Opens the inventory form in edit mode for that item. Without it, the form is for a new item. | `/inventory/new?item=item-0001` |
 | `focus` | Student List | `search` | Focuses the student search field once the list has loaded; `Alt + K` links here. | `/students?focus=search` |
+| `record` | Student List | `complete`, `incomplete` | Opens the Student List with the Record status filter set. Read only on arrival; the in-screen filter does the same. Built by the Dashboard's incomplete-records chip (`paths.studentsIncomplete`), which no longer opens the Incomplete Records queue. | `/students?record=incomplete` |
 | `search` | Inventory | Any text | Opens Inventory with this text in the search box. Read only on arrival. Built by Add Item's duplicate warning. | `/inventory?search=Paracetamol` |
 | `letter` | Visit Log | `pending` | Opens the Visit Log on visits with a pending excuse letter, over a range that includes older outstanding letters. Read only on arrival. Built by the Dashboard's Pending excuse letters card (`paths.visitsWithPendingLetter`). | `/visits?letter=pending` |
 | `letter` | Excuse Letter | A letter ID | Opens that version of the visit's excuse letter (`paths.excuseLetterVersion`). | `/visits/visit-0001/excuse-letter?letter=<letter-id>` |

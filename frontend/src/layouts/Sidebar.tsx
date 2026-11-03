@@ -171,12 +171,12 @@ export function Sidebar({
                               aria-label="Backup needs attention"
                               title="Backup needs attention"
                               className={cn(
-                                'flex size-5 shrink-0 items-center justify-center rounded-md',
-                                isActive ? 'bg-[#c69214] text-brand-green-dark' : 'bg-warning text-text-primary',
+                                'flex size-6 shrink-0 items-center justify-center rounded-md',
+                                isActive ? 'bg-[#c69214] text-brand-green-dark' : 'bg-warning-fill text-warning-text',
                                 collapsed ? 'absolute -top-1 -right-1' : 'ml-auto',
                               )}
                             >
-                              <Icon name="alertTriangle" size={12} />
+                              <Icon name="alertTriangle" size={16} />
                             </span>
                           )}
                         </Link>

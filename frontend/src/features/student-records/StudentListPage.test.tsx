@@ -86,4 +86,15 @@ describe('Student List', () => {
       expect(gradeCell).toBeInTheDocument()
     }
   })
+
+  it('opens on incomplete records from ?record=incomplete', async () => {
+    const incomplete = await listStudents({ recordStatus: 'incomplete' })
+    expect(incomplete.length).toBeGreaterThan(0)
+    renderWithRouter(<StudentListPage />, { route: '/students?record=incomplete' })
+
+    expect(await screen.findByText(`${incomplete.length} result${incomplete.length === 1 ? '' : 's'} shown`)).toBeInTheDocument()
+    const table = within(screen.getByRole('table', { name: 'Student masterlist' }))
+    expect(table.queryByText('Complete')).not.toBeInTheDocument()
+    expect(table.getAllByText('Incomplete').length).toBeGreaterThan(0)
+  })
 })

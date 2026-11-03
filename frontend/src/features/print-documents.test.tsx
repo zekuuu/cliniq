@@ -267,6 +267,16 @@ describe('Visit Details printout (ADR-049, ADR-053)', () => {
     expect(doc).toHaveTextContent('Maria Cruz (Mother)')
   })
 
+  it('says on paper that a visit was entered in error, like a void excuse letter', async () => {
+    resetMockDb()
+    const visit = db().visits.find((row) => row.id === 'visit-0151')!
+    visit.enteredInError = { reason: 'Wrong student selected', at: `${todayISO()}T09:00:00+08:00`, byUserId: STAFF.id }
+    visible()
+    await screen.findByRole('heading', { name: 'Visit Details' })
+    const notice = print().querySelector('[data-print-void]')
+    expect(notice).toHaveTextContent(/^Entered in error\. This visit is not valid\. Reason: Wrong student selected\./)
+  })
+
   it('gives the Admin no printout', async () => {
     resetMockDb()
     renderWithRouter(<VisitDetailPage viewer={ADMIN} visitId="visit-0151" />)

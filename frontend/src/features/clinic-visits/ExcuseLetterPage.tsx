@@ -389,7 +389,7 @@ function ExcuseLetterEditor({
             />
             <StayHomeField checked={stayHome.checked} note={stayHome.note} onChange={setStayHome} disabled={locked} />
             <div className="flex flex-col gap-1">
-              <label htmlFor="excuse-body" className="text-xs font-semibold text-text-primary">
+              <label htmlFor="excuse-body" className="text-sm font-semibold text-text-primary">
                 Letter body
               </label>
               <textarea

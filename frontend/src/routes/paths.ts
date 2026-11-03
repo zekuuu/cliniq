@@ -16,6 +16,8 @@ export const paths = {
   students: '/students',
   studentNew: '/students/new',
   incompleteRecords: '/students/incomplete',
+  /** The Student List filtered to incomplete records (the Dashboard's incomplete-records chip). */
+  studentsIncomplete: '/students?record=incomplete',
   /** By the internal id: an LRN never goes in an address, history or logs (ADR-028). */
   studentProfile: (studentId: string) => `/students/${seg(studentId)}`,
   studentEdit: (studentId: string) => `/students/${seg(studentId)}/edit`,
@@ -32,6 +34,7 @@ export const paths = {
   visitNew: '/visits/new',
   /** New Visit with a staff member already chosen (the Staff Profile's "Record a visit"). */
   visitNewForStaff: (personnelId: string) => `/visits/new?staff=${seg(personnelId)}`,
+  visitNewForStudent: (studentId: string) => `/visits/new?student=${seg(studentId)}`,
   peReferral: '/visits/pe-referral',
   visitDetail: (visitId: string) => `/visits/${seg(visitId)}`,
   excuseLetter: (visitId: string) => `/visits/${seg(visitId)}/excuse-letter`,
@@ -41,6 +44,7 @@ export const paths = {
   incidentsInRange: (from: string, to: string) => `/incidents?from=${seg(from)}&to=${seg(to)}`,
   incidentNew: '/incidents/new',
   incidentNewForStaff: (personnelId: string) => `/incidents/new?staff=${seg(personnelId)}`,
+  incidentNewForStudent: (studentId: string) => `/incidents/new?student=${seg(studentId)}`,
   /** Reopens a saved Stage-1 incident to complete Stage 2 (Screen #16b). */
   incidentComplete: (incidentId: string) => `/incidents/${seg(incidentId)}/complete`,
   studentImport: '/students/import',

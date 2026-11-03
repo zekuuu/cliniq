@@ -78,7 +78,7 @@ function TextareaField({
   const id = label.toLowerCase().replaceAll(' ', '-')
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-semibold text-text-primary">
+      <label htmlFor={id} className="text-sm font-semibold text-text-primary">
         {label} <span className="text-error">*</span>
       </label>
       <textarea
@@ -298,7 +298,7 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
               onChange={(value) => setField('treatment', value)}
             />
             <div>
-              <p className="mb-1 text-xs font-semibold text-text-primary">Disposition</p>
+              <p className="mb-1 text-sm font-semibold text-text-primary">Disposition</p>
               <SegmentedControl
                 label="Disposition"
                 value={values.disposition}

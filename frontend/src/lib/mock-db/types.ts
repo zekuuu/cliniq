@@ -321,7 +321,7 @@ export type SportsReportWindow = 30 | 60 | 90 | 'school_year'
 
 /**
  * A saved Sports Report (ADR-034): a list of students the clinician builds for a PE or sports
- * activity. It holds only the list and her notes, never a copy of medical content; the visits and
+ * activity. It holds only the list, never a copy of medical content; the visits and
  * incidents are read when it is printed. Staff only. PROVISIONAL pending the ERD.
  */
 export interface SportsReport<T = ISODateTime> {
@@ -333,7 +333,7 @@ export interface SportsReport<T = ISODateTime> {
   window: SportsReportWindow
   /** Print the students' recorded conditions and allergies. Off by default. */
   includeConditions: boolean
-  students: Array<{ studentId: string; note: string | null }>
+  students: Array<{ studentId: string }>
   archived: boolean
   createdByUserId: string
   createdAt: T

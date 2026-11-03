@@ -65,7 +65,7 @@ describe('Add/Edit Student', () => {
     await user.type(screen.getByLabelText(/^LRN/), '123456789012')
     await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
     await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
-    await selectOption(user, screen.getByLabelText(/^sex/i), 'Female')
+    await user.click(screen.getByRole('radio', { name: 'Female' }))
     await user.type(screen.getByLabelText(/contact name/i), 'Marisol Santos')
     await user.type(screen.getByLabelText(/relationship/i), 'Mother')
     await user.type(screen.getByLabelText(/contact phone/i), '0917-333-4444')

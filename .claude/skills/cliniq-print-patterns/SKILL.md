@@ -37,7 +37,11 @@ Every printout has:
   A4 is its paper; the team chose it.
 - A **landscape** page (`landscape` prop, `@page landscape`) only for a table that can't be read in
   portrait. None needs it today; the Audit Log reads in portrait.
-- Body text about 10pt, tables no smaller than 9pt, the excuse letter and incident report 11–12pt.
+- Body text about 10pt, tables no smaller than 9pt, the excuse letter, incident report and visit
+  details 11–12pt.
+- **No rule under a section heading** (Zean, Tuesday, November 3, 2026: "there are a lot of horizontal
+  lines"): a heading is 12pt bold with space below, and lines are kept for table rows, the letterhead and
+  the stat strip. Use `PrintSection` rather than a hand-made heading so this stays one rule.
 - Tables repeat their header row on every page, never split a row, and a heading never sits alone at
   the bottom of a page.
 - Correct in **black and white**: status in words, no large dark fills, charts labeled directly
@@ -52,7 +56,8 @@ Every printout has:
   deliberately opened student shows the full name and the full LRN (ADR-004, ADR-028, ADR-040).
 - A draft or unapproved excuse letter does not print at all (ADR-038 item 6): it stays on screen and
   its Print is unavailable, with "Approve the letter to print it." in the same tooltip. A superseded or void letter still prints,
-  stamped SUPERSEDED or VOID, so it can't pass for a valid one.
+  stamped SUPERSEDED or VOID, so it can't pass for a valid one. A visit marked Entered in error prints
+  with a boxed notice at the top that says it is not valid, with the reason.
 
 ## Who can print
 
@@ -67,7 +72,9 @@ Every printout has:
 ## Where it lives
 
 - Shared components: `frontend/src/components/print/Print.tsx` (`PrintDocument`, `PrintSection`,
-  `PrintTable`, `PrintFigures`, `PrintBars`, `PrintFields`, `PrintSignatures`, `PrintNote`).
+  `PrintTable`, `PrintBars`, `PrintFields`, `PrintSignatures`, `PrintNote`). The letterhead logo is
+  `print/mca-logo-print.png`, inlined as a data URL, because the document mounts during `beforeprint`
+  and a fetched image is not ready in time.
 - **Signature lines carry the name when CLINIQ knows it** (`PrintSignatures` `name`; Zean, Monday,
   October 26, 2026): never leave a bare "Prepared by" for a known person. The person printing for
   Prepared by, the active Admin/Principal account (`getPrincipalName`) for a Principal line, and the
@@ -83,6 +90,7 @@ Every printout has:
   `@page` margin boxes; `index.css` hides the rest of the app for that print. So it costs nothing on
   screen and never duplicates screen text in tests. Pass the screen's loaded data as props.
 - The screen's Print button is the shared `PrintButton` (`components/print/Print.tsx`), inside a `print:hidden` block; it calls `window.print()` (or `onPrint`) and takes a `disabledReason` for a document that isn't printable yet.
+- **Figures print once** (frontend review round 2, R29 and R30, Tuesday, November 03, 2026 — 19:49 PHT): the Monthly Clinic Report prints its complaints as the table only; the Complaint summary prints its chart above its table, one below the other; the by-week table prints in the Monthly Report only. `PrintFields` titles are bold and black (R17).
 - Existing printouts: `DashboardPrint` (prints the open Dashboard tab: Clinic Overview Report or Clinic Trends Report, ADR-045), `ReportsPrint` (Monthly Clinic
   Report, Incident register, Complaint summary, the monthly Inventory sheet), and the print trees in `ExcuseLetterPage`,
   `IncidentReportPage`, `StudentProfilePage`, and `AuditLogPage`, and `SportsReportPrint` (the Sports

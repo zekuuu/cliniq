@@ -105,7 +105,7 @@ function TextareaField({
   const hintId = hint ? `${id}-hint` : undefined
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-semibold text-text-primary">
+      <label htmlFor={id} className="text-sm font-semibold text-text-primary">
         {label} {required && <span className="text-error">*</span>}
       </label>
       <textarea
@@ -150,6 +150,13 @@ function VisitPrint({ visit, viewer }: { visit: VisitDetail; viewer: SessionUser
       viewer={viewer}
       scope={`${student.fullName} (${patientIdText(student)}), ${patientGroup(student).value}. Clinic visit on ${formatDateTime(visit.dateTime)}.`}
     >
+      {/* A voided visit says so on paper, like the void excuse letter and the Stage 1 incident notice. */}
+      {visit.enteredInError && (
+        <p data-print-void className="mb-[4mm] border-2 border-text-primary px-[3mm] py-[2mm] text-[11pt] font-bold">
+          Entered in error. This visit is not valid. Reason: {visit.enteredInError.reason}. Marked by {visit.enteredInErrorBy ?? 'Unknown user'}, {formatDateTime(visit.enteredInError.at)}.
+        </p>
+      )}
+      <div className="text-[11pt]">
       <PrintSection title={PATIENT_KIND_LABELS[student.kind]}>
         <PrintFields
           fields={[
@@ -197,6 +204,7 @@ function VisitPrint({ visit, viewer }: { visit: VisitDetail; viewer: SessionUser
           />
         </PrintSection>
       )}
+      </div>
     </PrintDocument>
   )
 }
@@ -517,7 +525,7 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                   }}
                 />
                 <div>
-                  <p className="mb-1 text-xs font-semibold text-text-primary">Disposition</p>
+                  <p className="mb-1 text-sm font-semibold text-text-primary">Disposition</p>
                   <SegmentedControl
                     label="Disposition"
                     // Four options: two by two on a phone, one row from sm up (panel review VS-1 added Resting).

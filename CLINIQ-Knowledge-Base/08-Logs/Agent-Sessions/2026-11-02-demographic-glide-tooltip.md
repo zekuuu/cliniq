@@ -1,0 +1,12 @@
+Date/Day/Time: Monday, November 02, 2026 — 15:24 PHT
+Agent: Claude Opus 5.5 (Claude Code)
+Task: Fit the Grade level chart without scrolling, and give both demographic views the gliding tooltip
+Status: Completed. Not committed. Not viewed in a browser.
+Prompt/Request: Zean: "it's scrollable, fit it. Then apply the smooth tooltip", then during the work: "also apply the tooltip in Sex".
+Files Modified: `frontend/src/features/dashboard/components/ComplaintTrends.tsx`, `ComplaintTrends.test.tsx`, `03-Design/Design-System.md`, `08-Logs/Changelog.md`.
+Changes Made: The grade chart's sideways-scroll wrapper and 48rem minimum width are gone, so the 13 tiles always fit the card. Below `xl` the labels read "K", "1" … "12"; from `xl` they read "Kinder", "Grade 1". The per-tile CSS tooltip is replaced by `useGlideTip` and `GlideTip`: one panel per view, with the classes, 320ms timing and fade-in of `components/charts/smoothTooltip.ts`, gliding to the hovered or focused anchor and kept 64px in from the edges. On Grade level it sits over the tile's bar and shows cases, visits and incidents. On Sex it sits over the matching part of the bar, from either that part or its button, and shows cases and share, students and staff, visits and incidents. Reduced motion turns the glide off.
+Reason: `smoothTooltip` is a Chart.js `external` handler and these views are plain HTML, so its look and motion were rebuilt in React rather than called. The refs live in the component and are passed to the hook, because the React Compiler lint (`react-hooks/refs`) rejects reading a hook result that holds a ref during render.
+Mistake and repair: running Prettier on the whole file reformatted about 400 lines that were never Prettier-clean at HEAD. It was undone with a three-way merge (HEAD, Prettier of HEAD, the current file), with `DemographicCharts`, which was rewritten today, kept in Prettier style. Prettier of the repaired file matched Prettier of the formatted one, so no code changed.
+Testing Performed: Typecheck clean, ESLint clean on `features/dashboard`, Vitest on `features/dashboard`: 8 files, 58 tests passed after the last edit. The full suite, 117 files and 959 tests, passed just before the ref change. The production build passed.
+Known Issues: On a touch screen there is no hover; the split is then in the Sex buttons, the printed tables and screen-reader names. On a phone each grade tile is about 20px wide.
+Next Steps: Zean to view it on the Dashboard.

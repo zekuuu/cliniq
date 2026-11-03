@@ -43,6 +43,8 @@ export {
 export { StudentPicker } from './forms/StudentPicker'
 export { PatientPicker } from './forms/PatientPicker'
 export { SelectWithOther } from './forms/SelectWithOther'
+export { ComboboxWithOther } from './forms/ComboboxWithOther'
+export { HealthListField } from './forms/HealthListField'
 export { PatientFilterSelect } from './forms/PatientFilterSelect'
 export { VitalsWarning } from './forms/VitalsWarning'
 export { StayHomeField } from './forms/StayHomeField'
@@ -54,11 +56,9 @@ export {
   PrintButton,
   ADMIN_PRINT_NOTE,
   PrintFields,
-  PrintFigures,
   PrintNote,
   PrintSection,
   PrintSignatures,
   PrintTable,
   type PrintColumn,
-  type PrintFigure,
 } from './print/Print'

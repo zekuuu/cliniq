@@ -22,7 +22,6 @@ import { InventorySheetPrint, VisitsBySexPrint, WeeklyComplaintsPrint } from './
 export type ReportView = 'monthly' | 'incidents' | 'health' | 'inventory'
 type ArchiveRow = MonthlyReportData['incidents'][number]
 
-
 const share = (count: number, total: number) =>
   total ? `${Math.round((count / total) * 100)}%` : '—'
 const change = (now: number, before: number) =>
@@ -30,15 +29,21 @@ const change = (now: number, before: number) =>
 const stageText = (incident: ArchiveRow) =>
   incident.stage === 1 ? 'Stage 1, needs completion' : 'Stage 2, complete'
 
-function ComplaintBreakdown({ rows, empty }: { rows: ComplaintCount[]; empty: string }) {
+/**
+ * Complaints with count and share. The Complaint Summary prints its chart above the table, one below
+ * the other; the Monthly Report prints the table only, so the figures appear once (review round 2, R29, R30).
+ */
+function ComplaintBreakdown({ rows, empty, chart = false }: { rows: ComplaintCount[]; empty: string; chart?: boolean }) {
   const total = rows.reduce((sum, row) => sum + row.count, 0)
   if (!rows.length) return <PrintNote className="text-text-primary">{empty}</PrintNote>
   return (
-    <div className="mt-[5mm] grid grid-cols-2 items-start gap-[6mm] [&>section]:mt-0">
-      <PrintBars
-        caption="Clinic visits by complaint"
-        rows={rows.map((row) => ({ label: row.complaint, value: row.count }))}
-      />
+    <div className="flex flex-col gap-[4mm]">
+      {chart && (
+        <PrintBars
+          caption="Clinic visits by complaint"
+          rows={rows.map((row) => ({ label: row.complaint, value: row.count }))}
+        />
+      )}
       <PrintTable
         caption="Clinic visits by complaint, with share"
         rows={rows}
@@ -131,6 +136,7 @@ export function ReportsPrint({
         <ComplaintBreakdown
           rows={data.complaintCounts}
           empty="No clinic visits were recorded this month."
+          chart
         />
         <PrintNote>
           Aggregated counts only. No student is identified in this summary; individual names stay
@@ -191,7 +197,8 @@ export function ReportsPrint({
         <WeeklyComplaintsPrint weekly={data.weeklyComplaints} />
       </PrintSection>
 
-      <div className="mt-[5mm] grid grid-cols-2 items-start gap-[6mm] [&>section]:mt-0">
+      {/* More room than between sections: the weekly table ran straight into this (R29). */}
+      <div className="mt-[8mm] grid grid-cols-2 items-start gap-[6mm] [&>section]:mt-0">
         <PrintSection title="After the visit">
           <PrintTable
             caption="Visits by disposition"

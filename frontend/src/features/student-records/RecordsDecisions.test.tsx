@@ -47,7 +47,7 @@ describe('Student and incident records', () => {
       gradeLevel: student.gradeLevel,
       section: '',
       sex: student.sex,
-      birthDate: '',
+      birthDate: student.birthDate ?? '2015-06-01',
       emergencyContacts: student.emergencyContacts,
     }
     for (const [allergies, medicalConditions] of [['None recorded', 'None'], ['', '']]) {
@@ -56,10 +56,12 @@ describe('Student and incident records', () => {
     }
   })
 
-  it('keeps a record complete with no birthdate', async () => {
+  // Review round 2, R14 (Zean: "Flag as incomplete"): a missing birthdate makes the record incomplete, and the save still goes through.
+  it('saves a record with no birthdate and marks it incomplete', async () => {
     const student = await getStudent('student-0001')
     const result = await saveStudent({ ...student, birthDate: null }, { studentId: student.id })
-    expect(result.status === 'saved' && result.student.recordComplete).toBe(true)
+    expect(result.status).toBe('saved')
+    expect(result.status === 'saved' && result.student.recordComplete).toBe(false)
   })
 
   it('matches an item\'s "avoid if allergic to" word against the allergies, case-insensitively', () => {

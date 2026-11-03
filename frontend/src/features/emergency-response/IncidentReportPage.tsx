@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { capitalize, contactNoun, NOTIFIED_PARTY, PATIENT_KIND_LABELS, patientGroup, patientIdText } from '../../lib/patients'
-import { BackButton, Badge, Button, Card, CardBody, CardHeader, EmergencyContactList, ErrorState, Icon, Modal, PrintDocument, PrintFields, PrintButton, PrintNote, PrintSection, PrintSignatures, PrintTable, Select, Skeleton } from '../../components'
+import { BackButton, Badge, Button, Card, CardBody, CardHeader, EmergencyContactList, ErrorState, Icon, Modal, PrintDocument, PrintFields, PrintButton, PrintSection, PrintSignatures, PrintTable, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
 import { formatDateTime } from '../../lib/dates'
@@ -53,7 +53,7 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
           {vitals.length ? (
             <PrintFields columns={4} fields={vitals.map(([key, value]) => ({ label: READING_LABELS[key]?.label ?? key, value: readingText(key, value) }))} />
           ) : (
-            <PrintNote className="text-text-primary">No readings taken.</PrintNote>
+            <p>No readings taken.</p>
           )}
         </PrintSection>
         <PrintSection title="Treatment">

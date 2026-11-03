@@ -104,9 +104,22 @@ export function BackupLocationsPanel({
               {canManage && (
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="neutral" aria-label={`Edit ${location.label}`} onClick={() => open(location)}>Edit</Button>
-                  <Button size="sm" variant="secondary" aria-label={`${location.enabled ? 'Disable' : 'Enable'} ${location.label}`} onClick={() => void toggle(location)}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    aria-label={`${location.enabled ? 'Disable' : 'Enable'} ${location.label}`}
+                    // R32: the last enabled location can't be disabled; the data layer refuses it too.
+                    disabled={location.enabled && enabled.length === 1}
+                    aria-describedby={location.enabled && enabled.length === 1 ? `last-location-${location.id}` : undefined}
+                    onClick={() => void toggle(location)}
+                  >
                     {location.enabled ? 'Disable' : 'Enable'}
                   </Button>
+                  {location.enabled && enabled.length === 1 && (
+                    <p id={`last-location-${location.id}`} className="basis-full text-xs text-text-secondary">
+                      The only enabled location. Enable another one first.
+                    </p>
+                  )}
                 </div>
               )}
             </li>

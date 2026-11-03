@@ -13,7 +13,7 @@ import {
   type StudentDuplicateCheck,
 } from '../../../lib/mock-db'
 import type { EmergencyContact, ISODate, Student, StudentSex } from '../../../types/entities'
-import { isNoneRecorded } from '../../../lib/patients'
+import { isNoneRecorded, tidyEntry } from '../../../lib/patients'
 
 export { checkStudentDuplicates, DUPLICATE_LRN_MESSAGE, DuplicateLrnError, NAME_CORRECTION_REASON_MIN }
 export type { DuplicateMatch, StudentDuplicateCheck }
@@ -49,7 +49,7 @@ export type StudentFormSubmitResult =
 function parseList(value: string): string[] {
   return value
     .split(',')
-    .map((item) => item.trim())
+    .map(tidyEntry)
     .filter(Boolean)
     .filter((item) => !isNoneRecorded(item))
 }

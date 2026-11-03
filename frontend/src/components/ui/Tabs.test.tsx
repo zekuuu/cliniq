@@ -21,7 +21,7 @@ function Harness({ printAll, actions, status }: { printAll?: boolean; actions?: 
         tabs={[
           { value: 'a', label: 'Alpha', panel: <button type="button">Inside alpha</button> },
           { value: 'b', label: 'Beta', panel: <p>Beta content</p> },
-          { value: 'c', label: 'Gamma', badge: <span>3</span>, panel: <p>Gamma content</p> },
+          { value: 'c', label: 'Gamma', panel: <p>Gamma content</p> },
         ]}
       />
     </>
@@ -47,7 +47,7 @@ describe('Tabs', () => {
     expect(screen.getByRole('tabpanel')).toHaveAccessibleName('Alpha')
     expect(panels[1]).not.toBeVisible()
     expect(panels[2]).toHaveTextContent('Gamma content')
-    expect(tabs[2]).toHaveTextContent('Gamma3')
+    expect(tabs[2]).toHaveTextContent('Gamma')
   })
 
   it('selects with a click, and marks selection by more than color', async () => {

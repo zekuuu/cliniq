@@ -1,3 +1,5 @@
+> **Note, Tuesday, November 03, 2026 — 19:49 PHT:** Zean, frontend review round 2, R33: "display it", to the question of what the Audit Log should show for a student (the groupmate said the LRN is still hidden). The Audit Log screen and its printout now show the full LRN ("LRN 000000250032") for a student-related record, never the name. This widens where the full LRN appears; lists, pickers, the Dashboard and Reports screens stay masked. Session: [2026-11-03-frontend-review-round-2-part-3](../08-Logs/Agent-Sessions/2026-11-03-frontend-review-round-2-part-3.md)
+
 # ADR-040: The full LRN shows on every single-student screen and its printout
 
 **Date:** Sunday, October 25, 2026 — 22:33 PHT

@@ -124,7 +124,7 @@ export function InventoryDispensePage() {
           )}
           {item ? (
             <div className="flex flex-col gap-1">
-              <p className="text-xs font-semibold text-text-primary">Item <span className="text-error" aria-hidden="true">*</span></p>
+              <p className="text-sm font-semibold text-text-primary">Item <span className="text-error" aria-hidden="true">*</span></p>
               <div className="flex h-10 items-center justify-between gap-3 rounded-md border border-border bg-surface px-3 text-sm">
                 <span className="font-semibold text-text-primary">{item.name} <span className="font-normal text-text-secondary">· {item.currentStock} {item.unit} in stock</span></span>
                 <button type="button" aria-label={`Change item (${item.name})`} onClick={() => setItemId('')} className="inline-flex cursor-pointer rounded-sm text-text-secondary transition-colors hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"><Icon name="xCircle" /></button>

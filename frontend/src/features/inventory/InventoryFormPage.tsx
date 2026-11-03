@@ -15,7 +15,7 @@ const EMPTY: InventoryFormValues = { name: '', category: 'medicine', currentStoc
 
 /** Stock and expiry on an existing item: shown, but changed only through the stock actions (ADR-018). */
 function ReadOnlyFact({ label, value, note }: { label: string; value: string; note: string }) {
-  return <div className="flex flex-col gap-1"><p className="text-xs font-semibold text-text-primary">{label}</p><p className="flex h-10 items-center rounded-md border border-border bg-surface px-3 text-sm font-semibold text-text-primary">{value}</p><p className="text-xs text-text-secondary">{note}</p></div>
+  return <div className="flex flex-col gap-1"><p className="text-sm font-semibold text-text-primary">{label}</p><p className="flex h-10 items-center rounded-md border border-border bg-surface px-3 text-sm font-semibold text-text-primary">{value}</p><p className="text-xs text-text-secondary">{note}</p></div>
 }
 
 function InventoryFormSkeleton({ back }: { back: ReactNode }) {

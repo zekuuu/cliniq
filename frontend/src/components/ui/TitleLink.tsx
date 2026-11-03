@@ -6,18 +6,19 @@ import { Icon } from '../icons/Icon'
 /**
  * Turns a widget's own name (stat-card label, list-card title) into its drill-down link. It keeps
  * the name's color at rest and shows the open-link icon so touch users can still see it's a link;
- * hover adds an underline that runs under the icon too, and shifts color. `darken` suits tinted/grey labels; `brand` turns
- * near-black titles (which can't get visibly darker) brand green, never grey.
+ * hover adds an underline that runs under the icon too. `brand` also turns
+ * near-black titles brand green, never grey. No `filter` here: it would shrink a stretched ::after
+ * to the label, and the hover would flicker (StatCard).
  */
 export function TitleLink({
   to,
   children,
-  hover = 'darken',
+  hover,
   className,
 }: {
   to: To
   children: string
-  hover?: 'darken' | 'brand'
+  hover?: 'brand'
   className?: string
 }) {
   // The last word and the icon share a no-wrap span, so a wrapped title never strands the icon alone.
@@ -27,8 +28,8 @@ export function TitleLink({
       to={to}
       state={DRILL_THROUGH_STATE}
       className={cn(
-        'text-current underline-offset-2 cursor-pointer transition-[color,filter] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none',
-        hover === 'darken' ? 'hover:brightness-75' : 'hover:text-brand-green-dark',
+        'text-current underline-offset-2 cursor-pointer transition-colors hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none',
+        hover === 'brand' && 'hover:text-brand-green-dark',
         className,
       )}
     >

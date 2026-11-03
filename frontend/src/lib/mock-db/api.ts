@@ -635,6 +635,7 @@ export interface StudentQuery {
   search?: string
   gradeLevel?: string
   includeArchived?: boolean
+  recordStatus?: '' | 'complete' | 'incomplete'
   limit?: number
   /** Mock only: for the screens that join or search on the client. The backend does that work itself. */
   fullLrn?: boolean
@@ -646,6 +647,7 @@ export function listStudents(query: StudentQuery = {}): Promise<StudentListRow[]
     return s.students
       .filter((st) => query.includeArchived || !st.archived)
       .filter((st) => !query.gradeLevel || st.gradeLevel === query.gradeLevel)
+      .filter((st) => !query.recordStatus || (missingRequiredFields(st).length === 0) === (query.recordStatus === 'complete'))
       .filter(
         (st) =>
           !search || st.fullName.toLowerCase().includes(search) || (/^\d+$/.test(search) && st.lrn.startsWith(search)),
@@ -2760,6 +2762,9 @@ export function saveBackupLocation(input: BackupLocationInput, options: { id?: s
 export function setBackupLocationEnabled(id: string, enabled: boolean, actor?: SessionUser): Promise<BackupLocation> {
   return write(enabled ? 'enable backup location' : 'disable backup location', (s) => {
     const location = must(s.frontendOnly.backupLocations.find((l) => l.id === id), 'Backup location')
+    // Review round 2, R32 (ADR-052 note): one location always stays enabled, so a backup always has somewhere to go.
+    if (!enabled && location.enabled && s.frontendOnly.backupLocations.filter((l) => l.enabled).length === 1)
+      throw new Error('Enable another backup location before disabling the last one.')
     if (location.enabled !== enabled) {
       location.enabled = enabled
       audit(s, actorOr(actor), 'update', { type: 'backup-location', id }, enabled ? 'Enabled' : 'Disabled')
@@ -2895,7 +2900,6 @@ export function deleteCalendarEvent(id: string, actor?: SessionUser): Promise<vo
 // ---- Sports Reports (ADR-034; Staff only; PROVISIONAL pending the ERD) ----------------------
 
 export const SPORTS_REPORT_TEXT_MAX = 120
-export const SPORTS_REPORT_NOTE_MAX = 500
 export const SPORTS_REPORT_WINDOWS: SportsReportWindow[] = [30, 60, 90, 'school_year']
 /** The school year runs June 15 to April 14 (the Principal, October 2026; Issues-and-TODOs "The school and its master list"). */
 const SCHOOL_YEAR_START = '06-15'
@@ -2924,10 +2928,10 @@ export interface SportsReportInput {
   requestedBy: string
   window: SportsReportWindow
   includeConditions: boolean
-  students: Array<{ studentId: string; note: string }>
+  students: Array<{ studentId: string }>
 }
 
-export type SportsReportErrors = Partial<Record<'title' | 'activity' | 'requestedBy' | 'window' | 'students', string>>
+export type SportsReportErrors = Partial<Record<'title' | 'activity' | 'requestedBy' | 'window', string>>
 
 /** Field messages for the builder; empty when the input is valid. The writes below enforce the same rules. */
 export function validateSportsReport(input: SportsReportInput): SportsReportErrors {
@@ -2940,8 +2944,6 @@ export function validateSportsReport(input: SportsReportInput): SportsReportErro
   if (!requestedBy) errors.requestedBy = 'Enter the name of the instructor who asked for the report.'
   else if (requestedBy.length > SPORTS_REPORT_TEXT_MAX) errors.requestedBy = `Keep the name to ${SPORTS_REPORT_TEXT_MAX} characters or fewer.`
   if (!SPORTS_REPORT_WINDOWS.includes(input.window)) errors.window = 'Choose a look-back window.'
-  if (input.students.some((student) => student.note.trim().length > SPORTS_REPORT_NOTE_MAX))
-    errors.students = `Keep each note to ${SPORTS_REPORT_NOTE_MAX} characters or fewer.`
   return errors
 }
 
@@ -2953,14 +2955,14 @@ export class SportsReportValidationError extends Error {
   }
 }
 
-/** Only the list and the notes are kept (ADR-034): never a copy of anything from a student's record. */
+/** Only the list is kept (ADR-034): never a copy of anything from a student's record. */
 function cleanSportsReport(input: SportsReportInput): Pick<SportsReport, 'title' | 'activity' | 'requestedBy' | 'window' | 'includeConditions' | 'students'> {
   const errors = validateSportsReport(input)
   if (Object.keys(errors).length) throw new SportsReportValidationError(errors)
   const seen = new Set<string>()
   const students = input.students
     .filter((student) => !seen.has(student.studentId) && seen.add(student.studentId))
-    .map((student) => ({ studentId: student.studentId, note: student.note.trim() || null }))
+    .map((student) => ({ studentId: student.studentId }))
   return {
     title: input.title.trim(),
     activity: input.activity.trim() || null,
@@ -2993,7 +2995,6 @@ export function listSportsReports(actor?: SessionUser): Promise<SportsReportSumm
 /** A student on a report as the builder shows it: the name for recognition (ADR-034's exception), never medical fields. */
 export interface SportsReportStudentRow {
   studentId: string
-  note: string | null
   /** Null when the record is no longer in CLINIQ. */
   fullName: string | null
   gradeLevel: string | null
@@ -3006,10 +3007,10 @@ export interface SportsReportDetail extends Omit<SportsReport, 'students'> {
 
 function sportsReportStudents(s: DbState, report: SportsReport): SportsReportStudentRow[] {
   const students = studentsById(s)
-  return report.students.map(({ studentId, note }) => {
+  return report.students.map(({ studentId }) => {
     const student = students.get(studentId)
-    if (!student) return { studentId, note, fullName: null, gradeLevel: null, status: 'missing' as const }
-    return { studentId, note, fullName: student.fullName, gradeLevel: student.gradeLevel, status: student.archived ? ('archived' as const) : ('active' as const) }
+    if (!student) return { studentId, fullName: null, gradeLevel: null, status: 'missing' as const }
+    return { studentId, fullName: student.fullName, gradeLevel: student.gradeLevel, status: student.archived ? ('archived' as const) : ('active' as const) }
   })
 }
 
@@ -3037,7 +3038,6 @@ export interface SportsReportContentRow {
   gradeLevel: string
   /** Newest first. */
   entries: SportsReportEntry[]
-  note: string | null
   /** Only when the report includes conditions. */
   conditions?: { medicalConditions: string[]; allergies: string[] }
 }
@@ -3069,7 +3069,7 @@ export function getSportsReportContent(id: string, actor?: SessionUser): Promise
     const students = studentsById(s)
     const leftOut = { archived: 0, missing: 0 }
     const rows: SportsReportContentRow[] = []
-    for (const { studentId, note } of report.students) {
+    for (const { studentId } of report.students) {
       const student = students.get(studentId)
       if (!student) leftOut.missing += 1
       else if (student.archived) leftOut.archived += 1
@@ -3087,7 +3087,6 @@ export function getSportsReportContent(id: string, actor?: SessionUser): Promise
         fullName: student.fullName,
         gradeLevel: student.gradeLevel,
         entries,
-        note,
         ...(report.includeConditions ? { conditions: { medicalConditions: student.medicalConditions, allergies: student.allergies } } : {}),
       })
     }

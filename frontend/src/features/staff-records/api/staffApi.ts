@@ -11,7 +11,7 @@ import {
   type SessionUser,
 } from '../../../lib/mock-db'
 import type { EmergencyContact, Personnel, StudentSex } from '../../../types/entities'
-import { isNoneRecorded } from '../../../lib/patients'
+import { isNoneRecorded, tidyEntry } from '../../../lib/patients'
 
 /**
  * Staff patients (ADR-043): the Staff List, Staff Profile and Staff Form. School Clinician only.
@@ -78,7 +78,7 @@ export async function fetchStaffFormContext(personnelId?: string): Promise<Staff
 function parseList(value: string): string[] {
   return value
     .split(',')
-    .map((item) => item.trim())
+    .map(tidyEntry)
     .filter(Boolean)
     .filter((item) => !isNoneRecorded(item))
 }

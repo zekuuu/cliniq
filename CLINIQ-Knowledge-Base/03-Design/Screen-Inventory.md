@@ -53,7 +53,7 @@ Give the agent this full list — it maps directly to the module groups (baselin
 19. **Monthly Report View/Generate** — with a weekly breakdown and exact counts (ADR-050); the clinician can also print the **monthly inventory print** (New Purchase, Total Available, Ending Inventory per item). The Admin reads it on screen and cannot print
 20. **Incident register** (formerly Incident Report Archive; rows open the report, or Complete Stage 2)
 21. **Complaint summary** (formerly Health Summaries View)
-21a. **Sports Reports** (ADR-034, Staff only; entry from Reports): the saved-reports list, the builder (title, activity, requested by, look-back window, conditions option, students by name or LRN search or a whole grade, a note per student), and the report view with its preview and A4 printout.
+21a. **Sports Reports** (ADR-034, Staff only; entry from Reports): the saved-reports list, the builder (title, activity, requested by, look-back window, conditions option, students by name or LRN search or a whole grade; no per-student note since November 3, 2026), and the report view with its preview and A4 printout.
 (All of these need print/export-friendly layouts — this is a paper-replacement feature, so print CSS matters.)
 
 ### (Removed) Screens #22–26

@@ -134,7 +134,8 @@ const REPORT_NAMES: Record<string, string> = {
 
 /**
  * A short, privacy-safe identifier for an audited record, shown beside its kind ("Visit · ●●●●●●●●0009").
- * Internal ids (`visit-0001`) never reach the screen, and students appear only by masked LRN (ADR-028).
+ * Internal ids (`visit-0001`) never reach the screen. Students appear by full LRN here (review round 2, R33,
+ * Zean: "display it"; dated notes on ADR-040 and ADR-044), never by name.
  * A human-facing reference number is a backend-phase follow-up (Issues-and-TODOs.md).
  */
 /**
@@ -169,7 +170,7 @@ function auditTargetIdentifier(lookups: ReturnType<typeof auditLookups>, target:
               : undefined
   if (patient?.studentId) {
     const student = students.get(patient.studentId)
-    return student ? { label: maskLrn(student.lrn), studentId: patient.studentId } : { label: '' }
+    return student ? { label: student.lrn, studentId: patient.studentId } : { label: '' }
   }
   // A staff patient appears by Staff No., never by name (ADR-043 item 6).
   if (patient?.personnelId) return { label: lookups.personnel.get(patient.personnelId)?.staffNumber ?? '' }
@@ -227,6 +228,8 @@ export function missingRequiredFields(student: SeedStudent): string[] {
   if (!student.fullName.trim()) missing.push('Full name')
   if (!student.gradeLevel.trim()) missing.push('Grade level')
   if (student.sex !== 'male' && student.sex !== 'female') missing.push('Sex')
+  // Review round 2, R14 (decision 2): no birthdate makes the record incomplete; saving never blocks (ADR-054, ADR-051).
+  if (!student.birthDate) missing.push('Birthdate')
   if (!student.emergencyContacts.length) missing.push('Emergency contact')
   student.emergencyContacts.forEach((contact, index) => {
     const prefix = student.emergencyContacts.length === 1 ? 'Emergency contact' : `Emergency contact ${index + 1}`

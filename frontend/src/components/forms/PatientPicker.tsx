@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { isLrn, normalizeLrn, STUDENT_SEARCH_MIN_LENGTH } from '../../lib/lrn'
-import { PATIENT_KIND_LABELS, type Patient, type PatientNumber as PatientNumberValue } from '../../lib/patients'
+import { type Patient, type PatientNumber as PatientNumberValue } from '../../lib/patients'
 import type { PatientSearchResult } from '../../types/entities'
-import { Badge } from '../ui/Badge'
+import { PatientKindBadge } from '../ui/PatientNumber'
 import { Button } from '../ui/Button'
 import { Combobox } from '../ui/Combobox'
 import { ListItemLink } from '../ui/ListItemLink'
@@ -62,7 +62,7 @@ export function PatientPicker({
   if (selected && onClear) {
     return (
       <div className="flex flex-col gap-1">
-        <p className="text-xs font-semibold text-text-primary">{label}</p>
+        <p className="text-sm font-semibold text-text-primary">{label}</p>
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-surface px-3 py-2">
           <p className="flex flex-wrap items-center gap-x-1 text-sm text-text-primary">
             <span className="font-semibold">{selected.fullName}</span>
@@ -73,9 +73,7 @@ export function PatientPicker({
               {' · '}
               {selected.kind === 'student' ? selected.gradeLevel : selected.type}
             </span>
-            <Badge tone="neutral" variant="outline" icon={null}>
-              {PATIENT_KIND_LABELS[selected.kind]}
-            </Badge>
+            <PatientKindBadge kind={selected.kind} />
           </p>
           <Button
             type="button"
@@ -116,9 +114,7 @@ export function PatientPicker({
             <span className="font-semibold">{result.fullName}</span>{' '}
             <span className="ml-auto flex items-baseline gap-2 pl-3 text-xs text-text-secondary">
               {result.kind === 'student' ? result.gradeLevel : result.type}{' '}
-              <Badge tone="neutral" variant="outline" icon={null}>
-                {PATIENT_KIND_LABELS[result.kind]}
-              </Badge>
+              <PatientKindBadge kind={result.kind} />
             </span>
           </span>
         )}

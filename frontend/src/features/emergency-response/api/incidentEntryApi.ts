@@ -96,7 +96,7 @@ export interface StageTwoIncidentInput {
  */
 export async function fetchIncidentEntryContext(
   incidentId?: string,
-  escalate?: { visitId?: string; prefill?: EscalationPrefill; staffId?: string },
+  escalate?: { visitId?: string; prefill?: EscalationPrefill; staffId?: string; studentId?: string },
 ): Promise<IncidentEntryContext> {
   const complaintTypes = getIncidentComplaintTypes()
   const items = listInventory()
@@ -119,8 +119,12 @@ export async function fetchIncidentEntryContext(
     escalation = { visitId: visit.id, studentId: visit.studentId, personnelId: visit.personnelId, complaint: visit.complaint, time: visit.dateTime, temperatureC: visit.temperatureC }
     sourceVisit = { id: visit.id, itemsGiven: visit.itemsGiven }
   }
-  // The Staff Profile's "Record an incident" opens with the staff member chosen (`?staff=`, D8).
-  const ref = escalate?.staffId ? { studentId: null, personnelId: escalate.staffId } : escalation
+  // The Staff and Student Profiles' "Record an incident" opens with the patient chosen (`?staff=`, D8; `?student=`, R13).
+  const ref = escalate?.staffId
+    ? { studentId: null, personnelId: escalate.staffId }
+    : escalate?.studentId
+      ? { studentId: escalate.studentId, personnelId: null }
+      : escalation
   const student = ref?.studentId || ref?.personnelId ? await getPatient({ studentId: ref.studentId ?? null, personnelId: ref.personnelId ?? null }) : null
   return { student, complaintTypes: await complaintTypes, incident: null, items: await items, vitalsRanges, escalation, sourceVisit, approved: false }
 }

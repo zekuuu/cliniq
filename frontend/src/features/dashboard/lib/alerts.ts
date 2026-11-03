@@ -30,9 +30,9 @@ export function followUpWhen(row: DueFollowUpRow): string {
   return `${formatShortDate(row.followUp.followUpDate)} · ${row.daysFromToday < 0 ? `${days} ago` : `in ${days}`}`
 }
 
-/** "Expired 4 days ago", "Low · expires in 11 days", "Expires in 18 days", "Low". */
+/** "Expired 4 days ago", "Low · expires in 11 days", "Expires in 18 days", "Low". An expiry not yet near is left out, as on screen. */
 export function stockStatus(row: InventoryAlertRow): string {
-  const expiry = expiryLabel(row)
+  const expiry = row.flags.some((flag) => flag !== 'low_stock') ? expiryLabel(row) : undefined
   if (row.flags.includes('expired')) return expiry ?? 'Expired'
   if (!row.flags.includes('low_stock')) return expiry ?? ''
   return expiry ? `Low · ${expiry.toLowerCase()}` : 'Low'

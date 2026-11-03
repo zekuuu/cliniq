@@ -226,9 +226,9 @@ export function VisitLogListPage() {
         <div>
           <p>{row.complaint}</p>
           {row.eventTag && <p className="text-xs text-text-secondary">{row.eventTag}</p>}
-          {(row.inClinicNow || row.escalated || row.enteredInError) && (
+          {/* No "In clinic now" badge: it repeated the disposition "Resting in clinic" (review round 2, R20). */}
+          {(row.escalated || row.enteredInError) && (
             <div className="mt-1 flex flex-wrap gap-1">
-              {row.inClinicNow && <Badge tone="info" variant="soft">In clinic now</Badge>}
               {row.escalated && <Badge tone="warning" variant="soft">Escalated</Badge>}
               {row.enteredInError && <Badge tone="error" variant="soft">Entered in error</Badge>}
             </div>

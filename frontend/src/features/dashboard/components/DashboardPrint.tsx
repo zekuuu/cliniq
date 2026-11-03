@@ -26,7 +26,7 @@ const SUBHEAD = 'mt-[3mm] mb-[0.5mm] break-after-avoid font-semibold'
 function Stat({ label, value, note }: { label: string; value: number; note?: ReactNode }) {
   return (
     <div className={STRIP_CELL}>
-      <dt className="text-[9pt] font-semibold">{label}</dt>
+      <dt className="text-[9pt] text-text-secondary">{label}</dt>
       <dd className="text-[16pt] leading-tight font-bold tabular-nums">{value}</dd>
       {note && <dd className="text-[8.5pt] text-text-secondary">{note}</dd>}
     </div>
@@ -102,7 +102,9 @@ export function DashboardPrint({
                   ? `${formatDate(range.from)} · Visits and incidents for ${range.from === summary.today ? 'today' : 'the day'}`
                   : formatDateRange(range.from, range.to)}
             </span>
-            The period applies to visits and incidents{summary.showFrequentVisitors ? ', and frequent visitors' : ''}. Follow-ups, excuse letters, stock and record counts are as of {formatDate(summary.today)}.
+            <span className="block text-[9pt] text-text-secondary">
+              The period applies to visits and incidents{summary.showFrequentVisitors ? ', and frequent visitors' : ''}. Follow-ups, excuse letters, stock and record counts are as of {formatDate(summary.today)}.
+            </span>
           </>
         ) : (
           <>
@@ -131,15 +133,16 @@ export function DashboardPrint({
                 </>
               }
             />
-            <Stat label="Active students" value={counts.activeStudents} />
-            {letters && <Stat label="Pending excuse letters" value={letters.length} />}
+            <Stat label="Active students" value={counts.activeStudents} note="Excludes archived" />
+            {letters && <Stat label="Excuse letters" value={letters.length} note="Awaiting approval" />}
             <Stat
               label="Follow-ups"
               value={summary.dueFollowUps.length}
               note={overdue ? <span className="font-semibold text-error-text">{overdue} overdue</span> : 'None overdue'}
             />
           </dl>
-          <p data-print-attention className="mt-[2mm] text-[10pt] font-semibold">
+          <p data-print-attention className="mt-[2mm] text-[10pt]">
+            <span className="font-semibold">Needs attention: </span>
             {counts.pendingRecords} incomplete records · {counts.lowStockItems} low stock · {expiredOrExpiring} expired or expiring
           </p>
 
@@ -171,7 +174,7 @@ export function DashboardPrint({
                   <p key={row.visitId} className={LIST_ROW}>
                     <span className="w-[32mm] shrink-0 text-text-secondary tabular-nums">{row.lrn}</span>
                     <span className="min-w-0 flex-1">{formatDateRange(row.excusedFrom, row.excusedUntil)}</span>
-                    <span className="shrink-0 tabular-nums">{formatDateTime(row.visitDateTime)}</span>
+                    <span className="shrink-0 tabular-nums">Visit {formatDateTime(row.visitDateTime)}</span>
                   </p>
                 ))}
               </div>
@@ -185,8 +188,11 @@ export function DashboardPrint({
                 <p key={row.item.id} className={LIST_ROW}>
                   <span className="min-w-0 flex-1">{row.item.name}</span>
                   <span className="shrink-0 tabular-nums">{stockQuantityText(row.item.currentStock, row.item.unit, row.flags)}</span>
-                  <span className={`w-[42mm] shrink-0 rounded-sm px-[1.5mm] text-right text-[9pt] font-semibold [print-color-adjust:exact] ${row.flags.includes('expired') ? 'bg-error text-white' : row.flags.includes('low_stock') ? 'border border-warning text-warning-text' : ''}`}>
-                    {stockStatus(row)}
+                  {/* A pale tag sized to its words, as in the inspiration; words carry the meaning in black and white. */}
+                  <span className="flex w-[42mm] shrink-0 justify-end">
+                    <span data-stock-tag className={`rounded-sm px-[1.5mm] text-[9pt] font-semibold [print-color-adjust:exact] ${row.flags.includes('expired') ? 'bg-error-fill text-error-text' : 'bg-warning-fill text-warning-text'}`}>
+                      {stockStatus(row)}
+                    </span>
                   </span>
                 </p>
               ))}
@@ -197,8 +203,8 @@ export function DashboardPrint({
             <div data-print-details className="mt-[5mm] grid grid-cols-2 items-start gap-[6mm]">
               {summary.showFrequentVisitors && (
                 <section>
-                  <h2 className="mb-[1mm] break-after-avoid border-b border-text-primary text-[11pt] font-bold">
-                    Frequent visitors ({summary.frequentVisitorMinVisits}+ visits in the period)
+                  <h2 className="mb-[1.5mm] break-after-avoid text-[12pt] font-bold">
+                    Frequent visitors ({summary.frequentVisitorMinVisits}+ visits)
                   </h2>
                   {summary.frequentVisitors.length ? (
                     <>
@@ -219,7 +225,7 @@ export function DashboardPrint({
               )}
               {complaints.length > 0 && (
                 <section>
-                  <h2 className="mb-[1mm] break-after-avoid border-b border-text-primary text-[11pt] font-bold">Complaints</h2>
+                  <h2 className="mb-[1.5mm] break-after-avoid text-[12pt] font-bold">Complaints</h2>
                   <PrintTable
                     caption="Complaints with count"
                     rows={complaintRows}
@@ -320,7 +326,7 @@ export function DashboardPrint({
               />
               <PrintTable
                 caption="By grade level"
-                rows={summary.demographics.gradeLevel}
+                rows={summary.demographics.gradeLevel.filter((row) => row.count > 0)}
                 rowKey={(row) => row.key}
                 empty="No visits or incidents in the period."
                 columns={[
