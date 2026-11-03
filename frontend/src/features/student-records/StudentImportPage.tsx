@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent } from 'react'
-import { BackButton, Button, Card, CardBody, CardHeader, ErrorState, Icon, Modal, Select } from '../../components'
+import { BackButton, Button, Card, CardBody, CardHeader, ErrorState, Icon, MaskedLrn, Modal, Select } from '../../components'
 import { IMPORT_FIELDS, guessMapping, mapRows, parseCsv, type ImportFieldKey, type ImportMapping, type ImportRow } from '../../lib/studentImport'
 import { applyStudentImport, getMockSessionUser, previewStudentImport, type SessionUser, type StudentImportPreview, type StudentImportResult } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
@@ -140,7 +140,7 @@ export function StudentImportPage({ viewer = getMockSessionUser() }: { viewer?: 
                   {preview.missing.map((student) => (
                     <label key={student.id} className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-background">
                       <input type="checkbox" className="size-4 cursor-pointer accent-brand-green-dark" checked={archiveIds.includes(student.id)} onChange={() => toggle(student.id)} />
-                      {student.fullName} · {student.lrn} · {student.gradeLevel}
+                      {student.fullName} · <MaskedLrn lrn={student.lrn} /> · {student.gradeLevel}
                     </label>
                   ))}
                 </div>
