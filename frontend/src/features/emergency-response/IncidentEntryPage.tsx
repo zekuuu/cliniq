@@ -257,10 +257,11 @@ export function IncidentEntryPage({
   const [searchParams] = useSearchParams()
   const fromVisit = searchParams.get('fromVisit') ?? undefined
   const staffId = searchParams.get('staff') ?? undefined
+  const studentId = searchParams.get('student') ?? undefined
   const prefill = (useLocation().state as { escalate?: EscalationPrefill } | null)?.escalate
   const { data, status, reload } = useAsyncData(
-    `incident-entry|${incidentId ?? ''}|${fromVisit ?? ''}|${staffId ?? ''}|${prefill ? JSON.stringify(prefill) : ''}`,
-    () => fetchIncidentEntryContext(incidentId, incidentId ? undefined : { visitId: fromVisit, prefill, staffId }),
+    `incident-entry|${incidentId ?? ''}|${fromVisit ?? ''}|${staffId ?? ''}|${studentId ?? ''}|${prefill ? JSON.stringify(prefill) : ''}`,
+    () => fetchIncidentEntryContext(incidentId, incidentId ? undefined : { visitId: fromVisit, prefill, staffId, studentId }),
   )
 
   const back = <BackButton fallback={paths.incidents} />
@@ -404,6 +405,8 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       })
     : null
   const completeBlocked = careBlocker !== null && !nothingFurther
+  // R24: Complete says what it is waiting for, before it is pressed.
+  const reasonMissing = careBlocker !== null && nothingFurther && !noFurtherActionReason.trim()
 
   const statusValue: IncidentStatus = completed ? 'complete' : incident ? 'in_progress' : 'needs_completion'
 
@@ -438,6 +441,14 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
     } finally {
       setSavingStageOne(false)
     }
+  }
+
+  /** R23: drops a half-filled attempt without logging it. */
+  function cancelNotification() {
+    setNotificationOutcome('reached')
+    setNotificationDetail('')
+    setCalledDraft(null)
+    setErrors((current) => ({ ...current, calledName: undefined, calledPhone: undefined }))
   }
 
   function addNotification() {
@@ -806,7 +817,13 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     )}
                   </fieldset>
 
-                  <fieldset className="rounded-md border border-border p-4">
+                  <fieldset
+                    className="rounded-md border border-border p-4"
+                    onKeyDown={(event) => {
+                      // Escape that closes an open list stays with that list.
+                      if (event.key === 'Escape' && !(event.target as HTMLElement).closest('[role="listbox"], [aria-expanded="true"]')) cancelNotification()
+                    }}
+                  >
                     <legend className="px-1 text-sm font-semibold text-text-primary">
                       {student?.kind === 'personnel' ? 'Emergency contact notification log' : 'Parent notification log'}
                     </legend>
@@ -837,14 +854,14 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                         value={notificationDetail}
                         onChange={(event) => setNotificationDetail(event.target.value)}
                       />
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        className="self-end"
-                        onClick={addNotification}
-                      >
-                        Add Attempt
-                      </Button>
+                      <div className="flex gap-2 self-end">
+                        <Button type="button" variant="neutral" aria-label="Cancel attempt" onClick={cancelNotification}>
+                          Cancel
+                        </Button>
+                        <Button type="button" variant="secondary" onClick={addNotification}>
+                          Add Attempt
+                        </Button>
+                      </div>
                     </div>
                     {notifications.length ? (
                       <RowList className="mt-3 rounded-md border border-border">
@@ -932,8 +949,9 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                       {nothingFurther && (
                         <Input
                           className="mt-3"
-                          label="Reason"
+                          label="Why was nothing further needed? (one line, required)"
                           required
+                          autoFocus
                           maxLength={200}
                           value={noFurtherActionReason}
                           onChange={(event) => {
@@ -947,9 +965,9 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                   )}
 
                   <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-                    {completeBlocked && (
+                    {(completeBlocked || reasonMissing) && (
                       <p id="complete-incident-blocker" className="mr-auto text-xs text-text-secondary">
-                        {careBlocker}
+                        {completeBlocked ? careBlocker : 'Write one line on why nothing further was needed.'}
                       </p>
                     )}
                     <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
@@ -958,7 +976,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                       variant="primary"
                       loading={savingStageTwo}
                       disabled={completeBlocked}
-                      aria-describedby={completeBlocked ? 'complete-incident-blocker' : undefined}
+                      aria-describedby={completeBlocked || reasonMissing ? 'complete-incident-blocker' : undefined}
                     >
                       Complete Incident
                     </Button>

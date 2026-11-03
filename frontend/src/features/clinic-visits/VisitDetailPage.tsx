@@ -150,6 +150,13 @@ function VisitPrint({ visit, viewer }: { visit: VisitDetail; viewer: SessionUser
       viewer={viewer}
       scope={`${student.fullName} (${patientIdText(student)}), ${patientGroup(student).value}. Clinic visit on ${formatDateTime(visit.dateTime)}.`}
     >
+      {/* A voided visit says so on paper, like the void excuse letter and the Stage 1 incident notice. */}
+      {visit.enteredInError && (
+        <p data-print-void className="mb-[4mm] border-2 border-text-primary px-[3mm] py-[2mm] text-[11pt] font-bold">
+          Entered in error. This visit is not valid. Reason: {visit.enteredInError.reason}. Marked by {visit.enteredInErrorBy ?? 'Unknown user'}, {formatDateTime(visit.enteredInError.at)}.
+        </p>
+      )}
+      <div className="text-[11pt]">
       <PrintSection title={PATIENT_KIND_LABELS[student.kind]}>
         <PrintFields
           fields={[
@@ -197,6 +204,7 @@ function VisitPrint({ visit, viewer }: { visit: VisitDetail; viewer: SessionUser
           />
         </PrintSection>
       )}
+      </div>
     </PrintDocument>
   )
 }

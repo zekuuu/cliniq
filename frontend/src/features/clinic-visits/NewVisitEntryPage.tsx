@@ -24,7 +24,7 @@ import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { cn } from '../../lib/cn'
-import { patientLine, patientRefOf, type Patient } from '../../lib/patients'
+import { NONE_RECORDED, patientLine, patientRefOf, type Patient } from '../../lib/patients'
 import { cleanComplaint, normalizeComplaint } from '../../lib/complaints'
 import { ageGroupOf } from '../../lib/vitals'
 import { addDays, todayISO } from '../../lib/dates'
@@ -216,14 +216,16 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
   const { data, status, reload } = useAsyncData('new-visit', fetchNewVisitContext)
   const identified = useIdentifiedStudent<Patient, PatientRef>(null, findVisitPatient)
   const isStaffPatient = identified.student?.kind === 'personnel'
-  // The Staff Profile's "Record a visit" opens with the staff member chosen (`?staff=`, D8).
+  // The Staff and Student Profiles' "Record a visit" opens with the patient chosen (`?staff=`, D8; `?student=`, R13).
   const [searchParams] = useSearchParams()
   const staffParam = searchParams.get('staff')
+  const studentParam = searchParams.get('student')
   useEffect(() => {
     if (staffParam) void identified.select({ studentId: null, personnelId: staffParam })
+    else if (studentParam) void identified.select({ studentId: studentParam, personnelId: null })
     // Only on arrival; Change and a save clear the pick as usual.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [staffParam])
+  }, [staffParam, studentParam])
   const [complaint, setComplaint] = useState('')
   const [extraComplaints, setExtraComplaints] = useState<string[]>([])
   const [treatment, setTreatment] = useState('')
@@ -490,6 +492,16 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 ? `${identified.student.fullName} · ${patientLine(identified.student)}`
                 : 'Student or staff member not identified yet.'}
             </p>
+            {/* R21: the patient's allergies (warning style, ADR-062) and medical conditions, together. Staff only, like this page. */}
+            {identified.student && (
+              <p data-testid="patient-health" className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                <span className="inline-flex items-center gap-1 font-semibold text-warning-text">
+                  <Icon name="alertTriangle" size={14} />
+                  <span className="text-warning-text">Allergies: {identified.student.allergies.join(', ') || NONE_RECORDED}</span>
+                </span>
+                <span className="text-text-primary">Medical conditions: {identified.student.medicalConditions.join(', ') || NONE_RECORDED}</span>
+              </p>
+            )}
             {/* ADR-051: which form to use; the nurse is to confirm the wording. Escalate to incident stays (ADR-036). */}
             <p className="mt-2 text-xs text-text-secondary">Visit: a common, routine case. A worse case that needs fast two-stage capture is an Incident.</p>
           </div>
