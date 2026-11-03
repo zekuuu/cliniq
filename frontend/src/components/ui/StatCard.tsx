@@ -69,7 +69,9 @@ const fillTone: Record<StatTone, string> = {
   active: 'bg-active-fill border-l-4 border-active',
 }
 
-const card = (tone: StatTone) => cn(CARD_SURFACE.replace('bg-background', fillTone[tone]), 'flex w-full flex-col gap-2 p-5')
+// A drop shadow marks what can be clicked; a card that opens nothing sits flat.
+const card = (tone: StatTone, clickable = false) =>
+  cn(CARD_SURFACE.replace('bg-background', fillTone[tone]).replace('shadow-card', clickable ? 'shadow-clickable' : ''), 'flex w-full flex-col gap-2 p-5')
 
 function Head({
   icon,
@@ -119,7 +121,7 @@ export function StatCard({
   className,
 }: StatCardProps) {
   return (
-    <div data-stat-card className={cn(card(tone), 'print:break-inside-avoid', to && 'relative transition-shadow hover:shadow-raised motion-reduce:transition-none', className)}>
+    <div data-stat-card className={cn(card(tone, Boolean(to)), 'print:break-inside-avoid', to && 'relative transition-shadow hover:shadow-overlay motion-reduce:transition-none', className)}>
       <Head icon={icon} label={label} tone={tone} to={to} />
       <p className={cn('-mt-1 text-3xl font-bold tracking-tight', textTone[tone])}>
         {value.toLocaleString('en-PH')}

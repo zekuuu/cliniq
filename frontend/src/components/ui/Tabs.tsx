@@ -6,8 +6,6 @@ export interface TabItem<V extends string> {
   value: V
   label: string
   icon?: IconName
-  /** Extra content after the label, inside the tab (e.g. a count badge); part of its accessible name. */
-  badge?: ReactNode
   panel: ReactNode
 }
 
@@ -73,7 +71,7 @@ export function Tabs<V extends string>({
       role="tablist"
       aria-label={label}
       className={cn(
-        // Content-sized tabs sharing the row, so a tab with a badge gets room instead of truncating.
+        // Content-sized tabs sharing the row.
         'flex gap-1 rounded-md border border-border bg-surface p-1 sm:inline-flex sm:self-start',
         printAll && 'print:hidden',
         className,
@@ -105,7 +103,6 @@ export function Tabs<V extends string>({
           >
             {tab.icon && <Icon name={tab.icon} size={16} className="hidden shrink-0 sm:block" />}
             <span className="truncate">{tab.label}</span>
-            {tab.badge}
           </button>
         )
       })}
