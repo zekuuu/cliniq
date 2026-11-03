@@ -4,7 +4,7 @@ import { lrnLabel, maskLrn } from '../../lib/lrn'
 export function MaskedLrn({ lrn }: { lrn: string }) {
   return (
     <span>
-      <span aria-hidden="true">{maskLrn(lrn)}</span>
+      <span aria-hidden="true" className="lrn-mask">{maskLrn(lrn)}</span>
       <span className="sr-only">{lrnLabel(lrn)}</span>
     </span>
   )

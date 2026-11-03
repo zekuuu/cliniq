@@ -65,7 +65,7 @@ describe('New Visit', () => {
     await pickStudent(user, '000000260001')
 
     expect(await screen.findByRole('heading', { name: 'New Visit' })).toBeInTheDocument()
-    expect(screen.getAllByText('●●●●●●●●0001').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('∙∙∙∙∙∙∙∙0001').length).toBeGreaterThan(0)
     expect(screen.queryByRole('combobox', { name: /student/i })).not.toBeInTheDocument()
     await selectComplaint(user, 'Fever')
     expect(screen.getByRole('heading', { name: /suggested first-aid steps for: Fever/i })).toBeInTheDocument()
@@ -189,7 +189,7 @@ describe('New Visit student lookup', () => {
     await user.click(option)
 
     const changeButton = await screen.findByRole('button', { name: /change student or staff member \(Gian Quizon\)/i })
-    expect(within(changeButton.parentElement!).getByText('●●●●●●●●0001')).toBeInTheDocument()
+    expect(within(changeButton.parentElement!).getByText('∙∙∙∙∙∙∙∙0001')).toBeInTheDocument()
     await user.click(changeButton)
     expect(screen.getByRole('combobox', { name: /student/i })).toHaveFocus()
   })

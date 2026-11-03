@@ -95,7 +95,7 @@ describe('purpose-built printouts', () => {
       expect(figures).toContain(String(value))
     expect(doc).toHaveTextContent(`${summary.counts.pendingRecords} incomplete records · ${summary.counts.lowStockItems} low stock`)
     for (const row of summary.dueFollowUps) expect(doc).toHaveTextContent(row.patient.number)
-    expect(doc.textContent).not.toContain('●')
+    expect(doc.textContent).not.toContain('∙')
     expect(doc).toHaveTextContent('Excuse letters awaiting approval')
     await expectNoNamesOrIds(doc)
   })
@@ -183,7 +183,7 @@ describe('purpose-built printouts', () => {
     expect(doc).toHaveTextContent('Not a medical certificate')
     // A letter about one student carries the full LRN (Zean, October 25, 2026).
     expect(doc).toHaveTextContent(/LRN \d{12}/)
-    expect(doc).not.toHaveTextContent('●')
+    expect(doc).not.toHaveTextContent('∙')
     expect(doc.textContent).not.toMatch(/visit-\d+/)
     expect(doc).toHaveTextContent(/Approved \w{3} \d{1,2}, \d{4}/)
     // Panel review EX-4: a signature line, and no internal storage wording on paper.
@@ -203,7 +203,7 @@ describe('purpose-built printouts', () => {
     // Not approved yet, so the Principal line stays blank.
     expect(doc).not.toHaveTextContent(ADMIN.name)
     expect(doc).toHaveTextContent(/LRN \d{12}/)
-    expect(doc).not.toHaveTextContent('●')
+    expect(doc).not.toHaveTextContent('∙')
     expect(doc.textContent).not.toMatch(/incident-\d+/)
   })
 
@@ -218,7 +218,7 @@ describe('purpose-built printouts', () => {
     expect(doc).toHaveTextContent('Excuse letters issued')
     expect(doc).not.toHaveTextContent('Archive')
     expect(doc).toHaveTextContent('LRN 000000220004')
-    expect(doc).not.toHaveTextContent('●')
+    expect(doc).not.toHaveTextContent('∙')
   })
 
   it('Audit Log: the filters in words, the entry count, and every matching entry', async () => {

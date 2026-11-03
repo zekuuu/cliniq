@@ -105,7 +105,7 @@ describe('API contract fixes', () => {
     const [record] = await getIncompleteRecordQueue()
     for (const row of [...rows, record.student]) {
       expect(Object.keys(row).sort()).toEqual(ROW_KEYS)
-      expect(row.lrn).toMatch(/^●{8}\d{4}$/)
+      expect(row.lrn).toMatch(/^∙{8}\d{4}$/)
     }
     expect((await getStudent(rows[0].id)).allergies).toBeDefined()
   })

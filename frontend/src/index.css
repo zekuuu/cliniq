@@ -287,3 +287,9 @@
     -webkit-print-color-adjust: exact;
   }
 }
+
+/* A masked LRN: Inter's case alternates lift the bullets to the digits' centre; without them they sit
+   at lowercase height and look low beside the four digits (Zean, November 3, 2026). */
+.lrn-mask {
+  font-feature-settings: 'cv11', 'ss01', 'case'; /* keeps the page's two features: this property replaces, never adds */
+}
