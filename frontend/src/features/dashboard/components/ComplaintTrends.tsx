@@ -1,6 +1,7 @@
+import { splitText } from '../../../lib/patients'
 import '../../../components/charts/chartSetup'
 import type { Chart, ChartOptions, Plugin, ScriptableContext } from 'chart.js'
-import { useId, useMemo, useState, type ReactNode } from 'react'
+import { useId, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { Bar, Line } from 'react-chartjs-2'
 import {
   Card,
@@ -606,7 +607,7 @@ function CommonComplaintsCard({ trends, clusters, reportMonth }: { trends: Trend
           <EmptyState icon="barChart" title="No complaints recorded in this date range" />
         ) : (
           <>
-            <ol className="flex flex-col gap-4" aria-labelledby={headingId}>
+            <ol className={COMPLAINT_LIST} aria-labelledby={headingId}>
               {trends.series.map((s) => {
                 const cluster = clusters.find((c) => c.complaint === s.complaint)
                 return (
@@ -674,8 +675,80 @@ function percent(value: number) {
 const FILTER_BUTTON_BASE =
   'cursor-pointer rounded-md border border-border text-left transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green aria-pressed:border-brand-green aria-pressed:bg-background aria-pressed:shadow-card aria-pressed:ring-1 aria-pressed:ring-brand-green motion-reduce:transition-none'
 // Fixed-width buttons in a centered row, so two Sex buttons don't stretch across the full-width card (Zean, October 26, 2026).
-const FILTER_ROW = 'flex flex-wrap justify-center gap-2'
-const FILTER_BUTTON = `${FILTER_BUTTON_BASE} w-[calc(50%-0.25rem)] px-3 py-2 text-sm sm:w-48`
+const FILTER_ROW = 'grid grid-cols-2 gap-2'
+const FILTER_BUTTON = `${FILTER_BUTTON_BASE} px-3 py-2 text-sm`
+// Each grade is a grey tile, so it reads as a button before it is hovered (Zean, November 2, 2026).
+const GRADE_COLUMN =
+  'flex w-full cursor-pointer flex-col items-center gap-1.5 rounded-md border border-transparent bg-surface px-1 pt-2 pb-2 text-xs transition-colors hover:border-border hover:bg-border/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green aria-pressed:border-brand-green aria-pressed:bg-background aria-pressed:shadow-card motion-reduce:transition-none'
+// The tallest bar, inside the 208px plot that also holds its count (taller, Zean, November 2, 2026).
+const GRADE_BAR_MAX = 180
+// The trend charts' `smoothTooltip` card, gliding between the grade tiles or the sex bar's parts (Zean, November 2, 2026).
+const GLIDE_TIP =
+  'pointer-events-none absolute top-0 left-0 z-10 max-w-72 rounded-md border border-border bg-background px-3 py-2 text-xs whitespace-nowrap text-text-primary shadow-card transition-[opacity,transform] ease-in-out motion-reduce:transition-none'
+// Keeps the tooltip's centre this far in from the container's edges, so the outermost ones stay in the card.
+const GLIDE_TIP_EDGE = 64
+
+type GlidePosition = { key: string; x: number; y: number; shown: boolean }
+
+/** One tooltip per container, centred over the hovered or focused anchor and gliding to the next. */
+function useGlideTip(ref: RefObject<HTMLElement | null>) {
+  const [tip, setTip] = useState<GlidePosition | null>(null)
+  const show = (key: string, anchor: Element) => {
+    const container = ref.current
+    if (!container) return
+    const box = container.getBoundingClientRect()
+    const rect = anchor.getBoundingClientRect()
+    const x = Math.min(
+      Math.max(rect.left - box.left + rect.width / 2, GLIDE_TIP_EDGE),
+      box.width - GLIDE_TIP_EDGE,
+    )
+    const next = { key, x, y: rect.top - box.top }
+    // The first hover fades in where it is instead of flying in from the corner.
+    if (!tip) {
+      setTip({ ...next, shown: false })
+      requestAnimationFrame(() => setTip((current) => current && { ...current, shown: true }))
+    } else setTip({ ...next, shown: true })
+  }
+  const hide = () => setTip((current) => current && { ...current, shown: false })
+  return { tip, show, hide }
+}
+
+function GlideTip({
+  tip,
+  title,
+  children,
+}: {
+  tip: GlidePosition
+  title: string
+  children: ReactNode
+}) {
+  const prefersReducedMotion = usePrefersReducedMotion()
+  return (
+    <div
+      aria-hidden="true"
+      data-glide-tooltip
+      className={GLIDE_TIP}
+      style={{
+        transitionDuration: `${prefersReducedMotion ? 0 : HOVER_MS}ms`,
+        opacity: tip.shown ? 1 : 0,
+        transform: `translate3d(${tip.x}px, ${tip.y}px, 0) translate(-50%, ${tip.shown ? 'calc(-100% - 10px)' : 'calc(-100% - 4px)'}) scale(${tip.shown ? 1 : 0.96})`,
+      }}
+    >
+      <p className="font-semibold">{title}</p>
+      {children}
+    </div>
+  )
+}
+// The scale never tops out below this, so one case doesn't fill a column.
+const GRADE_SCALE_MIN = 4
+// Below this a part is too thin for its words; the button under the bar still has them.
+const SEX_LABEL_MIN_SHARE = 0.15
+// Each sex in its own colour (Zean, November 2, 2026); the button swatch matches its part of the bar.
+const SEX_COLOR: Record<string, string> = {
+  female: 'bg-sex-female',
+  male: 'bg-sex-male',
+  none: 'bg-border',
+}
 
 /** "1 case", "3 cases": a bare number beside a percentage read as unclear (Zean, October 25, 2026). */
 function casesText(count: number) {
@@ -686,10 +759,27 @@ function countsText(rows: DemographicAnalysis['sex']) {
   return rows.map((row) => `${row.label} ${row.count} (${percent(row.share)}): ${row.students ?? 0} students, ${row.staff ?? 0} staff`).join('; ')
 }
 
-function splitText(rows: DemographicAnalysis['gradeLevel']) {
-  return rows
-    .map((row) => `${row.label} ${row.visits} ${row.visits === 1 ? 'visit' : 'visits'}, ${row.incidents} ${row.incidents === 1 ? 'incident' : 'incidents'}`)
-    .join('; ')
+function plural(count: number, noun: string) {
+  return `${count} ${noun}${count === 1 ? '' : 's'}`
+}
+
+function gradeBand(key: string) {
+  const grade = Number(key.replace('Grade ', ''))
+  if (grade >= 11) return 'Senior High'
+  if (grade >= 7) return 'Junior High'
+  return 'Kinder and Elementary'
+}
+
+/** Consecutive grades of one school level, for the labels under the columns. */
+function gradeBands(rows: DemographicAnalysis['gradeLevel']) {
+  const bands: Array<{ label: string; span: number }> = []
+  for (const row of rows) {
+    const label = gradeBand(row.key)
+    const last = bands.at(-1)
+    if (last?.label === label) last.span += 1
+    else bands.push({ label, span: 1 })
+  }
+  return bands
 }
 
 function DemographicCharts({
@@ -697,16 +787,20 @@ function DemographicCharts({
   filters,
   onFiltersChange,
 }: Required<Pick<ComplaintTrendsProps, 'demographics' | 'filters' | 'onFiltersChange'>>) {
-  const prefersReducedMotion = usePrefersReducedMotion()
-  const animation = prefersReducedMotion ? false : ({ duration: 280, easing: 'easeOutCubic' } as const)
-  // The same gliding tooltip as the trend charts, instead of Chart.js's canvas tooltip that jumps.
-  const hover = {
-    transitions: { active: { animation: { duration: prefersReducedMotion ? 0 : HOVER_MS, easing: 'easeInOutCubic' as const } } },
-    tooltip: { enabled: false, external: (context: Parameters<typeof smoothTooltip>[0]) => smoothTooltip(context, HOVER_MS) },
-  }
-  const tick = colorToken('text-secondary')
   // Sir Rey (October 25, 2026): one card with a switch instead of two charts side by side.
   const [groupBy, setGroupBy] = useState<'sex' | 'grade'>('sex')
+  const grades = demographics.gradeLevel
+  const busiestGrade = Math.max(GRADE_SCALE_MIN, ...grades.map((row) => row.count))
+  const gradeColumns = { gridTemplateColumns: `repeat(${grades.length}, minmax(0, 1fr))` }
+  const gradeTipRef = useRef<HTMLDivElement>(null)
+  const sexTipRef = useRef<HTMLDivElement>(null)
+  const gradeTip = useGlideTip(gradeTipRef)
+  const sexTip = useGlideTip(sexTipRef)
+  const gradeTipRow = grades.find((row) => row.key === gradeTip.tip?.key)
+  const sexTipRow = demographics.sex.find((row) => row.key === sexTip.tip?.key)
+  // Hovering a button or a part of the bar points the tooltip at that part.
+  const showSexTip = (key: string, fallback: Element) =>
+    sexTip.show(key, sexTipRef.current?.querySelector(`[data-sex-part="${key}"]`) ?? fallback)
   return (
     <section aria-label="Demographic analysis">
       <Card>
@@ -715,7 +809,11 @@ function DemographicCharts({
           className="[&>div:first-child]:basis-56"
           title={`Visits and incidents by ${groupBy === 'sex' ? 'sex' : 'grade level'}`}
           // Sex counts everyone with the split shown (ADR-063); grade level is a student's (ADR-043).
-          description={groupBy === 'sex' ? 'Students and staff in the selected period, shown as the two parts of each bar; aggregated only.' : "Students' visits and incidents in the selected period; aggregated only. Staff are not included."}
+          description={
+            groupBy === 'sex'
+              ? 'Students and staff in the selected period; aggregated only.'
+              : "Students' visits and incidents in the selected period; aggregated only. Staff are not included."
+          }
           icon={<Icon name="barChart" />}
           actions={
             // A visible label beside the switch, so it isn't mistaken for the chart's legend (Zean, October 25, 2026).
@@ -738,29 +836,229 @@ function DemographicCharts({
         <CardBody className="flex flex-col gap-3">
           {groupBy === 'sex' ? (
             <>
-              {/* Legend clicks would hide a part while its count stays on the button below; filtering is the buttons' job. */}
-              <div className="relative h-56 lg:h-72"><Bar data={{ labels: demographics.sex.map((row) => row.label), datasets: [{ label: 'Students', data: demographics.sex.map((row) => row.students ?? 0), backgroundColor: colorToken('brand-green-dark'), borderColor: colorToken('background'), borderWidth: 1 }, { label: 'Staff', data: demographics.sex.map((row) => row.staff ?? 0), backgroundColor: colorToken('text-secondary'), borderColor: colorToken('background'), borderWidth: 1 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, interaction: { mode: 'index', axis: 'x', intersect: false }, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick, boxWidth: 14 } } }, scales: { x: { stacked: true, grid: { display: false }, ticks: { color: tick } }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0, color: tick } } } }} aria-label={`Visits and incidents by Sex: ${countsText(demographics.sex)}.`} role="img" /></div>
-              <div className={FILTER_ROW}>
-                {demographics.sex.filter((row) => row.key !== 'none').map((row) => (
-                  <button key={row.key} type="button" aria-pressed={filters.sex === row.key} onClick={() => onFiltersChange({ ...filters, sex: filters.sex === row.key ? null : row.key as 'female' | 'male' })} className={FILTER_BUTTON}>
-                    <span className="block font-semibold text-text-primary">{row.label}</span>{' '}<span className="text-text-secondary">{casesText(row.count)} · {percent(row.share)}</span>{' '}<span className="block text-xs text-text-secondary">Students {row.students ?? 0} · Staff {row.staff ?? 0}</span>
-                  </button>
-                ))}
+              {/* One whole, split once: two groups stretched a chart across the card (Zean, November 2, 2026). The buttons below filter and carry the figures. */}
+              <div
+                ref={sexTipRef}
+                className="relative flex flex-col gap-3"
+                onPointerLeave={sexTip.hide}
+              >
+                <div
+                  role="img"
+                  aria-label={`Visits and incidents by Sex: ${countsText(demographics.sex)}.`}
+                  className="flex h-9 gap-0.5 overflow-hidden rounded-md bg-surface"
+                >
+                  {demographics.sex
+                    .filter((row) => row.count > 0)
+                    .map((row) => (
+                      <div
+                        key={row.key}
+                        data-sex-part={row.key}
+                        onPointerEnter={(event) => sexTip.show(row.key, event.currentTarget)}
+                        className={cn(
+                          'flex min-w-0 items-center px-3 text-sm font-semibold',
+                          SEX_COLOR[row.key],
+                          row.key === 'none' ? 'text-text-primary' : 'text-background',
+                        )}
+                        style={{ width: percent(row.share) }}
+                      >
+                        {row.share >= SEX_LABEL_MIN_SHARE && (
+                          <span className="truncate">
+                            {row.label} {percent(row.share)}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                </div>
+                <div className={FILTER_ROW}>
+                  {demographics.sex
+                    .filter((row) => row.key !== 'none')
+                    .map((row) => (
+                      <button
+                        key={row.key}
+                        type="button"
+                        aria-pressed={filters.sex === row.key}
+                        onClick={() =>
+                          onFiltersChange({
+                            ...filters,
+                            sex: filters.sex === row.key ? null : (row.key as 'female' | 'male'),
+                          })
+                        }
+                        onPointerEnter={(event) => showSexTip(row.key, event.currentTarget)}
+                        onFocus={(event) => showSexTip(row.key, event.currentTarget)}
+                        onBlur={sexTip.hide}
+                        className={FILTER_BUTTON}
+                      >
+                        <span className="flex items-center gap-1.5 font-semibold text-text-primary">
+                          <span
+                            aria-hidden="true"
+                            className={cn('size-2.5 shrink-0 rounded-sm', SEX_COLOR[row.key])}
+                          />
+                          {row.label}
+                        </span>{' '}
+                        <span className="text-text-secondary">
+                          {casesText(row.count)} · {percent(row.share)}
+                        </span>{' '}
+                        <span className="block text-xs text-text-secondary">
+                          {splitText({ students: row.students ?? 0, staff: row.staff ?? 0 })}
+                        </span>
+                      </button>
+                    ))}
+                </div>
+                {sexTip.tip && sexTipRow && (
+                  <GlideTip tip={sexTip.tip} title={sexTipRow.label}>
+                    <p className="mt-0.5 text-text-secondary tabular-nums">
+                      {casesText(sexTipRow.count)} · {percent(sexTipRow.share)}
+                    </p>
+                    <p className="mt-0.5 text-text-secondary tabular-nums">
+                      {splitText({
+                        students: sexTipRow.students ?? 0,
+                        staff: sexTipRow.staff ?? 0,
+                      })}
+                    </p>
+                    <p className="mt-0.5 text-text-secondary tabular-nums">
+                      {plural(sexTipRow.visits, 'visit')} ·{' '}
+                      {plural(sexTipRow.incidents, 'incident')}
+                    </p>
+                  </GlideTip>
+                )}
               </div>
-              {demographics.sex.filter((row) => row.key === 'none').map((row) => (
-                <p key={row.key} className="text-center text-xs text-text-secondary">{row.label}: {casesText(row.count)}</p>
-              ))}
+              {demographics.sex
+                .filter((row) => row.key === 'none')
+                .map((row) => (
+                  <p key={row.key} className="text-center text-xs text-text-secondary">
+                    {row.label}: {casesText(row.count)}
+                  </p>
+                ))}
             </>
           ) : (
             <>
-              {/* Stacked, so each bar's height is still the grade's total; incidents are red, as everywhere (ADR-062). */}
-              <div className="relative h-56"><Bar data={{ labels: demographics.gradeLevel.map((row) => row.label), datasets: [{ label: 'Visits', data: demographics.gradeLevel.map((row) => row.visits), backgroundColor: colorToken('brand-green-dark'), borderColor: colorToken('background'), borderWidth: 1 }, { label: 'Incidents', data: demographics.gradeLevel.map((row) => row.incidents), backgroundColor: colorToken('error'), borderColor: colorToken('background'), borderWidth: 1 }] }} options={{ responsive: true, maintainAspectRatio: false, animation, transitions: hover.transitions, interaction: { mode: 'index', axis: 'x', intersect: false }, layout: { padding: { right: 2 } }, plugins: { tooltip: hover.tooltip, legend: { display: true, position: 'bottom', onClick: () => {}, labels: { color: tick, boxWidth: 14 } } }, scales: { x: { stacked: true, grid: { drawTicks: false }, ticks: { color: tick } }, y: { stacked: true, beginAtZero: true, border: { color: colorToken('text-muted') }, ticks: { precision: 0, color: tick } }, yRight: { display: true, position: 'right', stacked: true, grid: { drawOnChartArea: false, drawTicks: false }, border: { display: true, color: colorToken('text-muted') }, ticks: { display: false } } } }} aria-label={`Visits and incidents by grade level: ${splitText(demographics.gradeLevel)}.`} role="img" /></div>
-              <div className={FILTER_ROW}>
-                {demographics.gradeLevel.map((row) => (
-                  <button key={row.key} type="button" aria-pressed={filters.gradeLevel === row.key} onClick={() => onFiltersChange({ ...filters, gradeLevel: filters.gradeLevel === row.key ? null : row.key })} className={FILTER_BUTTON}>
-                    <span className="block font-semibold text-text-primary">{row.label}</span>{' '}<span className="text-text-secondary">{casesText(row.count)} · {percent(row.share)}</span>
-                  </button>
-                ))}
+              {/* Columns in school order, every grade in its place, so an empty tile shows a grade with none. Incidents are red, as everywhere (ADR-062). */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-secondary">
+                <p className="order-last sm:ml-auto">Select a grade to filter the charts above.</p>
+                <span className="flex items-center gap-1.5">
+                  <span className="size-3 rounded-sm bg-brand-green-dark" />
+                  Visits
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="size-3 rounded-sm bg-error" />
+                  Incidents
+                </span>
+              </div>
+              {/* Fits the card at every width; on a phone the labels shorten to the grade number. */}
+              <div>
+                <div ref={gradeTipRef} className="relative">
+                  <ul
+                    className="grid gap-1 sm:gap-1.5"
+                    style={gradeColumns}
+                    onPointerLeave={gradeTip.hide}
+                  >
+                    {grades.map((row) => {
+                      const height = (value: number) =>
+                        `${(value / busiestGrade) * GRADE_BAR_MAX}px`
+                      const name = `${row.label}: ${casesText(row.count)}, ${percent(row.share)}, ${plural(row.visits, 'visit')}, ${plural(row.incidents, 'incident')}`
+                      return (
+                        <li key={row.key}>
+                          <button
+                            type="button"
+                            aria-label={name}
+                            aria-pressed={filters.gradeLevel === row.key}
+                            onClick={() =>
+                              onFiltersChange({
+                                ...filters,
+                                gradeLevel: filters.gradeLevel === row.key ? null : row.key,
+                              })
+                            }
+                            onPointerEnter={(event) =>
+                              gradeTip.show(
+                                row.key,
+                                event.currentTarget.querySelector('[data-grade-anchor]') ??
+                                  event.currentTarget,
+                              )
+                            }
+                            onFocus={(event) =>
+                              gradeTip.show(
+                                row.key,
+                                event.currentTarget.querySelector('[data-grade-anchor]') ??
+                                  event.currentTarget,
+                              )
+                            }
+                            onBlur={gradeTip.hide}
+                            className={GRADE_COLUMN}
+                          >
+                            <span
+                              aria-hidden="true"
+                              className="flex h-52 w-full flex-col items-center justify-end gap-0.5"
+                            >
+                              {/* An empty tile says zero; a printed 0 read as one more grade number. */}
+                              <span
+                                data-grade-anchor
+                                className="text-sm font-semibold text-text-primary tabular-nums"
+                              >
+                                {row.count > 0 && row.count}
+                              </span>
+                              {row.incidents > 0 && (
+                                <span
+                                  data-grade-part
+                                  className="w-3/5 max-w-11 rounded-t bg-error"
+                                  style={{ height: height(row.incidents) }}
+                                />
+                              )}
+                              {row.visits > 0 && (
+                                <span
+                                  data-grade-part
+                                  className={cn(
+                                    'w-3/5 max-w-11 bg-brand-green-dark',
+                                    row.incidents === 0 && 'rounded-t',
+                                  )}
+                                  style={{ height: height(row.visits) }}
+                                />
+                              )}
+                            </span>
+                            <span
+                              aria-hidden="true"
+                              className="font-medium whitespace-nowrap text-text-primary"
+                            >
+                              <span className="xl:hidden">
+                                {row.label === 'Kinder' ? 'K' : row.label.replace('Grade ', '')}
+                              </span>
+                              <span className="hidden xl:inline">{row.label}</span>
+                            </span>
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                  {gradeTip.tip && gradeTipRow && (
+                    <GlideTip tip={gradeTip.tip} title={gradeTipRow.label}>
+                      <p className="mt-0.5 text-text-secondary tabular-nums">
+                        {casesText(gradeTipRow.count)}
+                      </p>
+                      <p className="mt-0.5 flex items-center gap-1.5 text-text-secondary tabular-nums">
+                        <span className="size-2 rounded-sm bg-brand-green-dark" />
+                        {plural(gradeTipRow.visits, 'visit')}
+                      </p>
+                      <p className="mt-0.5 flex items-center gap-1.5 text-text-secondary tabular-nums">
+                        <span className="size-2 rounded-sm bg-error" />
+                        {plural(gradeTipRow.incidents, 'incident')}
+                      </p>
+                    </GlideTip>
+                  )}
+                  <div
+                    aria-hidden="true"
+                    className="mt-1 grid gap-1 sm:gap-1.5"
+                    style={gradeColumns}
+                  >
+                    {gradeBands(grades).map((band) => (
+                      <span
+                        key={band.label}
+                        className="mx-1 truncate border-t-2 border-border pt-0.5 text-center text-xs text-text-secondary"
+                        style={{ gridColumn: `span ${band.span}` }}
+                      >
+                        {band.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
             </>
           )}
@@ -783,8 +1081,9 @@ export function ComplaintTrends({ trends, demographics, filters, onFiltersChange
   )
 }
 
-// `items-start`: each card keeps its own height instead of stretching to the taller one.
-const TRENDS_GRID = 'grid grid-cols-1 items-start gap-4 lg:grid-cols-3'
+// Side by side, in R4's order; the grid stretches Common complaints to the trend card's height, so a short list leaves no grey gap below it (Zean, November 2, 2026; it was `items-start`).
+const TRENDS_GRID = 'grid grid-cols-1 gap-4 lg:grid-cols-3'
+const COMPLAINT_LIST = 'flex flex-col gap-4'
 
 /**
  * Loading placeholder shaped like the trends row: the line-chart card (real title, toggle bars, a
@@ -827,7 +1126,7 @@ export function ComplaintTrendsSkeleton() {
             </div>
           </div>
         </div>
-        <div data-skeleton="complaints-list" className={CARD_SURFACE}>
+        <div data-skeleton="complaints-list" className={cn(CARD_SURFACE, 'order-first')}>
           <div className="flex items-start gap-2.5 px-5 pt-5 pb-3">
             <span className="mt-0.5 text-brand-green-dark">
               <Icon name="barChart" />
@@ -837,7 +1136,7 @@ export function ComplaintTrendsSkeleton() {
               <Skeleton className="h-3 w-44" />
             </div>
           </div>
-          <ol className="flex flex-col gap-5 px-5 pb-5">
+          <ol className={cn(COMPLAINT_LIST, 'px-5 pb-5')}>
             {[90, 72, 55, 40, 28].map((w) => (
               <li
                 key={w}
@@ -867,7 +1166,7 @@ export function ComplaintTrendsSkeleton() {
               </div>
             </div>
             <div className="flex flex-col gap-3 px-5 pb-5">
-              <Skeleton className="h-56" />
+              <Skeleton className="h-9" />
               <div className="flex gap-2">
                 <Skeleton className="h-14 flex-1" />
                 <Skeleton className="h-14 flex-1" />

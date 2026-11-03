@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Navigate, useSearchParams } from 'react-router'
-import { Card, ErrorState, Icon, Tabs } from '../../components'
+import { Card, ErrorState, Tabs } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { cn } from '../../lib/cn'
 import { todayISO } from '../../lib/dates'
@@ -20,7 +20,6 @@ import {
 import { AttentionChips } from './components/AttentionChips'
 import { FullReportLink } from './components/FullReportLink'
 import { ClusterAlerts } from './components/ClusterAlerts'
-import { urgentCount } from './lib/urgentCount'
 import { ComplaintTrends, ComplaintTrendsSkeleton } from './components/ComplaintTrends'
 import { DashboardPrint } from './components/DashboardPrint'
 import { DashboardHeader } from './components/DashboardHeader'
@@ -149,8 +148,6 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
     )
   }
 
-  const alertCount = data ? urgentCount(data) : 0
-
   return (
     // Block flow in print: in a flex column, a card pushed to the next page by break-inside-avoid
     // doesn't move the following section down, so the Calendar printed over Common complaints.
@@ -199,20 +196,6 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
               value: 'overview',
               label: 'Overview',
               icon: 'layoutGrid',
-              // Visible from every view, so alerts are not missed while on Trends.
-              badge:
-                alertCount > 0 ? (
-                  <>
-                    <span
-                      aria-hidden="true"
-                      className="inline-flex shrink-0 items-center gap-0.5 rounded-sm bg-warning px-1.5 text-xs leading-5 font-semibold text-text-primary"
-                    >
-                      <Icon name="alertTriangle" size={12} />
-                      {alertCount}
-                    </span>
-                    <span className="sr-only">{`, ${alertCount} urgent ${alertCount === 1 ? 'item' : 'items'}`}</span>
-                  </>
-                ) : undefined,
               panel: summaryPanel(
                 'Loading clinic overview…',
                 <StatCardRowSkeleton />,

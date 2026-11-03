@@ -25,6 +25,7 @@ import {
   inClinicNow,
   inventoryStatusFor,
   lowStockCount,
+  gradeLevels,
   patientSplit,
   pendingRecordCount,
   studentsById,
@@ -109,7 +110,7 @@ export function buildDashboardSummary(
     backupAlert: null,
     inventoryAlerts: buildInventoryAlerts(state),
     complaintTrends: buildComplaintTrends(filteredTrendEvents, query.range, config, state.frontendOnly.calendarEvents),
-    demographics: buildDemographicAnalysis([...inRangeEvents, ...staffEvents], query),
+    demographics: buildDemographicAnalysis([...inRangeEvents, ...staffEvents], query, gradeLevels(state)),
   }
 }
 
@@ -335,10 +336,12 @@ function demographicCounts(
 export function buildDemographicAnalysis(
   inRangeEvents: DemographicEvent[],
   query: Pick<DashboardQuery, 'sex' | 'gradeLevel'>,
+  /** Listed even with no cases, so the grade chart keeps every grade in its place. */
+  enrolledGrades: string[] = [],
 ): DemographicAnalysis {
   const sexEvents = inRangeEvents.filter((event) => !query.gradeLevel || event.gradeLevel === query.gradeLevel)
   const gradeEvents = inRangeEvents.filter((event) => !query.sex || event.sex === query.sex)
-  const grades = [...new Set(inRangeEvents.flatMap((event) => event.gradeLevel ?? []))].sort(compareGradeLevels)
+  const grades = [...new Set([...enrolledGrades, ...inRangeEvents.flatMap((event) => event.gradeLevel ?? [])])].sort(compareGradeLevels)
   const sexLabels: Array<[string, string]> = [['female', 'Female'], ['male', 'Male']]
   if (sexEvents.some((event) => !event.sex)) sexLabels.push(['none', 'No sex recorded'])
   return {
