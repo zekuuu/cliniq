@@ -227,7 +227,7 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
             </p>
           </div>
           {viewer.role === 'staff' && (
-            <div className="flex flex-wrap gap-2">
+            <div className="ml-auto flex flex-wrap justify-end gap-2">
               {incompleteCount !== undefined && (
                 <Link className={buttonClassName({ variant: 'secondary' })} to={paths.incompleteRecords}>
                   <Icon name="alertTriangle" />
