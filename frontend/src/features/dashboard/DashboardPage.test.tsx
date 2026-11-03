@@ -80,7 +80,7 @@ describe('Clinic Overview Dashboard', () => {
     expect(screen.getByRole('link', { name: 'Incidents' })).toHaveAttribute('href', expect.stringMatching(/^\/incidents\?from=\d{4}-\d{2}-\d{2}&to=/))
     expect(screen.getByRole('link', { name: /low stock/i })).toHaveAttribute('href', '/inventory?attention=low_stock')
     expect(screen.getByRole('link', { name: /expired or expiring/i })).toHaveAttribute('href', '/inventory?attention=expiry')
-    expect(screen.getByRole('link', { name: /incomplete student records/i })).toHaveAttribute('href', '/students?record=incomplete')
+    expect(screen.getByRole('link', { name: /incomplete student records/i })).toHaveAttribute('href', '/students/incomplete')
   })
 
   it('sends Staff from the Pending excuse letters card to the filtered Visit Log, with no duplicate list', async () => {

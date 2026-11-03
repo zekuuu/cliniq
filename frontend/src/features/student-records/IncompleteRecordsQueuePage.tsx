@@ -218,7 +218,8 @@ export function IncompleteRecordsQueuePage({
     )
   }
 
-  const back = <BackButton fallback={paths.students} />
+  // Always the Student List, whichever page opened the queue (Zean, November 3, 2026).
+  const back = <BackButton to={paths.students} />
 
   if (status === 'error') {
     return (
