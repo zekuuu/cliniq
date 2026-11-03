@@ -531,7 +531,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     relDateTime(`${w}.createdAt`, e.createdAt)
     relDateTime(`${w}.updatedAt`, e.updatedAt)
   })
-  // Sports Reports (ADR-034): the list and notes only, never a copy of medical content.
+  // Sports Reports (ADR-034): the list only, never a copy of medical content.
   const sportsReportIds = new Set<string>()
   ;((fo.sportsReports ?? []) as Rec[]).forEach((r, i) => {
     const w = `frontendOnly.sportsReports[${i}]`
@@ -544,7 +544,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     oneOf(`${w}.window`, r.window, [30, 60, 90, 'school_year'])
     const listed = new Set<string>()
     ;((r.students ?? []) as Rec[]).forEach((s, j) => {
-      checkFields(`${w}.students[${j}]`, s, ['studentId', 'note'])
+      checkFields(`${w}.students[${j}]`, s, ['studentId'])
       studentRef(`${w}.students[${j}].studentId`, s.studentId)
       if (listed.has(String(s.studentId))) fail(`${w}.students[${j}].studentId: listed twice`)
       listed.add(String(s.studentId))

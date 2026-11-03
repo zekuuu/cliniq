@@ -83,11 +83,10 @@ function conditionsCell(row: SportsReportContentRow) {
 /** The columns of the report table, in the order ADR-034 sets; the conditions column only when ticked. */
 export function sportsReportColumns(includeConditions: boolean, select?: EntrySelection): Array<PrintColumn<SportsReportContentRow>> {
   const columns: Array<PrintColumn<SportsReportContentRow>> = [
-    { header: 'Student', width: includeConditions ? '20%' : '24%', cell: (row) => <><span className="block font-semibold">{row.fullName}</span>{row.gradeLevel}</> },
-    { header: 'Recent visits and incidents', width: includeConditions ? '38%' : '46%', cell: (row) => entriesCell(row, select) },
-    { header: "Clinician's note", width: includeConditions ? '22%' : '30%', cell: (row) => <span className="whitespace-pre-line">{row.note ?? ''}</span> },
+    { header: 'Student', width: includeConditions ? '24%' : '28%', cell: (row) => <><span className="block font-semibold">{row.fullName}</span>{row.gradeLevel}</> },
+    { header: 'Recent visits and incidents', width: includeConditions ? '50%' : '72%', cell: (row) => entriesCell(row, select) },
   ]
-  if (includeConditions) columns.push({ header: 'Recorded conditions and allergies', width: '20%', cell: (row) => conditionsCell(row) })
+  if (includeConditions) columns.push({ header: 'Recorded conditions and allergies', width: '26%', cell: (row) => conditionsCell(row) })
   return columns
 }
 

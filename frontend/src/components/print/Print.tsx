@@ -4,6 +4,9 @@ import { canPrint, usePrinting } from '../../hooks/usePrinting'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/cn'
 import { getMockSessionUser, type PrintAuditRecord, type SessionUser } from '../../lib/mock-db'
+// Inlined as a data URL: the tree mounts inside beforeprint, and a fetched image (the dev server
+// sends no-cache) is not ready in time, so the letterhead printed an empty box.
+import LOGO_SRC from './mca-logo-print.png?inline'
 
 /*
  * Purpose-built printouts (ADR-026, `.claude/skills/cliniq-print-patterns`). A printout is its own
@@ -14,10 +17,6 @@ import { getMockSessionUser, type PrintAuditRecord, type SessionUser } from '../
  * as `[data-print-document]`; `index.css` then hides the app for that print. So the screen pays nothing
  * for it and it must render from data the screen already loaded: printing never fetches.
  */
-
-const LOGO_SRC = '/MCA_Logo.png'
-// Warm the cache so the letterhead logo is ready when the print tree mounts mid-print.
-if (typeof window !== 'undefined' && typeof Image !== 'undefined') new Image().src = LOGO_SRC
 
 const FOOTER_FONT = `font-family: 'Inter Variable', 'Segoe UI', Arial, sans-serif; font-size: 7.5pt; line-height: 1.35; color: #1a1a1a; vertical-align: top; padding-top: 3mm;`
 
@@ -119,7 +118,7 @@ export function PrintDocument({
     >
       <style>{FOOTER_CSS}</style>
       <header className="flex items-center gap-[4mm] border-b-2 border-text-primary pb-[3mm]">
-        <img src={LOGO_SRC} alt="" className="size-[15mm] shrink-0 object-contain" />
+        <img src={LOGO_SRC} alt="" decoding="sync" className="size-[15mm] shrink-0 object-contain" />
         <div className="min-w-0">
           <p className="text-[10.5pt] font-semibold">Mendez Christian Academy — School Clinic</p>
           <h1 className="text-[16pt] leading-tight font-bold">{title}</h1>
@@ -145,7 +144,7 @@ export function PrintSection({
 }) {
   return (
     <section className={cn('mt-[5mm] first:mt-0', className)}>
-      <h2 className="mb-[2mm] break-after-avoid border-b border-text-primary pb-[0.5mm] text-[12pt] font-bold">
+      <h2 className="mb-[1.5mm] break-after-avoid text-[12pt] font-bold">
         {title}
       </h2>
       {children}
@@ -226,34 +225,6 @@ export function PrintTable<T>({
   )
 }
 
-export interface PrintFigure {
-  label: string
-  value: ReactNode
-  /** Plain-words context under the value, e.g. "Oct 1 – Oct 15" or "Up from 4 last month". */
-  note?: string
-}
-
-/** Key figures in a row of boxed cells with plain labels. */
-export function PrintFigures({ figures }: { figures: PrintFigure[] }) {
-  return (
-    <dl
-      className="grid break-inside-avoid gap-[2mm]"
-      style={{ gridTemplateColumns: `repeat(${Math.min(figures.length, 5)}, minmax(0, 1fr))` }}
-    >
-      {figures.map((figure) => (
-        <div
-          key={figure.label}
-          className="rounded-sm border border-text-secondary px-[2.5mm] py-[1.5mm]"
-        >
-          <dt className="text-[9pt] font-semibold">{figure.label}</dt>
-          <dd className="text-[16pt] leading-tight font-bold tabular-nums">{figure.value}</dd>
-          {figure.note && <dd className="text-[8.5pt] text-text-secondary">{figure.note}</dd>}
-        </div>
-      ))}
-    </dl>
-  )
-}
-
 /**
  * A grayscale-safe bar chart: each bar is labeled directly with its name and number, so it reads in
  * black and white and the table beside it is never the only place the numbers appear.
@@ -304,7 +275,8 @@ export function PrintFields({
     <dl className={cn('grid gap-x-[6mm] gap-y-[2mm]', FIELD_COLUMNS[columns])}>
       {fields.map((field) => (
         <div key={field.label} className={cn('break-inside-avoid', field.wide && 'col-span-full')}>
-          <dt className="text-[8.5pt] font-semibold text-text-secondary uppercase">
+          {/* Bold and black, so the titles read on paper (review round 2, R17). */}
+          <dt className="text-[8.5pt] font-bold text-text-primary uppercase">
             {field.label}
           </dt>
           <dd className="whitespace-pre-line">{field.value}</dd>
@@ -314,7 +286,6 @@ export function PrintFields({
   )
 }
 
-/** Signature lines with room for a handwritten signature above each. */
 /**
  * Signature blocks: "Prepared by:", room to sign, the line, then the printed name, the position and a
  * date to write in (Zean, October 26, 2026). A name CLINIQ doesn't know stays blank to be handwritten.

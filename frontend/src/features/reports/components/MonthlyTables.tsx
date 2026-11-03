@@ -1,3 +1,4 @@
+import { splitText } from '../../../lib/patients'
 import { DataTable, EmptyState, PrintTable } from '../../../components'
 import { formatDate } from '../../../lib/dates'
 import type { MonthlyInventoryRow } from '../../../lib/mock-db'
@@ -107,20 +108,21 @@ type BySex = MonthlyReportData['visitsBySex']
 /** Visits by sex, as the Dashboard's Trends tables word it (ADR-045, ADR-051), students and staff as the two parts (ADR-063). */
 function sexRows({ female, male, noSexRecorded }: BySex) {
   return [
-    { label: 'Female', count: female.students + female.staff, parts: female },
-    { label: 'Male', count: male.students + male.staff, parts: male },
-    ...(noSexRecorded ? [{ label: 'No sex recorded', count: noSexRecorded, parts: { students: 0, staff: noSexRecorded } }] : []),
+    { label: 'Female', count: female.students + female.staff, parts: female, accent: 'border-l-sex-female' },
+    { label: 'Male', count: male.students + male.staff, parts: male, accent: 'border-l-sex-male' },
+    ...(noSexRecorded ? [{ label: 'No sex recorded', count: noSexRecorded, parts: { students: 0, staff: noSexRecorded }, accent: '' }] : []),
   ]
 }
 
+/** Female and Male carry the Dashboard Trends colours (sex-*) as a left accent so the two screens read alike. */
 export function VisitsBySexSummary({ bySex }: { bySex: BySex }) {
   return (
     <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {sexRows(bySex).map((row) => (
-        <div key={row.label} className="rounded-md border border-border bg-surface px-4 py-3">
+        <div key={row.label} className={`rounded-md border border-l-4 border-border bg-surface px-4 py-3 ${row.accent}`}>
           <dt className="text-xs font-semibold text-text-secondary">{row.label}</dt>
           <dd className="mt-1 text-xl font-bold text-text-primary tabular-nums">{row.count}</dd>
-          <dd className="text-xs text-text-secondary">Students {row.parts.students} · Staff {row.parts.staff}</dd>
+          <dd className="text-xs text-text-secondary">{splitText(row.parts)}</dd>
         </div>
       ))}
     </dl>

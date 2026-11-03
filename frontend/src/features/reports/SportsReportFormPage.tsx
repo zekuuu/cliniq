@@ -14,13 +14,11 @@ import {
   Select,
   Skeleton,
   StudentPicker,
-  Textarea,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import {
-  SPORTS_REPORT_NOTE_MAX,
   SPORTS_REPORT_TEXT_MAX,
   SPORTS_REPORT_WINDOWS,
   validateSportsReport,
@@ -104,14 +102,14 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
   const formRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(formRef)
 
-  const values = { title, activity, requestedBy, window: lookBack, includeConditions, students: students.map(({ studentId, note }) => ({ studentId, note: note ?? '' })) }
+  const values = { title, activity, requestedBy, window: lookBack, includeConditions, students: students.map(({ studentId }) => ({ studentId })) }
   const initialValues = {
     title: initial?.title ?? '',
     activity: initial?.activity ?? '',
     requestedBy: initial?.requestedBy ?? '',
     window: initial?.window ?? 90,
     includeConditions: initial?.includeConditions ?? false,
-    students: (initial?.students ?? []).map(({ studentId, note }) => ({ studentId, note: note ?? '' })),
+    students: (initial?.students ?? []).map(({ studentId }) => ({ studentId })),
   }
   const dirty = JSON.stringify(values) !== JSON.stringify(initialValues)
   const { cancel, discardDialog, allowLeave } = useCancelNavigation(reportId ? paths.sportsReport(reportId) : paths.sportsReports, dirty)
@@ -121,7 +119,7 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
     const fresh = picked.filter((student) => !known.has(student.id))
     setStudents((current) => [
       ...current,
-      ...fresh.map((student) => ({ studentId: student.id, note: null, fullName: student.fullName, gradeLevel: student.gradeLevel, status: 'active' as const })),
+      ...fresh.map((student) => ({ studentId: student.id, fullName: student.fullName, gradeLevel: student.gradeLevel, status: 'active' as const })),
     ])
     return fresh.length
   }
@@ -153,9 +151,6 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
     // The removed row held focus; keep the keyboard in the student section.
     studentsHeading.current?.focus()
   }
-  function setNote(studentId: string, note: string) {
-    setStudents((current) => current.map((student) => (student.studentId === studentId ? { ...student, note } : student)))
-  }
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -180,7 +175,7 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
       <Card className="p-5">
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">{reportId ? 'Edit Sports Report' : 'New Sports Report'}</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          List the students an instructor asked about. Their recent visits and incidents print with your note.
+          List the students an instructor asked about. Their recent visits and incidents print for the instructor.
         </p>
       </Card>
       <form ref={formRef} className="flex flex-col gap-4" onSubmit={submit} noValidate>
@@ -226,7 +221,7 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
               />
               <span>
                 <span className="block text-sm font-semibold text-text-primary">Include recorded conditions and allergies</span>
-                <span className="block text-xs text-text-secondary">Off unless you tick it. Adds a column with each student's recorded conditions and allergies.</span>
+                <span className="block text-xs text-text-secondary">Off unless you tick it. Adds a column with each student's recorded conditions and allergies. Each visit's or incident's complaint prints either way.</span>
               </span>
             </label>
           </CardBody>
@@ -266,16 +261,11 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
             <h3 ref={studentsHeading} tabIndex={-1} className="text-sm font-semibold text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green">
               On this report
             </h3>
-            {errors.students && (
-              <p role="alert" className="text-sm font-semibold text-error">
-                {errors.students}
-              </p>
-            )}
             {students.length ? (
               // Compact rows, so a whole grade stays reviewable: one line each, scrolling past about ten.
               <ul className="-m-1 flex max-h-[34rem] scroll-py-1 flex-col divide-y divide-border overflow-y-auto p-1 scrollbar-thin">
                 {students.map((student) => (
-                  <li key={student.studentId} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-2 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto]">
+                  <li key={student.studentId} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-2">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold wrap-break-word text-text-primary">{student.fullName ?? 'Student record not found'}</p>
                       {student.gradeLevel && <p className="text-xs text-text-secondary">{student.gradeLevel}</p>}
@@ -285,16 +275,6 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
                         </Badge>
                       )}
                     </div>
-                    <Textarea
-                      label={`Note for ${studentName(student)}`}
-                      hideLabel
-                      rows={1}
-                      placeholder="Add a note"
-                      maxLength={SPORTS_REPORT_NOTE_MAX}
-                      value={student.note ?? ''}
-                      className="order-last col-span-2 sm:order-none sm:col-span-1 [&_textarea]:max-h-24 [&_textarea]:resize-none [&_textarea]:[field-sizing:content] [&_textarea]:placeholder:text-text-secondary"
-                      onChange={(note) => setNote(student.studentId, note)}
-                    />
                     <button
                       type="button"
                       onClick={() => remove(student)}
