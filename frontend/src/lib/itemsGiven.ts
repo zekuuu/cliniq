@@ -1,5 +1,6 @@
 import type { ItemLineDraft } from '../components/forms/ItemsGivenField'
 import type { Incident, ItemGivenLine, Visit } from '../types/entities'
+import { STARTER_ALLERGIES } from '../config/healthStarterList'
 
 /** "Paracetamol 500mg × 2 tablets (1 tablet every 6 hours)", from the line's own snapshot. */
 export function formatItemGiven(line: Pick<ItemGivenLine, 'itemName' | 'quantity' | 'unit' | 'instructions'>): string {
@@ -79,7 +80,12 @@ export function draftsFrom(lines: ReadonlyArray<ItemGivenLine>): ItemLineDraft[]
  * case-insensitively ("Penicillin (rash)" matches "penicillin"). A warning only; nothing is blocked.
  */
 export function allergyMatches(item: { avoidIfAllergicTo?: string[] }, allergies: readonly string[]): string[] {
-  const listed = allergies.map((allergy) => allergy.toLowerCase())
+  // An allergy typed in Filipino also matches its English name, and the reverse (review round 2, R16).
+  const listed = allergies.flatMap((allergy) => {
+    const typed = allergy.toLowerCase()
+    const entry = STARTER_ALLERGIES.find((item) => item.name.toLowerCase() === typed || item.aliases.includes(typed))
+    return entry ? [typed, entry.name.toLowerCase(), ...entry.aliases] : [typed]
+  })
   return (item.avoidIfAllergicTo ?? []).filter((tag) => listed.some((allergy) => allergy.includes(tag.toLowerCase())))
 }
 

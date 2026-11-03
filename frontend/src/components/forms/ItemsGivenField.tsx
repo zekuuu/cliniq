@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { allergyMatches, allergyWarningText } from '../../lib/itemsGiven'
 import type { ItemGivenLine } from '../../types/entities'
 import { Icon } from '../icons/Icon'
-import { Badge } from '../ui/Badge'
 import { Input } from '../ui/Input'
 import { InventoryItemPicker, type PickableItem } from './InventoryItemPicker'
 
@@ -14,6 +13,12 @@ export interface ItemLineDraft {
 }
 
 export const INSTRUCTIONS_MAX = 120
+
+/**
+ * Item, quantity, unit, instructions, remove, shared by the column names and every row from sm. Fixed
+ * widths, never `auto`: the names and the rows are separate grids, so `auto` sized them apart.
+ */
+const ROW_COLUMNS = 'sm:grid-cols-[minmax(0,1fr)_6rem_4.5rem_minmax(0,12rem)_1rem]'
 
 const iconButton =
   'inline-flex cursor-pointer rounded-sm text-text-secondary transition-colors hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-text-secondary motion-reduce:transition-none'
@@ -107,75 +112,87 @@ export function ItemsGivenField({
       </div>
 
       {lines.length > 0 && (
-        <ul aria-label="Medicines and supplies given" className="mt-3 flex flex-col gap-2">
-          {lines.map((line) => {
-            const name = nameOf(line.itemId)
-            const unit = unitOf(line.itemId)
-            const item = byId.get(line.itemId)
-            const isExpired = expired(line.itemId)
-            const available = item ? item.currentStock + (savedById.get(line.itemId)?.quantity ?? 0) : null
-            const overStock = available !== null && line.quantity > available
-            return (
-              <li key={line.itemId} className="rounded-md border border-border p-3">
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                  <p className="min-w-0 flex-1 text-sm font-semibold text-text-primary">
+        <>
+          {/* Compact like the Sports Report list (Zean, November 3, 2026): one divided row per item. From sm the
+              columns are named once here; below sm each field shows its own label. */}
+          <div aria-hidden="true" className={`mt-3 hidden gap-x-3 text-xs font-semibold text-text-secondary sm:grid ${ROW_COLUMNS}`}>
+            <span>Item</span>
+            <span>Quantity</span>
+            <span>Unit</span>
+            <span>Instructions (optional)</span>
+            <span />
+          </div>
+          <ul aria-label="Medicines and supplies given" className="mt-1 flex flex-col divide-y divide-border">
+            {lines.map((line) => {
+              const name = nameOf(line.itemId)
+              const unit = unitOf(line.itemId)
+              const item = byId.get(line.itemId)
+              const isExpired = expired(line.itemId)
+              const available = item ? item.currentStock + (savedById.get(line.itemId)?.quantity ?? 0) : null
+              const overStock = available !== null && line.quantity > available
+              return (
+                <li key={line.itemId} className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-2 ${ROW_COLUMNS}`}>
+                  {/* Expiry on its own small line under the name: a badge beside a wrapping name overlapped it. */}
+                  <p className="order-1 min-w-0 text-sm font-semibold text-text-primary sm:order-none">
                     {name}
-                    {isExpired && <Badge tone="error" variant="soft" className="ml-2">Expired</Badge>}
+                    {isExpired && <span className="block text-xs font-semibold text-error-text">Expired</span>}
                     {item?.flags.includes('nearing_expiration') && (
-                      <Badge tone="warning" variant="soft" className="ml-2">
-                        {item.daysUntilExpiry === 0 ? 'Expires today' : `Expires in ${item.daysUntilExpiry}d`}
-                      </Badge>
+                      <span className="block text-xs font-semibold text-warning-text">
+                        {item.daysUntilExpiry === 0 ? 'Expires today' : `Expires in ${item.daysUntilExpiry} ${item.daysUntilExpiry === 1 ? 'day' : 'days'}`}
+                      </span>
                     )}
                   </p>
-                  <div className="inline-flex h-10 items-center gap-2 rounded-md border border-border bg-background px-3 shadow-card">
-                    <button type="button" aria-label={`Decrease ${name}`} disabled={line.quantity <= 1} onClick={() => update(line.itemId, { quantity: line.quantity - 1 })} className={iconButton}>
-                      <Icon name="minus" />
-                    </button>
-                    <input
-                      aria-label={`Quantity of ${name}`}
-                      inputMode="numeric"
-                      autoComplete="off"
-                      value={line.quantity || ''}
-                      onChange={(event) => {
-                        const digits = event.target.value.replace(/\D/g, '')
-                        update(line.itemId, { quantity: digits ? Number(digits) : 0 })
-                      }}
-                      onBlur={() => {
-                        if (line.quantity < 1) update(line.itemId, { quantity: 1 })
-                      }}
-                      className="w-10 bg-transparent text-center text-sm font-semibold text-text-primary tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green"
-                    />
-                    <button type="button" aria-label={`Increase ${name}`} disabled={!canRaise(line)} onClick={() => update(line.itemId, { quantity: line.quantity + 1 })} className={iconButton}>
-                      <Icon name="plus" />
-                    </button>
+                  <div className="order-3 col-span-2 flex items-center gap-3 sm:order-none sm:contents">
+                    <div className="inline-flex h-10 items-center gap-1 rounded-md border border-border bg-background px-2 shadow-card">
+                      <button type="button" aria-label={`Decrease ${name}`} disabled={line.quantity <= 1} onClick={() => update(line.itemId, { quantity: line.quantity - 1 })} className={iconButton}>
+                        <Icon name="minus" />
+                      </button>
+                      <input
+                        aria-label={`Quantity of ${name}`}
+                        inputMode="numeric"
+                        autoComplete="off"
+                        value={line.quantity || ''}
+                        onChange={(event) => {
+                          const digits = event.target.value.replace(/\D/g, '')
+                          update(line.itemId, { quantity: digits ? Number(digits) : 0 })
+                        }}
+                        onBlur={() => {
+                          if (line.quantity < 1) update(line.itemId, { quantity: 1 })
+                        }}
+                        className="w-8 bg-transparent text-center text-sm font-semibold text-text-primary tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green"
+                      />
+                      <button type="button" aria-label={`Increase ${name}`} disabled={!canRaise(line)} onClick={() => update(line.itemId, { quantity: line.quantity + 1 })} className={iconButton}>
+                        <Icon name="plus" />
+                      </button>
+                    </div>
+                    <span className="text-sm text-text-secondary">{unit}</span>
                   </div>
-                  <span className="w-16 text-sm text-text-secondary">{unit}</span>
-                  <button type="button" aria-label={`Remove ${name}`} onClick={() => remove(line.itemId)} className={iconButton}>
+                  <Input
+                    label="Instructions (optional)"
+                    aria-label={`Instructions for ${name}`}
+                    className="order-4 col-span-2 sm:order-none sm:col-span-1 sm:[&>label]:sr-only"
+                    value={line.instructions}
+                    maxLength={INSTRUCTIONS_MAX}
+                    placeholder="e.g. 1 tablet every 6 hours"
+                    onChange={(event) => update(line.itemId, { instructions: event.target.value })}
+                  />
+                  <button type="button" aria-label={`Remove ${name}`} onClick={() => remove(line.itemId)} className={`order-2 sm:order-none ${iconButton}`}>
                     <Icon name="xCircle" />
                   </button>
-                </div>
-                <Input
-                  label="Instructions (optional)"
-                  className="mt-2"
-                  value={line.instructions}
-                  maxLength={INSTRUCTIONS_MAX}
-                  placeholder="e.g. 1 tablet every 6 hours"
-                  hint={`${line.instructions.length}/${INSTRUCTIONS_MAX} characters`}
-                  onChange={(event) => update(line.itemId, { instructions: event.target.value })}
-                />
-                {overStock && (
-                  <p className="mt-2 flex items-start gap-1 text-xs font-semibold text-warning-text">
-                    <Icon name="alertTriangle" size={14} className="mt-px shrink-0" />
-                    Only {available} {unit} in stock. Saving takes stock below zero; recount and restock.
-                  </p>
-                )}
-                {isExpired && (
-                  <p className="mt-2 text-xs text-text-secondary">This item has expired. Keep or lower the quantity given; it can’t be raised.</p>
-                )}
-              </li>
-            )
-          })}
-        </ul>
+                  {overStock && (
+                    <p className="order-5 col-span-full flex items-start gap-1 text-xs font-semibold text-warning-text sm:order-none">
+                      <Icon name="alertTriangle" size={14} className="mt-px shrink-0" />
+                      Only {available} {unit} in stock. Saving takes stock below zero; recount and restock.
+                    </p>
+                  )}
+                  {isExpired && (
+                    <p className="order-6 col-span-full text-xs text-text-secondary sm:order-none">This item has expired. Keep or lower the quantity given; it can’t be raised.</p>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </>
       )}
       {error && (
         <p role="alert" className="mt-2 text-xs font-semibold text-error">

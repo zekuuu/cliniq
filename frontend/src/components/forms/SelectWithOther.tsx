@@ -8,7 +8,7 @@ const OTHER_VALUE = '__other__'
  * A dropdown of familiar choices with an explicit "Other (type your own)" path
  * (cliniq-combobox-patterns): Other is always the first option, stays visibly selected, and reveals
  * a focused text field whose text is the value. The option label itself is never stored. Used by the
- * visit and incident Complaint fields and the Staff Form's department or role (ADR-043).
+ * visit and incident Complaint fields.
  */
 export function SelectWithOther({
   label,

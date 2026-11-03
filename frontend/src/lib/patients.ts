@@ -67,9 +67,9 @@ export const NOTIFIED_PARTY: Record<PatientKind, string> = { student: 'Parent', 
 
 export const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 
-/** "Students 12 · Staff 3": the split shown wherever a total counts people (ADR-043, D14). */
+/** "12 students · 3 staff", number first: "Students 3" read like a student's number. The split shown wherever a total counts people (ADR-043, D14). */
 export function splitText(split: { students: number; staff: number }): string {
-  return `Students ${split.students} · Staff ${split.staff}`
+  return `${split.students} ${split.students === 1 ? 'student' : 'students'} · ${split.staff} staff`
 }
 
 /**
@@ -77,6 +77,12 @@ export function splitText(split: { students: number; staff: number }): string {
  * offers the same words as a choice. Typed "None" or "None recorded" is stored as an empty list.
  */
 export const NONE_RECORDED = 'None recorded'
+
+/** One allergy or condition as stored: trimmed, first letter capital (review round 2, R16). */
+export function tidyEntry(value: string): string {
+  const trimmed = value.trim().replace(/\s+/g, ' ')
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1)
+}
 
 export function isNoneRecorded(value: string): boolean {
   const typed = value.trim().toLowerCase()
