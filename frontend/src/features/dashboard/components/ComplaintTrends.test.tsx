@@ -1,8 +1,7 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { ComplaintTrends, ComplaintTrendsSkeleton, TrendTable } from './ComplaintTrends'
-import { colorToken } from '../../../lib/tokens'
 import type { ComplaintTrends as ComplaintTrendsData, TrendBucket } from '../../../types/dashboard'
 
 interface LineProps {
@@ -161,14 +160,43 @@ describe('TrendTable', () => {
     )
     expect(screen.getByRole('button', { name: /^Female/ })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: /^Female/ }).className).toContain('aria-pressed:ring-brand-green')
-    expect(screen.getByRole('img', { name: /by Sex: Female 2 \(50%\): 2 students, 0 staff; Male 2 \(50%\): 2 students, 0 staff/ })).toBeInTheDocument()
-    // ADR-063: Students and Staff are the two parts of each bar, both named in the legend.
-    const sets = (barMock.props as { data: { datasets: Array<{ label: string; backgroundColor: string }> } }).data.datasets
-    expect(sets.map((set) => set.label)).toEqual(['Students', 'Staff'])
-    expect(sets.map((set) => set.backgroundColor)).toEqual([colorToken('brand-green-dark'), colorToken('text-secondary')])
+    // One split bar in place of the two-column chart; the buttons carry the students and staff (ADR-063).
+    const bar = screen.getByRole('img', { name: /by Sex: Female 2 \(50%\): 2 students, 0 staff; Male 2 \(50%\): 2 students, 0 staff/ })
+    expect(bar).toHaveTextContent('Female 50%')
+    expect(bar.querySelector<HTMLElement>('[data-sex-part]')?.style.width).toBe('50%')
+    // Each sex has its own colour, repeated as a swatch on its button.
+    expect([...bar.querySelectorAll('[data-sex-part]')].map((part) => part.className.match(/bg-sex-\w+/)?.[0])).toEqual(['bg-sex-female', 'bg-sex-male'])
+    expect(screen.getByRole('button', { name: /^Male/ }).querySelector('.bg-sex-male')).not.toBeNull()
+    // The same gliding tooltip as the grade tiles, from the bar or the button.
+    fireEvent.pointerEnter(bar.querySelector('[data-sex-part="male"]')!)
+    expect(document.querySelector('[data-glide-tooltip]')).toHaveTextContent('Male2 cases · 50%2 students · 0 staff2 visits · 0 incidents')
+    fireEvent.focus(screen.getByRole('button', { name: /^Female/ }))
+    expect(document.querySelectorAll('[data-glide-tooltip]')).toHaveLength(1)
+    expect(document.querySelector('[data-glide-tooltip]')).toHaveTextContent(/^Female/)
   })
 
-  it('lays out grade filters as fixed-width buttons in a centered row', async () => {
+  it('keeps a thin part of the sex bar unlabelled, with its figures on the button', () => {
+    render(
+      <ComplaintTrends
+        trends={trends}
+        demographics={{
+          sex: [
+            { key: 'female', label: 'Female', count: 19, visits: 19, incidents: 0, share: 0.95, students: 19, staff: 0 },
+            { key: 'male', label: 'Male', count: 1, visits: 1, incidents: 0, share: 0.05, students: 1, staff: 0 },
+          ],
+          gradeLevel: [],
+        }}
+        filters={{ sex: null, gradeLevel: null }}
+        onFiltersChange={() => {}}
+      />,
+    )
+    const bar = screen.getByRole('img', { name: /by Sex/ })
+    expect(bar).toHaveTextContent('Female 95%')
+    expect(bar).not.toHaveTextContent('Male')
+    expect(screen.getByRole('button', { name: /^Male 1 case · 5%/ })).toBeInTheDocument()
+  })
+
+  it('draws grades as columns on one scale, with zeros kept and incidents in words', async () => {
     const user = userEvent.setup()
     render(
       <ComplaintTrends
@@ -176,10 +204,10 @@ describe('TrendTable', () => {
         demographics={{
           sex: [],
           gradeLevel: [
-            { key: 'Grade 1', label: 'Grade 1', count: 1, visits: 1, incidents: 0, share: 0.25 },
-            { key: 'Grade 2', label: 'Grade 2', count: 1, visits: 1, incidents: 0, share: 0.25 },
-            { key: 'Grade 3', label: 'Grade 3', count: 1, visits: 1, incidents: 0, share: 0.25 },
-            { key: 'Grade 4', label: 'Grade 4', count: 1, visits: 1, incidents: 0, share: 0.25 },
+            { key: 'Kinder', label: 'Kinder', count: 0, visits: 0, incidents: 0, share: 0 },
+            { key: 'Grade 1', label: 'Grade 1', count: 2, visits: 2, incidents: 0, share: 0.5 },
+            { key: 'Grade 7', label: 'Grade 7', count: 1, visits: 1, incidents: 0, share: 0.25 },
+            { key: 'Grade 11', label: 'Grade 11', count: 1, visits: 0, incidents: 1, share: 0.25 },
           ],
         }}
         filters={{ sex: null, gradeLevel: null }}
@@ -188,11 +216,31 @@ describe('TrendTable', () => {
     )
 
     await user.click(screen.getByRole('radio', { name: 'Grade level' }))
-    // Name on top, count below, like the Female / Male buttons; the count says "case".
-    const firstGrade = screen.getByRole('button', { name: 'Grade 1 1 case · 25%' })
-    expect(firstGrade.firstElementChild).toHaveClass('block')
-    expect(firstGrade).toHaveClass('sm:w-48')
-    expect(firstGrade.parentElement).toHaveClass('flex', 'flex-wrap', 'justify-center')
+    // One tile per grade: the tile is the filter, on one scale that never tops out below 4 cases.
+    const busiest = screen.getByRole('button', { name: 'Grade 1: 2 cases, 50%, 2 visits, 0 incidents' })
+    const half = screen.getByRole('button', { name: 'Grade 7: 1 case, 25%, 1 visit, 0 incidents' })
+    const barHeight = (button: HTMLElement) => button.querySelector<HTMLElement>('[data-grade-part]')?.style.height
+    expect(barHeight(busiest)).toBe('90px')
+    expect(barHeight(half)).toBe('45px')
+    // The full label on a wide screen, the bare number on a phone, so the chart fits without scrolling.
+    expect(busiest).toHaveTextContent(/^21Grade 1$/)
+    expect(busiest.closest('.overflow-x-auto')).toBeNull()
+    expect(busiest.className).toContain('bg-surface')
+    // Hover or keyboard focus shows the split in one gliding tooltip; red never stands alone (ADR-062).
+    expect(document.querySelector('[data-glide-tooltip]')).toBeNull()
+    fireEvent.pointerEnter(screen.getByRole('button', { name: /^Grade 11:/ }))
+    expect(document.querySelector('[data-glide-tooltip]')).toHaveTextContent('Grade 111 case0 visits1 incident')
+    fireEvent.focus(busiest)
+    expect(document.querySelectorAll('[data-glide-tooltip]')).toHaveLength(1)
+    expect(document.querySelector('[data-glide-tooltip]')).toHaveTextContent('Grade 12 cases2 visits0 incidents')
+    // A grade with nothing keeps its tile, with no bar and no printed 0.
+    const none = screen.getByRole('button', { name: 'Kinder: 0 cases, 0%, 0 visits, 0 incidents' })
+    expect(none.querySelector('[data-grade-part]')).toBeNull()
+    expect(none).toHaveTextContent(/^KKinder$/)
+    expect(screen.getByText('Select a grade to filter the charts above.')).toBeInTheDocument()
+    expect(screen.getByText('Junior High')).toBeInTheDocument()
+    expect(screen.getByText('Visits')).toBeInTheDocument()
+    expect(screen.getByText('Incidents')).toBeInTheDocument()
   })
 
   it('shapes the loading skeleton with the demographic card below the trend row (R4)', () => {
@@ -262,31 +310,8 @@ describe('TrendTable', () => {
     await user.click(screen.getByRole('radio', { name: 'Grade level' }))
     expect(screen.getByRole('heading', { name: 'Visits and incidents by grade level' })).toBeInTheDocument()
     expect(screen.queryByRole('img', { name: /by Sex/i })).not.toBeInTheDocument()
-    expect(screen.getByRole('img', { name: /by grade level: Grade 5 3 visits, 1 incident\./i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Grade 5.*4.*100%/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Grade 5: 4 cases, 100%, 3 visits, 1 incident' })).toBeInTheDocument()
     expect(document.querySelector('[data-chart-right-boundary]')).not.toBeInTheDocument()
-    expect((barMock.props as LineProps).options?.scales?.x?.grid?.drawTicks).toBe(false)
-  })
-
-  it('draws a right plot boundary without ticks extending beyond the baseline', async () => {
-    const user = userEvent.setup()
-    render(
-      <ComplaintTrends
-        trends={trends}
-        demographics={{ sex: [], gradeLevel: [] }}
-        filters={{ sex: null, gradeLevel: null }}
-        onFiltersChange={() => {}}
-      />,
-    )
-
-    await user.click(screen.getByRole('radio', { name: 'Grade level' }))
-    expect((barMock.props as LineProps).options?.scales?.yRight).toMatchObject({
-      display: true,
-      position: 'right',
-      grid: { drawOnChartArea: false, drawTicks: false },
-      border: { display: true, color: colorToken('border') },
-      ticks: { display: false },
-    })
   })
 
   it('uses smooth chart transitions and a slower, eased hover glide', () => {

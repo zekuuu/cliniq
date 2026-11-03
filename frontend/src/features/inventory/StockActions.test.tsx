@@ -11,6 +11,9 @@ import { InventoryDispensePage } from './InventoryDispensePage'
 import { InventoryFormPage } from './InventoryFormPage'
 import { InventoryListPage } from './InventoryListPage'
 
+// The whole list on one page: these tests reach every item (Inventory is paged since review round 2, R26).
+beforeEach(() => window.sessionStorage.setItem('cliniq.pageSize', '50'))
+
 /** Adjust Stock, Restock, the locked Edit Item fields, and the standalone Dispense rules (ADR-018). */
 
 const stock = async (id: string) => (await getInventoryItem(id)).currentStock

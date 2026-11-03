@@ -2,17 +2,19 @@ import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
-import { getDashboardSummary, getMonthlyReport, getPersonnel, getRecordedAuditEntries, recordVisit, saveIncidentStageOne, savePersonnel, type PersonnelInput, type SessionUser } from '../lib/mock-db'
+import { getDashboardSummary, listPendingExcuseLetters, getMonthlyReport, getPersonnel, getRecordedAuditEntries, recordVisit, saveIncidentStageOne, savePersonnel, type PersonnelInput, type SessionUser } from '../lib/mock-db'
 import { db } from '../lib/mock-db/store'
 import { rangeForPreset, type DateRange } from '../lib/dateRange'
 import { AppShell } from '../layouts/AppShell'
 import { AppRoutes } from '../routes/AppRoutes'
+import { splitText } from '../lib/patients'
 import { renderWithRouter } from '../test/renderWithRouter'
 import { selectOption } from '../test/selectOption'
 import { CalendarPage } from './dashboard/CalendarPage'
 import { DashboardPage } from './dashboard/DashboardPage'
 import { DashboardPrint } from './dashboard/components/DashboardPrint'
-import type { DashboardSummary, DueFollowUpRow } from '../types/dashboard'
+import type { DashboardSummary, DueFollowUpRow, InventoryAlertRow } from '../types/dashboard'
+import { stockStatus } from './dashboard/lib/alerts'
 
 /** Groupmate's frontend review, round 2, Part 1 (ADR-062, ADR-063). */
 
@@ -45,6 +47,41 @@ describe('R2 and R3: the Dashboard cards', () => {
     for (const name of ['Unfinished incident records', 'Follow-ups to review', 'Pending excuse letters'])
       expect(within(attention).getByRole('link', { name })).toBeInTheDocument()
     for (const name of ['Clinic visits', 'Incidents', 'Active students']) expect(within(activity).getByRole('link', { name })).toBeInTheDocument()
+  })
+
+  it('keeps the whole card clickable while hovered', async () => {
+    renderWithRouter(<DashboardPage viewer={STAFF} />)
+    const summary = await ready()
+    // A filter on the link would shrink its stretched ::after to the label, and the hover would flicker.
+    expect(within(summary).getByRole('link', { name: 'Clinic visits' }).className).not.toMatch(/brightness|blur|backdrop|transform|translate|scale|will-change/)
+  })
+
+  it('marks a clickable card with a drop shadow and a whole-card hover', async () => {
+    const { container } = renderWithRouter(<DashboardPage viewer={STAFF} />)
+    await ready()
+    const cards = [...container.querySelectorAll<HTMLElement>('[data-stat-card]')]
+    expect(cards).toHaveLength(6)
+    for (const card of cards) {
+      expect(card.className).toMatch(/-fill/)
+      expect(card).toHaveClass('border-l-4', 'shadow-clickable', 'hover:shadow-overlay')
+      expect(card).not.toHaveClass('hover:brightness-90')
+    }
+  })
+
+  it('colours the attention chips like the same data elsewhere', async () => {
+    renderWithRouter(<DashboardPage viewer={STAFF} />)
+    const summary = await ready()
+    // Student profiles with missing details, not the incident records on the pink card.
+    expect(within(summary).getByRole('link', { name: /incomplete student records/ })).not.toHaveClass('bg-unfinished/35')
+    expect(within(summary).getByRole('link', { name: /incomplete student records/ })).toHaveClass('shadow-clickable')
+    expect(within(summary).getByRole('link', { name: /low stock/ })).toHaveClass('bg-warning-fill')
+    expect(within(summary).getByRole('link', { name: /expired or expiring/ })).toHaveClass('bg-error-fill')
+    expect(within(summary).getByRole('link', { name: /low stock/ })).not.toHaveClass('border')
+  })
+
+  it('puts the number first in a students and staff split', () => {
+    expect(splitText({ students: 3, staff: 2 })).toBe('3 students · 2 staff')
+    expect(splitText({ students: 1, staff: 0 })).toBe('1 student · 0 staff')
   })
 
   it('gives the Admin no action cards, and only the links ADR-038 allows', async () => {
@@ -205,7 +242,61 @@ describe('R6: Sign out', () => {
   })
 })
 
+describe('the Overview tab', () => {
+  it('shows no alert count, since how it counted was unclear (Zean, November 3, 2026)', async () => {
+    renderWithRouter(<DashboardPage viewer={STAFF} />)
+    const tab = await screen.findByRole('tab', { name: 'Overview' })
+    expect(tab).toHaveAccessibleName('Overview')
+    expect(tab.textContent).toBe('Overview')
+  })
+})
+
 describe('R8: the Clinic Overview printout', () => {
+  it('names an expiry on a low-stock label only when the item is expiring, like the screen', () => {
+    const row = (flags: InventoryAlertRow['flags'], daysUntilExpiry: number | null) => ({ flags, daysUntilExpiry }) as InventoryAlertRow
+    expect(stockStatus(row(['low_stock'], 400))).toBe('Low')
+    expect(stockStatus(row(['low_stock', 'nearing_expiration'], 11))).toBe('Low · expires in 11 days')
+    expect(stockStatus(row(['nearing_expiration'], 18))).toBe('Expires in 18 days')
+    expect(stockStatus(row(['expired'], -4))).toBe('Expired 4 days ago')
+  })
+
+  it('prints stock status as a pale tag with no outline, like the inspiration', async () => {
+    const year = rangeForPreset('thisYear', db().today)
+    const doc = printed(await getDashboardSummary({ range: year }, STAFF), year)
+    const tags = [...doc.querySelectorAll<HTMLElement>('[data-print-stock] [data-stock-tag]')]
+    expect(tags.length).toBeGreaterThan(0)
+    for (const tag of tags) {
+      expect(tag.className.split(' ')).not.toContain('border')
+      expect(tag.className).toMatch(/bg-(error|warning)-fill/)
+    }
+    expect(tags.find((tag) => /^Expired/.test(tag.textContent ?? ''))).toHaveClass('bg-error-fill', 'text-error-text')
+    expect(tags.find((tag) => tag.textContent === 'Low')).toHaveClass('bg-warning-fill', 'text-warning-text')
+  })
+
+  it('embeds the letterhead logo, so it is not blank when printing starts', async () => {
+    const year = rangeForPreset('thisYear', db().today)
+    const doc = printed(await getDashboardSummary({ range: year }, STAFF), year)
+    expect(doc.querySelector('header img')?.getAttribute('src')).toMatch(/^data:image[/]png/)
+  })
+
+  it('keeps the page calm: short muted labels, a labelled attention line, one heading size', async () => {
+    const year = rangeForPreset('thisYear', db().today)
+    const doc = printed(await getDashboardSummary({ range: year }, STAFF), year, await listPendingExcuseLetters())
+    const strip = doc.querySelector('[data-print-strip]')!
+    const labels = [...strip.querySelectorAll('dt')]
+    expect(labels.map((dt) => dt.textContent)).toEqual(['Visits', 'Incidents', 'Active students', 'Excuse letters', 'Follow-ups'])
+    for (const dt of labels) expect(dt).toHaveClass('text-text-secondary')
+    expect(strip.textContent).toContain('Awaiting approval')
+    expect(strip.textContent).toContain('Excludes archived')
+    expect(doc.querySelector('[data-print-attention]')?.textContent).toMatch(/^Needs attention: /)
+    expect(doc.querySelector('[data-print-letters]')?.textContent ?? '').toMatch(/Visit [A-Z][a-z]{2} \d/)
+    // No rule under a heading: the page had too many lines (Zean, November 3, 2026).
+    for (const h2 of doc.querySelectorAll('h2')) {
+      expect(h2).toHaveClass('text-[12pt]')
+      expect(h2).not.toHaveClass('border-b')
+    }
+  })
+
   it('runs in action order for a year', async () => {
     const year = rangeForPreset('thisYear', db().today)
     const summary = await getDashboardSummary({ range: year }, STAFF)

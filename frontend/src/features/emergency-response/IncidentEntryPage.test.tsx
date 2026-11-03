@@ -12,7 +12,7 @@ import { renderWithRouter } from '../../test/renderWithRouter'
 /** Panel review IN-3: a record with no treatment, medicine, notification or referral needs this to complete. */
 async function tickNothingFurther(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByLabelText(/nothing further was needed or done/i))
-  await user.type(screen.getByRole('textbox', { name: /^reason/i }), 'Observed only; no further care needed.')
+  await user.type(screen.getByRole('textbox', { name: /^Why was nothing further needed/ }), 'Observed only; no further care needed.')
 }
 
 /** Gian Quizon's synthetic LRN in the seed. */

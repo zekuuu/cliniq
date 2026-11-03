@@ -82,9 +82,10 @@ describe('Staff Form', () => {
     await user.type(screen.getByLabelText(/^Full name/), 'Ana Test')
     await user.click(screen.getByRole('radio', { name: 'Female' }))
     await selectOption(user, screen.getByLabelText(/^Type/), 'Teacher')
-    await user.type(screen.getByRole('textbox', { name: /^Allergies/ }), 'None')
-    // Department or role: a value in use, or Other to type a new one (D4).
-    await selectOption(user, screen.getByLabelText(/^Department or role/), 'Other (type your own)')
+    await user.type(screen.getByRole('combobox', { name: /^Allergies/ }), 'None')
+    // Department or role: a value in use, or Other (specify) to type a new one (D4, review round 2 R19).
+    await user.click(screen.getByRole('combobox', { name: /^Department or role/ }))
+    await user.click(screen.getByRole('option', { name: 'Other (specify)' }))
     await user.type(screen.getByLabelText(/^Specify other department or role/), 'Guidance office')
     await user.click(screen.getByRole('button', { name: 'Save Staff' }))
 
@@ -107,8 +108,8 @@ describe('Staff Form', () => {
     expect(await screen.findByText('Enter the emergency contact phone.')).toBeInTheDocument()
 
     await user.clear(screen.getByLabelText('Primary emergency contact name'))
-    await user.clear(screen.getByLabelText(/^Medical conditions/))
-    await user.type(screen.getByLabelText(/^Medical conditions/), 'Migraine')
+    await user.clear(screen.getByRole('combobox', { name: /^Medical conditions/ }))
+    await user.type(screen.getByRole('combobox', { name: /^Medical conditions/ }), 'Migraine')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     expect(await screen.findByText('Staff record updated for Liza Pangilinan.')).toBeInTheDocument()
     expect((await getPersonnel('personnel-0005')).medicalConditions).toEqual(['Migraine'])

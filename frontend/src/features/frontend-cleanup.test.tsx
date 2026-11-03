@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DatePicker, ErrorState } from '../components'
 import { beginPasswordChange, getMockToday, getPendingPasswordChangeUser, getStudent, recordVisit, resetMockDb } from '../lib/mock-db'
 import { renderWithRouter } from '../test/renderWithRouter'
-import { selectOption } from '../test/selectOption'
 import { ForcePasswordChangePage } from './auth/ForcePasswordChangePage'
 import { LoginPage } from './auth/LoginPage'
 import { VisitLogListPage } from './clinic-visits/VisitLogListPage'
@@ -84,7 +83,7 @@ describe('After Edit Student saves (C6)', () => {
     await user.click(screen.getByRole('link', { name: 'Open profile' }))
     await user.click(await screen.findByRole('link', { name: /edit/i }))
     await screen.findByRole('heading', { name: 'Edit Student' })
-    await selectOption(user, screen.getByLabelText(/^sex/i), student.sex === 'female' ? 'Male' : 'Female')
+    await user.click(screen.getByRole('radio', { name: student.sex === 'female' ? 'Male' : 'Female' }))
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     expect(await screen.findByText(/^Student record updated for/)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Back' }))

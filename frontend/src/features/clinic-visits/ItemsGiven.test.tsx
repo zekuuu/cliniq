@@ -36,11 +36,27 @@ describe('New Visit: medicines and supplies given', () => {
     await openNewVisit(user)
     await pick(user, 'para', /Paracetamol 500mg/)
     await user.click(screen.getByRole('button', { name: 'Increase Paracetamol 500mg' }))
-    await user.type(screen.getAllByLabelText('Instructions (optional)')[0], '1 tablet every 6 hours')
+    await user.type(screen.getByRole('textbox', { name: 'Instructions for Paracetamol 500mg' }), '1 tablet every 6 hours')
     await pick(user, 'gauze', /Gauze Pads/)
+    // Compact like the Sports Report list (Zean, November 3, 2026): one divided row per item, no box, no counter.
+    const list = screen.getByRole('list', { name: 'Medicines and supplies given' })
+    expect(list).toHaveClass('divide-y')
+    for (const row of within(list).getAllByRole('listitem')) expect(row.className.split(' ')).not.toContain('border')
+    expect(screen.queryByText(/characters$/)).not.toBeInTheDocument()
+    // The column names line up with the values: fixed widths, never `auto`, which would size the two grids apart.
+    const columns = within(list).getAllByRole('listitem')[0].className.split(' ').find((name) => name.startsWith('sm:grid-cols-'))
+    expect(columns).not.toMatch(/auto/)
+    expect(list.previousElementSibling).toHaveClass(columns!, 'gap-x-3')
+    expect(within(list).getAllByRole('listitem')[0]).toHaveClass('gap-x-3')
+    // A narrow stepper column leaves the name room, so it wraps less (Zean, November 3, 2026).
+    expect(columns).toContain('_6rem_')
+    // Expiry sits on its own small line under the name, in words, so it never overlaps the name.
+    await pick(user, 'ceti', /Cetirizine/)
+    const expiry = within(screen.getByRole('list', { name: 'Medicines and supplies given' })).getByText(/^Expires in \d+ days?$|^Expires today$/)
+    expect(expiry).toHaveClass('block', 'text-warning-text')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
-    expect(await screen.findByText(/2 items were taken from inventory/)).toBeInTheDocument()
+    expect(await screen.findByText(/3 items were taken from inventory/)).toBeInTheDocument()
     expect(await stock('item-0001')).toBe(10)
     expect(await stock('item-0011')).toBe(39)
   })

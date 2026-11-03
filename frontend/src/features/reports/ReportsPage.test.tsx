@@ -34,6 +34,17 @@ function renderReports(viewer = STAFF, reportView?: 'monthly' | 'health') {
 }
 
 describe('Reports', () => {
+  it('colours the month totals like the same figures on the Dashboard', async () => {
+    const { container } = renderReports()
+    await screen.findByRole('heading', { name: 'Clinic visits by sex' })
+    const card = (label: string) => [...container.querySelectorAll('[data-stat-card]')].find((el) => el.textContent?.startsWith(label))
+    expect(card('Clinic visits')).toHaveClass('bg-brand-green-fill')
+    expect(card('Incidents')).toHaveClass('bg-error-fill')
+    expect(card('Follow-ups')).toHaveClass('bg-follow-up-fill')
+    // These open nothing, so they sit flat.
+    expect(card('Incidents')).not.toHaveClass('shadow-clickable')
+  })
+
   it('switches between print-friendly report views', async () => {
     const user = userEvent.setup()
     vi.spyOn(window, 'print').mockImplementation(() => {})

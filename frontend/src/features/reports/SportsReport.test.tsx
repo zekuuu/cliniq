@@ -45,7 +45,7 @@ function input(studentIds: string[], overrides: Partial<SportsReportInput> = {})
     requestedBy: 'Coach Ramon Cruz',
     window: 90,
     includeConditions: false,
-    students: studentIds.map((studentId) => ({ studentId, note: '' })),
+    students: studentIds.map((studentId) => ({ studentId })),
     ...overrides,
   }
 }
@@ -111,15 +111,15 @@ describe('Sports Report data rules (ADR-034)', () => {
     expect(getRecordedAuditEntries()).toHaveLength(before)
   })
 
-  it('saves only the list and the notes, never medical content', async () => {
+  it('saves only the list, never medical content or a note', async () => {
     const { studentId, visit } = await studentWithOlderVisitOnly()
     const report = await createSportsReport(
-      { ...input([studentId, studentId], { includeConditions: true }), students: [{ studentId, note: '  Cleared by her doctor last week. ' }, { studentId, note: '' }] },
+      { ...input([studentId, studentId], { includeConditions: true }), students: [{ studentId }, { studentId }] },
       STAFF,
     )
     expect(Object.keys(report).sort()).toEqual(['activity', 'archived', 'createdAt', 'createdByUserId', 'id', 'includeConditions', 'requestedBy', 'students', 'title', 'updatedAt', 'window'])
-    // Duplicates collapse to one entry, holding the id and the note only.
-    expect(report.students).toEqual([{ studentId, note: 'Cleared by her doctor last week.' }])
+    // Duplicates collapse to one entry, holding the id only: the note was removed to cut the clinician's work (Zean, November 3, 2026).
+    expect(report.students).toEqual([{ studentId }])
     const student = await getStudent(studentId)
     const saved = JSON.stringify(report)
     for (const value of [visit.complaint, visit.treatment, student.lrn, student.fullName, ...student.medicalConditions, ...student.allergies]) {
@@ -185,7 +185,7 @@ describe('Sports Report data rules (ADR-034)', () => {
     await updateSportsReport(report.id, input([student.id], { title: 'Palaro finals' }), STAFF)
     const copy = await duplicateSportsReport(report.id, STAFF)
     await setSportsReportArchived(report.id, true, STAFF)
-    expect(copy).toMatchObject({ title: 'Copy of Palaro finals', archived: false, students: [{ studentId: student.id, note: null }] })
+    expect(copy).toMatchObject({ title: 'Copy of Palaro finals', archived: false, students: [{ studentId: student.id }] })
     expect((await listSportsReports(STAFF)).map((r) => [r.title, r.archived])).toEqual(
       expect.arrayContaining([['Palaro finals', true], ['Copy of Palaro finals', false]]),
     )
@@ -235,7 +235,7 @@ describe('Sports Report screens', () => {
     const { studentId, visit } = await studentWithOlderVisitOnly()
     const none = await studentWithNoEntries()
     const report = await createSportsReport(
-      { ...input([studentId, none.id]), students: [{ studentId, note: 'Light drills only this week.' }, { studentId: none.id, note: '' }] },
+      { ...input([studentId, none.id]), students: [{ studentId }, { studentId: none.id }] },
       STAFF,
     )
     const student = await getStudent(studentId)
@@ -247,7 +247,7 @@ describe('Sports Report screens', () => {
     )
     expect(await screen.findByRole('heading', { name: 'Palaro tryouts' }, { timeout: 5000 })).toBeInTheDocument()
     const preview = screen.getByRole('table', { name: 'Sports Report preview' })
-    expect(within(preview).getAllByRole('columnheader').map((cell) => cell.textContent)).toEqual(['Student', 'Recent visits and incidents', "Clinician's note"])
+    expect(within(preview).getAllByRole('columnheader').map((cell) => cell.textContent)).toEqual(['Student', 'Recent visits and incidents'])
     expect(within(preview).getByText('No visits or incidents recorded in this period')).toBeInTheDocument()
 
     const before = getRecordedAuditEntries().length
@@ -258,10 +258,19 @@ describe('Sports Report screens', () => {
     expect(text).toContain('Sports Report')
     expect(text).toContain('Requested by: Coach Ramon Cruz')
     expect(text).toContain('Activity: Palaro 2026, Boys Basketball')
-    expect(text).toMatch(/As of .+ \(Philippine time\)/)
+    expect(text).toMatch(/As of [A-Z][a-z]{2} [0-9]+, [0-9]{4} · [0-9]+:[0-9]{2} [AP]M/)
+    expect(text).not.toContain('Philippine time')
+    // Zean, November 3, 2026: the title centred, then who asked on the left and when on the right.
+    expect(doc.querySelector('[data-sports-title]')).toHaveClass('text-center')
+    const [left, right] = [...doc.querySelectorAll('[data-sports-meta] > span')]
+    expect(left).toHaveTextContent(/Activity: .*Requested by: .*Printed by: /)
+    expect(right).toHaveClass('text-right')
+    expect(right).toHaveTextContent(/As of .*Visits and incidents: [A-Z][a-z]{2} [0-9]+(, [0-9]{4})? – /)
+    // Each line on one line: the right column takes its width and never wraps (Zean, November 3, 2026).
+    expect(right).toHaveClass('whitespace-nowrap')
     expect(text).toContain(`${student.fullName}${student.gradeLevel}`)
     expect(text).toContain(visit.complaint)
-    expect(text).toContain('Light drills only this week.')
+    expect(text).not.toContain("Clinician's note")
     expect(text).toContain('No visits or incidents recorded in this period')
     expect(text).toContain('Released by:')
     expect(text).toContain('Received by:')
@@ -305,7 +314,7 @@ describe('Sports Report screens', () => {
     expect(print).not.toHaveBeenCalled()
   })
 
-  it('builds a report by keyboard: picks a student by LRN, labels the note with the name, and refuses a repeat', async () => {
+  it('builds a report by keyboard: picks a student by LRN, asks for no note, and refuses a repeat', async () => {
     const user = userEvent.setup({ delay: null })
     const [student] = await listStudents({ limit: 1, fullLrn: true })
     render(
@@ -326,11 +335,11 @@ describe('Sports Report screens', () => {
       await user.keyboard('{Enter}')
     }
     expect(await screen.findByText(`${student.fullName} is already on this report.`)).toBeInTheDocument()
-    await user.type(screen.getByRole('textbox', { name: `Note for ${student.fullName}` }), 'Watch the left knee.')
+    expect(screen.queryByRole('textbox', { name: /^Note for/ })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Create Report' }))
     expect(await screen.findByTestId('path')).toHaveTextContent(/^\/reports\/sports\/sports-report-\d{4}$/)
     const [saved] = await listSportsReports(STAFF)
     expect(saved).toMatchObject({ title: 'Intramurals volleyball', requestedBy: 'Coach Liza Reyes', studentCount: 1 })
-    expect((await getSportsReport(saved.id, STAFF)).students).toMatchObject([{ studentId: student.id, note: 'Watch the left knee.' }])
+    expect((await getSportsReport(saved.id, STAFF)).students).toEqual([expect.objectContaining({ studentId: student.id })])
   })
 })

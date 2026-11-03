@@ -20,7 +20,7 @@ import {
   NoBackupLocationError,
   type SessionUser,
 } from '../lib/mock-db'
-import { migratePersistedState, type Saved } from '../lib/mock-db/store'
+import { db, migratePersistedState, type Saved } from '../lib/mock-db/store'
 import { resolveSeed, seed } from '../lib/mock-db/seed'
 import { renderWithRouter } from '../test/renderWithRouter'
 import { BackupStatusPage } from './backup/BackupStatusPage'
@@ -126,7 +126,8 @@ describe('Staff wording, extra complaints and backup locations', () => {
   })
 
   it('warns when no location is enabled, and refuses to back up', async () => {
-    for (const location of (await listBackupLocations()).locations) await setBackupLocationEnabled(location.id, false, STAFF)
+    // The screen and the data layer no longer allow disabling the last location (review round 2, R32), so this state is set directly, as an old saved copy could hold it.
+    for (const location of db().frontendOnly.backupLocations) location.enabled = false
     await expect(recordBackupNow(STAFF)).rejects.toBeInstanceOf(NoBackupLocationError)
     renderWithRouter(<BackupStatusPage />)
     expect(await screen.findByText(/^No backup location is enabled/)).toHaveAttribute('role', 'alert')

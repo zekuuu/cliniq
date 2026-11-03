@@ -36,7 +36,7 @@ describe('the patient picker', () => {
     renderAt('/visits/new?staff=personnel-0002')
     expect(await screen.findByText('Dindo Arcega · STF-0002 · Teacher · Science department')).toBeInTheDocument()
     // The allergy beside the medicine picker works for staff.
-    expect(await screen.findByText(/Penicillin/)).toBeInTheDocument()
+    expect(await within(screen.getByRole('note', { name: 'Allergies' })).findByText(/Penicillin/)).toBeInTheDocument()
     await selectOption(user, screen.getByLabelText(/^Complaint/), 'Headache')
     await user.click(screen.getByRole('radio', { name: 'Sent home' }))
     expect(screen.queryByText('Prepare an excuse letter')).not.toBeInTheDocument()

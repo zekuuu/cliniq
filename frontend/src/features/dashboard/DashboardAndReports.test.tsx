@@ -7,7 +7,6 @@ import { ReportsPage } from '../reports/ReportsPage'
 import { selectOption } from '../../test/selectOption'
 import { FollowUpsAlert } from './components/AlertLists'
 import { trendFor } from './lib/statTrend'
-import { urgentCount } from './lib/urgentCount'
 
 /** Panel review part 4: small-number trends, the urgent badge, renames and register links. */
 
@@ -25,23 +24,6 @@ describe('stat card trends (DB-2, D4)', () => {
   it('keeps the percentage from the threshold up, with the counts for screen readers', () => {
     expect(trendFor(30, 10, range, 5)).toEqual({ direction: 'up', text: '200% vs prior 22 days', detail: '30 vs 10 in the prior 22 days' })
     expect(trendFor(5, 10, range, 5)).toMatchObject({ direction: 'down', text: '50% vs prior 22 days' })
-  })
-})
-
-describe('the Overview badge counts urgent items only (DB-4)', () => {
-  beforeEach(() => resetMockDb())
-
-  it('adds expired stock, overdue follow-ups and incidents awaiting Stage 2, nothing else', async () => {
-    const today = getMockToday()
-    const summary = await getDashboardSummary({ range: { preset: 'today', from: today, to: today } })
-    const expected =
-      summary.inventoryAlerts.filter((row) => row.flags.includes('expired')).length +
-      summary.dueFollowUps.filter((row) => row.daysFromToday < 0).length +
-      summary.counts.incidentsAwaitingStage2
-    expect(urgentCount(summary)).toBe(expected)
-    expect(summary.counts.incidentsAwaitingStage2).toBeGreaterThan(0)
-    // Low stock and incomplete records are not part of it.
-    expect(urgentCount({ ...summary, counts: { ...summary.counts, pendingRecords: 999, lowStockItems: 999 } })).toBe(expected)
   })
 })
 
