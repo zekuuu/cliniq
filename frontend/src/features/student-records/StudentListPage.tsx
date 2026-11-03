@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Link, useLocation } from 'react-router'
+import { Link, useLocation, useSearchParams } from 'react-router'
 import {
   BackButton,
   Badge,
@@ -23,7 +23,7 @@ import { paths } from '../../routes/paths'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { StudentListRow } from '../../types/entities'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
-import { fetchGradeLevels, fetchStudentList } from './api/studentListApi'
+import { fetchGradeLevels, fetchIncompleteCount, fetchStudentList } from './api/studentListApi'
 import { MaskedLrn } from '../../components/ui/MaskedLrn'
 
 function StudentListSkeleton({ back }: { back: ReactNode }) {
@@ -71,6 +71,13 @@ function GradeSelect({
     />
   )
 }
+
+type RecordStatusFilter = '' | 'complete' | 'incomplete'
+
+const recordStatusOptions = [
+  { value: 'complete', label: 'Complete' },
+  { value: 'incomplete', label: 'Incomplete' },
+]
 
 type StudentSortKey = 'name' | 'number' | 'grade' | 'status'
 
@@ -136,6 +143,12 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
   const [search, setSearch] = useState('')
   const [gradeLevel, setGradeLevel] = useState('')
   const [includeArchived, setIncludeArchived] = useState(false)
+  // `?record=incomplete` is read only on arrival (the Dashboard's incomplete-records chip).
+  const [searchParams] = useSearchParams()
+  const [recordStatus, setRecordStatus] = useState<RecordStatusFilter>(() => {
+    const value = searchParams.get('record')
+    return value === 'complete' || value === 'incomplete' ? value : ''
+  })
   const [sort, setSort] = useState<TableSortState<StudentSortKey>>({ key: 'name', direction: 'ascending' })
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = usePageSize()
@@ -143,9 +156,11 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
     setPageSize(size)
     setPage(1)
   }
-  const key = `${search}|${gradeLevel}|${includeArchived}`
+  const key = `${search}|${gradeLevel}|${includeArchived}|${recordStatus}`
+  // R11: a way to the Incomplete Records Queue besides the Dashboard. The queue is Staff only (ADR-038).
+  const { data: incompleteCount } = useAsyncData('incomplete-count', fetchIncompleteCount)
   const { data, status, isRefetching, reload } = useAsyncData(key, () =>
-    fetchStudentList({ search, gradeLevel, includeArchived }),
+    fetchStudentList({ search, gradeLevel, includeArchived, recordStatus }),
   )
 
   // The field renders once the list has loaded; Alt + K can also arrive while the page is already open.
@@ -213,6 +228,12 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
           </div>
           {viewer.role === 'staff' && (
             <div className="flex flex-wrap gap-2">
+              {incompleteCount !== undefined && (
+                <Link className={buttonClassName({ variant: 'secondary' })} to={paths.incompleteRecords}>
+                  <Icon name="alertTriangle" />
+                  Incomplete records ({incompleteCount})
+                </Link>
+              )}
               <Link className={buttonClassName({ variant: 'secondary' })} to={paths.studentImport}>
                 <Icon name="fileText" />
                 Import List
@@ -234,7 +255,7 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
           icon={<Icon name="users" />}
         />
         <CardBody className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1fr)_16rem_auto]">
+          <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1fr)_16rem_12rem_auto]">
             <Input
               ref={searchInputRef}
               label="Search"
@@ -249,6 +270,17 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
               value={gradeLevel}
               onChange={(value) => {
                 setGradeLevel(value)
+                setPage(1)
+              }}
+            />
+            <Select
+              label="Record status"
+              value={recordStatus}
+              placeholder="All records"
+              clearable
+              options={recordStatusOptions}
+              onChange={(value) => {
+                setRecordStatus(value as RecordStatusFilter)
                 setPage(1)
               }}
             />
@@ -291,7 +323,7 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
               <EmptyState
                 icon="users"
                 title="No students found"
-                description="Try a different search or grade-level filter."
+                description="Try a different search, grade-level, or record-status filter."
               />
             )}
           </div>

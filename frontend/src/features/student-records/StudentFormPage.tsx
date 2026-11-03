@@ -7,14 +7,16 @@ import {
   Card,
   CardBody,
   CardHeader,
-  Combobox,
+  ComboboxWithOther,
   DatePicker,
   ErrorState,
   Icon,
   Input,
   MaskedLrn,
+  HealthListField,
   Modal,
   Select,
+  SexRadios,
   Skeleton,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
@@ -43,6 +45,7 @@ import { unusualAgeNote } from '../../lib/age'
 import { isLrn, maskLrn, normalizeLrn } from '../../lib/lrn'
 import { setSavedMessage } from '../../lib/savedMessage'
 import { NONE_RECORDED } from '../../lib/patients'
+import { STARTER_ALLERGIES, STARTER_CONDITIONS } from '../../config/healthStarterList'
 
 type StudentFormErrors = Partial<Record<string, string>>
 
@@ -59,11 +62,6 @@ const EMPTY_VALUES: StudentFormValues = {
 }
 
 /** Offers "None recorded" while the field is empty or being typed toward it (ADR-051). */
-function noneSuggestion(value: string): string[] {
-  const typed = value.trim().toLowerCase()
-  return typed !== NONE_RECORDED.toLowerCase() && NONE_RECORDED.toLowerCase().startsWith(typed) ? [NONE_RECORDED] : []
-}
-
 function valuesFromStudent(student: Student | null): StudentFormValues {
   if (!student) return EMPTY_VALUES
   return {
@@ -149,7 +147,7 @@ function DuplicateDialog({
   )
 }
 
-const RELATIONSHIP_SUGGESTIONS = ['Mother', 'Father', 'Guardian', 'Sister or brother', 'Relative', 'Other']
+const RELATIONSHIP_SUGGESTIONS = ['Mother', 'Father', 'Guardian', 'Sister or brother', 'Relative']
 
 /** Saving needs no contact (ADR-059; the record shows as Incomplete until one is added), but a started one must be complete. */
 function contactStarted(contact: StudentFormValues['emergencyContacts'][number]): boolean {
@@ -457,18 +455,8 @@ function StudentFormEditor({
                 onChange={(value) => setField('gradeLevel', value)}
               />
               <Input label="Section (optional)" value={values.section} onChange={(event) => setField('section', event.target.value)} />
-              <Select
-                label="Sex"
-                required
-                value={values.sex}
-                placeholder="Select sex"
-                options={[
-                  { value: 'female', label: 'Female' },
-                  { value: 'male', label: 'Male' },
-                ]}
-                error={errors.sex}
-                onChange={(value) => setField('sex', value as StudentFormValues['sex'])}
-              />
+              {/* R12: one answer of two, as radio buttons (the Staff form's SexRadios, ADR-063). */}
+              <SexRadios value={values.sex} error={errors.sex} onChange={(value) => setField('sex', value)} />
               <div className="flex flex-col gap-2">
                 <DatePicker
                   label="Birthdate (optional)"
@@ -510,16 +498,15 @@ function StudentFormEditor({
                           error={errors[contactErrorKey(index, 'name')]}
                           onChange={(event) => setEmergencyContact(index, 'name', event.target.value)}
                         />
-                        <Combobox
+                        <ComboboxWithOther
                           label="Relationship"
                           icon="users"
+                          otherOption="Other"
+                          otherLabel="Say which relationship"
                           aria-label={`${label} relationship`}
                           required={contactStarted(contact)}
                           value={contact.relationship}
                           options={RELATIONSHIP_SUGGESTIONS}
-                          optionKey={(option) => option}
-                          optionLabel={(option) => option}
-                          allowFreeText
                           error={errors[contactErrorKey(index, 'relationship')]}
                           onValueChange={(value) => setEmergencyContact(index, 'relationship', value)}
                         />
@@ -552,32 +539,8 @@ function StudentFormEditor({
                 Medical history
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Combobox
-                  label="Allergies"
-                  placeholder={NONE_RECORDED}
-                  hint="Optional. Comma-separated list. Left empty, it reads None recorded."
-                  value={values.allergies}
-                  options={noneSuggestion(values.allergies)}
-                  optionKey={(option) => option}
-                  optionLabel={(option) => option}
-                  allowFreeText
-                  noMatchesText={null}
-                  error={errors.allergies}
-                  onValueChange={(value) => setField('allergies', value)}
-                />
-                <Combobox
-                  label="Medical conditions"
-                  placeholder={NONE_RECORDED}
-                  hint="Optional. Comma-separated list. Left empty, it reads None recorded."
-                  value={values.medicalConditions}
-                  options={noneSuggestion(values.medicalConditions)}
-                  optionKey={(option) => option}
-                  optionLabel={(option) => option}
-                  allowFreeText
-                  noMatchesText={null}
-                  error={errors.medicalConditions}
-                  onValueChange={(value) => setField('medicalConditions', value)}
-                />
+                <HealthListField label="Allergies" list={STARTER_ALLERGIES} value={values.allergies} error={errors.allergies} onValueChange={(value) => setField('allergies', value)} />
+                <HealthListField label="Medical conditions" list={STARTER_CONDITIONS} value={values.medicalConditions} error={errors.medicalConditions} onValueChange={(value) => setField('medicalConditions', value)} />
               </div>
             </section>
 

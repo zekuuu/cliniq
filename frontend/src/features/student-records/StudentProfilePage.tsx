@@ -146,6 +146,17 @@ function ProfileHeader({
         </div>
         {/* ADR-038: the Admin reads the profile; Print stays visible but disabled for the Admin. */}
         <div className="flex flex-wrap items-start justify-end gap-2 print:hidden">
+          {/* R13: like the Staff Profile; Staff only, and not for an archived record. */}
+          {staffCanAct && !student.archived && (
+            <>
+              <Link to={paths.visitNewForStudent(student.id)} className={buttonClassName({ variant: 'primary' })}>
+                Record a visit
+              </Link>
+              <Link to={paths.incidentNewForStudent(student.id)} className={buttonClassName()}>
+                Record an incident
+              </Link>
+            </>
+          )}
           {staffCanAct && (
             <Link to={paths.studentEdit(student.id)} className={buttonClassName()}>
               Edit
@@ -435,7 +446,8 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
     <PrintDocument
       title="Student Health Record"
       viewer={viewer}
-      scope={`${student.fullName}, LRN ${student.lrn}, ${student.gradeLevel}.${student.archived ? ' Archived record.' : ''} Every recorded clinic visit and incident, newest first.`}
+      // R17: the name prints once, in the Student block below.
+      scope={`LRN ${student.lrn}, ${student.gradeLevel}.${student.archived ? ' Archived record.' : ''} Every recorded clinic visit and incident, newest first.`}
     >
       <PrintSection title="Student">
         <PrintFields

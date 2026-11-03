@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { BackButton, Button, Card, CardBody, CardHeader, Combobox, ErrorState, Icon, Input, Select, SelectWithOther, SexRadios, Skeleton } from '../../components'
+import { BackButton, Button, Card, CardBody, CardHeader, ErrorState, Icon, ComboboxWithOther, HealthListField, Input, Select, SexRadios, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
@@ -8,13 +8,14 @@ import { isPhilippinePhone, PHONE_ERROR } from '../../lib/phone'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
 import { NONE_RECORDED } from '../../lib/patients'
+import { STARTER_ALLERGIES, STARTER_CONDITIONS } from '../../config/healthStarterList'
 import { setSavedMessage } from '../../lib/savedMessage'
 import type { Personnel } from '../../types/entities'
 import { fetchStaffFormContext, submitStaffForm, type StaffFormContext, type StaffFormValues } from './api/staffApi'
 
 /** D4: a choice from the values in use, or Other to type one; at most 60 characters (PERSONNEL_DEPARTMENT_MAX in the data layer). */
 const DEPARTMENT_MAX = 60
-const RELATIONSHIP_SUGGESTIONS = ['Spouse', 'Parent', 'Sister or brother', 'Son or daughter', 'Relative', 'Other']
+const RELATIONSHIP_SUGGESTIONS = ['Spouse', 'Parent', 'Sister or brother', 'Son or daughter', 'Relative']
 const EMPTY_CONTACT = { name: '', relationship: '', phone: '', verified: false }
 
 type Errors = Partial<Record<string, string>>
@@ -177,17 +178,18 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                 error={errors.type}
                 onChange={(value) => setField('type', value)}
               />
-              <SelectWithOther
+              {/* R19: every department or role in use, as a type-ahead; Other (specify) for a new one. */}
+              <ComboboxWithOther
                 label="Department or role"
+                otherOption="Other (specify)"
                 otherLabel="Specify other department or role"
                 value={values.department}
                 options={data.departments}
-                placeholder="Not recorded"
-                clearable
+                pickOnly
                 maxLength={DEPARTMENT_MAX}
-                hint={`Optional. Pick one already in use, or Other to type a new one (at most ${DEPARTMENT_MAX} characters).`}
+                hint={`Optional. Type to find one in use, or Other (specify) for a new one (at most ${DEPARTMENT_MAX} characters).`}
                 error={errors.department}
-                onChange={(value) => setField('department', value)}
+                onValueChange={(value) => setField('department', value)}
               />
               <Input label="Contact number" hint="Optional." value={values.contactInfo} onChange={(event) => setField('contactInfo', event.target.value)} />
             </section>
@@ -207,15 +209,14 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                         <Input label="Name"
                           icon="user"
                           aria-label={`${label} name`} value={contact.name} error={errors[contactKey(index, 'name')]} onChange={(event) => setContact(index, 'name', event.target.value)} />
-                        <Combobox
+                        <ComboboxWithOther
                           label="Relationship"
                           icon="users"
+                          otherOption="Other"
+                          otherLabel="Say which relationship"
                           aria-label={`${label} relationship`}
                           value={contact.relationship}
                           options={RELATIONSHIP_SUGGESTIONS}
-                          optionKey={(option) => option}
-                          optionLabel={(option) => option}
-                          allowFreeText
                           error={errors[contactKey(index, 'relationship')]}
                           onValueChange={(value) => setContact(index, 'relationship', value)}
                         />
@@ -250,13 +251,12 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                 Allergies and conditions
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Input label="Allergies" placeholder={NONE_RECORDED} hint="Optional. Comma-separated list. Left empty, it reads None recorded." value={values.allergies} onChange={(event) => setField('allergies', event.target.value)} />
-                <Input
+                <HealthListField label="Allergies" list={STARTER_ALLERGIES} value={values.allergies} onValueChange={(value) => setField('allergies', value)} />
+                <HealthListField
                   label="Medical conditions"
-                  placeholder={NONE_RECORDED}
-                  hint="Optional. Comma-separated list. Left empty, it reads None recorded."
+                  list={STARTER_CONDITIONS}
                   value={values.medicalConditions}
-                  onChange={(event) => setField('medicalConditions', event.target.value)}
+                  onValueChange={(value) => setField('medicalConditions', value)}
                 />
               </div>
             </section>
