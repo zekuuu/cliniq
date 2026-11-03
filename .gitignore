@@ -23,3 +23,5 @@ frontend/*.local
 .playwright-mcp
 _read-first
 .pinpoint/
+# Design tool cache (impeccable)
+.impeccable/
