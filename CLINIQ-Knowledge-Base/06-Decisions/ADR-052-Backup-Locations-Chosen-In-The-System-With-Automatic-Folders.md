@@ -1,3 +1,5 @@
+> **Note, Tuesday, November 03, 2026 — 19:49 PHT:** Zean, frontend review round 2, R32: "Block it (Recommended)", and in the review prompt: "much better that they cannot both be disabled". The last enabled backup location can no longer be disabled: the data layer refuses with "Enable another backup location before disabling the last one.", and the Backup page shows its Disable button off with "The only enabled location. Enable another one first." The warning for no enabled location stays for an old saved copy that has none. Session: [2026-11-03-frontend-review-round-2-part-3](../08-Logs/Agent-Sessions/2026-11-03-frontend-review-round-2-part-3.md)
+
 # ADR-052: Backup locations are chosen in the system and the folders are created automatically
 
 **Date:** Thursday, October 29, 2026 — 22:18 PHT

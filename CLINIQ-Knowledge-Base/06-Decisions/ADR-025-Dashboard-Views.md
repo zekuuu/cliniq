@@ -1,3 +1,5 @@
+> **Note, Tuesday, November 03, 2026 — 18:38 PHT:** Zean: "remove the badge in Overview tab switcher because it's not clear how it counts". The Overview tab no longer carries a warning badge or count, and its counting helper (`urgentCount`) is deleted. The sentence below about the Overview tab's warning badge, and the consequence "A nurse who stays on Trends or Calendar sees alerts only as the Overview badge count", no longer hold: on Trends or Calendar the nurse sees no alert count until she opens Overview. Session: [2026-11-03-overview-badge-removed](../08-Logs/Agent-Sessions/2026-11-03-overview-badge-removed.md)
+
 # ADR-025: Dashboard Shows One View at a Time (Overview / Trends / Calendar)
 
 **Date:** Thursday, October 15, 2026 — 19:08

@@ -1,3 +1,5 @@
+> **Note, Tuesday, November 03, 2026 — 18:02 PHT:** Zean: "I think it's better to remove the clinician's note, since the clinician wont always remember what she did to that student and i think it's nonsense", then, after I recommended keeping it as her advice to the coach, "remove the note, we want it less workload". The per-student note is removed: the builder has no note box, the printout has no "Clinician's note" column, and a saved report holds only the list of students. Points 1, 3, 6 and 8 below and the rejected alternative "A system-set fit to play status" ("the clinician's note says it in her words") are superseded on that one item; the system still never decides or prints "fit to play". The canonical Modules and Features and Frontend Context Brief, and the backend Data Dictionary, ERD and Reference Schema, still describe the note and need updating. Session: [2026-11-03-sports-report-no-note](../08-Logs/Agent-Sessions/2026-11-03-sports-report-no-note.md)
+
 # ADR-034: The Sports Report: a Saved, Clinician-Built Student List with a Printout for the PE Instructor
 
 **Date:** Wednesday, October 21, 2026 — 00:28

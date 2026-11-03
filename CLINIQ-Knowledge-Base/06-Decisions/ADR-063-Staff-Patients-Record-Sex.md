@@ -1,3 +1,5 @@
+> **Note, Monday, November 02, 2026 — 15:05 PHT:** Zean chose option S3: the Dashboard Trends by-sex view is now one split bar, not the stacked bar below. The count rule stands, and the students and staff split stays in words on the Female and Male buttons. Session: [2026-11-02-sex-split-bar-grade-columns](../08-Logs/Agent-Sessions/2026-11-02-sex-split-bar-grade-columns.md)
+
 # ADR-063: Staff patients record sex, and the by-sex counts include them
 
 **Date:** Sunday, November 1, 2026 — 22:36 PHT

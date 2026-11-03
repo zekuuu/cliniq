@@ -17,12 +17,12 @@
 
 ## Open work at a glance
 
-Open: FIX 0 · AUDIT 0 · DOC 20 · DECIDE 2 · LATER 20 | Notes: NOTE 78 · VERIFY 25 | Done: 457 (all in `Issues-Done-Archive.md`)
+Open: FIX 0 · AUDIT 0 · DOC 24 · DECIDE 2 · LATER 20 | Notes: NOTE 79 · VERIFY 26 | Done: 457 (all in `Issues-Done-Archive.md`)
 
 **Open `FIX` items:** none.
 
 - **AUDIT** (0): none. The final audit of the frontend clean-up, Part 3, superseded all ten.
-- **DOC** (20): Frontend review round 2, Part 1; Groupmate system review; Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; Panel-style system review; Feedback from Sir Mina and Sir Rey; Decisions sheet answers; Decisions sheet follow-up answers; Canonical documents updated to the ADRs; Known gaps
+- **DOC** (24): Frontend review round 2, Parts 2 and 3; Frontend review round 2, Part 1; Groupmate system review; Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; Panel-style system review; Feedback from Sir Mina and Sir Rey; Decisions sheet answers; Decisions sheet follow-up answers; Canonical documents updated to the ADRs; Known gaps
 - **DECIDE** (2): Open decisions, waiting on someone outside the dev team; Known gaps
 - **LATER** (20): Known gaps; Reported UI/UX follow-ups; Medicines & supplies given (ADR-018); Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); README sync; Professor consultation and team meeting, October 16; Panel-style system review; Feedback from Sir Mina and Sir Rey; Staff and teachers as clinic patients; System review fixes; Decisions sheet answers; Decisions sheet follow-up answers; Decisions answered after the list was resent; Birthdate instead of the student's own number
 
@@ -512,8 +512,17 @@ When you find or resolve something, add it here with a date and enough context t
 ## Frontend clean-up, Part 1
 
 
+## Frontend review round 2, Parts 2 and 3 — Tuesday, November 03, 2026 — 19:49 PHT
+
+- [ ] **[DOC]** **Backup: the last enabled location cannot be disabled; `API-Contract.md` needs the note** (R32). The prompt asked for a note on the backup entry of `API-Contract.md`, a backend document that changes on the `backend` branch only (ADR-056), and `stash@{0}` already holds unrelated edits to it. Add there: disabling the last enabled location is refused with "Enable another backup location before disabling the last one." [Agent session](Agent-Sessions/2026-11-03-frontend-review-round-2-part-3.md)
+- [ ] **[DOC]** **Canonical documents behind four ADR notes** (R14 ADR-054, R16 ADR-049, R32 ADR-052, R33 ADR-040 and ADR-044). The Modules and Features and the Frontend Context Brief still say a missing birthdate leaves a record complete, allergies are plain text, any backup location can be disabled, and the Audit Log masks the LRN. `Audit-Coverage.md`, which the prompt asked to update, does not exist in the repository. [Agent session](Agent-Sessions/2026-11-03-frontend-review-round-2-part-3.md)
+- [ ] **[VERIFY]** **Round 2, Parts 2 and 3: checks that need a browser** (no browser or axe-core here). R10 Login at 375, 768 and 1280 px; axe on the changed screens (Student List, Student and Staff forms, Student Profile, New Visit, Incident Stage 2, Inventory, Reports, Backup, Audit Log, Sports Report form); the keyboard walk; the print previews of the Student Health Record, the Monthly Report and the Complaint summary. [Agent session](Agent-Sessions/2026-11-03-frontend-review-round-2-part-3.md)
+- **[NOTE]** **R18 not built: staff Type "Other" stays "Other"** (Tuesday, November 03, 2026 — 19:49 PHT). Zean chose "Keep Other only", so no box to specify the type; ADR-053 unchanged. [Agent session](Agent-Sessions/2026-11-03-frontend-review-round-2-part-2.md)
+
 ## Frontend review round 2, Part 1
 
+- [ ] **[DOC]** **Sports Report note removed: canonical and backend documents still describe it** (found Tuesday, November 03, 2026 — 18:02 PHT). ADR-034 has a dated note. `CLINIQ_Modules_and_Features.md` and `CLINIQ_Frontend_Context_Brief.md` need the canonical owner to drop the per-student note; on the `backend` branch, `Data-Dictionary.md`, `ERD.md` and `Reference-Schema.sql` still have a note column on the sports report students table (ADR-056: backend files change on `backend` only). [Agent session](Agent-Sessions/2026-11-03-sports-report-no-note.md)
+- [ ] **[DOC]** **Timestamps from `TZ=Asia/Manila date` in Git Bash are UTC labelled PHT, 8 hours behind** (found Monday, November 02, 2026 — 14:59 PHT). Git Bash on this workstation has no zone data, so the command returned GMT while plain `date` and Windows gave the real +08:00 time. Entries of November 1 and 2, 2026 written that way are affected, including ADR-062 and ADR-063 ("Sunday, November 1, 2026 — 22:36 PHT" was really Monday, November 2, 06:36) and the clock mismatch reported in the Part 1 session. Earlier entries made with the same command may be too. Use plain `date` here. Nothing was rewritten: correcting dates is Zean's call. [Agent session](Agent-Sessions/2026-11-02-hover-shadow-only.md)
 - [ ] **[DOC]** **The canonical design documents still show the old warning colour** (found Sunday, November 1, 2026 — 22:36 PHT). `CLINIQ_Frontend_Context_Brief.md` and `CLINIQ_Frontend_Design_Reference.md` predate ADR-062, and the Context Brief predates ADR-063. [Agent session](Agent-Sessions/2026-11-01-frontend-review-round-2-part-1.md)
 - [ ] **[DOC]** **`personnel.sex` is not yet verified on MariaDB** (found Sunday, November 1, 2026 — 22:36 PHT). The ERD diagram images in `Diagrams/` are not regenerated, `Reference-Schema.sql` was not reloaded, and the two new constraint tests have not run, because this workstation has no MariaDB. [Agent session](Agent-Sessions/2026-11-01-frontend-review-round-2-part-1.md)
 

@@ -1,3 +1,5 @@
+> **Note, Tuesday, November 03, 2026 — 19:49 PHT:** Zean, frontend review round 2, R14: "Flag as incomplete (Recommended)", to the question whether a student with no birthdate counts as an incomplete record like a missing contact. A missing birthdate now lists "Birthdate" among the missing fields, so the record shows as Incomplete in the Student List, the Incomplete Records Queue and the Dashboard count. Point 2 still holds: the record saves without one. Seed: 3 incomplete records before, 8 after. Session: [2026-11-03-frontend-review-round-2-part-2](../08-Logs/Agent-Sessions/2026-11-03-frontend-review-round-2-part-2.md)
+
 # ADR-054: The student's own number is dropped, an optional birthdate is added, and the age group follows the age
 
 **Date:** Friday, October 30, 2026 — 21:14 PHT

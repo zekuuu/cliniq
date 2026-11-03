@@ -1,3 +1,5 @@
+> **Note, Tuesday, November 03, 2026 — 19:49 PHT:** Zean, frontend review round 2, R16: "Type-ahead, starter list (Recommended)". Allergies and medical conditions are typed with suggestions from an editable starter list (`frontend/src/config/healthStarterList.ts`: English names with Filipino words such as hipon, mani, hika). Picking stores the English name; anything else is kept and marked as typed by hand; entries are trimmed with a capital first letter. The stored shape is unchanged. The "avoid if allergic to" check now also matches through the list, so "Hipon" typed by hand warns for an item marked shrimp; nothing else is matched. Session: [2026-11-03-frontend-review-round-2-part-2](../08-Logs/Agent-Sessions/2026-11-03-frontend-review-round-2-part-2.md)
+
 # ADR-049: Clinical record rules: letters, allergies, notes and what the clinic does not add
 
 **Date:** Thursday, October 29, 2026 — 12:33 PHT

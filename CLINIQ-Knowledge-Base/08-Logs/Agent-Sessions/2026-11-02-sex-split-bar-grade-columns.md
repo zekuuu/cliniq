@@ -1,0 +1,12 @@
+Date/Day/Time: Monday, November 02, 2026 — 15:05 PHT
+Agent: Claude Opus 5.5 (Claude Code)
+Task: Redesign the Trends Sex / Grade level card
+Status: Completed. Not committed. Not viewed in a browser.
+Prompt/Request: "Since there are only two data group in Sex, the graph looks weirdly big. Then in Grade Level, it is not the proper way to display them. Find ways, inspo, etc to improve it or redesign it", then "S3 and G1" from the options mock (https://claude.ai/artifact/TjHTRuBohtKo9GbjPdXkkm).
+Files Modified: `frontend/src/features/dashboard/components/ComplaintTrends.tsx`, `ComplaintTrends.test.tsx`, `DashboardPrint.tsx`, `frontend/src/lib/mock-db/dashboard.ts`, `dashboard.test.ts`, `03-Design/Design-System.md`, `06-Decisions/ADR-063-Staff-Patients-Record-Sex.md`, `08-Logs/Changelog.md`.
+Changes Made: Sex: the Chart.js stacked column chart is replaced by one split bar (Female green, Male grey, No sex recorded light grey). A part under 15% drops its words. The two filter buttons now fill the card width under the bar, replacing the fixed-width centred row of October 26, because the chosen mock showed them that way. Grade level: the rows are replaced by columns, one per enrolled grade from Kinder to Grade 12, with the count on top, a shared height scale set by the busiest grade, and Kinder and Elementary, Junior High and Senior High labels below. Each column is the filter button. The chart scrolls inside the card on a phone. `buildDemographicAnalysis` takes the enrolled grades, so zeros are listed; the printed grade table still lists only grades with cases.
+Reason: Two groups do not need a full-width chart, and the rows did not share a scale, because each row sized its own right column. Grades are an ordered sequence, and a grade with no cases should stay visible.
+Additions beyond the mock: an "Incidents: Grade 4 (1)." line under the columns, and a native `title` on each column, because the mock showed only totals and red must not stand alone (ADR-062).
+Testing Performed: After the last code edit: typecheck clean, ESLint clean, Vitest 117 files and 959 tests passed, production build passed. Not viewed in a browser, because `frontend/` has no Playwright.
+Known Issues: The Sex view no longer draws students against staff; the split is words on the buttons. The grey that meant Staff in the old chart now means Male. "Enrolled" comes from `gradeLevels(state)`, so a grade with no student record has no column. The Sex view does not show incidents, as before.
+Next Steps: Zean to view it on the Dashboard.
