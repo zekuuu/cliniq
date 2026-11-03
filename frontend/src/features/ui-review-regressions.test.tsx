@@ -260,6 +260,7 @@ describe('UI/UX review Group B decisions', () => {
 
     const table = await screen.findByRole('table', { name: 'Filtered audit log' })
     expect(table.textContent).not.toMatch(/\b(visit|incident|item|student|user|followup)-(staff-|admin-)?\d{2,4}\b/)
-    expect(table.textContent).toMatch(/(Visit|Incident)●{8}\d{4}/)
+    // Students appear by full LRN (review round 2, R33).
+    expect(table.textContent).toMatch(/(Visit|Incident)LRN \d{12}/)
   })
 })

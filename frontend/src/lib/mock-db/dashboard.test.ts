@@ -61,7 +61,8 @@ const student = (id: string, n: string, extra: Partial<SeedStudent> = {}): SeedS
   fullName: `SECRET NAME ${id}`,
   gradeLevel: 'Grade 5',
   sex: 'female',
-  birthDate: null,
+  // A birthdate, so only a missing contact makes a fixture incomplete (R14).
+  birthDate: '2015-06-01',
   allergies: [],
   medicalConditions: [],
   emergencyContacts: [{ name: 'Guardian', relationship: 'Parent', phone: '0900-111-0000', verified: true }],
@@ -394,6 +395,13 @@ describe('dashboard summary', () => {
 
   it('never includes a student name anywhere in the payload', () => {
     expect(JSON.stringify(summary)).not.toContain('SECRET NAME')
+  })
+
+  it('keeps every enrolled grade in the demographics, in order, even at zero', () => {
+    const events = [{ sex: 'female' as const, gradeLevel: 'Grade 2', kind: 'visit' as const }]
+    expect(
+      buildDemographicAnalysis(events, { sex: null, gradeLevel: null }, ['Kinder', 'Grade 1', 'Grade 2']).gradeLevel.map((g) => [g.key, g.count]),
+    ).toEqual([['Kinder', 0], ['Grade 1', 0], ['Grade 2', 1]])
   })
 
   it('returns aggregate demographic counts and applies those filters only to Trends', () => {

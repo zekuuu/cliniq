@@ -98,9 +98,14 @@ describe('App Shell / Navigation', () => {
 
     expect(await screen.findByRole('img', { name: 'Backup needs attention' })).toHaveClass(
       'rounded-md',
-      'bg-warning',
-      'text-text-primary',
+      // The pale warning tag, not the solid orange (Zean, November 3, 2026: "the color are a bit dark").
+      'bg-warning-fill',
+      'text-warning-text',
     )
+    // A bit bigger (Zean, November 3, 2026): a 24px square with a 16px icon.
+    const marker = screen.getByRole('img', { name: 'Backup needs attention' })
+    expect(marker).toHaveClass('size-6')
+    expect(marker.querySelector('svg')).toHaveAttribute('width', '16')
     expect(screen.getByRole('link', { name: /backup.*needs attention/i })).toHaveAttribute(
       'href',
       '/backup',

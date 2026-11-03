@@ -15,7 +15,7 @@ async function fillRequiredStudentFields() {
   await user.type(screen.getByLabelText(/^LRN/), '1234 5678-9012')
   await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
   await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
-  await selectOption(user, screen.getByLabelText(/^sex/i), 'Female')
+  await user.click(screen.getByRole('radio', { name: 'Female' }))
   await user.type(screen.getByLabelText(/contact name/i), 'Marisol Santos')
   await user.type(screen.getByLabelText(/relationship/i), 'Mother')
   await user.type(screen.getByLabelText(/contact phone/i), '0917-333-4444')
@@ -43,7 +43,6 @@ describe('Student Form', () => {
     await screen.findByRole('heading', { name: 'Add Student' })
 
     expect(screen.getByLabelText(/grade level/i)).toHaveClass('h-10')
-    expect(screen.getByLabelText(/^sex/i)).toHaveClass('h-10')
   })
 
   it('omits redundant add/edit and staff-access badges', async () => {
@@ -165,7 +164,7 @@ describe('Student Form', () => {
     await user.type(screen.getByLabelText(/^LRN/), '123456789012')
     await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
     await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
-    await selectOption(user, screen.getByLabelText(/^sex/i), 'Female')
+    await user.click(screen.getByRole('radio', { name: 'Female' }))
     await user.type(screen.getByLabelText(/contact name/i), 'Marisol')
     await user.click(screen.getByRole('button', { name: 'Save Student' }))
     expect(await screen.findByText('Enter the emergency contact phone.')).toBeInTheDocument()
@@ -202,7 +201,7 @@ describe('Student Form', () => {
     await user.type(screen.getByLabelText(/^LRN/), '123456789012')
     await user.type(screen.getByLabelText(/full name/i), existing.fullName)
     await selectOption(user, screen.getByLabelText(/grade level/i), existing.gradeLevel)
-    await selectOption(user, screen.getByLabelText(/^sex/i), 'Female')
+    await user.click(screen.getByRole('radio', { name: 'Female' }))
     await user.type(screen.getByLabelText(/contact name/i), 'Parent Guardian')
     await user.type(screen.getByLabelText(/relationship/i), 'Parent')
     await user.type(screen.getByLabelText(/contact phone/i), '0917-333-4444')
@@ -313,9 +312,7 @@ describe('Student Form', () => {
     renderWithRouter(<StudentFormPage studentId={existing.id} />)
 
     await screen.findByRole('heading', { name: 'Edit Student' })
-    const sex = screen.getByLabelText(/^sex/i)
-    await user.click(sex)
-    await user.click(screen.getByRole('option', { name: existing.sex === 'female' ? 'Male' : 'Female' }))
+    await user.click(screen.getByRole('radio', { name: existing.sex === 'female' ? 'Male' : 'Female' }))
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
     const entry = getRecordedAuditEntries().at(-1)
