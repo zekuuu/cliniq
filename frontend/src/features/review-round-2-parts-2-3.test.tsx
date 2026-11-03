@@ -441,10 +441,11 @@ describe('R32: the last enabled backup location cannot be disabled', () => {
 
 describe('the masked LRN reads lighter', () => {
   it('uses small bullets, not bold black circles (Zean, November 3, 2026)', () => {
-    expect(maskLrn('000000250032')).toBe('∙∙∙∙∙∙∙∙0032')
+    expect(maskLrn('000000250032')).toBe('••••••••0032')
     renderWithRouter(<MaskedLrn lrn="000000250032" />)
     // Inter's case alternates raise the bullets to the digits' centre (Zean, November 3, 2026: "not visually aligned").
-    expect(screen.getByText('∙∙∙∙∙∙∙∙0032')).toHaveClass('lrn-mask')
+    expect(screen.getByText('••••••••0032')).toBeInTheDocument()
+    expect(document.querySelectorAll('[data-lrn-dots] circle')).toHaveLength(8)
     expect(document.body.textContent).not.toContain('●')
   })
 })
