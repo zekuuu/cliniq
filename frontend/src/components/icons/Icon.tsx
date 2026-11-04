@@ -211,6 +211,12 @@ const paths = {
       <path d="M3 9h18M3 15h18M12 3v18" />
     </>
   ),
+  upload: (
+    <>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <path d="m17 8-5-5-5 5M12 3v12" />
+    </>
+  ),
   users: (
     <>
       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -224,6 +230,7 @@ const paths = {
       <path d="M10 11v6M14 11v6" />
     </>
   ),
+  x: <path d="M18 6 6 18M6 6l12 12" />,
   xCircle: (
     <>
       <circle cx="12" cy="12" r="10" />

@@ -289,7 +289,7 @@ export function IncompleteRecordsQueuePage({
         />
         <CardBody className="flex flex-col gap-4">
           <Input
-            label="Search"
+            label="Search" type="search"
             value={search}
             placeholder="Name, LRN, or grade"
             onChange={(event) => setSearch(event.target.value)}

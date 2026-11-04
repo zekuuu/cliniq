@@ -51,7 +51,7 @@ describe('at about 1,000 students and 6,000 visits', () => {
       render(<MemoryRouter><StudentListPage /></MemoryRouter>)
       await screen.findByRole('table')
     })).toBeLessThan(2000)
-    const search = screen.getAllByRole('textbox')[0]
+    const search = screen.getByRole('searchbox', { name: 'Search' })
     await timed('Student List typing', async () => {
       await act(async () => {
         fireEvent.change(search, { target: { value: 'Stress Student 5' } })

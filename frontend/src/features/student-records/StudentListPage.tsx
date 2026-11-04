@@ -258,7 +258,7 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
           <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1fr)_16rem_12rem_auto]">
             <Input
               ref={searchInputRef}
-              label="Search"
+              label="Search" type="search"
               value={search}
               placeholder="Name or LRN"
               onChange={(event) => {

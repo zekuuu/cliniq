@@ -310,7 +310,7 @@ export function VisitLogListPage() {
         <CardBody className="flex flex-col gap-4">
           <div className="flex flex-wrap items-end gap-3">
             <Input
-              label="Search"
+              label="Search" type="search"
               value={search}
               placeholder="LRN, Staff No., complaint or event"
               onChange={(event) => changeSearch(event.target.value)}
