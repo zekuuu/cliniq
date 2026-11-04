@@ -20,6 +20,12 @@ Use this with `cliniq-interactive-states` whenever a text input is created or ch
 - Every `type="password"` field automatically gets a reveal toggle on its right: a 32px eye/eye-off button named "Show password", with `aria-pressed` for its state. It's `type="button"`, so it never submits the form. Edge's built-in reveal eye is hidden so a field never shows two. Don't build a page-local reveal.
 - Fields without `icon` or `type="password"` render exactly as before, with no extra wrapper.
 
+## Clear button, optional fields and field width (Thursday, November 05, 2026 — 02:21 PHT)
+
+- **Clear button on every editable text field** (Zean): the shared `Input` shows an X button whenever a `text`, `tel`, `email`, `url` or `number` field holds text; `Combobox` does the same. It is named "Clear" (search fields keep "Clear search"), carries `aria-controls` for its field, empties the field and keeps focus in it. It never shows on a password (the reveal eye sits there), a date or time field (their own pickers), or a read-only or disabled field. Don't add a page-local clear button.
+- **Optional fields say so in the placeholder, not the label** (Zean): no "(optional)" in a label and no "Optional." at the start of a hint. The placeholder reads "Optional", or "Optional, e.g. Santos" when it also gives an example. Required fields keep the red asterisk (ADR-051). A field whose empty value already has a meaning keeps that placeholder ("None recorded", ADR-051), and a select whose empty choice is named ("Not specified") needs nothing more.
+- **Size a field to what it holds** (Zean): a field alone on its row is not stretched across the card. From `sm`: a patient or student picker, an item picker and a long single-line text `sm:max-w-md`; a short select (complaint) or a short text (username) `sm:max-w-sm`; a select of a few short choices `sm:max-w-xs`; a quantity `sm:max-w-40`. Fields in a grid row, text areas and lists keep the full width. Below `sm` every field is full width.
+
 ## Date, month, and time fields
 
 - Never use a native `type="date"`, `type="month"`, or `type="datetime-local"` input: their calendars are operating-system chrome. Use `DatePicker` (value `YYYY-MM-DD`) or `MonthPicker` (value `YYYY-MM`) from `frontend/src/components/ui/DatePicker.tsx`.
