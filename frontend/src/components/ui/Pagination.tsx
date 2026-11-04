@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { PAGE_SIZE_OPTIONS, type PageSize } from '../../hooks/usePageSize'
 import { Button } from './Button'
 import { Select } from './Select'
@@ -35,9 +36,58 @@ export function Pagination({ page, pageCount, total, pageSize, onPageChange, ite
       </div>
       <div className="flex items-center gap-2">
         <Button variant="secondary" size="sm" onClick={() => onPageChange(page - 1)} disabled={page === 1}>Previous</Button>
-        <span className="text-sm font-semibold tabular-nums text-text-primary" aria-current="page">Page {page} of {pageCount}</span>
+        {pageCount > 1 ? (
+          <PageField page={page} pageCount={pageCount} onPageChange={onPageChange} />
+        ) : (
+          <span className="text-sm font-semibold tabular-nums text-text-primary" aria-current="page">Page {page} of {pageCount}</span>
+        )}
         <Button variant="secondary" size="sm" onClick={() => onPageChange(page + 1)} disabled={page === pageCount}>Next</Button>
       </div>
     </nav>
+  )
+}
+
+/**
+ * "Page [ 3 ] of 12" (Zean, November 4, 2026): Enter or leaving the field jumps; Escape, an empty
+ * field or a non-number restores the current page; a number out of range goes to the nearest end.
+ */
+function PageField({ page, pageCount, onPageChange }: Pick<PaginationProps, 'page' | 'pageCount' | 'onPageChange'>) {
+  const [draft, setDraft] = useState(String(page))
+  // Previous, Next and a filter resetting to page 1 change `page` from outside: the field follows.
+  const [shown, setShown] = useState(page)
+  if (shown !== page) {
+    setShown(page)
+    setDraft(String(page))
+  }
+  function apply() {
+    const typed = draft.trim()
+    const number = Number(typed)
+    if (!typed || !Number.isInteger(number)) return setDraft(String(page))
+    const target = Math.min(pageCount, Math.max(1, number))
+    setDraft(String(target))
+    if (target !== page) onPageChange(target)
+  }
+  return (
+    <span className="flex items-center gap-1.5 text-sm font-semibold tabular-nums text-text-primary" aria-current="page">
+      <span aria-hidden="true">Page</span>
+      <input
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        aria-label="Page number"
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={apply}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') apply()
+          if (event.key === 'Escape') setDraft(String(page))
+        }}
+        // Sized for the page count's digits, so the field never changes width while typing.
+        style={{ width: `calc(${String(pageCount).length}ch + 1.5rem)` }}
+        className="h-11 rounded-md border border-border bg-background px-2 text-center text-sm font-semibold tabular-nums text-text-primary transition-colors duration-150 hover:border-brand-green focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none sm:h-8"
+      />
+      <span>of {pageCount}</span>
+      <span className="sr-only" role="status" aria-live="polite">Page {page} of {pageCount}</span>
+    </span>
   )
 }
