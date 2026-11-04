@@ -6,7 +6,7 @@ Everything open about the backend lives here: the Laravel API, the database buil
 
 ## Open work at a glance
 
-Open: FIX 2 · AUDIT 0 · DOC 0 · DECIDE 0 · LATER 10 | Notes: NOTE 4 · VERIFY 0 | Done: 8
+Open: FIX 2 · AUDIT 0 · DOC 1 · DECIDE 0 · LATER 10 | Notes: NOTE 4 · VERIFY 0 | Done: 8
 
 **Open `FIX` items:**
 
@@ -33,6 +33,10 @@ Open: FIX 2 · AUDIT 0 · DOC 0 · DECIDE 0 · LATER 10 | Notes: NOTE 4 · VERIF
 - [ ] **[LATER]** **B2: finish the session middleware** (logged Sunday, November 1, 2026 — 02:44 PHT). Store the sign-in time at sign-in, put `auth:sanctum`, `session.fixed`, `admin.idle` and `role` on every route, and add the two checks that need the users table: a disabled account and `password_change_required`. Remove the `class.notFound` ignore in `phpstan.neon` once the user model exists. Session: [2026-11-01-backend-part-3-countercheck-audit](Agent-Sessions/2026-11-01-backend-part-3-countercheck-audit.md)
 - **[NOTE]** **The module list differs from ADR-009** (logged Sunday, November 1, 2026 — 02:44 PHT). `app/Modules/` follows ERD rule M-1, approved by ADR-057: 11 modules, with the QR module gone and the first-aid checklist, staff patients and audit viewer added. The prompt said to ask first; Zean said not to stop, so it stands unless he vetoes it. Session: [2026-11-01-backend-part-2-foundation](Agent-Sessions/2026-11-01-backend-part-2-foundation.md)
 - **[NOTE]** **Part 3 ran before Parts 1 and 2 were committed** (logged Sunday, November 1, 2026 — 02:44 PHT). The prompt says Part 3 follows Zean's commits; he said to run through to the last part without stopping. Nothing is committed. Session: [2026-11-01-backend-part-3-countercheck-audit](Agent-Sessions/2026-11-01-backend-part-3-countercheck-audit.md)
+
+## Student-name split (ADR-064) — Thursday, November 05, 2026 — 01:35 PHT
+
+- [ ] **[DOC]** **Regenerate the `ERD-3.2-Students` diagram** (logged Thursday, November 05, 2026 — 01:35 PHT). The PNG and SVG still show `full_name` on `students` and `personnel`; the Mermaid block in `ERD.md` 3.2 is current. The Mermaid CLI could not be run in that session. Session: [2026-11-05-backend-student-name-split-docs](Agent-Sessions/2026-11-05-backend-student-name-split-docs.md)
 
 ---
 
