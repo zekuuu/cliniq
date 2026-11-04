@@ -9,8 +9,8 @@ type BackTarget =
   | { fallback: string; onBack?: never; to?: never; label?: never }
   /** A form's shared Cancel (`useCancelNavigation`), so Back and Cancel behave identically. */
   | { onBack: () => void; fallback?: never; to?: never; label?: never }
-  /** Always goes to one fixed screen, so the label may name it ("Back to Sign In"). */
-  | { to: string; label: `Back to ${string}`; fallback?: never; onBack?: never }
+  /** Always goes to one fixed screen. Label "Back", or one that names it ("Back to Sign In"). */
+  | { to: string; label?: `Back to ${string}`; fallback?: never; onBack?: never }
 
 /**
  * The one Back control (`cliniq-back-navigation-patterns`). It sits top-left of the page content,
@@ -54,7 +54,8 @@ export function BackButton({
       </>
     ) : (
       <span className="inline-flex items-center gap-1 border-b border-transparent group-hover:border-current">
-        <Icon name="chevronLeft" />
+        {/* The chevron's tip sits 6px inside its 16px box; pull it left so the underline starts at the tip. */}
+        <Icon name="chevronLeft" className="-ml-1.5" />
         {target.label ?? 'Back'}
       </span>
     )

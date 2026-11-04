@@ -133,7 +133,7 @@ const REPORT_NAMES: Record<string, string> = {
 }
 
 /**
- * A short, privacy-safe identifier for an audited record, shown beside its kind ("Visit · ●●●●●●●●0009").
+ * A short, privacy-safe identifier for an audited record, shown beside its kind ("Visit · LRN 000000250009").
  * Internal ids (`visit-0001`) never reach the screen. Students appear by full LRN here (review round 2, R33,
  * Zean: "display it"; dated notes on ADR-040 and ADR-044), never by name.
  * A human-facing reference number is a backend-phase follow-up (Issues-and-TODOs.md).

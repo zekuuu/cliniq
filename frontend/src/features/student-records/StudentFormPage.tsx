@@ -42,7 +42,7 @@ import {
   type StudentFormValues,
 } from './api/studentFormApi'
 import { unusualAgeNote } from '../../lib/age'
-import { isLrn, maskLrn, normalizeLrn } from '../../lib/lrn'
+import { isLrn, normalizeLrn } from '../../lib/lrn'
 import { setSavedMessage } from '../../lib/savedMessage'
 import { NONE_RECORDED } from '../../lib/patients'
 import { STARTER_ALLERGIES, STARTER_CONDITIONS } from '../../config/healthStarterList'
@@ -130,7 +130,7 @@ function DuplicateDialog({
             <li key={match.id} className="rounded-md border border-border bg-surface px-3 py-2">
               <p className="text-sm font-semibold text-text-primary">{match.fullName}</p>
               <p className="text-xs text-text-secondary">
-                LRN {maskLrn(match.lrn)} · {match.gradeLevel}
+                <MaskedLrn lrn={match.lrn} /> · {match.gradeLevel}
               </p>
             </li>
           ))}

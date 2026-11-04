@@ -38,3 +38,5 @@ Use this with `cliniq-interactive-states` whenever a text input is created or ch
 ## Scope
 
 This rule covers text, search, number, date, month, time, and password fields. It does not replace `Select`, `DateRangePicker`, or `MultiSelect`; use the relevant shared control for those choices (the date-range custom From/To fields are themselves `DatePicker`s).
+
+- **Search fields are `type="search"`** (Zean, Tuesday, November 03, 2026 — 23:58 PHT): every list search uses `<Input type="search">`. Its role is `searchbox`. Since Wednesday, November 04, 2026 — 00:17 PHT the shared `Input` does two things for it: what is typed reaches the page 250ms after typing stops (a change from outside, such as Clear Filters, shows at once), and its own clear button (X, secondary text, brand green on hover, "Clear search") shows whenever the field has text and clears at once. The browser's own button is hidden: it showed only on hover or focus. Don't add a delay in the page as well.

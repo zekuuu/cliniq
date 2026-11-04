@@ -218,7 +218,8 @@ export function IncompleteRecordsQueuePage({
     )
   }
 
-  const back = <BackButton fallback={paths.students} />
+  // Always the Student List, whichever page opened the queue (Zean, November 3, 2026).
+  const back = <BackButton to={paths.students} />
 
   if (status === 'error') {
     return (
@@ -288,7 +289,7 @@ export function IncompleteRecordsQueuePage({
         />
         <CardBody className="flex flex-col gap-4">
           <Input
-            label="Search"
+            label="Search" type="search"
             value={search}
             placeholder="Name, LRN, or grade"
             onChange={(event) => setSearch(event.target.value)}

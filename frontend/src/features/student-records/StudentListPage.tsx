@@ -143,7 +143,7 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
   const [search, setSearch] = useState('')
   const [gradeLevel, setGradeLevel] = useState('')
   const [includeArchived, setIncludeArchived] = useState(false)
-  // `?record=incomplete` is read only on arrival (the Dashboard's incomplete-records chip).
+  // `?record=incomplete` is read only on arrival; the Dashboard chip now opens the Incomplete Records Queue instead.
   const [searchParams] = useSearchParams()
   const [recordStatus, setRecordStatus] = useState<RecordStatusFilter>(() => {
     const value = searchParams.get('record')
@@ -227,7 +227,7 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
             </p>
           </div>
           {viewer.role === 'staff' && (
-            <div className="flex flex-wrap gap-2">
+            <div className="ml-auto flex flex-wrap justify-end gap-2">
               {incompleteCount !== undefined && (
                 <Link className={buttonClassName({ variant: 'secondary' })} to={paths.incompleteRecords}>
                   <Icon name="alertTriangle" />
@@ -258,7 +258,7 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
           <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1fr)_16rem_12rem_auto]">
             <Input
               ref={searchInputRef}
-              label="Search"
+              label="Search" type="search"
               value={search}
               placeholder="Name or LRN"
               onChange={(event) => {

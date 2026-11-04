@@ -16,8 +16,6 @@ export const paths = {
   students: '/students',
   studentNew: '/students/new',
   incompleteRecords: '/students/incomplete',
-  /** The Student List filtered to incomplete records (the Dashboard's incomplete-records chip). */
-  studentsIncomplete: '/students?record=incomplete',
   /** By the internal id: an LRN never goes in an address, history or logs (ADR-028). */
   studentProfile: (studentId: string) => `/students/${seg(studentId)}`,
   studentEdit: (studentId: string) => `/students/${seg(studentId)}/edit`,

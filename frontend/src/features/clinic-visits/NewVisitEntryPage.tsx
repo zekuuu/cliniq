@@ -191,7 +191,7 @@ function TriagePanel({
       <ul className="mt-3 flex flex-col gap-2">
         {selected.triageSteps.map((step) => (
           <li key={step}>
-            <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-background motion-reduce:transition-none">
+            <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
               <input
                 type="checkbox"
                 checked={checked.includes(step)}

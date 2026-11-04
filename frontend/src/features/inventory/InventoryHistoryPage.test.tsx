@@ -15,9 +15,9 @@ describe('Inventory Usage History (Module 8)', () => {
   it('filters by item and type, and shows a dispense as a removal with a masked patient', async () => {
     const all = await listInventoryMovements()
     expect(all.length).toBeGreaterThan(0)
-    const dispense = all.find((row) => row.type === 'dispense' && row.patientNumber?.includes('●'))!
+    const dispense = all.find((row) => row.type === 'dispense' && row.patientNumber?.includes('•'))!
     expect(dispense.change).toBeLessThan(0)
-    expect(dispense.patientNumber).toContain('●')
+    expect(dispense.patientNumber).toContain('•')
     expect((await listInventoryMovements({ itemId: dispense.itemId })).every((row) => row.itemId === dispense.itemId)).toBe(true)
     expect((await listInventoryMovements({ type: 'restock' })).every((row) => row.type === 'restock')).toBe(true)
     expect(await listInventoryMovements({ from: '2099-01-01' })).toEqual([])

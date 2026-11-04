@@ -190,7 +190,7 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
         />
         <CardBody className="flex flex-col gap-4">
           <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1fr)_16rem_auto]">
-            <Input label="Search" value={search} placeholder="Name or Staff No." onChange={(event) => { setSearch(event.target.value); setPage(1) }} />
+            <Input label="Search" type="search" value={search} placeholder="Name or Staff No." onChange={(event) => { setSearch(event.target.value); setPage(1) }} />
             <TypeSelect value={type} onChange={(value) => { setType(value); setPage(1) }} />
             <label className="flex min-h-10 cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-text-primary shadow-card transition-colors hover:bg-surface">
               <input

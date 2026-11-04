@@ -914,7 +914,9 @@ export function previewStudentImport(rows: ImportRow[], actor?: SessionUser): Pr
       newCount: good.length - known.length,
       continuingCount: known.length,
       changedCount: known.filter(({ record, row }) => importChanges(record, row)).length,
-      missing: s.students.filter((student) => !student.archived && !listed.has(student.lrn)).map((student) => ({ id: student.id, fullName: student.fullName, lrn: maskLrn(student.lrn), gradeLevel: student.gradeLevel })),
+      missing: s.students.filter((student) => !student.archived && !listed.has(student.lrn)).map((student) => ({ id: student.id, fullName: student.fullName, lrn: maskLrn(student.lrn), gradeLevel: student.gradeLevel }))
+        // By name, like the Student List's default order (Zean, November 3, 2026).
+        .sort((a, b) => a.fullName.localeCompare(b.fullName)),
       problems,
     }
   })

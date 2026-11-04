@@ -13,7 +13,8 @@ import { selectOption } from '../test/selectOption'
 import { findDuplicateItem } from './inventory/api/inventoryApi'
 import { createSportsReport, listInventory, setBackupLocationEnabled } from '../lib/mock-db'
 import { useState } from 'react'
-import { ComboboxWithOther, HealthListField, PatientNumber } from '../components'
+import { ComboboxWithOther, HealthListField, MaskedLrn, PatientNumber } from '../components'
+import { maskLrn } from '../lib/lrn'
 import { STARTER_ALLERGIES } from '../config/healthStarterList'
 import { allergyMatches } from '../lib/itemsGiven'
 import { getStudent, listStudents } from '../lib/mock-db'
@@ -33,6 +34,14 @@ describe('R11: the Student List links to the incomplete records', () => {
     const open = (await getIncompleteRecordQueue()).filter((row) => row.status === 'open').length
     const link = await screen.findByRole('link', { name: `Incomplete records (${open})` })
     expect(link).toHaveAttribute('href', '/students/incomplete')
+  })
+
+  it('goes back from the queue to the Student List, whichever page opened it (Zean, November 3, 2026)', async () => {
+    render(<MemoryRouter initialEntries={['/dashboard', '/students/incomplete']} initialIndex={1}><AppRoutes user={STAFF} onLogout={() => {}} /></MemoryRouter>)
+    const back = await screen.findByRole('link', { name: 'Back' }, { timeout: 5000 })
+    expect(back).toHaveAttribute('href', '/students')
+    // The underline starts at the chevron's tip, not at the edge of its icon box (Zean, November 3, 2026).
+    expect(back.querySelector('svg')).toHaveClass('-ml-1.5')
   })
 
   it('gives the Admin no link, since the queue is Staff only (ADR-038)', async () => {
@@ -427,5 +436,16 @@ describe('R32: the last enabled backup location cannot be disabled', () => {
     expect(last).toHaveAccessibleDescription('The only enabled location. Enable another one first.')
     await user.click(screen.getByRole('button', { name: 'Enable External drive' }))
     await waitFor(() => expect(screen.getByRole('button', { name: 'Disable Internal drive' })).toBeEnabled())
+  })
+})
+
+describe('the masked LRN reads lighter', () => {
+  it('uses small bullets, not bold black circles (Zean, November 3, 2026)', () => {
+    expect(maskLrn('000000250032')).toBe('••••••••0032')
+    renderWithRouter(<MaskedLrn lrn="000000250032" />)
+    // Inter's case alternates raise the bullets to the digits' centre (Zean, November 3, 2026: "not visually aligned").
+    expect(screen.getByText('••••••••0032')).toBeInTheDocument()
+    expect(document.querySelectorAll('[data-lrn-dots] circle')).toHaveLength(8)
+    expect(document.body.textContent).not.toContain('●')
   })
 })

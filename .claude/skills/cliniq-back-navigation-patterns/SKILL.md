@@ -24,7 +24,8 @@ Use this with `cliniq-interactive-states` (hover, cursor, focus) and `cliniq-dis
 ## Label
 
 - History target: the visible text is plain **"Back"**, because history can land anywhere.
-- "Back to <screen>" only for a fixed target, through `to` and `label` (a `Link`): "Back to Sign In", "Back to Dashboard".
+- "Back to <screen>" only for a fixed target, through `to` and `label` (a `Link`): "Back to Sign In", "Back to Dashboard". A fixed target may also keep the plain "Back" (`to` without `label`): the Incomplete Records Queue always returns to the Student List, labelled "Back" like the others (Zean, November 3, 2026).
+- The quiet underline starts at the chevron's tip: the icon is pulled 6px left (`-ml-1.5`), since its tip sits 6px inside the 16px box (Zean, November 3, 2026).
 - The visible text is the accessible name (no `aria-label`). Never a student name or LRN.
 
 ## Look and placement

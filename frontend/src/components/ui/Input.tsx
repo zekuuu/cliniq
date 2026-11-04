@@ -1,4 +1,4 @@
-import { forwardRef, useId, useState, type InputHTMLAttributes } from 'react'
+import { forwardRef, useEffect, useId, useRef, useState, type ChangeEvent, type InputHTMLAttributes } from 'react'
 import { cn } from '../../lib/cn'
 import { Icon, type IconName } from '../icons/Icon'
 
@@ -35,6 +35,32 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
   // Every password field can be revealed, so a typo can be checked before it counts toward lockout.
   const isPassword = type === 'password'
   const [revealed, setRevealed] = useState(false)
+  // A search field (Zean, November 4, 2026): what is typed reaches the page 250ms after typing stops, and a
+  // clear button shows whenever there is text (the browser's own shows only on hover or focus).
+  const isSearch = type === 'search'
+  const { value, onChange, ...fieldProps } = rest
+  const [draft, setDraft] = useState(String(value ?? ''))
+  const timer = useRef<number | undefined>(undefined)
+  // A change from outside (Clear Filters, a link that sets the search) shows at once.
+  useEffect(() => {
+    if (isSearch) setDraft(String(value ?? ''))
+  }, [isSearch, value])
+  useEffect(() => () => window.clearTimeout(timer.current), [])
+  const searchProps = isSearch
+    ? {
+        value: draft,
+        onChange: (event: ChangeEvent<HTMLInputElement>) => {
+          setDraft(event.target.value)
+          window.clearTimeout(timer.current)
+          timer.current = window.setTimeout(() => onChange?.(event), 250)
+        },
+      }
+    : { value, onChange }
+  function clearSearch() {
+    window.clearTimeout(timer.current)
+    setDraft('')
+    onChange?.({ target: { value: '' }, currentTarget: { value: '' } } as ChangeEvent<HTMLInputElement>)
+  }
   const field = (
     <input
       id={inputId}
@@ -50,9 +76,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
         icon && 'pl-9',
         // Edge draws its own reveal eye; hide it so the field never shows two.
         isPassword && 'pr-10 [&::-ms-reveal]:hidden',
+        isSearch && 'pr-9 [&::-webkit-search-cancel-button]:hidden',
         inputClassName,
       )}
-      {...rest}
+      {...fieldProps}
+      {...searchProps}
     />
   )
   return (
@@ -67,12 +95,22 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
         )}
         {required && <span className="sr-only"> (required)</span>}
       </label>
-      {icon || isPassword ? (
+      {icon || isPassword || isSearch ? (
         <div className="relative flex flex-col">
           {icon && (
             <Icon name={icon} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-text-secondary" />
           )}
           {field}
+          {isSearch && draft && !disabled && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={clearSearch}
+              className="absolute top-1/2 right-2 inline-flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-sm text-text-secondary transition-colors hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
+            >
+              <Icon name="x" size={16} />
+            </button>
+          )}
           {isPassword && (
             <button
               type="button"
