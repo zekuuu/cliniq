@@ -102,9 +102,9 @@ export function InventoryDispensePage() {
           <p role="status" className="sr-only">
             {invalid.announcement}
           </p>
-          <Select label="For" required value={recipient} placeholder="Choose who this is for" options={recipientOptions} error={errors.recipient} onChange={(value) => { setRecipient(value as Recipient); clear('recipient') }} />
+          <Select className="sm:max-w-xs" label="For" required value={recipient} placeholder="Choose who this is for" options={recipientOptions} error={errors.recipient} onChange={(value) => { setRecipient(value as Recipient); clear('recipient') }} />
           {recipient === 'student' && (
-            <PatientPicker
+            <div className="sm:max-w-md">            <PatientPicker
               search={searchDispensePatients}
               selected={lookup?.patient ?? null}
               onSelect={(result) => { setPicked(result); setPatientRef(patientRefOf(result)); clear('student') }}
@@ -113,7 +113,7 @@ export function InventoryDispensePage() {
               hint="Type an LRN, a Staff No. or a name, then pick who received it."
               addStudentHref={paths.studentNew}
               addStaffHref={paths.staffNew}
-            />
+            /></div>
           )}
           {recipient === 'student' && lookup?.todaysVisit && (
             <div role="status" className="rounded-md border border-info bg-info/10 px-4 py-3 text-sm text-text-primary">
@@ -123,7 +123,7 @@ export function InventoryDispensePage() {
             </div>
           )}
           {item ? (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 sm:max-w-md">
               <p className="text-sm font-semibold text-text-primary">Item <span className="text-error" aria-hidden="true">*</span></p>
               <div className="flex h-10 items-center justify-between gap-3 rounded-md border border-border bg-surface px-3 text-sm">
                 <span className="font-semibold text-text-primary">{item.name} <span className="font-normal text-text-secondary">· {item.currentStock} {item.unit} in stock</span></span>
@@ -131,7 +131,7 @@ export function InventoryDispensePage() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 sm:max-w-md">
               <InventoryItemPicker label="Item" items={items} onPick={(id) => { setItemId(id); clear('item') }} />
               {errors.item && <p role="alert" className="text-xs font-semibold text-error">{errors.item}</p>}
             </div>
@@ -139,7 +139,7 @@ export function InventoryDispensePage() {
           {item && lookup?.patient && allergyMatches(item, lookup.patient.allergies).map((tag) => (
             <p key={tag} role="note" className="flex items-start gap-1 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm font-semibold text-text-primary"><Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning-text" />{allergyWarningText(tag)} You can still record it.</p>
           ))}
-          <Input label="Quantity" required type="number" min="1" step="1" value={quantity} error={errors.quantity} hint={item ? `In ${item.unit}.` : undefined} onChange={(event) => { setQuantity(event.target.value); clear('quantity') }} />
+          <Input className="sm:max-w-40" label="Quantity" required type="number" min="1" step="1" value={quantity} error={errors.quantity} hint={item ? `In ${item.unit}.` : undefined} onChange={(event) => { setQuantity(event.target.value); clear('quantity') }} />
           {overStock && <p className="flex items-start gap-1 text-xs font-semibold text-warning-text"><Icon name="alertTriangle" size={14} className="mt-px shrink-0" />Only {item.currentStock} {item.unit} in stock. Recording this takes stock below zero; recount and restock.</p>}
           {errors.save && <p role="alert" className="text-sm font-semibold text-error">{errors.save}</p>}
           {success && <p role="status" className="text-sm font-semibold text-success">{success}</p>}

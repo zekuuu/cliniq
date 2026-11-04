@@ -57,7 +57,7 @@ export function HealthListField({
       <Combobox<Suggestion>
         label={label}
         placeholder={NONE_RECORDED}
-        hint="Optional. Pick from the list or type your own, separated by commas."
+        hint="Pick from the list or type your own, separated by commas."
         value={value}
         options={suggestions}
         optionKey={(option) => option.key}

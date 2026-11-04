@@ -221,13 +221,15 @@ describe('Body part affected (D11)', () => {
 
   it('is optional on Stage 2, saved, and shown on the report and printout only when filled', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<IncidentEntryPage />)
+    const form = renderWithRouter(<IncidentEntryPage />)
     await pickStudent(user, '000000260001')
     await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
     await screen.findByRole('heading', { name: 'Stage 2 completion' })
     expect(screen.getByRole('combobox', { name: /body part affected/i })).not.toBeRequired()
     const id = recordedWrites()[0].targetRecord!.id
+    // The form's field label reads "Body part affected" too, so only the report is left on screen.
+    form.unmount()
 
     renderWithRouter(<IncidentReportPage incidentId={id} />)
     await screen.findAllByRole('heading', { name: 'Incident summary' })
@@ -236,13 +238,14 @@ describe('Body part affected (D11)', () => {
 
   it('saves typed text and prints "Body part affected"', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
+    const form = renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
     await screen.findByRole('heading', { name: 'Complete Incident Record' })
     await user.type(screen.getByRole('combobox', { name: /body part affected/i }), 'Left knee')
     await user.type(screen.getByLabelText(/treatment notes/i), 'Cleaned and dressed.')
     await user.click(screen.getByRole('button', { name: 'Complete Incident' }))
     await screen.findByText(/incident completed/i)
     expect((await getIncident('incident-0022')).bodyPart).toBe('Left knee')
+    form.unmount()
 
     renderWithRouter(<IncidentReportPage incidentId="incident-0022" />)
     await screen.findByRole('heading', { name: 'Incident summary' })

@@ -119,7 +119,7 @@ export function ItemsGivenField({
             <span>Item</span>
             <span>Quantity</span>
             <span>Unit</span>
-            <span>Instructions (optional)</span>
+            <span>Instructions</span>
             <span />
           </div>
           <ul aria-label="Medicines and supplies given" className="mt-1 flex flex-col divide-y divide-border">
@@ -168,12 +168,12 @@ export function ItemsGivenField({
                     <span className="text-sm text-text-secondary">{unit}</span>
                   </div>
                   <Input
-                    label="Instructions (optional)"
+                    label="Instructions"
                     aria-label={`Instructions for ${name}`}
                     className="order-4 col-span-2 sm:order-none sm:col-span-1 sm:[&>label]:sr-only"
                     value={line.instructions}
                     maxLength={INSTRUCTIONS_MAX}
-                    placeholder="e.g. 1 tablet every 6 hours"
+                    placeholder="Optional, e.g. 1 tablet every 6 hours"
                     onChange={(event) => update(line.itemId, { instructions: event.target.value })}
                   />
                   <button type="button" aria-label={`Remove ${name}`} onClick={() => remove(line.itemId)} className={`order-2 sm:order-none ${iconButton}`}>

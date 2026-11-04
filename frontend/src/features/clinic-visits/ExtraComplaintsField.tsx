@@ -45,7 +45,8 @@ export function ExtraComplaintsField({
       <div className="flex items-end gap-2">
         <Combobox
           className="min-w-0 flex-1"
-          label="Other complaints (optional)"
+          label="Other complaints"
+          placeholder="Optional"
           value={typed}
           onValueChange={(text) => {
             setTyped(text)

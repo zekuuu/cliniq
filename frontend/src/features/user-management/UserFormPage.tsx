@@ -132,6 +132,7 @@ function UserForm({
               {invalid.announcement}
             </p>
             <Input
+              className="sm:max-w-md"
               label="Full name"
               value={name}
               required
@@ -139,6 +140,7 @@ function UserForm({
               onChange={(event) => setName(event.target.value)}
             />
             <Input
+              className="sm:max-w-sm"
               label="Username"
               value={username}
               required
@@ -146,6 +148,7 @@ function UserForm({
               onChange={(event) => setUsername(event.target.value)}
             />
             <Select
+              className="sm:max-w-xs"
               label="Role"
               value={role}
               required
@@ -162,6 +165,7 @@ function UserForm({
             />
             {!userId && (
               <Input
+                className="sm:max-w-sm"
                 label="Temporary password"
                 type="password"
                 autoComplete="new-password"

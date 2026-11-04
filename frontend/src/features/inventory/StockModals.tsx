@@ -160,7 +160,8 @@ export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryIt
           }}
         />
         <Input
-          label={noteRequired ? 'Note' : 'Note (optional)'}
+          label="Note"
+          placeholder={noteRequired ? undefined : 'Optional'}
           required={noteRequired}
           value={note}
           maxLength={200}

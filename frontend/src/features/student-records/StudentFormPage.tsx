@@ -10,6 +10,8 @@ import {
   ComboboxWithOther,
   DatePicker,
   ErrorState,
+  FormSection,
+  FORM_DIVIDER,
   Icon,
   Input,
   MaskedLrn,
@@ -153,22 +155,7 @@ function DuplicateDialog({
   )
 }
 
-/** One titled group of the form; groups after the first sit under a divider. */
-function FormSection({ id, title, description, children }: { id: string; title: string; description: string; children: ReactNode }) {
-  return (
-    <section aria-labelledby={id} className="flex flex-col gap-4 border-t border-border pt-5 first-of-type:border-t-0 first-of-type:pt-0">
-      <div>
-        <h2 id={id} className="text-sm font-bold text-text-primary">
-          {title}
-        </h2>
-        <p className="mt-0.5 text-xs text-text-secondary">{description}</p>
-      </div>
-      {children}
-    </section>
-  )
-}
-
-const RELATIONSHIP_SUGGESTIONS =['Mother', 'Father', 'Guardian', 'Sister or brother', 'Relative']
+const RELATIONSHIP_SUGGESTIONS = ['Mother', 'Father', 'Guardian', 'Sister or brother', 'Relative']
 
 /** Saving needs no contact (ADR-059; the record shows as Incomplete until one is added), but a started one must be complete. */
 function contactStarted(contact: StudentFormValues['emergencyContacts'][number]): boolean {
@@ -429,6 +416,7 @@ function StudentFormEditor({
               <div className="flex flex-col gap-2">
                 <DatePicker
                   label="Birthdate"
+                  placeholder="Optional"
                   value={values.birthDate}
                   max={data.today}
                   error={errors.birthDate}
@@ -499,7 +487,7 @@ function StudentFormEditor({
                 error={errors.gradeLevel}
                 onChange={(value) => setField('gradeLevel', value)}
               />
-              <Input label="Section" value={values.section} onChange={(event) => setField('section', event.target.value)} />
+              <Input label="Section" placeholder="Optional" value={values.section} onChange={(event) => setField('section', event.target.value)} />
               </div>
             </FormSection>
 
@@ -563,7 +551,7 @@ function StudentFormEditor({
               </div>
             </FormSection>
 
-            <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
+            <div className={`flex flex-wrap justify-end gap-2 pt-4 ${FORM_DIVIDER}`}>
               <Button variant="neutral" onClick={cancel}>
                 Cancel
               </Button>

@@ -128,7 +128,7 @@ describe('Student and incident records', () => {
     const { IncidentEntryPage } = await import('../emergency-response/IncidentEntryPage')
     const incident = await saveIncidentStageOne({ studentId: 'student-0001', complaint: 'Fainting', vitals: {}, generalNotes: 'First note' })
     renderWithRouter(<IncidentEntryPage incidentId={incident.id} />)
-    const notes = await screen.findByLabelText('Additional notes (optional)')
+    const notes = await screen.findByLabelText('Additional notes')
     expect(notes).toHaveValue('First note')
     await user.clear(notes)
     await user.type(notes, 'Edited')

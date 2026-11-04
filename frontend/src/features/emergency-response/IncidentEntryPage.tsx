@@ -116,6 +116,7 @@ function IncidentSkeleton({ back }: { back: ReactNode }) {
 
 function TextareaField({
   label,
+  placeholder,
   value,
   onChange,
   error,
@@ -123,6 +124,7 @@ function TextareaField({
   rows = 4,
 }: {
   label: string
+  placeholder?: string
   value: string
   onChange: (value: string) => void
   error?: string
@@ -139,6 +141,7 @@ function TextareaField({
       </label>
       <textarea
         id={id}
+        placeholder={placeholder}
         rows={rows}
         required={required}
         value={value}
@@ -619,7 +622,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                 </p>
               )}
               {!data.student && (
-                <PatientPicker
+                <div className="sm:max-w-md">                <PatientPicker
                   search={searchIncidentPatients}
                   selected={identified.student}
                   onClear={identified.reset}
@@ -628,10 +631,10 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                   hint="No one was identified before this emergency. Type an LRN, a Staff No. or a name, then pick the student or staff member."
                   addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
                   addStaffHref={viewer.role === 'staff' ? paths.staffNew : undefined}
-                />
+                /></div>
               )}
               {student && <StudentAlertCard student={student} />}
-              <SelectWithOther
+              <div className="sm:max-w-sm">              <SelectWithOther
                 label="Complaint"
                 otherLabel="Specify other complaint"
                 required
@@ -645,7 +648,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                 maxLength={COMPLAINT_MAX_LENGTH}
                 hint="The complaint or symptom only. Don't include names."
                 error={errors.complaint}
-              />
+              /></div>
               <ReadingsFields
                 values={readings}
                 onChange={setReading}
@@ -653,7 +656,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                 ranges={data.vitalsRanges}
                 ageGroup={student ? ageGroupOf(student, incidentDate, data.vitalsRanges.usual) : null}
               />
-              <TextareaField label="Additional notes (optional)" value={generalNotes} onChange={setGeneralNotes} rows={3} />
+              <TextareaField label="Additional notes" placeholder="Optional" value={generalNotes} onChange={setGeneralNotes} rows={3} />
               <div className="flex flex-wrap justify-end gap-2 pt-2">
                 <Button type="button" variant="neutral" className="h-11" onClick={cancel}>Cancel</Button>
                 <Button
@@ -704,7 +707,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                   </div>
                   {/* ADR-049: correctable until the report is approved; each change is an audited edit. */}
                   {!data.approved && (
-                    <TextareaField label="Additional notes (optional)" value={generalNotes} onChange={setGeneralNotes} rows={3} />
+                    <TextareaField label="Additional notes" placeholder="Optional" value={generalNotes} onChange={setGeneralNotes} rows={3} />
                   )}
                   {incident.sourceVisitId && <FromVisit visitId={incident.sourceVisitId} given={data.sourceVisit?.itemsGiven ?? []} />}
                   <ReadingsFields
@@ -722,7 +725,8 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     }}
                   />
                   <Combobox
-                    label="Body part affected (optional)"
+                    label="Body part affected"
+                    placeholder="Optional"
                     value={bodyPart}
                     onValueChange={setBodyPart}
                     options={BODY_PART_SUGGESTIONS}

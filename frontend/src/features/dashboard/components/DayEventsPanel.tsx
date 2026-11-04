@@ -88,7 +88,8 @@ function EventForm({
           required
         />
         <DatePicker
-          label="End date (optional)"
+          label="End date"
+          placeholder="Optional"
           value={endDate}
           onChange={setEndDate}
           min={startDate || undefined}

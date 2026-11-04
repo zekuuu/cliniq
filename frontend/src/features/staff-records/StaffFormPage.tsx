@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { BackButton, Button, Card, CardBody, CardHeader, ErrorState, Icon, ComboboxWithOther, HealthListField, Input, NameFields, Select, SexRadios, Skeleton } from '../../components'
+import { BackButton, Button, Card, CardBody, CardHeader, ErrorState, FormSection, FORM_DIVIDER, Icon, ComboboxWithOther, HealthListField, Input, NameFields, Select, SexRadios, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
@@ -157,10 +157,15 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                 {saveError}
               </p>
             )}
-            <section aria-labelledby="staff-identity" className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <h2 id="staff-identity" className="sr-only">
-                Identity
-              </h2>
+            <FormSection id="staff-identity" title="Identity" description="Who the staff member is, as written in the school's staff records.">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <NameFields
+                className="md:col-span-3"
+                values={values}
+                errors={errors}
+                hint="Write the name as it appears on the school's staff records."
+                onChange={(field, value) => setField(field, value)}
+              />
               {editing && (
                 <Input
                   label="Staff No."
@@ -170,14 +175,12 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                   inputClassName="cursor-default bg-surface hover:border-border"
                 />
               )}
-              <NameFields
-                className="md:col-span-2"
-                values={values}
-                errors={errors}
-                hint="Write the name as it appears on the school's staff records."
-                onChange={(field, value) => setField(field, value)}
-              />
               <SexRadios value={values.sex} error={errors.sex} onChange={(value) => setField('sex', value)} />
+              </div>
+            </FormSection>
+
+            <FormSection id="staff-work" title="Work details" description="Where the staff member works and how to reach them.">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <Select
                 label="Type"
                 required
@@ -196,19 +199,16 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                 options={data.departments}
                 pickOnly
                 maxLength={DEPARTMENT_MAX}
-                hint={`Optional. Type to find one in use, or Other (specify) for a new one (at most ${DEPARTMENT_MAX} characters).`}
+                hint={`Type to find one in use, or Other (specify) for a new one (at most ${DEPARTMENT_MAX} characters).`}
                 error={errors.department}
                 onValueChange={(value) => setField('department', value)}
               />
-              <Input label="Contact number" hint="Optional." value={values.contactInfo} onChange={(event) => setField('contactInfo', event.target.value)} />
-            </section>
+              <Input label="Contact number" placeholder="Optional" value={values.contactInfo} onChange={(event) => setField('contactInfo', event.target.value)} />
+              </div>
+            </FormSection>
 
-            <section aria-labelledby="staff-contacts">
-              <h2 id="staff-contacts" className="text-sm font-bold text-text-primary">
-                Emergency contacts
-              </h2>
-              <p className="mt-1 text-sm text-text-secondary">Optional. The first contact is primary.</p>
-              <div className="mt-3 flex flex-col gap-3">
+            <FormSection id="staff-contacts" title="Emergency contacts" description="Optional. Who the clinic calls first. The first contact is primary.">
+              <div className="flex flex-col gap-3">
                 {values.emergencyContacts.map((contact, index) => {
                   const label = index === 0 ? 'Primary emergency contact' : `Emergency contact ${index + 1}`
                   return (
@@ -250,15 +250,12 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                   )
                 })}
               </div>
-              <Button variant="secondary" className="mt-3" onClick={() => setContacts([...values.emergencyContacts, EMPTY_CONTACT])}>
+              <Button variant="secondary" size="sm" icon="plus" className="self-start" onClick={() => setContacts([...values.emergencyContacts, EMPTY_CONTACT])}>
                 Add another contact
               </Button>
-            </section>
+            </FormSection>
 
-            <section aria-labelledby="staff-medical-title">
-              <h2 id="staff-medical-title" className="mb-3 text-sm font-bold text-text-primary">
-                Allergies and conditions
-              </h2>
+            <FormSection id="staff-medical-title" title="Allergies and conditions" description="Allergies and conditions the clinic should know before treating.">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <HealthListField label="Allergies" list={STARTER_ALLERGIES} value={values.allergies} onValueChange={(value) => setField('allergies', value)} />
                 <HealthListField
@@ -268,9 +265,9 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                   onValueChange={(value) => setField('medicalConditions', value)}
                 />
               </div>
-            </section>
+            </FormSection>
 
-            <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
+            <div className={`flex flex-wrap justify-end gap-2 pt-4 ${FORM_DIVIDER}`}>
               <Button variant="neutral" onClick={cancel}>
                 Cancel
               </Button>

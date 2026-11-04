@@ -87,6 +87,7 @@ function VisitDetailSkeleton({ back }: { back: ReactNode }) {
 
 function TextareaField({
   label,
+  placeholder,
   value,
   onChange,
   error,
@@ -94,6 +95,7 @@ function TextareaField({
   hint,
 }: {
   label: string
+  placeholder?: string
   value: string
   onChange: (value: string) => void
   error?: string
@@ -110,6 +112,7 @@ function TextareaField({
       </label>
       <textarea
         id={id}
+        placeholder={placeholder}
         rows={4}
         value={value}
         aria-invalid={error ? true : undefined}
@@ -484,22 +487,23 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                     }}
                   />
                 </div>
-                <ComplaintField
+                <div className="sm:max-w-sm">                <ComplaintField
                   value={values.complaint}
                   onChange={(value) => setField('complaint', value)}
                   suggestions={visit.complaintSuggestions}
                   error={errors.complaint}
-                />
-                <ExtraComplaintsField
+                /></div>
+                <div className="sm:max-w-md">                <ExtraComplaintsField
                   value={values.extraComplaints}
                   onChange={(next) => setField('extraComplaints', next)}
                   main={values.complaint}
                   suggestions={visit.complaintSuggestions}
-                />
+                /></div>
                 <TextareaField
                   label="Treatment notes"
                   required={false}
-                  hint="Optional. Care that isn't stock: rest, cold compress, wound cleaning, advice."
+                  placeholder="Optional"
+                  hint="Care that isn't stock: rest, cold compress, wound cleaning, advice."
                   value={values.treatment}
                   onChange={(value) => setField('treatment', value)}
                 />

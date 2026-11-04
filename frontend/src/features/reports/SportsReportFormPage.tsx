@@ -185,16 +185,18 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
         <Card>
           <CardHeader title="Report details" icon={<Icon name="clipboardList" />} />
           <CardBody className="flex flex-col gap-4">
-            <Input label="Title" required value={title} maxLength={SPORTS_REPORT_TEXT_MAX} error={errors.title} onChange={(event) => setTitle(event.target.value)} />
+            <Input className="sm:max-w-md" label="Title" required value={title} maxLength={SPORTS_REPORT_TEXT_MAX} error={errors.title} onChange={(event) => setTitle(event.target.value)} />
             <Input
+              className="sm:max-w-md"
               label="Activity"
               value={activity}
               maxLength={SPORTS_REPORT_TEXT_MAX}
               error={errors.activity}
-              hint="Optional, for example “Palaro 2026, Boys Basketball”."
+              placeholder="Optional, e.g. Palaro 2026, Boys Basketball"
               onChange={(event) => setActivity(event.target.value)}
             />
             <Input
+              className="sm:max-w-sm"
               label="Requested by"
               required
               value={requestedBy}
@@ -204,6 +206,7 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
               onChange={(event) => setRequestedBy(event.target.value)}
             />
             <Select
+              className="sm:max-w-xs"
               label="Look-back window"
               value={String(lookBack)}
               options={WINDOW_OPTIONS}
@@ -234,13 +237,13 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
             icon={<Icon name="users" />}
           />
           <CardBody className="flex flex-col gap-4">
-            <StudentPicker
+            <div className="sm:max-w-md">            <StudentPicker
               label="Add a student"
               hint="Type a name or LRN, then pick the student. Repeat for each student."
               required={false}
               search={searchSportsReportStudents}
               onSelect={pickStudent}
-            />
+            /></div>
             <div className="flex flex-wrap items-end gap-2">
               <Select
                 label="Or add a whole grade level"

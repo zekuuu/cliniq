@@ -342,7 +342,7 @@ describe('Student Form: First name, Last name and Middle name (S4, ADR-064)', ()
     expect(fields.map((field) => field.getAttribute('placeholder'))).toEqual([
       'e.g. Maria Angela',
       'e.g. Dela Cruz',
-      'e.g. Santos',
+      'Optional, e.g. Santos',
     ])
     expect(screen.getByLabelText(/^First name/)).toBeRequired()
     expect(screen.getByLabelText(/^Last name/)).toBeRequired()
@@ -352,6 +352,19 @@ describe('Student Form: First name, Last name and Middle name (S4, ADR-064)', ()
     expect(screen.getByLabelText('Middle name')).toHaveAttribute('maxlength', '40')
     expect(group).toHaveAccessibleDescription("Write the name as it appears on the school's list.")
     expect(screen.queryByLabelText(/full name/i)).not.toBeInTheDocument()
+  })
+
+  it('clears and locks the middle name when No middle name is ticked (Zean, November 5, 2026)', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<StudentFormPage />)
+    await screen.findByRole('heading', { name: 'Add Student' })
+    const middle = screen.getByLabelText('Middle name')
+    await user.type(middle, 'Santos')
+    await user.click(screen.getByRole('checkbox', { name: 'No middle name' }))
+    expect(middle).toHaveValue('')
+    expect(middle).toBeDisabled()
+    await user.click(screen.getByRole('checkbox', { name: 'No middle name' }))
+    expect(middle).toBeEnabled()
   })
 
   it('saves the parts trimmed and single-spaced, leaves a blank middle name empty, and builds the full name', async () => {
