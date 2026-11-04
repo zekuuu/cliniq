@@ -24,7 +24,7 @@ export function SexRadios({ value, error, onChange }: { value: StudentSex | ''; 
               value={option.value}
               checked={value === option.value}
               onChange={() => onChange(option.value)}
-              className="size-4 cursor-pointer accent-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark"
+              className="size-4 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark"
             />
             {option.label}
           </label>
