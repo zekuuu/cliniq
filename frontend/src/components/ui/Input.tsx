@@ -56,10 +56,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
         },
       }
     : { value, onChange }
+  // Every editable text field has a clear button while it holds text (Zean, November 5, 2026): not
+  // passwords (the reveal eye sits there), dates and times (their own pickers), read-only or disabled fields.
+  const clearable = isSearch || (['text', 'tel', 'email', 'url', 'number', undefined].includes(type) && !fieldProps.readOnly)
+  const shown = isSearch ? draft : String(value ?? '')
+  const showClear = clearable && shown !== '' && !disabled
   function clearSearch() {
     window.clearTimeout(timer.current)
     setDraft('')
     onChange?.({ target: { value: '' }, currentTarget: { value: '' } } as ChangeEvent<HTMLInputElement>)
+    document.getElementById(inputId)?.focus()
   }
   const field = (
     <input
@@ -76,7 +82,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
         icon && 'pl-9',
         // Edge draws its own reveal eye; hide it so the field never shows two.
         isPassword && 'pr-10 [&::-ms-reveal]:hidden',
-        isSearch && 'pr-9 [&::-webkit-search-cancel-button]:hidden',
+        isSearch && '[&::-webkit-search-cancel-button]:hidden',
+        clearable && 'pr-9',
         inputClassName,
       )}
       {...fieldProps}
@@ -95,16 +102,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
         )}
         {required && <span className="sr-only"> (required)</span>}
       </label>
-      {icon || isPassword || isSearch ? (
+      {icon || isPassword || clearable ? (
         <div className="relative flex flex-col">
           {icon && (
             <Icon name={icon} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-text-secondary" />
           )}
           {field}
-          {isSearch && draft && !disabled && (
+          {showClear && (
             <button
               type="button"
-              aria-label="Clear search"
+              aria-label={isSearch ? 'Clear search' : 'Clear'}
+              aria-controls={inputId}
               onClick={clearSearch}
               className="absolute top-1/2 right-2 inline-flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-sm text-text-secondary transition-colors hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
             >
