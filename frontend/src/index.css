@@ -100,7 +100,7 @@
   /* Two page containers only (Design-System.md, Layout & Spacing): `max-w-page-wide` for lists,
      tables, reports, and dashboards; `max-w-page-narrow` for single-record forms and detail views. */
   --container-page-wide: 75rem; /* 1200px */
-  --container-page-narrow: 45rem; /* 720px */
+  --container-page-narrow: 52rem; /* 832px */
 
   /* ExpandableSection: the revealed fields slide down a little and fade in. Short on purpose. */
   --animate-expand-down: expand-down 150ms ease-out;

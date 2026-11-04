@@ -89,7 +89,7 @@ function valuesFromStudent(student: Student | null): StudentFormValues {
 
 function StudentFormSkeleton({ back }: { back: ReactNode }) {
   return (
-    <div className="mx-auto flex max-w-[52rem] flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+    <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {back}
       <div aria-hidden="true" className="flex flex-col gap-4">
         <Card className="p-5">
@@ -365,7 +365,7 @@ function StudentFormEditor({
   }
 
   return (
-    <div className="mx-auto flex max-w-[52rem] flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+    <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {discardDialog}
       <BackButton onBack={cancel} />
       <Card className="p-5">
@@ -601,7 +601,7 @@ export function StudentFormPage({
 
   if (viewer.role !== 'staff') {
     return (
-      <div className="mx-auto max-w-[52rem] px-4 pt-10 pb-8 sm:px-8">
+      <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8">
         <ErrorState asPageTitle title="Staff access required." />
       </div>
     )
@@ -613,7 +613,7 @@ export function StudentFormPage({
 
   if (status === 'error') {
     return (
-      <div className="mx-auto flex max-w-[52rem] flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
         {back}
         <ErrorState asPageTitle title="Unable to load student form." onRetry={reload} />
       </div>
