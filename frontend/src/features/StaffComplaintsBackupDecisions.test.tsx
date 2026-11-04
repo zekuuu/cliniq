@@ -125,6 +125,20 @@ describe('Staff wording, extra complaints and backup locations', () => {
     expect(after.find((location) => location.id === added.id)?.lastBackupAt).toBeNull()
   })
 
+  it('chooses the location from a drive and a folder, never a typed path (Zean, November 5, 2026)', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<BackupStatusPage />)
+    await user.click(await screen.findByRole('button', { name: 'Add location' }))
+    expect(screen.queryByRole('textbox', { name: /path/i })).not.toBeInTheDocument()
+    await user.type(screen.getByRole('combobox', { name: /Label/ }), 'Blue USB')
+    await user.click(await screen.findByRole('radio', { name: /USB Drive \(E:\)/ }))
+    await user.click(await screen.findByRole('button', { name: 'Backups' }))
+    expect(screen.getByText('E:\\Backups\\.cliniq')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Save location' }))
+    await screen.findByText('E:\\Backups')
+    expect((await listBackupLocations()).locations.at(-1)).toMatchObject({ label: 'Blue USB', path: 'E:\\Backups' })
+  })
+
   it('warns when no location is enabled, and refuses to back up', async () => {
     // The screen and the data layer no longer allow disabling the last location (review round 2, R32), so this state is set directly, as an old saved copy could hold it.
     for (const location of db().frontendOnly.backupLocations) location.enabled = false

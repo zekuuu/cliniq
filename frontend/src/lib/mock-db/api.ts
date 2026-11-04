@@ -2780,6 +2780,39 @@ export function saveBackupLocation(input: BackupLocationInput, options: { id?: s
   })
 }
 
+/** A drive the clinic computer can back up to (ADR-052: the backend lists them). */
+export interface BackupDrive {
+  /** The drive's root, e.g. `E:\`. */
+  root: string
+  name: string
+  kind: 'internal' | 'removable'
+  freeSpace: string
+}
+
+/**
+ * PROVISIONAL (ADR-052): a browser can't see the clinic computer's drives, so the mock lists a fixed set
+ * of drives and folders. The backend replaces this with the real drives and folders of the computer it
+ * runs on; nothing here is ever written.
+ */
+const MOCK_DRIVES: BackupDrive[] = [
+  { root: 'C:\\', name: 'Local Disk', kind: 'internal', freeSpace: '86 GB free' },
+  { root: 'D:\\', name: 'Data', kind: 'internal', freeSpace: '412 GB free' },
+  { root: 'E:\\', name: 'USB Drive', kind: 'removable', freeSpace: '58 GB free' },
+]
+const MOCK_FOLDERS: Record<string, string[]> = {
+  'C:\\': ['CLINIQ', 'ProgramData', 'Users'],
+  'C:\\Users': ['Clinic'],
+  'C:\\Users\\Clinic': ['Documents', 'Desktop'],
+  'D:\\': ['Backups', 'Shared'],
+  'D:\\Backups': ['Clinic'],
+  'E:\\': ['Backups', 'School files'],
+}
+
+/** The drives, and the folders directly inside `path` (none when `path` is empty or unknown). */
+export function listBackupFolders(path: string): Promise<{ drives: BackupDrive[]; folders: string[] }> {
+  return read('backup folders', () => ({ drives: MOCK_DRIVES, folders: MOCK_FOLDERS[path] ?? [] }))
+}
+
 /** Locations are never deleted, only disabled and enabled again (ADR-052). */
 export function setBackupLocationEnabled(id: string, enabled: boolean, actor?: SessionUser): Promise<BackupLocation> {
   return write(enabled ? 'enable backup location' : 'disable backup location', (s) => {

@@ -1,10 +1,12 @@
 import {
   getBackupStatus,
+  listBackupFolders,
   listBackupLocations,
   recordBackupNow,
   saveBackupLocation,
   setBackupLocationEnabled,
   verifyLatestBackup,
+  type BackupDrive,
   type BackupLocation,
   type BackupLocationInput,
   type BackupLocationSettings,
@@ -56,3 +58,5 @@ export async function setLocationEnabled(id: string, enabled: boolean, actor?: S
   window.dispatchEvent(new CustomEvent(BACKUP_CHANGED_EVENT))
   return location
 }
+
+export { listBackupFolders as fetchBackupFolders, type BackupDrive }
