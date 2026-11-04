@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { getVisitComplaintSuggestions, recordVisit, searchStudents } from './api'
+import { checkStudentDuplicates, getVisitComplaintSuggestions, listPersonnel, listStudents, recordVisit, searchPersonnel, searchStudents } from './api'
 import { getMockSessionUser } from './session'
-import { resetMockDb } from './store'
+import { db, migratePersistedState, resetMockDb } from './store'
 
 describe('student search', () => {
   beforeEach(() => resetMockDb())
@@ -28,6 +28,43 @@ describe('student search', () => {
     expect(await searchStudents('Hannah Umali')).toEqual([])
     const [first] = await searchStudents('000000260001')
     expect(Object.keys(first).sort()).toEqual(['fullName', 'gradeLevel', 'id', 'lrn'])
+  })
+})
+
+// S4 (Zean, November 4, 2026; ADR-064): names are stored as parts.
+describe('names stored as parts', () => {
+  beforeEach(() => resetMockDb())
+
+  it('finds a student or staff member by any part, both parts in either order, or the full name', async () => {
+    for (const query of ['gian', 'quizon', 'quizon gian', 'Gian Quizon']) expect((await searchStudents(query)).map((s) => s.fullName)).toContain('Gian Quizon')
+    const staff = (await listPersonnel())[0]
+    expect((await searchPersonnel(staff.lastName)).map((p) => p.id)).toContain(staff.id)
+    expect((await searchPersonnel(`${staff.lastName} ${staff.firstName}`)).map((p) => p.id)).toContain(staff.id)
+  })
+
+  it('sorts the Student List and the Staff List by last name, then first name', async () => {
+    const parts = (rows: Array<{ id: string }>) => rows.map((row) => { const r = [...db().students, ...db().personnel].find((x) => x.id === row.id)!; return `${r.lastName}, ${r.firstName}` })
+    const students = parts(await listStudents({}))
+    expect(students).toEqual([...students].sort((a, b) => a.localeCompare(b)))
+    const staff = parts(await listPersonnel())
+    expect(staff).toEqual([...staff].sort((a, b) => a.localeCompare(b)))
+  })
+
+  it('spots a duplicate name whatever its case, accents or spacing', async () => {
+    const [first] = await listStudents({})
+    const record = db().students.find((s) => s.id === first.id)!
+    const typed = `  ${record.firstName.toUpperCase()}   ${record.lastName.replace(/a/g, 'á')} `
+    expect((await checkStudentDuplicates('', typed)).nameMatches.map((m) => m.id)).toEqual([record.id])
+  })
+
+  it('migrates a browser-saved full name into parts', () => {
+    const saved = structuredClone({ state: db(), seedAuditLength: 0 })
+    const raw = saved.state.students[0] as unknown as Record<string, unknown>
+    for (const key of ['firstName', 'lastName', 'middleName']) delete raw[key]
+    raw.fullName = 'Maria Angela Reyes'
+    const migrated = migratePersistedState(saved).state.students[0]
+    expect(migrated).toMatchObject({ firstName: 'Maria Angela', lastName: 'Reyes', middleName: null })
+    expect(migrated).not.toHaveProperty('fullName')
   })
 })
 

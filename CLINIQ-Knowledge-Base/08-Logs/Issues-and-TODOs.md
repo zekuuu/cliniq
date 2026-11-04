@@ -17,12 +17,12 @@
 
 ## Open work at a glance
 
-Open: FIX 0 · AUDIT 0 · DOC 24 · DECIDE 2 · LATER 20 | Notes: NOTE 79 · VERIFY 26 | Done: 457 (all in `Issues-Done-Archive.md`)
+Open: FIX 1 · AUDIT 0 · DOC 26 · DECIDE 2 · LATER 20 | Notes: NOTE 80 · VERIFY 26 | Done: 464 (all in `Issues-Done-Archive.md`)
 
-**Open `FIX` items:** none.
+**Open `FIX` items:** Import page empty steps fail colour contrast (Pager field, history scroll, report link and name split).
 
 - **AUDIT** (0): none. The final audit of the frontend clean-up, Part 3, superseded all ten.
-- **DOC** (24): Frontend review round 2, Parts 2 and 3; Frontend review round 2, Part 1; Groupmate system review; Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; Panel-style system review; Feedback from Sir Mina and Sir Rey; Decisions sheet answers; Decisions sheet follow-up answers; Canonical documents updated to the ADRs; Known gaps
+- **DOC** (26): Narrow page width 832px; Pager field, history scroll, report link and name split; Frontend review round 2, Parts 2 and 3; Frontend review round 2, Part 1; Groupmate system review; Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; Panel-style system review; Feedback from Sir Mina and Sir Rey; Decisions sheet answers; Decisions sheet follow-up answers; Canonical documents updated to the ADRs; Known gaps
 - **DECIDE** (2): Open decisions, waiting on someone outside the dev team; Known gaps
 - **LATER** (20): Known gaps; Reported UI/UX follow-ups; Medicines & supplies given (ADR-018); Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); README sync; Professor consultation and team meeting, October 16; Panel-style system review; Feedback from Sir Mina and Sir Rey; Staff and teachers as clinic patients; System review fixes; Decisions sheet answers; Decisions sheet follow-up answers; Decisions answered after the list was resent; Birthdate instead of the student's own number
 
@@ -512,6 +512,12 @@ When you find or resolve something, add it here with a date and enough context t
 ## Frontend clean-up, Part 1
 
 
+## Pager field, history scroll, report link and name split — Wednesday, November 04, 2026 — 23:28 PHT
+
+- [ ] **[FIX]** **Import page empty steps fail colour contrast** (found Wednesday, November 04, 2026 — 23:28 PHT). On `/students/import` before a file is chosen, "Choose a file first." and "Match the columns and press Preview first." sit in cards at `opacity-70` and measure 3.23:1 (axe `color-contrast`, at 375, 768 and 1280). Added by the empty-steps change of November 3 (`3c968e5e`), not by this session. Dim the card's header only, or drop the opacity. [Agent session](Agent-Sessions/2026-11-04-pager-history-scroll-report-link-name-split.md)
+- [ ] **[DOC]** **Canonical documents still describe one "full name" field** (ADR-064, Wednesday, November 04, 2026 — 23:28 PHT). `CLINIQ_Modules_and_Features.md` and `CLINIQ_Frontend_Context_Brief.md` §5 need first name, last name and optional middle name for students and staff, the derived full name, last-name order and the name-correction wording. [Agent session](Agent-Sessions/2026-11-04-pager-history-scroll-report-link-name-split.md)
+- **[NOTE]** **The ERD, Data Dictionary, schema, constraint tests, diagrams and API contract follow on the `backend` branch** (Wednesday, November 04, 2026 — 23:28 PHT). Zean's second prompt, `Prompt-Backend-Docs-Student-Name-Split-Nov4.md`, does them from the "For the backend branch" note in the session log; nothing here edits them (ADR-056). [Agent session](Agent-Sessions/2026-11-04-pager-history-scroll-report-link-name-split.md)
+
 ## Frontend review round 2, Parts 2 and 3 — Tuesday, November 03, 2026 — 19:49 PHT
 
 - [ ] **[DOC]** **Backup: the last enabled location cannot be disabled; `API-Contract.md` needs the note** (R32). The prompt asked for a note on the backup entry of `API-Contract.md`, a backend document that changes on the `backend` branch only (ADR-056), and `stash@{0}` already holds unrelated edits to it. Add there: disabling the last enabled location is refused with "Enable another backup location before disabling the last one." [Agent session](Agent-Sessions/2026-11-03-frontend-review-round-2-part-3.md)
@@ -526,3 +532,7 @@ When you find or resolve something, add it here with a date and enough context t
 - [ ] **[DOC]** **The canonical design documents still show the old warning colour** (found Sunday, November 1, 2026 — 22:36 PHT). `CLINIQ_Frontend_Context_Brief.md` and `CLINIQ_Frontend_Design_Reference.md` predate ADR-062, and the Context Brief predates ADR-063. [Agent session](Agent-Sessions/2026-11-01-frontend-review-round-2-part-1.md)
 - [ ] **[DOC]** **`personnel.sex` is not yet verified on MariaDB** (found Sunday, November 1, 2026 — 22:36 PHT). The ERD diagram images in `Diagrams/` are not regenerated, `Reference-Schema.sql` was not reloaded, and the two new constraint tests have not run, because this workstation has no MariaDB. [Agent session](Agent-Sessions/2026-11-01-frontend-review-round-2-part-1.md)
 
+
+## Narrow page width 832px — Thursday, November 05, 2026 — 01:16 PHT
+
+- [ ] **[DOC]** `--container-page-narrow` is now 832px (52rem), up from 720px (Zean: "use the same width of that page to other who has small width"). `Design-System.md` is updated. The canonical `CLINIQ_Frontend_Context_Brief.md` (Layout table) and `CLINIQ_Frontend_Design_Reference.md` ("Two page widths only") still say 720px and need the same change. See [Agent session](Agent-Sessions/2026-11-05-student-form-sections.md).

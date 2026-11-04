@@ -10,7 +10,9 @@ import { StudentProfilePage } from './StudentProfilePage'
 const base = {
   id: 'student-x',
   lrn: '000000260999',
-  fullName: 'Test Pupil',
+  firstName: 'Test',
+  lastName: 'Pupil',
+  middleName: null,
   sex: 'female' as const,
   birthDate: '2018-06-01',
   allergies: [],

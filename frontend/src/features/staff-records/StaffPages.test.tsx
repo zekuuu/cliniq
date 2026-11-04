@@ -75,11 +75,15 @@ describe('Staff Form', () => {
     renderAt('/staff/new')
     await screen.findByRole('heading', { level: 1, name: 'Add Staff' })
     await user.click(screen.getByRole('button', { name: 'Save Staff' }))
-    expect(await screen.findByText('Enter the full name.')).toBeInTheDocument()
+    expect(await screen.findByText("Enter the staff member's first name.")).toBeInTheDocument()
+    expect(screen.getByText("Enter the staff member's last name.")).toBeInTheDocument()
     expect(screen.getByText('Select the staff type.')).toBeInTheDocument()
-    expect(screen.getByLabelText(/^Full name/)).toHaveFocus()
+    expect(screen.getByLabelText(/^First name/)).toHaveFocus()
+    // The same three name fields as a student (Zean, November 4, 2026; ADR-064).
+    expect(screen.getByLabelText('Middle name')).not.toBeRequired()
 
-    await user.type(screen.getByLabelText(/^Full name/), 'Ana Test')
+    await user.type(screen.getByLabelText(/^First name/), 'Ana')
+    await user.type(screen.getByLabelText(/^Last name/), 'Test')
     await user.click(screen.getByRole('radio', { name: 'Female' }))
     await selectOption(user, screen.getByLabelText(/^Type/), 'Teacher')
     await user.type(screen.getByRole('combobox', { name: /^Allergies/ }), 'None')

@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { BackButton, Button, Card, CardBody, CardHeader, ErrorState, Icon, Input, MaskedLrn, type IconName, Modal, Select } from '../../components'
-import { IMPORT_FIELDS, guessMapping, mapRows, parseCsv, type ImportFieldKey, type ImportMapping, type ImportRow } from '../../lib/studentImport'
+import { IMPORT_FIELDS, guessMapping, mapRows, missingImportFields, namesFromOneColumn, parseCsv, type ImportFieldKey, type ImportMapping, type ImportRow } from '../../lib/studentImport'
 import { applyStudentImport, getMockSessionUser, previewStudentImport, type SessionUser, type StudentImportPreview, type StudentImportResult } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
-
-const fieldsMissing = (mapping: ImportMapping) => IMPORT_FIELDS.filter((field) => field.required && mapping[field.key] < 0).map((field) => field.label)
+import { nameMatches } from '../../lib/personName'
 
 /** Import the yearly student list (ADR-047): file, column mapping, reviewed preview, then apply. Staff only. */
 const students = (count: number) => `${count} ${count === 1 ? 'student' : 'students'}`
@@ -78,11 +77,14 @@ export function StudentImportPage({ viewer = getMockSessionUser() }: { viewer?: 
   }
 
   const columnOptions = [{ value: '-1', label: 'Not in this file' }, ...(csv?.[0] ?? []).map((header, index) => ({ value: String(index), label: header || `Column ${index + 1}` }))]
-  const missingFields = mapping ? fieldsMissing(mapping) : []
+  const missingFields = mapping ? missingImportFields(mapping) : []
+  const oneColumn = mapping ? namesFromOneColumn(mapping) : false
   const checked = new Set(archiveIds)
+  // The previewed rows, numbered as in the file (the header is row 1), when the names came from one column.
+  const splitRows = preview && oneColumn ? rows.map((row, index) => ({ line: index + 2, row })) : []
   // The search field itself waits until typing stops (Input, type="search").
   const term = find.trim().toLowerCase()
-  const shownMissing = (preview?.missing ?? []).filter((student) => !term || student.fullName.toLowerCase().includes(term) || student.gradeLevel.toLowerCase().includes(term))
+  const shownMissing = (preview?.missing ?? []).filter((student) => !term || nameMatches(student.fullName, term) || student.gradeLevel.toLowerCase().includes(term))
   const toggle = (id: string) => setArchiveIds((current) => (current.includes(id) ? current.filter((other) => other !== id) : [...current, id]))
 
   return (
@@ -138,7 +140,7 @@ export function StudentImportPage({ viewer = getMockSessionUser() }: { viewer?: 
                 <Select
                   key={field.key}
                   label={field.label}
-                  required={field.required}
+                  required={field.required && !(oneColumn && (field.key === 'firstName' || field.key === 'lastName'))}
                   value={String(mapping[field.key])}
                   options={columnOptions}
                   onChange={(value) => {
@@ -174,6 +176,38 @@ export function StudentImportPage({ viewer = getMockSessionUser() }: { viewer?: 
                 </div>
               ))}
             </dl>
+            {/* One full-name column (ADR-064): every split is shown, so the registrar can correct the file. */}
+            {splitRows.length > 0 && (
+              <section aria-labelledby="import-split-title" className="flex flex-col gap-1">
+                <h2 id="import-split-title" className="text-sm font-bold text-text-primary">Names split from one column</h2>
+                <p className="text-sm text-text-secondary">
+                  The last word is the last name, unless the name is written "Surname, First Middle". If a name is split wrongly, correct the file and preview it again.
+                </p>
+                <div className="max-h-60 overflow-y-auto rounded-md border border-border" tabIndex={0} role="region" aria-label="Names split from one column, scrollable">
+                  <table className="w-full border-collapse text-sm">
+                    <caption className="sr-only">Names split from one column</caption>
+                    <thead>
+                      <tr className="border-b border-border text-left text-xs text-text-secondary">
+                        <th scope="col" className="sticky top-0 bg-background px-3 py-1.5 font-semibold">Row</th>
+                        <th scope="col" className="sticky top-0 bg-background px-3 py-1.5 font-semibold">Last name</th>
+                        <th scope="col" className="sticky top-0 bg-background px-3 py-1.5 font-semibold">First name</th>
+                        <th scope="col" className="sticky top-0 bg-background px-3 py-1.5 font-semibold">Middle name</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {splitRows.map(({ line, row }) => (
+                        <tr key={line} className="border-b border-border last:border-b-0">
+                          <td className="px-3 py-1.5 tabular-nums text-text-secondary">{line}</td>
+                          <td className="px-3 py-1.5 font-semibold text-text-primary">{row.lastName}</td>
+                          <td className="px-3 py-1.5 text-text-primary">{row.firstName}</td>
+                          <td className="px-3 py-1.5 text-text-primary">{row.middleName || 'None'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
             {preview.problems.length > 0 && (
               <section aria-labelledby="import-problems-title">
                 <h2 id="import-problems-title" className="text-sm font-bold text-text-primary">Rows with a problem</h2>

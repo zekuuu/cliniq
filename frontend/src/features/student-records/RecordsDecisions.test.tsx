@@ -43,7 +43,9 @@ describe('Student and incident records', () => {
     const student = await getStudent('student-0001')
     const base = {
       lrn: student.lrn,
-      fullName: student.fullName,
+      firstName: student.firstName,
+      lastName: student.lastName,
+      middleName: '',
       gradeLevel: student.gradeLevel,
       section: '',
       sex: student.sex,

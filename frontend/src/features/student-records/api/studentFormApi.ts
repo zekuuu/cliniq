@@ -22,7 +22,10 @@ export type StudentFormMode = 'add' | 'edit'
 export interface StudentFormValues {
   /** Typed by Staff; spaces and dashes are stripped (ADR-028). */
   lrn: string
-  fullName: string
+  /** The name parts (ADR-064); the middle name may be left blank. */
+  firstName: string
+  lastName: string
+  middleName: string
   gradeLevel: string
   /** Optional (ADR-047). */
   section: string
@@ -71,7 +74,9 @@ export async function submitStudentForm(
   return saveStudent(
     {
       lrn: values.lrn,
-      fullName: values.fullName,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      middleName: values.middleName || null,
       gradeLevel: values.gradeLevel,
       section: values.section,
       sex: values.sex as StudentSex,

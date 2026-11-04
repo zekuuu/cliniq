@@ -13,6 +13,7 @@ import {
   Icon,
   Input,
   MaskedLrn,
+  NameFields,
   HealthListField,
   Modal,
   Select,
@@ -42,6 +43,7 @@ import {
   type StudentFormValues,
 } from './api/studentFormApi'
 import { unusualAgeNote } from '../../lib/age'
+import { formatPersonName } from '../../lib/personName'
 import { isLrn, normalizeLrn } from '../../lib/lrn'
 import { setSavedMessage } from '../../lib/savedMessage'
 import { NONE_RECORDED } from '../../lib/patients'
@@ -51,7 +53,9 @@ type StudentFormErrors = Partial<Record<string, string>>
 
 const EMPTY_VALUES: StudentFormValues = {
   lrn: '',
-  fullName: '',
+  firstName: '',
+  lastName: '',
+  middleName: '',
   gradeLevel: '',
   section: '',
   sex: '',
@@ -66,7 +70,9 @@ function valuesFromStudent(student: Student | null): StudentFormValues {
   if (!student) return EMPTY_VALUES
   return {
     lrn: student.lrn,
-    fullName: student.fullName,
+    firstName: student.firstName,
+    lastName: student.lastName,
+    middleName: student.middleName ?? '',
     gradeLevel: student.gradeLevel,
     section: student.section ?? '',
     sex: student.sex,
@@ -147,7 +153,22 @@ function DuplicateDialog({
   )
 }
 
-const RELATIONSHIP_SUGGESTIONS = ['Mother', 'Father', 'Guardian', 'Sister or brother', 'Relative']
+/** One titled group of the form; groups after the first sit under a divider. */
+function FormSection({ id, title, description, children }: { id: string; title: string; description: string; children: ReactNode }) {
+  return (
+    <section aria-labelledby={id} className="flex flex-col gap-4 border-t border-border pt-5 first-of-type:border-t-0 first-of-type:pt-0">
+      <div>
+        <h2 id={id} className="text-sm font-bold text-text-primary">
+          {title}
+        </h2>
+        <p className="mt-0.5 text-xs text-text-secondary">{description}</p>
+      </div>
+      {children}
+    </section>
+  )
+}
+
+const RELATIONSHIP_SUGGESTIONS =['Mother', 'Father', 'Guardian', 'Sister or brother', 'Relative']
 
 /** Saving needs no contact (ADR-059; the record shows as Incomplete until one is added), but a started one must be complete. */
 function contactStarted(contact: StudentFormValues['emergencyContacts'][number]): boolean {
@@ -162,7 +183,8 @@ function validate(values: StudentFormValues, today: ISODate): StudentFormErrors 
   const errors: StudentFormErrors = {}
   if (!values.lrn) errors.lrn = 'Enter the 12-digit LRN.'
   else if (!isLrn(values.lrn)) errors.lrn = 'The LRN must be exactly 12 digits.'
-  if (!values.fullName.trim()) errors.fullName = 'Enter the student full name.'
+  if (!values.firstName.trim()) errors.firstName = "Enter the student's first name."
+  if (!values.lastName.trim()) errors.lastName = "Enter the student's last name."
   if (!values.gradeLevel) errors.gradeLevel = 'Select the grade level.'
   if (!values.sex) errors.sex = 'Select the sex recorded by the school.'
   if (values.birthDate > today) errors.birthDate = "The birthdate can't be in the future."
@@ -193,7 +215,8 @@ function StudentFormEditor({
   const [liveDuplicates, setLiveDuplicates] = useState<StudentDuplicateCheck>({ lrnTaken: false, nameMatches: [] })
   // Sir Rey (October 25, 2026): the LRN is locked after creation; a name correction asks why.
   const [nameReason, setNameReason] = useState('')
-  const nameChanged = data.mode === 'edit' && values.fullName.trim() !== (data.student?.fullName ?? '')
+  const typedName = formatPersonName(values)
+  const nameChanged = data.mode === 'edit' && typedName !== (data.student?.fullName ?? '')
   const navigate = useNavigate()
   // Set by the Incomplete Records queue's Edit Record, so a save goes back there instead of to the profile.
   const location = useLocation()
@@ -226,7 +249,7 @@ function StudentFormEditor({
     if (mode !== 'add') return
     let stale = false
     const timer = setTimeout(() => {
-      void checkStudentDuplicates(values.lrn, values.fullName).then((result) => {
+      void checkStudentDuplicates(values.lrn, typedName).then((result) => {
         if (!stale) setLiveDuplicates(result)
       })
     }, 300)
@@ -234,7 +257,7 @@ function StudentFormEditor({
       stale = true
       clearTimeout(timer)
     }
-  }, [mode, values.lrn, values.fullName])
+  }, [mode, values.lrn, typedName])
 
   function setField<K extends keyof StudentFormValues>(field: K, value: StudentFormValues[K]) {
     setValues((current) => ({ ...current, [field]: value }))
@@ -379,10 +402,8 @@ function StudentFormEditor({
               {successMessage}
             </p>
 
-            <section aria-labelledby="identity-title" className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <h2 id="identity-title" className="sr-only">
-                Identity
-              </h2>
+            <FormSection id="identity-title" title="Identity" description="Who the student is, as written in the school records.">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {mode === 'edit' ? (
                 <Input
                   label="LRN"
@@ -399,17 +420,36 @@ function StudentFormEditor({
                   autoComplete="off"
                   value={values.lrn}
                   error={errors.lrn ?? (liveDuplicates.lrnTaken ? DUPLICATE_LRN_MESSAGE : undefined)}
-                  hint="The 12-digit Learner Reference Number. Spaces and dashes are removed."
+                  hint="12 digits. Spaces and dashes are removed."
                   onChange={(event) => setField('lrn', normalizeLrn(event.target.value))}
                 />
               )}
+              {/* R12: one answer of two, as radio buttons (the Staff form's SexRadios, ADR-063). */}
+              <SexRadios value={values.sex} error={errors.sex} onChange={(value) => setField('sex', value)} />
               <div className="flex flex-col gap-2">
-                <Input
-                  label="Full name"
-                  required
-                  value={values.fullName}
-                  error={errors.fullName}
-                  onChange={(event) => setField('fullName', event.target.value)}
+                <DatePicker
+                  label="Birthdate"
+                  value={values.birthDate}
+                  max={data.today}
+                  error={errors.birthDate}
+                  onChange={(value) => setField('birthDate', value)}
+                />
+                {ageNote && !errors.birthDate && (
+                  <p
+                    role="status"
+                    className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-xs text-text-primary"
+                  >
+                    <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning-text" />
+                    {ageNote}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col gap-2 md:col-span-3">
+                <NameFields
+                  values={values}
+                  errors={errors}
+                  hint="Write the name as it appears on the school's list."
+                  onChange={(field, value) => setField(field, value)}
                 />
                 {mode === 'add' && liveDuplicates.nameMatches.length > 0 && (
                   <div
@@ -433,7 +473,7 @@ function StudentFormEditor({
               </div>
               {nameChanged && (
                 <Input
-                  className="md:col-span-2"
+                  className="md:col-span-3"
                   label="Reason for the name correction"
                   required
                   value={nameReason}
@@ -445,6 +485,11 @@ function StudentFormEditor({
                   }}
                 />
               )}
+              </div>
+            </FormSection>
+
+            <FormSection id="school-title" title="School details" description="Where the student is enrolled this school year.">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <Select
                 label="Grade level"
                 required
@@ -454,35 +499,12 @@ function StudentFormEditor({
                 error={errors.gradeLevel}
                 onChange={(value) => setField('gradeLevel', value)}
               />
-              <Input label="Section (optional)" value={values.section} onChange={(event) => setField('section', event.target.value)} />
-              {/* R12: one answer of two, as radio buttons (the Staff form's SexRadios, ADR-063). */}
-              <SexRadios value={values.sex} error={errors.sex} onChange={(value) => setField('sex', value)} />
-              <div className="flex flex-col gap-2">
-                <DatePicker
-                  label="Birthdate (optional)"
-                  value={values.birthDate}
-                  max={data.today}
-                  error={errors.birthDate}
-                  onChange={(value) => setField('birthDate', value)}
-                />
-                {ageNote && !errors.birthDate && (
-                  <p
-                    role="status"
-                    className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-xs text-text-primary"
-                  >
-                    <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning-text" />
-                    {ageNote}
-                  </p>
-                )}
+              <Input label="Section" value={values.section} onChange={(event) => setField('section', event.target.value)} />
               </div>
-            </section>
+            </FormSection>
 
-            <section aria-labelledby="emergency-contact-title">
-              <h2 id="emergency-contact-title" className="text-sm font-bold text-text-primary">
-                Emergency contacts
-              </h2>
-              <p className="mt-1 text-sm text-text-secondary">The first contact is primary. Add every person the clinic may need to reach.</p>
-              <div className="mt-3 flex flex-col gap-3">
+            <FormSection id="emergency-contact-title" title="Emergency contacts" description="Who the clinic calls first. The first contact is primary.">
+              <div className="flex flex-col gap-3">
                 {values.emergencyContacts.map((contact, index) => {
                   const label = index === 0 ? 'Primary emergency contact' : `Emergency contact ${index + 1}`
                   return (
@@ -531,18 +553,15 @@ function StudentFormEditor({
                   )
                 })}
               </div>
-              <Button variant="secondary" className="mt-3" onClick={addEmergencyContact}>Add another contact</Button>
-            </section>
+              <Button variant="secondary" size="sm" icon="plus" className="self-start" onClick={addEmergencyContact}>Add another contact</Button>
+            </FormSection>
 
-            <section aria-labelledby="medical-title">
-              <h2 id="medical-title" className="mb-3 text-sm font-bold text-text-primary">
-                Medical history
-              </h2>
+            <FormSection id="medical-title" title="Medical history" description="Allergies and conditions the clinic should know before treating.">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <HealthListField label="Allergies" list={STARTER_ALLERGIES} value={values.allergies} error={errors.allergies} onValueChange={(value) => setField('allergies', value)} />
                 <HealthListField label="Medical conditions" list={STARTER_CONDITIONS} value={values.medicalConditions} error={errors.medicalConditions} onValueChange={(value) => setField('medicalConditions', value)} />
               </div>
-            </section>
+            </FormSection>
 
             <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
               <Button variant="neutral" onClick={cancel}>

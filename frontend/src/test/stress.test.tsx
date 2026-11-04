@@ -18,7 +18,7 @@ function fill(students = 1000, visits = 6000) {
   const student = state.students[0]
   const visit = state.visits[0]
   for (let i = 0; i < students; i += 1) {
-    state.students.push({ ...student, id: `stress-student-${i}`, lrn: String(900000000000 + i), fullName: `Stress Student ${i}` })
+    state.students.push({ ...student, id: `stress-student-${i}`, lrn: String(900000000000 + i), firstName: 'Stress', lastName: `Student ${i}` })
   }
   for (let i = 0; i < visits; i += 1) {
     const day = new Date(Date.UTC(2026, 0, 1) + (i % 300) * 86_400_000).toISOString().slice(0, 10)

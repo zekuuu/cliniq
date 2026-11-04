@@ -40,7 +40,10 @@ type Replace<T, R> = Omit<T, keyof R> & R
 export type SeedUser = Replace<User, { lastLogin: RelativeDateTime | null }>
 
 /** Old mock JSON did not hold Sex; `resolveSeed` assigns a deterministic synthetic value on load. */
-export type SeedStudent = Omit<Student, 'recordComplete' | 'sex'> & { sex?: StudentSex; nameCorrectionReason?: string }
+export type SeedStudent = Omit<Student, 'recordComplete' | 'sex' | 'fullName'> & { sex?: StudentSex; nameCorrectionReason?: string }
+
+/** A stored staff record: the name parts only, never the derived `fullName` (ADR-064). */
+export type SeedPersonnel = Omit<Personnel, 'fullName'>
 
 /** Older seed rows have no `personnelId`; `resolveSeed` reads a missing one as null (ADR-043). */
 type SeedPatient = { personnelId?: string | null }
@@ -361,7 +364,7 @@ export interface MockDbSeed {
   users: SeedUser[]
   students: SeedStudent[]
   /** Staff patients (ADR-043): the one top-level entity added since the §5 shapes. PROVISIONAL. */
-  personnel: Personnel[]
+  personnel: SeedPersonnel[]
   visits: SeedVisit[]
   incidents: SeedIncident[]
   followUps: SeedFollowUp[]
@@ -402,13 +405,13 @@ export interface FrontendOnlyState {
   backupLocations: BackupLocation[]
 }
 
-/** Raw records only. `Student` here never carries `recordComplete`; selectors add it on read. */
+/** Raw records only. `Student` here never carries `recordComplete` or `fullName`; selectors add them on read. */
 export interface DbState {
   today: ISODate
   config: MockDbConfig
   users: User[]
   students: SeedStudent[]
-  personnel: Personnel[]
+  personnel: SeedPersonnel[]
   visits: Visit[]
   incidents: Incident[]
   followUps: FollowUp[]

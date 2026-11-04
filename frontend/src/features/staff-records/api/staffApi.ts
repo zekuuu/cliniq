@@ -48,7 +48,10 @@ export function archiveStaffRecord(personnelId: string, actor: SessionUser): Pro
 }
 
 export interface StaffFormValues {
-  fullName: string
+  /** The name parts, as on a student (ADR-064); the middle name may be left blank. */
+  firstName: string
+  lastName: string
+  middleName: string
   sex: StudentSex | ''
   type: string
   department: string
@@ -86,7 +89,9 @@ function parseList(value: string): string[] {
 export function submitStaffForm(values: StaffFormValues, options: { personnelId?: string; actor: SessionUser }) {
   return savePersonnel(
     {
-      fullName: values.fullName,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      middleName: values.middleName || null,
       sex: values.sex || null,
       type: values.type,
       department: values.department,

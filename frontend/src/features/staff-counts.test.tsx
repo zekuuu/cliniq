@@ -74,7 +74,7 @@ describe('Audit Log and Privacy Policy', () => {
     const user = userEvent.setup()
     const { savePersonnel } = await import('../lib/mock-db')
     await savePersonnel(
-      { sex: 'female', fullName: 'Audit Staff', type: 'Teacher', department: null, contactInfo: '', allergies: [], medicalConditions: [], emergencyContacts: [] },
+      { sex: 'female', firstName: 'Audit', lastName: 'Staff', middleName: null, type: 'Teacher', department: null, contactInfo: '', allergies: [], medicalConditions: [], emergencyContacts: [] },
       { actor: STAFF },
     )
     render(

@@ -97,7 +97,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 - Confirm or cancel when a duplicate warning appears
 
 **Incomplete Record Handling**
-- Auto-flag records missing required fields (full name, grade level, sex, emergency contact)
+- Auto-flag records missing required fields (first name, last name, grade level, sex, emergency contact)
 - View the incomplete-records review queue (feeds the expanded Dashboard, Module 9)
 - Resolve/complete a flagged record
 - Log which staff member resolved each flag
@@ -111,7 +111,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 Teachers, non-teaching staff and utility workers can be clinic patients. Built Monday, October 26, 2026.
 - **Staff List** (`/staff`): name, Staff No., type, department or role; search by name or Staff No., filter by type, "Show archived". A masterlist, so names are shown.
 - **Staff Profile** (`/staff/:id`): the record, the allergy alert, emergency contacts, and visit, incident and follow-up history; "Record a visit" and "Record an incident" open those forms with the person chosen. Archive, never delete.
-- **Add / Edit Staff**: full name and type required; department or role (a value already in use, or Other to type a new one, at most 60 characters), contact number, emergency contacts, allergies and conditions optional. The Staff No. (`STF-0001`) is assigned by CLINIQ and never edited.
+- **Add / Edit Staff**: first name, last name, sex and type required, middle name optional (ADR-064); department or role (a value already in use, or Other to type a new one, at most 60 characters), contact number, emergency contacts, allergies and conditions optional. The Staff No. (`STF-0001`) is assigned by CLINIQ and never edited.
 - A visit, incident, follow-up or medicine given is about a student **or** a staff member, exactly one. One patient search on New Visit, New Incident and Dispense labels each result Student or Staff.
 - Not for staff: excuse letter, PE referral, Sports Report, incomplete-records queue, yearly list, Registrar import. An incident's calls go to the **emergency contact**.
 - Lists with more than one person show the Staff No. (never the name) with a Student or Staff chip, and an Everyone / Students / Staff filter.

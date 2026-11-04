@@ -1,6 +1,7 @@
 import rawSeed from './mock-db.json'
 import type { ISODate, ISODateTime } from '../../types/entities'
 import { EXCUSE_LETTER_RECIPIENT, excuseLetterBody } from '../excuseLetter'
+import { formatPersonName } from '../personName'
 import { resolveDate, resolveDateTime, resolveSchoolDate, resolveSchoolDateTime } from './relativeDates'
 import type { DbState, MockDbSeed } from './types'
 
@@ -187,7 +188,7 @@ export function fillApprovedLetterWording(state: DbState): DbState {
     const visit = state.visits.find((v) => v.id === approval.visitId)
     const student = state.students.find((st) => st.id === visit?.studentId)
     approval.recipient ??= EXCUSE_LETTER_RECIPIENT
-    approval.body ??= excuseLetterBody(student?.fullName ?? 'The student', (visit?.dateTime ?? approval.approvedAt).slice(0, 10), approval)
+    approval.body ??= excuseLetterBody(student ? formatPersonName(student) : 'The student', (visit?.dateTime ?? approval.approvedAt).slice(0, 10), approval)
   }
   return state
 }

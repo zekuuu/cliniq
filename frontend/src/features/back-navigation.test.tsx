@@ -86,7 +86,8 @@ describe('Back after a save never returns to the submitted form', () => {
     renderAfterPrevious('/add-student', <StudentFormPage />)
     await screen.findByRole('heading', { name: 'Add Student' })
     await user.type(screen.getByLabelText(/^LRN/), '123456789012')
-    await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
+    await user.type(screen.getByLabelText(/^first name/i), 'Lara')
+    await user.type(screen.getByLabelText(/^last name/i), 'Santos')
     await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
     await user.click(screen.getByRole('radio', { name: 'Female' }))
     await user.type(screen.getByLabelText(/contact name/i), 'Marisol Santos')
@@ -155,7 +156,7 @@ describe('Back and Cancel behave identically on forms', () => {
 
   it.each([
     ['New Visit', <NewVisitEntryPage />, /treatment/i],
-    ['Add Student', <StudentFormPage />, /full name/i],
+    ['Add Student', <StudentFormPage />, /^first name/i],
     ['Add Inventory Item', <InventoryFormPage />, /item name/i],
     ['User form', <UserFormPage />, /full name/i],
   ])(

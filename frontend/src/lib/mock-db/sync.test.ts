@@ -37,7 +37,7 @@ vi.mock('./mock-db.json', async (importOriginal) => {
   for (const v of recent) if (v.studentId) counts.set(v.studentId, (counts.get(v.studentId) ?? 0) + 1)
   const [target] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]
   const student = seed.students.find((s) => s.id === target)!
-  student.fullName = 'Renamed Synthetic Student'
+  Object.assign(student, { firstName: 'Renamed Synthetic', lastName: 'Student' })
   student.gradeLevel = 'Grade 12'
   const item = seed.inventoryItems.find((i) => i.name === 'Mefenamic Acid 250mg')!
   item.currentStock = item.lowStockThreshold - 1

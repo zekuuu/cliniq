@@ -1,3 +1,4 @@
+import { formatPersonName } from '../lib/personName'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
@@ -13,7 +14,7 @@ import { fetchVisitLog } from './clinic-visits/api/visitLogApi'
 
 const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
 const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }
-const STAFF_NAMES = () => db().personnel.map((p) => p.fullName)
+const STAFF_NAMES = () => db().personnel.map(formatPersonName)
 
 function renderAt(route: string, user: SessionUser = STAFF) {
   return render(

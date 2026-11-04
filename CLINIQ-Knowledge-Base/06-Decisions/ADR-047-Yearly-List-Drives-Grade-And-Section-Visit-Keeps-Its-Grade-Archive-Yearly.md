@@ -1,3 +1,5 @@
+> **Note, Wednesday, November 04, 2026 — 23:26 PHT:** the import's name columns now fill separate first, last and middle name fields, and a single full-name column is split by a stated rule shown in the preview ([ADR-064](ADR-064-Names-Stored-As-First-Last-And-Middle-Name.md)).
+
 # ADR-047: The yearly list drives grade and section, a visit keeps the grade it had, and archiving is yearly
 
 **Date:** Thursday, October 29, 2026 — 12:33 PHT

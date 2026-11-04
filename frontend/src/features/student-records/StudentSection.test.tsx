@@ -25,14 +25,16 @@ const SECTION = 'Sampaguita'
 
 /** The student's own values as a saveStudent input, with changes on top. */
 async function input(changes: Record<string, unknown>) {
-  const { lrn, fullName, gradeLevel, section, sex, birthDate, allergies, medicalConditions, emergencyContacts } = await getStudent(STUDENT)
-  return { lrn, fullName, gradeLevel, section, sex, birthDate, allergies, medicalConditions, emergencyContacts, ...changes }
+  const { lrn, firstName, lastName, middleName, gradeLevel, section, sex, birthDate, allergies, medicalConditions, emergencyContacts } = await getStudent(STUDENT)
+  return { lrn, firstName, lastName, middleName, gradeLevel, section, sex, birthDate, allergies, medicalConditions, emergencyContacts, ...changes }
 }
 const setSection = async (section: string) => saveStudent(await input({ section }), { studentId: STUDENT, actor: STAFF })
 
 const newStudent = (lrn: string, fullName: string, section: string): StudentFormValues => ({
   lrn,
-  fullName,
+  firstName: fullName.split(' ')[0],
+  lastName: fullName.split(' ').slice(1).join(' '),
+  middleName: '',
   gradeLevel: 'Grade 7',
   section,
   sex: 'female',

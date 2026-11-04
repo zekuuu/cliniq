@@ -1,3 +1,4 @@
+import { splitFullName } from '../personName'
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
   archivePersonnel,
@@ -37,7 +38,7 @@ const problemsAfter = (edit: (s: MockDbSeed) => void) => {
 }
 const staffVisit = (s: MockDbSeed) => s.visits.find((v) => v.personnelId)!
 const newStaff = (fullName: string): PersonnelInput => ({
-  fullName,
+  ...splitFullName(fullName),
   sex: 'female',
   type: 'Teacher',
   department: 'Grade 2 adviser',

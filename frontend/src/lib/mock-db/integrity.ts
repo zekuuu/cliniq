@@ -1,4 +1,5 @@
 import { isRealDate, todayISO } from '../dates'
+import { cleanNamePart, NAME_PART_MAX } from '../personName'
 import { isRelativeDate, isRelativeDateTime } from './relativeDates'
 import type { MockDbSeed } from './types'
 
@@ -27,8 +28,8 @@ const FIELDS = {
   top: ['meta', 'config', 'users', 'students', 'personnel', 'visits', 'incidents', 'followUps', 'inventoryItems', 'reports', 'backupLogs', 'auditLog', 'frontendOnly'],
   config: ['_note', 'showFrequentVisitors', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'personnelTypes', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges', 'medicalCertificateAfterDays', 'adminIdleMinutes', 'clusterMinStudents', 'clusterWindowDays', 'followUpOverdueAfterDays', 'followUpAutoCloseDays', 'vitalsUsualRanges', 'backupKeepLast', 'unusualAgeYears', 'largeWriteOffPercent'],
   users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture', 'deactivatedAt'],
-  students: ['id', 'lrn', 'fullName', 'gradeLevel', 'birthDate', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
-  personnel: ['id', 'staffNumber', 'fullName', 'sex', 'type', 'department', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived'],
+  students: ['id', 'lrn', 'firstName', 'lastName', 'middleName', 'gradeLevel', 'birthDate', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
+  personnel: ['id', 'staffNumber', 'firstName', 'lastName', 'middleName', 'sex', 'type', 'department', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived'],
   emergencyContact: ['name', 'relationship', 'phone', 'verified'],
   visits: ['id', 'studentId', 'dateTime', 'complaint', 'treatment', 'disposition', 'loggedByUserId', 'eventTag', 'itemsGiven', 'excuseLetterDraft', 'referredTo', 'temperatureC', 'timeOut', 'assistedBy', 'parentGuardian', 'remarks'],
   excuseLetterDraft: ['excusedFrom', 'excusedUntil', 'note'],
@@ -49,6 +50,8 @@ const FIELDS = {
  * not just that it's unexpected.
  */
 const DERIVED_FIELDS = new Set([
+  // The name is stored as parts; the full name is built on read (ADR-064).
+  'fullName',
   'recordComplete', 'missingFields', 'incomplete', 'isIncomplete',
   'visitCount', 'visitsCount', 'isFrequentVisitor', 'frequentVisitor',
   'dueState', 'isOverdue', 'overdue', 'isDueToday', 'isUpcoming', 'daysFromToday',
@@ -89,6 +92,15 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   const fail = (message: string) => problems.push(message)
   const s = seed as unknown as Rec
 
+  // First and last name required, middle name null or text; each trimmed, single-spaced and within NAME_PART_MAX (ADR-064).
+  const checkName = (where: string, record: Rec) => {
+    for (const key of ['firstName', 'lastName', 'middleName'] as const) {
+      const value = record[key]
+      if (key === 'middleName' && value === null) continue
+      if (typeof value !== 'string' || !value || cleanNamePart(value) !== value || value.length > NAME_PART_MAX[key])
+        fail(`${where}.${key}: must be ${key === 'middleName' ? 'null or ' : ''}trimmed text of at most ${NAME_PART_MAX[key]} characters`)
+    }
+  }
   const checkFields = (where: string, record: unknown, allowed: readonly string[], optional: readonly string[] = []) => {
     if (!record || typeof record !== 'object') return fail(`${where}: expected an object`)
     const keys = Object.keys(record)
@@ -192,6 +204,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     const w = `students[${i}] (${String(st.id)})`
     // Pre-Part 3B seed exports omit Sex; `resolveSeed` supplies a clearly synthetic migration value.
     checkFields(w, st, FIELDS.students, ['sex', 'section'])
+    checkName(w, st)
     const lrn = String(st.lrn)
     if (!LRN_PATTERN.test(lrn)) fail(`${w}.lrn: "${lrn}" isn't 12 digits (ADR-028)`)
     if (lrns.has(lrn)) fail(`${w}.lrn: duplicate "${lrn}"`)
@@ -225,7 +238,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     if (!STAFF_NUMBER_PATTERN.test(number)) fail(`${w}.staffNumber: "${number}" doesn't look like STF-0001`)
     if (staffNumbers.has(number)) fail(`${w}.staffNumber: duplicate "${number}"`)
     staffNumbers.add(number)
-    if (!String(pe.fullName ?? '').trim()) fail(`${w}.fullName: must not be empty`)
+    checkName(w, pe)
     oneOf(`${w}.type`, pe.type, personnelTypes)
     if (pe.sex !== null) oneOf(`${w}.sex`, pe.sex, ENUMS.sex)
     if (pe.department !== null && (typeof pe.department !== 'string' || !pe.department.trim() || pe.department.length > PERSONNEL_DEPARTMENT_MAX))

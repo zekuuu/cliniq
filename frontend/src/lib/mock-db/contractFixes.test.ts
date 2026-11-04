@@ -24,9 +24,9 @@ beforeEach(() => resetMockDb())
 describe('API contract fixes', () => {
   it('ADR-058: the audit log carries the name-correction reason, never the names', async () => {
     const student = await getStudent('student-0001')
-    await saveStudent({ ...student, fullName: `${student.fullName} Jr.` }, { studentId: student.id, actor: STAFF, nameCorrectionReason: 'Birthcertificate zebra mismatch' })
+    await saveStudent({ ...student, lastName: `${student.lastName} Jr.` }, { studentId: student.id, actor: STAFF, nameCorrectionReason: 'Birthcertificate zebra mismatch' })
     const entry = getRecordedAuditEntries().at(-1)
-    expect(entry?.summary).toBe('Updated name. Name corrected; reason: Birthcertificate zebra mismatch')
+    expect(entry?.summary).toBe('Updated last name. Name corrected; reason: Birthcertificate zebra mismatch')
     expect(JSON.stringify(getRecordedAuditEntries())).not.toContain(student.fullName)
   })
 
@@ -93,7 +93,7 @@ describe('API contract fixes', () => {
 
   it('ADR-059: a student saves without an emergency contact and is flagged Incomplete', async () => {
     const student = await getStudent('student-0001')
-    const saved = await saveStudent({ ...student, lrn: '000000269992', fullName: 'No Contact Yet', emergencyContacts: [] }, { actor: STAFF, confirmDuplicate: true })
+    const saved = await saveStudent({ ...student, lrn: '000000269992', firstName: 'No Contact', lastName: 'Yet', middleName: null, emergencyContacts: [] }, { actor: STAFF, confirmDuplicate: true })
     if (saved.status !== 'saved') throw new Error('not saved')
     expect(saved.student.recordComplete).toBe(false)
     const queue = await getIncompleteRecordQueue()

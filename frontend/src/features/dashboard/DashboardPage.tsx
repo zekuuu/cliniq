@@ -212,9 +212,8 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                         <ActivityCards summary={d} range={range} canNavigate={canNavigate} />
                       </section>
                     </section>
-                    <div>
-                      <FullReportLink report="Monthly Report" view="monthly" month={range.to.slice(0, 7)} />
-                    </div>
+                    {/* Right under the Activity summary cards, outside the counts region (Zean, November 4, 2026). */}
+                    <FullReportLink className="-mt-3" report="Monthly Report" view="monthly" month={range.to.slice(0, 7)} />
                     {viewer.role === 'staff' && <ClusterAlerts alerts={clusters.data ?? []} />}
                     {d.showFrequentVisitors && (
                       <section aria-label="Frequent visitor warnings">

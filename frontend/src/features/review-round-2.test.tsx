@@ -128,7 +128,7 @@ describe('R4: Trends order', () => {
 
 describe('R5: staff patients record sex (ADR-063)', () => {
   const newStaff = (over: Partial<PersonnelInput> = {}): PersonnelInput => ({
-    fullName: 'Sam Test', type: 'Teacher', sex: 'male', department: '', contactInfo: '', allergies: [], medicalConditions: [], emergencyContacts: [], ...over,
+    firstName: 'Sam', lastName: 'Test', middleName: null, type: 'Teacher', sex: 'male', department: '', contactInfo: '', allergies: [], medicalConditions: [], emergencyContacts: [], ...over,
   })
 
   it('refuses a new staff record with no sex', async () => {
@@ -140,7 +140,8 @@ describe('R5: staff patients record sex (ADR-063)', () => {
     render(<MemoryRouter initialEntries={['/staff/new']}><AppRoutes user={STAFF} onLogout={() => {}} /></MemoryRouter>)
     const group = await screen.findByRole('radiogroup', { name: /^sex/i })
     expect(within(group).getAllByRole('radio').map((r) => r.getAttribute('value'))).toEqual(['female', 'male'])
-    await user.type(screen.getByLabelText(/^full name/i), 'Radio Test')
+    await user.type(screen.getByLabelText(/^first name/i), 'Radio')
+    await user.type(screen.getByLabelText(/^last name/i), 'Test')
     await selectOption(user, screen.getByLabelText(/^type/i), 'Teacher')
     await user.click(screen.getByRole('button', { name: 'Save Staff' }))
     expect(await within(group.parentElement!).findByText('Choose the sex.')).toBeInTheDocument()

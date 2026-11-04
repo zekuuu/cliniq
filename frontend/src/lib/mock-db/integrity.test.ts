@@ -32,6 +32,13 @@ describe('mock-db.json integrity', () => {
     expect(seed.visits.length).toBeGreaterThan(120)
   })
 
+  it('rejects a stored full name, a missing first name and an untrimmed middle name (ADR-064)', () => {
+    expect(problemsAfter((s) => Object.assign(s.students[0], { fullName: 'Gian Quizon' }))).toMatch(/students\[0\].*"fullName" is a derived value/)
+    expect(problemsAfter((s) => Object.assign(s.students[0], { firstName: '' }))).toMatch(/students\[0\].*firstName: must be trimmed text/)
+    expect(problemsAfter((s) => Object.assign(s.personnel[0], { middleName: ' Santos' }))).toMatch(/personnel\[0\].*middleName: must be null or trimmed text/)
+    expect(problemsAfter((s) => Object.assign(s.students[0], { lastName: 'x'.repeat(51) }))).toMatch(/lastName: must be trimmed text of at most 50/)
+  })
+
   it('accepts a visit with neither treatment notes nor items given', () => {
     expect(
       problemsAfter((s) => {

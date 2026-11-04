@@ -18,19 +18,32 @@ const TYPE_OPTIONS = [
 const typeText = (row: InventoryMovementRow) =>
   row.reason ? `Adjusted: ${ADJUSTMENT_REASON_LABELS[row.reason]}` : row.type === 'dispense' ? 'Dispensed' : row.type === 'restock' ? 'Restocked' : 'Adjusted'
 
+// Fits the card at 1280px with the sidebar open (about 56rem, less the focus-ring room), so a desktop never scrolls sideways
+// (Zean, November 4, 2026). Balanced to the content (November 5): Change, Batch, Patient and By are
+// sized to their widest usual value; Date and Movement take a share of the width, Item the
+// rest, so at the page cap nothing wraps and on a narrower desktop the date and movement wrap first.
+// All columns are left-aligned. Only a narrower screen scrolls.
+const HISTORY_TABLE_MIN_WIDTH = '55rem'
+
+/** "Nov 4, 2026 ·" over "10:05 AM": the time never breaks across lines. */
+function DateOverTime({ value }: { value: string }) {
+  const [date, time] = value.split(' · ')
+  return time ? <>{date} · <span className="whitespace-nowrap">{time}</span></> : value
+}
+
 const columns: Array<DataTableColumn<InventoryMovementRow>> = [
-  { key: 'when', header: 'Date and time', width: '11rem', cell: (row) => formatDateTime(row.timestamp) },
+  { key: 'when', header: 'Date and time', width: '17.5%', cell: (row) => <DateOverTime value={formatDateTime(row.timestamp)} /> },
   { key: 'item', header: 'Item', rowHeader: true, cell: (row) => row.itemName },
-  { key: 'type', header: 'Movement', width: '12rem', cell: typeText },
-  { key: 'change', header: 'Change', width: '7rem', align: 'right', cell: (row) => `${row.change > 0 ? '+' : ''}${row.change} ${row.unit}` },
+  { key: 'type', header: 'Movement', width: '20%', cell: typeText },
+  { key: 'change', header: 'Change', width: '6.5rem', cell: (row) => `${row.change > 0 ? '+' : ''}${row.change} ${row.unit}` },
   {
     key: 'batch',
     header: 'Batch',
-    width: '12rem',
+    width: '6.5rem',
     cell: (row) => row.batches.map((batch) => `${batch.quantity} · ${batch.expirationDate ? `exp. ${formatDate(batch.expirationDate)}` : 'no expiration'}`).join(', ') || 'Not recorded',
   },
-  { key: 'patient', header: 'Patient', width: '9rem', cell: (row) => row.patientNumber ?? 'None' },
-  { key: 'by', header: 'By', width: '9rem', cell: (row) => row.by },
+  { key: 'patient', header: 'Patient', width: '7.5rem', cell: (row) => row.patientNumber ?? 'None' },
+  { key: 'by', header: 'By', width: '7.5rem', cell: (row) => row.by },
 ]
 
 /** Inventory Usage History (Module 8): every stock movement, or one item's with `?item=`. Staff only. */
@@ -77,7 +90,7 @@ export function InventoryHistoryPage() {
           <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>
             {data.rows.length ? (
               <>
-                <DataTable caption="Stock movements" columns={columns} rows={data.rows.slice((currentPage - 1) * pageSize, currentPage * pageSize)} rowKey={(row) => row.id} fixedLayout minTableWidth="72rem" />
+                <DataTable caption="Stock movements" columns={columns} rows={data.rows.slice((currentPage - 1) * pageSize, currentPage * pageSize)} rowKey={(row) => row.id} fixedLayout minTableWidth={HISTORY_TABLE_MIN_WIDTH} />
                 <Pagination page={currentPage} pageCount={pageCount} total={data.rows.length} pageSize={pageSize} onPageSizeChange={change<PageSize>(setPageSize)} itemLabel="movements" onPageChange={setPage} />
               </>
             ) : (
