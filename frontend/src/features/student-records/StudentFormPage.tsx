@@ -89,7 +89,7 @@ function valuesFromStudent(student: Student | null): StudentFormValues {
 
 function StudentFormSkeleton({ back }: { back: ReactNode }) {
   return (
-    <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+    <div className="mx-auto flex max-w-[52rem] flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {back}
       <div aria-hidden="true" className="flex flex-col gap-4">
         <Card className="p-5">
@@ -153,7 +153,22 @@ function DuplicateDialog({
   )
 }
 
-const RELATIONSHIP_SUGGESTIONS = ['Mother', 'Father', 'Guardian', 'Sister or brother', 'Relative']
+/** One titled group of the form; groups after the first sit under a divider. */
+function FormSection({ id, title, description, children }: { id: string; title: string; description: string; children: ReactNode }) {
+  return (
+    <section aria-labelledby={id} className="flex flex-col gap-4 border-t border-border pt-5 first-of-type:border-t-0 first-of-type:pt-0">
+      <div>
+        <h2 id={id} className="text-sm font-bold text-text-primary">
+          {title}
+        </h2>
+        <p className="mt-0.5 text-xs text-text-secondary">{description}</p>
+      </div>
+      {children}
+    </section>
+  )
+}
+
+const RELATIONSHIP_SUGGESTIONS =['Mother', 'Father', 'Guardian', 'Sister or brother', 'Relative']
 
 /** Saving needs no contact (ADR-059; the record shows as Incomplete until one is added), but a started one must be complete. */
 function contactStarted(contact: StudentFormValues['emergencyContacts'][number]): boolean {
@@ -350,7 +365,7 @@ function StudentFormEditor({
   }
 
   return (
-    <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+    <div className="mx-auto flex max-w-[52rem] flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {discardDialog}
       <BackButton onBack={cancel} />
       <Card className="p-5">
@@ -387,10 +402,8 @@ function StudentFormEditor({
               {successMessage}
             </p>
 
-            <section aria-labelledby="identity-title" className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <h2 id="identity-title" className="sr-only">
-                Identity
-              </h2>
+            <FormSection id="identity-title" title="Identity" description="Who the student is, as written in the school records.">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {mode === 'edit' ? (
                 <Input
                   label="LRN"
@@ -407,11 +420,31 @@ function StudentFormEditor({
                   autoComplete="off"
                   value={values.lrn}
                   error={errors.lrn ?? (liveDuplicates.lrnTaken ? DUPLICATE_LRN_MESSAGE : undefined)}
-                  hint="The 12-digit Learner Reference Number. Spaces and dashes are removed."
+                  hint="12 digits. Spaces and dashes are removed."
                   onChange={(event) => setField('lrn', normalizeLrn(event.target.value))}
                 />
               )}
-              <div className="flex flex-col gap-2 md:col-span-2">
+              {/* R12: one answer of two, as radio buttons (the Staff form's SexRadios, ADR-063). */}
+              <SexRadios value={values.sex} error={errors.sex} onChange={(value) => setField('sex', value)} />
+              <div className="flex flex-col gap-2">
+                <DatePicker
+                  label="Birthdate"
+                  value={values.birthDate}
+                  max={data.today}
+                  error={errors.birthDate}
+                  onChange={(value) => setField('birthDate', value)}
+                />
+                {ageNote && !errors.birthDate && (
+                  <p
+                    role="status"
+                    className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-xs text-text-primary"
+                  >
+                    <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning-text" />
+                    {ageNote}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col gap-2 md:col-span-3">
                 <NameFields
                   values={values}
                   errors={errors}
@@ -440,7 +473,7 @@ function StudentFormEditor({
               </div>
               {nameChanged && (
                 <Input
-                  className="md:col-span-2"
+                  className="md:col-span-3"
                   label="Reason for the name correction"
                   required
                   value={nameReason}
@@ -452,6 +485,11 @@ function StudentFormEditor({
                   }}
                 />
               )}
+              </div>
+            </FormSection>
+
+            <FormSection id="school-title" title="School details" description="Where the student is enrolled this school year.">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <Select
                 label="Grade level"
                 required
@@ -461,35 +499,12 @@ function StudentFormEditor({
                 error={errors.gradeLevel}
                 onChange={(value) => setField('gradeLevel', value)}
               />
-              <Input label="Section (optional)" value={values.section} onChange={(event) => setField('section', event.target.value)} />
-              {/* R12: one answer of two, as radio buttons (the Staff form's SexRadios, ADR-063). */}
-              <SexRadios value={values.sex} error={errors.sex} onChange={(value) => setField('sex', value)} />
-              <div className="flex flex-col gap-2">
-                <DatePicker
-                  label="Birthdate (optional)"
-                  value={values.birthDate}
-                  max={data.today}
-                  error={errors.birthDate}
-                  onChange={(value) => setField('birthDate', value)}
-                />
-                {ageNote && !errors.birthDate && (
-                  <p
-                    role="status"
-                    className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-xs text-text-primary"
-                  >
-                    <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning-text" />
-                    {ageNote}
-                  </p>
-                )}
+              <Input label="Section" value={values.section} onChange={(event) => setField('section', event.target.value)} />
               </div>
-            </section>
+            </FormSection>
 
-            <section aria-labelledby="emergency-contact-title">
-              <h2 id="emergency-contact-title" className="text-sm font-bold text-text-primary">
-                Emergency contacts
-              </h2>
-              <p className="mt-1 text-sm text-text-secondary">The first contact is primary. Add every person the clinic may need to reach.</p>
-              <div className="mt-3 flex flex-col gap-3">
+            <FormSection id="emergency-contact-title" title="Emergency contacts" description="Who the clinic calls first. The first contact is primary.">
+              <div className="flex flex-col gap-3">
                 {values.emergencyContacts.map((contact, index) => {
                   const label = index === 0 ? 'Primary emergency contact' : `Emergency contact ${index + 1}`
                   return (
@@ -538,18 +553,15 @@ function StudentFormEditor({
                   )
                 })}
               </div>
-              <Button variant="secondary" className="mt-3" onClick={addEmergencyContact}>Add another contact</Button>
-            </section>
+              <Button variant="secondary" size="sm" icon="plus" className="self-start" onClick={addEmergencyContact}>Add another contact</Button>
+            </FormSection>
 
-            <section aria-labelledby="medical-title">
-              <h2 id="medical-title" className="mb-3 text-sm font-bold text-text-primary">
-                Medical history
-              </h2>
+            <FormSection id="medical-title" title="Medical history" description="Allergies and conditions the clinic should know before treating.">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <HealthListField label="Allergies" list={STARTER_ALLERGIES} value={values.allergies} error={errors.allergies} onValueChange={(value) => setField('allergies', value)} />
                 <HealthListField label="Medical conditions" list={STARTER_CONDITIONS} value={values.medicalConditions} error={errors.medicalConditions} onValueChange={(value) => setField('medicalConditions', value)} />
               </div>
-            </section>
+            </FormSection>
 
             <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
               <Button variant="neutral" onClick={cancel}>
@@ -589,7 +601,7 @@ export function StudentFormPage({
 
   if (viewer.role !== 'staff') {
     return (
-      <div className="mx-auto max-w-page-narrow px-4 pt-10 pb-8 sm:px-8">
+      <div className="mx-auto max-w-[52rem] px-4 pt-10 pb-8 sm:px-8">
         <ErrorState asPageTitle title="Staff access required." />
       </div>
     )
@@ -601,7 +613,7 @@ export function StudentFormPage({
 
   if (status === 'error') {
     return (
-      <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      <div className="mx-auto flex max-w-[52rem] flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
         {back}
         <ErrorState asPageTitle title="Unable to load student form." onRetry={reload} />
       </div>

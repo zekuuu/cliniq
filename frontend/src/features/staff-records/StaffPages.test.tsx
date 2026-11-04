@@ -80,7 +80,7 @@ describe('Staff Form', () => {
     expect(screen.getByText('Select the staff type.')).toBeInTheDocument()
     expect(screen.getByLabelText(/^First name/)).toHaveFocus()
     // The same three name fields as a student (Zean, November 4, 2026; ADR-064).
-    expect(screen.getByLabelText('Middle name (optional)')).not.toBeRequired()
+    expect(screen.getByLabelText('Middle name')).not.toBeRequired()
 
     await user.type(screen.getByLabelText(/^First name/), 'Ana')
     await user.type(screen.getByLabelText(/^Last name/), 'Test')

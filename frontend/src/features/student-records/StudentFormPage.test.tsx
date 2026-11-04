@@ -342,14 +342,14 @@ describe('Student Form: First name, Last name and Middle name (S4, ADR-064)', ()
     expect(fields.map((field) => field.getAttribute('placeholder'))).toEqual([
       'e.g. Maria Angela',
       'e.g. Dela Cruz',
-      'e.g. Santos (leave blank if none)',
+      'e.g. Santos',
     ])
     expect(screen.getByLabelText(/^First name/)).toBeRequired()
     expect(screen.getByLabelText(/^Last name/)).toBeRequired()
-    expect(screen.getByLabelText('Middle name (optional)')).not.toBeRequired()
+    expect(screen.getByLabelText('Middle name')).not.toBeRequired()
     for (const field of fields) expect(field).toHaveAttribute('autocomplete', 'off')
     expect(screen.getByLabelText(/^First name/)).toHaveAttribute('maxlength', '50')
-    expect(screen.getByLabelText('Middle name (optional)')).toHaveAttribute('maxlength', '40')
+    expect(screen.getByLabelText('Middle name')).toHaveAttribute('maxlength', '40')
     expect(group).toHaveAccessibleDescription("Write the name as it appears on the school's list.")
     expect(screen.queryByLabelText(/full name/i)).not.toBeInTheDocument()
   })
@@ -388,7 +388,7 @@ describe('Student Form: First name, Last name and Middle name (S4, ADR-064)', ()
     await screen.findByRole('heading', { name: 'Edit Student' })
     expect(screen.getByLabelText(/^First name/)).toHaveValue(existing.firstName)
     expect(screen.getByLabelText(/^Last name/)).toHaveValue(existing.lastName)
-    expect(screen.getByLabelText('Middle name (optional)')).toHaveValue('')
+    expect(screen.getByLabelText('Middle name')).toHaveValue('')
   })
 
   it('names a corrected middle name by field only in the audit log', async () => {
