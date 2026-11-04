@@ -150,21 +150,22 @@ describe('Dashboard links to Reports (C10)', () => {
     expect(screen.getByRole('button', { name: /month/i })).toHaveTextContent(new Date(`${month}-01T00:00:00`).toLocaleDateString('en-PH', { month: 'long' }))
   })
 
-  // S3 (Zean, November 4, 2026): "View full report" moved out of the header to a right-aligned footer row.
-  it('puts the Overview link in a right-aligned footer under the Activity summary cards, after them in tab order', async () => {
+  // Zean, November 5, 2026: the Overview link sits right-aligned on the "Activity summary" heading row
+  // (it had been a footer under the Activity summary cards, S3 of November 4).
+  it('puts the Overview link right-aligned on the Activity summary heading row, before its cards in tab order', async () => {
     render(<MemoryRouter><DashboardPage viewer={STAFF} /></MemoryRouter>)
     const link = await screen.findByRole('link', { name: 'View full report: Monthly Report' })
-    const activity = screen.getByRole('heading', { name: 'Activity summary' }).closest('section')!
-    const footer = link.closest('footer')!
-    // Right after the Summary counts region, whose last part is the Activity summary cards; not one of the count cards.
-    const summary = screen.getByRole('region', { name: 'Summary counts' })
-    expect(summary.lastElementChild).toBe(activity)
-    expect(summary.nextElementSibling).toBe(footer)
-    expect(footer).toHaveClass('justify-end', 'print:hidden')
+    const heading = screen.getByRole('heading', { name: 'Activity summary' })
+    const row = heading.parentElement!
+    expect(row).toContainElement(link)
+    expect(row).toHaveClass('justify-between')
+    expect(link.closest('footer')).toBeNull()
+    expect(link.parentElement).toHaveClass('justify-end', 'print:hidden')
     expect(link).toHaveAttribute('href', '/reports')
     expect(link).toHaveTextContent('View full report')
-    const cardLinks = within(activity).getAllByRole('link')
-    expect(cardLinks.at(-1)!.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    const activity = heading.closest('section')!
+    const cardLinks = within(activity).getAllByRole('link').filter((element) => element !== link)
+    expect(link.compareDocumentPosition(cardLinks[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('puts the Common complaints link in the card footer, not its header, and opens the Complaint summary', async () => {
