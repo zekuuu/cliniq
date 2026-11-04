@@ -17,14 +17,14 @@
 
 ## Open work at a glance
 
-Open: FIX 1 · AUDIT 0 · DOC 27 · DECIDE 2 · LATER 22 | Notes: NOTE 80 · VERIFY 26 | Done: 464 (all in `Issues-Done-Archive.md`)
+Open: FIX 1 · AUDIT 0 · DOC 27 · DECIDE 2 · LATER 23 | Notes: NOTE 80 · VERIFY 26 | Done: 467 (all in `Issues-Done-Archive.md`)
 
 **Open `FIX` items:** Import page empty steps fail colour contrast (Pager field, history scroll, report link and name split).
 
 - **AUDIT** (0): none. The final audit of the frontend clean-up, Part 3, superseded all ten.
 - **DOC** (27): Incident Stage 2 optional (ADR-065); Narrow page width 832px; Pager field, history scroll, report link and name split; Frontend review round 2, Parts 2 and 3; Frontend review round 2, Part 1; Groupmate system review; Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; Panel-style system review; Feedback from Sir Mina and Sir Rey; Decisions sheet answers; Decisions sheet follow-up answers; Canonical documents updated to the ADRs; Known gaps
 - **DECIDE** (2): Open decisions, waiting on someone outside the dev team; Known gaps
-- **LATER** (22): Incident Stage 2 optional (ADR-065); Backup folder picker needs real drives; Known gaps; Reported UI/UX follow-ups; Medicines & supplies given (ADR-018); Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); README sync; Professor consultation and team meeting, October 16; Panel-style system review; Feedback from Sir Mina and Sir Rey; Staff and teachers as clinic patients; System review fixes; Decisions sheet answers; Decisions sheet follow-up answers; Decisions answered after the list was resent; Birthdate instead of the student's own number
+- **LATER** (23): Account menu (ADR-066); Incident Stage 2 optional (ADR-065); Backup folder picker needs real drives; Known gaps; Reported UI/UX follow-ups; Medicines & supplies given (ADR-018); Open FIX and styling DECIDE sweep; Back navigation (ADR-024); Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); README sync; Professor consultation and team meeting, October 16; Panel-style system review; Feedback from Sir Mina and Sir Rey; Staff and teachers as clinic patients; System review fixes; Decisions sheet answers; Decisions sheet follow-up answers; Decisions answered after the list was resent; Birthdate instead of the student's own number
 
 ---
 
@@ -545,3 +545,7 @@ When you find or resolve something, add it here with a date and enough context t
 
 - [ ] **[DOC]** The canonical Frontend Context Brief (screens 16b and 18) and Frontend Design Reference (step 4 of the incident flow) still say Stage 2 and approval need care, a call, a referral or a "nothing further" reason. ADR-065 removed that rule. Session: [2026-11-05-stay-home-stage-two-pager-backup-report](Agent-Sessions/2026-11-05-stay-home-stage-two-pager-backup-report.md)
 - [ ] **[LATER]** Backend docs for ADR-065, on the `backend` branch: the API contract's Stage 2 completion and report approval drop the care check; `incidents.no_further_action_reason` stays only for older rows (Data Dictionary). Log it in `Backend-Issues-and-TODOs.md` there. Session: [2026-11-05-stay-home-stage-two-pager-backup-report](Agent-Sessions/2026-11-05-stay-home-stage-two-pager-backup-report.md)
+
+## Account menu (ADR-066) — Thursday, November 05, 2026 — 04:49 PHT
+
+- [ ] **[LATER]** **Add an email field to the Edit profile dialog when the backend sends password-reset mails** (ADR-048). The backend half is the existing "Backend: email password reset" entry. Session: [2026-11-05-account-menu](Agent-Sessions/2026-11-05-account-menu.md)

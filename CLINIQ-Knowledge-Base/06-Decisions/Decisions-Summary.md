@@ -257,3 +257,7 @@ Students and staff: First and Last name required, Middle name optional; the full
 ### ADR-065: Everything on Incident Stage 2 is optional; the "Nothing further was needed or done" tick is removed
 
 Stage 2 completes with nothing filled, and an empty completed record can be approved after a check note. Reverses panel review IN-3 and R24; older reasons are kept and printed. [ADR-065](ADR-065-Incident-Stage-2-Care-Is-Optional.md)
+
+### ADR-066: Account menu in the header; users change their own name, picture and password
+
+The header's avatar, name and role open one menu (Edit profile, Change password, Keyboard shortcuts, Report an issue, Privacy Policy, Sign out), the same for every role. Edit profile is a dialog: own display name and picture, audited by field name; username and role stay Admin-only. [ADR-066](ADR-066-Account-Menu-And-Own-Profile.md)

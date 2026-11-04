@@ -20,4 +20,4 @@ This requirement covers **in-app keyboard navigation**: the desktop workstation 
 - **Consistent across the app** — the same shortcut always does the same kind of thing, matching the existing Consistency principle in the Design & UX Guidelines.
 
 ## Status
-Built (`frontend/src/components/KeyboardShortcuts.tsx`): `Alt + N` New Visit, `Alt + I` Report Incident, `Alt + K` Student Search, `Alt + D` Dashboard, `Shift + Alt + N` save the visit and start another, `?` for the list.
+Built (`frontend/src/components/KeyboardShortcuts.tsx`): `Alt + N` New Visit, `Alt + I` Report Incident, `Alt + K` Student Search, `Alt + D` Dashboard, `Shift + Alt + N` save the visit and start another, `?` for the list. The list is also opened from "Keyboard shortcuts" in the account menu (ADR-066, Thursday, November 05, 2026 — 04:49 PHT; it replaced the header's Shortcuts button); no shortcut was added or changed.

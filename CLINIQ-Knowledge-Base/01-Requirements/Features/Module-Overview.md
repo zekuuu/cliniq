@@ -40,7 +40,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 - Search/filter user accounts
 
 **Password Management** *(Staff, Admin/Principal — self-service for whoever is logged in)*
-- Change password (self-service): the signed-in user gives the current password first (`/account/password`, from the top bar)
+- Change password (self-service): the signed-in user gives the current password first (`/account/password`, from the account menu in the header, ADR-066)
 - Force password change on first login
 - Prevent reuse of last 5 passwords
 - Enforce minimum 8-character password length

@@ -6,6 +6,8 @@
 | **Admin/Principal** | No Staff patient screens, and staff patients' incidents are left out of the Incident Log (ADR-043). Read-only — reports, Clinic Overview Dashboard, audit log, and the Student List, Student Profile, Incident Log and Incident Report (ADR-038; opening a profile or report is audit-logged once per session, for Staff too, ADR-048). Can manage calendar events (ADR-042). Signed out after 30 idle minutes (ADR-048). No printing or Save as PDF anywhere (ADR-038). Manages every account (ADR-033). Backup with the same abilities as Staff: status, history, Back up now, mark verified (ADR-037); no other edit access |
 | **PE/Sports Instructor** | No account and no access (ADR-029). An instructor asks the clinician, who decides what to share |
 
+**Own account (ADR-066):** every role changes its own display name, profile picture and password from the account menu in the header; the username and role stay with the Admin.
+
 **Deferred role (designed, not built):** Canteen Staff — a scoped sign-in with a narrow data scope (food allergies only). See `08-Logs/Issues-and-TODOs.md`.
 
 ## Display-Privacy Rule

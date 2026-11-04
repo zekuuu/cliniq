@@ -83,7 +83,9 @@ The QR screens (#22–24, #26) were removed with the QR feature (ADR-027), and t
 35. **Audit Log** — Staff and Admin/Principal, view-only (kept 10 years, ADR-051); filterable by date range, user, action type, and target/module (`ADR-016`); masked LRN, not name, for student-related entries, per the display-privacy rule
 
 ### Account
-37. **Change Password** (`/account/password`) — both roles, from the top bar: current password, new password, confirmation
+37. **Change Password** (`/account/password`) — both roles, from the account menu: current password, new password, confirmation
+38. **Account menu** (header, every screen; not a page) — ADR-066, Thursday, November 05, 2026 — 04:49 PHT: the header's avatar, name and role are one button (only the avatar and a chevron on a phone) that opens a menu: the account details (name, role, username, last sign-in), then Edit profile, Change password, Keyboard shortcuts (from `md` only), Report an issue, Privacy Policy, a separator and Sign out (red, still confirmed). Same items for every role. It replaced the header's Shortcuts button, padlock (Change password) and red sign-out icon. ARIA menu button; a full-width sheet under the header on a phone; not printed.
+39. **Edit profile dialog** (a dialog over the current screen; no page and no route) — ADR-066: read-only username, role and last sign-in; the user's own Full name (at most 120 characters) and profile picture (Change picture, Remove picture); Save changes enabled only when something changed; a dirty close asks first (ADR-021); "Profile updated." on save. Audited by field name only.
 
 ### Sidebar Footer / Legal
 36. **Privacy Policy** — accessible to every role (Staff, Admin/Principal), reached via a link in the sidebar footer; static content, no student data rendered on the page itself. Draft content: `09-References/Privacy-Policy.md`.

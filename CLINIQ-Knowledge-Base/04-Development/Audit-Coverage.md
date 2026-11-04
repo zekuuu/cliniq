@@ -12,9 +12,11 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | What the user does | Action | Target recorded | Summary | Also tested in |
 |---|---|---|---|---|
 | Signs in | `login` | user | — | `lib/mock-db/auth.test.ts` |
-| Signs out | `logout` | — | — | `layouts/AppShell.test.tsx` |
+| Signs out (account menu, then the confirmation) | `logout` | — | — | `layouts/AppShell.test.tsx` |
 | Gets locked out (5 wrong passwords in a row at sign-in; locked 30 minutes) | `login` | user | "Account locked for 30 minutes after 5 wrong passwords (sign-in)" | `features/backup/AccessAndBackup.test.tsx` |
 | Changes their password (first sign-in, or Change Password) | `update` | user | "Changed password" | — |
+| Changes their own name in Edit profile (account menu, ADR-066) | `update` | user | "Changed own name" (never the old or new name) | `lib/mock-db/ownProfile.test.ts`, `layouts/AccountMenu.test.tsx` |
+| Changes or removes their own picture in Edit profile (ADR-066) | `update` | user | "Changed own profile picture" (never image data) | `lib/mock-db/ownProfile.test.ts`, `layouts/AccountMenu.test.tsx` |
 | Admin creates an account | `create` | user | — | `features/user-management/accounts.test.ts` |
 | Admin edits an account (name, username, role, picture) | `update` | user | changed field names | `features/user-management/profilePicture.test.ts` |
 | Admin disables / enables an account | `update` | user | "Disabled account" / "Enabled account" | `features/backup/AccessAndBackup.test.tsx` |
