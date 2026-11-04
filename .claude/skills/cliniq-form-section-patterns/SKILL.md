@@ -19,4 +19,4 @@ Use this with `cliniq-input-patterns` and `cliniq-interactive-states`. Source: Z
 
 ## Where it is used
 
-Add/Edit Student (Identity, School details, Emergency contacts, Medical history), Add/Edit Staff (Identity, Work details, Emergency contacts, Allergies and conditions), New Visit (Patient and time, Presenting problem, Care given, Disposition, Logbook details), Add/Edit Inventory Item (Item details, Stock), PE/Sports Injury Referral (Referral source, Findings, Outcome).
+Add/Edit Student (Identity, School details, Emergency contacts, Medical history), Add/Edit Staff (Identity, Work details, Emergency contacts, Allergies and conditions), New Visit (Patient and time, Presenting problem, Care given, Disposition, Logbook details), Add/Edit Inventory Item (Item details, Stock), PE/Sports Injury Referral (Referral source, Findings, Outcome), Incident Stage 2 (Stage 1 record, Readings and care, Hospital referral, Parent or Emergency contact notification log, Follow-up prompt; added Thursday, November 05, 2026 — 03:46 PHT after Zean asked why it had been left out).

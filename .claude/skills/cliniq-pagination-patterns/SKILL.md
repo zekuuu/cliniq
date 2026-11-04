@@ -15,8 +15,8 @@ than rendering every row at once.
   shared `Pagination` does it; don't rebuild it on a page. Enter or leaving the field jumps; Escape, an
   empty field or a non-number restores the current page; a number past either end goes to that end.
   A polite live region says "Page 7 of 12". The field is named "Page number", is sized for the page
-  count's digits (no jump while typing), and is 44px tall on a phone. A single-page list shows plain
-  "Page 1 of 1", no field.
+  count's digits (no jump while typing), and is 44px tall on a phone. A single-page list shows the field
+  too, holding 1, so every pager looks the same (Zean, Thursday, November 05, 2026 — 03:46 PHT; before, it showed plain "Page 1 of 1").
 - Provide labeled Previous and Next buttons, disabling them at the first and last page.
 - Reset to the first page when a filter changes so a user never lands on an empty later page.
 - A print/export action renders the complete current filtered result, not only the visible page.

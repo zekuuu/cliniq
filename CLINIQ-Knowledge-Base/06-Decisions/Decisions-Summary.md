@@ -253,3 +253,7 @@ Sex is required on the staff form. By-sex counts cover everyone, with Students a
 ### ADR-064: Names are stored as first name, last name and an optional middle name
 
 Students and staff: First and Last name required, Middle name optional; the full name is built on read as "First Middle Last", never stored. Lists sort by last name, then first name; search matches any part. A name correction names the changed part. Amends ADR-058's wording; settles ERD D-15 for the frontend. Zean, Wednesday, November 4, 2026 — 22:25 PHT. [ADR-064](ADR-064-Names-Stored-As-First-Last-And-Middle-Name.md)
+
+### ADR-065: Everything on Incident Stage 2 is optional; the "Nothing further was needed or done" tick is removed
+
+Stage 2 completes with nothing filled, and an empty completed record can be approved after a check note. Reverses panel review IN-3 and R24; older reasons are kept and printed. [ADR-065](ADR-065-Incident-Stage-2-Care-Is-Optional.md)
