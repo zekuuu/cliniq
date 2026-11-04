@@ -57,7 +57,7 @@ export function ComboboxWithOther({
         icon={icon}
         aria-label={ariaLabel}
         required={required}
-        hint={hint}
+        hint={other ? undefined : hint}
         maxLength={maxLength}
         value={other ? otherOption : text}
         options={shown}
@@ -93,6 +93,8 @@ export function ComboboxWithOther({
           value={value}
           error={error}
           onChange={(event) => onValueChange(event.target.value)}
+          // Slides in under the field, in the same column (Zean, November 5, 2026).
+          className="animate-expand-down motion-reduce:animate-none"
         />
       )}
     </div>
