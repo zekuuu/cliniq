@@ -36,11 +36,8 @@ export function Pagination({ page, pageCount, total, pageSize, onPageChange, ite
       </div>
       <div className="flex items-center gap-2">
         <Button variant="secondary" size="sm" onClick={() => onPageChange(page - 1)} disabled={page === 1}>Previous</Button>
-        {pageCount > 1 ? (
-          <PageField page={page} pageCount={pageCount} onPageChange={onPageChange} />
-        ) : (
-          <span className="text-sm font-semibold tabular-nums text-text-primary" aria-current="page">Page {page} of {pageCount}</span>
-        )}
+        {/* The page field shows on every list, one page or many, so the pager looks the same everywhere (Zean, November 5, 2026). */}
+        <PageField page={page} pageCount={pageCount} onPageChange={onPageChange} />
         <Button variant="secondary" size="sm" onClick={() => onPageChange(page + 1)} disabled={page === pageCount}>Next</Button>
       </div>
     </nav>

@@ -128,7 +128,7 @@ describe('Audit Log', () => {
 
     await selectOption(user, screen.getByLabelText('User'), 'user-admin-01')
     await screen.findByText(/7 entries shown/)
-    expect(screen.queryByRole('textbox', { name: 'Page number' })).not.toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Page number' })).toHaveValue('1')
     expect(screen.getByText('Page 1 of 1')).toBeInTheDocument()
   })
 

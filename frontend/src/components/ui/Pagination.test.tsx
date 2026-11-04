@@ -96,9 +96,9 @@ describe('Pagination page number field (S1)', () => {
     expect(field()).toHaveClass('h-11', 'sm:h-8', 'tabular-nums', 'text-center')
   })
 
-  it('shows no field when there is a single page', () => {
+  it('shows the field on a single page too, so every pager looks the same (Zean, November 5, 2026)', () => {
     render(<Pager start={1} total={7} />)
-    expect(screen.queryByRole('textbox', { name: 'Page number' })).not.toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Page number' })).toHaveValue('1')
     expect(screen.getByText('Page 1 of 1')).toBeInTheDocument()
   })
 
