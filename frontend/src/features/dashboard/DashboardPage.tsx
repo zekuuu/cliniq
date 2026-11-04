@@ -208,12 +208,14 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                         <AttentionChips summary={d} canNavigate={canNavigate} />
                       </section>
                       <section aria-labelledby="dashboard-activity" className="flex flex-col gap-3">
-                        <h2 id="dashboard-activity" className="text-base font-semibold text-text-primary">Activity summary</h2>
+                        {/* The Monthly Report covers these counts, so its link sits on this heading row, right-aligned (Zean, November 5, 2026). */}
+                        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                          <h2 id="dashboard-activity" className="text-base font-semibold text-text-primary">Activity summary</h2>
+                          <FullReportLink as="div" report="Monthly Report" view="monthly" month={range.to.slice(0, 7)} />
+                        </div>
                         <ActivityCards summary={d} range={range} canNavigate={canNavigate} />
                       </section>
                     </section>
-                    {/* Right under the Activity summary cards, outside the counts region (Zean, November 4, 2026). */}
-                    <FullReportLink className="-mt-3" report="Monthly Report" view="monthly" month={range.to.slice(0, 7)} />
                     {viewer.role === 'staff' && <ClusterAlerts alerts={clusters.data ?? []} />}
                     {d.showFrequentVisitors && (
                       <section aria-label="Frequent visitor warnings">

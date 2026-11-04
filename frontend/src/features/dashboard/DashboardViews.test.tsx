@@ -75,7 +75,8 @@ describe('Clinic Overview Dashboard: views', () => {
     await screen.findByRole('region', { name: 'Summary counts' })
     const summary = screen.getByRole('region', { name: 'Summary counts' })
     // ADR-038: Students and Incidents are the only cards the Admin can open.
-    expect(within(summary).getAllByRole('link').map((link) => link.getAttribute('href')?.split('?')[0])).toEqual(['/incidents', '/students'])
+    // The count cards only; the Monthly Report link sits on the Activity summary heading row.
+    expect(within(summary).getAllByRole('link').filter((link) => !link.textContent?.includes('View full report')).map((link) => link.getAttribute('href')?.split('?')[0])).toEqual(['/incidents', '/students'])
     expect(screen.queryByRole('link', { name: 'New Visit' })).not.toBeInTheDocument()
   })
 })

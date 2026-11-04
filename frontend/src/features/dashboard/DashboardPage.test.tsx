@@ -102,7 +102,8 @@ describe('Clinic Overview Dashboard', () => {
   it('shows Admin the same counts, linking only Students and Incidents (ADR-038)', async () => {
     renderWithRouter(<DashboardPage viewer={{ id: 'admin', name: 'Principal', role: 'admin' }} />)
     const summary = await screen.findByRole('region', { name: 'Summary counts' })
-    expect(within(summary).getAllByRole('link')).toHaveLength(2)
+    // The count cards only; the Monthly Report link sits on the Activity summary heading row.
+    expect(within(summary).getAllByRole('link').filter((link) => !link.textContent?.includes('View full report'))).toHaveLength(2)
     expect(within(summary).queryByRole('link', { name: /visits|follow-ups|letters/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /low stock/i })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /print/i })).toHaveAttribute('aria-disabled', 'true')
