@@ -1,3 +1,5 @@
+> **Note, Wednesday, November 04, 2026 — 23:26 PHT:** names are now stored as parts ([ADR-064](ADR-064-Names-Stored-As-First-Last-And-Middle-Name.md)). The summary names the corrected part, for example "Updated last name. Name corrected; reason: …", instead of "Updated name". It still never carries a name.
+
 # ADR-058: The name-correction reason goes in the audit log
 
 **Date:** Sunday, November 1, 2026 — 11:48 PHT

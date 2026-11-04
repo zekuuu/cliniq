@@ -249,3 +249,7 @@ Each meaning has an accent, a fill and a darker text shade; icons use the text s
 ### ADR-063: Staff patients record sex, and the by-sex counts include them
 
 Sex is required on the staff form. By-sex counts cover everyone, with Students and Staff as the two parts; the Admin's incident counts still leave staff out. Amends ADR-043 and changes the ERD after its approval. Zean, Monday, November 2, 2026 — 04:53 PHT. [ADR-063](ADR-063-Staff-Patients-Record-Sex.md)
+
+### ADR-064: Names are stored as first name, last name and an optional middle name
+
+Students and staff: First and Last name required, Middle name optional; the full name is built on read as "First Middle Last", never stored. Lists sort by last name, then first name; search matches any part. A name correction names the changed part. Amends ADR-058's wording; settles ERD D-15 for the frontend. Zean, Wednesday, November 4, 2026 — 22:25 PHT. [ADR-064](ADR-064-Names-Stored-As-First-Last-And-Middle-Name.md)
