@@ -70,7 +70,9 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
     // DOM order is panel then photo so Tab reaches the form before Demo Accounts; the photo is
     // drawn first on phones (a band on top) and second from md (filling the right side).
     <main data-login-page className="relative isolate flex min-h-dvh flex-col-reverse md:h-dvh md:flex-row">
-      <div className="flex flex-1 flex-col bg-background px-4 py-8 md:w-[26rem] md:flex-none md:overflow-y-auto md:px-12 lg:w-1/3 lg:min-w-[28rem] lg:px-16">
+      {/* On phones the panel rises over the photo band with a rounded top (Zean, November 5, 2026). A faint
+          brand-green glow behind the lockup keeps the white panel from reading as blank. */}
+      <div className="relative z-10 -mt-6 flex flex-1 flex-col rounded-t-3xl bg-background bg-[radial-gradient(48rem_32rem_at_0%_0%,color-mix(in_srgb,var(--color-brand-green)_7%,transparent),transparent_70%)] px-4 py-8 md:mt-0 md:w-[26rem] md:flex-none md:overflow-y-auto md:rounded-none md:px-12 lg:w-1/3 lg:min-w-[28rem] lg:px-16">
         <div className="mx-auto flex w-full max-w-[24rem] flex-1 flex-col">
           <div className="flex items-center gap-3">
             <img src="/MCA_Logo.png" alt="Mendez Christian Academy logo" className="size-14 shrink-0 object-contain" />
@@ -81,6 +83,7 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
           </div>
           <div className="flex flex-1 flex-col justify-center py-10">
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">Sign In</h1>
+            <p className="mt-1 text-sm text-text-secondary">Use your CLINIQ account to open the clinic records.</p>
             {typeof idleMinutes === 'number' && (
               <p role="status" className="mt-4 rounded-md border border-info bg-info/10 px-3 py-2 text-sm text-text-primary">
                 You were signed out after {idleMinutes} minutes of inactivity.
@@ -123,8 +126,36 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
       </Modal>
       <div className="relative h-36 shrink-0 md:h-auto md:flex-1">
         <LoginBackdrop className="absolute inset-0" />
+        <LoginSeam />
         {import.meta.env.DEV && <DemoAccounts />}
       </div>
     </main>
+  )
+}
+
+/**
+ * The seam between the white panel and the photo (Zean, November 5, 2026: "make it curvy or
+ * diagonal"): from md, the panel's white flows into the photo as one gentle S-curve, with a thin
+ * brand-green line tracing it a little further in. Stretched to the full height; the stroke keeps its
+ * width at any height. Decorative only.
+ */
+function LoginSeam() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 96 800"
+      preserveAspectRatio="none"
+      className="pointer-events-none absolute inset-y-0 left-0 hidden h-full w-24 md:block print:hidden"
+    >
+      <path d="M0 0H52C18 170 84 300 46 440C14 560 76 690 40 800H0Z" fill="var(--color-background)" />
+      <path
+        d="M60 0C26 170 92 300 54 440C22 560 84 690 48 800"
+        fill="none"
+        stroke="var(--color-brand-green-light)"
+        strokeWidth="2"
+        strokeOpacity="0.9"
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
   )
 }
