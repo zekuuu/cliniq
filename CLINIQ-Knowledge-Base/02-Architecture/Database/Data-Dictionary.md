@@ -2,6 +2,8 @@
 
 **Status: Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057); changes after this go through a new decision.** Generated Friday, October 09, 2026 — 02:11 PHT from the reference schema (`Reference-Schema.sql`). Purposes, mappings and notes are hand-written. If you change the schema, change this file with it.
 
+**Updated Thursday, November 05, 2026 — 01:33 PHT:** `students` and `personnel` store `first_name`, `last_name` and an optional `middle_name` instead of `full_name` ([ADR-064](../../06-Decisions/ADR-064-Names-Stored-As-First-Last-And-Middle-Name.md), which follows this approved ERD and settles D-15); compared with `Reference-Schema.sql` and its constraint tests.
+
 **Updated Sunday, November 1, 2026 — 01:55 PHT with the answers of ADR-057 and the gaps of `ERD-Review.md`.** Written by hand and compared with `Reference-Schema.sql`, which loads on MariaDB 10.11 and passes `Checks/constraint-tests.sql`.
 
 How to read it: **Tier** is `Core` (a built screen or the mock already needs it) or `Spec` (the requirements ask for it but the frontend contract does not carry it yet). **Module** is the backend module that owns the table (ADR-009, extended in `ERD.md`). **Frontend** says how the table maps to today's `types/entities.ts`, which is what the API layer must translate. Conventions (keys, times, FK policy) are in `ERD.md` section 2.
@@ -276,13 +278,15 @@ One row per registrar masterlist import, for traceability and for "which import 
 
 The student record. The LRN identifies the student to people (masked on lists, ADR-028); `id` is internal, never shown, and the only key used in URLs and foreign keys.
 
-**Frontend:** `Student` (id, lrn, fullName, gradeLevel, section, sex, birthDate, archived). `allergies`, `medicalConditions`, `emergencyContact` move to child tables; `recordComplete` is derived.
+**Frontend:** `Student` (id, lrn, firstName, lastName, middleName, gradeLevel, section, sex, birthDate, archived). `allergies`, `medicalConditions`, `emergencyContact` move to child tables; `recordComplete` is derived.
 
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
 | `id` **PK** | `bigint unsigned` | no |  |  |
 | `lrn` | `char(12)` | no |  | Learner Reference Number, entered by Staff: exactly 12 digits, stored as text so leading zeros survive, unique, set once and not changed after the record is created (ADR-028 note). Never in a URL or an audit entry (ADR-028). |
-| `full_name` | `varchar(150)` | no |  | Required and non-blank. Single field for now; splitting into last/first/middle waits for the registrar file format (D-15). Accent- and case-insensitive matching comes from the collation. |
+| `first_name` | `varchar(50)` | no |  | Required and non-blank; trimmed, spaces collapsed (ADR-064, a change after the ADR-057 approval that settles D-15). |
+| `last_name` | `varchar(50)` | no |  | Required and non-blank; trimmed, spaces collapsed (ADR-064). |
+| `middle_name` | `varchar(40)` | yes | NULL | Optional: NULL when there is none, never an empty or blank string (ADR-064). |
 | `grade_level_id` | `bigint unsigned` | yes | NULL | Nullable on purpose: an imported record may lack it and is then flagged "incomplete". Never nullable for a completed record (rule in the app). |
 | `section` | `varchar(60)` | yes | NULL | Optional until the yearly import fills it (ADR-047). Shown on the Student Profile and its printout only. |
 | `sex` | `varchar(6)` | yes | NULL | `female` or `male`, as recorded by the school. Required for a completed record (ADR-031); nullable during an incomplete import. |
@@ -295,13 +299,17 @@ The student record. The LRN identifies the student to people (masked on lists, A
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
 
-**Indexes:** `idx_students_archived_at` (`archived_at`); `idx_students_grade_archived` (`grade_level_id`, `archived_at`); `idx_students_name` (`full_name`); UNIQUE `uq_students_lrn` (`lrn`)
+**Indexes:** `idx_students_archived_at` (`archived_at`); `idx_students_grade_archived` (`grade_level_id`, `archived_at`); `idx_students_name` (`last_name`, `first_name`, `middle_name`); UNIQUE `uq_students_lrn` (`lrn`)
 
 **Foreign keys:** `archived_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `import_batch_id` -> `student_import_batches`(`id`) ON DELETE RESTRICT; `created_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `grade_level_id` -> `grade_levels`(`id`) ON DELETE RESTRICT
 
+**Name (ADR-064):** the full name is never stored. The API builds `fullName` on read as the non-empty parts in the order First, Middle, Last (`CONCAT_WS(' ', first_name, middle_name, last_name)`: "Maria Angela Santos Dela Cruz"; without a middle name "Ana Reyes"). Lists sort by `last_name`, `first_name`, `middle_name`, which `idx_students_name` serves. Name search requires every word of the query somewhere in the joined name; duplicate detection compares the joined names after trimming and collapsing spaces. Accent- and case-insensitive matching comes from the collation.
+
 **Checks:**
 
-- `chk_students_name`: `char_length(trim(full_name)) >= 1`
+- `chk_students_first_name`: `char_length(trim(first_name)) >= 1`
+- `chk_students_last_name`: `char_length(trim(last_name)) >= 1`
+- `chk_students_middle_name`: `middle_name is null or char_length(trim(middle_name)) >= 1`
 - `chk_students_lrn`: `lrn regexp '^[0-9]{12}$'`
 - `chk_students_sex`: `sex is null or sex in ('female','male')`
 
@@ -1089,13 +1097,15 @@ Append-only record of who did what and when (RA 10173 accountability). **Kept 10
 
 A teacher, non-teaching staff member or utility worker seen at the clinic (ADR-043, ADR-053).
 
-**Frontend:** `Personnel` (`staffNumber` -> `staff_number`, `contactInfo` -> `contact_number`).
+**Frontend:** `Personnel` (`firstName` -> `first_name`, `lastName` -> `last_name`, `middleName` -> `middle_name`, `staffNumber` -> `staff_number`, `contactInfo` -> `contact_number`).
 
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
 | `id` **PK** | `bigint unsigned` | no |  |  |
 | `staff_number` | `varchar(20)` | no |  |  |
-| `full_name` | `varchar(150)` | no |  |  |
+| `first_name` | `varchar(50)` | no |  | Required and non-blank (ADR-064, as for `students`). |
+| `last_name` | `varchar(50)` | no |  | Required and non-blank (ADR-064). |
+| `middle_name` | `varchar(40)` | yes | NULL | Optional: NULL when there is none, never blank (ADR-064). |
 | `sex` | `varchar(6)` | no |  | `female` or `male` (ADR-063, a change after the ADR-057 approval). |
 | `type` | `varchar(30)` | no |  |  |
 | `department` | `varchar(60)` | yes | NULL |  |
@@ -1106,11 +1116,15 @@ A teacher, non-teaching staff member or utility worker seen at the clinic (ADR-0
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
 
-**Indexes:** UNIQUE KEY uq_personnel_staff_number (staff_number); KEY idx_personnel_name (full_name); KEY idx_personnel_archived_at (archived_at)
+**Indexes:** UNIQUE KEY uq_personnel_staff_number (staff_number); KEY idx_personnel_name (last_name, first_name, middle_name); KEY idx_personnel_archived_at (archived_at)
 
 **Checks:**
 
-- `chk_personnel_name`: `CHAR_LENGTH(TRIM(full_name)) >= 1`
+- `chk_personnel_first_name`: `CHAR_LENGTH(TRIM(first_name)) >= 1`
+- `chk_personnel_last_name`: `CHAR_LENGTH(TRIM(last_name)) >= 1`
+- `chk_personnel_middle_name`: `middle_name IS NULL OR CHAR_LENGTH(TRIM(middle_name)) >= 1`
+
+The full name is built on read, sorted and searched as for `students` (ADR-064).
 - `chk_personnel_sex`: `sex in ('female','male')`
 
 ## personnel_health_entries

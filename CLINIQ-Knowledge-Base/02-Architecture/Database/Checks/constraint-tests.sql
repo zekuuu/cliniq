@@ -90,10 +90,10 @@ DELIMITER ;
 
 INSERT INTO users (id, name, username, email, password_hash, role) VALUES
   (1, 'Nurse', 'nurse', 'nurse@school.test', 'h', 'staff'), (2, 'Principal', 'principal', NULL, 'h', 'admin');
-INSERT INTO students (id, lrn, full_name, sex) VALUES
-  (1, '100000000001', 'Nuñez, Ana', 'female'), (2, '100000000002', 'Reyes, Ben', 'male'), (3, '100000000003', 'Cruz, Cara', 'female');
-INSERT INTO personnel (id, staff_number, full_name, sex, type) VALUES
-  (1, 'STF-0001', 'Santos, Dan', 'male', 'Teacher'), (2, 'STF-0002', 'Lim, Eve', 'female', 'Teacher');
+INSERT INTO students (id, lrn, last_name, first_name, sex) VALUES
+  (1, '100000000001', 'Nuñez', 'Ana', 'female'), (2, '100000000002', 'Reyes', 'Ben', 'male'), (3, '100000000003', 'Cruz', 'Cara', 'female');
+INSERT INTO personnel (id, staff_number, last_name, first_name, sex, type) VALUES
+  (1, 'STF-0001', 'Santos', 'Dan', 'male', 'Teacher'), (2, 'STF-0002', 'Lim', 'Eve', 'female', 'Teacher');
 INSERT INTO complaint_types (id, label) VALUES (1, 'Headache');
 INSERT INTO triage_steps (id, complaint_type_id, step_text) VALUES (1, 1, 'Check temperature');
 INSERT INTO inventory_items (id, name, category, unit) VALUES (1, 'Paracetamol', 'medicine', 'tablet'), (2, 'Gauze', 'supply', 'pack');
@@ -130,7 +130,8 @@ INSERT INTO backup_location_results (backup_log_id, backup_location_id, status) 
 INSERT INTO holidays (holiday_date, name, kind, source) VALUES ('2026-12-25', 'Christmas', 'regular', 'test');
 
 SET @u = 'INSERT INTO users (name, username, password_hash, role, is_head_nurse) VALUES ';
-SET @st = 'INSERT INTO students (lrn, full_name, sex) VALUES ';
+SET @st = 'INSERT INTO students (lrn, last_name, first_name, middle_name, sex) VALUES ';
+SET @pe = 'INSERT INTO personnel (staff_number, last_name, first_name, middle_name, sex, type) VALUES ';
 SET @v = 'INSERT INTO visits (student_id, personnel_id, visited_at, complaint, disposition, referred_to, logged_by_user_id) VALUES ';
 SET @i = 'INSERT INTO incidents (student_id, personnel_id, occurred_at, complaint, stage, completed_at, completed_by_user_id, created_by_user_id) VALUES ';
 SET @l = 'INSERT INTO excuse_letters (visit_id, status, excused_from, excused_until, prepared_by_user_id, reference_no, approved_by_user_id, approved_at, voided_at, superseded_at) VALUES ';
@@ -167,16 +168,24 @@ CALL t_rejects('uq_complaint_types_label', "INSERT INTO complaint_types (label) 
 -- Students and staff patients
 -- ---------------------------------------------------------------------------------
 
-CALL t_rejects('chk_students_lrn', CONCAT(@st, "('12345', 'A', 'female')"));
-CALL t_rejects('chk_students_lrn', CONCAT(@st, "('12345678901a', 'A', 'female')"));
-CALL t_rejects('chk_students_name', CONCAT(@st, "('100000000009', ' ', 'female')"));
-CALL t_rejects('chk_students_sex', CONCAT(@st, "('100000000009', 'A', 'other')"));
-CALL t_rejects('chk_personnel_sex', "INSERT INTO personnel (staff_number, full_name, sex, type) VALUES ('STF-0098', 'A', 'other', 'Teacher')");
-CALL t_accepts('staff sex is female or male', "INSERT INTO personnel (staff_number, full_name, sex, type) VALUES ('STF-0099', 'A', 'female', 'Teacher')");
-CALL t_rejects('uq_students_lrn', CONCAT(@st, "('100000000001', 'A', 'female')"));
+CALL t_rejects('chk_students_lrn', CONCAT(@st, "('12345', 'A', 'A', NULL, 'female')"));
+CALL t_rejects('chk_students_lrn', CONCAT(@st, "('12345678901a', 'A', 'A', NULL, 'female')"));
+CALL t_rejects('chk_students_first_name', CONCAT(@st, "('100000000009', 'A', ' ', NULL, 'female')"));
+CALL t_rejects('chk_students_last_name', CONCAT(@st, "('100000000009', ' ', 'A', NULL, 'female')"));
+CALL t_rejects('chk_students_middle_name', CONCAT(@st, "('100000000009', 'A', 'A', '  ', 'female')"));
+CALL t_accepts('a student with no middle name', CONCAT(@st, "('100000000009', 'A', 'A', NULL, 'female')"));
+CALL t_rejects("Data too long for column 'first_name'", CONCAT(@st, "('100000000009', 'A', REPEAT('a', 51), NULL, 'female')"));
+CALL t_rejects("Data too long for column 'middle_name'", CONCAT(@st, "('100000000009', 'A', 'A', REPEAT('a', 41), 'female')"));
+CALL t_rejects("Data too long for column 'last_name'", CONCAT(@st, "('100000000009', REPEAT('a', 51), 'A', NULL, 'female')"));
+CALL t_accepts('name parts at their limits', CONCAT(@st, "('100000000009', REPEAT('a', 50), REPEAT('a', 50), REPEAT('a', 40), 'female')"));
+CALL t_rejects('chk_students_sex', CONCAT(@st, "('100000000009', 'A', 'A', NULL, 'other')"));
+CALL t_rejects('chk_personnel_sex', CONCAT(@pe, "('STF-0098', 'A', 'A', NULL, 'other', 'Teacher')"));
+CALL t_accepts('staff sex is female or male', CONCAT(@pe, "('STF-0099', 'A', 'A', NULL, 'female', 'Teacher')"));
+CALL t_rejects('uq_students_lrn', CONCAT(@st, "('100000000001', 'A', 'A', NULL, 'female')"));
 CALL t_rejects('fk_students_grade', "UPDATE students SET grade_level_id = 999 WHERE id = 1");
-CALL t_accepts('an LRN keeps its leading zeros', CONCAT(@st, "('000000000009', 'A', NULL)"));
-CALL t_count('accents and capitals match', '', "students WHERE full_name = 'NUNEZ, ANA'", 1);
+CALL t_accepts('an LRN keeps its leading zeros', CONCAT(@st, "('000000000009', 'A', 'A', NULL, NULL)"));
+CALL t_count('accents and capitals match', '', "students WHERE last_name = 'NUNEZ' AND first_name = 'ANA'", 1);
+CALL t_count('the joined name skips a missing middle name and ignores accents', '', "students WHERE CONCAT_WS(' ', first_name, middle_name, last_name) = 'ANA NUNEZ'", 1);
 CALL t_rejects('chk_health_kind', "INSERT INTO student_health_entries (student_id, kind, label) VALUES (1, 'other', 'x')");
 CALL t_rejects('uq_health_entry', "INSERT INTO student_health_entries (student_id, kind, label) VALUES (1, 'allergy', 'peanuts')");
 CALL t_rejects('uq_contacts_one_primary', "INSERT INTO emergency_contacts (student_id, name, phone) VALUES (1, 'B', '1')");
@@ -188,8 +197,12 @@ CALL t_rejects('chk_reviews_resolved', "INSERT INTO student_record_reviews (stud
 CALL t_rejects('uq_reviews_one_open', "INSERT INTO student_record_reviews (student_id, source) VALUES (1, 'flagged_in_clinic'), (1, 'registrar_import')");
 CALL t_rejects('chk_import_batches_status', "INSERT INTO student_import_batches (label, status, imported_by_user_id) VALUES ('a', 'x', 1)");
 CALL t_rejects('uq_import_batches_file', CONCAT("INSERT INTO student_import_batches (label, source_file_sha256, imported_by_user_id) VALUES ('a', REPEAT('a', 64), 1), ('b', REPEAT('a', 64), 1)"));
-CALL t_rejects('chk_personnel_name', "INSERT INTO personnel (staff_number, full_name, type) VALUES ('STF-0009', ' ', 'Teacher')");
-CALL t_rejects('uq_personnel_staff_number', "INSERT INTO personnel (staff_number, full_name, type) VALUES ('STF-0001', 'A', 'Teacher')");
+CALL t_rejects('chk_personnel_first_name', CONCAT(@pe, "('STF-0009', 'A', ' ', NULL, 'female', 'Teacher')"));
+CALL t_rejects('chk_personnel_last_name', CONCAT(@pe, "('STF-0009', ' ', 'A', NULL, 'female', 'Teacher')"));
+CALL t_rejects('chk_personnel_middle_name', CONCAT(@pe, "('STF-0009', 'A', 'A', ' ', 'female', 'Teacher')"));
+CALL t_accepts('a staff member with no middle name', CONCAT(@pe, "('STF-0009', 'A', 'A', NULL, 'female', 'Teacher')"));
+CALL t_rejects("Data too long for column 'last_name'", CONCAT(@pe, "('STF-0009', REPEAT('a', 51), 'A', NULL, 'female', 'Teacher')"));
+CALL t_rejects('uq_personnel_staff_number', CONCAT(@pe, "('STF-0001', 'A', 'A', NULL, 'female', 'Teacher')"));
 CALL t_rejects('chk_personnel_health_kind', "INSERT INTO personnel_health_entries (personnel_id, kind, label) VALUES (1, 'family_history', 'x')");
 CALL t_rejects('uq_personnel_health_entry', "INSERT INTO personnel_health_entries (personnel_id, kind, label) VALUES (1, 'allergy', 'LATEX')");
 CALL t_rejects('uq_personnel_contacts_one_primary', "INSERT INTO personnel_emergency_contacts (personnel_id, name, phone) VALUES (1, 'B', '1')");

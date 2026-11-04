@@ -150,7 +150,7 @@ The list under "Questions for the team's approval" stays. These join it.
 - [x] **Actor role on audit rows (D-01).** Stored; ADR-057 item 12 amends ADR-017 (answered Sunday, November 1, 2026 — 02:16 PHT, Zean: as recommended)
 - [x] **Reference number format. `EL-YYYY-NNNNN` and `IR-YYYY-NNNNN`. (answered Sunday, November 1, 2026 — 01:23 PHT, Zean: best approach)
 - [x] **Answer contract questions Q3, Q6, Q7, Q9 and Q10 Answered in `API-Contract.md`. (answered Sunday, November 1, 2026 — 01:23 PHT, Zean: best approach)
-- [x] **Head Nurse flag (D-04), referral status (D-05), name parts (D-15), role storage (D-16). Defaults of `ERD.md` section 11 kept; D-04 and D-05 can still change with the client's answer, at the cost shown there. (answered Sunday, November 1, 2026 — 01:23 PHT, Zean: best approach)
+- [x] **Head Nurse flag (D-04), referral status (D-05), name parts (D-15), role storage (D-16). Defaults of `ERD.md` section 11 kept; D-04 and D-05 can still change with the client's answer, at the cost shown there. (answered Sunday, November 1, 2026 — 01:23 PHT, Zean: best approach) D-15 was later closed by ADR-064 (Thursday, November 05, 2026 — 01:33 PHT): the name is stored as first, last and middle name.
 
 ## Checks
 

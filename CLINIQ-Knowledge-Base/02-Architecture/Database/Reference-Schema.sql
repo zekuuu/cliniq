@@ -12,6 +12,8 @@
 -- Time           : every DATETIME is Philippine time (UTC+8, no DST). See ERD.md rule C-3.
 -- Charset        : utf8mb4 / utf8mb4_unicode_ci (works on both engines; case- and accent-
 --                  insensitive, so "Nuñez" = "nunez" for matching and duplicate warnings).
+-- Names          : students and personnel store first_name, last_name and middle_name (ADR-064, which
+--                  follows the approved ERD); the full name "First Middle Last" is built on read, never stored.
 -- FK policy      : RESTRICT for shared references. CASCADE only for rows a parent owns (profile parts,
 --                  lines, letters, readings, allocations); no route deletes those parents, and the one
 --                  retention purge deletes in the order set out in ERD.md section 7.
@@ -164,7 +166,9 @@ CREATE TABLE student_import_batches (
 CREATE TABLE students (
   id                       BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   lrn                      CHAR(12)        NOT NULL,
-  full_name                VARCHAR(150)    NOT NULL,
+  first_name               VARCHAR(50)     NOT NULL,
+  last_name                VARCHAR(50)     NOT NULL,
+  middle_name              VARCHAR(40)     NULL,
   grade_level_id           BIGINT UNSIGNED NULL,
   section                  VARCHAR(60)     NULL,
   sex                      VARCHAR(6)      NULL,
@@ -178,11 +182,13 @@ CREATE TABLE students (
   updated_at               DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_students_lrn (lrn),
-  KEY idx_students_name (full_name),
+  KEY idx_students_name (last_name, first_name, middle_name),
   KEY idx_students_grade_archived (grade_level_id, archived_at),
   KEY idx_students_archived_at (archived_at),
   CONSTRAINT chk_students_lrn CHECK (lrn REGEXP '^[0-9]{12}$'),
-  CONSTRAINT chk_students_name CHECK (CHAR_LENGTH(TRIM(full_name)) >= 1),
+  CONSTRAINT chk_students_first_name CHECK (CHAR_LENGTH(TRIM(first_name)) >= 1),
+  CONSTRAINT chk_students_last_name CHECK (CHAR_LENGTH(TRIM(last_name)) >= 1),
+  CONSTRAINT chk_students_middle_name CHECK (middle_name IS NULL OR CHAR_LENGTH(TRIM(middle_name)) >= 1),
   CONSTRAINT chk_students_sex CHECK (sex IS NULL OR sex IN ('female','male')),
   CONSTRAINT fk_students_grade FOREIGN KEY (grade_level_id) REFERENCES grade_levels (id),
   CONSTRAINT fk_students_archived_by FOREIGN KEY (archived_by_user_id) REFERENCES users (id),
@@ -254,7 +260,9 @@ CREATE TABLE student_record_reviews (
 CREATE TABLE personnel (
   id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   staff_number        VARCHAR(20)     NOT NULL,
-  full_name           VARCHAR(150)    NOT NULL,
+  first_name          VARCHAR(50)     NOT NULL,
+  last_name           VARCHAR(50)     NOT NULL,
+  middle_name         VARCHAR(40)     NULL,
   sex                 VARCHAR(6)      NOT NULL,
   type                VARCHAR(30)     NOT NULL,
   department          VARCHAR(60)     NULL,
@@ -266,9 +274,11 @@ CREATE TABLE personnel (
   updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_personnel_staff_number (staff_number),
-  KEY idx_personnel_name (full_name),
+  KEY idx_personnel_name (last_name, first_name, middle_name),
   KEY idx_personnel_archived_at (archived_at),
-  CONSTRAINT chk_personnel_name CHECK (CHAR_LENGTH(TRIM(full_name)) >= 1),
+  CONSTRAINT chk_personnel_first_name CHECK (CHAR_LENGTH(TRIM(first_name)) >= 1),
+  CONSTRAINT chk_personnel_last_name CHECK (CHAR_LENGTH(TRIM(last_name)) >= 1),
+  CONSTRAINT chk_personnel_middle_name CHECK (middle_name IS NULL OR CHAR_LENGTH(TRIM(middle_name)) >= 1),
   CONSTRAINT chk_personnel_sex CHECK (sex IN ('female','male')),
   CONSTRAINT fk_personnel_archived_by FOREIGN KEY (archived_by_user_id) REFERENCES users (id),
   CONSTRAINT fk_personnel_created_by FOREIGN KEY (created_by_user_id) REFERENCES users (id)

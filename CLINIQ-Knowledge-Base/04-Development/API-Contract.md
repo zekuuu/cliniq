@@ -22,6 +22,7 @@ Sanctum SPA cookie mode (ADR-056). The browser first calls `GET /sanctum/csrf-co
 - **A missing value is null.** The API never fills one in. A student with no recorded sex returns null, where the mock reads it as `female` (G4).
 - **Stored shapes the API bridges:** ids as strings; one merged `vitals` object, latest value of each reading (G13); the Sports Report `lookBack` values (G23); a medicine line's `batchAllocations`, read from its movements (ADR-057).
 - **Trimming.** Blank optional text is stored as null, as the mock does.
+- **Names (ADR-064, which follows the approved ERD).** Students and staff are written as `firstName` and `lastName` (required) and `middleName` (optional, null when none, never ""), each trimmed with its spaces collapsed; limits 50, 50 and 40 (`NAME_PART_MAX`). `fullName` is never stored or accepted: every response that carried it still does, built as the non-empty parts in the order First, Middle, Last (`formatPersonName`). Lists sort by last name, then first name, then middle name. A name search matches when every word of the query appears somewhere in the full name, ignoring case, accents and extra spaces; the LRN and Staff No. searches are unchanged. All of these live in `frontend/src/lib/personName.ts`.
 - **Writes are all-or-nothing.** Each write endpoint runs in one database transaction, audit entries included, like `write()` at `api.ts:144`.
 
 ### Filtering and pagination
@@ -222,26 +223,26 @@ All read-only, no audit. Text-only lists, safe for both roles.
 #### `POST /api/students/query`
 - Roles: S, A. A read, sent as `POST` because `search` can hold LRN digits.
 - Request: `search`, `gradeLevel`, `includeArchived`, `limit`.
-- Response: `StudentListRow[]`, by name; masked LRN; no birthdate, no health fields, no contacts (Q2).
-- Copies: `listStudents` (`api.ts:633`); tests: `AppRoutes`, `AuditLogPage`, `Birthdate`, `ClinicRulesDecisions` and 2 more. Name contains, or an all-digit search matches the LRN prefix.
+- Response: `StudentListRow[]`, by last, first and middle name (ADR-064); masked LRN; no birthdate, no health fields, no contacts (Q2).
+- Copies: `listStudents` (`api.ts:633`); tests: `AppRoutes`, `AuditLogPage`, `Birthdate`, `ClinicRulesDecisions` and 2 more. Every word of the search in the full name (ADR-064), or an all-digit search matches the LRN prefix.
 
 #### `POST /api/students/search`
 - Roles: S.
 - Request: `q`, `limit` (default 8).
 - Response: `StudentSearchResult[]`, active students, no medical fields, masked LRN.
-- Copies: `searchStudents` (`api.ts:653`); tests: `Birthdate`, `search`. LRN matches first, then by name; below 1 character, empty.
+- Copies: `searchStudents` (`api.ts:653`); tests: `Birthdate`, `search`. LRN matches first, then name matches (every word in the full name, ADR-064); below 1 character, empty.
 
 #### `POST /api/students/check-duplicates`
 - Roles: S.
-- Request: `lrn`, `fullName`.
-- Response: `StudentDuplicateCheck`, with no word on who holds a taken LRN; `nameMatches` masked.
+- Request: `lrn`, `firstName`, `lastName`, `middleName`.
+- Response: `StudentDuplicateCheck`, `nameMatches` are students whose joined full name equals the typed one after trimming, collapsing spaces, and ignoring accents and case (ADR-064); with no word on who holds a taken LRN; `nameMatches` masked.
 - Copies: `checkStudentDuplicates` (`api.ts:724`); tests: none.
 
 #### `POST /api/students`
 - Roles: S.
-- Request: `StudentInput`, `confirmDuplicate?`.
-- Response: 201 `{ status: "saved", student, action: "create" }`, or **200** `{ status: "duplicate", matches }`, which is not an error: the mock returns it as a value and the form asks.
-- Errors: 422 "The LRN must be exactly 12 digits.", "Enter a real birthdate.", "The birthdate can't be in the future."; 409 `duplicate_lrn` (never names the other student).
+- Request: `StudentInput` (`firstName`, `lastName`, `middleName`, not `fullName`; ADR-064), `confirmDuplicate?`.
+- Response: 201 `{ status: "saved", student, action: "create" }`, `student.fullName` built on read, or **200** `{ status: "duplicate", matches }`, which is not an error: the mock returns it as a value and the form asks.
+- Errors: 422 "The LRN must be exactly 12 digits.", "Enter the student's first name.", "Enter the student's last name.", "The first name can be at most 50 characters." (middle 40, last 50), "Enter a real birthdate.", "The birthdate can't be in the future."; 409 `duplicate_lrn` (never names the other student).
 - Audit: `create student`.
 - Copies: `saveStudent` (`api.ts:765`); tests: `Birthdate`, `LettersAndVisitsDecisions`, `RecordsDecisions`, `StudentFormPage` and 2 more. A name and grade match on an active record asks once.
 
@@ -261,7 +262,7 @@ All read-only, no audit. Text-only lists, safe for both roles.
 - Request: `StudentInput`, `nameCorrectionReason?`.
 - Response: `{ status: "saved", student, action: "update" }`.
 - Errors: 404; 409 `lrn_locked`; 422 name-correction reason under 3 characters; 409 `duplicate_lrn`; the birthdate 422s.
-- Audit: `update student`, changed. A name correction adds "Name corrected; reason: <reason>", never the old or new name. The reason is also kept in `name_correction_reason` (ADR-058, which reverses Q3).
+- Audit: `update student`, changed. A changed name part is named by field only ("Updated last name", "Updated first name and last name"); a name correction adds ". Name corrected; reason: <reason>", never the old or new name (ADR-058 as amended by ADR-064). The reason is also kept in `name_correction_reason` (ADR-058, which reverses Q3).
 - Copies: `saveStudent` (`api.ts:765`); tests: `Birthdate`, `LettersAndVisitsDecisions`, `RecordsDecisions`, `StudentFormPage` and 2 more. Completing a flagged record resolves its review, crediting the saver.
 
 #### `POST /api/students/{id}/archive`
@@ -287,7 +288,7 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 #### `GET /api/personnel`
 - Roles: S.
 - Query: `search`, `type`, `includeArchived`.
-- Response: `Personnel[]`, by name. A deliberate masterlist, so names show (D7).
+- Response: `Personnel[]`, by last, first and middle name (ADR-064). A deliberate masterlist, so names show (D7).
 - Copies: `listPersonnel` (`api.ts:857`); tests: `personnel`.
 
 #### `GET /api/personnel/search`
@@ -296,9 +297,9 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 
 #### `POST /api/personnel`
 - Roles: S.
-- Request: `PersonnelInput`, with `sex` (`female` or `male`, required, ADR-063).
+- Request: `PersonnelInput`, with `firstName`, `lastName`, `middleName` (ADR-064) and `sex` (`female` or `male`, required, ADR-063).
 - Response: 201 `{ personnel, action: "create" }`.
-- Errors: 403 "Only the clinic staff can manage staff records."; 422 "Enter the full name.", "Choose the sex.", "Choose the staff type.", department over 60.
+- Errors: 403 "Only the clinic staff can manage staff records."; 422 "Enter the staff member's first name.", "Enter the staff member's last name.", a name part over its limit, "Choose the sex.", "Choose the staff type.", department over 60.
 - Audit: `create staff`.
 - Copies: `savePersonnel` (`api.ts:950`); tests: `personnel`, `staff-counts`. The Staff No. is assigned, never reused.
 
@@ -306,7 +307,7 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 - Roles: S. Errors: 404. Copies: `getPersonnel` (`api.ts:868`); tests: `StaffPages`.
 
 #### `PUT /api/personnel/{id}`
-- Roles: S. Request: `PersonnelInput`. Response: `{ personnel, action: "update" }`. Errors: as create, plus 404. Audit: `update staff`, changed.
+- Roles: S. Request: `PersonnelInput`. Response: `{ personnel, action: "update" }`. Errors: as create, plus 404. Audit: `update staff`, changed; a changed name part is named by field only ("Updated last name", ADR-064).
 - Copies: `savePersonnel` (`api.ts:950`); tests: `personnel`, `staff-counts`.
 
 #### `POST /api/personnel/{id}/archive`
@@ -482,6 +483,7 @@ Added by the frontend clean-up, Part 2. The real import waits for the signed dat
 
 #### `POST /api/students/import/preview`
 - Roles: S. Request: mapped rows. Response: `StudentImportPreview`; writes nothing.
+- Columns (ADR-064): separate First name, Last name and Middle name columns map directly. A single "Full name (one column)" column is accepted only when no First or Last column is matched. With a comma ("Surname, First Middle") the last name is before the comma, and of the words after it the last is the middle name when there are two or more (one word is the first name, no middle). Without a comma the last word is the last name and the rest is the first name, no middle. The preview lists every split (row, last, first, middle) so the registrar can correct the file.
 - Copies: `previewStudentImport`; tests: `StudentImportPage`.
 
 #### `POST /api/students/import`
@@ -745,8 +747,9 @@ Each one is business logic the backend must copy exactly, with its source. Tests
 | Age in whole years, never stored; usual age for a grade; soft note | `lib/age.ts` |
 | Record complete: name, grade, sex, at least one contact with name, relationship and phone | `selectors.ts` `missingRequiredFields` |
 | Completing a flagged record resolves its review and credits the saver | `api.ts:815-824` |
-| Student search: LRN prefix first, name contains, capped, active only | `selectors.ts` `searchStudents` |
+| Student search: LRN prefix first, every word in the full name, capped, active only | `selectors.ts` `searchStudents` |
 | Staff search: Staff No. or its digits; a query with no digit is a name search | `selectors.ts` `searchPersonnel` |
+| Names: first, last, optional middle; full name built on read; sort by last, first, middle; search by every word (ADR-064) | `lib/personName.ts` |
 | Combined patient search | `selectors.ts` `searchPatients` |
 | Staff No. never reused, archived included | `api.ts:941` |
 | Exactly one patient; staff get no letter, PE referral or Sports Report | `api.ts:437`, `:1205`, ADR-043 |

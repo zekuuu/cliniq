@@ -3,7 +3,9 @@
 > **STATUS: Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057); changes after this go through a new decision.** Drafted Friday, October 09, 2026 — 00:29 PHT. Migrations are built from it in phase B1, in the order of section 13.
 >
 
-> **Updated Sunday, November 1, 2026 — 22:36 PHT:** `personnel.sex` added by [ADR-063](../../06-Decisions/ADR-063-Staff-Patients-Record-Sex.md). Not yet loaded into MariaDB.
+> **Updated Thursday, November 05, 2026 — 01:33 PHT:** `students` and `personnel` store `first_name`, `last_name` and an optional `middle_name` instead of `full_name`, by [ADR-064](../../06-Decisions/ADR-064-Names-Stored-As-First-Last-And-Middle-Name.md), which follows this approved ERD and settles D-15. The full name is built on read. Loaded into MariaDB 10.11.16 with the constraint tests passing.
+>
+> **Updated Sunday, November 1, 2026 — 22:36 PHT:** `personnel.sex` added by [ADR-063](../../06-Decisions/ADR-063-Staff-Patients-Record-Sex.md). Loaded into MariaDB with the ADR-064 change on Thursday, November 05, 2026 — 01:33 PHT; its two cases pass, and two older staff cases that left out `sex` were fixed.
 >
 > **Updated to the decisions up to ADR-056 on Saturday, October 31, 2026 — 20:28 PHT.** Still a proposed draft, not final or approved. Choices no decision settles are in [`ERD-Review.md`](./ERD-Review.md); no migration, seeder or model with columns is built from this (ADR-056).
 
@@ -11,7 +13,7 @@ This file replaces the old "TBA" placeholder. For the wider readiness picture (A
 
 What backs it up:
 
-- `Reference-Schema.sql` (same folder) is the reference DDL. It loads on MariaDB 10.11.16 and passes the **191 constraint tests** in `Checks/constraint-tests.sql` (Sunday, November 1, 2026 — 01:55 PHT): every CHECK and UNIQUE is tested, and the retention purge is run end to end.
+- `Reference-Schema.sql` (same folder) is the reference DDL. It loads on MariaDB 10.11.16 and passes the **204 constraint tests** in `Checks/constraint-tests.sql` (Thursday, November 05, 2026 — 01:33 PHT, after ADR-064): every CHECK and UNIQUE is tested, and the retention purge is run end to end.
 - The first draft was then loaded with a stress volume (**150,000 visits, 25,000 incidents, 1,500,000 audit rows**, the worst-case assumptions from the planning discussion) and the dashboard, calendar, audit-viewer and list queries each ran in **under 30 ms**.
 - `Data-Dictionary.md` (same folder) was generated from that same database; later updates were written by hand and compared with the DDL.
 
@@ -91,7 +93,7 @@ Rendered images live in `Diagrams/` (PNG to view, SVG to zoom, `ERD-Overview.dot
 | Image | What it shows |
 |---|---|
 | `Diagrams/ERD-Overview.png` / `.svg` | All 44 tables and their relationships, grouped by module |
-| `Diagrams/ERD-3.2-Students.png` | Students, grade levels, health entries, contacts, reviews |
+| `Diagrams/ERD-3.2-Students.png` | Students, grade levels, health entries, contacts, reviews. **Not yet regenerated** after ADR-064 (Thursday, November 05, 2026 — 01:33 PHT): the PNG and SVG still show `full_name` on `students` and `personnel`; the Mermaid block in 3.2 below is current. |
 | `Diagrams/ERD-3.3-Visits.png` | Visits, excuse letters, triage, follow-ups, PE referrals |
 | `Diagrams/ERD-3.4-Emergency.png` | Incidents, vitals, referrals, call attempts, sign-off |
 | `Diagrams/ERD-3.5-Inventory.png` | Items, medicines given, stock ledger |
@@ -181,7 +183,9 @@ erDiagram
     students {
         bigint id PK
         char lrn UK "12 digits, set once"
-        varchar full_name
+        varchar last_name "ADR-064; lists sort by last, first, middle"
+        varchar first_name
+        varchar middle_name "optional; full name built on read"
         bigint grade_level_id FK "nullable until complete"
         varchar sex "female or male; required when complete (ADR-031)"
         varchar section "optional, ADR-047"
@@ -193,7 +197,9 @@ erDiagram
     personnel {
         bigint id PK
         varchar staff_number UK "STF-0001, assigned by CLINIQ"
-        varchar full_name
+        varchar last_name "ADR-064, as for students"
+        varchar first_name
+        varchar middle_name "optional"
         varchar sex "female or male (ADR-063)"
         varchar type "Teacher, Non-teaching staff, Utility worker, Other"
         varchar department
@@ -918,7 +924,7 @@ Each has a recommended default so the design stands either way. Zean accepted th
 | **D-12** | Encrypt sensitive columns (allergies, conditions)? | No: it would block the "flag students with restrictions" search. Use BitLocker on the workstation, encrypted backup drives, role-scoped API. | Moderate. |
 | **D-13** | After a purge, historical report numbers drop. Freeze monthly totals before purging? | Keep PDF exports of official reports. | Cheap. |
 | **D-14** | Reference-number reuse after restoring an older backup (Student Numbers no longer exist, ADR-028). | Post-restore command that bumps all sequences; add to the recovery checklist. | Cheap. |
-| **D-15** | Split `full_name` into last/first/middle? | Wait for the registrar's file format, then add columns and keep `full_name` as the displayed value. | Moderate. |
+| **D-15** | *(Closed by ADR-064: `first_name`, `last_name` and an optional `middle_name` for students and staff; the full name is built on read, not stored.)* | — | — |
 | **D-16** | Role storage: one `users.role` column or Spatie `laravel-permission` (suggested in Development-Phases)? | One column + policy classes. Roles are fixed (2), one per user, and the matrix is static; Spatie adds 5 tables for a 2-row matrix. | Moderate. |
 | **D-17** | Do vitals live in readings rows or as columns on `incidents`? | Readings rows (keeps the Stage 1 reading and allows rechecks); the API still presents one merged `vitals` object. | Expensive to flip later. |
 | **D-18** | Does a PE referral create a visit or incident automatically? The Brief says it "links into the same visit/treatment flow". | Keep it standalone with optional links (columns present). | Cheap. |
