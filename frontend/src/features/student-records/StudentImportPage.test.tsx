@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { applyStudentImport, getRecordedAuditEntries, listStudents, previewStudentImport, resetMockDb } from '../../lib/mock-db'
@@ -91,10 +91,46 @@ describe('student list import (ADR-047)', () => {
     renderWithRouter(<StudentImportPage viewer={STAFF} />)
     await user.upload(screen.getByLabelText('Student list (CSV)'), new File([SAMPLE], 'list.csv', { type: 'text/csv' }))
     await user.click(await screen.findByRole('button', { name: 'Preview' }))
-    expect(await screen.findByText('2 new')).toBeInTheDocument()
+    // Plain review (Zean, November 3, 2026: "this part are confusing").
+    const added = await screen.findByText('New students')
+    expect(added.parentElement).toHaveTextContent('2')
+    const missing = screen.getByRole('group', { name: /^In the Student List but not in this file \(\d+\)$/ })
+    await user.click(within(missing).getByRole('button', { name: 'Check all' }))
+    expect(within(missing).getByText(/^\d+ of \d+ checked$/)).toBeInTheDocument()
+    await user.click(within(missing).getByRole('button', { name: 'Uncheck all' }))
+    expect(within(missing).getByText(/^0 of \d+ checked$/)).toBeInTheDocument()
+    // Scales to a whole school year's leavers: search narrows the list, and Check all acts on what is shown.
+    await user.type(within(missing).getByRole('searchbox', { name: 'Find a student' }), 'Kinder')
+    // The list filters a moment after typing stops.
+    await waitFor(() => expect(within(missing).getAllByRole('checkbox').length).toBeLessThan(10))
+    const shown = within(missing).getAllByRole('checkbox').length
+    expect(shown).toBeGreaterThan(0)
+    expect(shown).toBeLessThan(10)
+    await user.click(within(missing).getByRole('button', { name: 'Check all' }))
+    expect(within(missing).getByText(new RegExp(`^${shown} of \\d+ checked$`))).toBeInTheDocument()
+    await user.click(within(missing).getByRole('button', { name: 'Uncheck all' }))
     expect((await listStudents({})).some((student) => student.fullName.includes('Ana Reyes Sample'))).toBe(false)
     await user.click(screen.getByRole('button', { name: 'Apply List' }))
     await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Apply List' }))
     await waitFor(() => expect(screen.getByText(/List applied: 2 added/)).toBeInTheDocument())
+  })
+
+  it('takes the CSV dropped on the drop zone, and names the chosen file (Zean, November 3, 2026)', async () => {
+    renderWithRouter(<StudentImportPage viewer={STAFF} />)
+    const zone = await screen.findByTestId('import-drop-zone')
+    expect(within(zone).getByText('Browse files')).toBeInTheDocument()
+    expect(screen.getByText('Accepted file type: .csv only')).toBeInTheDocument()
+    fireEvent.drop(zone, { dataTransfer: { files: [new File([SAMPLE], 'dropped.csv', { type: 'text/csv' })] } })
+    expect(await screen.findByText(/rows in dropped\.csv/)).toBeInTheDocument()
+    expect(within(zone).getByText('dropped.csv')).toBeInTheDocument()
+  })
+
+  it('shows all three steps from the start, the later ones empty until reached (Zean, November 3, 2026)', async () => {
+    renderWithRouter(<StudentImportPage viewer={STAFF} />)
+    expect(await screen.findByRole('heading', { name: '1. Choose the file' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '2. Match the columns' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '3. Review before applying' })).toBeInTheDocument()
+    expect(screen.getByText('Choose a file first.')).toBeInTheDocument()
+    expect(screen.getByText('Match the columns and press Preview first.')).toBeInTheDocument()
   })
 })
