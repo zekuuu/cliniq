@@ -296,9 +296,9 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 
 #### `POST /api/personnel`
 - Roles: S.
-- Request: `PersonnelInput`.
+- Request: `PersonnelInput`, with `sex` (`female` or `male`, required, ADR-063).
 - Response: 201 `{ personnel, action: "create" }`.
-- Errors: 403 "Only the clinic staff can manage staff records."; 422 "Enter the full name.", "Choose the staff type.", department over 60.
+- Errors: 403 "Only the clinic staff can manage staff records."; 422 "Enter the full name.", "Choose the sex.", "Choose the staff type.", department over 60.
 - Audit: `create staff`.
 - Copies: `savePersonnel` (`api.ts:950`); tests: `personnel`, `staff-counts`. The Staff No. is assigned, never reused.
 
@@ -555,7 +555,7 @@ Every endpoint is Staff only. The database row lock of `ERD.md` section 9 replac
 #### `GET /api/reports/monthly`
 - Roles: S, A (view; no printing).
 - Query: `month`, `YYYY-MM`; 422 otherwise.
-- Response: `MonthlyReportData`, computed on each call, masked; `fullLrn=1` for the Staff print. May include staff incidents (Q8).
+- Response: `MonthlyReportData`, computed on each call, masked; `fullLrn=1` for the Staff print. May include staff incidents (Q8). `visitsBySex` is `{ female: { students, staff }, male: { students, staff }, noSexRecorded }` (ADR-063).
 - Copies: `getMonthlyReport` (`api.ts:2358`); tests: `Birthdate`, `ClinicRulesDecisions`, `ReportsDecisions`, `ReportsPage` and 5 more.
 
 ## Sports Reports (ADR-034)
@@ -599,7 +599,7 @@ Staff only; the Admin gets 403 with "Only the clinic staff can open Sports Repor
 #### `GET /api/dashboard/summary`
 - Roles: S, A.
 - Query: `preset`, `from`, `to`, `sex?`, `gradeLevel?`.
-- Response: `DashboardSummary`, masked. The Admin's totals leave staff incidents out (ADR-053 item 4).
+- Response: `DashboardSummary`, masked. The Admin's totals leave staff incidents out (ADR-053 item 4). Each `demographics.sex` row also carries `students` and `staff`, the two parts of its count, plus a `none` row only when a record has no sex (ADR-063). `gradeLevel` stays students only.
 - Copies: `getDashboardSummary` (`api.ts:2467`); tests: `AccessAndBackup`, `Birthdate`, `ClinicRulesDecisions`, `DashboardAndReports` and 5 more.
 
 #### `GET /api/dashboard/cluster-alerts`

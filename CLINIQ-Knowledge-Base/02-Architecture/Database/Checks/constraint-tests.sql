@@ -92,8 +92,8 @@ INSERT INTO users (id, name, username, email, password_hash, role) VALUES
   (1, 'Nurse', 'nurse', 'nurse@school.test', 'h', 'staff'), (2, 'Principal', 'principal', NULL, 'h', 'admin');
 INSERT INTO students (id, lrn, full_name, sex) VALUES
   (1, '100000000001', 'Nuñez, Ana', 'female'), (2, '100000000002', 'Reyes, Ben', 'male'), (3, '100000000003', 'Cruz, Cara', 'female');
-INSERT INTO personnel (id, staff_number, full_name, type) VALUES
-  (1, 'STF-0001', 'Santos, Dan', 'Teacher'), (2, 'STF-0002', 'Lim, Eve', 'Teacher');
+INSERT INTO personnel (id, staff_number, full_name, sex, type) VALUES
+  (1, 'STF-0001', 'Santos, Dan', 'male', 'Teacher'), (2, 'STF-0002', 'Lim, Eve', 'female', 'Teacher');
 INSERT INTO complaint_types (id, label) VALUES (1, 'Headache');
 INSERT INTO triage_steps (id, complaint_type_id, step_text) VALUES (1, 1, 'Check temperature');
 INSERT INTO inventory_items (id, name, category, unit) VALUES (1, 'Paracetamol', 'medicine', 'tablet'), (2, 'Gauze', 'supply', 'pack');
@@ -171,6 +171,8 @@ CALL t_rejects('chk_students_lrn', CONCAT(@st, "('12345', 'A', 'female')"));
 CALL t_rejects('chk_students_lrn', CONCAT(@st, "('12345678901a', 'A', 'female')"));
 CALL t_rejects('chk_students_name', CONCAT(@st, "('100000000009', ' ', 'female')"));
 CALL t_rejects('chk_students_sex', CONCAT(@st, "('100000000009', 'A', 'other')"));
+CALL t_rejects('chk_personnel_sex', "INSERT INTO personnel (staff_number, full_name, sex, type) VALUES ('STF-0098', 'A', 'other', 'Teacher')");
+CALL t_accepts('staff sex is female or male', "INSERT INTO personnel (staff_number, full_name, sex, type) VALUES ('STF-0099', 'A', 'female', 'Teacher')");
 CALL t_rejects('uq_students_lrn', CONCAT(@st, "('100000000001', 'A', 'female')"));
 CALL t_rejects('fk_students_grade', "UPDATE students SET grade_level_id = 999 WHERE id = 1");
 CALL t_accepts('an LRN keeps its leading zeros', CONCAT(@st, "('000000000009', 'A', NULL)"));
