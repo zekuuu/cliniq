@@ -182,17 +182,12 @@ export function ReportsPrint({
         />
       </PrintSection>
 
-      <PrintSection title="Complaints">
-        <ComplaintBreakdown
-          rows={data.complaintCounts}
-          empty="No clinic visits were recorded this month."
-        />
-      </PrintSection>
-
       <PrintSection title="Visits by sex">
         <VisitsBySexPrint bySex={data.visitsBySex} />
       </PrintSection>
 
+      {/* One complaints table only (Zean, November 5, 2026): "Complaints" repeated these counts; the weekly
+          table's Total column gives them, and the full breakdown is the Complaint summary report. */}
       <PrintSection title="Complaints by week">
         <WeeklyComplaintsPrint weekly={data.weeklyComplaints} />
       </PrintSection>
