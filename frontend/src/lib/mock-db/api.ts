@@ -424,6 +424,59 @@ export async function changeOwnPassword(userId: string, currentPassword: string,
   await changeMockPassword(userId, nextPassword)
 }
 
+/** The approved `users.name` length (Reference-Schema: VARCHAR(120)); the Edit profile dialog uses it too. */
+export const USER_NAME_MAX = 120
+
+/** The signed-in account as the account menu and the Edit profile dialog show it (ADR-066). */
+export interface OwnAccount {
+  name: string
+  username: string
+  role: UserRole
+  profilePicture: string | null
+  lastLogin: ISODateTime | null
+}
+
+/** The signed-in, active account. Never takes a user id from the caller (ADR-066). */
+function ownAccount(state: DbState): User {
+  const session = getMockSessionUser()
+  const user = must(state.users.find((u) => u.id === session.id), 'Account')
+  if (user.deactivatedAt) throw new Error('This account is disabled.')
+  return user
+}
+
+export function getOwnAccount(): Promise<OwnAccount> {
+  return read('own account', (s) => {
+    const user = ownAccount(s)
+    return { name: user.name, username: user.username, role: user.role, profilePicture: user.profilePicture ?? null, lastLogin: user.lastLogin }
+  })
+}
+
+/**
+ * Self-service Edit profile (ADR-066): the signed-in user changes their own display name and picture.
+ * The username and role stay with the Admin. Each change is audited by field name only, never the old
+ * or new name and never image data (ADR-016, ADR-017).
+ */
+export function updateOwnProfile(input: { name: string; profilePicture: string | null }): Promise<OwnAccount> {
+  return write('update own profile', (s) => {
+    const user = ownAccount(s)
+    const name = input.name.trim().replace(/\s+/g, ' ')
+    if (!name) throw new Error('Enter your full name.')
+    if (name.length > USER_NAME_MAX) throw new Error(`Keep your name to ${USER_NAME_MAX} characters or fewer.`)
+    const picture = input.profilePicture ?? null
+    if (picture !== null && !picture.startsWith('data:image/')) throw new Error('Choose a JPEG, PNG, or WebP image.')
+    const actor: SessionUser = { id: user.id, name: user.name, role: user.role }
+    if (name !== user.name) {
+      user.name = name
+      audit(s, actor, 'update', { type: 'user', id: user.id }, 'Changed own name')
+    }
+    if (picture !== (user.profilePicture ?? null)) {
+      user.profilePicture = picture
+      audit(s, actor, 'update', { type: 'user', id: user.id }, 'Changed own profile picture')
+    }
+    return { name: user.name, username: user.username, role: user.role, profilePicture: user.profilePicture ?? null, lastLogin: user.lastLogin }
+  })
+}
+
 function userName(state: DbState, id: string | null): string | null {
   if (!id) return null
   return state.users.find((u) => u.id === id)?.name ?? 'Unknown user'

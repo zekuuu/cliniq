@@ -15,6 +15,7 @@ import { DashboardPage } from './dashboard/DashboardPage'
 import { DashboardPrint } from './dashboard/components/DashboardPrint'
 import type { DashboardSummary, DueFollowUpRow, InventoryAlertRow } from '../types/dashboard'
 import { stockStatus } from './dashboard/lib/alerts'
+import { openAccountMenu } from '../test/accountMenu'
 
 /** Groupmate's frontend review, round 2, Part 1 (ADR-062, ADR-063). */
 
@@ -216,7 +217,8 @@ describe('R6: Sign out', () => {
     const user = userEvent.setup()
     const onLogout = vi.fn()
     shell(onLogout)
-    await user.click(screen.getByRole('button', { name: 'Sign out' }))
+    await openAccountMenu(user)
+    await user.click(screen.getByRole('menuitem', { name: 'Sign out' }))
     const dialog = await screen.findByRole('dialog', { name: 'Sign out of CLINIQ?' })
     expect(within(dialog).getByRole('button', { name: 'Cancel' })).toHaveFocus()
     expect(onLogout).not.toHaveBeenCalled()
@@ -229,17 +231,24 @@ describe('R6: Sign out', () => {
     const user = userEvent.setup()
     const onLogout = vi.fn()
     shell(onLogout)
-    await user.click(screen.getByRole('button', { name: 'Sign out' }))
+    await openAccountMenu(user)
+    await user.click(screen.getByRole('menuitem', { name: 'Sign out' }))
     await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Sign Out' }))
     await waitFor(() => expect(onLogout).toHaveBeenCalledOnce())
   })
 
-  it('leaves the lock control (Change password) without a confirmation, and apart from Sign out', () => {
+  // ADR-066: both moved into the account menu; Sign out stays last, after a separator, and still confirms.
+  it('leaves Change password without a confirmation, and apart from Sign out', async () => {
+    const user = userEvent.setup()
     shell(vi.fn())
-    const lock = screen.getByRole('link', { name: 'Change password' })
-    const signOut = screen.getByRole('button', { name: 'Sign out' })
-    for (const control of [lock, signOut]) expect(control.className).toContain('size-11')
-    expect(signOut.className).toContain('ml-4')
+    const menu = await openAccountMenu(user)
+    const items = within(menu).getAllByRole('menuitem')
+    const lock = within(menu).getByRole('menuitem', { name: 'Change password' })
+    const signOut = within(menu).getByRole('menuitem', { name: 'Sign out' })
+    expect(lock).toHaveAttribute('href', '/account/password')
+    expect(items.at(-1)).toBe(signOut)
+    expect(signOut.previousElementSibling).toHaveAttribute('role', 'separator')
+    for (const control of [lock, signOut]) expect(control.className).toContain('min-h-11')
   })
 })
 
