@@ -66,6 +66,7 @@ import {
   searchPersonnel as searchPersonnelRecords,
   searchStudents as searchStudentRecords,
   studentsById,
+  toPersonnel,
   toStudent,
   toStudentRow,
   type BackupStatus,
@@ -77,6 +78,7 @@ import {
 import { clearMockSession, firstViewThisSession, getMockSessionUser, type SessionUser } from './session'
 import { commit, db, restoreDb } from './store'
 import { CALENDAR_EVENT_TITLE_MAX, PERSONNEL_DEPARTMENT_MAX } from './integrity'
+import { cleanNamePart, compareByLastName, formatPersonName, NAME_PART_MAX, nameKey, nameMatches, type NameParts } from '../personName'
 import type {
   AdjustmentReason,
   BackupLocation,
@@ -87,6 +89,7 @@ import type {
   InventoryTransaction,
   IssueReport,
   PeReferral,
+  SeedPersonnel,
   SeedStudent,
   SportsReport,
   SportsReportWindow,
@@ -206,7 +209,6 @@ function audit(
 }
 
 const FIELD_LABELS: Record<string, string> = {
-  fullName: 'name',
   lrn: 'LRN',
   gradeLevel: 'grade level',
   contactInfo: 'contact info',
@@ -432,7 +434,7 @@ function studentOf(state: DbState, studentId: string): SeedStudent {
   return must(studentsById(state).get(studentId), 'Student')
 }
 
-function personnelOf(state: DbState, personnelId: string): Personnel {
+function personnelOf(state: DbState, personnelId: string): SeedPersonnel {
   return must(state.personnel.find((p) => p.id === personnelId), 'Staff member')
 }
 
@@ -650,9 +652,10 @@ export function listStudents(query: StudentQuery = {}): Promise<StudentListRow[]
       .filter((st) => !query.recordStatus || (missingRequiredFields(st).length === 0) === (query.recordStatus === 'complete'))
       .filter(
         (st) =>
-          !search || st.fullName.toLowerCase().includes(search) || (/^\d+$/.test(search) && st.lrn.startsWith(search)),
+          !search || nameMatches(formatPersonName(st), search) || (/^\d+$/.test(search) && st.lrn.startsWith(search)),
       )
-      .sort((a, b) => a.fullName.localeCompare(b.fullName))
+      // School-list order: last name, then first name (Zean, November 4, 2026).
+      .sort(compareByLastName)
       .slice(0, query.limit ?? Infinity)
       .map((st) => toStudentRow(st, query.fullLrn))
   })
@@ -706,7 +709,7 @@ export function getStudentHistory(studentId: string, limit = 8): Promise<Student
 
 export type StudentInput = Pick<
   Student,
-  'lrn' | 'fullName' | 'gradeLevel' | 'section' | 'sex' | 'birthDate' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
+  'lrn' | 'firstName' | 'lastName' | 'middleName' | 'gradeLevel' | 'section' | 'sex' | 'birthDate' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
 >
 
 export interface DuplicateMatch {
@@ -732,20 +735,35 @@ export interface StudentDuplicateCheck {
   nameMatches: DuplicateMatch[]
 }
 
-/** Add Student's live check while typing; the save itself still enforces both rules. */
+/** Add Student's live check while typing; the save itself still enforces both rules. Names compare case-, accent- and space-insensitively. */
 export function checkStudentDuplicates(lrn: string, fullName: string): Promise<StudentDuplicateCheck> {
   return read('check student duplicates', (s) => {
     const normalized = normalizeLrn(lrn)
-    const name = fullName.trim().toLowerCase()
+    const name = nameKey(fullName)
     return {
       lrnTaken: isLrn(normalized) && s.students.some((st) => st.lrn === normalized),
       nameMatches: name
         ? s.students
-            .filter((st) => !st.archived && st.fullName.trim().toLowerCase() === name)
-            .map((st) => ({ id: st.id, fullName: st.fullName, lrn: st.lrn, gradeLevel: st.gradeLevel }))
+            .filter((st) => !st.archived && nameKey(formatPersonName(st)) === name)
+            .map((st) => ({ id: st.id, fullName: formatPersonName(st), lrn: st.lrn, gradeLevel: st.gradeLevel }))
         : [],
     }
   })
+}
+
+const NAME_PART_LABELS = { firstName: 'first name', lastName: 'last name', middleName: 'middle name' } as const
+
+/**
+ * Cleans the three name parts (trimmed, single spaces) and enforces the rules the forms show:
+ * first and last name required, middle name optional, each within `NAME_PART_MAX` (ADR-064).
+ */
+function cleanName(input: NameParts, whose: string): NameParts {
+  const name = { firstName: cleanNamePart(input.firstName), lastName: cleanNamePart(input.lastName), middleName: cleanNamePart(input.middleName ?? '') || null }
+  if (!name.firstName) throw new Error(`Enter ${whose} first name.`)
+  if (!name.lastName) throw new Error(`Enter ${whose} last name.`)
+  for (const key of ['firstName', 'lastName', 'middleName'] as const)
+    if ((name[key]?.length ?? 0) > NAME_PART_MAX[key]) throw new Error(`The ${NAME_PART_LABELS[key]} can be at most ${NAME_PART_MAX[key]} characters.`)
+  return name
 }
 
 /** The LRN is the student's identifier: set on create, never changed afterwards (ADR-028, Sir Rey). */
@@ -783,15 +801,16 @@ export function saveStudent(
     if (!isLrn(lrn)) throw new Error('The LRN must be exactly 12 digits.')
     const current = options.studentId ? studentOf(s, options.studentId) : null
     if (current && current.lrn !== lrn) throw new LrnLockedError()
-    const nameChanged = current !== null && current.fullName !== input.fullName.trim()
+    const name = cleanName(input, "the student's")
+    const nameChanged = current !== null && formatPersonName(current) !== formatPersonName(name)
     const reason = options.nameCorrectionReason?.trim() ?? ''
     if (nameChanged && reason.length < NAME_CORRECTION_REASON_MIN) throw new NameCorrectionReasonError()
     if (s.students.some((st) => st.id !== options.studentId && st.lrn === lrn)) throw new DuplicateLrnError()
-    const name = input.fullName.trim().toLowerCase()
+    const key = nameKey(formatPersonName(name))
     const matches = s.students
       .filter((st) => st.id !== options.studentId && !st.archived)
-      .filter((st) => st.fullName.trim().toLowerCase() === name && st.gradeLevel === input.gradeLevel)
-      .map((st) => ({ id: st.id, fullName: st.fullName, lrn: st.lrn, gradeLevel: st.gradeLevel }))
+      .filter((st) => nameKey(formatPersonName(st)) === key && st.gradeLevel === input.gradeLevel)
+      .map((st) => ({ id: st.id, fullName: formatPersonName(st), lrn: st.lrn, gradeLevel: st.gradeLevel }))
     if (!options.studentId && matches.length && !options.confirmDuplicate) return { status: 'duplicate', matches }
 
     const birthDate = input.birthDate || null
@@ -802,7 +821,7 @@ export function saveStudent(
     const section = input.section?.trim() || null
     const fields = {
       lrn,
-      fullName: input.fullName.trim(),
+      ...name,
       gradeLevel: input.gradeLevel,
       // A record that never had a section stays without the field, so an unrelated edit isn't audited.
       ...(section || existing?.section ? { section } : {}),
@@ -867,7 +886,6 @@ export interface StudentImportPreview {
   problems: ImportProblem[]
 }
 
-const importFullName = (row: ImportRow) => [row.firstName, row.middleName, row.lastName].filter(Boolean).join(' ')
 const importSex = (value: string): StudentSex | null => (/^m(ale)?$/i.test(value) ? 'male' : /^f(emale)?$/i.test(value) ? 'female' : null)
 
 /** Sorts the rows into usable and flagged. A flagged row is left out of the import. */
@@ -914,9 +932,9 @@ export function previewStudentImport(rows: ImportRow[], actor?: SessionUser): Pr
       newCount: good.length - known.length,
       continuingCount: known.length,
       changedCount: known.filter(({ record, row }) => importChanges(record, row)).length,
-      missing: s.students.filter((student) => !student.archived && !listed.has(student.lrn)).map((student) => ({ id: student.id, fullName: student.fullName, lrn: maskLrn(student.lrn), gradeLevel: student.gradeLevel }))
-        // By name, like the Student List's default order (Zean, November 3, 2026).
-        .sort((a, b) => a.fullName.localeCompare(b.fullName)),
+      // By last name, then first name, like the Student List's default order (Zean, November 4, 2026).
+      missing: s.students.filter((student) => !student.archived && !listed.has(student.lrn)).sort(compareByLastName)
+        .map((student) => ({ id: student.id, fullName: formatPersonName(student), lrn: maskLrn(student.lrn), gradeLevel: student.gradeLevel })),
       problems,
     }
   })
@@ -952,7 +970,9 @@ export function applyStudentImport(rows: ImportRow[], options: { fileName: strin
           id: nextId('student', s.students),
           archived: false,
           lrn: row.lrn,
-          fullName: importFullName(row),
+          firstName: cleanNamePart(row.firstName),
+          lastName: cleanNamePart(row.lastName),
+          middleName: cleanNamePart(row.middleName) || null,
           gradeLevel: row.gradeLevel,
           ...(row.section ? { section: row.section } : {}),
           sex: importSex(row.sex)!,
@@ -1003,19 +1023,20 @@ export function listPersonnel(query: PersonnelQuery = {}): Promise<Personnel[]> 
     return s.personnel
       .filter((p) => query.includeArchived || !p.archived)
       .filter((p) => !query.type || p.type === query.type)
-      .filter((p) => !search || p.fullName.toLowerCase().includes(search) || p.staffNumber.toLowerCase().includes(search))
-      .sort((a, b) => a.fullName.localeCompare(b.fullName))
+      .filter((p) => !search || nameMatches(formatPersonName(p), search) || p.staffNumber.toLowerCase().includes(search))
+      .sort(compareByLastName)
+      .map(toPersonnel)
   })
 }
 
 export function getPersonnel(id: string): Promise<Personnel> {
-  return read('staff member', (s) => personnelOf(s, id))
+  return read('staff member', (s) => toPersonnel(personnelOf(s, id)))
 }
 
 /** One patient in full (allergies included), for a form or a single-person screen (ADR-043). */
 export function getPatient(ref: PatientRef): Promise<Patient> {
   return read('patient', (s): Patient =>
-    ref.studentId ? { kind: 'student', ...toStudent(studentOf(s, ref.studentId)) } : { kind: 'personnel', ...personnelOf(s, ref.personnelId ?? '') },
+    ref.studentId ? { kind: 'student', ...toStudent(studentOf(s, ref.studentId)) } : { kind: 'personnel', ...toPersonnel(personnelOf(s, ref.personnelId ?? '')) },
   )
 }
 
@@ -1066,7 +1087,7 @@ export function getPersonnelHistory(personnelId: string, limit = 8): Promise<Per
 
 export type PersonnelInput = Pick<
   Personnel,
-  'fullName' | 'sex' | 'type' | 'department' | 'contactInfo' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
+  'firstName' | 'lastName' | 'middleName' | 'sex' | 'type' | 'department' | 'contactInfo' | 'allergies' | 'medicalConditions' | 'emergencyContacts'
 >
 
 /** Staff records belong to the School Clinician (ADR-043 item 9). */
@@ -1097,15 +1118,14 @@ export function savePersonnel(
   return write('save staff', (s) => {
     const by = actorOr(options.actor)
     requireClinician(by)
-    const fullName = input.fullName.trim()
-    if (!fullName) throw new Error('Enter the full name.')
+    const name = cleanName(input, "the staff member's")
     if (input.sex !== 'female' && input.sex !== 'male') throw new Error('Choose the sex.')
     if (!s.config.personnelTypes.includes(input.type)) throw new Error('Choose the staff type.')
     const department = input.department?.trim() || null
     if (department && department.length > PERSONNEL_DEPARTMENT_MAX)
       throw new Error(`Department or role can be at most ${PERSONNEL_DEPARTMENT_MAX} characters.`)
     const fields = {
-      fullName,
+      ...name,
       sex: input.sex,
       type: input.type,
       department,
@@ -1119,12 +1139,12 @@ export function savePersonnel(
       const summary = changedSummary(record, fields)
       Object.assign(record, fields)
       audit(s, by, 'update', { type: 'staff', id: record.id }, summary)
-      return { personnel: record, action: 'update' as const }
+      return { personnel: toPersonnel(record), action: 'update' as const }
     }
-    const record: Personnel = { id: nextId('personnel', s.personnel), staffNumber: nextStaffNumber(s), ...fields, archived: false }
+    const record: SeedPersonnel = { id: nextId('personnel', s.personnel), staffNumber: nextStaffNumber(s), ...fields, archived: false }
     s.personnel.push(record)
     audit(s, by, 'create', { type: 'staff', id: record.id })
-    return { personnel: record, action: 'create' as const }
+    return { personnel: toPersonnel(record), action: 'create' as const }
   })
 }
 
@@ -1136,7 +1156,7 @@ export function archivePersonnel(personnelId: string, actor?: SessionUser): Prom
     const record = personnelOf(s, personnelId)
     record.archived = true
     audit(s, by, 'archive', { type: 'staff', id: record.id })
-    return record
+    return toPersonnel(record)
   })
 }
 
@@ -1639,7 +1659,7 @@ function storeApproval(s: DbState, by: SessionUser, visit: Visit, input: ExcuseL
     ...period,
     note: input.note?.trim() || null,
     recipient: input.recipient?.trim() || EXCUSE_LETTER_RECIPIENT,
-    body: input.body?.trim() || excuseLetterBody(studentOf(s, visit.studentId ?? '').fullName, visit.dateTime.slice(0, 10), period),
+    body: input.body?.trim() || excuseLetterBody(formatPersonName(studentOf(s, visit.studentId ?? '')), visit.dateTime.slice(0, 10), period),
     ...(input.stayHomeUntilCleared && { stayHomeUntilCleared: true, stayHomeNote: input.stayHomeNote?.trim() || null }),
   }
   s.frontendOnly.excuseLetterApprovals = [...s.frontendOnly.excuseLetterApprovals, approval]
@@ -3012,7 +3032,7 @@ function sportsReportStudents(s: DbState, report: SportsReport): SportsReportStu
   return report.students.map(({ studentId }) => {
     const student = students.get(studentId)
     if (!student) return { studentId, fullName: null, gradeLevel: null, status: 'missing' as const }
-    return { studentId, fullName: student.fullName, gradeLevel: student.gradeLevel, status: student.archived ? ('archived' as const) : ('active' as const) }
+    return { studentId, fullName: formatPersonName(student), gradeLevel: student.gradeLevel, status: student.archived ? ('archived' as const) : ('active' as const) }
   })
 }
 
@@ -3086,13 +3106,14 @@ export function getSportsReportContent(id: string, actor?: SessionUser): Promise
       ].sort((a, b) => b.dateTime.localeCompare(a.dateTime))
       rows.push({
         studentId,
-        fullName: student.fullName,
+        fullName: formatPersonName(student),
         gradeLevel: student.gradeLevel,
         entries,
         ...(report.includeConditions ? { conditions: { medicalConditions: student.medicalConditions, allergies: student.allergies } } : {}),
       })
     }
-    rows.sort((a, b) => a.fullName.localeCompare(b.fullName))
+    // By last name, then first name (Zean, November 4, 2026).
+    rows.sort((a, b) => compareByLastName(students.get(a.studentId)!, students.get(b.studentId)!))
     const { title, activity, requestedBy, window, includeConditions, archived } = report
     return { report: { id, title, activity, requestedBy, window, includeConditions, archived }, from, to, asOf: now(s), rows, leftOut }
   })

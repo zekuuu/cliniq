@@ -2,6 +2,7 @@ import type { FollowUpDueState } from '../../components/status/followUp'
 import type { InventoryFlag } from '../../components/status/inventory'
 import { addDays, diffDays, formatDateTime, isWithin } from '../dates'
 import { maskLrn, STUDENT_SEARCH_MIN_LENGTH } from '../lrn'
+import { compareByLastName, formatPersonName, nameMatches, type NameParts } from '../personName'
 import type {
   AuditActionType,
   AuditLogEntry,
@@ -19,7 +20,7 @@ import type {
   StudentSearchResult,
   UserRole,
 } from '../../types/entities'
-import type { DbState, RecordReview, SeedStudent } from './types'
+import type { DbState, RecordReview, SeedPersonnel, SeedStudent } from './types'
 
 /**
  * SELECTORS: every derived value the screens show is computed here, from raw records, on every
@@ -225,7 +226,8 @@ export function auditLogList(state: DbState, query: AuditLogQuery): AuditLogList
  */
 export function missingRequiredFields(student: SeedStudent): string[] {
   const missing: string[] = []
-  if (!student.fullName.trim()) missing.push('Full name')
+  if (!student.firstName.trim()) missing.push('First name')
+  if (!student.lastName.trim()) missing.push('Last name')
   if (!student.gradeLevel.trim()) missing.push('Grade level')
   if (student.sex !== 'male' && student.sex !== 'female') missing.push('Sex')
   // Review round 2, R14 (decision 2): no birthdate makes the record incomplete; saving never blocks (ADR-054, ADR-051).
@@ -240,9 +242,14 @@ export function missingRequiredFields(student: SeedStudent): string[] {
   return missing
 }
 
-/** The §5 `Student` shape, with `recordComplete` derived rather than stored. */
+/** The §5 `Student` shape, with `recordComplete` and `fullName` derived rather than stored. */
 export function toStudent(student: SeedStudent): Student {
-  return { ...student, sex: student.sex ?? 'female', recordComplete: missingRequiredFields(student).length === 0 }
+  return { ...student, fullName: formatPersonName(student), sex: student.sex ?? 'female', recordComplete: missingRequiredFields(student).length === 0 }
+}
+
+/** A stored staff record with its derived `fullName` (ADR-064). */
+export function toPersonnel(person: SeedPersonnel): Personnel {
+  return { ...person, fullName: formatPersonName(person) }
 }
 
 /** A student on a multi-student screen: the list's columns and the masked LRN, nothing else (API contract Q2, ADR-038, ADR-057). */
@@ -277,16 +284,16 @@ export function searchStudents(state: DbState, query: string, limit = 8): Studen
   const lrnQuery = /^[\d\s-]+$/.test(q) && digits.length > 0
   return activeStudents(state)
     .map((s) => ({ s, byLrn: lrnQuery && s.lrn.startsWith(digits) }))
-    .filter(({ s, byLrn }) => byLrn || s.fullName.toLowerCase().includes(q))
-    .sort((a, b) => Number(b.byLrn) - Number(a.byLrn) || a.s.fullName.localeCompare(b.s.fullName))
+    .filter(({ s, byLrn }) => byLrn || nameMatches(formatPersonName(s), q))
+    .sort((a, b) => Number(b.byLrn) - Number(a.byLrn) || compareByLastName(a.s, b.s))
     .slice(0, limit)
-    .map(({ s }) => ({ id: s.id, lrn: s.lrn, fullName: s.fullName, gradeLevel: s.gradeLevel }))
+    .map(({ s }) => ({ id: s.id, lrn: s.lrn, fullName: formatPersonName(s), gradeLevel: s.gradeLevel }))
 }
 
 // ---- Personnel: staff patients (ADR-043) ----------------------------------------------------
 
 export function activePersonnel(state: DbState): Personnel[] {
-  return state.personnel.filter((p) => !p.archived)
+  return state.personnel.filter((p) => !p.archived).map(toPersonnel)
 }
 
 /**
@@ -300,19 +307,20 @@ export function searchPersonnel(state: DbState, query: string, limit = 8): Perso
   const number = /\d/.test(q) ? q.toUpperCase().replace(/\s/g, '') : null
   return activePersonnel(state)
     .map((p) => ({ p, byNumber: number !== null && (p.staffNumber.startsWith(number) || p.staffNumber.slice(4).startsWith(number)) }))
-    .filter(({ p, byNumber }) => byNumber || p.fullName.toLowerCase().includes(q))
-    .sort((a, b) => Number(b.byNumber) - Number(a.byNumber) || a.p.fullName.localeCompare(b.p.fullName))
+    .filter(({ p, byNumber }) => byNumber || nameMatches(p.fullName, q))
+    .sort((a, b) => Number(b.byNumber) - Number(a.byNumber) || compareByLastName(a.p, b.p))
     .slice(0, limit)
     .map(({ p }) => ({ id: p.id, staffNumber: p.staffNumber, fullName: p.fullName, type: p.type }))
 }
 
-/** One box for students and staff (ADR-043 item 5): both searches, labelled, by name, capped at `limit`. */
+/** One box for students and staff (ADR-043 item 5): both searches, labelled, by last name, capped at `limit`. */
 export function searchPatients(state: DbState, query: string, limit = 8): PatientSearchResult[] {
+  const names = new Map<string, NameParts>([...state.students, ...state.personnel].map((record) => [record.id, record]))
   return [
     ...searchStudents(state, query, limit).map((s) => ({ kind: 'student' as const, ...s })),
     ...searchPersonnel(state, query, limit).map((p) => ({ kind: 'personnel' as const, ...p })),
   ]
-    .sort((a, b) => a.fullName.localeCompare(b.fullName))
+    .sort((a, b) => compareByLastName(names.get(a.id)!, names.get(b.id)!))
     .slice(0, limit)
 }
 
@@ -381,7 +389,7 @@ export interface IncompleteRecordRow {
  */
 export function incompleteRecordQueue(state: DbState, fullLrn = false): IncompleteRecordRow[] {
   const reviews = new Map(state.frontendOnly.recordReviews.map((r) => [r.studentId, r]))
-  return activeStudents(state).flatMap((student) => {
+  return [...activeStudents(state)].sort(compareByLastName).flatMap((student) => {
     const missingFields = missingRequiredFields(student)
     const review = reviews.get(student.id) ?? null
     const resolved = Boolean(review?.resolvedAt)

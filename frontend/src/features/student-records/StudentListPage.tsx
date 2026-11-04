@@ -204,8 +204,10 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
     if (column.key === 'status') return { ...column, sort: sortColumn('status', 'Record status') }
     return column
   })
+  // The list arrives in school-list order, last name then first name (ADR-064); the Name column sorts by that order.
+  const nameOrder = new Map(data.map((student, index) => [student.id, index]))
   const sortedData = sortTableRows(data, sort, (student, key) => {
-    if (key === 'name') return student.fullName
+    if (key === 'name') return nameOrder.get(student.id)
     if (key === 'number') return student.lrn
     if (key === 'grade') return student.gradeLevel
     return student.recordComplete ? (student.archived ? 'Complete Archived' : 'Complete') : 'Incomplete'

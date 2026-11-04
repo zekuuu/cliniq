@@ -104,7 +104,7 @@ describe('Letters and visits (ADR-049)', () => {
     await approveExcuseLetter(visitId, { ...before.period, recipient: 'Grade 4 Adviser', body: 'Approved wording, as signed.' })
     // The student's name changes afterwards, which would change the template's first sentence.
     const student = await getStudent(before.student.id)
-    await saveStudent({ ...student, fullName: `${student.fullName} Jr.` }, { studentId: student.id, nameCorrectionReason: 'Registrar correction' })
+    await saveStudent({ ...student, lastName: `${student.lastName} Jr.` }, { studentId: student.id, nameCorrectionReason: 'Registrar correction' })
     const after = await fetchExcuseLetterContext(visitId)
     expect(after.body).toBe('Approved wording, as signed.')
     expect(after.recipient).toBe('Grade 4 Adviser')

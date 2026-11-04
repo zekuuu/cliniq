@@ -71,8 +71,8 @@ describe('A failed submit focuses the first invalid field', () => {
 
   it('Edit Student: a cleared required field takes focus', async () => {
     await submitEmpty(<StudentFormPage studentId={STUDENT} />, async (user) => {
-      await user.clear(screen.getByLabelText(/full name/i))
+      await user.clear(screen.getByLabelText(/^first name/i))
     })
-    expect(screen.getByLabelText(/full name/i)).toHaveFocus()
+    expect(screen.getByLabelText(/^first name/i)).toHaveFocus()
   })
 })

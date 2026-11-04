@@ -155,8 +155,10 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   const columns = baseColumns.map((column) =>
     column.key in labels ? { ...column, sort: sortColumn(column.key as StaffSortKey, labels[column.key as StaffSortKey]) } : column,
   )
+  // By last name, then first name (ADR-064): the order the list arrives in.
+  const nameOrder = new Map(data.map((person, index) => [person.id, index]))
   const rows = sortTableRows(data, sort, (person, key) =>
-    key === 'name' ? person.fullName : key === 'number' ? person.staffNumber : key === 'type' ? person.type : (person.department ?? ''),
+    key === 'name' ? nameOrder.get(person.id) : key === 'number' ? person.staffNumber : key === 'type' ? person.type : (person.department ?? ''),
   )
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize))
   const currentPage = Math.min(page, pageCount)

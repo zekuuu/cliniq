@@ -63,7 +63,8 @@ describe('Add/Edit Student', () => {
     expect(screen.queryByLabelText(/mobile number/i)).not.toBeInTheDocument()
 
     await user.type(screen.getByLabelText(/^LRN/), '123456789012')
-    await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
+    await user.type(screen.getByLabelText(/^first name/i), 'Lara')
+    await user.type(screen.getByLabelText(/^last name/i), 'Santos')
     await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
     await user.click(screen.getByRole('radio', { name: 'Female' }))
     await user.type(screen.getByLabelText(/contact name/i), 'Marisol Santos')

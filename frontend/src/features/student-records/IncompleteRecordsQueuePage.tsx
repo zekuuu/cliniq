@@ -19,6 +19,7 @@ import {
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
 import { formatDate } from '../../lib/dates'
+import { nameMatches } from '../../lib/personName'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { fetchIncompleteRecords, type IncompleteRecord } from './api/incompleteRecordsApi'
@@ -92,22 +93,24 @@ export function IncompleteRecordsQueuePage({
       .filter((record) => {
         if (!term) return true
         return (
-          record.fullName.toLowerCase().includes(term) ||
+          nameMatches(record.fullName, term) ||
           record.lrn.startsWith(term.replace(/[\s-]/g, '')) ||
           record.gradeLevel.toLowerCase().includes(term)
         )
       })
   }, [data, filter, search])
 
+  const nameOrder = useMemo(() => new Map((data ?? []).map((record, index) => [record.id, index])), [data])
   const sortedRows = useMemo(
     () => sortTableRows(visibleRows, sort, (record, key) => {
-      if (key === 'student') return record.fullName
+      // The queue arrives by last name, then first name (ADR-064); the Student column sorts by that order.
+      if (key === 'student') return nameOrder.get(record.id)
       if (key === 'grade') return record.gradeLevel
       if (key === 'missing') return record.missingFields.join(', ')
       if (key === 'imported') return record.importedAt
       return resolutionOf(record) ? 'Resolved' : 'Open'
     }),
-    [visibleRows, sort],
+    [visibleRows, sort, nameOrder],
   )
 
   const sortColumn = (key: IncompleteSortKey, label: string) => ({

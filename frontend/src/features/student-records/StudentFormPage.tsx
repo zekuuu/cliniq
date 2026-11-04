@@ -13,6 +13,7 @@ import {
   Icon,
   Input,
   MaskedLrn,
+  NameFields,
   HealthListField,
   Modal,
   Select,
@@ -42,6 +43,7 @@ import {
   type StudentFormValues,
 } from './api/studentFormApi'
 import { unusualAgeNote } from '../../lib/age'
+import { formatPersonName } from '../../lib/personName'
 import { isLrn, normalizeLrn } from '../../lib/lrn'
 import { setSavedMessage } from '../../lib/savedMessage'
 import { NONE_RECORDED } from '../../lib/patients'
@@ -51,7 +53,9 @@ type StudentFormErrors = Partial<Record<string, string>>
 
 const EMPTY_VALUES: StudentFormValues = {
   lrn: '',
-  fullName: '',
+  firstName: '',
+  lastName: '',
+  middleName: '',
   gradeLevel: '',
   section: '',
   sex: '',
@@ -66,7 +70,9 @@ function valuesFromStudent(student: Student | null): StudentFormValues {
   if (!student) return EMPTY_VALUES
   return {
     lrn: student.lrn,
-    fullName: student.fullName,
+    firstName: student.firstName,
+    lastName: student.lastName,
+    middleName: student.middleName ?? '',
     gradeLevel: student.gradeLevel,
     section: student.section ?? '',
     sex: student.sex,
@@ -162,7 +168,8 @@ function validate(values: StudentFormValues, today: ISODate): StudentFormErrors 
   const errors: StudentFormErrors = {}
   if (!values.lrn) errors.lrn = 'Enter the 12-digit LRN.'
   else if (!isLrn(values.lrn)) errors.lrn = 'The LRN must be exactly 12 digits.'
-  if (!values.fullName.trim()) errors.fullName = 'Enter the student full name.'
+  if (!values.firstName.trim()) errors.firstName = "Enter the student's first name."
+  if (!values.lastName.trim()) errors.lastName = "Enter the student's last name."
   if (!values.gradeLevel) errors.gradeLevel = 'Select the grade level.'
   if (!values.sex) errors.sex = 'Select the sex recorded by the school.'
   if (values.birthDate > today) errors.birthDate = "The birthdate can't be in the future."
@@ -193,7 +200,8 @@ function StudentFormEditor({
   const [liveDuplicates, setLiveDuplicates] = useState<StudentDuplicateCheck>({ lrnTaken: false, nameMatches: [] })
   // Sir Rey (October 25, 2026): the LRN is locked after creation; a name correction asks why.
   const [nameReason, setNameReason] = useState('')
-  const nameChanged = data.mode === 'edit' && values.fullName.trim() !== (data.student?.fullName ?? '')
+  const typedName = formatPersonName(values)
+  const nameChanged = data.mode === 'edit' && typedName !== (data.student?.fullName ?? '')
   const navigate = useNavigate()
   // Set by the Incomplete Records queue's Edit Record, so a save goes back there instead of to the profile.
   const location = useLocation()
@@ -226,7 +234,7 @@ function StudentFormEditor({
     if (mode !== 'add') return
     let stale = false
     const timer = setTimeout(() => {
-      void checkStudentDuplicates(values.lrn, values.fullName).then((result) => {
+      void checkStudentDuplicates(values.lrn, typedName).then((result) => {
         if (!stale) setLiveDuplicates(result)
       })
     }, 300)
@@ -234,7 +242,7 @@ function StudentFormEditor({
       stale = true
       clearTimeout(timer)
     }
-  }, [mode, values.lrn, values.fullName])
+  }, [mode, values.lrn, typedName])
 
   function setField<K extends keyof StudentFormValues>(field: K, value: StudentFormValues[K]) {
     setValues((current) => ({ ...current, [field]: value }))
@@ -403,13 +411,12 @@ function StudentFormEditor({
                   onChange={(event) => setField('lrn', normalizeLrn(event.target.value))}
                 />
               )}
-              <div className="flex flex-col gap-2">
-                <Input
-                  label="Full name"
-                  required
-                  value={values.fullName}
-                  error={errors.fullName}
-                  onChange={(event) => setField('fullName', event.target.value)}
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <NameFields
+                  values={values}
+                  errors={errors}
+                  hint="Write the name as it appears on the school's list."
+                  onChange={(field, value) => setField(field, value)}
                 />
                 {mode === 'add' && liveDuplicates.nameMatches.length > 0 && (
                   <div

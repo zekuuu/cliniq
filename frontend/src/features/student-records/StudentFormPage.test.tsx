@@ -10,10 +10,17 @@ import { StudentProfilePage } from './StudentProfilePage'
 import { fetchStudentList } from './api/studentListApi'
 import { renderWithRouter } from '../../test/renderWithRouter'
 
+/** Types a first and last name (and a middle name, when given) into the split name fields (ADR-064). */
+async function typeName(user: ReturnType<typeof userEvent.setup>, firstName: string, lastName: string, middleName = '') {
+  await user.type(screen.getByLabelText(/^First name/), firstName)
+  await user.type(screen.getByLabelText(/^Last name/), lastName)
+  if (middleName) await user.type(screen.getByLabelText(/^Middle name/), middleName)
+}
+
 async function fillRequiredStudentFields() {
   const user = userEvent.setup({ delay: null })
   await user.type(screen.getByLabelText(/^LRN/), '1234 5678-9012')
-  await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
+  await typeName(user, 'Lara', 'Santos')
   await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
   await user.click(screen.getByRole('radio', { name: 'Female' }))
   await user.type(screen.getByLabelText(/contact name/i), 'Marisol Santos')
@@ -93,7 +100,7 @@ describe('Student Form', () => {
     expect(await screen.findByText('This LRN is already used by another student record.')).toBeInTheDocument()
     expect(document.body.textContent).not.toContain(existing.fullName)
 
-    await user.type(screen.getByLabelText(/full name/i), existing.fullName)
+    await typeName(user, existing.firstName, existing.lastName)
     const note = await screen.findByText('Already in the Student List:')
     expect(note.parentElement).toHaveTextContent(existing.gradeLevel)
     expect(note.parentElement).toHaveTextContent(existing.lrn.slice(-4))
@@ -135,8 +142,8 @@ describe('Student Form', () => {
 
     await screen.findByRole('heading', { name: 'Edit Student' })
     expect(screen.queryByLabelText(/^Reason for the name correction/)).not.toBeInTheDocument()
-    await user.clear(screen.getByLabelText(/^Full name/))
-    await user.type(screen.getByLabelText(/^Full name/), 'Corrected Surname')
+    await user.clear(screen.getByLabelText(/^Last name/))
+    await user.type(screen.getByLabelText(/^Last name/), 'Correctedsurname')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     const reason = screen.getByLabelText(/^Reason for the name correction/)
     expect(reason).toHaveAccessibleDescription(expect.stringMatching(/Enter why the name is being corrected/))
@@ -144,17 +151,18 @@ describe('Student Form', () => {
     expect(getRecordedAuditEntries()).toHaveLength(0)
 
     const full = await getStudent(existing.id)
-    await expect(saveStudent({ ...full, fullName: 'Corrected Surname' }, { studentId: existing.id, nameCorrectionReason: 'ok' })).rejects.toBeInstanceOf(NameCorrectionReasonError)
+    await expect(saveStudent({ ...full, lastName: 'Surname' }, { studentId: existing.id, nameCorrectionReason: 'ok' })).rejects.toBeInstanceOf(NameCorrectionReasonError)
 
     await user.type(reason, 'Misspelled on the enrolment form')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     await waitFor(() => expect(getRecordedAuditEntries()).toHaveLength(1))
     expect(getRecordedAuditEntries()[0]).toMatchObject({
       actionType: 'update',
-      summary: 'Updated name. Name corrected; reason: Misspelled on the enrolment form',
+      // The changed field is named, never its old or new value (ADR-058, ADR-064).
+      summary: 'Updated last name. Name corrected; reason: Misspelled on the enrolment form',
     })
-    expect(JSON.stringify(getRecordedAuditEntries())).not.toMatch(new RegExp(`Corrected Surname|${existing.fullName}`))
-    expect((await getStudent(existing.id)).fullName).toBe('Corrected Surname')
+    expect(JSON.stringify(getRecordedAuditEntries())).not.toMatch(new RegExp(`Correctedsurname|${existing.lastName}|${existing.fullName}`))
+    expect((await getStudent(existing.id)).fullName).toBe(`${existing.firstName} Correctedsurname`)
   })
 
   it('saves with no emergency contact, and finishes a started one (ADR-059)', async () => {
@@ -162,7 +170,7 @@ describe('Student Form', () => {
     renderWithRouter(<StudentFormPage />)
     await screen.findByRole('heading', { name: 'Add Student' })
     await user.type(screen.getByLabelText(/^LRN/), '123456789012')
-    await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
+    await typeName(user, 'Lara', 'Santos')
     await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
     await user.click(screen.getByRole('radio', { name: 'Female' }))
     await user.type(screen.getByLabelText(/contact name/i), 'Marisol')
@@ -180,7 +188,8 @@ describe('Student Form', () => {
     await screen.findByRole('heading', { name: 'Add Student' })
     await user.click(screen.getByRole('button', { name: 'Save Student' }))
 
-    expect(screen.getByText('Enter the student full name.')).toBeInTheDocument()
+    expect(screen.getByText("Enter the student's first name.")).toBeInTheDocument()
+    expect(screen.getByText("Enter the student's last name.")).toBeInTheDocument()
     expect(screen.getByText('Select the grade level.')).toBeInTheDocument()
     expect(screen.getByText('Select the sex recorded by the school.')).toBeInTheDocument()
     // Allergies and conditions may be left empty; an empty field reads "None recorded" (ADR-051).
@@ -199,7 +208,7 @@ describe('Student Form', () => {
 
     await screen.findByRole('heading', { name: 'Add Student' })
     await user.type(screen.getByLabelText(/^LRN/), '123456789012')
-    await user.type(screen.getByLabelText(/full name/i), existing.fullName)
+    await typeName(user, existing.firstName, existing.lastName)
     await selectOption(user, screen.getByLabelText(/grade level/i), existing.gradeLevel)
     await user.click(screen.getByRole('radio', { name: 'Female' }))
     await user.type(screen.getByLabelText(/contact name/i), 'Parent Guardian')
@@ -228,7 +237,8 @@ describe('Student Form', () => {
     expect(await screen.findByText('Student record created for Lara Santos.')).toBeInTheDocument()
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['create'])
     // The form is cleared for the next student.
-    expect(screen.getByLabelText(/full name/i)).toHaveValue('')
+    expect(screen.getByLabelText(/^First name/)).toHaveValue('')
+    expect(screen.getByLabelText(/^Last name/)).toHaveValue('')
   })
 
   it('adds, promotes, and removes repeatable emergency contacts', async () => {
@@ -297,7 +307,7 @@ describe('Student Form', () => {
     renderWithRouter(<StudentFormPage />)
 
     await screen.findByRole('heading', { name: 'Add Student' })
-    await user.type(screen.getByLabelText(/full name/i), 'Lara Santos')
+    await typeName(user, 'Lara', 'Santos')
     await user.click(screen.getByRole('button', { name: 'Save Student' }))
 
     expect(screen.getByLabelText(/^LRN/)).toHaveFocus()
@@ -318,5 +328,73 @@ describe('Student Form', () => {
     const entry = getRecordedAuditEntries().at(-1)
     expect(entry).toMatchObject({ actionType: 'update', targetRecord: { type: 'student', id: existing.id }, summary: 'Updated sex' })
     expect(entry?.summary).not.toContain(existing.sex)
+  })
+})
+
+describe('Student Form: First name, Last name and Middle name (S4, ADR-064)', () => {
+  beforeEach(() => resetMockDb())
+
+  it('shows the three fields in order, with example placeholders, required marks and the source hint', async () => {
+    renderWithRouter(<StudentFormPage />)
+    await screen.findByRole('heading', { name: 'Add Student' })
+    const group = screen.getByRole('group', { name: 'Name' })
+    const fields = within(group).getAllByRole('textbox')
+    expect(fields.map((field) => field.getAttribute('placeholder'))).toEqual([
+      'e.g. Maria Angela',
+      'e.g. Dela Cruz',
+      'e.g. Santos (leave blank if none)',
+    ])
+    expect(screen.getByLabelText(/^First name/)).toBeRequired()
+    expect(screen.getByLabelText(/^Last name/)).toBeRequired()
+    expect(screen.getByLabelText('Middle name (optional)')).not.toBeRequired()
+    for (const field of fields) expect(field).toHaveAttribute('autocomplete', 'off')
+    expect(screen.getByLabelText(/^First name/)).toHaveAttribute('maxlength', '50')
+    expect(screen.getByLabelText('Middle name (optional)')).toHaveAttribute('maxlength', '40')
+    expect(group).toHaveAccessibleDescription("Write the name as it appears on the school's list.")
+    expect(screen.queryByLabelText(/full name/i)).not.toBeInTheDocument()
+  })
+
+  it('saves the parts trimmed and single-spaced, leaves a blank middle name empty, and builds the full name', async () => {
+    renderWithRouter(<StudentFormPage />)
+    await screen.findByRole('heading', { name: 'Add Student' })
+    const user = userEvent.setup({ delay: null })
+    await user.type(screen.getByLabelText(/^LRN/), '123456789012')
+    await typeName(user, '  Maria   Angela ', ' Dela  Cruz ', ' Santos ')
+    await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
+    await user.click(screen.getByRole('radio', { name: 'Female' }))
+    await user.click(screen.getByRole('button', { name: 'Save Student' }))
+    expect(await screen.findByText('Student record created for Maria Angela Santos Dela Cruz.')).toBeInTheDocument()
+    const [saved] = await fetchStudentList({ search: 'dela cruz', gradeLevel: '', includeArchived: false })
+    expect(await getStudent(saved.id)).toMatchObject({ firstName: 'Maria Angela', lastName: 'Dela Cruz', middleName: 'Santos', fullName: 'Maria Angela Santos Dela Cruz' })
+  })
+
+  it('treats spaces alone as empty, and stores no middle name when it is left blank', async () => {
+    const user = userEvent.setup({ delay: null })
+    renderWithRouter(<StudentFormPage />)
+    await screen.findByRole('heading', { name: 'Add Student' })
+    await typeName(user, '   ', 'Reyes')
+    await user.click(screen.getByRole('button', { name: 'Save Student' }))
+    expect(screen.getByText("Enter the student's first name.")).toBeInTheDocument()
+    expect(screen.queryByText("Enter the student's last name.")).not.toBeInTheDocument()
+
+    const full = await getStudent('student-0001')
+    const result = await saveStudent({ ...full, middleName: '   ' }, { studentId: full.id })
+    expect(result.status === 'saved' && result.student.middleName).toBeNull()
+  })
+
+  it('prefills the three parts on Edit Student', async () => {
+    const existing = await getStudent('student-0001')
+    renderWithRouter(<StudentFormPage studentId={existing.id} />)
+    await screen.findByRole('heading', { name: 'Edit Student' })
+    expect(screen.getByLabelText(/^First name/)).toHaveValue(existing.firstName)
+    expect(screen.getByLabelText(/^Last name/)).toHaveValue(existing.lastName)
+    expect(screen.getByLabelText('Middle name (optional)')).toHaveValue('')
+  })
+
+  it('names a corrected middle name by field only in the audit log', async () => {
+    const existing = await getStudent('student-0001')
+    await saveStudent({ ...existing, middleName: 'Zamora' }, { studentId: existing.id, nameCorrectionReason: 'Missing on the first encoding' })
+    expect(getRecordedAuditEntries().at(-1)?.summary).toBe('Updated middle name. Name corrected; reason: Missing on the first encoding')
+    expect(JSON.stringify(getRecordedAuditEntries())).not.toContain('Zamora')
   })
 })

@@ -3,6 +3,7 @@ import type { AuditLogEntry, ISODate } from '../../types/entities'
 import { persistParam, resetParam } from './devToggles'
 import { checkSeedIntegrity } from './integrity'
 import { fillApprovedLetterWording, fillGradeAtTime, resolveSeed, seed } from './seed'
+import { splitFullName } from '../personName'
 import type { DbState } from './types'
 
 /**
@@ -87,6 +88,12 @@ export function migratePersistedState(saved: Saved): Saved {
   }
   // ADR-063: staff saved before the field show "Sex not recorded".
   for (const person of (saved.state.personnel ?? []) as unknown as Array<Record<string, unknown>>) person.sex ??= null
+  // ADR-064 (November 4, 2026): names are stored as parts. A saved full name is split by the import's rule.
+  for (const person of [...saved.state.students, ...(saved.state.personnel ?? [])] as unknown as Array<Record<string, unknown>>) {
+    if (typeof person.fullName !== 'string') continue
+    if (typeof person.firstName !== 'string') Object.assign(person, splitFullName(person.fullName))
+    delete person.fullName
+  }
   // ADR-054: a student's own number is gone and the birthdate is new. Staff keep their number.
   for (const student of saved.state.students as unknown as Array<Record<string, unknown>>) {
     delete student.contactInfo

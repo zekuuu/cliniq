@@ -58,7 +58,9 @@ const CONFIG: MockDbConfig = {
 const student = (id: string, n: string, extra: Partial<SeedStudent> = {}): SeedStudent => ({
   id,
   lrn: n,
-  fullName: `SECRET NAME ${id}`,
+  firstName: 'SECRET',
+  lastName: `NAME ${id}`,
+  middleName: null,
   gradeLevel: 'Grade 5',
   sex: 'female',
   // A birthdate, so only a missing contact makes a fixture incomplete (R14).

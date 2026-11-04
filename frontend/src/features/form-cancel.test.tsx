@@ -94,12 +94,12 @@ describe('Cancel with unsaved changes asks first', () => {
       '/incidents',
       /additional notes/i,
     ],
-    ['Add Student', <StudentFormPage />, '/students', /full name/i],
+    ['Add Student', <StudentFormPage />, '/students', /^first name/i],
     [
       'Edit Student',
       <StudentFormPage studentId={STUDENT} />,
       `/students/${STUDENT}`,
-      /full name/i,
+      /^first name/i,
     ],
     [
       'PE/Sports Referral',

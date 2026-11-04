@@ -25,6 +25,12 @@ export interface Student {
   id: string
   /** Learner Reference Number: 12 digits, text, unique, entered by Staff (ADR-028). Masked on lists (`lib/lrn.ts`). */
   lrn: string
+  /** The name is stored as parts (ADR-064). PROVISIONAL, pending the ERD. */
+  firstName: string
+  lastName: string
+  /** Optional; null when the student has none. */
+  middleName: string | null
+  /** "First Middle Last", built by `formatPersonName` (`lib/personName.ts`) on read. Never stored. */
   fullName: string
   gradeLevel: string
   /** Optional until the yearly import fills it (ADR-047). PROVISIONAL, pending the ERD. */
@@ -66,6 +72,11 @@ export interface Personnel {
   id: string
   /** System-assigned, unique, `STF-0001`. Stands in for the masked LRN on lists (ADR-004). PROVISIONAL: the school may have its own employee number. */
   staffNumber: string
+  /** Stored as parts, like a student's (ADR-064). PROVISIONAL, pending the ERD. */
+  firstName: string
+  lastName: string
+  middleName: string | null
+  /** "First Middle Last", built on read. Never stored. */
   fullName: string
   /** Required on the form (ADR-063). Null only on a record saved before the field existed: "Sex not recorded". */
   sex: StudentSex | null
