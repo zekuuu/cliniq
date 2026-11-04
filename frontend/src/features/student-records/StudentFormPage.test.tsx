@@ -342,7 +342,7 @@ describe('Student Form: First name, Last name and Middle name (S4, ADR-064)', ()
     expect(fields.map((field) => field.getAttribute('placeholder'))).toEqual([
       'e.g. Maria Angela',
       'e.g. Dela Cruz',
-      'Optional, e.g. Santos',
+      'e.g. Santos (optional)',
     ])
     expect(screen.getByLabelText(/^First name/)).toBeRequired()
     expect(screen.getByLabelText(/^Last name/)).toBeRequired()

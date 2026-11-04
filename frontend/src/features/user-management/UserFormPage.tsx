@@ -131,8 +131,9 @@ function UserForm({
             <p role="status" className="sr-only">
               {invalid.announcement}
             </p>
+            {/* Two fields per row (Zean, November 5, 2026). */}
+            <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-2">
             <Input
-              className="sm:max-w-md"
               label="Full name"
               value={name}
               required
@@ -140,7 +141,6 @@ function UserForm({
               onChange={(event) => setName(event.target.value)}
             />
             <Input
-              className="sm:max-w-sm"
               label="Username"
               value={username}
               required
@@ -148,7 +148,6 @@ function UserForm({
               onChange={(event) => setUsername(event.target.value)}
             />
             <Select
-              className="sm:max-w-xs"
               label="Role"
               value={role}
               required
@@ -165,7 +164,6 @@ function UserForm({
             />
             {!userId && (
               <Input
-                className="sm:max-w-sm"
                 label="Temporary password"
                 type="password"
                 autoComplete="new-password"
@@ -176,6 +174,7 @@ function UserForm({
                 onChange={(event) => setTemporaryPassword(event.target.value)}
               />
             )}
+            </div>
             <section aria-labelledby="profile-picture-title" className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4">
               <div className="flex items-center gap-3">
                 <UserAvatar name={name || 'New user'} picture={profilePicture} className="size-16 text-lg" />

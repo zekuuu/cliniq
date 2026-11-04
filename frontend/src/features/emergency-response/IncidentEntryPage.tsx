@@ -2,6 +2,7 @@ import { useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNo
 import { cleanComplaint, COMPLAINT_MAX_LENGTH } from '../../lib/complaints'
 import { useLocation, useSearchParams } from 'react-router'
 import {
+  FIELD_HALF,
   BackButton,
   Button,
   Card,
@@ -622,7 +623,8 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                 </p>
               )}
               {!data.student && (
-                <div className="sm:max-w-md">                <PatientPicker
+                <div className={identified.student ? undefined : FIELD_HALF}>
+                <PatientPicker
                   search={searchIncidentPatients}
                   selected={identified.student}
                   onClear={identified.reset}
@@ -634,7 +636,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                 /></div>
               )}
               {student && <StudentAlertCard student={student} />}
-              <div className="sm:max-w-sm">              <SelectWithOther
+              <SelectWithOther
                 label="Complaint"
                 otherLabel="Specify other complaint"
                 required
@@ -648,7 +650,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                 maxLength={COMPLAINT_MAX_LENGTH}
                 hint="The complaint or symptom only. Don't include names."
                 error={errors.complaint}
-              /></div>
+              />
               <ReadingsFields
                 values={readings}
                 onChange={setReading}
@@ -736,7 +738,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     openOnFocus
                     noMatchesText={null}
                     maxLength={60}
-                    className="sm:max-w-sm"
+                    className={FIELD_HALF}
                   />
                   {completed && incident && !treatmentNotes.trim() && !incident.itemsGiven.length && (
                     <p className="text-sm text-text-secondary">No treatment recorded</p>
@@ -835,7 +837,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                       {/* A select, as on the Parent Notification page: the four labels don't fit side by side on a phone. */}
                       <Select
                         label="Outcome"
-                        className="sm:max-w-sm"
+                        className={FIELD_HALF}
                         value={notificationOutcome}
                         onChange={(value) => setNotificationOutcome(value as ParentNotificationOutcome)}
                         options={PARENT_NOTIFICATION_OUTCOMES}

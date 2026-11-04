@@ -398,7 +398,7 @@ describe('R31: "Include recorded conditions and allergies" switched off on Edit'
     render(<MemoryRouter initialEntries={[`/reports/sports/${report.id}/edit`]}><AppRoutes user={STAFF} onLogout={() => {}} /></MemoryRouter>)
     const box = await screen.findByRole('checkbox', { name: /Include recorded conditions and allergies/ }, { timeout: 5000 })
     expect(box).toBeChecked()
-    expect(screen.getByText(/complaint prints either way/)).toBeInTheDocument()
+    expect(screen.getByText(/complaints always print/)).toBeInTheDocument()
     await user.click(box)
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     const page = await screen.findByRole('table', { name: 'Sports Report preview' }, { timeout: 5000 })

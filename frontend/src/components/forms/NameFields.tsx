@@ -49,7 +49,7 @@ export function NameFields({
         <Input label="First name" required placeholder="e.g. Maria Angela" {...field('firstName')} />
         <Input label="Last name" required placeholder="e.g. Dela Cruz" {...field('lastName')} />
         <div className="flex flex-col gap-2">
-          <Input label="Middle name" placeholder={noMiddle ? 'None' : 'Optional, e.g. Santos'} disabled={noMiddle} {...field('middleName')} />
+          <Input label="Middle name" placeholder={noMiddle ? 'None' : 'e.g. Santos (optional)'} disabled={noMiddle} {...field('middleName')} />
           <label className="inline-flex cursor-pointer items-center gap-2 self-start text-sm text-text-primary">
             <input
               type="checkbox"

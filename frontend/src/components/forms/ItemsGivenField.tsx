@@ -173,7 +173,7 @@ export function ItemsGivenField({
                     className="order-4 col-span-2 sm:order-none sm:col-span-1 sm:[&>label]:sr-only"
                     value={line.instructions}
                     maxLength={INSTRUCTIONS_MAX}
-                    placeholder="Optional, e.g. 1 tablet every 6 hours"
+                    placeholder="e.g. 1 tablet every 6 hours (optional)"
                     onChange={(event) => update(line.itemId, { instructions: event.target.value })}
                   />
                   <button type="button" aria-label={`Remove ${name}`} onClick={() => remove(line.itemId)} className={`order-2 sm:order-none ${iconButton}`}>

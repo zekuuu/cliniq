@@ -256,7 +256,8 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
           />
           <CardBody className="flex flex-col gap-5">
             <FormSection id="pe-source-title" title="Referral source" description="The student, who referred them, and the activity.">
-            <div className="sm:max-w-md">            <StudentPicker
+            <div className={identified.student ? undefined : 'md:w-[calc(50%-0.5rem)]'}>
+            <StudentPicker
               search={searchReferralStudents}
               selected={identified.student}
               onClear={identified.reset}

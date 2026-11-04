@@ -26,7 +26,7 @@ export { StatCard, StatCardSkeleton, type StatTone, type StatTrend } from './ui/
 export { TitleLink } from './ui/TitleLink'
 export { SexRadios } from './forms/SexRadios'
 export { NameFields, type NameValues } from './forms/NameFields'
-export { FormSection, FORM_DIVIDER } from './forms/FormSection'
+export { FormSection, FORM_DIVIDER, FIELD_HALF } from './forms/FormSection'
 export { StatusBadge, type StatusDefinition, type StatusMap } from './ui/StatusBadge'
 export { followUpDueMap, followUpStatusMap, type FollowUpDueState } from './status/followUp'
 export { frequentVisitorMap } from './status/frequentVisitor'

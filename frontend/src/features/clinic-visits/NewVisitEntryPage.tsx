@@ -10,6 +10,7 @@ import {
   DatePicker,
   EmptyState,
   FormSection,
+  FIELD_HALF,
   FORM_DIVIDER,
   ErrorState,
   Icon,
@@ -569,7 +570,8 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
           />
           <CardBody className="flex flex-col gap-5">
             <FormSection id="visit-patient-title" title="Patient and time" description="Who came in, and when.">
-            <div className="sm:max-w-md">            <PatientPicker
+            <div className={identified.student ? undefined : FIELD_HALF}>
+            <PatientPicker
               search={searchVisitPatients}
               selected={identified.student}
               onClear={identified.reset}
@@ -613,7 +615,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
             </div>
             {isLateEntry && (
               <Input
-                className="sm:max-w-md"
+                className={FIELD_HALF}
                 label="Reason for late entry"
                 placeholder="Optional"
                 value={lateEntryReason}
@@ -626,15 +628,16 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
 
             <FormSection id="visit-complaint-title" title="Presenting problem" description="Why the patient came in. The first-aid checklist follows the complaint.">
             {/* Remounts on the pick, so focus moves on to the next thing to fill in (D4: fewer clicks). */}
-            <div className="sm:max-w-sm">            <ComplaintField
+            <ComplaintField
               key={identified.student?.id ?? 'none'}
               autoFocus={Boolean(identified.student)}
               value={complaint}
               onChange={updateComplaint}
               suggestions={suggestions}
               error={errors.complaint}
-            /></div>
-            <div className="sm:max-w-md">            <ExtraComplaintsField value={extraComplaints} onChange={setExtraComplaints} main={complaint} suggestions={suggestions} /></div>
+            />
+            <div className={FIELD_HALF}>
+            <ExtraComplaintsField value={extraComplaints} onChange={setExtraComplaints} main={complaint} suggestions={suggestions} /></div>
             {looksLikeEmergency && (
               <div role="note" className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary">
                 <span className="flex items-center gap-2">

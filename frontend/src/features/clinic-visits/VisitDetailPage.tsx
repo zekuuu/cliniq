@@ -2,6 +2,7 @@ import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { PATIENT_KIND_LABELS, patientGroup, patientIdText, patientLine } from '../../lib/patients'
 import { Link, useNavigate } from 'react-router'
 import {
+  FIELD_HALF,
   BackButton,
   Badge,
   Button,
@@ -487,13 +488,14 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                     }}
                   />
                 </div>
-                <div className="sm:max-w-sm">                <ComplaintField
+                <ComplaintField
                   value={values.complaint}
                   onChange={(value) => setField('complaint', value)}
                   suggestions={visit.complaintSuggestions}
                   error={errors.complaint}
-                /></div>
-                <div className="sm:max-w-md">                <ExtraComplaintsField
+                />
+                <div className={FIELD_HALF}>
+                <ExtraComplaintsField
                   value={values.extraComplaints}
                   onChange={(next) => setField('extraComplaints', next)}
                   main={values.complaint}

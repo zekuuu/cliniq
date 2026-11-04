@@ -1,6 +1,13 @@
 import type { ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 
+/**
+ * A field alone on its row takes one column of the form's 2-column grid (from `sm`, `gap-3`), so its
+ * edges line up with the two-field rows around it (Zean, November 5, 2026). A picker drops it once
+ * someone is selected, so the selected card has the full row and never wraps.
+ */
+export const FIELD_HALF = 'sm:w-[calc(50%-0.375rem)]'
+
 /** The divider between form sections and above a form's action row (Zean, November 5, 2026). */
 export const FORM_DIVIDER = 'border-t border-text-muted/50'
 
