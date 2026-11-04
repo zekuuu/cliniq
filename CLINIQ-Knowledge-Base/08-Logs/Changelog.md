@@ -2,6 +2,7 @@
 
 **Backend changes are logged in [`Backend-Changelog.md`](./Backend-Changelog.md), not here** (ADR-056); this file covers the frontend, the documents and the project.
 
+| Thursday, November 05, 2026 — 01:16 PHT | Narrow page width (`max-w-page-narrow`) is now 832px instead of 720px, so every form and detail page matches the Student form; `Design-System.md` updated, canonical docs flagged (DOC), on `main` (not committed). See [Agent session](Agent-Sessions/2026-11-05-student-form-sections.md). |
 | Thursday, November 05, 2026 — 01:14 PHT | Student form labels drop "(optional)" (Middle name, Section, Birthdate; Middle name on the Staff form too); only required fields carry a mark (ADR-051), on `main` (not committed). See [Agent session](Agent-Sessions/2026-11-05-student-form-sections.md). |
 | Thursday, November 05, 2026 — 01:12 PHT | Add/Edit Student form fields aligned on one 3-column grid (Sex and Birthdate moved into Identity; shared `NameFields` now 3 columns, which also affects the Staff form); shorter `HealthListField` hint; Student form page widened to 52rem, on `main` (not committed). See [Agent session](Agent-Sessions/2026-11-05-student-form-sections.md). |
 | Thursday, November 05, 2026 — 01:08 PHT | Add/Edit Student form grouped into four titled sections (Identity, School details, Emergency contacts, Medical history) with dividers; shorter LRN hint; no behavior change, on `main` (not committed). See [Agent session](Agent-Sessions/2026-11-05-student-form-sections.md). |

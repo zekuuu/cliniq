@@ -105,7 +105,7 @@ Clean, organized, compact, comfortable, uncluttered — avoid both extremes: cro
 | Token | Width | Use |
 |---|---|---|
 | `--container-page-wide` (`max-w-page-wide`) | 1200px | Lists, tables, reports, and dashboards |
-| `--container-page-narrow` (`max-w-page-narrow`) | 720px | Single-record forms and detail views, stacked in one column |
+| `--container-page-narrow` (`max-w-page-narrow`) | 832px | Single-record forms and detail views, stacked in one column |
 
 Don't introduce a third width for one screen.
 

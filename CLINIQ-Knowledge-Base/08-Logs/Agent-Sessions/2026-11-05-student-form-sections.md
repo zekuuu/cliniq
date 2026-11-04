@@ -27,3 +27,8 @@ Next Steps: Apply the same sections to the Staff form if the user wants the two 
 Follow-up (Thursday, November 05, 2026 — 01:14 PHT), prompt: "remove (optional) label, it seems like the fields isn't important":
 - The labels "Middle name (optional)", "Section (optional)" and "Birthdate (optional)" now read "Middle name", "Section" and "Birthdate". Under ADR-051 only required fields are marked (red *), so a field with no mark is optional. The `NameFields` change also applies to the Staff form.
 - StudentFormPage.test.tsx and StaffPages.test.tsx updated, and the Add/Edit Student line in 03-Design/Screen-Inventory.md updated. vitest on student-records and staff-records: 14 files, 100 tests passed.
+
+Follow-up (Thursday, November 05, 2026 — 01:16 PHT), prompt: "now use the same width of that page to other who has small width like add staff, etc":
+- The shared `--container-page-narrow` token in `frontend/src/index.css` is now 52rem (832px), up from 45rem (720px). Every form and detail page that uses `max-w-page-narrow` (18 pages) gets the Student form width. The Student form uses the token again instead of its own `max-w-[52rem]`.
+- `03-Design/Design-System.md` is updated. The canonical Frontend Context Brief and Frontend Design Reference still say 720px; this is logged as a DOC item in Issues-and-TODOs.
+- The full vitest suite passes: 121 files, 1034 tests.
