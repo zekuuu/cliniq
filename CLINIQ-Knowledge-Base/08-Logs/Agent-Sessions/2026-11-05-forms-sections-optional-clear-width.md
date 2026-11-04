@@ -52,3 +52,48 @@ Known Issues:
 - None checked in a browser; the width caps and sections were checked through the tests and the class names only.
 - `TextareaField` is duplicated locally in New Visit, Visit Detail, Incident and PE referral. Three of them gained a placeholder prop; merging them was not part of this request.
 Next Steps: Check the forms on screen and adjust any width cap that cuts real values.
+
+Follow-up (Thursday, November 05, 2026 — 02:31 PHT), prompt: "when resizing, and cutting, follow the by column e.g. those fields below aren't aligned with the field above that follow 2 column. also be mindful for those fields like selecting Student or staff, when selected it shows datas and since the field is shorter, it wraps. take note that not only in that page. let me clarify all those refactor you did, you checked with other screens to right?"
+- Answer given: no. The earlier width pass was checked only through tests and class names, not on screen.
+- Fix: the fixed caps (`sm:max-w-md`, `-sm`, `-xs`, `-40`) became `FIELD_HALF` (`sm:w-[calc(50%-0.375rem)]`, one column of a `sm:grid-cols-2 gap-3` grid). This applies to New Visit, Visit Detail, Incident (including Body part affected), Sports Report (and its grade + Add Grade row, which also lost a duplicate `className`), Dispense and the User form. PE referral uses `md:w-[calc(50%-0.5rem)]` to match its `md` grid. Patient and student pickers drop the column once someone is selected, so the selected card has the full row.
+- The inventory form's first section was renamed "Item", because it repeated the card title "Item details".
+- Checked on screen with Playwright (npx-cache playwright-core 1.60) driving Chromium (puppeteer's chrome-headless-shell 155), at 1366px and 390px, against the running Vite dev server. Pages: New Visit (empty and with a student picked, plus phone width), Report Incident (empty and picked), PE referral (picked), New Sports Report, Dispense, Add User (as Admin), Add Staff, Add Student, Add Inventory Item. Single fields end at the same edge as the two-column rows; selected-patient cards take the full row without wrapping; phone width stacks full width. Screenshots stayed in the session scratchpad, outside the repository.
+- Not checked on screen: Visit Detail in edit mode (it needs a saved visit opened for editing); it uses the same `FIELD_HALF` in the same `sm:grid-cols-2 gap-3` grid.
+- Skill `cliniq-input-patterns`: the width rule changed. Old: fixed caps by field kind. New: one column of the form grid, and the full row for a picker once someone is selected.
+- Tests: tsc and eslint are clean; the full vitest suite passes (121 files, 1037 tests).
+
+Follow-up (Thursday, November 05, 2026 — 02:49 PHT), prompt: "Is there another option or another technique to do with those fields or options that has Other option, because when we choose other the other field shows up and it kinda breaks layout and also it doesn't show up dynamically just insert itself anywhere."
+- Three choices were offered in the question pop-up: a type-ahead with no Other, a swap in place, and the box beside the dropdown. Zean rejected the type-ahead ("prone to typo, wrong capitalization") and the swap ("it should be easy to switch to other options instead of clicking more button"). Zean picked "Under, in same cell" for fields in full 3-column rows.
+- `SelectWithOther` (Complaint on New Visit, Visit Detail and Incident) now lays out the dropdown and the Other box in one `sm:grid-cols-2 gap-3` row. The box fades in beside the dropdown (`animate-expand-down`, off under reduced motion), and the hint shows once. The callers' `FIELD_HALF` wrappers were removed, because the component lines up on its own.
+- `ComboboxWithOther` (Department or role, Relationship): the box slides in under the field, in the same column, and the field's hint is hidden while Other is active.
+- Checked on screen at 1366px and 390px with Playwright and Chromium (New Visit Complaint, Add Staff Department). The full vitest suite passes (121 files, 1037 tests); tsc and eslint are clean.
+- Skill `cliniq-combobox-patterns`: adds where the Other box appears, and the rejected alternatives.
+
+Follow-up (Thursday, November 05, 2026 — 02:58 PHT), prompts, in order:
+1. "Then also I want to redesign the vertical divider in login page, it looks boring I wanted to add a taste there, something like making it maybe curvy or diagonally or whatever. Look for inspo either it skills or look in internet for modern style". In the question pop-up: "Maybe not just the line to redesign, but still same style left fields then right image. Like add a taste to how they are layout and styled, etc".
+2. "Why are these stacked. Fix it. Check other screens too that might have the same issue." (Sports Report details, each field alone in one column)
+3. About the frosted caption on the Login photo: "It looks out of the blue and isn't redundant or what."
+4. "Off unless you tick it. Adds a column with each student's recorded conditions and allergies. Each visit's or incident's complaint prints either way. This description's kinda confusing, rephrase to simpler wordings"
+5. "Then for all optional placeholder it should be like "e.g. Palaro 2026, Boys Basketball (optional)" so it doesn't block the original placeholder"
+
+Changes:
+- Login (frontend/src/features/auth/LoginPage.tsx, DemoAccounts.tsx).
+  - Inspiration came from a web search on split-screen logins with curved or diagonal dividers. One source suggests curves for professional, calm brands and slants for bold ones.
+  - From 768px, the white panel's edge now flows into the photo as one gentle S-curve (`LoginSeam`, an SVG with a thin `brand-green-light` line tracing it).
+  - The panel has a faint 7% brand-green glow behind the lockup, and a sub-line under Sign In: "Use your CLINIQ account to open the clinic records."
+  - On phones the panel rises 24px over the photo band with a rounded top, and Demo Accounts sits higher.
+  - A frosted CLINIQ caption on the photo was added, then removed at Zean's request (it repeated the lockup).
+  - 03-Design/Design-System.md "Login layout B" is updated.
+- Paired fields (prompt 2):
+  - Sports Report details: Title | Activity, Requested by | Look-back window; Students: Add a student | Or add a whole grade level.
+  - Add/Edit User: Full name | Username, Role | Temporary password.
+  - Dispense: For | Student or staff member (the selected card takes the full row), Item | Quantity. The allergy notes moved under that row.
+  - Other screens were checked. The New Visit and Visit Detail "Other complaints" field stays alone (nothing to pair with).
+  - Skill `cliniq-form-section-patterns`: added the rule "Pair fields; never stack half-width fields one per row".
+- The Sports Report checkbox hint now reads "Adds each student's allergies and medical conditions to the printout. Visit and incident complaints always print." The test in review-round-2-parts-2-3.test.tsx is updated.
+- Placeholders with an example now read "e.g. … (optional)" (Middle name, Activity, Instructions, Avoid if allergic to); a field with no example keeps "Optional". Skill `cliniq-input-patterns` and the student name test are updated.
+Testing: tsc and eslint are clean. The full vitest suite passes (121 files, 1037 tests). Checked on screen with Playwright and Chromium:
+- Login at 1366px and 390px.
+- New Sports Report at 1366px and 390px.
+- Add User (as Admin), and Dispense (general use and student).
+Known issues: Dispense was not captured with a patient actually selected; the full-row behaviour there uses the same `sm:col-span-2` switch as the checked pages.

@@ -15,6 +15,7 @@ Use this with `cliniq-input-patterns` and `cliniq-interactive-states`. Source: Z
 - **Titles name the group, never a field in it.** A section title that repeats a field label ("Complaint" over a Complaint field, "Treatment" over Treatment notes) makes the label ambiguous to screen readers and tests, because the section is labelled by its title. Use a group name instead ("Presenting problem", "Care given").
 - **Fields inside a section line up on one grid**: a 3-column grid from `md` when a section has three or more short fields (the name fields are three columns), so field edges line up from section to section. Two long fields (allergies and conditions) may use two columns.
 - **Order the first section by what is filled first**: the identifier or the name, then the rest. The failed-submit focus goes to the first invalid field in DOM order.
+- **Pair fields; never stack half-width fields one per row** (Zean, Thursday, November 05, 2026 — 02:58 PHT: "Why are these stacked"). Two short fields that follow each other share one `grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-2` row (Title | Activity, Requested by | Look-back window, Full name | Username, Role | Temporary password, For | Student or staff member, Item | Quantity, Add a student | Or add a whole grade level). Only a field with nothing to pair with takes one column alone (`FIELD_HALF`). A picker in a row takes `sm:col-span-2` once someone is selected.
 
 ## Where it is used
 
