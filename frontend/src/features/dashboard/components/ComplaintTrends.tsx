@@ -600,7 +600,6 @@ function CommonComplaintsCard({ trends, clusters, reportMonth }: { trends: Trend
         icon={<Icon name="barChart" />}
         title="Common complaints"
         description="Top complaints in this period."
-        actions={reportMonth && <FullReportLink report="Complaint summary" view="health" month={reportMonth} />}
       />
       <CardBody>
         {trends.series.length === 0 ? (
@@ -650,6 +649,7 @@ function CommonComplaintsCard({ trends, clusters, reportMonth }: { trends: Trend
             )}
           </>
         )}
+        {reportMonth && <FullReportLink className="mt-4 border-t border-border pt-3" report="Complaint summary" view="health" month={reportMonth} />}
       </CardBody>
     </Card>
   )

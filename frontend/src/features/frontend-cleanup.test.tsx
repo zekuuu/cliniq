@@ -149,6 +149,46 @@ describe('Dashboard links to Reports (C10)', () => {
     expect(await screen.findByRole('tab', { name: 'Monthly Report', selected: true })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /month/i })).toHaveTextContent(new Date(`${month}-01T00:00:00`).toLocaleDateString('en-PH', { month: 'long' }))
   })
+
+  // S3 (Zean, November 4, 2026): "View full report" moved out of the header to a right-aligned footer row.
+  it('puts the Overview link in a right-aligned footer under the Activity summary cards, after them in tab order', async () => {
+    render(<MemoryRouter><DashboardPage viewer={STAFF} /></MemoryRouter>)
+    const link = await screen.findByRole('link', { name: 'View full report: Monthly Report' })
+    const activity = screen.getByRole('heading', { name: 'Activity summary' }).closest('section')!
+    const footer = link.closest('footer')!
+    // Right after the Summary counts region, whose last part is the Activity summary cards; not one of the count cards.
+    const summary = screen.getByRole('region', { name: 'Summary counts' })
+    expect(summary.lastElementChild).toBe(activity)
+    expect(summary.nextElementSibling).toBe(footer)
+    expect(footer).toHaveClass('justify-end', 'print:hidden')
+    expect(link).toHaveAttribute('href', '/reports')
+    expect(link).toHaveTextContent('View full report')
+    const cardLinks = within(activity).getAllByRole('link')
+    expect(cardLinks.at(-1)!.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('puts the Common complaints link in the card footer, not its header, and opens the Complaint summary', async () => {
+    const user = userEvent.setup({ delay: null })
+    render(
+      <MemoryRouter>
+        <Routes>
+          <Route path="/" element={<DashboardPage viewer={STAFF} />} />
+          <Route path="/reports" element={<ReportsPage viewer={STAFF} />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    await user.click(await screen.findByRole('tab', { name: /Trends/ }))
+    const link = await screen.findByRole('link', { name: 'View full report: Complaint summary' })
+    const card = screen.getByRole('region', { name: 'Common complaints' })
+    const heading = within(card).getByRole('heading', { name: 'Common complaints' })
+    const footer = link.closest('footer')!
+    expect(card).toContainElement(footer)
+    expect(footer).toHaveClass('justify-end', 'print:hidden')
+    expect(heading.parentElement!.parentElement!.parentElement).not.toContainElement(link)
+    expect(heading.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    await user.click(link)
+    expect(await screen.findByRole('tab', { name: 'Complaint summary', selected: true })).toBeInTheDocument()
+  })
 })
 
 describe('?focus=search and Alt + K (C11)', () => {
