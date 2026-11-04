@@ -217,7 +217,7 @@ describe('R19: the staff department or role, from those in use', () => {
     const field = await screen.findByRole('combobox', { name: /^Department or role/ })
     await user.type(field, 'g')
     const options = screen.getAllByRole('option').map((option) => option.textContent)
-    expect(options).toEqual(['Grade 4 adviser', 'Grade 9 adviser', 'Grounds', 'Other (specify)'])
+    expect(options).toEqual(['Other (specify)', 'Grade 4 adviser', 'Grade 9 adviser', 'Grounds'])
     await user.click(screen.getByRole('option', { name: 'Grounds' }))
     expect(field).toHaveValue('Grounds')
     await user.clear(field)

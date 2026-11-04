@@ -48,7 +48,8 @@ export function ComboboxWithOther({
   const text = pickOnly ? query : value
   const typed = other ? '' : text.trim().toLowerCase()
   const unmatched = pickOnly && !other && query.trim() !== '' && !options.includes(query)
-  const shown = [...options.filter((option) => option.toLowerCase().startsWith(typed)), otherOption]
+  // Other is always the first option, whatever is typed (Zean, November 5, 2026), as in SelectWithOther.
+  const shown = [otherOption, ...options.filter((option) => option.toLowerCase().startsWith(typed))]
   return (
     <div className="flex flex-col gap-2">
       <Combobox
