@@ -100,13 +100,20 @@ export function BackupLocationsPanel({
                     ? `Last backup ${formatDateTime(location.lastBackupAt)} · ${location.lastResult === 'ok' ? 'Completed' : 'Failed'}`
                     : 'No backup written here yet'}
                 </p>
+                {/* Under the text, not beside the buttons, so the row keeps its layout (Zean, November 5, 2026). */}
+                {canManage && location.enabled && enabled.length === 1 && (
+                  <p id={`last-location-${location.id}`} className="mt-1 text-xs text-text-secondary">
+                    The only enabled location. Enable another one first.
+                  </p>
+                )}
               </div>
               {canManage && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex shrink-0 gap-2">
                   <Button size="sm" variant="neutral" aria-label={`Edit ${location.label}`} onClick={() => open(location)}>Edit</Button>
                   <Button
                     size="sm"
                     variant="secondary"
+                    className="min-w-20"
                     aria-label={`${location.enabled ? 'Disable' : 'Enable'} ${location.label}`}
                     // R32: the last enabled location can't be disabled; the data layer refuses it too.
                     disabled={location.enabled && enabled.length === 1}
@@ -115,11 +122,6 @@ export function BackupLocationsPanel({
                   >
                     {location.enabled ? 'Disable' : 'Enable'}
                   </Button>
-                  {location.enabled && enabled.length === 1 && (
-                    <p id={`last-location-${location.id}`} className="basis-full text-xs text-text-secondary">
-                      The only enabled location. Enable another one first.
-                    </p>
-                  )}
                 </div>
               )}
             </li>
