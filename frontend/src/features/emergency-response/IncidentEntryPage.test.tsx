@@ -9,12 +9,6 @@ import { IncidentEntryPage } from './IncidentEntryPage'
 import { IncidentReportPage } from './IncidentReportPage'
 import { renderWithRouter } from '../../test/renderWithRouter'
 
-/** Panel review IN-3: a record with no treatment, medicine, notification or referral needs this to complete. */
-async function tickNothingFurther(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByLabelText(/nothing further was needed or done/i))
-  await user.type(screen.getByRole('textbox', { name: /^Why was nothing further needed/ }), 'Observed only; no further care needed.')
-}
-
 /** Gian Quizon's synthetic LRN in the seed. */
 const STUDENT = '000000260001'
 const STUDENT_ID = 'student-0001'
@@ -150,15 +144,14 @@ describe('Report Incident', () => {
     expect(screen.queryByLabelText(/student number/i)).not.toBeInTheDocument()
   })
 
-  it('completes Stage 2 without treatment notes or medicines once "Nothing further" is ticked with a reason', async () => {
+  it('completes Stage 2 with no treatment notes, medicines, call or referral (ADR-065)', async () => {
     const user = userEvent.setup({ delay: null })
     renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
 
     await screen.findByRole('heading', { name: 'Complete Incident Record' })
     await user.type(screen.getByLabelText(/blood pressure/i), '110/70')
     await user.type(screen.getByLabelText(/oxygen saturation/i), '98%')
-    // Panel review IN-3: an empty record needs the explicit tick and a reason.
-    await tickNothingFurther(user)
+    expect(screen.queryByLabelText(/nothing further was needed or done/i)).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Complete Incident' }))
 
     expect(await screen.findByText(/incident completed/i)).toBeInTheDocument()
@@ -395,7 +388,6 @@ describe('Report Incident: optional readings, never all four forced', () => {
 
     // Stage 2 shows the same four, prefilled; clearing blood pressure doesn't block completion.
     await user.clear(screen.getByLabelText(/blood pressure/i))
-    await tickNothingFurther(user)
     await user.click(screen.getByRole('button', { name: 'Complete Incident' }))
     expect(await screen.findByText(/incident completed/i)).toBeInTheDocument()
     expect((await getIncident(incident.id)).vitals).toEqual({ temperatureC: 37.2, pulseBpm: 92, oxygenSaturationPct: 98, treatmentNotes: '' })
@@ -406,7 +398,6 @@ describe('Report Incident: optional readings, never all four forced', () => {
     renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
     await screen.findByRole('heading', { name: 'Complete Incident Record' })
     for (const label of [/temperature/i, /pulse/i, /blood pressure/i, /oxygen saturation/i]) await user.clear(screen.getByLabelText(label))
-    await tickNothingFurther(user)
     await user.click(screen.getByRole('button', { name: 'Complete Incident' }))
 
     expect(await screen.findByText(/incident completed/i)).toBeInTheDocument()

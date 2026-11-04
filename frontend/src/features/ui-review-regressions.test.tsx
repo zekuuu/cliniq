@@ -11,7 +11,6 @@ vi.mock('react-chartjs-2', () => {
 })
 import { renderWithRouter } from '../test/renderWithRouter'
 import { selectOption } from '../test/selectOption'
-import { incidentCompletionBlocker } from '../lib/itemsGiven'
 import { getGradeLevels, getMockToday, getStudent, listIncidents, listVisits, resetMockDb } from '../lib/mock-db'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
 import { IncidentReportPage } from './emergency-response/IncidentReportPage'
@@ -49,8 +48,8 @@ describe('UI/UX review regressions', () => {
 
   it('labels incident vitals in plain language and confirms report approval', async () => {
     const user = userEvent.setup()
-    // Panel review IN-3: only a record with care, a notification or a referral can be approved.
-    const incident = (await listIncidents()).find((item) => !incidentCompletionBlocker(item))!
+    // Only a completed (Stage 2) record can be approved.
+    const incident = (await listIncidents()).find((item) => item.stage === 2)!
     renderWithRouter(<IncidentReportPage incidentId={incident.id} />)
 
     await screen.findByRole('heading', { name: 'Incident Report' })

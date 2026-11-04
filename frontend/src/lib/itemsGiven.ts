@@ -20,30 +20,6 @@ export function incidentCareSummary(incident: Pick<Incident, 'vitals' | 'itemsGi
   return [notes, given && `Given: ${given}`].filter(Boolean).join(' · ') || 'No treatment recorded'
 }
 
-/** Only presence matters, so a draft's lines count the same as saved ones. */
-type IncidentCare = Pick<Incident, 'vitals' | 'noFurtherActionReason'> & {
-  itemsGiven: ReadonlyArray<unknown>
-  parentNotifications: ReadonlyArray<unknown>
-  hospitalReferral: unknown
-}
-
-/**
- * Why an incident can't be completed or approved yet (panel review IN-3), or null when it can. It
- * needs one of: treatment notes, a medicine line, a parent notification attempt, a hospital
- * referral, or a "Nothing further was needed or done" reason. No reading is required.
- */
-export function incidentCompletionBlocker(incident: IncidentCare): string | null {
-  const done =
-    String(incident.vitals.treatmentNotes ?? '').trim() ||
-    incident.itemsGiven.length ||
-    incident.parentNotifications.length ||
-    incident.hospitalReferral ||
-    incident.noFurtherActionReason?.trim()
-  return done
-    ? null
-    : 'Add treatment notes, a medicine, a parent notification or a hospital referral, or tick "Nothing further was needed or done" with a reason.'
-}
-
 /** Names shorter than this are ignored by `itemsNamedInNotes`, so "ORS" or "Ice" can't match by accident. */
 const MIN_NAME_LENGTH = 4
 

@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { addParentNotification, approveIncidentReport, getIncident, getStudent, resetMockDb } from '../../lib/mock-db'
 import { db, migratePersistedState } from '../../lib/mock-db/store'
-import { incidentCompletionBlocker } from '../../lib/itemsGiven'
 import { pickStudent } from '../../test/pickStudent'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { selectOption } from '../../test/selectOption'
@@ -60,81 +59,38 @@ describe('Stage 1 alert card (IN-1)', () => {
   })
 })
 
-describe('No empty completion or approval (IN-3)', () => {
+describe('Stage 2 care is optional (ADR-065, reversing panel review IN-3)', () => {
   beforeEach(() => resetMockDb())
 
-  it('keeps Complete Incident disabled on an empty record until the tick and a reason are given', async () => {
+  it('completes an empty Stage 2 with no tick and no reason', async () => {
     const user = userEvent.setup()
     renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
     await screen.findByRole('heading', { name: 'Complete Incident Record' })
-
+    expect(screen.queryByLabelText(/nothing further was needed or done/i)).not.toBeInTheDocument()
     const complete = screen.getByRole('button', { name: 'Complete Incident' })
-    expect(complete).toBeDisabled()
-    expect(complete).toHaveAccessibleDescription(/tick "Nothing further was needed or done"/)
-
-    await user.click(screen.getByLabelText(/nothing further was needed or done/i))
     expect(complete).toBeEnabled()
     await user.click(complete)
-    expect(screen.getByRole('textbox', { name: /^Why was nothing further needed/ })).toHaveAccessibleDescription(/Write one line on why nothing further was needed/)
-    expect(recordedWrites()).toEqual([])
-
-    await user.type(screen.getByRole('textbox', { name: /^Why was nothing further needed/ }), 'Rested ten minutes; no complaint after.')
-    await user.click(complete)
     expect(await screen.findByText(/incident completed/i)).toBeInTheDocument()
-    expect((await getIncident('incident-0022')).noFurtherActionReason).toBe('Rested ten minutes; no complaint after.')
-    // The audit names the field, never the reason text (ADR-017).
-    const [entry] = recordedWrites()
-    expect(entry.summary).toMatch(/nothing further was needed or done/)
-    expect(JSON.stringify(recordedWrites())).not.toContain('Rested')
+    expect((await getIncident('incident-0022')).stage).toBe(2)
   })
 
-  it('hides the tick once any care is recorded', async () => {
-    const user = userEvent.setup()
-    renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
-    await screen.findByRole('heading', { name: 'Complete Incident Record' })
-    await user.type(screen.getByLabelText(/treatment notes/i), 'Cold compress.')
-    expect(screen.queryByLabelText(/nothing further was needed or done/i)).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Complete Incident' })).toBeEnabled()
-  })
-
-  it('disables Approve Report on an empty record and the data layer refuses it too', async () => {
-    // A completed record with nothing on it (older data): Stage 2 itself now refuses to save one.
+  it('lets an empty completed record be approved, with a note to check it first', async () => {
     const record = db().incidents.find((i) => i.id === 'incident-0022')!
     record.stage = 2
     renderWithRouter(<IncidentReportPage incidentId="incident-0022" />)
     await screen.findByRole('heading', { name: 'Incident summary' })
-    const approve = screen.getByRole('button', { name: 'Approve Report' })
-    expect(approve).toBeDisabled()
-    expect(screen.getByText(/can't be approved yet/i)).toBeInTheDocument()
-    await expect(approveIncidentReport('incident-0022')).rejects.toThrow(/nothing further was needed or done/i)
-    expect(recordedWrites()).toEqual([])
+    expect(screen.getByRole('button', { name: 'Approve Report' })).toBeEnabled()
+    expect(screen.getByText(/No treatment recorded\. Check this is correct before approving\./)).toBeInTheDocument()
+    await expect(approveIncidentReport('incident-0022')).resolves.toBeUndefined()
   })
 
-  it('prints the reason when nothing further was needed', async () => {
-    const user = userEvent.setup()
-    renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
-    await screen.findByRole('heading', { name: 'Complete Incident Record' })
-    await user.click(screen.getByLabelText(/nothing further was needed or done/i))
-    await user.type(screen.getByRole('textbox', { name: /^Why was nothing further needed/ }), 'Observed only.')
-    await user.click(screen.getByRole('button', { name: 'Complete Incident' }))
-    await screen.findByText(/incident completed/i)
-
+  it('still prints the reason an older record was given', async () => {
+    const record = db().incidents.find((i) => i.id === 'incident-0022')!
+    record.stage = 2
+    record.noFurtherActionReason = 'Observed only.'
     renderWithRouter(<IncidentReportPage incidentId="incident-0022" />)
     await screen.findByRole('heading', { name: 'Incident summary' })
-    expect(screen.getAllByRole('button', { name: 'Approve Report' }).at(-1)).toBeEnabled()
     expect(printReport()).toHaveTextContent('No treatment or notification: Observed only.')
-  })
-
-  it('treats any one of notes, a medicine, a notification or a referral as enough', () => {
-    const empty = { vitals: {}, itemsGiven: [], parentNotifications: [], hospitalReferral: null }
-    expect(incidentCompletionBlocker(empty)).not.toBeNull()
-    expect(incidentCompletionBlocker({ ...empty, vitals: { treatmentNotes: '  ' } })).not.toBeNull()
-    expect(incidentCompletionBlocker({ ...empty, vitals: { temperatureC: 37 } })).not.toBeNull()
-    expect(incidentCompletionBlocker({ ...empty, vitals: { treatmentNotes: 'Ice pack' } })).toBeNull()
-    expect(incidentCompletionBlocker({ ...empty, itemsGiven: [{}] })).toBeNull()
-    expect(incidentCompletionBlocker({ ...empty, parentNotifications: [{}] })).toBeNull()
-    expect(incidentCompletionBlocker({ ...empty, hospitalReferral: { destination: 'X' } })).toBeNull()
-    expect(incidentCompletionBlocker({ ...empty, noFurtherActionReason: 'Observed only' })).toBeNull()
   })
 })
 

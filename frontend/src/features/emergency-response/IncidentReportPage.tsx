@@ -4,7 +4,7 @@ import { BackButton, Badge, Button, Card, CardBody, CardHeader, EmergencyContact
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
 import { formatDateTime } from '../../lib/dates'
-import { formatItemGiven, incidentCareSummary, incidentCompletionBlocker } from '../../lib/itemsGiven'
+import { formatItemGiven, incidentCareSummary } from '../../lib/itemsGiven'
 import { getMockSessionUser, ROLE_LABELS, type SessionUser } from '../../lib/mock-db'
 import { READING_LABELS, readingText, takenReadings } from '../../lib/vitals'
 import { approveReport, fetchIncidentRecord, type IncidentRecord } from './api/incidentRecordApi'
@@ -173,9 +173,9 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
   const { incident, student, options, approved } = data
   const referral = incident.hospitalReferral
   const hasTreatment = incidentCareSummary(incident) !== 'No treatment recorded'
-  // Panel review IN-3: an empty record can't be signed off.
-  // Only a completed (Stage 2) record can be signed off; then it also needs care, a call or a referral.
-  const approvalBlocker = approved ? null : incident.stage === 1 ? 'Complete Stage 2 before approving this report.' : incidentCompletionBlocker(incident)
+  // Only a completed (Stage 2) record can be signed off. An empty one can be (ADR-065); the note below
+  // asks the approver to check it.
+  const approvalBlocker = approved ? null : incident.stage === 1 ? 'Complete Stage 2 before approving this report.' : null
 
   async function approve() {
     setApproving(true)

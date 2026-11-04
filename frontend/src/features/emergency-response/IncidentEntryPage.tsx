@@ -3,6 +3,8 @@ import { cleanComplaint, COMPLAINT_MAX_LENGTH } from '../../lib/complaints'
 import { useLocation, useSearchParams } from 'react-router'
 import {
   FIELD_HALF,
+  FORM_DIVIDER,
+  FormSection,
   BackButton,
   Button,
   Card,
@@ -33,8 +35,8 @@ import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { paths } from '../../routes/paths'
 import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
-import { addDays, todayISO } from '../../lib/dates'
-import { draftsFrom, formatItemGiven, incidentCompletionBlocker } from '../../lib/itemsGiven'
+import { addDays, formatTime, todayISO } from '../../lib/dates'
+import { draftsFrom, formatItemGiven } from '../../lib/itemsGiven'
 import { ageGroupOf, readingText, takenReadings, type ReadingKey, type ReadingValues } from '../../lib/vitals'
 import { type AgeGroup,
   getMockSessionUser,
@@ -360,8 +362,6 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
     Array<{ outcome: ParentNotificationOutcome; timestamp: string; detail: string; calledContact: CalledContact }>
   >([])
   const [bodyPart, setBodyPart] = useState(existing?.bodyPart ?? '')
-  const [nothingFurther, setNothingFurther] = useState(Boolean(existing?.noFurtherActionReason))
-  const [noFurtherActionReason, setNoFurtherActionReason] = useState(existing?.noFurtherActionReason ?? '')
   const [needsFollowUp, setNeedsFollowUp] = useState(false)
   const [followUpDate, setFollowUpDate] = useState(addDays(today, 1))
   const [followUpReason, setFollowUpReason] = useState('')
@@ -389,7 +389,6 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       notificationDetail.trim() !== '' ||
       bodyPart !== (incident.bodyPart ?? '') ||
       generalNotes !== (incident.generalNotes ?? '') ||
-      nothingFurther !== Boolean(incident.noFurtherActionReason) ||
       needsFollowUp ||
       lines.length !== incident.itemsGiven.length)
   const { cancel, discardDialog } = useCancelNavigation(paths.incidents, stageOneDirty || stageTwoDirty)
@@ -399,18 +398,8 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
     if (key === 'oxygenSaturationPct') setErrors((current) => ({ ...current, oxygenSaturationPct: undefined }))
   }
 
-  // Panel review IN-3: completing needs care, a notification, a referral, or the explicit tick.
-  const careBlocker = incident
-    ? incidentCompletionBlocker({
-        vitals: { treatmentNotes },
-        itemsGiven: completed ? incident.itemsGiven : lines,
-        parentNotifications: [...incident.parentNotifications, ...notifications],
-        hospitalReferral: referToHospital || incident.hospitalReferral,
-      })
-    : null
-  const completeBlocked = careBlocker !== null && !nothingFurther
-  // R24: Complete says what it is waiting for, before it is pressed.
-  const reasonMissing = careBlocker !== null && nothingFurther && !noFurtherActionReason.trim()
+  // Stage 2's care, call and referral are all optional (Zean, November 5, 2026; ADR-065 reverses panel
+  // review IN-3 and its "Nothing further was needed or done" tick).
 
   const statusValue: IncidentStatus = completed ? 'complete' : incident ? 'in_progress' : 'needs_completion'
 
@@ -488,14 +477,12 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
     }
     if (needsFollowUp && !followUpReason.trim()) next.followUpReason = 'Enter the follow-up reason.'
     if (lines.some((line) => line.quantity < 1)) next.itemsGiven = 'Each quantity must be at least 1.'
-    if (careBlocker && nothingFurther && !noFurtherActionReason.trim())
-      next.noFurtherActionReason = 'Write one line on why nothing further was needed.'
     return next
   }
 
   async function onStageTwoSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!incident || !student || completeBlocked) return
+    if (!incident || !student) return
     const nextErrors = validateStageTwo()
     setErrors(nextErrors)
     invalid.report(Object.keys(nextErrors).length)
@@ -526,8 +513,8 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
             calledContact: item.calledContact,
           })),
           bodyPart,
-          // Kept only while nothing else on the record answers the rule; adding care makes it moot.
-          noFurtherActionReason: careBlocker && nothingFurther ? noFurtherActionReason : '',
+          // An older record's reason (from the removed tick, ADR-065) is kept as it was.
+          noFurtherActionReason: incident.noFurtherActionReason ?? '',
           ...(!data.approved && { generalNotes }),
           followUp: needsFollowUp
             ? {
@@ -686,7 +673,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
               icon={<Icon name="clipboardList" />}
               description={`Complete the same incident record with any further readings, treatment notes, referral details, and ${contactNoun(student?.kind ?? 'student')} notification attempts.`}
             />
-            <CardBody className="flex flex-col gap-4">
+            <CardBody className="flex flex-col gap-5">
               {!incident ? (
                 <EmptyState
                   icon="alertTriangle"
@@ -696,6 +683,8 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                 />
               ) : (
                 <>
+                  {/* Titled sections like the other forms (cliniq-form-section-patterns, Zean, November 5, 2026). */}
+                  <FormSection id="stage-two-record-title" title="Stage 1 record" description="What was captured first. The notes stay editable until the report is approved.">
                   <div className="rounded-md border border-border bg-surface p-3">
                     <p className="text-xs font-semibold text-text-secondary">Stage 1 summary</p>
                     <p className="mt-1 text-sm font-semibold text-text-primary">{complaint}</p>
@@ -712,6 +701,9 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     <TextareaField label="Additional notes" placeholder="Optional" value={generalNotes} onChange={setGeneralNotes} rows={3} />
                   )}
                   {incident.sourceVisitId && <FromVisit visitId={incident.sourceVisitId} given={data.sourceVisit?.itemsGiven ?? []} />}
+                  </FormSection>
+
+                  <FormSection id="stage-two-care-title" title="Readings and care" description="Any further readings, what was done, and medicines or supplies used.">
                   <ReadingsFields
                     values={readings}
                     onChange={setReading}
@@ -767,12 +759,10 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                       error={errors.itemsGiven}
                     />
                   )}
+                  </FormSection>
 
-                  <fieldset className="rounded-md border border-border p-4">
-                    <legend className="px-1 text-sm font-semibold text-text-primary">
-                      Hospital referral
-                    </legend>
-                    <label className="mt-2 flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
+                  <FormSection id="stage-two-referral-title" title="Hospital referral" description="Only when the patient was taken to a hospital or another clinic.">
+                    <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
                       <input
                         type="checkbox"
                         checked={referToHospital}
@@ -821,30 +811,31 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                         />
                       </div>
                     )}
-                  </fieldset>
+                  </FormSection>
 
-                  <fieldset
-                    className="rounded-md border border-border p-4"
+                  <FormSection
+                    id="stage-two-notification-title"
+                    title={student?.kind === 'personnel' ? 'Emergency contact notification log' : 'Parent notification log'}
+                    description="Each call attempt, added as it happens. Nothing is saved until Complete Incident."
+                  >
+                  <div
                     onKeyDown={(event) => {
                       // Escape that closes an open list stays with that list.
                       if (event.key === 'Escape' && !(event.target as HTMLElement).closest('[role="listbox"], [aria-expanded="true"]')) cancelNotification()
                     }}
                   >
-                    <legend className="px-1 text-sm font-semibold text-text-primary">
-                      {student?.kind === 'personnel' ? 'Emergency contact notification log' : 'Parent notification log'}
-                    </legend>
-                    <div className="mb-3">
-                      {/* A select, as on the Parent Notification page: the four labels don't fit side by side on a phone. */}
+                    {/* Outcome and Who was called share a row (Zean, November 5, 2026); "Other" opens the name and
+                        number on the row below. A select, as on the Parent Notification page: the four labels don't
+                        fit side by side on a phone. */}
+                    <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <Select
                         label="Outcome"
-                        className={FIELD_HALF}
                         value={notificationOutcome}
                         onChange={(value) => setNotificationOutcome(value as ParentNotificationOutcome)}
                         options={PARENT_NOTIFICATION_OUTCOMES}
                       />
-                    </div>
-                    <div className="mb-3">
                       <CalledContactField
+                        className="contents"
                         contacts={student?.emergencyContacts ?? []}
                         draft={calledDraft}
                         onChange={(next) => {
@@ -860,38 +851,50 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                         value={notificationDetail}
                         onChange={(event) => setNotificationDetail(event.target.value)}
                       />
-                      <div className="flex gap-2 self-end">
-                        <Button type="button" variant="neutral" aria-label="Cancel attempt" onClick={cancelNotification}>
-                          Cancel
-                        </Button>
-                        <Button type="button" variant="secondary" onClick={addNotification}>
-                          Add Attempt
-                        </Button>
-                      </div>
+                      <Button type="button" variant="secondary" className="self-end" onClick={addNotification}>
+                        Add Attempt
+                      </Button>
                     </div>
                     {notifications.length ? (
                       <RowList className="mt-3 rounded-md border border-border">
-                        {notifications.map((item, index) => (
-                          <ListRow
-                            key={`${item.timestamp}-${index}`}
-                            primary={OUTCOME_LABELS[item.outcome]}
-                            secondary={[calledContactText(item.calledContact), item.detail].filter(Boolean).join(' · ')}
-                            meta={item.timestamp.slice(11, 16)}
-                          />
-                        ))}
+                        {notifications.map((item, index) => {
+                          // 12-hour Philippine time; the slice of the ISO string read as UTC (Zean, November 5, 2026).
+                          const time = formatTime(item.timestamp)
+                          return (
+                            <ListRow
+                              key={`${item.timestamp}-${index}`}
+                              primary={OUTCOME_LABELS[item.outcome]}
+                              secondary={[calledContactText(item.calledContact), item.detail].filter(Boolean).join(' · ')}
+                              // An attempt added by mistake is removed here; nothing is saved until Complete Incident
+                              // (Zean, November 5, 2026; this replaces R23's Cancel beside Add Attempt). The time and the
+                              // delete button sit on one line, time left and icon right; the button is the Sports Report's.
+                              trailing={
+                                <span className="flex items-center gap-3">
+                                  <span className="text-xs text-text-secondary tabular-nums">{time}</span>
+                                  <button
+                                    type="button"
+                                    aria-label={`Remove attempt: ${OUTCOME_LABELS[item.outcome]} at ${time}`}
+                                    onClick={() => setNotifications((current) => current.filter((_, i) => i !== index))}
+                                    className="inline-flex cursor-pointer rounded-sm text-error transition-[filter] hover:brightness-75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
+                                  >
+                                    <Icon name="trash" size={18} />
+                                  </button>
+                                </span>
+                              }
+                            />
+                          )
+                        })}
                       </RowList>
                     ) : (
                       <p className="mt-3 text-xs text-text-secondary">
                         No notification attempts added yet.
                       </p>
                     )}
-                  </fieldset>
+                  </div>
+                  </FormSection>
 
-                  <fieldset className="rounded-md border border-border p-4">
-                    <legend className="px-1 text-sm font-semibold text-text-primary">
-                      Follow-up prompt
-                    </legend>
-                    <label className="mt-2 flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
+                  <FormSection id="stage-two-follow-up-title" title="Follow-up prompt" description="Plan a recheck after the incident.">
+                    <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
                       <input
                         type="checkbox"
                         checked={needsFollowUp}
@@ -931,58 +934,14 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                         </div>
                       </div>
                     )}
-                  </fieldset>
+                  </FormSection>
 
-                  {careBlocker && (
-                    <div className="rounded-md border border-border p-4">
-                      <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
-                        <input
-                          type="checkbox"
-                          checked={nothingFurther}
-                          onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                            setNothingFurther(event.target.checked)
-                            setErrors((current) => ({ ...current, noFurtherActionReason: undefined }))
-                          }}
-                          className="mt-0.5 size-4 cursor-pointer accent-brand-green-dark"
-                        />
-                        <span>
-                          <span className="block text-sm font-semibold text-text-primary">Nothing further was needed or done</span>
-                          <span className="block text-xs text-text-secondary">
-                            Only when there was no treatment, medicine, parent call or referral. It is printed on the report.
-                          </span>
-                        </span>
-                      </label>
-                      {nothingFurther && (
-                        <Input
-                          className="mt-3"
-                          label="Why was nothing further needed? (one line, required)"
-                          required
-                          autoFocus
-                          maxLength={200}
-                          value={noFurtherActionReason}
-                          onChange={(event) => {
-                            setNoFurtherActionReason(event.target.value)
-                            setErrors((current) => ({ ...current, noFurtherActionReason: undefined }))
-                          }}
-                          error={errors.noFurtherActionReason}
-                        />
-                      )}
-                    </div>
-                  )}
-
-                  <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-                    {(completeBlocked || reasonMissing) && (
-                      <p id="complete-incident-blocker" className="mr-auto text-xs text-text-secondary">
-                        {completeBlocked ? careBlocker : 'Write one line on why nothing further was needed.'}
-                      </p>
-                    )}
+                  <div className={`flex flex-wrap items-center justify-end gap-2 pt-4 ${FORM_DIVIDER}`}>
                     <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
                     <Button
                       type="submit"
                       variant="primary"
                       loading={savingStageTwo}
-                      disabled={completeBlocked}
-                      aria-describedby={completeBlocked || reasonMissing ? 'complete-incident-blocker' : undefined}
                     >
                       Complete Incident
                     </Button>

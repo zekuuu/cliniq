@@ -261,8 +261,8 @@ describe('R22: the Staff chip is grey, so it stands apart from Student', () => {
   })
 })
 
-describe('R23: Cancel on a half-filled notification attempt', () => {
-  it.each([['the Cancel button'], ['Escape']])('discards it with %s, logging nothing', async (how) => {
+describe('R23: Escape on a half-filled notification attempt', () => {
+  it.each([['Escape']])('discards it with %s, logging nothing', async (how) => {
     resetMockDb()
     const user = userEvent.setup({ delay: null })
     renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
@@ -270,30 +270,26 @@ describe('R23: Cancel on a half-filled notification attempt', () => {
     await selectOption(user, screen.getByLabelText('Outcome'), 'No answer')
     await user.type(screen.getByLabelText('Attempt note'), 'Line busy')
     if (how === 'Escape') await user.keyboard('{Escape}')
-    else await user.click(screen.getByRole('button', { name: 'Cancel attempt' }))
     expect(screen.getByLabelText('Attempt note')).toHaveValue('')
     expect(screen.getByLabelText('Outcome')).toHaveTextContent('Reached')
     expect(screen.queryByText('No answer', { selector: 'li *' })).not.toBeInTheDocument()
   })
 })
 
-describe('R24: "Nothing further was needed or done" asks for its reason plainly', () => {
-  it('shows the reason right under the box, focuses it, and says what Complete is waiting for', async () => {
+describe('An added notification attempt can be removed before Complete Incident (Zean, November 5, 2026)', () => {
+  it('shows an X on each added attempt that takes it off the list, and the Cancel button is gone', async () => {
     resetMockDb()
     const user = userEvent.setup({ delay: null })
     renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
     await screen.findByRole('heading', { name: 'Complete Incident Record' })
-    await user.click(screen.getByRole('checkbox', { name: /Nothing further was needed or done/ }))
-    const reason = screen.getByRole('textbox', { name: /^Why was nothing further needed\? \(one line, required\)/ })
-    expect(reason).toHaveFocus()
-    const complete = screen.getByRole('button', { name: 'Complete Incident' })
-    expect(complete).toHaveAccessibleDescription('Write one line on why nothing further was needed.')
-    await user.click(complete)
-    expect(reason).toHaveAccessibleDescription(/Write one line on why nothing further was needed\./)
-    await user.type(reason, 'Felt better after resting; no care given.')
-    expect(complete).not.toHaveAccessibleDescription(/Write one line/)
-    await user.click(complete)
-    expect(await screen.findByText(/incident completed/i)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Cancel attempt' })).not.toBeInTheDocument()
+    await selectOption(user, screen.getByLabelText('Outcome'), 'No answer')
+    await user.type(screen.getByLabelText('Attempt note'), 'Line busy')
+    await user.click(screen.getByRole('button', { name: 'Add Attempt' }))
+    const remove = await screen.findByRole('button', { name: /^Remove attempt: No answer at / })
+    await user.click(remove)
+    expect(screen.queryByRole('button', { name: /^Remove attempt/ })).not.toBeInTheDocument()
+    expect(screen.getByText('No notification attempts added yet.')).toBeInTheDocument()
   })
 })
 
@@ -363,10 +359,11 @@ describe('R29 and R30: complaint figures print once', () => {
     return document.body.querySelector<HTMLElement>('[data-print-document]')!
   }
 
-  it('prints the Monthly Report complaints as the table only, and the weekly table once', async () => {
+  // Zean, November 5, 2026: R29 dropped the chart but left two complaint tables; only the weekly one stays.
+  it('prints the Monthly Report complaints once, as the weekly table only', async () => {
     const doc = await printReport('Monthly Report')
     expect(within(doc).queryByRole('figure')).not.toBeInTheDocument()
-    expect(within(doc).getByRole('table', { name: 'Clinic visits by complaint, with share' })).toBeInTheDocument()
+    expect(within(doc).queryByRole('table', { name: 'Clinic visits by complaint, with share' })).not.toBeInTheDocument()
     expect(within(doc).getAllByRole('table', { name: 'Clinic visits by complaint and week' })).toHaveLength(1)
     act(() => {
       window.dispatchEvent(new Event('afterprint'))

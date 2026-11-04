@@ -36,7 +36,6 @@ import { normalizeComplaint, reportComplaint } from '../complaints'
 import type { Patient, PatientNumber } from '../patients'
 import type { ImportRow } from '../studentImport'
 import type { StudentSex } from '../../types/entities'
-import { incidentCompletionBlocker } from '../itemsGiven'
 import { DISPOSITION_LABELS } from '../dispositions'
 import { EXCUSE_LETTER_RECIPIENT, excuseLetterBody } from '../excuseLetter'
 import { addDays, endOfMonth, isRealDate, monthWeeks, toISODate, type MonthWeek } from '../dates'
@@ -1812,15 +1811,7 @@ export function completeIncidentStageTwo(
     const incident = must(s.incidents.find((i) => i.id === input.incidentId), 'Incident')
     const lines = input.itemsGiven ?? []
     const noFurtherActionReason = input.noFurtherActionReason?.trim() || null
-    // An empty record can't be completed (panel review IN-3); checked before any stock moves.
-    const blocker = incidentCompletionBlocker({
-      vitals: input.vitals,
-      itemsGiven: incident.stage === 2 ? incident.itemsGiven : lines,
-      parentNotifications: [...incident.parentNotifications, ...input.newParentNotifications],
-      hospitalReferral: input.hospitalReferral,
-      noFurtherActionReason,
-    })
-    if (blocker) throw new Error(blocker)
+    // Care, a call and a referral are all optional (ADR-065 reverses panel review IN-3).
     const notes = input.generalNotes === undefined ? (incident.generalNotes ?? null) : input.generalNotes.trim() || null
     const notesChanged = notes !== (incident.generalNotes ?? null)
     if (notesChanged && incidentApproved(s, incident.id)) throw new IncidentApprovedError()
@@ -1926,8 +1917,6 @@ export function approveIncidentReport(incidentId: string, actor?: SessionUser): 
     const incident = must(s.incidents.find((i) => i.id === incidentId), 'Incident')
     // Only a completed (Stage 2) record is signed off (Zean, Thursday, October 22, 2026).
     if (incident.stage === 1) throw new Error('Complete Stage 2 before approving this report.')
-    const blocker = incidentCompletionBlocker(incident)
-    if (blocker) throw new Error(blocker)
     audit(s, actorOr(actor), 'approve', { type: 'incident-report', id: incidentId })
   })
 }
