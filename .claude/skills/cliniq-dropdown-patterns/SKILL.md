@@ -12,6 +12,7 @@ Use this alongside `cliniq-interactive-states` whenever a dropdown's trigger or 
 - The Dashboard's date-range dropdown is the reference. Every dropdown matches its trigger, panel, and option rows.
 - The look lives in `frontend/src/components/ui/dropdownClassName.ts`. `DateRangePicker`, `Select`, and `MultiSelect` all build on it; change the look there, never in one component or on one page.
 - Trigger: 40px tall (`md`), `text-sm font-semibold`, `border-border`, `shadow-card`, and a 14px `brand-green-dark` chevron that flips while the panel is open. Use `size="sm"` (32px) only beside 32px inputs in a form grid or inside a table row.
+- Opening: every panel (`DROPDOWN_PANEL`) and the header account menu fade in and slide down 4px over 150ms (`animate-expand-down`, with `motion-reduce:animate-none`). Keep it short and subtle (Thursday, November 05, 2026 — 20:25 PHT).
 - A leading icon belongs only to a dropdown whose type calls for one (the calendar on a date range). Don't add one to an ordinary select.
 
 ## Selected option
