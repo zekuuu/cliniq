@@ -98,6 +98,12 @@ function ReportIssueForm({
 
   return (
     <form onSubmit={(event) => void submit(event)}>
+      {/* Reports go to the system's developer, not the school (Zean, November 5, 2026). */}
+      <p className="mb-3 text-sm leading-6 text-text-primary">
+        Use this only for problems with CLINIQ itself, such as an error, a page that won&apos;t
+        load, or a button that doesn&apos;t work. For clinic, school, or account matters, contact
+        the school administration instead.
+      </p>
       <p className="text-sm leading-6 text-text-secondary">
         We&apos;ll save this report with the page and role context captured automatically. An email
         draft will also open as a fallback.
