@@ -13,6 +13,7 @@ import {
   EmptyState,
   ErrorState,
   Icon,
+  ShortcutHint,
   Input,
   Pagination,
   SegmentedControl,
@@ -20,6 +21,7 @@ import {
   type BadgeTone,
   type DataTableColumn,
 } from '../../components'
+import { SHORTCUT_KEYS } from '../../lib/shortcuts'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { useDateRangeEntryParams } from '../../hooks/useDateRangeEntryParams'
@@ -146,7 +148,7 @@ export function IncidentLogListPage({ viewer = getMockSessionUser() }: { viewer?
 
   return <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
     {back}
-    <Card className="p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">Incident Log</h1><p className="mt-1 text-sm text-text-secondary">{isStaff ? 'Review incidents by LRN or Staff No. and complete records that still need follow-up detail.' : 'Review incidents by LRN and open each incident report.'}</p></div>{isStaff && <div className="flex flex-wrap items-center gap-3"><Link className={buttonClassName({ variant: 'primary' })} to={paths.incidentNew}><Icon name="alertTriangle" />New Incident</Link></div>}</div></Card>
+    <Card className="p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold tracking-tight text-text-primary">Incident Log</h1><p className="mt-1 text-sm text-text-secondary">{isStaff ? 'Review incidents by LRN or Staff No. and complete records that still need follow-up detail.' : 'Review incidents by LRN and open each incident report.'}</p></div>{isStaff && <div className="flex flex-wrap items-center gap-3"><Link className={buttonClassName({ variant: 'primary' })} to={paths.incidentNew} aria-keyshortcuts={SHORTCUT_KEYS.newIncident}><Icon name="alertTriangle" />New Incident<ShortcutHint keys={SHORTCUT_KEYS.newIncident} /></Link></div>}</div></Card>
     <Card aria-labelledby="incident-log-title"><CardHeader titleId="incident-log-title" title="Incidents" description={`${data.length.toLocaleString('en-PH')} record${data.length === 1 ? '' : 's'} shown`} icon={<Icon name="alertTriangle" />} actions={<SegmentedControl label="Completion filter" value={completion} onChange={(value) => changeCompletion(value as CompletionFilter)} options={completionOptions} />} /><CardBody className="flex flex-col gap-4"><div className="flex flex-wrap items-end gap-3"><Input label="Search" type="search" value={search} placeholder={isStaff ? 'LRN, Staff No., reason or event' : 'LRN, grade, reason, or event'} onChange={(event) => changeSearch(event.target.value)} className="min-w-56 flex-1" />{isStaff && <PatientFilterSelect value={patient} onChange={changePatient} />}<DateRangePicker value={range} onChange={changeRange} today={defaultRange.to} presets={['all', 'today', 'last7', 'thisMonth', 'custom']} presetLabels={{ last7: 'This week' }} customPopover /></div><div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>{data.length ? <><DataTable caption="Clinic incident log" columns={columns} rows={pageRows} rowKey={(row) => row.id} fixedLayout minTableWidth="58rem" /><Pagination page={currentPage} pageCount={pageCount} total={data.length} pageSize={pageSize} onPageSizeChange={changePageSize} itemLabel="incidents" onPageChange={setPage} /></> : <EmptyState icon="alertTriangle" title="No incidents found" description="Try another date range, LRN, reason, or completion status." />}</div></CardBody></Card>
   </div>
 }

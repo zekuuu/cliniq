@@ -12,6 +12,7 @@ import {
   EmptyState,
   ErrorState,
   Icon,
+  ShortcutHint,
   Input,
   MultiSelect,
   Pagination,
@@ -22,6 +23,7 @@ import {
   Skeleton,
   type DataTableColumn,
 } from '../../components'
+import { SHORTCUT_KEYS } from '../../lib/shortcuts'
 import { Link, useSearchParams } from 'react-router'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { usePageSize, type PageSize } from '../../hooks/usePageSize'
@@ -284,9 +286,10 @@ export function VisitLogListPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Link className={buttonClassName({ variant: 'primary' })} to={paths.visitNew}>
+            <Link className={buttonClassName({ variant: 'primary' })} to={paths.visitNew} aria-keyshortcuts={SHORTCUT_KEYS.newVisit}>
               <Icon name="stethoscope" />
               New Visit
+              <ShortcutHint keys={SHORTCUT_KEYS.newVisit} />
             </Link>
           </div>
         </div>

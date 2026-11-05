@@ -22,7 +22,7 @@ function shell(viewer: SessionUser = STAFF, onLogout = vi.fn()) {
 }
 
 const button = () => screen.getByRole('button', { name: /^Account menu, / })
-const itemNames = () => within(screen.getByRole('menu', { name: 'Account' })).getAllByRole('menuitem').map((item) => item.textContent)
+const itemNames = () => within(screen.getByRole('menu', { name: 'Account' })).getAllByRole('menuitem').map((item) => [...item.childNodes].filter((node) => node.nodeName !== 'KBD').map((node) => node.textContent).join(''))
 
 /** Account menu (ADR-066; Zean, Thursday, November 5, 2026). */
 describe('Account menu', () => {

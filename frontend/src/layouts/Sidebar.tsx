@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router'
-import { Icon } from '../components'
+import { Icon, ShortcutHint } from '../components'
 import { BACKUP_CHANGED_EVENT, fetchBackupStatus } from '../features/backup/api/backupApi'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { cn } from '../lib/cn'
@@ -154,6 +154,7 @@ export function Sidebar({
                           to={item.to}
                           aria-label={collapsed ? itemLabel : undefined}
                           aria-current={isActive ? 'page' : undefined}
+                          aria-keyshortcuts={item.shortcut}
                           title={collapsed ? itemLabel : undefined}
                           className={cn(
                             'flex h-10 cursor-pointer items-center rounded-md text-sm transition-colors duration-150 motion-reduce:transition-none',
@@ -165,6 +166,7 @@ export function Sidebar({
                         >
                           <Icon name={item.icon} />
                           <span className={labelVisibility}>{item.label}</span>
+                          {item.shortcut && !collapsed && <ShortcutHint keys={item.shortcut} />}
                           {hasBackupWarning && (
                             <span
                               role="img"

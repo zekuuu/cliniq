@@ -1,4 +1,5 @@
 import type { IconName } from '../components'
+import { SHORTCUT_KEYS } from '../lib/shortcuts'
 import { paths } from '../routes/paths'
 import type { UserRole } from '../types/entities'
 
@@ -32,12 +33,14 @@ export interface NavItem {
   icon: IconName
   available: boolean
   to?: string
+  /** Its keyboard shortcut, shown as a tip beside the label. */
+  shortcut?: string
 }
 
 const ALL: Record<NavKey, NavItem> = {
-  dashboard: { key: 'dashboard', label: 'Dashboard', icon: 'layoutGrid', available: true, to: paths.dashboard },
+  dashboard: { key: 'dashboard', label: 'Dashboard', icon: 'layoutGrid', available: true, to: paths.dashboard, shortcut: SHORTCUT_KEYS.dashboard },
   calendar: { key: 'calendar', label: 'Activity calendar', icon: 'calendar', available: true, to: paths.calendar },
-  students: { key: 'students', label: 'Students', icon: 'users', available: true, to: paths.students },
+  students: { key: 'students', label: 'Students', icon: 'users', available: true, to: paths.students, shortcut: SHORTCUT_KEYS.studentSearch },
   staff: { key: 'staff', label: 'Staff', icon: 'user', available: true, to: paths.staff },
   visits: { key: 'visits', label: 'Visits', icon: 'stethoscope', available: true, to: paths.visits },
   incidents: { key: 'incidents', label: 'Incidents', icon: 'alertTriangle', available: true, to: paths.incidents },

@@ -1,13 +1,14 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { Link } from 'react-router'
-import { Icon, type IconName } from '../components'
+import { Icon, ShortcutHint, type IconName } from '../components'
+import { SHORTCUT_KEYS } from '../lib/shortcuts'
 import { cn } from '../lib/cn'
 import { formatDateTime } from '../lib/dates'
 import { ROLE_LABELS, type OwnAccount, type SessionUser } from '../lib/mock-db'
 import { UserAvatar } from '../features/user-management/UserAvatar'
 import { paths } from '../routes/paths'
 
-type MenuItem = { key: string; label: string; icon: IconName; danger?: boolean } & ({ to: string } | { onSelect: () => void })
+type MenuItem = { key: string; label: string; icon: IconName; group: number; shortcut?: string; danger?: boolean } & ({ to: string } | { onSelect: () => void })
 
 /** Keyboard help belongs to the desktop workstation, as the header's Shortcuts button did (shown from `md`). */
 function isDesktopWidth() {
@@ -49,12 +50,13 @@ export function AccountMenu({
   const name = account?.name ?? user.name
 
   const items: MenuItem[] = [
-    { key: 'edit', label: 'Edit profile', icon: 'userCog', onSelect: onEditProfile },
-    { key: 'password', label: 'Change password', icon: 'lock', to: paths.changePassword },
-    ...(desktop ? [{ key: 'shortcuts', label: 'Keyboard shortcuts', icon: 'keyboard' as const, onSelect: onShortcuts }] : []),
-    { key: 'issue', label: 'Report an issue', icon: 'flag', onSelect: onReportIssue },
-    { key: 'privacy', label: 'Privacy Policy', icon: 'fileText', to: paths.privacyPolicy },
-    { key: 'signout', label: signingOut ? 'Signing out' : 'Sign out', icon: 'logout', danger: true, onSelect: onSignOut },
+    // Grouped by purpose, a divider between groups: the account, help, then Sign out.
+    { key: 'edit', label: 'Edit profile', icon: 'userCog', group: 0, onSelect: onEditProfile },
+    { key: 'password', label: 'Change password', icon: 'lock', group: 0, to: paths.changePassword },
+    ...(desktop ? [{ key: 'shortcuts', label: 'Keyboard shortcuts', icon: 'keyboard' as const, group: 1, shortcut: SHORTCUT_KEYS.shortcutsList, onSelect: onShortcuts }] : []),
+    { key: 'issue', label: 'Report an issue', icon: 'flag', group: 1, onSelect: onReportIssue },
+    { key: 'privacy', label: 'Privacy Policy', icon: 'fileText', group: 1, to: paths.privacyPolicy },
+    { key: 'signout', label: signingOut ? 'Signing out' : 'Sign out', icon: 'logout', group: 2, danger: true, onSelect: onSignOut },
   ]
 
   function openMenu(first: 'first' | 'last') {
@@ -130,12 +132,13 @@ export function AccountMenu({
 
   const itemClass = (danger?: boolean) =>
     cn(
-      'flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-md px-3 text-left text-sm font-semibold transition-colors duration-150 hover:bg-surface focus-visible:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none',
+      'flex min-h-9 w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-left text-sm font-medium transition-colors duration-150 hover:bg-surface focus-visible:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none',
       danger ? 'text-error' : 'text-text-primary',
     )
 
   return (
-    <div className="relative">
+    // From `md` the button and the menu share one width, so the menu reads as the button unfolding (Zean, November 5, 2026).
+    <div className="relative md:w-64">
       <button
         ref={buttonRef}
         type="button"
@@ -145,36 +148,36 @@ export function AccountMenu({
         aria-controls={open ? menuId : undefined}
         onClick={() => (open ? close(false) : openMenu('first'))}
         onKeyDown={onButtonKeyDown}
-        className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md px-1.5 transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none"
+        className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md px-1.5 transition-colors md:w-full hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none"
       >
         <UserAvatar name={name} picture={account?.profilePicture} />
-        <span className="hidden flex-col text-left leading-tight sm:flex">
-          <span className="text-sm font-semibold text-text-primary">{name}</span>
+        <span className="hidden min-w-0 flex-col text-left leading-tight sm:flex">
+          <span className="truncate text-sm font-semibold text-text-primary">{name}</span>
           <span className="text-xs text-text-secondary">{ROLE_LABELS[user.role]}</span>
         </span>
-        <Icon name="chevronDown" size={16} className={cn('text-text-secondary transition-transform motion-reduce:transition-none', open && 'rotate-180')} />
+        <Icon name="chevronDown" size={16} className={cn('ml-auto shrink-0 text-text-secondary transition-transform motion-reduce:transition-none', open && 'rotate-180')} />
       </button>
       {open && (
         <div
           ref={panelRef}
           // Below the header on a phone (a full-width sheet), under the button and right-aligned from `sm`.
-          className={cn('border border-border bg-background shadow-raised', 'fixed inset-x-0 top-16 z-40 max-h-[calc(100dvh-4rem)] overflow-y-auto rounded-none p-2 sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-2 sm:w-72 sm:rounded-md')}
+          className={cn('border border-border bg-background shadow-raised', 'fixed inset-x-0 top-16 z-40 max-h-[calc(100dvh-4rem)] overflow-y-auto rounded-none p-1.5 sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-1 sm:w-64 sm:rounded-md', 'animate-expand-down motion-reduce:animate-none')}
         >
-          <div className="flex items-start gap-3 border-b border-border px-3 pt-2 pb-3">
-            <UserAvatar name={name} picture={account?.profilePicture} className="size-10" />
-            <div className="min-w-0 text-xs text-text-secondary">
-              <p className="truncate text-sm font-semibold text-text-primary">{name}</p>
-              <p>{ROLE_LABELS[user.role]}</p>
-              {account && <p className="truncate">Username: {account.username}</p>}
-              {account && <p>Last sign-in: {account.lastLogin ? formatDateTime(account.lastLogin) : 'Not recorded'}</p>}
-            </div>
+          {/* No second avatar: the button right above already shows it. */}
+          <div className="min-w-0 border-b border-border px-2.5 pt-1 pb-2 text-xs leading-5 text-text-secondary">
+            <p className="break-words text-sm font-semibold text-text-primary">{name}</p>
+            {/* Each detail on its own line and wrapped, never cut off with an ellipsis. */}
+            <p>{ROLE_LABELS[user.role]}</p>
+            {account && <p className="break-words">Username: {account.username}</p>}
+            {account && <p>Last sign-in: {account.lastLogin ? formatDateTime(account.lastLogin) : 'Not recorded'}</p>}
           </div>
-          <div id={menuId} role="menu" aria-label="Account" onKeyDown={onMenuKeyDown} className="flex flex-col gap-0.5 pt-1">
+          <div id={menuId} role="menu" aria-label="Account" onKeyDown={onMenuKeyDown} className="flex flex-col pt-1">
             {items.map((item, index) => {
               const content = (
                 <>
-                  <Icon name={item.icon} size={18} />
+                  <Icon name={item.icon} size={16} className="shrink-0" />
                   {item.label}
+                  {item.shortcut && <ShortcutHint keys={item.shortcut} />}
                 </>
               )
               const ref = (node: HTMLElement | null) => {
@@ -182,7 +185,7 @@ export function AccountMenu({
               }
               return (
                 <div key={item.key} className="contents">
-                  {item.key === 'signout' && <div role="separator" className="my-1 border-t border-border" />}
+                  {index > 0 && item.group !== items[index - 1].group && <div role="separator" className="my-1 border-t border-border" />}
                   {'to' in item ? (
                     <Link ref={ref} role="menuitem" tabIndex={-1} to={item.to} onClick={() => close(false)} className={itemClass(item.danger)}>
                       {content}
@@ -193,6 +196,7 @@ export function AccountMenu({
                       type="button"
                       role="menuitem"
                       tabIndex={-1}
+                      aria-keyshortcuts={item.shortcut}
                       disabled={item.key === 'signout' && signingOut}
                       onClick={() => choose(item)}
                       className={cn(itemClass(item.danger), 'disabled:cursor-not-allowed disabled:opacity-50')}

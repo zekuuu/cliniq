@@ -149,7 +149,7 @@ describe('App Shell / Navigation', () => {
     )
   })
 
-  it('shows a plain Keyboard shortcuts item in the account menu', async () => {
+  it('shows a Keyboard shortcuts item with its ? tip in the account menu', async () => {
     renderWithRouter(
       <AppShell
         user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
@@ -163,7 +163,10 @@ describe('App Shell / Navigation', () => {
     // ADR-066: the header's Shortcuts button moved into the account menu as a plain-language item.
     await openAccountMenu(userEvent.setup())
     expect(screen.getByRole('menuitem', { name: 'Keyboard shortcuts' })).toHaveTextContent('Keyboard shortcuts')
-    expect(screen.getByRole('menuitem', { name: 'Keyboard shortcuts' })).not.toHaveTextContent('?')
+    // Its shortcut shows as a tip, hidden from the accessible name (Zean, November 5, 2026).
+    const item = screen.getByRole('menuitem', { name: 'Keyboard shortcuts' })
+    expect(item).toHaveAttribute('aria-keyshortcuts', '?')
+    expect(item.querySelector('kbd')).toHaveTextContent('?')
   })
 
   it('uses a readable monospaced treatment for the live workstation clock', () => {
