@@ -241,6 +241,11 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
               <Icon name="alertTriangle" />
               Incomplete records ({incompleteCount})
             </Link>
+            {/* ADR-069, as on the Student List. */}
+            <Link className={buttonClassName({ variant: 'secondary' })} to={paths.staffImport}>
+              <Icon name="fileText" />
+              Import List
+            </Link>
             <Link className={buttonClassName({ variant: 'primary' })} to={paths.staffNew}>
               <Icon name="plus" />
               Add Staff

@@ -81,6 +81,8 @@ import { clearMockSession, firstViewThisSession, getMockSessionUser, type Sessio
 import { commit, db, restoreDb } from './store'
 import { CALENDAR_EVENT_TITLE_MAX, PERSONNEL_DEPARTMENT_MAX } from './integrity'
 import { cleanNamePart, compareByLastName, formatPersonName, NAME_PART_MAX, nameKey, nameMatches, type NameParts } from '../personName'
+import { isPhilippinePhone } from '../phone'
+import type { StaffImportRow } from '../staffImport'
 import type {
   AdjustmentReason,
   BackupLocation,
@@ -1062,6 +1064,170 @@ export function getIncompleteRecordQueue(options: { fullLrn?: boolean } = {}): P
   )
 }
 
+/** ADR-067: completing an incomplete staff record resolves it on the staff Incomplete Records page, crediting whoever did it. */
+function resolveIfCompleted(s: DbState, record: SeedPersonnel, wasIncomplete: boolean, by: SessionUser) {
+  if (!wasIncomplete || missingStaffFields(record).length) return
+  const reviews = (s.frontendOnly.personnelReviews ??= [])
+  let review = reviews.find((r) => r.personnelId === record.id)
+  if (!review) {
+    review = { personnelId: record.id, resolvedByUserId: null, resolvedAt: null }
+    reviews.push(review)
+  }
+  review.resolvedByUserId = by.id
+  review.resolvedAt = now(s)
+}
+
+// ---- staff list import (ADR-069, mock level) -------------------------------------------------
+
+export interface StaffImportProblem {
+  /** The row in the file, counting the header as row 1. */
+  line: number
+  name: string
+  problem: string
+}
+
+export interface StaffImportPreview {
+  newCount: number
+  /** Rows that match a staff record already in CLINIQ, and how many of those change. */
+  continuingCount: number
+  changedCount: number
+  problems: StaffImportProblem[]
+}
+
+export interface StaffImportResult {
+  created: number
+  updated: number
+  flagged: number
+}
+
+interface StaffImportPlan {
+  row: StaffImportRow
+  record: SeedPersonnel | null
+  fields: Pick<SeedPersonnel, 'firstName' | 'lastName' | 'middleName' | 'sex' | 'type' | 'department'> & Partial<Pick<SeedPersonnel, 'contactInfo' | 'emergencyContacts'>>
+}
+
+/**
+ * Checks every row and works out what it would do. A row with a Staff No. updates that record; without
+ * one it matches a staff member by full name and type, or is added. A flagged row is left out.
+ */
+function planStaffImport(s: DbState, rows: StaffImportRow[]) {
+  const seenNumbers = new Map<string, number>()
+  for (const row of rows) if (row.staffNumber) seenNumbers.set(row.staffNumber.toUpperCase(), (seenNumbers.get(row.staffNumber.toUpperCase()) ?? 0) + 1)
+  const problems: StaffImportProblem[] = []
+  const plans: StaffImportPlan[] = []
+  const claimed = new Set<string>()
+  rows.forEach((row, index) => {
+    const line = index + 2
+    const name = [row.firstName, row.lastName].filter(Boolean).join(' ')
+    const type = s.config.personnelTypes.find((candidate) => candidate.toLowerCase() === row.type.toLowerCase())
+    const contactStarted = Boolean(row.contactName || row.contactRelationship || row.contactPhone)
+    const number = row.staffNumber.toUpperCase()
+    const byNumber = number ? s.personnel.find((p) => p.staffNumber === number) : undefined
+    const byName = number
+      ? undefined
+      : s.personnel.filter((p) => p.type === type && nameKey(formatPersonName(p)) === nameKey(formatPersonName({ firstName: row.firstName, lastName: row.lastName, middleName: row.middleName || null })))
+    const problem = !row.firstName || !row.lastName
+      ? 'The name is incomplete.'
+      : !importSex(row.sex)
+        ? 'Sex must be Male or Female.'
+        : !type
+          ? `"${row.type}" is not a staff type (${s.config.personnelTypes.join(', ')}).`
+          : number && (seenNumbers.get(number) ?? 0) > 1
+            ? 'This Staff No. appears more than once in the file.'
+            : number && !byNumber
+              ? `No staff record has the Staff No. ${number}. Leave it blank to add a new staff member.`
+              : byName && byName.length > 1
+                ? 'More than one staff member has this name and type. Add the Staff No. to this row.'
+                : row.department.length > PERSONNEL_DEPARTMENT_MAX
+                  ? `Department or role can be at most ${PERSONNEL_DEPARTMENT_MAX} characters.`
+                  : contactStarted && !(row.contactName && row.contactRelationship && row.contactPhone)
+                    ? 'The emergency contact needs a name, relationship and phone.'
+                    : contactStarted && !isPhilippinePhone(row.contactPhone)
+                      ? 'The emergency contact phone is not a Philippine number.'
+                      : null
+    const record = byNumber ?? byName?.[0] ?? null
+    if (!problem && record && claimed.has(record.id)) {
+      problems.push({ line, name, problem: 'Another row in the file is the same staff member.' })
+      return
+    }
+    if (problem) {
+      problems.push({ line, name, problem })
+      return
+    }
+    if (record) claimed.add(record.id)
+    plans.push({
+      row,
+      record,
+      fields: {
+        firstName: cleanNamePart(row.firstName),
+        lastName: cleanNamePart(row.lastName),
+        middleName: cleanNamePart(row.middleName) || null,
+        sex: importSex(row.sex)!,
+        type: type!,
+        department: row.department || (record?.department ?? null),
+        // Blank cells keep what CLINIQ has; a contact from the file is added only when the record has none.
+        ...(row.contactInfo ? { contactInfo: row.contactInfo } : {}),
+        ...(contactStarted && !record?.emergencyContacts.length
+          ? { emergencyContacts: [{ name: row.contactName, relationship: row.contactRelationship, phone: row.contactPhone, verified: false }] }
+          : {}),
+      },
+    })
+  })
+  return { plans, problems }
+}
+
+const staffImportChanges = (plan: StaffImportPlan) =>
+  !plan.record || plan.record.archived || Object.entries(plan.fields).some(([key, value]) => JSON.stringify(plan.record![key as keyof SeedPersonnel]) !== JSON.stringify(value))
+
+/** The preview before anything is applied. Reads only. */
+export function previewStaffImport(rows: StaffImportRow[], actor?: SessionUser): Promise<StaffImportPreview> {
+  return read('staff import preview', (s) => {
+    requireClinician(actorOr(actor))
+    const { plans, problems } = planStaffImport(s, rows)
+    const known = plans.filter((plan) => plan.record)
+    return { newCount: plans.length - known.length, continuingCount: known.length, changedCount: known.filter(staffImportChanges).length, problems }
+  })
+}
+
+/**
+ * Applies a reviewed staff list (ADR-069): adds new staff with a new Staff No., updates the matched
+ * ones and restores a matched archived record. Staff missing from the file are left alone. A list
+ * that changes nothing writes nothing. The audit entry holds counts, never names.
+ */
+export function applyStaffImport(rows: StaffImportRow[], options: { fileName: string; actor?: SessionUser }): Promise<StaffImportResult> {
+  return write('apply staff import', (s) => {
+    const by = actorOr(options.actor)
+    requireClinician(by)
+    const { plans, problems } = planStaffImport(s, rows)
+    const result: StaffImportResult = { created: 0, updated: 0, flagged: problems.length }
+    for (const plan of plans) {
+      if (plan.record) {
+        if (!staffImportChanges(plan)) continue
+        const wasIncomplete = missingStaffFields(plan.record).length > 0
+        Object.assign(plan.record, plan.fields, { archived: false })
+        resolveIfCompleted(s, plan.record, wasIncomplete, by)
+        result.updated += 1
+      } else {
+        s.personnel.push({
+          id: nextId('personnel', s.personnel),
+          staffNumber: nextStaffNumber(s),
+          contactInfo: '',
+          allergies: [],
+          medicalConditions: [],
+          emergencyContacts: [],
+          archived: false,
+          ...plan.fields,
+        })
+        result.created += 1
+      }
+    }
+    if (!result.created && !result.updated) return result
+    const id = `staff-import-${s.auditLog.filter((entry) => entry.targetRecord?.type === 'staff-import').length + 1}`
+    audit(s, by, 'submit', { type: 'staff-import', id }, `${result.created} added, ${result.updated} updated, ${result.flagged} flagged`)
+    return result
+  })
+}
+
 export type StaffIncompleteRecord = StaffIncompleteRow & { resolvedByName: string | null }
 
 /** The staff Incomplete Records page (ADR-067). */
@@ -1204,17 +1370,7 @@ export function savePersonnel(
       const wasIncomplete = missingStaffFields(record).length > 0
       Object.assign(record, fields)
       audit(s, by, 'update', { type: 'staff', id: record.id }, summary)
-      // ADR-067: completing an incomplete record resolves it on the staff Incomplete Records page, crediting whoever saved it.
-      if (wasIncomplete && !missingStaffFields(record).length) {
-        const reviews = (s.frontendOnly.personnelReviews ??= [])
-        let review = reviews.find((r) => r.personnelId === record.id)
-        if (!review) {
-          review = { personnelId: record.id, resolvedByUserId: null, resolvedAt: null }
-          reviews.push(review)
-        }
-        review.resolvedByUserId = by.id
-        review.resolvedAt = now(s)
-      }
+      resolveIfCompleted(s, record, wasIncomplete, by)
       return { personnel: toPersonnel(record), action: 'update' as const }
     }
     const record: SeedPersonnel = { id: nextId('personnel', s.personnel), staffNumber: nextStaffNumber(s), ...fields, archived: false }

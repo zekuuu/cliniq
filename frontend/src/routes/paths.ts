@@ -24,6 +24,8 @@ export const paths = {
   staffNew: '/staff/new',
   /** ADR-067: the staff Incomplete Records page. */
   staffIncomplete: '/staff/incomplete',
+  /** ADR-069: the staff list import. */
+  staffImport: '/staff/import',
   staffProfile: (personnelId: string) => `/staff/${seg(personnelId)}`,
   staffEdit: (personnelId: string) => `/staff/${seg(personnelId)}/edit`,
   visits: '/visits',

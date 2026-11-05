@@ -48,6 +48,7 @@ const StudentProfilePage = page(
 const StaffListPage = page(() => import('../features/staff-records/StaffListPage'), 'StaffListPage')
 const StaffProfilePage = page(() => import('../features/staff-records/StaffProfilePage'), 'StaffProfilePage')
 const StaffFormPage = page(() => import('../features/staff-records/StaffFormPage'), 'StaffFormPage')
+const StaffImportPage = page(() => import('../features/staff-records/StaffImportPage'), 'StaffImportPage')
 const StaffIncompleteRecordsPage = page(() => import('../features/staff-records/StaffIncompleteRecordsPage'), 'StaffIncompleteRecordsPage')
 const VisitLogListPage = page(
   () => import('../features/clinic-visits/VisitLogListPage'),
@@ -269,6 +270,13 @@ const APP_ROUTES: AppRoute[] = [
     roles: ['staff'],
     nav: 'staff',
     render: (viewer) => <StaffFormPage viewer={viewer} />,
+  },
+  {
+    path: paths.staffImport,
+    title: 'Import Staff List',
+    roles: ['staff'],
+    nav: 'staff',
+    render: (viewer) => <StaffImportPage viewer={viewer} />,
   },
   {
     path: paths.staffIncomplete,
