@@ -313,7 +313,7 @@ describe('R26: the Inventory list is paged', () => {
     const total = (await listInventory()).length
     expect(total).toBeGreaterThan(10)
     expect(within(table).getAllByRole('row')).toHaveLength(11)
-    await user.click(screen.getByRole('button', { name: 'Next' }))
+    await user.click(screen.getByRole('button', { name: 'Next page' }))
     expect(within(screen.getByRole('table', { name: 'Inventory items' })).getAllByRole('row')).toHaveLength(total - 10 + 1)
     await user.type(screen.getByLabelText('Search'), 'para')
     expect(await screen.findByText('Page 1 of 1')).toBeInTheDocument()

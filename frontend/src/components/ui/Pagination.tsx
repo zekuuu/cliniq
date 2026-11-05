@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { PAGE_SIZE_OPTIONS, type PageSize } from '../../hooks/usePageSize'
+import { Icon, type IconName } from '../icons/Icon'
 import { Button } from './Button'
 import { Select } from './Select'
 
@@ -35,12 +36,24 @@ export function Pagination({ page, pageCount, total, pageSize, onPageChange, ite
         )}
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="secondary" size="sm" onClick={() => onPageChange(page - 1)} disabled={page === 1}>Previous</Button>
+        {/* Arrows without tails, and double arrows to the first and last page (Zean, November 5, 2026). */}
+        <PageArrow icon="chevronsLeft" label="First page" disabled={page === 1} onClick={() => onPageChange(1)} />
+        <PageArrow icon="chevronLeft" label="Previous page" disabled={page === 1} onClick={() => onPageChange(page - 1)} />
         {/* The page field shows on every list, one page or many, so the pager looks the same everywhere (Zean, November 5, 2026). */}
         <PageField page={page} pageCount={pageCount} onPageChange={onPageChange} />
-        <Button variant="secondary" size="sm" onClick={() => onPageChange(page + 1)} disabled={page === pageCount}>Next</Button>
+        <PageArrow icon="chevronRight" label="Next page" disabled={page === pageCount} onClick={() => onPageChange(page + 1)} />
+        <PageArrow icon="chevronsRight" label="Last page" disabled={page === pageCount} onClick={() => onPageChange(pageCount)} />
       </div>
     </nav>
+  )
+}
+
+/** A square, icon-only pager button; its name is the label, also shown as a tooltip. */
+function PageArrow({ icon, label, disabled, onClick }: { icon: IconName; label: string; disabled: boolean; onClick: () => void }) {
+  return (
+    <Button variant="secondary" size="sm" aria-label={label} title={label} disabled={disabled} onClick={onClick} className="w-8 px-0!">
+      <Icon name={icon} size={16} />
+    </Button>
   )
 }
 

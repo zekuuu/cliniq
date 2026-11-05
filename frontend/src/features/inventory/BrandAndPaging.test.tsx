@@ -48,7 +48,7 @@ describe('Rows per page', () => {
     const table = await screen.findByRole('table')
     const rows = () => within(table).getAllByRole('row').length - 1
     expect(rows()).toBe(10)
-    await user.click(screen.getByRole('button', { name: 'Next' }))
+    await user.click(screen.getByRole('button', { name: 'Next page' }))
     expect(screen.getByText(/^Page 2 of/)).toBeInTheDocument()
 
     const size = screen.getByLabelText('Rows per page')

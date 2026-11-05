@@ -25,3 +25,16 @@ _read-first
 .pinpoint/
 # Design tool cache (impeccable)
 .impeccable/
+
+# Secret files (added by Tokalator)
+.env*
+!.env.example
+*.pem
+id_rsa*
+*.p12
+*.pfx
+credentials.json
+service-account*.json
+.npmrc
+.pypirc
+token.json

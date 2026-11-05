@@ -110,7 +110,7 @@ describe('Audit Log', () => {
     renderPage()
     await screen.findByRole('table', { name: 'Filtered audit log' })
 
-    await user.click(screen.getByRole('button', { name: 'Next' }))
+    await user.click(screen.getByRole('button', { name: 'Next page' }))
 
     expect(screen.getByText('Page 2 of 3')).toBeInTheDocument()
     expect(screen.getByText(/Showing 11–20 of/)).toBeInTheDocument()
@@ -137,7 +137,7 @@ describe('Audit Log', () => {
     renderPage()
     await screen.findByRole('table', { name: 'Filtered audit log' })
 
-    await user.click(screen.getByRole('button', { name: 'Next' }))
+    await user.click(screen.getByRole('button', { name: 'Next page' }))
     expect(screen.getByText('Page 2 of 3')).toBeInTheDocument()
 
     await selectOption(user, screen.getByLabelText('User'), 'user-admin-01')

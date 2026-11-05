@@ -97,7 +97,7 @@ describe('UI/UX review regressions', () => {
 
     expect(await screen.findByText(`${total} records shown`)).toBeInTheDocument()
     expect(screen.getByText(`Showing 1–10 of ${total} visits`)).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Next' }))
+    await user.click(screen.getByRole('button', { name: 'Next page' }))
     expect(screen.getByText(`Showing 11–20 of ${total} visits`)).toBeInTheDocument()
     await user.type(screen.getByLabelText('Search'), '00000026')
     expect(await screen.findByText(/^Showing 1–/)).toBeInTheDocument()

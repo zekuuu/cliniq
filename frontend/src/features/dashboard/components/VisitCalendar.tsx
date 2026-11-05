@@ -826,13 +826,16 @@ export function VisitCalendar({
             {period.label}
           </h3>
           <div className="flex items-center gap-2 print:hidden">
+            {/* Arrows without tails, icon only; the name says the period (Zean, November 5, 2026). */}
             <Button
               size="sm"
               variant="neutral"
-              icon="chevronLeft"
+              aria-label={`Previous ${viewNounTitle[view]}`}
+              title={`Previous ${viewNounTitle[view]}`}
+              className="w-8 px-0!"
               onClick={() => setAnchor(shiftAnchor(view, anchor, -1))}
             >
-              Previous<span className="sr-only"> {viewNounTitle[view]}</span>
+              <Icon name="chevronLeft" size={16} />
             </Button>
             <Button size="sm" variant="neutral" onClick={() => setAnchor(today)}>
               Today
@@ -841,10 +844,12 @@ export function VisitCalendar({
               size="sm"
               variant="neutral"
               disabled={nextDisabled}
+              aria-label={`Next ${viewNounTitle[view]}`}
+              title={`Next ${viewNounTitle[view]}`}
+              className="w-8 px-0!"
               onClick={() => setAnchor(shiftAnchor(view, anchor, 1))}
             >
-              Next<span className="sr-only"> {viewNounTitle[view]}</span>
-              <Icon name="chevronRight" />
+              <Icon name="chevronRight" size={16} />
             </Button>
           </div>
         </div>

@@ -54,6 +54,8 @@ const paths = {
   chevronDown: <path d="m6 9 6 6 6-6" />,
   chevronLeft: <path d="m15 18-6-6 6-6" />,
   chevronRight: <path d="m9 18 6-6-6-6" />,
+  chevronsLeft: <path d="m11 17-5-5 5-5m7 10-5-5 5-5" />,
+  chevronsRight: <path d="m6 17 5-5-5-5m7 10 5-5-5-5" />,
   clipboardList: (
     <>
       <rect x="8" y="2" width="8" height="4" rx="1" />
