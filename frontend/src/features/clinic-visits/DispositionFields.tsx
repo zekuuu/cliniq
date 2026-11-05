@@ -1,5 +1,5 @@
 import type { ChangeEvent } from 'react'
-import { Combobox, DatePicker, Input, StayHomeField } from '../../components'
+import { Combobox, DatePicker, FIELD_HALF, Input, StayHomeField } from '../../components'
 import { formatDateRange } from '../../lib/dates'
 import type { ExcusedPeriod } from '../../lib/mock-db'
 import type { Disposition } from '../../types/entities'
@@ -176,6 +176,8 @@ function ReferredToField({ value, onChange }: { value: string; onChange: (value:
   return (
     <Input
       label="Referred to (hospital or clinic)"
+      // One column of the form grid, like other fields alone on a row (cliniq-input-patterns).
+      className={FIELD_HALF}
       value={value}
       placeholder="Optional"
       onChange={(event) => onChange(event.target.value)}

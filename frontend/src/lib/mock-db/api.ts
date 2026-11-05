@@ -60,6 +60,9 @@ import {
   inventoryStatusFor,
   missingRequiredFields,
   monthlyCounts,
+  missingStaffFields,
+  staffIncompleteQueue,
+  type StaffIncompleteRow,
   personnelDepartments,
   searchPatients as searchPatientRecords,
   searchPersonnel as searchPersonnelRecords,
@@ -1059,6 +1062,15 @@ export function getIncompleteRecordQueue(options: { fullLrn?: boolean } = {}): P
   )
 }
 
+export type StaffIncompleteRecord = StaffIncompleteRow & { resolvedByName: string | null }
+
+/** The staff Incomplete Records page (ADR-067). */
+export function getStaffIncompleteQueue(): Promise<StaffIncompleteRecord[]> {
+  return read('staff incomplete records', (s) =>
+    staffIncompleteQueue(s).map((row) => ({ ...row, resolvedByName: userName(s, row.review?.resolvedByUserId ?? null) })),
+  )
+}
+
 // ---- personnel: staff patients (ADR-043) -------------------------------------------------------
 
 export interface PersonnelQuery {
@@ -1108,7 +1120,7 @@ export function getPersonnelTypes(): Promise<string[]> {
 }
 
 /** Department or role values already in use, as suggestions (D4). */
-export function getPersonnelDepartments(): Promise<string[]> {
+export function getPersonnelDepartments(): Promise<Record<string, string[]>> {
   return read('staff departments', personnelDepartments)
 }
 
@@ -1189,8 +1201,20 @@ export function savePersonnel(
     if (options.personnelId) {
       const record = personnelOf(s, options.personnelId)
       const summary = changedSummary(record, fields)
+      const wasIncomplete = missingStaffFields(record).length > 0
       Object.assign(record, fields)
       audit(s, by, 'update', { type: 'staff', id: record.id }, summary)
+      // ADR-067: completing an incomplete record resolves it on the staff Incomplete Records page, crediting whoever saved it.
+      if (wasIncomplete && !missingStaffFields(record).length) {
+        const reviews = (s.frontendOnly.personnelReviews ??= [])
+        let review = reviews.find((r) => r.personnelId === record.id)
+        if (!review) {
+          review = { personnelId: record.id, resolvedByUserId: null, resolvedAt: null }
+          reviews.push(review)
+        }
+        review.resolvedByUserId = by.id
+        review.resolvedAt = now(s)
+      }
       return { personnel: toPersonnel(record), action: 'update' as const }
     }
     const record: SeedPersonnel = { id: nextId('personnel', s.personnel), staffNumber: nextStaffNumber(s), ...fields, archived: false }
@@ -2270,9 +2294,6 @@ export const ADJUSTMENT_REASON_LABELS: Record<AdjustmentReason, string> = {
 export type StaffAdjustmentReason = Exclude<AdjustmentReason, 'visit_edited'>
 export const STAFF_ADJUSTMENT_REASONS: StaffAdjustmentReason[] = ['expired_disposed', 'damaged_spilled', 'miscount_correction', 'other']
 
-/** The shortest written note a large write-off accepts; a preset reason alone is not enough. */
-export const LARGE_WRITE_OFF_NOTE_MIN = 20
-
 /**
  * Panel review IV-7: a removal of `percent` or more of the item on hand, or one that empties the
  * item, is a large write-off. `onHand` is the whole item before the change, all batches.
@@ -2307,7 +2328,6 @@ export function adjustInventoryStock(itemId: string, input: StockAdjustmentInput
     const item = must(s.inventoryItems.find((i) => i.id === itemId), 'Inventory item')
     if (!STAFF_ADJUSTMENT_REASONS.includes(input.reason)) throw new StockRuleError('Choose a reason for the adjustment.')
     const note = input.note?.trim() || null
-    if (input.reason === 'other' && !note) throw new StockRuleError('Add a note explaining the adjustment.')
     const batch = must(item.batches.find((candidate) => candidate.id === input.batchId) ?? item.batches[0], 'Batch')
     const counted = input.countedQuantity
     if (counted !== undefined && (!Number.isInteger(counted) || counted < 0))
@@ -2320,8 +2340,6 @@ export function adjustInventoryStock(itemId: string, input: StockAdjustmentInput
       throw new StockRuleError('Choose an expired batch to record expired stock disposal.')
     const onHand = item.batches.reduce((total, candidate) => total + candidate.quantity, 0)
     const large = isLargeWriteOff(change, onHand, s.config.largeWriteOffPercent)
-    if (large && (note?.length ?? 0) < LARGE_WRITE_OFF_NOTE_MIN)
-      throw new StockRuleError(`This is a large write-off. Write a note of at least ${LARGE_WRITE_OFF_NOTE_MIN} characters.`)
     batch.quantity += change
     const txn: InventoryTransaction = {
       id: nextId('txn', s.frontendOnly.inventoryTransactions),

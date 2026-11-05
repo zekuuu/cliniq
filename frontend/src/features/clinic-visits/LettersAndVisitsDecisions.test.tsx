@@ -36,7 +36,7 @@ describe('Letters and visits (ADR-049)', () => {
   }
 
   async function chooseComplaint(user: ReturnType<typeof userEvent.setup>, label: string) {
-    await user.click(screen.getByRole('button', { name: /complaint/i }))
+    await user.click(screen.getByRole('button', { name: /^Complaint/ }))
     const option = screen.queryByRole('option', { name: label })
     if (option) return user.click(option)
     // Not among the top suggestions yet: typed under Other, as the clinician would.

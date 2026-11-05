@@ -227,7 +227,6 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                         {canNavigate && (
                           <AttentionCards pendingLetterCount={letters.data?.length ?? 0} />
                         )}
-                        <AttentionChips summary={d} canNavigate={canNavigate} group="now" />
                       </section>
                       {/* Can wait for a quieter moment, so it sits apart from what needs doing today (Zean, November 5, 2026). */}
                       <section
@@ -241,8 +240,13 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                           To do
                         </h2>
                         {canNavigate && <ToDoCards summary={d} />}
-                        <AttentionChips summary={d} canNavigate={canNavigate} group="later" />
                       </section>
+                    </div>
+                    {/* One chip row under both sections: split per column, the column gap broke it into two
+                        uneven rows (Zean, November 5, 2026). Urgent chips first. */}
+                    <div className="-mt-3 flex flex-wrap gap-2">
+                      <AttentionChips summary={d} canNavigate={canNavigate} group="now" />
+                      <AttentionChips summary={d} canNavigate={canNavigate} group="later" />
                     </div>
                     <section aria-labelledby="dashboard-activity" className="flex flex-col gap-3">
                       {/* The Monthly Report covers these counts, so its link sits on this heading row, right-aligned (Zean, November 5, 2026). */}

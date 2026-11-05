@@ -38,7 +38,7 @@ describe('Visit Details', () => {
 
     await screen.findByRole('heading', { name: 'Visit Details' })
     await user.click(screen.getByRole('button', { name: 'Edit' }))
-    await user.click(screen.getByRole('button', { name: /complaint/i }))
+    await user.click(screen.getByRole('button', { name: /^Complaint/ }))
     await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
     await user.click(screen.getByRole('button', { name: 'Remove Paracetamol 500mg' }))
     await user.clear(screen.getByLabelText(/treatment/i))
@@ -48,7 +48,7 @@ describe('Visit Details', () => {
     expect(screen.getByText('Enter the visit complaint.')).toBeInTheDocument()
     expect(screen.queryByText(/enter treatment notes/i)).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /complaint/i }))
+    await user.click(screen.getByRole('button', { name: /^Complaint/ }))
     await user.click(screen.getByRole('option', { name: 'Headache' }))
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
@@ -62,7 +62,7 @@ describe('Visit Details', () => {
 
     await screen.findByRole('heading', { name: 'Visit Details' })
     await user.click(screen.getByRole('button', { name: 'Edit' }))
-    await user.click(screen.getByRole('button', { name: /complaint/i }))
+    await user.click(screen.getByRole('button', { name: /^Complaint/ }))
     await user.click(screen.getByRole('option', { name: 'Headache' }))
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
@@ -76,7 +76,7 @@ describe('Visit Details', () => {
 
     await screen.findByRole('heading', { name: 'Visit Details' })
     await user.click(screen.getByRole('button', { name: 'Edit' }))
-    const complaint = screen.getByRole('button', { name: /complaint/i })
+    const complaint = screen.getByRole('button', { name: /^Complaint/ })
     await user.click(complaint)
     await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
     expect(complaint).toHaveTextContent('Other (type your own)')

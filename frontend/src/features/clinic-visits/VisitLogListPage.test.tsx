@@ -119,7 +119,7 @@ describe('Visit Log', () => {
     expect(screen.getByRole('columnheader', { name: 'Disposition' })).toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: /full name/i })).not.toBeInTheDocument()
     // ADR-010 (Option A): the complaint stays visible beside the LRN; names never do.
-    expect(screen.getByRole('columnheader', { name: /complaint/i })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /^Complaint/ })).toBeInTheDocument()
     const [newest] = await fetchVisitLog({ ...defaultVisitLogRange(), search: '', disposition: 'all' })
     expect(screen.getAllByText(newest.complaint).length).toBeGreaterThan(0)
     expect(screen.queryByText('Visit recorded')).not.toBeInTheDocument()

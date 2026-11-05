@@ -636,8 +636,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
               suggestions={suggestions}
               error={errors.complaint}
             />
-            <div className={FIELD_HALF}>
-            <ExtraComplaintsField value={extraComplaints} onChange={setExtraComplaints} main={complaint} suggestions={suggestions} /></div>
+            <ExtraComplaintsField value={extraComplaints} onChange={setExtraComplaints} main={complaint} suggestions={suggestions} />
             {looksLikeEmergency && (
               <div role="note" className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary">
                 <span className="flex items-center gap-2">
@@ -701,7 +700,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
               <SegmentedControl
                 label="Disposition"
                 // Four options: two by two on a phone, one row from sm up (panel review VS-1 added Resting).
-                className="max-sm:grid max-sm:w-full max-sm:grid-cols-2"
+                className="gap-1.5! border border-border max-sm:grid max-sm:w-full max-sm:grid-cols-2"
                 value={disposition}
                 onChange={(next) => {
                   // Disposition-specific fields start fresh whenever the disposition changes.

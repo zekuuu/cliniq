@@ -2,7 +2,6 @@ import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { PATIENT_KIND_LABELS, patientGroup, patientIdText, patientLine } from '../../lib/patients'
 import { Link, useNavigate } from 'react-router'
 import {
-  FIELD_HALF,
   BackButton,
   Badge,
   Button,
@@ -494,13 +493,12 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                   suggestions={visit.complaintSuggestions}
                   error={errors.complaint}
                 />
-                <div className={FIELD_HALF}>
                 <ExtraComplaintsField
                   value={values.extraComplaints}
                   onChange={(next) => setField('extraComplaints', next)}
                   main={values.complaint}
                   suggestions={visit.complaintSuggestions}
-                /></div>
+                />
                 <TextareaField
                   label="Treatment notes"
                   required={false}
@@ -535,7 +533,7 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                   <SegmentedControl
                     label="Disposition"
                     // Four options: two by two on a phone, one row from sm up (panel review VS-1 added Resting).
-                    className="max-sm:grid max-sm:w-full max-sm:grid-cols-2"
+                    className="gap-1.5! border border-border max-sm:grid max-sm:w-full max-sm:grid-cols-2"
                     value={values.disposition}
                     onChange={setDisposition}
                     options={dispositionOptionsFor(visit.student.kind)}

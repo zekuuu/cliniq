@@ -140,6 +140,10 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
         importedAt: resolveSchoolDate(r.importedAt, today),
         resolvedAt: r.resolvedAt ? resolveSchoolDateTime(r.resolvedAt, today) : null,
       })),
+      personnelReviews: fo.personnelReviews.map((r) => ({
+        ...r,
+        resolvedAt: r.resolvedAt ? resolveSchoolDateTime(r.resolvedAt, today) : null,
+      })),
       excuseLetterApprovals: fo.excuseLetterApprovals.map((a) => ({
         ...a,
         approvedAt: resolveSchoolDateTime(a.approvedAt, today),

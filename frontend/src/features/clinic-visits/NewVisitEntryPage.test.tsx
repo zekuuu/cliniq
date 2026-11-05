@@ -8,7 +8,7 @@ import { renderWithRouter } from '../../test/renderWithRouter'
 import { pickStudent } from '../../test/pickStudent'
 import { NewVisitEntryPage } from './NewVisitEntryPage'
 
-const complaintField = () => screen.getByRole('button', { name: /complaint/i })
+const complaintField = () => screen.getByRole('button', { name: /^Complaint/ })
 async function selectComplaint(user: ReturnType<typeof userEvent.setup>, label: string) {
   await user.click(complaintField())
   await user.click(screen.getByRole('option', { name: label }))

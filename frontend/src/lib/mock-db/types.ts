@@ -254,6 +254,13 @@ export interface RecordReview<D = ISODate, T = ISODateTime> {
   resolvedAt: T | null
 }
 
+/** ADR-067: who completed an incomplete staff record, and when. No import, so no imported fields. */
+export interface PersonnelReview<T = ISODateTime> {
+  personnelId: string
+  resolvedByUserId: string | null
+  resolvedAt: T | null
+}
+
 export interface ExcuseLetterApproval<T = ISODateTime, D = ISODate> {
   id: string
   visitId: string
@@ -350,6 +357,8 @@ export interface SeedFrontendOnly {
   incidentComplaintTypes: string[]
   inventoryTransactions: Array<Replace<InventoryTransaction<RelativeDateTime>, SeedPatient>>
   recordReviews: Array<RecordReview<RelativeDate, RelativeDateTime>>
+  /** Empty in the seed: none until a staff record is completed (ADR-067). */
+  personnelReviews: Array<PersonnelReview<RelativeDateTime>>
   excuseLetterApprovals: Array<ExcuseLetterApproval<RelativeDateTime, RelativeDate>>
   peReferrals: Array<PeReferral<RelativeDateTime>>
   issueReports: Array<IssueReport<RelativeDateTime>>
@@ -397,6 +406,7 @@ export interface FrontendOnlyState {
   incidentComplaintTypes: string[]
   inventoryTransactions: InventoryTransaction[]
   recordReviews: RecordReview[]
+  personnelReviews: PersonnelReview[]
   excuseLetterApprovals: ExcuseLetterApproval[]
   peReferrals: PeReferral[]
   issueReports: IssueReport[]

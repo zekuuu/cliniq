@@ -20,7 +20,7 @@ import type {
   StudentSearchResult,
   UserRole,
 } from '../../types/entities'
-import type { DbState, RecordReview, SeedPersonnel, SeedStudent } from './types'
+import type { DbState, PersonnelReview, RecordReview, SeedPersonnel, SeedStudent } from './types'
 
 /**
  * SELECTORS: every derived value the screens show is computed here, from raw records, on every
@@ -292,6 +292,36 @@ export function searchStudents(state: DbState, query: string, limit = 8): Studen
 
 // ---- Personnel: staff patients (ADR-043) ----------------------------------------------------
 
+/**
+ * What a staff record still lacks (ADR-067): a sex (only records saved before ADR-063) and at least one
+ * emergency contact. Mirrors the student check, minus the Registrar import: saving never blocks on these.
+ */
+export function missingStaffFields(person: Pick<Personnel, 'sex' | 'emergencyContacts'>): string[] {
+  const missing: string[] = []
+  if (!person.sex) missing.push('Sex')
+  if (!person.emergencyContacts.length) missing.push('Emergency contact')
+  return missing
+}
+
+export interface StaffIncompleteRow {
+  person: Personnel
+  missingFields: string[]
+  review: PersonnelReview | null
+  status: 'open' | 'resolved'
+}
+
+/** The staff Incomplete Records page (ADR-067): as the student queue, open until Edit Staff saves the record complete. */
+export function staffIncompleteQueue(state: DbState): StaffIncompleteRow[] {
+  const reviews = new Map((state.frontendOnly.personnelReviews ?? []).map((r) => [r.personnelId, r]))
+  return [...activePersonnel(state)].sort(compareByLastName).flatMap((person) => {
+    const missingFields = missingStaffFields(person)
+    const review = reviews.get(person.id) ?? null
+    const resolved = Boolean(review?.resolvedAt)
+    if (!missingFields.length && !resolved) return []
+    return [{ person, missingFields, review, status: resolved ? 'resolved' : 'open' }]
+  })
+}
+
 export function activePersonnel(state: DbState): Personnel[] {
   return state.personnel.filter((p) => !p.archived).map(toPersonnel)
 }
@@ -325,8 +355,11 @@ export function searchPatients(state: DbState, query: string, limit = 8): Patien
 }
 
 /** Department or role values already used, for the Staff Form's suggestions (D4). */
-export function personnelDepartments(state: DbState): string[] {
-  return [...new Set(state.personnel.flatMap((p) => (p.department ? [p.department] : [])))].sort((a, b) => a.localeCompare(b))
+/** Departments or roles in use, by staff type, so the form suggests only the chosen type's (Zean, November 5, 2026). */
+export function personnelDepartments(state: DbState): Record<string, string[]> {
+  const byType: Record<string, Set<string>> = {}
+  for (const p of state.personnel) if (p.department) (byType[p.type] ??= new Set()).add(p.department)
+  return Object.fromEntries(Object.entries(byType).map(([type, set]) => [type, [...set].sort((a, b) => a.localeCompare(b))]))
 }
 
 /** The Students / Staff split of any set of clinical records (ADR-043 item 8). */

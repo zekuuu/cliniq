@@ -42,7 +42,7 @@ const FIELDS = {
   reports: ['type', 'dateRange'],
   backupLogs: ['lastRun', 'fileSizeBytes', 'status', 'verifiedByUserId'],
   auditLog: ['userId', 'actionType', 'targetRecord', 'timestamp'],
-  frontendOnly: ['_note', 'devAccounts', 'visitComplaintTypes', 'incidentComplaintTypes', 'inventoryTransactions', 'recordReviews', 'excuseLetterApprovals', 'peReferrals', 'issueReports', 'calendarEvents', 'sportsReports', 'backupLocations'],
+  frontendOnly: ['_note', 'devAccounts', 'visitComplaintTypes', 'incidentComplaintTypes', 'inventoryTransactions', 'recordReviews', 'personnelReviews', 'excuseLetterApprovals', 'peReferrals', 'issueReports', 'calendarEvents', 'sportsReports', 'backupLocations'],
 } as const
 
 /**
@@ -465,7 +465,6 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
       checkFields(w, t, ['id', 'itemId', 'type', 'quantity', 'timestamp', 'userId', 'studentId', 'visitId', 'reason', 'note'], ['personnelId'])
       oneOf(`${w}.reason`, t.reason, ENUMS.adjustmentReason)
       if (!Number.isInteger(quantity) || quantity === 0) fail(`${w}.quantity: an adjustment is a whole number other than 0`)
-      if (t.reason === 'other' && !String(t.note ?? '').trim()) fail(`${w}.note: required when the reason is "other"`)
       if ((t.reason === 'visit_edited') !== (t.visitId !== null)) fail(`${w}: a "visit_edited" adjustment, and only that, links a visit`)
     } else {
       checkFields(w, t, ['id', 'itemId', 'type', 'quantity', 'timestamp', 'userId', 'studentId', 'visitId'], ['incidentId', 'personnelId'])
@@ -492,6 +491,12 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     const w = `frontendOnly.recordReviews[${i}]`
     studentRef(`${w}.studentId`, r.studentId)
     relDate(`${w}.importedAt`, r.importedAt)
+    userRef(`${w}.resolvedByUserId`, r.resolvedByUserId, true)
+    relDateTime(`${w}.resolvedAt`, r.resolvedAt, true)
+  })
+  ;((fo.personnelReviews ?? []) as Rec[]).forEach((r, i) => {
+    const w = `frontendOnly.personnelReviews[${i}]`
+    if (!personnelIds.has(String(r.personnelId))) fail(`${w}.personnelId: "${String(r.personnelId)}" doesn't exist`)
     userRef(`${w}.resolvedByUserId`, r.resolvedByUserId, true)
     relDateTime(`${w}.resolvedAt`, r.resolvedAt, true)
   })
