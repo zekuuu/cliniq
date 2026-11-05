@@ -286,30 +286,12 @@ export function DashboardPrint({
             )}
           </PrintSection>
 
-          <PrintSection title="Visit activity">
-            <PrintTable
-              caption="Visits and incidents per period"
-              rows={activity}
-              rowKey={(row) => row.label}
-              empty={`No visits or incidents ${period}.`}
-              columns={[
-                {
-                  header: trends.granularity === 'day' ? 'Week' : 'Period',
-                  cell: (row) => row.label,
-                },
-                {
-                  header: 'Visits and incidents',
-                  width: '40%',
-                  align: 'right',
-                  cell: (row) => row.total,
-                },
-              ]}
-            />
-          </PrintSection>
-
           <PrintSection title="Visits and incidents by sex and grade level">
             <PrintNote>Aggregated. By sex counts students and staff; by grade level counts students only.</PrintNote>
-            <div className="grid grid-cols-2 items-start gap-[6mm]">
+            {/* Kept whole: split at a page break, only the long grade-level column carried over, alone on one
+                side of the next page. Before Visit activity, whose single full-width table splits cleanly
+                with its header repeated (Zean, November 5, 2026). */}
+            <div className="grid break-inside-avoid grid-cols-2 items-start gap-[6mm]">
               <PrintTable
                 caption="By sex"
                 rows={summary.demographics.sex}
@@ -337,6 +319,27 @@ export function DashboardPrint({
                 ]}
               />
             </div>
+          </PrintSection>
+
+          <PrintSection title="Visit activity">
+            <PrintTable
+              caption="Visits and incidents per period"
+              rows={activity}
+              rowKey={(row) => row.label}
+              empty={`No visits or incidents ${period}.`}
+              columns={[
+                {
+                  header: trends.granularity === 'day' ? 'Week' : 'Period',
+                  cell: (row) => row.label,
+                },
+                {
+                  header: 'Visits and incidents',
+                  width: '40%',
+                  align: 'right',
+                  cell: (row) => row.total,
+                },
+              ]}
+            />
           </PrintSection>
         </>
       )}
