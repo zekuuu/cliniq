@@ -33,6 +33,7 @@ import {
   MAX_DAY_LABELS,
   monthGrid,
   noClassDayClass,
+  yearHolidayClass,
   periodFor,
   shiftAnchor,
   type CalendarView,
@@ -100,7 +101,7 @@ function Legend({ scale, showHoliday }: { scale: HeatScale; showHoliday: boolean
         ))}
         {showHoliday && (
           <li className="flex items-center gap-1">
-            <span aria-hidden="true" className="inline-block size-3.5 rounded-sm border border-border bg-holiday" />
+            <span aria-hidden="true" className={cn('inline-block size-3.5 rounded-sm border border-text-muted bg-holiday', yearHolidayClass)} />
             Holiday
           </li>
         )}
@@ -417,7 +418,7 @@ function YearView({
                     return (
                       <span
                         key={date}
-                        title={day ? describeDay(day, today, holidays) : undefined}
+                        title={day ? describeDay(day, today, holidays) : holidays.length ? holidays.map(holidayName).join(', ') : undefined}
                         className={cn(
                           'inline-flex size-5 items-center justify-center rounded-[3px] border text-xs leading-none',
                           hasEvent
@@ -427,8 +428,8 @@ function YearView({
                               : future
                                 ? heatClasses[0]
                                 : heatClasses[heatLevel(total, scale)],
-                          !hasEvent && noClassEmpty(holidays, total) && noClassDayClass,
-                          date === today ? 'border-2 border-brand-green' : hasEvent ? 'border-brand-yellow-dark' : 'border-border',
+                          holidays.length > 0 && yearHolidayClass,
+                          date === today ? 'border-2 border-brand-green' : hasEvent ? 'border-brand-yellow-dark' : holidays.length ? 'border-text-muted' : 'border-border',
                         )}
                       >
                         {parseISODate(date).getDate()}
@@ -445,8 +446,7 @@ function YearView({
           Activity, event, and holiday days in {year}
         </p>
         <p className="text-xs text-text-secondary">
-          Yellow squares above mark days with an event; today has a green ring. Tan squares mark holidays, striped when
-          there is no class.
+          Yellow squares above mark days with an event; today has a green ring. Grey-striped squares mark holidays.
         </p>
         {activeDays.length === 0 ? (
           <p className="text-xs text-text-secondary">No clinic activity, events, or holidays this year.</p>
