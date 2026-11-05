@@ -51,7 +51,7 @@ describe('Account menu', () => {
     expect(itemNames()).toEqual(['Edit profile', 'Change password', 'Keyboard shortcuts', 'Report an issue', 'Privacy Policy', 'Sign out'])
     const panel = menu.parentElement!
     expect(panel).toHaveTextContent('Username: demo.nurse')
-    expect(panel).toHaveTextContent(/Last sign-in:/)
+    expect(panel).toHaveTextContent(/Signed in /)
     expect(within(menu).getByRole('menuitem', { name: 'Edit profile' })).toHaveFocus()
   })
 

@@ -48,6 +48,7 @@ const StudentProfilePage = page(
 const StaffListPage = page(() => import('../features/staff-records/StaffListPage'), 'StaffListPage')
 const StaffProfilePage = page(() => import('../features/staff-records/StaffProfilePage'), 'StaffProfilePage')
 const StaffFormPage = page(() => import('../features/staff-records/StaffFormPage'), 'StaffFormPage')
+const StaffIncompleteRecordsPage = page(() => import('../features/staff-records/StaffIncompleteRecordsPage'), 'StaffIncompleteRecordsPage')
 const VisitLogListPage = page(
   () => import('../features/clinic-visits/VisitLogListPage'),
   'VisitLogListPage',
@@ -268,6 +269,13 @@ const APP_ROUTES: AppRoute[] = [
     roles: ['staff'],
     nav: 'staff',
     render: (viewer) => <StaffFormPage viewer={viewer} />,
+  },
+  {
+    path: paths.staffIncomplete,
+    title: 'Incomplete Staff Records',
+    roles: ['staff'],
+    nav: 'staff',
+    render: (viewer) => <StaffIncompleteRecordsPage viewer={viewer} />,
   },
   {
     path: '/staff/:personnelId',

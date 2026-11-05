@@ -13,6 +13,8 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   id?: string
   className?: string
   inputClassName?: string
+  /** Set false to drop the clear (X) button, e.g. the login username. */
+  clearable?: boolean
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
@@ -26,6 +28,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
   disabled,
   className,
   inputClassName,
+  clearable: clearableProp = true,
   ...rest
 }: InputProps, ref) {
   const autoId = useId()
@@ -58,7 +61,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
     : { value, onChange }
   // Every editable text field has a clear button while it holds text (Zean, November 5, 2026): not
   // passwords (the reveal eye sits there), dates and times (their own pickers), read-only or disabled fields.
-  const clearable = isSearch || (['text', 'tel', 'email', 'url', 'number', undefined].includes(type) && !fieldProps.readOnly)
+  const clearable =
+    clearableProp && (isSearch || (['text', 'tel', 'email', 'url', 'number', undefined].includes(type) && !fieldProps.readOnly))
   const shown = isSearch ? draft : String(value ?? '')
   const showClear = clearable && shown !== '' && !disabled
   function clearSearch() {

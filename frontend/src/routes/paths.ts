@@ -22,6 +22,8 @@ export const paths = {
   /** Staff patients (ADR-043): teachers and school staff, by the internal id. School Clinician only. */
   staff: '/staff',
   staffNew: '/staff/new',
+  /** ADR-067: the staff Incomplete Records page. */
+  staffIncomplete: '/staff/incomplete',
   staffProfile: (personnelId: string) => `/staff/${seg(personnelId)}`,
   staffEdit: (personnelId: string) => `/staff/${seg(personnelId)}/edit`,
   visits: '/visits',

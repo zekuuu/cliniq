@@ -91,7 +91,7 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
             )}
             <form ref={formRef} className="mt-6 flex w-full flex-col gap-4" onSubmit={submit} noValidate>
               <p role="status" className="sr-only">{invalid.announcement}</p>
-              <Input label="Username" icon="user" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} error={fieldErrors.username} required />
+              <Input label="Username" icon="user" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} error={fieldErrors.username} clearable={false} required />
               <Input label="Password" icon="lock" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} {...capsLock.handlers} hint={capsLock.hint} error={fieldErrors.password} required />
               {error && <p role="alert" className="text-sm font-semibold text-error">{error}</p>}
               <Button type="submit" variant="primary" className="mt-2 w-full" loading={loading}>Sign In</Button>

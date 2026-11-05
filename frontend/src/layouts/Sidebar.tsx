@@ -122,7 +122,7 @@ export function Sidebar({
           collapsed ? 'items-center gap-2 scrollbar-thin' : 'gap-4 pr-2',
         )}
       >
-        {groups.map((group) => {
+        {groups.map((group, groupIndex) => {
           const groupId = navGroupId(group.label)
           return (
             // A named group, not a <section>: a labelled section becomes a landmark region, and
@@ -131,8 +131,10 @@ export function Sidebar({
               key={group.label}
               role="group"
               aria-labelledby={groupId}
-              className={cn('w-full', collapsed ? 'flex justify-center' : '')}
+              className={cn('w-full', collapsed ? 'flex flex-col items-center' : '')}
             >
+              {/* Collapsed, the group titles are hidden, so a short rule marks where each group starts (Zean, November 5, 2026). */}
+              {collapsed && groupIndex > 0 && <div aria-hidden="true" className="mb-2 h-px w-8 bg-border" />}
               <h2
                 id={groupId}
                 className={cn(
@@ -173,12 +175,13 @@ export function Sidebar({
                               aria-label="Backup needs attention"
                               title="Backup needs attention"
                               className={cn(
-                                'flex size-6 shrink-0 items-center justify-center rounded-md',
+                                'flex shrink-0 items-center justify-center',
                                 isActive ? 'bg-[#c69214] text-brand-green-dark' : 'bg-warning-fill text-warning-text',
-                                collapsed ? 'absolute -top-1 -right-1' : 'ml-auto',
+                                // Collapsed: a small corner badge, so it marks the 40px icon button instead of covering it (Zean, November 5, 2026).
+                                collapsed ? 'absolute -top-1 -right-1 size-4 rounded-full ring-2 ring-background' : 'ml-auto size-6 rounded-md',
                               )}
                             >
-                              <Icon name="alertTriangle" size={16} />
+                              <Icon name="alertTriangle" size={collapsed ? 11 : 16} />
                             </span>
                           )}
                         </Link>

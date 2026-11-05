@@ -132,13 +132,14 @@ export function AccountMenu({
 
   const itemClass = (danger?: boolean) =>
     cn(
-      'flex min-h-9 w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-left text-sm font-medium transition-colors duration-150 hover:bg-surface focus-visible:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none',
+      'flex min-h-9 w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-left text-sm font-medium whitespace-nowrap transition-colors duration-150 hover:bg-surface focus-visible:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none',
       danger ? 'text-error' : 'text-text-primary',
     )
 
   return (
-    // From `md` the button and the menu share one width, so the menu reads as the button unfolding (Zean, November 5, 2026).
-    <div className="relative md:w-64">
+    // From `md` the button and the menu share one width, so the menu reads as the button unfolding (Zean, November 5, 2026):
+    // 240px (the menu's rows fit on one line), growing with a long name up to 288px, so the chevron stays near the name.
+    <div className="relative md:w-max md:min-w-60 md:max-w-72">
       <button
         ref={buttonRef}
         type="button"
@@ -148,7 +149,7 @@ export function AccountMenu({
         aria-controls={open ? menuId : undefined}
         onClick={() => (open ? close(false) : openMenu('first'))}
         onKeyDown={onButtonKeyDown}
-        className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md px-1.5 transition-colors md:w-full hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none"
+        className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md pr-3 pl-1.5 transition-colors md:w-full hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none"
       >
         <UserAvatar name={name} picture={account?.profilePicture} />
         <span className="hidden min-w-0 flex-col text-left leading-tight sm:flex">
@@ -161,7 +162,7 @@ export function AccountMenu({
         <div
           ref={panelRef}
           // Below the header on a phone (a full-width sheet), under the button and right-aligned from `sm`.
-          className={cn('border border-border bg-background shadow-raised', 'fixed inset-x-0 top-16 z-40 max-h-[calc(100dvh-4rem)] overflow-y-auto rounded-none p-1.5 sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-1 sm:w-64 sm:rounded-md', 'animate-expand-down motion-reduce:animate-none')}
+          className={cn('border border-border bg-background shadow-raised', 'fixed inset-x-0 top-16 z-40 max-h-[calc(100dvh-4rem)] overflow-y-auto rounded-none p-1.5 sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-1 sm:w-60 sm:rounded-md md:left-0 md:w-auto', 'animate-expand-down motion-reduce:animate-none')}
         >
           {/* No second avatar: the button right above already shows it. */}
           <div className="min-w-0 border-b border-border px-2.5 pt-1 pb-2 text-xs leading-5 text-text-secondary">
@@ -169,7 +170,7 @@ export function AccountMenu({
             {/* Each detail on its own line and wrapped, never cut off with an ellipsis. */}
             <p>{ROLE_LABELS[user.role]}</p>
             {account && <p className="break-words">Username: {account.username}</p>}
-            {account && <p>Last sign-in: {account.lastLogin ? formatDateTime(account.lastLogin) : 'Not recorded'}</p>}
+            {account && <p className="whitespace-nowrap">{account.lastLogin ? `Signed in ${formatDateTime(account.lastLogin)}` : 'Sign-in not recorded'}</p>}
           </div>
           <div id={menuId} role="menu" aria-label="Account" onKeyDown={onMenuKeyDown} className="flex flex-col pt-1">
             {items.map((item, index) => {

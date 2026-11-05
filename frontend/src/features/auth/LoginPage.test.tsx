@@ -38,6 +38,8 @@ describe('LoginPage', () => {
     await user.type(screen.getByLabelText(/Username/), 'demo.nurse')
     await user.click(screen.getByRole('button', { name: 'Sign In' }))
     expect(screen.getByLabelText(/^Password/)).toHaveFocus()
+    // No clear (X) button on the username (Zean, November 5, 2026).
+    expect(screen.queryByRole('button', { name: 'Clear' })).not.toBeInTheDocument()
   })
 
   it('explains that password reset is not available yet, without resetting anything', async () => {
