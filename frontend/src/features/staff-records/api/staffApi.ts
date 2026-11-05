@@ -4,6 +4,7 @@ import {
   getPersonnelDepartments,
   getPersonnelHistory,
   getPersonnelTypes,
+  getStaffIncompleteQueue,
   listPersonnel,
   recordView,
   savePersonnel,
@@ -65,7 +66,8 @@ export interface StaffFormValues {
 export interface StaffFormContext {
   mode: 'add' | 'edit'
   types: string[]
-  departments: string[]
+  /** Departments or roles in use, by staff type. */
+  departments: Record<string, string[]>
   personnel: Personnel | null
 }
 
@@ -105,3 +107,6 @@ export function submitStaffForm(values: StaffFormValues, options: { personnelId?
     options,
   )
 }
+
+/** The staff Incomplete Records page (ADR-067). */
+export const fetchStaffIncompleteRecords = () => getStaffIncompleteQueue()

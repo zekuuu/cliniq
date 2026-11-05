@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { Button, DatePicker, Input, Modal, SegmentedControl, Select } from '../../components'
-import { ADJUSTMENT_REASON_LABELS, getLargeWriteOffPercent, getMockToday, isLargeWriteOff, LARGE_WRITE_OFF_NOTE_MIN, StockRuleError, STAFF_ADJUSTMENT_REASONS, type StaffAdjustmentReason } from '../../lib/mock-db'
+import { ADJUSTMENT_REASON_LABELS, getLargeWriteOffPercent, getMockToday, isLargeWriteOff, StockRuleError, STAFF_ADJUSTMENT_REASONS, type StaffAdjustmentReason } from '../../lib/mock-db'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDate } from '../../lib/dates'
@@ -71,7 +71,6 @@ export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryIt
   const { data: writeOffPercent } = useAsyncData('large-write-off-percent', getLargeWriteOffPercent)
   const onHand = item.batches.reduce((total, candidate) => total + candidate.quantity, 0)
   const largeWriteOff = batch !== undefined && after !== null && writeOffPercent !== undefined && isLargeWriteOff(after - batch.quantity, onHand, writeOffPercent)
-  const noteRequired = reason === 'other' || largeWriteOff
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -82,8 +81,6 @@ export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryIt
     if (!next.amount && after !== null && after < 0) next.amount = `Stock can't go below 0. ${batch?.quantity ?? 0} ${item.unit} in this batch.`
     if (!next.amount && batch && mode === 'count' && parsed === batch.quantity) next.amount = 'That matches the selected batch; there is nothing to adjust.'
     if (!reason) next.reason = 'Choose a reason.'
-    if (reason === 'other' && !note.trim()) next.note = 'Add a note explaining the adjustment.'
-    if (largeWriteOff && note.trim().length < LARGE_WRITE_OFF_NOTE_MIN) next.note = `This is a large write-off. Write a note of at least ${LARGE_WRITE_OFF_NOTE_MIN} characters.`
     setErrors(next)
     invalid.report(Object.keys(next).length)
     if (Object.keys(next).length || !reason) return
@@ -161,11 +158,11 @@ export function AdjustStockModal({ item, onClose, onSaved }: { item: InventoryIt
         />
         <Input
           label="Note"
-          placeholder={noteRequired ? undefined : 'Optional'}
-          required={noteRequired}
+          // Always optional (ADR-068; Zean, November 5, 2026): the reason says why.
+          placeholder="Optional"
           value={note}
           maxLength={200}
-          hint={largeWriteOff ? `Large write-off: explain it in at least ${LARGE_WRITE_OFF_NOTE_MIN} characters. It is flagged in the Audit Log.` : undefined}
+          hint={largeWriteOff ? 'Large write-off: it is flagged in the Audit Log.' : undefined}
           error={errors.note}
           onChange={(event) => {
             setNote(event.target.value)

@@ -1,5 +1,6 @@
-import { useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
+import { useGoBack } from '../../hooks/useGoBack'
 import { BackButton, Button, Card, CardBody, CardHeader, ErrorState, FormSection, FORM_DIVIDER, Icon, ComboboxWithOther, HealthListField, Input, NameFields, Select, SexRadios, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
@@ -39,6 +40,7 @@ function valuesFrom(person: Personnel | null): StaffFormValues {
 }
 
 const contactKey = (index: number, field: 'name' | 'relationship' | 'phone') => `emergencyContacts.${index}.${field}`
+const MISSING = 'Missing. Fill this in to complete the record.'
 
 /** Only the name, sex and type are required (D3 to D6, ADR-063); a contact that is started must be complete. */
 function validate(values: StaffFormValues): Errors {
@@ -86,6 +88,8 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
   const [saveError, setSaveError] = useState('')
   const navigate = useNavigate()
   const location = useLocation()
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo
+  const goBackToReturn = useGoBack(returnTo ?? paths.staff)
   const formRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(formRef)
   const { cancel, discardDialog, allowLeave } = useCancelNavigation(
@@ -93,6 +97,24 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
     JSON.stringify(values) !== JSON.stringify(initial),
   )
   const editing = data.mode === 'edit'
+  // ADR-067, as on Edit Student: what the record still lacks stays red until filled; a real error wins.
+  const shown = useMemo<Errors>(() => {
+    if (!editing) return errors
+    const gaps: Errors = {}
+    if (!values.sex) gaps.sex = MISSING
+    if (!values.emergencyContacts.some((contact) => contact.name.trim() || contact.relationship.trim() || contact.phone.trim()))
+      for (const field of ['name', 'relationship', 'phone'] as const) gaps[contactKey(0, field)] = MISSING
+    const defined = Object.fromEntries(Object.entries(errors).filter(([, message]) => message))
+    return { ...gaps, ...defined }
+  }, [editing, errors, values])
+  // Opens on the first missing field.
+  const landed = useRef(false)
+  useEffect(() => {
+    if (landed.current || !editing) return
+    landed.current = true
+    const count = Object.values(shown).filter(Boolean).length
+    if (count) invalid.report(count)
+  }, [editing, shown, invalid])
 
   function setField<K extends keyof StaffFormValues>(field: K, value: StaffFormValues[K]) {
     setValues((current) => ({ ...current, [field]: value }))
@@ -125,6 +147,8 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
       setSavedMessage(`Staff record ${action === 'create' ? 'created' : 'updated'} for ${personnel.fullName}.`)
       // An edit returns through history, so the next Back leaves the profile instead of showing it again.
       allowLeave()
+      // From the staff Incomplete Records page: back there, as on the student queue (ADR-067).
+      if (action === 'update' && returnTo) return goBackToReturn()
       if (action === 'update' && location.key !== 'default') void navigate(-1)
       else void navigate(paths.staffProfile(personnel.id), { replace: true })
     } catch (cause) {
@@ -175,7 +199,7 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                   inputClassName="cursor-default bg-surface hover:border-border"
                 />
               )}
-              <SexRadios value={values.sex} error={errors.sex} onChange={(value) => setField('sex', value)} />
+              <SexRadios value={values.sex} error={shown.sex} onChange={(value) => setField('sex', value)} />
               </div>
             </FormSection>
 
@@ -190,13 +214,13 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                 error={errors.type}
                 onChange={(value) => setField('type', value)}
               />
-              {/* R19: every department or role in use, as a type-ahead; Other (specify) for a new one. */}
+              {/* R19: the departments or roles in use for the chosen type (all of them before a type is picked), as a type-ahead; Other (specify) for a new one. */}
               <ComboboxWithOther
                 label="Department or role"
                 otherOption="Other (specify)"
                 otherLabel="Specify other department or role"
                 value={values.department}
-                options={data.departments}
+                options={values.type ? (data.departments[values.type] ?? []) : [...new Set(Object.values(data.departments).flat())].sort((a, b) => a.localeCompare(b))}
                 pickOnly
                 maxLength={DEPARTMENT_MAX}
                 hint={`Type to find one in use, or Other (specify) for a new one (at most ${DEPARTMENT_MAX} characters).`}
@@ -217,7 +241,7 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                       <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-3">
                         <Input label="Name"
                           icon="user"
-                          aria-label={`${label} name`} value={contact.name} error={errors[contactKey(index, 'name')]} onChange={(event) => setContact(index, 'name', event.target.value)} />
+                          aria-label={`${label} name`} value={contact.name} error={shown[contactKey(index, 'name')]} onChange={(event) => setContact(index, 'name', event.target.value)} />
                         <ComboboxWithOther
                           label="Relationship"
                           icon="users"
@@ -226,13 +250,13 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
                           aria-label={`${label} relationship`}
                           value={contact.relationship}
                           options={RELATIONSHIP_SUGGESTIONS}
-                          error={errors[contactKey(index, 'relationship')]}
+                          error={shown[contactKey(index, 'relationship')]}
                           onValueChange={(value) => setContact(index, 'relationship', value)}
                         />
                         <Input label="Phone"
                           icon="phone"
                           type="tel"
-                          aria-label={`${label} phone`} value={contact.phone} error={errors[contactKey(index, 'phone')]} onChange={(event) => setContact(index, 'phone', event.target.value)} />
+                          aria-label={`${label} phone`} value={contact.phone} error={shown[contactKey(index, 'phone')]} onChange={(event) => setContact(index, 'phone', event.target.value)} />
                       </div>
                       {values.emergencyContacts.length > 1 && (
                         <div className="mt-3 flex flex-wrap gap-2">

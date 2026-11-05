@@ -72,7 +72,7 @@ export function IncompleteRecordsQueuePage({
     'incomplete-records',
     fetchIncompleteRecords,
   )
-  const [filter, setFilter] = useState<QueueFilter>('all')
+  const [filter, setFilter] = useState<QueueFilter>('open') // Resolved rows stay one click away (Zean, November 5, 2026).
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<TableSortState<IncompleteSortKey>>({ key: 'imported', direction: 'descending' })
 

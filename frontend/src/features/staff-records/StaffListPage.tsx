@@ -22,8 +22,8 @@ import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { paths } from '../../routes/paths'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { Personnel } from '../../types/entities'
-import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
-import { fetchStaffList, fetchStaffTypes } from './api/staffApi'
+import { getMockSessionUser, missingStaffFields, type SessionUser } from '../../lib/mock-db'
+import { fetchStaffIncompleteRecords, fetchStaffList, fetchStaffTypes } from './api/staffApi'
 
 function StaffListSkeleton({ back }: { back: ReactNode }) {
   return (
@@ -65,13 +65,21 @@ function TypeSelect({ value, onChange }: { value: string; onChange: (value: stri
   )
 }
 
-type StaffSortKey = 'name' | 'number' | 'type' | 'department'
+type StaffSortKey = 'name' | 'number' | 'type' | 'department' | 'status'
+
+/** Record status, as on the Student List (ADR-067): incomplete = something `missingStaffFields` names. */
+type RecordStatusFilter = '' | 'complete' | 'incomplete'
+const recordStatusOptions = [
+  { value: 'complete', label: 'Complete' },
+  { value: 'incomplete', label: 'Incomplete' },
+]
+const isIncomplete = (person: Personnel) => missingStaffFields(person).length > 0
 
 const baseColumns: Array<DataTableColumn<Personnel>> = [
   {
     key: 'name',
     header: 'Full name',
-    width: '27%',
+    width: '24%',
     rowHeader: true,
     cell: (person) => (
       <span className="flex flex-wrap items-center gap-2">
@@ -84,9 +92,19 @@ const baseColumns: Array<DataTableColumn<Personnel>> = [
       </span>
     ),
   },
-  { key: 'number', header: 'Staff No.', width: '14%', cell: (person) => <span className="tabular-nums">{person.staffNumber}</span> },
-  { key: 'type', header: 'Type', width: '19%', cell: (person) => person.type },
-  { key: 'department', header: 'Department or role', width: '25%', cell: (person) => person.department ?? '—' },
+  { key: 'number', header: 'Staff No.', width: '12%', cell: (person) => <span className="tabular-nums">{person.staffNumber}</span> },
+  { key: 'type', header: 'Type', width: '16%', cell: (person) => person.type },
+  { key: 'department', header: 'Department or role', width: '20%', cell: (person) => person.department ?? '—' },
+  {
+    key: 'status',
+    header: 'Record status',
+    width: '13%',
+    cell: (person) => (
+      <Badge tone={isIncomplete(person) ? 'warning' : 'success'} variant="soft">
+        {isIncomplete(person) ? 'Incomplete' : 'Complete'}
+      </Badge>
+    ),
+  },
   {
     key: 'actions',
     header: 'Actions',
@@ -108,6 +126,9 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   const [search, setSearch] = useState('')
   const [type, setType] = useState('')
   const [includeArchived, setIncludeArchived] = useState(false)
+  // ADR-067: Complete / Incomplete; the Incomplete records button opens the staff queue page instead.
+  const [recordStatus, setRecordStatus] = useState<RecordStatusFilter>('')
+  const incompleteOnly = recordStatus === 'incomplete'
   const [sort, setSort] = useState<TableSortState<StaffSortKey>>({ key: 'name', direction: 'ascending' })
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = usePageSize()
@@ -118,6 +139,9 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   const { data, status, isRefetching, reload } = useAsyncData(`staff-list|${search}|${type}|${includeArchived}`, () =>
     fetchStaffList({ search, type, includeArchived }),
   )
+  // The button counts the open rows on the staff Incomplete Records page.
+  const queue = useAsyncData('staff-incomplete-records', fetchStaffIncompleteRecords)
+  const incompleteCount = queue.data?.filter((record) => record.status === 'open').length ?? 0
 
   const back = <BackButton fallback={paths.dashboard} drillThroughOnly />
   if (viewer.role !== 'staff') {
@@ -151,14 +175,48 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
     direction: sort.key === key ? sort.direction : undefined,
     onSort: () => setSort((current) => toggleTableSort(current, key)),
   })
-  const labels: Record<StaffSortKey, string> = { name: 'Full name', number: 'Staff No.', type: 'Type', department: 'Department or role' }
-  const columns = baseColumns.map((column) =>
+  const labels: Record<StaffSortKey, string> = { name: 'Full name', number: 'Staff No.', type: 'Type', department: 'Department or role', status: 'Record status' }
+  const sortable = baseColumns.map((column) =>
     column.key in labels ? { ...column, sort: sortColumn(column.key as StaffSortKey, labels[column.key as StaffSortKey]) } : column,
   )
+  // Filtered to incomplete records: what's missing, and Edit Record straight to the form, as on the student queue.
+  const columns: Array<DataTableColumn<Personnel>> = incompleteOnly
+    ? [
+        ...sortable.filter((column) => !['department', 'status', 'actions'].includes(column.key)),
+        {
+          key: 'missing',
+          header: 'Missing fields',
+          width: '25%',
+          cell: (person) => (
+            <span className="flex flex-wrap gap-1">
+              {missingStaffFields(person).map((field) => (
+                // The student queue's badge (Zean, November 5, 2026).
+                <Badge key={field} tone="warning" variant="soft" className="whitespace-normal!">
+                  {field}
+                </Badge>
+              ))}
+            </span>
+          ),
+        },
+        {
+          key: 'actions',
+          header: 'Actions',
+          width: '15%',
+          align: 'right',
+          cell: (person) => (
+            <Link to={paths.staffEdit(person.id)} aria-label={`Edit Record for ${person.fullName}`} className={buttonClassName({ size: 'sm' })}>
+              <Icon name="pencil" />
+              Edit Record
+            </Link>
+          ),
+        },
+      ]
+    : sortable
+  const listed = recordStatus ? data.filter((person) => isIncomplete(person) === incompleteOnly) : data
   // By last name, then first name (ADR-064): the order the list arrives in.
   const nameOrder = new Map(data.map((person, index) => [person.id, index]))
-  const rows = sortTableRows(data, sort, (person, key) =>
-    key === 'name' ? nameOrder.get(person.id) : key === 'number' ? person.staffNumber : key === 'type' ? person.type : (person.department ?? ''),
+  const rows = sortTableRows(listed, sort, (person, key) =>
+    key === 'name' ? nameOrder.get(person.id) : key === 'number' ? person.staffNumber : key === 'type' ? person.type : key === 'status' ? (isIncomplete(person) ? 'Incomplete' : 'Complete') : (person.department ?? ''),
   )
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize))
   const currentPage = Math.min(page, pageCount)
@@ -176,10 +234,18 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
               individual profile.
             </p>
           </div>
-          <Link className={buttonClassName({ variant: 'primary' })} to={paths.staffNew}>
-            <Icon name="plus" />
-            Add Staff
-          </Link>
+          {/* ml-auto: when the actions wrap under the description they stay right-aligned, as on the Student List. */}
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
+            {/* ADR-067: the staff Incomplete Records page, as the Student List's button opens the student queue. */}
+            <Link className={buttonClassName({ variant: 'secondary' })} to={paths.staffIncomplete}>
+              <Icon name="alertTriangle" />
+              Incomplete records ({incompleteCount})
+            </Link>
+            <Link className={buttonClassName({ variant: 'primary' })} to={paths.staffNew}>
+              <Icon name="plus" />
+              Add Staff
+            </Link>
+          </div>
         </div>
       </Card>
 
@@ -187,13 +253,24 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
         <CardHeader
           titleId="staff-list-title"
           title="Staff records"
-          description={`${data.length.toLocaleString('en-PH')} result${data.length === 1 ? '' : 's'} shown`}
+          description={`${listed.length.toLocaleString('en-PH')} result${listed.length === 1 ? '' : 's'} shown${incompleteOnly ? ' · incomplete records only' : ''}`}
           icon={<Icon name="user" />}
         />
         <CardBody className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1fr)_16rem_auto]">
+          <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1fr)_16rem_12rem_auto]">
             <Input label="Search" type="search" value={search} placeholder="Name or Staff No." onChange={(event) => { setSearch(event.target.value); setPage(1) }} />
             <TypeSelect value={type} onChange={(value) => { setType(value); setPage(1) }} />
+            <Select
+              label="Record status"
+              value={recordStatus}
+              placeholder="All records"
+              clearable
+              options={recordStatusOptions}
+              onChange={(value) => {
+                setRecordStatus(value as RecordStatusFilter)
+                setPage(1)
+              }}
+            />
             <label className="flex min-h-10 cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-text-primary shadow-card transition-colors hover:bg-surface">
               <input
                 type="checkbox"
@@ -206,7 +283,7 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           </div>
 
           <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>
-            {data.length ? (
+            {listed.length ? (
               <>
                 <DataTable
                   caption="Staff masterlist"
@@ -227,7 +304,11 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                 />
               </>
             ) : (
-              <EmptyState icon="user" title="No staff found" description="Try a different search or type filter, or add a staff record." />
+              <EmptyState
+                icon="user"
+                title={incompleteOnly ? 'No incomplete staff records' : 'No staff found'}
+                description={incompleteOnly ? 'Every staff record shown has a sex and an emergency contact.' : 'Try a different search, type, or record-status filter, or add a staff record.'}
+              />
             )}
           </div>
         </CardBody>

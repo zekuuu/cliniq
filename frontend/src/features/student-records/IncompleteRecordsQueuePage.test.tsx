@@ -24,7 +24,7 @@ describe('Incomplete Records', () => {
     ).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Student' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Missing fields' })).toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: 'All' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('radio', { name: 'Open' })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getAllByText(/Emergency contact|Allergies confirmation|Medical conditions confirmation/).length).toBeGreaterThan(0)
     expect(screen.queryByText('Peanuts')).not.toBeInTheDocument()
     expect(screen.queryByText('Asthma')).not.toBeInTheDocument()
