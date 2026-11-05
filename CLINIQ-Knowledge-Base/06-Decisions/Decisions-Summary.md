@@ -261,3 +261,11 @@ Stage 2 completes with nothing filled, and an empty completed record can be appr
 ### ADR-066: Account menu in the header; users change their own name, picture and password
 
 The header's avatar, name and role open one menu (Edit profile, Change password, Keyboard shortcuts, Report an issue, Privacy Policy, Sign out), the same for every role. Edit profile is a dialog: own display name and picture, audited by field name; username and role stay Admin-only. [ADR-066](ADR-066-Account-Menu-And-Own-Profile.md)
+
+### ADR-067: Staff records have a record status and their own Incomplete Records page
+
+A staff record with no emergency contact (or no sex, on old records) is Incomplete. The Staff List shows a Record status column and filter; its "Incomplete records (N)" button opens `/staff/incomplete`, laid out like the student queue, where a record is resolved when Edit Staff saves it complete (who and when are kept). Edit Staff marks the gaps in red and opens on the first; saving never blocks. Amends ADR-043. [ADR-067](ADR-067-Staff-Record-Status-And-Incomplete-Filter.md)
+
+### ADR-068: The Adjust Stock note is optional
+
+The Adjust Stock note is optional for every reason, including Other and a large write-off; the reason says why. A large write-off is still flagged "Large write-off" in the Audit Log. Amends ADR-061. [ADR-068](ADR-068-Adjust-Stock-Note-Is-Optional.md)

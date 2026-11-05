@@ -3,6 +3,8 @@
 **Date:** Sunday, November 1, 2026 — 13:03 PHT
 **Status:** Accepted on the recommendation in `Prompt-Frontend-Cleanup-Code-Nov1` D1, which Zean ran on Sunday, November 1, 2026; Zean may overrule it. Closes the open question from panel review IV-7.
 
+**Amended by [ADR-068](ADR-068-Adjust-Stock-Note-Is-Optional.md):** the note is optional; a large write-off is still flagged in the Audit Log.
+
 ## Context
 Large negative adjustments are where shrinkage hides. Adjust Stock already asked for a reason, but a preset reason explains little.
 
