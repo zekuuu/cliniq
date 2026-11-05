@@ -11,12 +11,13 @@ export function ShortcutHint({ keys, className }: { keys: string; className?: st
     <kbd
       aria-hidden="true"
       className={cn(
-        // Muted, with its outline kept (Zean, November 5, 2026): a quiet aside, not a second label.
-        'ml-auto hidden shrink-0 rounded-sm border border-current/30 px-1.5 font-sans text-xs leading-5 font-normal whitespace-nowrap opacity-75 md:inline',
+        // Muted plain text, no outline (Zean, November 5, 2026): a quiet aside, not a second label.
+        'ml-auto hidden shrink-0 pl-3 font-sans text-xs leading-5 font-normal whitespace-nowrap opacity-75 md:inline',
         className,
       )}
     >
-      {keys}
+      {/* Spaced ("Alt + D") so the keys don't run together; aria-keyshortcuts keeps "Alt+D". */}
+      {keys.replaceAll('+', ' + ')}
     </kbd>
   )
 }
