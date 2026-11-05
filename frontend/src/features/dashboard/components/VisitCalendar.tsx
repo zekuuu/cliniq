@@ -412,19 +412,23 @@ function YearView({
                     const total = day ? day.visits + day.incidents : 0
                     const future = date > today
                     const holidays = holidaysFor(date)
+                    // Solid yellow, as on the monthly chips: an outline alone read as the tan holiday squares (Zean, November 5, 2026).
+                    const hasEvent = !!day && dayLabels(day).length > 0
                     return (
                       <span
                         key={date}
                         title={day ? describeDay(day, today, holidays) : undefined}
                         className={cn(
                           'inline-flex size-5 items-center justify-center rounded-[3px] border text-xs leading-none',
-                          holidays.length && total === 0 ? 'bg-holiday text-text-primary' : future ? heatClasses[0] : heatClasses[heatLevel(total, scale)],
-                          noClassEmpty(holidays, total) && noClassDayClass,
-                          date === today
-                            ? 'border-2 border-brand-green'
-                            : day && dayLabels(day).length
-                              ? 'border-brand-yellow-dark'
-                              : 'border-border',
+                          hasEvent
+                            ? 'bg-brand-yellow text-text-primary'
+                            : holidays.length && total === 0
+                              ? 'bg-holiday text-text-primary'
+                              : future
+                                ? heatClasses[0]
+                                : heatClasses[heatLevel(total, scale)],
+                          !hasEvent && noClassEmpty(holidays, total) && noClassDayClass,
+                          date === today ? 'border-2 border-brand-green' : hasEvent ? 'border-brand-yellow-dark' : 'border-border',
                         )}
                       >
                         {parseISODate(date).getDate()}
@@ -441,7 +445,7 @@ function YearView({
           Activity, event, and holiday days in {year}
         </p>
         <p className="text-xs text-text-secondary">
-          Outlined squares above mark days with an event; today has a green ring. Tan squares mark holidays, striped when
+          Yellow squares above mark days with an event; today has a green ring. Tan squares mark holidays, striped when
           there is no class.
         </p>
         {activeDays.length === 0 ? (
@@ -467,12 +471,13 @@ function CalendarTable({
 }) {
   const holidayText = (date: ISODate) =>
     (holidaysOn.get(date) ?? NO_HOLIDAYS).map(holidayName).join(', ')
+  // The year table reads January to December; day views keep newest first (Zean, November 5, 2026).
   const [sort, setSort] = useState<TableSortState<string>>({
     key: view === 'year' ? 'month' : 'date',
-    direction: 'descending',
+    direction: view === 'year' ? 'ascending' : 'descending',
   })
   const effectiveSort = view === 'year' && sort.key === 'date'
-    ? { key: 'month', direction: 'descending' as const }
+    ? { key: 'month', direction: 'ascending' as const }
     : view !== 'year' && sort.key === 'month'
       ? { key: 'date', direction: 'descending' as const }
       : sort
