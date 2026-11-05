@@ -6,7 +6,7 @@ import { applyStudentImport, getRecordedAuditEntries, listStudents, previewStude
 import { db } from '../../lib/mock-db/store'
 import { guessMapping, mapRows, missingImportFields, parseCsv, type ImportRow } from '../../lib/studentImport'
 import { renderWithRouter } from '../../test/renderWithRouter'
-import SAMPLE from '../../test/fixtures/student-list-sample.csv?raw'
+import SAMPLE from '../../../sample-data/student-list-sample.csv?raw'
 import { StudentImportPage } from './StudentImportPage'
 
 const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
