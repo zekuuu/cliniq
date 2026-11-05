@@ -2,6 +2,7 @@
 
 **Backend changes are logged in [`Backend-Changelog.md`](./Backend-Changelog.md), not here** (ADR-056); this file covers the frontend, the documents and the project.
 
+| Thursday, November 05, 2026 — 22:34 PHT | ADR-069: Import Staff List (`/staff/import`), like the student import; matches by Staff No., else name and type; adds and updates only, on `main` (not committed). See [Agent session](Agent-Sessions/2026-11-05-staff-import.md). |
 | Thursday, November 05, 2026 — 22:12 PHT | Yearly calendar: every holiday is grey-striped (stronger stripes, over any fill), so it shows on busy and event days too, on `main` (not committed). See [Agent session](Agent-Sessions/2026-11-05-year-calendar-holiday-stripes.md). |
 | Thursday, November 05, 2026 — 21:58 PHT | Pagers: icon-only arrows for Previous / Next page and double arrows for First / Last page; the Activity calendar's Previous / Next are arrows too; the disposition boxes get one outline around the group and a 6px gap, on `main` (not committed). See [Agent session](Agent-Sessions/2026-11-05-pager-arrows.md). |
 | Thursday, November 05, 2026 — 21:42 PHT | Disposition: every box shows its Visit Log badge colour (tinted; solid when chosen) (a misread first tinted the Follow-up prompt purple; reverted); ADR-068 revised: the Adjust Stock note is optional for every reason and for large write-offs (still flagged in the Audit Log); "Referred to" takes one column, on `main` (not committed). See [Agent session](Agent-Sessions/2026-11-05-disposition-colour-optional-stock-note.md). |

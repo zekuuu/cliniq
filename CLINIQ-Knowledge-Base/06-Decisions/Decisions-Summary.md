@@ -269,3 +269,7 @@ A staff record with no emergency contact (or no sex, on old records) is Incomple
 ### ADR-068: The Adjust Stock note is optional
 
 The Adjust Stock note is optional for every reason, including Other and a large write-off; the reason says why. A large write-off is still flagged "Large write-off" in the Audit Log. Amends ADR-061. [ADR-068](ADR-068-Adjust-Stock-Note-Is-Optional.md)
+
+### ADR-069: Staff can be imported from a CSV, adding and updating only
+
+Import Staff List (`/staff/import`) works like the student import: file, columns, preview, apply. A row matches by Staff No., else by name and type, else is added; staff missing from the file are left alone; a file's contact never replaces one CLINIQ has. Amends ADR-043. [ADR-069](ADR-069-Staff-List-Import.md)
