@@ -14,9 +14,7 @@ import {
   fetchDashboardSummary,
   fetchPendingExcuseLetters,
 } from './api/dashboardApi'
-import {
-  FrequentVisitorsAlert,
-} from './components/AlertLists'
+import { FrequentVisitorsAlert } from './components/AlertLists'
 import { AttentionChips } from './components/AttentionChips'
 import { FullReportLink } from './components/FullReportLink'
 import { ClusterAlerts } from './components/ClusterAlerts'
@@ -24,7 +22,12 @@ import { ComplaintTrends, ComplaintTrendsSkeleton } from './components/Complaint
 import { DashboardPrint } from './components/DashboardPrint'
 import { DashboardHeader } from './components/DashboardHeader'
 import { NewVisitLink } from './components/StaffShortcuts'
-import { ActivityCards, AttentionCards, StatCardRowSkeleton } from './components/StatCardRow'
+import {
+  ActivityCards,
+  AttentionCards,
+  StatCardRowSkeleton,
+  ToDoCards,
+} from './components/StatCardRow'
 
 type DashboardView = 'overview' | 'trends'
 
@@ -59,9 +62,16 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   const [range, setRange] = useState<DateRange>(() => rangeForPreset('today', today))
   const [searchParams, setSearchParams] = useSearchParams()
   const view = parseDashboardView(searchParams.get('view'))
-  const demographicFilters = { sex: parseSex(searchParams.get('sex')), gradeLevel: searchParams.get('grade') || null }
+  const demographicFilters = {
+    sex: parseSex(searchParams.get('sex')),
+    gradeLevel: searchParams.get('grade') || null,
+  }
   const filterLabel = [
-    demographicFilters.sex === 'female' ? 'Female' : demographicFilters.sex === 'male' ? 'Male' : null,
+    demographicFilters.sex === 'female'
+      ? 'Female'
+      : demographicFilters.sex === 'male'
+        ? 'Male'
+        : null,
     demographicFilters.gradeLevel,
   ]
     .filter(Boolean)
@@ -107,14 +117,17 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   }
 
   function changeDemographicFilters(next: typeof demographicFilters) {
-    setSearchParams((prev) => {
-      const params = new URLSearchParams(prev)
-      if (next.sex) params.set('sex', next.sex)
-      else params.delete('sex')
-      if (next.gradeLevel) params.set('grade', next.gradeLevel)
-      else params.delete('grade')
-      return params
-    }, { replace: true })
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        if (next.sex) params.set('sex', next.sex)
+        else params.delete('sex')
+        if (next.gradeLevel) params.set('grade', next.gradeLevel)
+        else params.delete('grade')
+        return params
+      },
+      { replace: true },
+    )
   }
 
   /** The summary request's states, shared by Overview and Trends (one request feeds both). */
@@ -196,42 +209,81 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
               value: 'overview',
               label: 'Overview',
               icon: 'layoutGrid',
-              panel: summaryPanel(
-                'Loading clinic overview…',
-                <StatCardRowSkeleton />,
-                (d) => (
-                  <>
-                    <section aria-label="Summary counts" className="flex flex-col gap-6">
-                      <section aria-labelledby="dashboard-attention" className="flex flex-col gap-3">
-                        <h2 id="dashboard-attention" className="text-base font-semibold text-text-primary">Needs attention now</h2>
-                        {canNavigate && <AttentionCards summary={d} pendingLetterCount={letters.data?.length ?? 0} />}
-                        <AttentionChips summary={d} canNavigate={canNavigate} />
+              panel: summaryPanel('Loading clinic overview…', <StatCardRowSkeleton />, (d) => (
+                <>
+                  <section aria-label="Summary counts" className="flex flex-col gap-6">
+                    {/* Side by side on wide screens: 1 + 2 columns line up with the 3 Activity cards below, with no empty slots. */}
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-4">
+                      <section
+                        aria-labelledby="dashboard-attention"
+                        className="flex flex-col gap-3"
+                      >
+                        <h2
+                          id="dashboard-attention"
+                          className="text-base font-semibold text-text-primary"
+                        >
+                          Needs attention now
+                        </h2>
+                        {canNavigate && (
+                          <AttentionCards pendingLetterCount={letters.data?.length ?? 0} />
+                        )}
+                        <AttentionChips summary={d} canNavigate={canNavigate} group="now" />
                       </section>
-                      <section aria-labelledby="dashboard-activity" className="flex flex-col gap-3">
-                        {/* The Monthly Report covers these counts, so its link sits on this heading row, right-aligned (Zean, November 5, 2026). */}
-                        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-                          <h2 id="dashboard-activity" className="text-base font-semibold text-text-primary">Activity summary</h2>
-                          <FullReportLink as="div" report="Monthly Report" view="monthly" month={range.to.slice(0, 7)} />
-                        </div>
-                        <ActivityCards summary={d} range={range} canNavigate={canNavigate} />
+                      {/* Can wait for a quieter moment, so it sits apart from what needs doing today (Zean, November 5, 2026). */}
+                      <section
+                        aria-labelledby="dashboard-todo"
+                        className="flex flex-col gap-3 lg:col-span-2"
+                      >
+                        <h2
+                          id="dashboard-todo"
+                          className="text-base font-semibold text-text-primary"
+                        >
+                          To do
+                        </h2>
+                        {canNavigate && <ToDoCards summary={d} />}
+                        <AttentionChips summary={d} canNavigate={canNavigate} group="later" />
                       </section>
+                    </div>
+                    <section aria-labelledby="dashboard-activity" className="flex flex-col gap-3">
+                      {/* The Monthly Report covers these counts, so its link sits on this heading row, right-aligned (Zean, November 5, 2026). */}
+                      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                        <h2
+                          id="dashboard-activity"
+                          className="text-base font-semibold text-text-primary"
+                        >
+                          Activity summary
+                        </h2>
+                        <FullReportLink
+                          as="div"
+                          report="Monthly Report"
+                          view="monthly"
+                          month={range.to.slice(0, 7)}
+                        />
+                      </div>
+                      <ActivityCards summary={d} range={range} canNavigate={canNavigate} />
                     </section>
-                    {viewer.role === 'staff' && <ClusterAlerts alerts={clusters.data ?? []} />}
-                    {d.showFrequentVisitors && (
-                      <section aria-label="Frequent visitor warnings">
-                        <FrequentVisitorsAlert summary={d} range={range} />
-                      </section>
-                    )}
-                  </>
-                ),
-              ),
+                  </section>
+                  {viewer.role === 'staff' && <ClusterAlerts alerts={clusters.data ?? []} />}
+                  {d.showFrequentVisitors && (
+                    <section aria-label="Frequent visitor warnings">
+                      <FrequentVisitorsAlert summary={d} range={range} />
+                    </section>
+                  )}
+                </>
+              )),
             },
             {
               value: 'trends',
               label: 'Trends',
               icon: 'activity',
               panel: summaryPanel('Loading trends…', <ComplaintTrendsSkeleton />, (d) => (
-                <ComplaintTrends reportMonth={range.to.slice(0, 7)} trends={d.complaintTrends} demographics={d.demographics} filters={demographicFilters} onFiltersChange={changeDemographicFilters} />
+                <ComplaintTrends
+                  reportMonth={range.to.slice(0, 7)}
+                  trends={d.complaintTrends}
+                  demographics={d.demographics}
+                  filters={demographicFilters}
+                  onFiltersChange={changeDemographicFilters}
+                />
               )),
             },
           ]}

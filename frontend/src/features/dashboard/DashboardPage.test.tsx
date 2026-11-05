@@ -22,7 +22,7 @@ describe('Clinic Overview Dashboard', () => {
     renderWithRouter(<DashboardPage />)
     const summary = await screen.findByRole('region', { name: 'Summary counts' })
     // Action cards first, then the totals (R2).
-    const order = ['Unfinished incident records', 'Follow-ups to review', 'Pending excuse letters', 'Clinic visits', 'Incidents', 'Active students']
+    const order = ['Pending excuse letters', 'Unfinished incident records', 'Follow-ups to review', 'Active students', 'Clinic visits', 'Incidents']
     const label = (text: string) => within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === text)
     expect(within(summary).getAllByText((_, element) => element?.tagName === 'P' && order.includes(element.textContent ?? '')).map((p) => p.textContent)).toEqual(order)
     // One colour per meaning (ADR-062).

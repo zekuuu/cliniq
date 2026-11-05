@@ -42,11 +42,15 @@ describe('R2 and R3: the Dashboard cards', () => {
   it('puts what needs doing before the totals', async () => {
     renderWithRouter(<DashboardPage viewer={STAFF} />)
     const summary = await ready()
-    expect(within(summary).getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Needs attention now', 'Activity summary'])
+    expect(within(summary).getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Needs attention now', 'To do', 'Activity summary'])
     const attention = within(summary).getByRole('region', { name: 'Needs attention now' })
+    const todo = within(summary).getByRole('region', { name: 'To do' })
     const activity = within(summary).getByRole('region', { name: 'Activity summary' })
-    for (const name of ['Unfinished incident records', 'Follow-ups to review', 'Pending excuse letters'])
-      expect(within(attention).getByRole('link', { name })).toBeInTheDocument()
+    // Today's work apart from what can wait: Stage 2 is optional (ADR-065), follow-ups have their own dates.
+    expect(within(attention).getByRole('link', { name: 'Pending excuse letters' })).toBeInTheDocument()
+    expect(within(attention).getByRole('link', { name: /expired or expiring/ })).toBeInTheDocument()
+    for (const name of ['Unfinished incident records', 'Follow-ups to review']) expect(within(todo).getByRole('link', { name })).toBeInTheDocument()
+    for (const name of [/incomplete student records/, /low stock/]) expect(within(todo).getByRole('link', { name })).toBeInTheDocument()
     for (const name of ['Clinic visits', 'Incidents', 'Active students']) expect(within(activity).getByRole('link', { name })).toBeInTheDocument()
   })
 
@@ -248,7 +252,8 @@ describe('R6: Sign out', () => {
     expect(lock).toHaveAttribute('href', '/account/password')
     expect(items.at(-1)).toBe(signOut)
     expect(signOut.previousElementSibling).toHaveAttribute('role', 'separator')
-    for (const control of [lock, signOut]) expect(control.className).toContain('min-h-11')
+    // Compact 36px rows (Zean, November 5, 2026).
+    for (const control of [lock, signOut]) expect(control.className).toContain('min-h-9')
   })
 })
 
