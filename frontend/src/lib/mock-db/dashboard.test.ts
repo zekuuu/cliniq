@@ -140,6 +140,7 @@ function dataset(partial: Partial<DbState>): DbState {
       incidentComplaintTypes: [],
       inventoryTransactions: [],
       recordReviews: [],
+      personnelReviews: [],
       excuseLetterApprovals: [],
       peReferrals: [],
       issueReports: [],

@@ -48,9 +48,11 @@ describe('R2 and R3: the Dashboard cards', () => {
     const activity = within(summary).getByRole('region', { name: 'Activity summary' })
     // Today's work apart from what can wait: Stage 2 is optional (ADR-065), follow-ups have their own dates.
     expect(within(attention).getByRole('link', { name: 'Pending excuse letters' })).toBeInTheDocument()
-    expect(within(attention).getByRole('link', { name: /expired or expiring/ })).toBeInTheDocument()
     for (const name of ['Unfinished incident records', 'Follow-ups to review']) expect(within(todo).getByRole('link', { name })).toBeInTheDocument()
-    for (const name of [/incomplete student records/, /low stock/]) expect(within(todo).getByRole('link', { name })).toBeInTheDocument()
+    // The chips share one row under both sections, urgent first (Zean, November 5, 2026).
+    const chips = [...within(summary).getAllByRole('link', { name: /expired or expiring|incomplete student records|low stock/ })].map((link) => link.textContent)
+    expect(chips.map((text) => text?.replace(/^\d+ /, ''))).toEqual(['expired or expiring', 'incomplete student records', 'low stock'])
+    expect(within(attention).queryByRole('link', { name: /expired or expiring/ })).not.toBeInTheDocument()
     for (const name of ['Clinic visits', 'Incidents', 'Active students']) expect(within(activity).getByRole('link', { name })).toBeInTheDocument()
   })
 

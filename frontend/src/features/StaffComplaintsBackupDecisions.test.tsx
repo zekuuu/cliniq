@@ -1,3 +1,4 @@
+import { selectOption } from '../test/selectOption'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -66,14 +67,26 @@ describe('Staff wording, extra complaints and backup locations', () => {
   })
 
   it('stops the field at 3 extra complaints and says so', async () => {
+    const { ExtraComplaintsField } = await import('./clinic-visits/ExtraComplaintsField')
+    renderWithRouter(<ExtraComplaintsField value={['Headache', 'Chills', 'Dizziness']} onChange={() => {}} main="Fever" suggestions={['Toothache']} />)
+    // A dropdown like the Complaint field (Zean, November 5, 2026): full, it's disabled and says why.
+    expect(screen.getByRole('button', { name: /^Other complaints/ })).toBeDisabled()
+    expect(screen.getByText('Up to 3. Remove one to add another. Reports count the main complaint only.')).toBeInTheDocument()
+  })
+
+  it('adds a picked suggestion with Add, and a typed one through Other', async () => {
     const user = userEvent.setup()
     const { ExtraComplaintsField } = await import('./clinic-visits/ExtraComplaintsField')
-    let value = ['Headache', 'Chills', 'Dizziness']
-    renderWithRouter(<ExtraComplaintsField value={value} onChange={(next) => (value = next)} main="Fever" suggestions={['Toothache']} />)
-    await user.type(screen.getByRole('combobox', { name: /Other complaints/ }), 'Toothache')
+    let value: string[] = []
+    const { rerender } = renderWithRouter(<ExtraComplaintsField value={value} onChange={(next) => (value = next)} main="Fever" suggestions={['Toothache', 'Fever']} />)
+    await selectOption(user, screen.getByRole('button', { name: /^Other complaints/ }), 'Toothache')
+    expect(value).toEqual([])
     await user.click(screen.getByRole('button', { name: 'Add' }))
-    expect(screen.getByRole('alert')).toHaveTextContent('Up to 3 extra complaints. Remove one to add another.')
-    expect(value).toHaveLength(3)
+    expect(value).toEqual(['Toothache'])
+    rerender(<ExtraComplaintsField value={value} onChange={(next) => (value = next)} main="Fever" suggestions={['Toothache', 'Fever']} />)
+    await selectOption(user, screen.getByRole('button', { name: /^Other complaints/ }), 'Other (type your own)')
+    await user.type(screen.getByLabelText(/^Specify other complaint/), 'Rash{Enter}')
+    expect(value).toEqual(['Toothache', 'Rash'])
   })
 
   it('offers the staff type "Other", also in a saved copy that lacked it', async () => {

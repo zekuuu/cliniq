@@ -211,10 +211,10 @@ describe('editing a saved visit', () => {
 describe('Adjust Stock', () => {
   beforeEach(() => resetMockDb())
 
-  it('requires a reason, and a note for "Other"', async () => {
+  it('requires a reason; the note is optional, even for "Other" (ADR-068)', async () => {
     await expect(adjustInventoryStock(GAUZE, { change: -1, reason: '' as never })).rejects.toThrow(/reason/)
     await expect(adjustInventoryStock(GAUZE, { change: -1, reason: 'visit_edited' as never })).rejects.toThrow(/reason/)
-    await expect(adjustInventoryStock(GAUZE, { change: -1, reason: 'other', note: ' ' })).rejects.toThrow(/note/)
+    await expect(adjustInventoryStock(GAUZE, { change: -1, reason: 'other', note: ' ' })).resolves.toBeTruthy()
     await expect(adjustInventoryStock(GAUZE, { change: -1, reason: 'other', note: 'Used for demo' })).resolves.toBeTruthy()
   })
 
