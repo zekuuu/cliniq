@@ -8,6 +8,7 @@ import { paths } from '../../routes/paths'
 import { StudentFormPage } from './StudentFormPage'
 import { StudentProfilePage } from './StudentProfilePage'
 import { fetchStudentList } from './api/studentListApi'
+import { fetchIncompleteRecords } from './api/incompleteRecordsApi'
 import { renderWithRouter } from '../../test/renderWithRouter'
 
 /** Types a first and last name (and a middle name, when given) into the split name fields (ADR-064). */
@@ -257,6 +258,20 @@ describe('Student Form', () => {
 
     await user.click(screen.getAllByRole('button', { name: 'Remove contact' })[1])
     expect(screen.queryByLabelText('Emergency contact 2 name')).not.toBeInTheDocument()
+  })
+
+  it('marks what an incomplete record still lacks and lands on it, until it is filled in', async () => {
+    const user = userEvent.setup({ delay: null })
+    const record = (await fetchIncompleteRecords()).find(
+      (row) => !row.resolvedAt && row.missingFields.length > 0 && row.missingFields.every((field) => field.startsWith('Emergency contact')),
+    )!
+    renderWithRouter(<StudentFormPage studentId={record.studentId} />)
+    const name = await screen.findByLabelText(/contact name/i)
+    await waitFor(() => expect(name).toHaveFocus())
+    expect(name).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getAllByText('Missing. Fill this in to complete the record.').length).toBeGreaterThan(0)
+    await user.type(name, 'Marisol Santos')
+    expect(name).not.toHaveAttribute('aria-invalid', 'true')
   })
 
   it('supports edit mode, records an update audit entry, and returns to the profile', async () => {
