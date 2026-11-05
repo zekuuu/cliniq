@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/.env.local)",
+      "Read(**/.env.production)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/id_rsa*)",
+      "Read(**/*.p12)",
+      "Read(**/*.pfx)",
+      "Read(**/credentials.json)",
+      "Read(**/service-account*.json)",
+      "Read(**/.npmrc)",
+      "Read(**/.pypirc)",
+      "Read(**/*.keystore)",
+      "Read(**/.htpasswd)",
+      "Read(**/.netrc)",
+      "Read(**/secrets.yml)",
+      "Read(**/secrets.yaml)",
+      "Read(**/*.jks)",
+      "Read(**/token.json)"
+    ]
+  }
+}
