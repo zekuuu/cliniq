@@ -14,18 +14,19 @@ function renderLogin() {
 }
 
 describe('LoginPage', () => {
-  it('shows the lockup, one Sign In heading and the school name in the panel, without a footer', () => {
+  it('shows the lockup (panel on phones, photo from md), one Sign In heading and the school name, without a footer', () => {
     renderLogin()
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(screen.getByRole('heading', { level: 1, name: 'Sign In' })).toBeInTheDocument()
-    expect(screen.getByText('CLINIQ')).toBeInTheDocument()
-    expect(screen.getByText('Mendez Christian Academy')).toBeInTheDocument()
+    // Two lockups by design; CSS shows only one at a time (md:hidden in the panel, hidden md:flex on the photo).
+    expect(screen.getAllByText('CLINIQ')).toHaveLength(2)
+    expect(screen.getAllByText('Mendez Christian Academy')).toHaveLength(2)
     expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
     expect(screen.queryByText(/assigned clinic account/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/clinic account/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/all rights reserved/i)).not.toBeInTheDocument()
-    expect(screen.getByAltText('Mendez Christian Academy logo')).toHaveAttribute('src', '/MCA_Logo.png')
+    for (const logo of screen.getAllByAltText('Mendez Christian Academy logo')) expect(logo).toHaveAttribute('src', '/MCA_Logo.png')
   })
 
   it('focuses the first invalid field after a failed submit', async () => {
