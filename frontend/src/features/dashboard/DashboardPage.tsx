@@ -212,42 +212,45 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
               panel: summaryPanel('Loading clinic overview…', <StatCardRowSkeleton />, (d) => (
                 <>
                   <section aria-label="Summary counts" className="flex flex-col gap-6">
-                    {/* Side by side on wide screens: 1 + 2 columns line up with the 3 Activity cards below, with no empty slots. */}
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-4">
-                      <section
-                        aria-labelledby="dashboard-attention"
-                        className="flex flex-col gap-3"
-                      >
-                        <h2
-                          id="dashboard-attention"
-                          className="text-base font-semibold text-text-primary"
-                        >
-                          Needs attention now
-                        </h2>
-                        {canNavigate && (
-                          <AttentionCards pendingLetterCount={letters.data?.length ?? 0} />
-                        )}
-                      </section>
-                      {/* Can wait for a quieter moment, so it sits apart from what needs doing today (Zean, November 5, 2026). */}
-                      <section
-                        aria-labelledby="dashboard-todo"
-                        className="flex flex-col gap-3 lg:col-span-2"
-                      >
-                        <h2
-                          id="dashboard-todo"
-                          className="text-base font-semibold text-text-primary"
-                        >
-                          To do
-                        </h2>
-                        {canNavigate && <ToDoCards summary={d} />}
-                      </section>
-                    </div>
-                    {/* One chip row under both sections: split per column, the column gap broke it into two
+                    {/* Admin/Principal sees only the Activity summary: the action sections and chips are the nurse's work (Zean, November 6, 2026). */}
+                    {canNavigate && (
+                      <>
+                        {/* Side by side on wide screens: 1 + 2 columns line up with the 3 Activity cards below, with no empty slots. */}
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-4">
+                          <section
+                            aria-labelledby="dashboard-attention"
+                            className="flex flex-col gap-3"
+                          >
+                            <h2
+                              id="dashboard-attention"
+                              className="text-base font-semibold text-text-primary"
+                            >
+                              Needs attention now
+                            </h2>
+                            <AttentionCards pendingLetterCount={letters.data?.length ?? 0} />
+                          </section>
+                          {/* Can wait for a quieter moment, so it sits apart from what needs doing today (Zean, November 5, 2026). */}
+                          <section
+                            aria-labelledby="dashboard-todo"
+                            className="flex flex-col gap-3 lg:col-span-2"
+                          >
+                            <h2
+                              id="dashboard-todo"
+                              className="text-base font-semibold text-text-primary"
+                            >
+                              To do
+                            </h2>
+                            <ToDoCards summary={d} />
+                          </section>
+                        </div>
+                        {/* One chip row under both sections: split per column, the column gap broke it into two
                         uneven rows (Zean, November 5, 2026). Urgent chips first. */}
-                    <div className="-mt-3 flex flex-wrap gap-2">
-                      <AttentionChips summary={d} canNavigate={canNavigate} group="now" />
-                      <AttentionChips summary={d} canNavigate={canNavigate} group="later" />
-                    </div>
+                        <div className="-mt-3 flex flex-wrap gap-2">
+                          <AttentionChips summary={d} canNavigate={canNavigate} group="now" />
+                          <AttentionChips summary={d} canNavigate={canNavigate} group="later" />
+                        </div>
+                      </>
+                    )}
                     <section aria-labelledby="dashboard-activity" className="flex flex-col gap-3">
                       {/* The Monthly Report covers these counts, so its link sits on this heading row, right-aligned (Zean, November 5, 2026). */}
                       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">

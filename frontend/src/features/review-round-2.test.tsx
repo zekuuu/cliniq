@@ -56,6 +56,13 @@ describe('R2 and R3: the Dashboard cards', () => {
     for (const name of ['Clinic visits', 'Incidents', 'Active students']) expect(within(activity).getByRole('link', { name })).toBeInTheDocument()
   })
 
+  it('shows Admin only the Activity summary, with no action sections or chips', async () => {
+    renderWithRouter(<DashboardPage viewer={ADMIN} />)
+    const summary = await ready()
+    expect(within(summary).getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Activity summary'])
+    expect(within(summary).queryByRole('link', { name: /expired or expiring|incomplete student records|low stock/ })).not.toBeInTheDocument()
+  })
+
   it('keeps the whole card clickable while hovered', async () => {
     renderWithRouter(<DashboardPage viewer={STAFF} />)
     const summary = await ready()
