@@ -148,13 +148,6 @@ export function isNoClassHoliday(holiday: Holiday): boolean {
 export const noClassDayClass =
   'bg-[image:repeating-linear-gradient(135deg,var(--color-border)_0_2px,transparent_2px_8px)]'
 
-/**
- * The yearly grid's holiday mark (Zean, November 5, 2026): grey stripes strong enough to read on a
- * 20px square, over any fill, so a holiday shows even on a day with visits or an event.
- */
-export const yearHolidayClass =
-  'bg-[image:repeating-linear-gradient(135deg,var(--color-text-muted)_0_1px,transparent_1px_4px)]'
-
 export function holidaysByDate(holidays: Holiday[]): Map<ISODate, Holiday[]> {
   const map = new Map<ISODate, Holiday[]>()
   for (const h of holidays) map.set(h.date, [...(map.get(h.date) ?? []), h])

@@ -45,8 +45,9 @@ describe('Activity calendar', () => {
     const january = await screen.findByText('January')
     const monthCard = january.closest('li')
     expect(monthCard).not.toBeNull()
-    expect(within(monthCard as HTMLElement).getByText('1', { exact: true })).toHaveClass(
-      'size-5',
+    // Square day cells sized by the month card (Zean, November 6, 2026).
+    expect(within(monthCard as HTMLElement).getAllByText('1', { exact: true })[0]).toHaveClass(
+      'aspect-square',
       'text-xs',
       'justify-center',
     )
