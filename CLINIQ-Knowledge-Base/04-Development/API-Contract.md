@@ -4,6 +4,8 @@
 
 The mock API is the executable spec (ADR-056). This file adds the HTTP layer: URLs, roles, status codes. It adds no behaviour of its own: where the mock and a decision disagreed, the answer is under [Questions](#questions), and the entry follows it. "Mock differs" marks a change the frontend fix branch makes.
 
+**Updated Saturday, November 07, 2026 — 16:12 PHT, following [ADR-076](../06-Decisions/ADR-076-Staff-Record-Reviews-In-Their-Own-Table.md):** staff record reviews live in `staff_record_reviews`; `GET /api/personnel/incomplete` serves from it, and saving or importing staff opens and resolves its rows. The Admin's Audit Log lists staff-record entries by Staff No. Settles counter-check C-1 and C-8.
+
 **Updated Saturday, November 07, 2026 — 13:24 PHT, following the approved design through [ADR-070](../06-Decisions/ADR-070-Consultation-Wording-Dashboard-Print-Moves-To-Reports.md) to [ADR-075](../06-Decisions/ADR-075-School-Year-Started-By-Hand.md), with their dated amendments:** 12 new mock functions and 14 new entries (authenticator and recovery, school years, the Archive), with changes to the archive, inventory, visit, Dashboard, Sports Report, backup-location and audit-log entries. Two entries are removed: the email reset (replaced by ADR-073) and editing a backup location. There is no Clinic Overview printout any more ([ADR-074](../06-Decisions/ADR-074-No-Clinic-Overview-Printout.md)), so `GET /api/dashboard/summary` no longer takes `fullLrn=1`. The counts below are the original ones. **At `main` `cfd4bd84` (counter-check C-16, Saturday, November 07, 2026 — 13:35 PHT):** `api.ts` exports 126 functions, 15 constants and 19 error classes (104 and 10 on October 31); every function has an entry or a "Not endpoints" row. See `Backend-Counter-Check-Nov7.md`.
 
 **Counts:** 104 exported functions: 94 map to endpoints, 10 are not endpoints. 102 entries: 98 from the mock and 4 additions (one entry holds the two email-reset routes). A function can back more than one entry (create and update), and two password functions share one.
@@ -377,6 +379,7 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 - Response: 201 `{ personnel, action: "create" }`.
 - Errors: 403 "Only the clinic staff can manage staff records."; 422 "Enter the staff member's first name.", "Enter the staff member's last name.", a name part over its limit, "Choose the sex.", "Choose the staff type.", department over 60.
 - Audit: `create staff`.
+- Review queue ([ADR-076](../06-Decisions/ADR-076-Staff-Record-Reviews-In-Their-Own-Table.md), Saturday, November 07, 2026 — 16:12 PHT): a save that leaves the record incomplete (no emergency contact, or no sex) opens a `staff_record_reviews` row if none is open; a save that completes a record with an open row resolves it with the signed-in user and the time. Never refused for missing fields (ADR-067). The `update staff` entry covers it: no separate audit entry, as in the mock.
 - Copies: `savePersonnel` (`api.ts:950`); tests: `personnel`, `staff-counts`. The Staff No. is assigned, never reused.
 
 #### `GET /api/personnel/{id}`
@@ -384,6 +387,7 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 
 #### `PUT /api/personnel/{id}`
 - Roles: S. Request: `PersonnelInput`. Response: `{ personnel, action: "update" }`. Errors: as create, plus 404. Audit: `update staff`, changed; a changed name part is named by field only ("Updated last name", ADR-064).
+- Review queue: as `POST /api/personnel`; this is the save that resolves a review (the mock's `resolveIfCompleted`).
 - Copies: `savePersonnel` (`api.ts:950`); tests: `personnel`, `staff-counts`.
 
 #### `POST /api/personnel/{id}/archive`
@@ -580,11 +584,15 @@ Added Saturday, November 07, 2026 — 13:33 PHT (counter-check C-5). Staff only;
 - Roles: S. Request: the rows and `fileName`.
 - Response: `StaffImportResult` (`created`, `updated`, `flagged`). Adds new staff with a new Staff No., updates matched ones, restores a matched archived record; staff missing from the file are left alone (ADR-069). A file that changes nothing writes nothing.
 - Audit: `submit staff-import`, "N added, N updated, N flagged" (counts, never names). No batch table exists for staff (the student import has `student_import_batches`): the entry's `target_label` names the run.
+- Review queue: each added or updated record is checked as on a save, so an import can open or resolve `staff_record_reviews` rows; a flagged row is left out of the import and opens nothing (ADR-076).
 - Copies: `applyStaffImport`; tests: `StaffImport`.
 
 #### `GET /api/personnel/incomplete`
-- Roles: S. Response: `StaffIncompleteRecord[]`, each with the missing fields and who resolved it.
-- Copies: `getStaffIncompleteQueue`; tests: none. Needs a review table for staff, which the schema lacks: see counter-check C-1 (`DECIDE`).
+- Roles: S. The Admin gets 403 and nothing about these reviews (ADR-038, ADR-043).
+- Response: `StaffIncompleteRecord[]`: active staff with missing fields or a resolved review, sorted by last name, each with `missingFields`, `review` (`resolvedByUserId`, `resolvedAt`), `resolvedByName` and `status` (`open` or `resolved`). Reads only; writes no entry.
+- Served from `staff_record_reviews` joined to `personnel` (ADR-076; was "needs a review table", counter-check C-1, settled Saturday, November 07, 2026 — 16:12 PHT). Missing fields are computed on read (`missingStaffFields`), never stored (ERD L-3).
+- No flag or resolve endpoint: the frontend has none. Rows open and resolve only through `POST`/`PUT /api/personnel` and `POST /api/personnel/import`.
+- Copies: `getStaffIncompleteQueue`, `staffIncompleteQueue`; tests: none.
 
 ## Inventory (Module 8)
 
@@ -827,6 +835,7 @@ Both roles, the same abilities (ADR-037).
 - Roles: S, A.
 - Query: `from`, `to`, `userId`, `actionTypes[]`, `targetTypes[]`.
 - Response: `AuditLogList`. A student-related target carries the **masked** LRN, never the name; with `fullLrn=1` (Staff only, for the Audit Log printout) the full LRN, and that request writes a `print` entry (Zean, November 7, 2026, `2026-11-07-audit-log-masked-lrn`; notes on ADR-040 and ADR-044; changed Saturday, November 07, 2026 — 13:24 PHT, before it was full on screen too, R33). Writes no entry (ADR-016). No route updates or deletes an entry.
+- Staff-record entries (`staff`, `staff-import`) carry the Staff No. as the record label, never the name. The Admin sees them listed but cannot open the record (ADR-043; counter-check C-8, Saturday, November 07, 2026 — 16:12 PHT).
 - Copies: `listAuditLog` (`api.ts:2986`); tests: `print-documents`.
 
 #### `POST /api/audit/views`
