@@ -28,6 +28,8 @@ export function AccountMenu({
   account,
   signingOut,
   onEditProfile,
+  onAuthenticator,
+  authenticatorEnabled = false,
   onShortcuts,
   onReportIssue,
   onSignOut,
@@ -36,6 +38,9 @@ export function AccountMenu({
   account: OwnAccount | null
   signingOut: boolean
   onEditProfile: () => void
+  /** Password recovery with an authenticator app (ADR-072). */
+  onAuthenticator: () => void
+  authenticatorEnabled?: boolean
   onShortcuts: () => void
   onReportIssue: () => void
   onSignOut: () => void
@@ -53,6 +58,7 @@ export function AccountMenu({
     // Grouped by purpose, a divider between groups: the account, help, then Sign out.
     { key: 'edit', label: 'Edit profile', icon: 'userCog', group: 0, onSelect: onEditProfile },
     { key: 'password', label: 'Change password', icon: 'lock', group: 0, to: paths.changePassword },
+    { key: 'authenticator', label: authenticatorEnabled ? 'Authenticator app: set up' : 'Set up authenticator app', icon: 'shieldPlus', group: 0, onSelect: onAuthenticator },
     ...(desktop ? [{ key: 'shortcuts', label: 'Keyboard shortcuts', icon: 'keyboard' as const, group: 1, shortcut: SHORTCUT_KEYS.shortcutsList, onSelect: onShortcuts }] : []),
     { key: 'issue', label: 'Report an issue', icon: 'flag', group: 1, onSelect: onReportIssue },
     { key: 'privacy', label: 'Privacy Policy', icon: 'fileText', group: 1, to: paths.privacyPolicy },

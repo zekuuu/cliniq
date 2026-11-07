@@ -1,7 +1,8 @@
 import { useRef, useState, type FormEvent } from 'react'
-import { formatTime } from '../../lib/dates'
 import { Link, useLocation, useNavigate } from 'react-router'
-import { Button, Input, Modal } from '../../components'
+import { Button, Input } from '../../components'
+import { ForgotPasswordDialog } from './ForgotPasswordDialog'
+import { lockedMessage } from './lockMessage'
 import { useCapsLock } from '../../hooks/useCapsLock'
 import { authenticateMockUser, beginPasswordChange, MockAuthError, type SessionUser } from '../../lib/mock-db'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
@@ -24,6 +25,7 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [forgotOpen, setForgotOpen] = useState(false)
+  const [notice, setNotice] = useState('')
   const capsLock = useCapsLock()
   const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({})
   const formRef = useRef<HTMLFormElement>(null)
@@ -56,8 +58,7 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
       navigate(returnPath(location.state) ?? paths.dashboard, { replace: true })
     } catch (cause) {
       if (cause instanceof MockAuthError && cause.reason === 'locked') {
-        const until = cause.lockedUntil ? `at ${formatTime(cause.lockedUntil)}` : 'in 30 minutes'
-        setError(`This account is temporarily locked after repeated failed attempts. Try again ${until}.`)
+        setError(lockedMessage(cause.lockedUntil))
       } else {
         setError('Unable to sign in with those credentials.')
       }
@@ -96,9 +97,10 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
               <p role="status" className="sr-only">{invalid.announcement}</p>
               <Input label="Username" icon="user" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} error={fieldErrors.username} clearable={false} required />
               <Input label="Password" icon="lock" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} {...capsLock.handlers} hint={capsLock.hint} error={fieldErrors.password} required />
+              {notice && !error && <p role="status" className="text-sm font-semibold text-success">{notice}</p>}
               {error && <p role="alert" className="text-sm font-semibold text-error">{error}</p>}
               <Button type="submit" variant="primary" className="mt-2 w-full" loading={loading}>Sign In</Button>
-              {/* Help only: no reset flow until the team decides the recovery method (Issues-and-TODOs, "Forgot password" DECIDE). */}
+              {/* Password recovery with an authenticator app (ADR-072); the Admin's reset stays the fallback. */}
               <button
                 type="button"
                 aria-haspopup="dialog"
@@ -121,12 +123,16 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
           </p>
         </div>
       </div>
-      <Modal open={forgotOpen} title="Forgot your password?" onClose={() => setForgotOpen(false)}>
-        <p className="text-sm text-text-secondary">Password reset is not available in CLINIQ yet. Ask the person who manages CLINIQ accounts at the clinic for help signing in.</p>
-        <div className="mt-4 flex justify-end">
-          <Button variant="neutral" data-autofocus onClick={() => setForgotOpen(false)}>Close</Button>
-        </div>
-      </Modal>
+      <ForgotPasswordDialog
+        open={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+        onReset={(name) => {
+          setUsername(name)
+          setPassword('')
+          setError('')
+          setNotice('Password changed. You can sign in.')
+        }}
+      />
       <div className="relative h-36 shrink-0 md:h-auto md:flex-1">
         <LoginBackdrop className="absolute inset-0" />
         <PhotoLockup />

@@ -48,7 +48,7 @@ describe('Account menu', () => {
     shell()
     const menu = await openAccountMenu(user)
     expect(button()).toHaveAttribute('aria-expanded', 'true')
-    expect(itemNames()).toEqual(['Edit profile', 'Change password', 'Keyboard shortcuts', 'Report an issue', 'Privacy Policy', 'Sign out'])
+    expect(itemNames()).toEqual(['Edit profile', 'Change password', 'Set up authenticator app', 'Keyboard shortcuts', 'Report an issue', 'Privacy Policy', 'Sign out'])
     const panel = menu.parentElement!
     expect(panel).toHaveTextContent('Username: demo.nurse')
     expect(panel).toHaveTextContent(/Signed in /)
@@ -59,7 +59,7 @@ describe('Account menu', () => {
     const user = userEvent.setup()
     shell(ADMIN)
     await openAccountMenu(user)
-    expect(itemNames()).toEqual(['Edit profile', 'Change password', 'Keyboard shortcuts', 'Report an issue', 'Privacy Policy', 'Sign out'])
+    expect(itemNames()).toEqual(['Edit profile', 'Change password', 'Set up authenticator app', 'Keyboard shortcuts', 'Report an issue', 'Privacy Policy', 'Sign out'])
   })
 
   it('leaves out Keyboard shortcuts on a phone or tablet width', async () => {

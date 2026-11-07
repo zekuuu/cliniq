@@ -14,6 +14,8 @@ import { BrandLogo, Sidebar } from './Sidebar'
 import { navGroupsFor, type NavKey } from './navigation'
 import { ReportIssueModal } from '../features/issue-reports/ReportIssueModal'
 import { EditProfileDialog } from '../features/account/EditProfileDialog'
+import { AuthenticatorDialog } from '../features/account/AuthenticatorDialog'
+import { getAuthenticatorStatus } from '../lib/mock-db'
 import { AccountMenu } from './AccountMenu'
 import { paths } from '../routes/paths'
 
@@ -62,6 +64,9 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
   const [isReportIssueOpen, setIsReportIssueOpen] = useState(false)
   const [reportIssueNotice, setReportIssueNotice] = useState<string | null>(null)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [isAuthenticatorOpen, setIsAuthenticatorOpen] = useState(false)
+  const [authenticatorVersion, setAuthenticatorVersion] = useState(0)
+  const authenticator = useAsyncData(`authenticator-status|${user.id}|${authenticatorVersion}`, getAuthenticatorStatus)
   // Bumped after Edit profile saves, so the menu reads the account again (ADR-066).
   const [accountVersion, setAccountVersion] = useState(0)
   const { data: account } = useAsyncData(`own-account|${user.id}|${accountVersion}`, () => getOwnAccount())
@@ -153,6 +158,8 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
               account={account ?? null}
               signingOut={isLoggingOut}
               onEditProfile={() => setIsEditingProfile(true)}
+              onAuthenticator={() => setIsAuthenticatorOpen(true)}
+              authenticatorEnabled={authenticator.data?.enabled ?? false}
               onShortcuts={showKeyboardShortcuts}
               onReportIssue={openReportIssue}
               onSignOut={() => setIsConfirmingSignOut(true)}
@@ -239,6 +246,12 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
           <Button variant="primary" data-autofocus>Stay signed in</Button>
         </div>
       </Modal>
+      <AuthenticatorDialog
+        open={isAuthenticatorOpen}
+        viewer={user}
+        onClose={() => setIsAuthenticatorOpen(false)}
+        onChanged={() => setAuthenticatorVersion((version) => version + 1)}
+      />
       <EditProfileDialog
         open={isEditingProfile}
         account={account ?? null}
