@@ -1,10 +1,10 @@
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
-import { BackButton, Card } from '../../components'
+import { BackButton, BULLET_LIST, Card } from '../../components'
 
 const sectionHeadingClass = 'text-lg font-semibold leading-7 text-text-primary'
 const paragraphClass = 'mt-3 leading-7'
-const listClass = 'mt-3 list-disc space-y-2 pl-6 leading-7'
+const listClass = `mt-3 leading-7 ${BULLET_LIST}`
 
 /**
  * Static legal copy for Screen #36. Keep this content synchronized with the reference draft.
@@ -74,7 +74,7 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
                 and medical conditions.
               </li>
               <li>
-                <strong>Clinic records:</strong> visit records (date, complaint, treatment,
+                <strong>Clinic records:</strong> visit records (date, symptoms, treatment,
                 outcome), incident/emergency records (including hospital referral and
                 parent-notification details where applicable), and follow-up records.
               </li>
