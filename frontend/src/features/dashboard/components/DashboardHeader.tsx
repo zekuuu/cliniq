@@ -1,4 +1,4 @@
-import { DateRangePicker, PrintButton } from '../../../components'
+import { DateRangePicker } from '../../../components'
 import { formatLongDate } from '../../../lib/dates'
 import { describeRangeDates, type DateRange } from '../../../lib/dateRange'
 import type { SessionUser } from '../../../lib/mock-db'
@@ -15,7 +15,6 @@ export interface DashboardHeaderProps {
   range: DateRange
   onRangeChange: (range: DateRange) => void
   isRefetching: boolean
-  onPrint: () => void
   /** Where the All range really starts; unknown until the summary loads. */
   oldestRecordDate?: ISODate | null
   /**
@@ -26,7 +25,7 @@ export interface DashboardHeaderProps {
 
 /**
  * Page header, following the reference: title/greeting on the left, and the period selector plus
- * the one page action (Print) on the right. Staff get a greeting in the supporting line; Admin gets
+ * nothing else: the Clinic Overview print moved to Reports (ADR-070). Staff get a greeting in the supporting line; Admin gets
  * the same page title without Staff-specific warmth. The "New Visit" shortcut sits on the view-tab
  * row below this header.
  */
@@ -36,7 +35,6 @@ export function DashboardHeader({
   range,
   onRangeChange,
   isRefetching,
-  onPrint,
   oldestRecordDate,
 }: DashboardHeaderProps) {
   const isStaff = viewer.role === 'staff'
@@ -62,7 +60,6 @@ export function DashboardHeader({
       </div>
       <div className="ml-auto flex flex-wrap items-center justify-end gap-2 print:hidden">
         <DateRangePicker value={range} onChange={onRangeChange} today={today} compact />
-        <PrintButton viewer={viewer} onPrint={onPrint} />
       </div>
     </header>
   )

@@ -19,8 +19,8 @@ import { AttentionChips } from './components/AttentionChips'
 import { FullReportLink } from './components/FullReportLink'
 import { ClusterAlerts } from './components/ClusterAlerts'
 import { ComplaintTrends, ComplaintTrendsSkeleton } from './components/ComplaintTrends'
-import { DashboardPrint } from './components/DashboardPrint'
 import { DashboardHeader } from './components/DashboardHeader'
+import { SchoolYearBanner } from './components/SchoolYearBanner'
 import { NewVisitLink } from './components/StaffShortcuts'
 import {
   ActivityCards,
@@ -52,8 +52,8 @@ function parseSex(value: string | null): StudentSex | null {
  * Header → view tabs, with Staff's New Visit on the tab row
  * (ADR-025): Overview (stat cards and three alert groups; pending excuse letters open in the Visit Log), Trends (complaint trends), Calendar. One view shows at a time; the choice
  * lives in `?view=` (replace, so Back is unaffected). Every panel stays mounted, so switching keeps
- * the calendar's state and refetches nothing. Print produces the "Clinic Overview Report" instead of
- * the screen (`DashboardPrint`, ADR-026), from data loaded here. Each view shows its own
+ * the calendar's state and refetches nothing. No print here: the Clinic Overview printout is a
+ * Reports tab now (ADR-070, amends ADR-045). Each view shows its own
  * shaped skeleton on first load and its own error; later refetches keep the previous render dimmed.
  */
 export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser }) {
@@ -174,10 +174,11 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           range={range}
           onRangeChange={setRange}
           isRefetching={isRefetching}
-          onPrint={() => window.print()}
           oldestRecordDate={data?.oldestRecordDate}
         />
       </Card>
+      {/* Staff only (the data layer leaves it null for the Admin), on every tab. */}
+      {data?.schoolYearReminder && <SchoolYearBanner reminder={data.schoolYearReminder} />}
 
       <div className="flex flex-col gap-3 print:block">
         <Tabs
@@ -296,16 +297,6 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           ]}
         />
       </div>
-      {data && (
-        <DashboardPrint
-          summary={data}
-          range={range}
-          viewer={viewer}
-          filterLabel={filterLabel}
-          view={view}
-          letters={viewer.role === 'staff' ? (letters.data ?? []) : undefined}
-        />
-      )}
     </div>
   )
 }
