@@ -273,3 +273,27 @@ The Adjust Stock note is optional for every reason, including Other and a large 
 ### ADR-069: Staff can be imported from a CSV, adding and updating only
 
 Import Staff List (`/staff/import`) works like the student import: file, columns, preview, apply. A row matches by Staff No., else by name and type, else is added; staff missing from the file are left alone; a file's contact never replaces one CLINIQ has. Amends ADR-043. [ADR-069](ADR-069-Staff-List-Import.md)
+
+### ADR-070: "Symptoms" and "Released to" are labels only; the Clinic Overview print moves to Reports; no pain rating
+
+Complaint reads Symptoms and Collected by reads Released to everywhere people read them; data names and the ERD are unchanged (one label module, `lib/labels.ts`). "Other" as the relationship asks who. The Dashboard print moves to a Clinic Overview report in Reports (amends ADR-045). A pain rating was declined. [ADR-070](ADR-070-Consultation-Wording-Dashboard-Print-Moves-To-Reports.md)
+
+### ADR-071: Suggested medicines come from "Commonly used for" tags on each item
+
+Staff tag items with symptom options; the Visit form's picker lists matching items first under "Suggested for these symptoms" and the rest behind "Show all medicines". Search covers every item; nothing is hidden, disabled or blocked; allergy and stock warnings are unchanged (relates to ADR-018, ADR-049). [ADR-071](ADR-071-Suggested-Medicines-From-Item-Tags.md)
+
+### ADR-072: One Archive page by school year, with the school year's dates in settings
+
+The school year (June 15 to April 14 by default) is a Staff setting; a year runs to the day before the next start. Archived students and staff store `archivedAt`, `archiveReason` and `archivedSchoolYear`, so changing the dates never moves them. One read-only `/archive` page (switcher; Students, Staff, Reports, Audit log tabs), reached from the sidebar and the Student List. Relates to ADR-047, 051, 057. [ADR-072](ADR-072-Archive-By-School-Year.md)
+
+### ADR-073: Password recovery uses an authenticator app; the email reset of ADR-048 is replaced
+
+Every role can set up an authenticator app (QR code, 8 one-time recovery codes) from the account menu. "Forgot password?" takes the username and a 6-digit or recovery code, offline; failures share one message and the sign-in lockout. Sign-in is unchanged. The Admin should set it up. [ADR-073](ADR-073-Password-Recovery-With-An-Authenticator-App.md)
+
+### ADR-074: No Clinic Overview printout
+
+Reports keeps four tabs: Monthly Report, Incident register, Symptom summary, Inventory sheet. The Clinic Overview tab of ADR-070 repeated them, so it and `DashboardPrint` were removed; the Dashboard prints nothing. Supersedes ADR-045. [ADR-074](ADR-074-No-Clinic-Overview-Printout.md)
+
+### ADR-075: Staff start each school year by hand
+
+Staff end a school year by hand ("End school year": today is the last class day, then the break) and start the next by hand after the break ("Start school year"); nothing changes by itself. The date settings give both due days. Staff get a short Dashboard banner 7 days before each, which turns to a warning once overdue. Records made in the break stay in the ended year. Each start is stored and audited. Amends ADR-072. [ADR-075](ADR-075-School-Year-Started-By-Hand.md)
