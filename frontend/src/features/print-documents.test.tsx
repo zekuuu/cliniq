@@ -174,7 +174,8 @@ describe('purpose-built printouts', () => {
     const doc = print()
     expectDocument(doc, 'Student Health Record')
     const visits = within(doc).getByRole('table', { name: 'Clinic visits' })
-    expect(within(visits).getAllByRole('row').length - 1).toBe(12)
+    // All 13 seeded visits (12 until the calendar redesign's seed added visit-0183), more than the screen's eight.
+    expect(within(visits).getAllByRole('row').length - 1).toBe(13)
     expect(doc).toHaveTextContent('Excuse letters issued')
     expect(doc).not.toHaveTextContent('Archive')
     expect(doc).toHaveTextContent('LRN 000000220004')
