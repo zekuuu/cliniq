@@ -91,7 +91,7 @@ Every printout has:
   screen and never duplicates screen text in tests. Pass the screen's loaded data as props.
 - The screen's Print button is the shared `PrintButton` (`components/print/Print.tsx`), inside a `print:hidden` block; it calls `window.print()` (or `onPrint`) and takes a `disabledReason` for a document that isn't printable yet.
 - **Figures print once** (frontend review round 2, R29 and R30, Tuesday, November 03, 2026 — 19:49 PHT): the Monthly Clinic Report prints its complaints as the table only; the Complaint summary prints its chart above its table, one below the other; the by-week table prints in the Monthly Report only. `PrintFields` titles are bold and black (R17).
-- Existing printouts: `DashboardPrint` (prints the open Dashboard tab: Clinic Overview Report or Clinic Trends Report, ADR-045), `ReportsPrint` (Monthly Clinic
+- Existing printouts (the Dashboard prints nothing, ADR-074): `ReportsPrint` (Monthly Clinic
   Report, Incident register, Complaint summary, the monthly Inventory sheet), and the print trees in `ExcuseLetterPage`,
   `IncidentReportPage`, `StudentProfilePage`, and `AuditLogPage`, and `SportsReportPrint` (the Sports
   Report, ADR-034).

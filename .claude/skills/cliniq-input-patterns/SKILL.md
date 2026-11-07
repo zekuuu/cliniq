@@ -12,6 +12,8 @@ Use this with `cliniq-interactive-states` whenever a text input is created or ch
 - Reuse `frontend/src/components/ui/Input.tsx`; do not create page-local text input styling.
 - Standard inputs are 40px tall, with `border-border`, a light card shadow, semibold 14px values, and a `brand-green` focus ring. This deliberately matches the shared `Select` trigger beside it.
 - Keep the real visible label above the field, required indicator, nearby hint/error text, hover response, and visible keyboard focus treatment.
+- **A field's hover is only for the field** (Zean, Saturday, November 07, 2026 — 13:04 PHT; before, hovering a label also lit its field, because browsers pass :hover from a label to its control). Field boxes use the `hover-field:` variant from `index.css`, never `hover:`: `Input`, `Textarea` and the shared dropdown trigger (Select, MultiSelect, Combobox, DatePicker, DateRangePicker). Checkbox and radio cards whose whole label is the target keep `hover:`.
+- **One-time codes use `CodeInput`** (`components/ui/CodeInput.tsx`, Zean, Saturday, November 07, 2026 — 13:04 PHT). It shows six boxes over one invisible real input, so typing, Backspace, paste, phone autofill and screen readers work as usual. It takes digits only and can continue by itself with `onComplete`. It is used in Forgot password and the authenticator setup. A recovery code (ABCD-EFGH) stays a normal `Input`.
 - Use an explicit local override only where a documented compact control is necessary; do not shrink filter inputs merely to create a different height from their paired dropdown.
 
 ## Leading icons and password reveal
@@ -36,6 +38,8 @@ Use this with `cliniq-interactive-states` whenever a text input is created or ch
 - Tests pick dates through `pickDate` / `pickMonth` in `frontend/src/test/pickDate.ts`.
 
 ## Failed submit
+
+**Every save gives feedback (Saturday, November 07, 2026 — 06:37 PHT, professor's consultation):** a busy `Button` (`loading`) is disabled and reads its action's "-ing" form ("Save Visit" reads "Saving…"; `busyLabel` in `components/ui/buttonClassName.ts`, `loadingText` overrides it). A save without its own messages uses `useSaveFeedback` (`hooks/`) with `<SaveFeedback>` (`components/forms/`): a second press while saving does nothing, success is a `role="status"` that clears after 5 seconds, failure a `role="alert"` that stays, and the form keeps what was typed. **The long incident form is the one exception to the focus rule below:** a failed Save Stage 1 or Complete focuses an `<ErrorSummary>` at the top whose links reach each field, and a save focuses the result message (`scroll-mt-20`, no smooth scroll under reduced motion).
 
 - Every entry and edit form uses the shared `useFocusFirstInvalid(formRef)` (`frontend/src/hooks/useFocusFirstInvalid.ts`): call `report(errorCount)` on each submit, after setting the errors, and render its `announcement` in a `role="status"` `sr-only` paragraph inside the form.
 - On a failed submit, focus moves to the first field marked `aria-invalid` (or the form's one `role="alert"` message when the form has no per-field errors), scrolled to the middle of the screen so the sticky top bar never covers it, and screen readers hear "N fields need attention."

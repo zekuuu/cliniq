@@ -15,7 +15,7 @@ This skill exists because the first real build (the Dashboard) shipped without c
 - Primary buttons (`brand-green-dark` fill, white label) → lighten slightly on hover (`hover:brightness-125`). Never use a `brand-green` fill under a white label: button labels are small text, and that pairing is only 3.74:1
 - Secondary/outlined buttons → pick up a light `surface` background tint on hover
 - Destructive buttons (`error` fill) → darken the same way
-- Icon-only actions → the icon itself changes color on hover, with no background box (see below)
+- Icon-only actions → the icon itself changes color on hover, with no background box (see below). Every X (close, clear, remove) goes `text-secondary` → `brand-green-dark` on hover (Zean, Saturday, November 07, 2026 — 13:04 PHT)
 - Plain list rows/cards that navigate → subtle `surface` background tint on hover, so the whole row visibly responds
 - Links → an underline or color shift, not silence
 
