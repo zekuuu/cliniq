@@ -51,7 +51,7 @@ export function Textarea({
         onChange={(event) => onChange(event.target.value)}
         className={cn(
           'resize-y rounded-md border bg-background px-3 py-2 text-sm text-text-primary shadow-card',
-          'transition-colors duration-150 hover:border-brand-green motion-reduce:transition-none',
+          'transition-colors duration-150 hover-field:border-brand-green motion-reduce:transition-none',
           error ? 'border-error' : 'border-border',
         )}
         {...rest}

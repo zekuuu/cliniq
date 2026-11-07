@@ -21,7 +21,7 @@ export function dropdownTriggerClassName({
 }: { size?: DropdownSize; invalid?: boolean; className?: string } = {}): string {
   return cn(
     'inline-flex items-center rounded-md border bg-background text-sm font-semibold text-text-primary shadow-card',
-    'cursor-pointer transition-colors duration-150 hover:border-brand-green hover:bg-surface motion-reduce:transition-none',
+    'cursor-pointer transition-colors duration-150 hover-field:border-brand-green hover-field:bg-surface motion-reduce:transition-none',
     'disabled:cursor-not-allowed disabled:opacity-50',
     invalid ? 'border-error' : 'border-border',
     triggerSizeClasses[size],

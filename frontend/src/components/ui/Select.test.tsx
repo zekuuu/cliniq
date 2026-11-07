@@ -40,7 +40,7 @@ describe('Select', () => {
     const trigger = screen.getByRole('button', { name: 'Grade level All grade levels' })
     expect(trigger).toHaveAttribute('aria-haspopup', 'listbox')
     expect(trigger).toHaveAttribute('aria-expanded', 'false')
-    expect(trigger).toHaveClass('cursor-pointer', 'font-semibold', 'hover:bg-surface')
+    expect(trigger).toHaveClass('cursor-pointer', 'font-semibold', 'hover-field:bg-surface')
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
   })
 

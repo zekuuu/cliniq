@@ -1,0 +1,85 @@
+import { useId, useState } from 'react'
+
+/**
+ * A one-time code as separate boxes, the usual modern pattern (Zean, November 7, 2026). One real
+ * `<input>` sits invisibly over the boxes, so typing, Backspace, paste, the phone's code autofill and
+ * screen readers all work as on a normal field; the boxes only show it. Digits only.
+ */
+export function CodeInput({
+  label,
+  value,
+  onChange,
+  onComplete,
+  length = 6,
+  hint,
+  autoFocus = false,
+  disabled = false,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  /** Called once the last digit is entered, for example to continue without a button press. */
+  onComplete?: (value: string) => void
+  length?: number
+  hint?: string
+  autoFocus?: boolean
+  disabled?: boolean
+}) {
+  const id = useId()
+  const hintId = hint ? `${id}-hint` : undefined
+  const [focused, setFocused] = useState(false)
+  const active = Math.min(value.length, length - 1)
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={id} className="text-sm font-semibold text-text-primary">
+        {label}
+      </label>
+      <div className="relative w-fit">
+        <div aria-hidden="true" className="flex gap-2">
+          {Array.from({ length }, (_, index) => {
+            const char = value[index] ?? ''
+            const current = focused && index === active
+            return (
+              <div
+                key={index}
+                data-code-box
+                className={`flex h-12 w-11 items-center justify-center rounded-md border bg-background text-xl font-semibold text-text-primary tabular-nums shadow-card transition-colors motion-reduce:transition-none ${
+                  current ? 'border-brand-green ring-2 ring-brand-green/30' : char ? 'border-text-muted' : 'border-border'
+                } ${disabled ? 'opacity-50' : ''}`}
+              >
+                {char || (current && value.length < length ? <span className="h-6 w-px animate-pulse bg-text-primary motion-reduce:animate-none" /> : null)}
+              </div>
+            )
+          })}
+        </div>
+        <input
+          id={id}
+          value={value}
+          disabled={disabled}
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          pattern="[0-9]*"
+          maxLength={length}
+          aria-describedby={hintId}
+          data-autofocus={autoFocus || undefined}
+          autoFocus={autoFocus}
+          spellCheck={false}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onChange={(event) => {
+            const next = event.target.value.replace(/\D/g, '').slice(0, length)
+            onChange(next)
+            if (next.length === length && value.length !== length) onComplete?.(next)
+          }}
+          // Invisible but present: the caret always sits at the end, like the boxes show.
+          className="absolute inset-0 h-full w-full cursor-text bg-transparent text-transparent caret-transparent opacity-0 outline-none selection:bg-transparent disabled:cursor-not-allowed"
+        />
+      </div>
+      {hint && (
+        <p id={hintId} className="text-xs text-text-secondary">
+          {hint}
+        </p>
+      )}
+    </div>
+  )
+}

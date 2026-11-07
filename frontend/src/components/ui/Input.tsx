@@ -81,7 +81,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
       aria-invalid={error ? true : undefined}
       aria-describedby={cn(hintId, errorId) || undefined}
       className={cn(
-        'h-10 rounded-md border bg-background px-3 text-sm font-semibold text-text-primary shadow-card transition-colors duration-150 hover:border-brand-green hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none',
+        'h-10 rounded-md border bg-background px-3 text-sm font-semibold text-text-primary shadow-card transition-colors duration-150 hover-field:border-brand-green hover-field:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none',
         error ? 'border-error' : 'border-border',
         icon && 'pl-9',
         // Edge draws its own reveal eye; hide it so the field never shows two.
