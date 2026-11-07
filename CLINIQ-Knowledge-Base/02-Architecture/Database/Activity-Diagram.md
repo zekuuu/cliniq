@@ -22,7 +22,7 @@ stateDiagram-v2
 
     Stage2_InProgress --> Stage2_InProgress: Add readings as needed,<br/>treatment notes,<br/>hospital referral,<br/>parent notification attempts
 
-    Stage2_InProgress --> Complete: Treatment, medicine, notification<br/>or referral recorded, or<br/>Nothing further with a reason
+    Stage2_InProgress --> Complete: Stage 2 saved<br/>(everything optional, ADR-065)
 
     NeedsCompletion --> [*]: (record remains open<br/>indefinitely until completed —<br/>no forced deadline)
     Complete --> [*]

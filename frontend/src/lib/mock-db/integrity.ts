@@ -24,9 +24,11 @@ export const PERSONNEL_DEPARTMENT_MAX = 60
 /** Longest calendar event title, so a chip stays readable (ADR-019). */
 export const CALENDAR_EVENT_TITLE_MAX = 60
 
+const ARCHIVE_FIELDS = ['archivedAt', 'archiveReason', 'archivedSchoolYear']
+
 const FIELDS = {
   top: ['meta', 'config', 'users', 'students', 'personnel', 'visits', 'incidents', 'followUps', 'inventoryItems', 'reports', 'backupLogs', 'auditLog', 'frontendOnly'],
-  config: ['_note', 'showFrequentVisitors', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'personnelTypes', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges', 'medicalCertificateAfterDays', 'adminIdleMinutes', 'clusterMinStudents', 'clusterWindowDays', 'followUpOverdueAfterDays', 'followUpAutoCloseDays', 'vitalsUsualRanges', 'backupKeepLast', 'unusualAgeYears', 'largeWriteOffPercent'],
+  config: ['_note', 'showFrequentVisitors', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'personnelTypes', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges', 'medicalCertificateAfterDays', 'adminIdleMinutes', 'clusterMinStudents', 'clusterWindowDays', 'followUpOverdueAfterDays', 'followUpAutoCloseDays', 'vitalsUsualRanges', 'backupKeepLast', 'unusualAgeYears', 'largeWriteOffPercent', 'schoolYearStartMonth', 'schoolYearStartDay', 'schoolYearEndMonth', 'schoolYearEndDay', 'schoolYearStarts'],
   users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture', 'deactivatedAt'],
   students: ['id', 'lrn', 'firstName', 'lastName', 'middleName', 'gradeLevel', 'birthDate', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
   personnel: ['id', 'staffNumber', 'firstName', 'lastName', 'middleName', 'sex', 'type', 'department', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived'],
@@ -38,11 +40,11 @@ const FIELDS = {
   hospitalReferral: ['destination', 'transportMode', 'departureTime'],
   parentNotification: ['outcome', 'timestamp'],
   followUps: ['id', 'studentId', 'relatedRecord', 'followUpDate', 'reason', 'status', 'notes', 'createdByUserId'],
-  inventoryItems: ['id', 'name', 'category', 'currentStock', 'unit', 'expirationDate', 'lowStockThreshold', 'brand'],
+  inventoryItems: ['_note', 'id', 'name', 'category', 'currentStock', 'unit', 'expirationDate', 'lowStockThreshold', 'brand'],
   reports: ['type', 'dateRange'],
   backupLogs: ['lastRun', 'fileSizeBytes', 'status', 'verifiedByUserId'],
   auditLog: ['userId', 'actionType', 'targetRecord', 'timestamp'],
-  frontendOnly: ['_note', 'devAccounts', 'visitComplaintTypes', 'incidentComplaintTypes', 'inventoryTransactions', 'recordReviews', 'excuseLetterApprovals', 'peReferrals', 'issueReports', 'calendarEvents', 'sportsReports', 'backupLocations'],
+  frontendOnly: ['_note', 'devAccounts', 'visitComplaintTypes', 'incidentComplaintTypes', 'inventoryTransactions', 'recordReviews', 'personnelReviews', 'excuseLetterApprovals', 'peReferrals', 'issueReports', 'calendarEvents', 'sportsReports', 'backupLocations'],
 } as const
 
 /**
@@ -113,6 +115,14 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
       if (!key.startsWith('_') && !optional.includes(key) && !keys.includes(key))
         fail(`${where}: missing field "${key}"`)
   }
+  // An archived record says when, why and in which school year ("2026–2027"); an active one says none.
+  const checkArchive = (where: string, record: Rec) => {
+    if (record.archived) {
+      if (typeof record.archivedAt !== 'string' || Number.isNaN(Date.parse(record.archivedAt))) fail(`${where}.archivedAt: an archived record needs the date and time it was archived`)
+      if (typeof record.archiveReason !== 'string' || !record.archiveReason.trim()) fail(`${where}.archiveReason: an archived record needs a reason`)
+      if (!/^\d{4}–\d{4}$/.test(String(record.archivedSchoolYear))) fail(`${where}.archivedSchoolYear: "${String(record.archivedSchoolYear)}" isn't a school year like "2026–2027"`)
+    } else if (ARCHIVE_FIELDS.some((key) => record[key] != null)) fail(`${where}: an active record has archive details`)
+  }
   const oneOf = (where: string, value: unknown, allowed: readonly unknown[]) => {
     if (!allowed.includes(value)) fail(`${where}: "${String(value)}" is not one of ${allowed.join(', ')}`)
   }
@@ -134,6 +144,20 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
 
   checkFields('top level', s, FIELDS.top)
   checkFields('config', s.config, FIELDS.config)
+  // School years started by hand: oldest first, one per label, labels "YYYY–YYYY" rising with the dates.
+  const starts = ((s.config as Rec | undefined)?.schoolYearStarts ?? []) as Array<Rec>
+  if (!Array.isArray(starts)) fail('config.schoolYearStarts: must be a list')
+  starts.forEach((start, index) => {
+    checkFields(`config.schoolYearStarts[${index}]`, start, ['label', 'startedOn', 'startedBy', 'endedOn', 'endedBy'], ['endedOn', 'endedBy'])
+    if (start.endedOn !== undefined && !(String(start.endedOn) >= String(start.startedOn))) fail(`config.schoolYearStarts[${index}].endedOn: must be on or after its start`)
+    if ((start.endedOn === undefined) !== (start.endedBy === undefined)) fail(`config.schoolYearStarts[${index}]: endedOn and endedBy go together`)
+    if (!/^\d{4}–\d{4}$/.test(String(start.label)) || Number(String(start.label).slice(5)) !== Number(String(start.label).slice(0, 4)) + 1) fail(`config.schoolYearStarts[${index}].label: must be "YYYY–YYYY", one year apart`)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(start.startedOn))) fail(`config.schoolYearStarts[${index}].startedOn: must be a date`)
+    const before = starts[index - 1]
+    if (before && !(String(before.startedOn) < String(start.startedOn) && String(before.label) < String(start.label))) fail(`config.schoolYearStarts[${index}]: must come after the one before it`)
+    // A year is ended before the next starts, so the break sits between them.
+    if (before && !(before.endedOn !== undefined && String(before.endedOn) < String(start.startedOn))) fail(`config.schoolYearStarts[${index - 1}]: must be ended before the next year starts`)
+  })
   for (const [key, value] of Object.entries((s.config ?? {}) as Rec)) {
     if (key === 'vitalsWarningRanges') {
       checkFields('config.vitalsWarningRanges', value, ['_note', 'temperatureC', 'pulseBpm', 'oxygenSaturationPct', 'feverFromC'])
@@ -161,6 +185,8 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     } else if (key === 'personnelTypes') {
       if (!Array.isArray(value) || !value.length || value.some((v) => typeof v !== 'string' || !v.trim()) || new Set(value).size !== value.length)
         fail('config.personnelTypes: must be a non-empty list of distinct names')
+    } else if (key === 'schoolYearStarts') {
+      // Checked above.
     } else if (key === 'showFrequentVisitors') {
       if (typeof value !== 'boolean') fail('config.showFrequentVisitors: must be true or false')
     } else if (!key.startsWith('_') && !(typeof value === 'number' && value > 0)) fail(`config.${key}: must be a positive number`)
@@ -203,7 +229,8 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   list('students').forEach((st, i) => {
     const w = `students[${i}] (${String(st.id)})`
     // Pre-Part 3B seed exports omit Sex; `resolveSeed` supplies a clearly synthetic migration value.
-    checkFields(w, st, FIELDS.students, ['sex', 'section'])
+    checkFields(w, st, FIELDS.students, ['sex', 'section', ...ARCHIVE_FIELDS])
+    checkArchive(w, st)
     checkName(w, st)
     const lrn = String(st.lrn)
     if (!LRN_PATTERN.test(lrn)) fail(`${w}.lrn: "${lrn}" isn't 12 digits (ADR-028)`)
@@ -232,7 +259,8 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   const personnelTypes = ((s.config as Rec | undefined)?.personnelTypes ?? []) as unknown[]
   list('personnel').forEach((pe, i) => {
     const w = `personnel[${i}] (${String(pe.id)})`
-    checkFields(w, pe, FIELDS.personnel)
+    checkFields(w, pe, FIELDS.personnel, ARCHIVE_FIELDS)
+    checkArchive(w, pe)
     personnelIds.add(String(pe.id))
     const number = String(pe.staffNumber)
     if (!STAFF_NUMBER_PATTERN.test(number)) fail(`${w}.staffNumber: "${number}" doesn't look like STF-0001`)
@@ -393,8 +421,22 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   // Inventory.
   list('inventoryItems').forEach((item, i) => {
     const w = `inventoryItems[${i}] (${String(item.id)})`
-    checkFields(w, item, FIELDS.inventoryItems)
+    checkFields(w, item, FIELDS.inventoryItems, ['usedFor'])
     oneOf(`${w}.category`, item.category, ENUMS.category)
+    // "Commonly used for": symptom options only, no repeats (consultation, November 6, 2026).
+    if (item.usedFor !== undefined) {
+      if (!Array.isArray(item.usedFor)) fail(`${w}.usedFor: must be a list of symptom options`)
+      else {
+        item.usedFor.forEach((tag) => {
+          if (!visitComplaints.has(String(tag))) fail(`${w}.usedFor: "${String(tag)}" isn't in frontendOnly.visitComplaintTypes`)
+        })
+        if (new Set(item.usedFor).size !== item.usedFor.length) fail(`${w}.usedFor: lists a symptom twice`)
+        // The save stores tags in the list's order, so a seed in another order would audit as an edit.
+        const tags = item.usedFor.map(String)
+        if (tags.join('|') !== [...visitComplaints].filter((label) => tags.includes(label)).join('|'))
+          fail(`${w}.usedFor: list the symptoms in frontendOnly.visitComplaintTypes order`)
+      }
+    }
     if (item.brand !== undefined && item.brand !== null) oneOf(`${w}.brand`, item.brand, ['generic', 'branded'])
     if (!Number.isInteger(item.currentStock)) fail(`${w}.currentStock: must be a whole number`)
     // Below zero happens only at runtime, through the warn-only dispense path (Module 8).
@@ -413,7 +455,7 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
 
   list('backupLogs').forEach((b, i) => {
     const w = `backupLogs[${i}]`
-    checkFields(w, b, FIELDS.backupLogs)
+    checkFields(w, b, FIELDS.backupLogs, ['locationNames'])
     relDateTime(`${w}.lastRun`, b.lastRun)
     oneOf(`${w}.status`, b.status, ENUMS.backupStatus)
     userRef(`${w}.verifiedByUserId`, b.verifiedByUserId, true)
@@ -465,7 +507,6 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
       checkFields(w, t, ['id', 'itemId', 'type', 'quantity', 'timestamp', 'userId', 'studentId', 'visitId', 'reason', 'note'], ['personnelId'])
       oneOf(`${w}.reason`, t.reason, ENUMS.adjustmentReason)
       if (!Number.isInteger(quantity) || quantity === 0) fail(`${w}.quantity: an adjustment is a whole number other than 0`)
-      if (t.reason === 'other' && !String(t.note ?? '').trim()) fail(`${w}.note: required when the reason is "other"`)
       if ((t.reason === 'visit_edited') !== (t.visitId !== null)) fail(`${w}: a "visit_edited" adjustment, and only that, links a visit`)
     } else {
       checkFields(w, t, ['id', 'itemId', 'type', 'quantity', 'timestamp', 'userId', 'studentId', 'visitId'], ['incidentId', 'personnelId'])
@@ -492,6 +533,12 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     const w = `frontendOnly.recordReviews[${i}]`
     studentRef(`${w}.studentId`, r.studentId)
     relDate(`${w}.importedAt`, r.importedAt)
+    userRef(`${w}.resolvedByUserId`, r.resolvedByUserId, true)
+    relDateTime(`${w}.resolvedAt`, r.resolvedAt, true)
+  })
+  ;((fo.personnelReviews ?? []) as Rec[]).forEach((r, i) => {
+    const w = `frontendOnly.personnelReviews[${i}]`
+    if (!personnelIds.has(String(r.personnelId))) fail(`${w}.personnelId: "${String(r.personnelId)}" doesn't exist`)
     userRef(`${w}.resolvedByUserId`, r.resolvedByUserId, true)
     relDateTime(`${w}.resolvedAt`, r.resolvedAt, true)
   })

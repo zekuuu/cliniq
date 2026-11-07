@@ -6,6 +6,9 @@ export interface SegmentOption<V extends string> {
   value: V
   label: string
   icon?: IconName
+  /** A colour of its own, e.g. a disposition's status tone: `className` while not chosen, `selectedClassName` when chosen. */
+  className?: string
+  selectedClassName?: string
 }
 
 export interface SegmentedControlProps<V extends string> {
@@ -77,7 +80,11 @@ export function SegmentedControl<V extends string>({
             className={cn(
               'inline-flex cursor-pointer items-center gap-1.5 rounded-sm px-2.5 transition-colors duration-150 motion-reduce:transition-none',
               size === 'sm' ? 'h-7 text-xs' : 'h-8 text-sm',
-              selected
+              selected && option.selectedClassName
+                ? cn('font-semibold shadow-card ring-2 ring-offset-1', option.selectedClassName)
+                : option.className && !selected
+                ? cn('font-medium text-text-primary hover:brightness-95', option.className)
+                : selected
                 ? // Raised white chip. The brand-green ring (3.43:1 on surface) is the non-color-alone
                   // state indicator, backed by weight and the dark-green label.
                   'bg-background font-semibold text-brand-green-dark shadow-card ring-1 ring-brand-green hover:bg-surface'

@@ -1,3 +1,4 @@
+import { SYMPTOM, SYMPTOMS, symptom, symptoms } from '../../../lib/labels'
 import {
   followUpStatusMap,
   PrintBars,
@@ -40,17 +41,17 @@ function ComplaintBreakdown({ rows, empty, chart = false }: { rows: ComplaintCou
     <div className="flex flex-col gap-[4mm]">
       {chart && (
         <PrintBars
-          caption="Clinic visits by complaint"
+          caption={`Clinic visits by ${symptom}`}
           rows={rows.map((row) => ({ label: row.complaint, value: row.count }))}
         />
       )}
       <PrintTable
-        caption="Clinic visits by complaint, with share"
+        caption={`Clinic visits by ${symptom}, with share`}
         rows={rows}
         rowKey={(row) => row.complaint}
         empty=""
         columns={[
-          { header: 'Complaint', cell: (row) => row.complaint },
+          { header: SYMPTOM, cell: (row) => row.complaint },
           { header: 'Visits', width: '20%', align: 'right', cell: (row) => row.count },
           { header: 'Share', width: '20%', align: 'right', cell: (row) => share(row.count, total) },
         ]}
@@ -69,7 +70,7 @@ function IncidentTable({ rows }: { rows: ArchiveRow[] }) {
       columns={[
         { header: 'LRN or Staff No.', width: '18%', cell: (row) => row.patient.number },
         { header: 'Date and time', width: '26%', cell: (row) => formatDateTime(row.time) },
-        { header: 'Complaint', cell: (row) => row.complaint },
+        { header: SYMPTOM, cell: (row) => row.complaint },
         { header: 'Stage and status', width: '26%', cell: stageText },
       ]}
     />
@@ -130,8 +131,8 @@ export function ReportsPrint({
     return (
       <PrintDocument
         viewer={viewer}
-        title={`Complaint summary — ${month}`}
-        scope={`Clinic visits per complaint in ${month}: ${totalVisits} ${totalVisits === 1 ? 'visit' : 'visits'} across ${data.complaintCounts.length} complaint ${data.complaintCounts.length === 1 ? 'type' : 'types'}.`}
+        title={`${SYMPTOM} summary — ${month}`}
+        scope={`Clinic visits per ${symptom} in ${month}: ${totalVisits} ${totalVisits === 1 ? 'visit' : 'visits'} across ${data.complaintCounts.length} ${data.complaintCounts.length === 1 ? symptom : symptoms}.`}
       >
         <ComplaintBreakdown
           rows={data.complaintCounts}
@@ -182,18 +183,13 @@ export function ReportsPrint({
         />
       </PrintSection>
 
-      <PrintSection title="Complaints">
-        <ComplaintBreakdown
-          rows={data.complaintCounts}
-          empty="No clinic visits were recorded this month."
-        />
-      </PrintSection>
-
       <PrintSection title="Visits by sex">
         <VisitsBySexPrint bySex={data.visitsBySex} />
       </PrintSection>
 
-      <PrintSection title="Complaints by week">
+      {/* One complaints table only (Zean, November 5, 2026): "Complaints" repeated these counts; the weekly
+          table's Total column gives them, and the full breakdown is the Complaint summary report. */}
+      <PrintSection title={`${SYMPTOMS} by week`}>
         <WeeklyComplaintsPrint weekly={data.weeklyComplaints} />
       </PrintSection>
 

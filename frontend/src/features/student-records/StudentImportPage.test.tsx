@@ -6,7 +6,7 @@ import { applyStudentImport, getRecordedAuditEntries, listStudents, previewStude
 import { db } from '../../lib/mock-db/store'
 import { guessMapping, mapRows, missingImportFields, parseCsv, type ImportRow } from '../../lib/studentImport'
 import { renderWithRouter } from '../../test/renderWithRouter'
-import SAMPLE from '../../test/fixtures/student-list-sample.csv?raw'
+import SAMPLE from '../../../sample-data/student-list-sample.csv?raw'
 import { StudentImportPage } from './StudentImportPage'
 
 const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
@@ -55,6 +55,8 @@ describe('student list import (ADR-047)', () => {
     const result = await applyStudentImport(sampleRows(), { fileName: 'list.csv', archiveIds: [first.id], actor: STAFF })
     expect(result).toEqual({ created: 2, updated: 0, archived: 1, flagged: 0 })
     expect(db().students.find((student) => student.id === first.id)?.archived).toBe(true)
+    // The Archive page files it under the school year of the import, with its reason (professor's consultation, November 6, 2026).
+    expect(db().students.find((student) => student.id === first.id)).toMatchObject({ archiveReason: 'Not on the new list', archivedSchoolYear: expect.stringMatching(/^\d{4}–\d{4}$/), archivedAt: expect.any(String) })
     expect(db().students.find((student) => student.id === second.id)?.archived).toBe(false)
     expect(db().frontendOnly.studentImportBatches).toHaveLength(1)
     const entry = getRecordedAuditEntries().at(-1)!

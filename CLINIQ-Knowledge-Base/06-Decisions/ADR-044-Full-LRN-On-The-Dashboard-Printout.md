@@ -1,3 +1,5 @@
+> **Note, Saturday, November 07, 2026 — 11:54 PHT:** Zean, in chat: "censor LRN in audit log", then "only show in audit log print". The Audit Log screen now shows the masked LRN through `<Lrn>`; only its printout shows the full LRN. Still never the name. Session: [2026-11-07-audit-log-masked-lrn](../08-Logs/Agent-Sessions/2026-11-07-audit-log-masked-lrn.md)
+
 > **Note, Tuesday, November 03, 2026 — 19:49 PHT:** Zean, frontend review round 2, R33: "display it", to the question of what the Audit Log should show for a student (the groupmate said the LRN is still hidden). The Audit Log screen and its printout now show the full LRN ("LRN 000000250032") for a student-related record, never the name. This widens where the full LRN appears; lists, pickers, the Dashboard and Reports screens stay masked. Session: [2026-11-03-frontend-review-round-2-part-3](../08-Logs/Agent-Sessions/2026-11-03-frontend-review-round-2-part-3.md)
 
 # ADR-044: Full LRN on the Dashboard printout

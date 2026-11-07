@@ -3,7 +3,6 @@ import {
   getMockToday,
   adjustInventoryStock,
   completeIncidentStageTwo,
-  getIncident,
   saveIncidentStageOne,
   getInventoryItem,
   getMonthlyReport,
@@ -212,10 +211,10 @@ describe('editing a saved visit', () => {
 describe('Adjust Stock', () => {
   beforeEach(() => resetMockDb())
 
-  it('requires a reason, and a note for "Other"', async () => {
+  it('requires a reason; the note is optional, even for "Other" (ADR-068)', async () => {
     await expect(adjustInventoryStock(GAUZE, { change: -1, reason: '' as never })).rejects.toThrow(/reason/)
     await expect(adjustInventoryStock(GAUZE, { change: -1, reason: 'visit_edited' as never })).rejects.toThrow(/reason/)
-    await expect(adjustInventoryStock(GAUZE, { change: -1, reason: 'other', note: ' ' })).rejects.toThrow(/note/)
+    await expect(adjustInventoryStock(GAUZE, { change: -1, reason: 'other', note: ' ' })).resolves.toBeTruthy()
     await expect(adjustInventoryStock(GAUZE, { change: -1, reason: 'other', note: 'Used for demo' })).resolves.toBeTruthy()
   })
 
@@ -252,24 +251,7 @@ describe('Edit Item', () => {
 describe('incident Stage 2', () => {
   beforeEach(() => resetMockDb())
 
-  it('refuses an empty Stage 2: no notes, medicine, notification, referral or reason (panel review IN-3)', async () => {
-    const student = await getStudent('student-0001')
-    const stageOne = await saveIncidentStageOne({ studentId: student.id, complaint: 'Fall injury', vitals: { temperatureC: 36.8 } })
-    await expect(
-      completeIncidentStageTwo({
-        incidentId: stageOne.id,
-        complaint: 'Fall injury',
-        vitals: { temperatureC: 36.8, treatmentNotes: '' },
-        hospitalReferral: null,
-        newParentNotifications: [],
-        followUp: null,
-        itemsGiven: [],
-      }),
-    ).rejects.toThrow(/nothing further was needed or done/i)
-    expect((await getIncident(stageOne.id)).stage).toBe(1)
-  })
-
-  it('accepts no treatment notes and no medicine lines when nothing further was needed', async () => {
+  it('accepts an empty Stage 2: no notes, medicine, notification or referral (ADR-065)', async () => {
     const student = await getStudent('student-0001')
     const stageOne = await saveIncidentStageOne({ studentId: student.id, complaint: 'Fall injury', vitals: { temperatureC: 36.8 } })
 
@@ -281,10 +263,9 @@ describe('incident Stage 2', () => {
       newParentNotifications: [],
       followUp: null,
       itemsGiven: [],
-      noFurtherActionReason: 'Observed only',
     })
 
-    expect(incident).toMatchObject({ stage: 2, itemsGiven: [], vitals: { treatmentNotes: '' }, noFurtherActionReason: 'Observed only' })
+    expect(incident).toMatchObject({ stage: 2, itemsGiven: [], vitals: { treatmentNotes: '' }, noFurtherActionReason: null })
   })
 
   it('dispenses its lines with transactions that reference the incident, and fixes them once complete', async () => {

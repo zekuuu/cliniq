@@ -1,6 +1,8 @@
+import { symptoms } from '../../lib/labels'
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import {
+ 
   BackButton,
   Badge,
   Button,
@@ -185,13 +187,15 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
         <Card>
           <CardHeader title="Report details" icon={<Icon name="clipboardList" />} />
           <CardBody className="flex flex-col gap-4">
+            {/* Two fields per row, so nothing sits alone in a half-empty row (Zean, November 5, 2026). */}
+            <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-2">
             <Input label="Title" required value={title} maxLength={SPORTS_REPORT_TEXT_MAX} error={errors.title} onChange={(event) => setTitle(event.target.value)} />
             <Input
               label="Activity"
               value={activity}
               maxLength={SPORTS_REPORT_TEXT_MAX}
               error={errors.activity}
-              hint="Optional, for example “Palaro 2026, Boys Basketball”."
+              placeholder="e.g. Palaro 2026, Boys Basketball (optional)"
               onChange={(event) => setActivity(event.target.value)}
             />
             <Input
@@ -212,6 +216,7 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
               hint="Visits and incidents in this period are printed."
               onChange={(value) => setLookBack(value === 'school_year' ? 'school_year' : (Number(value) as SportsReportWindow))}
             />
+            </div>
             <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
               <input
                 type="checkbox"
@@ -221,7 +226,7 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
               />
               <span>
                 <span className="block text-sm font-semibold text-text-primary">Include recorded conditions and allergies</span>
-                <span className="block text-xs text-text-secondary">Off unless you tick it. Adds a column with each student's recorded conditions and allergies. Each visit's or incident's complaint prints either way.</span>
+                <span className="block text-xs text-text-secondary">Adds each student's allergies and medical conditions to the printout. Visit and incident {symptoms} always print.</span>
               </span>
             </label>
           </CardBody>
@@ -234,6 +239,7 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
             icon={<Icon name="users" />}
           />
           <CardBody className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 items-start gap-x-3 gap-y-4 sm:grid-cols-2">
             <StudentPicker
               label="Add a student"
               hint="Type a name or LRN, then pick the student. Repeat for each student."
@@ -241,19 +247,20 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
               search={searchSportsReportStudents}
               onSelect={pickStudent}
             />
-            <div className="flex flex-wrap items-end gap-2">
+            <div className="flex items-end gap-2">
               <Select
+                className="min-w-0 flex-1"
                 label="Or add a whole grade level"
                 value={grade}
                 options={(grades ?? []).map((level) => ({ value: level, label: level }))}
                 placeholder="Choose a grade level"
                 error={gradeError}
-                className="w-full sm:w-64"
                 onChange={setGrade}
               />
               <Button type="button" variant="secondary" onClick={() => void askAddGrade()}>
                 Add Grade
               </Button>
+            </div>
             </div>
             <p role="status" className="text-sm text-text-secondary empty:hidden">
               {studentNotice}

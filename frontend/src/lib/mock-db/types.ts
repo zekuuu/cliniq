@@ -68,6 +68,8 @@ export type SeedFollowUp = Replace<FollowUp, SeedPatient & { followUpDate: Relat
 export type SeedInventoryItem = Omit<InventoryItem, 'batches' | 'currentStock' | 'expirationDate'> & {
   currentStock: number
   expirationDate: RelativeDate | null
+  /** A seed-only comment (for example "starter tags, to be confirmed"); dropped on load. */
+  _note?: string
 }
 
 /** `data` is generated on read, so only the request (type + range) is stored. */
@@ -144,6 +146,16 @@ export interface MockDbConfig {
   unusualAgeYears: number
   /** A stock removal of this share of the item on hand needs a written note (panel review IV-7). Starting value, to confirm. */
   largeWriteOffPercent: number
+  /**
+   * The school year's dates (professor's consultation, November 6, 2026): June 15 to April 14 from the
+   * Principal's meeting of October 17, 2026. Staff change them on the Archive page.
+   */
+  schoolYearStartMonth: number
+  schoolYearStartDay: number
+  schoolYearEndMonth: number
+  schoolYearEndDay: number
+  /** The school years Staff started by hand, oldest first (Zean, November 7, 2026). */
+  schoolYearStarts?: Array<{ label: string; startedOn: string; startedBy: string; endedOn?: string; endedBy?: string }>
 }
 
 /**
@@ -199,6 +211,21 @@ export interface DevAccount {
   password: string
   /** Exercises the Force Password Change screen (#2). */
   mustChangePassword: boolean
+  /** Password recovery with an authenticator app (ADR-072); absent until set up. */
+  authenticator?: AuthenticatorRecord | null
+}
+
+/**
+ * MOCK ONLY. The real backend stores the secret ENCRYPTED and the recovery codes hashed with a slow
+ * password hash (bcrypt or argon2), never SHA-256. Here the secret is plain and the codes are SHA-256,
+ * which is enough for a browser-only demo and never leaves this machine.
+ */
+export interface AuthenticatorRecord {
+  /** Base32, 160 bits. Never shown again after setup. */
+  secret: string
+  confirmedAt: string
+  /** SHA-256 hex of each unused recovery code; a used one is removed. */
+  recoveryCodeHashes: string[]
 }
 
 export interface ComplaintType {
@@ -250,6 +277,13 @@ export interface RecordReview<D = ISODate, T = ISODateTime> {
   studentId: string
   importedAt: D
   importedBy: string
+  resolvedByUserId: string | null
+  resolvedAt: T | null
+}
+
+/** ADR-067: who completed an incomplete staff record, and when. No import, so no imported fields. */
+export interface PersonnelReview<T = ISODateTime> {
+  personnelId: string
   resolvedByUserId: string | null
   resolvedAt: T | null
 }
@@ -350,6 +384,8 @@ export interface SeedFrontendOnly {
   incidentComplaintTypes: string[]
   inventoryTransactions: Array<Replace<InventoryTransaction<RelativeDateTime>, SeedPatient>>
   recordReviews: Array<RecordReview<RelativeDate, RelativeDateTime>>
+  /** Empty in the seed: none until a staff record is completed (ADR-067). */
+  personnelReviews: Array<PersonnelReview<RelativeDateTime>>
   excuseLetterApprovals: Array<ExcuseLetterApproval<RelativeDateTime, RelativeDate>>
   peReferrals: Array<PeReferral<RelativeDateTime>>
   issueReports: Array<IssueReport<RelativeDateTime>>
@@ -397,6 +433,7 @@ export interface FrontendOnlyState {
   incidentComplaintTypes: string[]
   inventoryTransactions: InventoryTransaction[]
   recordReviews: RecordReview[]
+  personnelReviews: PersonnelReview[]
   excuseLetterApprovals: ExcuseLetterApproval[]
   peReferrals: PeReferral[]
   issueReports: IssueReport[]

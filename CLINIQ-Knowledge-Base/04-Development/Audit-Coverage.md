@@ -12,15 +12,20 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | What the user does | Action | Target recorded | Summary | Also tested in |
 |---|---|---|---|---|
 | Signs in | `login` | user | — | `lib/mock-db/auth.test.ts` |
-| Signs out | `logout` | — | — | `layouts/AppShell.test.tsx` |
+| Signs out (account menu, then the confirmation) | `logout` | — | — | `layouts/AppShell.test.tsx` |
 | Gets locked out (5 wrong passwords in a row at sign-in; locked 30 minutes) | `login` | user | "Account locked for 30 minutes after 5 wrong passwords (sign-in)" | `features/backup/AccessAndBackup.test.tsx` |
 | Changes their password (first sign-in, or Change Password) | `update` | user | "Changed password" | — |
+| Changes their own name in Edit profile (account menu, ADR-066) | `update` | user | "Changed own name" (never the old or new name) | `lib/mock-db/ownProfile.test.ts`, `layouts/AccountMenu.test.tsx` |
+| Changes or removes their own picture in Edit profile (ADR-066) | `update` | user | "Changed own profile picture" (never image data) | `lib/mock-db/ownProfile.test.ts`, `layouts/AccountMenu.test.tsx` |
 | Admin creates an account | `create` | user | — | `features/user-management/accounts.test.ts` |
 | Admin edits an account (name, username, role, picture) | `update` | user | changed field names | `features/user-management/profilePicture.test.ts` |
 | Admin disables / enables an account | `update` | user | "Disabled account" / "Enabled account" | `features/backup/AccessAndBackup.test.tsx` |
 | Admin resets a password | `update` | user | "Reset password" | `features/user-management/accounts.test.ts` |
+| Sets up, replaces or turns off an authenticator app (ADR-073) | `update` | user | "Set up authenticator", "Replaced authenticator", "Turned off authenticator" | `features/account/Authenticator.test.tsx` |
+| Uses a recovery code, or resets the password with the authenticator (ADR-073) | `update` | user | "Used a recovery code", "Reset password with authenticator" (plus "Changed password"); never a code, secret or password | `features/account/Authenticator.test.tsx` |
+| Changes the school year's dates (ADR-072) | `update` | school-year | "Updated start month and start day" (field names only) | `features/archive/ArchivePage.test.tsx` |
 | Adds / edits a student record | `create` / `update` | student | changed field names ("Updated grade level"; a birthdate change reads "Updated birth date", never the value, ADR-054); a name correction adds "Name corrected; reason: <reason>", never the old or new name. The LRN can't change after creation (Sunday, October 25, 2026) | `features/student-records/StudentFormPage.test.tsx` |
-| Archives a student record | `archive` | student | — | `features/ui-review-regressions.test.tsx` |
+| Archives a student record (a required reason since ADR-072; the entry names no reason) | `archive` | student | — | `features/ui-review-regressions.test.tsx` |
 | Adds / edits a staff record (ADR-043, Staff Form) | `create` / `update` | staff | changed field names ("Updated allergies"); the Staff No. is assigned and never edited | `lib/mock-db/personnel.test.ts` |
 | Archives a staff record (ADR-043) | `archive` | staff | — | `lib/mock-db/personnel.test.ts` |
 | Saves a visit | `submit` | visit | "Late entry" when dated more than 30 minutes earlier | `features/clinic-visits/VisitLogic.test.tsx` |
@@ -32,6 +37,7 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | Approves an excuse letter | `approve` | excuse-letter | — | `features/clinic-visits/ExcuseLetterPage.test.tsx` |
 | Corrects an incident's Additional notes before approval (ADR-049) | `update` | incident-stage-2 | "…; included corrected additional notes" | `features/student-records/RecordsDecisions.test.tsx` |
 | Sets an item's "avoid if allergic to" words (ADR-049) | `update` | inventory | "Updated avoid if allergic to" | `features/student-records/RecordsDecisions.test.tsx` |
+| Sets an item's "Commonly used for" symptoms (ADR-071) | `update` | inventory | "Updated commonly used for" (field name only, never the symptoms) | `features/clinic-visits/SuggestedMedicines.test.tsx` |
 | "Save and approve now" on a visit (ADR-049) | `submit` / `update` + `approve` | visit + excuse-letter | — | `features/clinic-visits/LettersAndVisitsDecisions.test.tsx` |
 | Issues a replacement letter | `update` | excuse-letter | "Superseded; replacement draft opened" | `features/clinic-visits/ExcuseLettersAndFollowUps.test.tsx` |
 | Creates a follow-up (from a visit or incident) | `create` | follow-up | — | `features/clinic-visits/NewVisitEntryPage.test.tsx` |

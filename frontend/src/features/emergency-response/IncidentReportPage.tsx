@@ -1,10 +1,11 @@
+import { SYMPTOM } from '../../lib/labels'
 import { useState, type ReactNode } from 'react'
 import { capitalize, contactNoun, NOTIFIED_PARTY, PATIENT_KIND_LABELS, patientGroup, patientIdText } from '../../lib/patients'
 import { BackButton, Badge, Button, Card, CardBody, CardHeader, EmergencyContactList, ErrorState, Icon, Modal, PrintDocument, PrintFields, PrintButton, PrintSection, PrintSignatures, PrintTable, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
 import { formatDateTime } from '../../lib/dates'
-import { formatItemGiven, incidentCareSummary, incidentCompletionBlocker } from '../../lib/itemsGiven'
+import { formatItemGiven, incidentCareSummary } from '../../lib/itemsGiven'
 import { getMockSessionUser, ROLE_LABELS, type SessionUser } from '../../lib/mock-db'
 import { READING_LABELS, readingText, takenReadings } from '../../lib/vitals'
 import { approveReport, fetchIncidentRecord, type IncidentRecord } from './api/incidentRecordApi'
@@ -41,7 +42,7 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
               { label: PATIENT_KIND_LABELS[student.kind], value: `${student.fullName} · ${patientIdText(student)}` },
               patientGroup(student),
               { label: 'Date and time', value: formatDateTime(incident.time) },
-              { label: 'Complaint', value: incident.complaint },
+              { label: SYMPTOM, value: incident.complaint },
               { label: 'Record status', value: incident.stage === 1 ? 'Stage 1, needs completion' : 'Stage 2, complete' },
               { label: 'Sign-off', value: approved ? 'Approved' : 'Pending sign-off' },
               ...(incident.bodyPart ? [{ label: 'Body part affected', value: incident.bodyPart }] : []),
@@ -173,9 +174,9 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
   const { incident, student, options, approved } = data
   const referral = incident.hospitalReferral
   const hasTreatment = incidentCareSummary(incident) !== 'No treatment recorded'
-  // Panel review IN-3: an empty record can't be signed off.
-  // Only a completed (Stage 2) record can be signed off; then it also needs care, a call or a referral.
-  const approvalBlocker = approved ? null : incident.stage === 1 ? 'Complete Stage 2 before approving this report.' : incidentCompletionBlocker(incident)
+  // Only a completed (Stage 2) record can be signed off. An empty one can be (ADR-065); the note below
+  // asks the approver to check it.
+  const approvalBlocker = approved ? null : incident.stage === 1 ? 'Complete Stage 2 before approving this report.' : null
 
   async function approve() {
     setApproving(true)
@@ -242,7 +243,7 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
           <dl className="grid gap-4 sm:grid-cols-2">
             <Field label={PATIENT_KIND_LABELS[student.kind]}><span className="font-semibold">{student.fullName} · {patientIdText(student)}</span></Field>
             <Field label="Recorded">{formatDateTime(incident.time)}</Field>
-            <Field label="Complaint">{incident.complaint}</Field>
+            <Field label={SYMPTOM}>{incident.complaint}</Field>
             {incident.bodyPart && <Field label="Body part affected">{incident.bodyPart}</Field>}
             <Field label="Sign-off">{approved ? 'Approved' : 'Pending sign-off'}</Field>
             {incident.generalNotes && (

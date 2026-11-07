@@ -21,15 +21,15 @@ describe('Audit Log', () => {
     expect(within(table).queryByRole('columnheader', { name: 'Actions' })).not.toBeInTheDocument()
     expect(screen.getByText(/Showing 1–10 of/)).toBeInTheDocument()
 
-    // The two seeded student archives: the newer one (student-0009) comes first, by full LRN and never the name (review round 2, R33).
+    // The two seeded student archives: the newer one (student-0009) comes first, by masked LRN and never the name (Zean, November 7, 2026; was the full LRN, R33).
     await user.click(screen.getByRole('button', { name: /action type all actions/i }))
     await user.click(screen.getByRole('checkbox', { name: 'Archive' }))
     await user.click(screen.getByRole('button', { name: /action type 1 selected/i }))
     await screen.findByText(/2 entries shown/)
     const [filtered] = screen.getAllByRole('table', { name: 'Filtered audit log' })
     const student = (await getStudent('student-0009'))
-    expect(within(filtered).getAllByRole('row')[1]).toHaveTextContent(`LRN ${student.lrn}`)
-    expect(within(filtered).getAllByRole('row')[1]).not.toHaveTextContent(maskLrn(student.lrn))
+    expect(within(filtered).getAllByRole('row')[1]).toHaveTextContent(`LRN ${maskLrn(student.lrn)}`)
+    expect(within(filtered).getAllByRole('row')[1]).not.toHaveTextContent(student.lrn)
     expect(within(filtered).getAllByRole('row')[1]).not.toHaveTextContent(student.fullName)
   })
 
@@ -73,7 +73,7 @@ describe('Audit Log', () => {
     expect(screen.getAllByText('Updated allergies').length).toBeGreaterThan(0)
     const [filtered] = screen.getAllByRole('table', { name: 'Filtered audit log' })
     expect(within(filtered).getAllByText('Student').length).toBeGreaterThan(0)
-    expect(within(filtered).getAllByRole('link', { name: /^LRN \d{12}$/ }).length).toBeGreaterThan(0)
+    expect(within(filtered).getAllByRole('link', { name: /^LRN ending in \d{4}$/ }).length).toBeGreaterThan(0)
   })
 
   it('filters action types through the multi-select control', async () => {
@@ -110,7 +110,7 @@ describe('Audit Log', () => {
     renderPage()
     await screen.findByRole('table', { name: 'Filtered audit log' })
 
-    await user.click(screen.getByRole('button', { name: 'Next' }))
+    await user.click(screen.getByRole('button', { name: 'Next page' }))
 
     expect(screen.getByText('Page 2 of 3')).toBeInTheDocument()
     expect(screen.getByText(/Showing 11–20 of/)).toBeInTheDocument()
@@ -128,7 +128,7 @@ describe('Audit Log', () => {
 
     await selectOption(user, screen.getByLabelText('User'), 'user-admin-01')
     await screen.findByText(/7 entries shown/)
-    expect(screen.queryByRole('textbox', { name: 'Page number' })).not.toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Page number' })).toHaveValue('1')
     expect(screen.getByText('Page 1 of 1')).toBeInTheDocument()
   })
 
@@ -137,7 +137,7 @@ describe('Audit Log', () => {
     renderPage()
     await screen.findByRole('table', { name: 'Filtered audit log' })
 
-    await user.click(screen.getByRole('button', { name: 'Next' }))
+    await user.click(screen.getByRole('button', { name: 'Next page' }))
     expect(screen.getByText('Page 2 of 3')).toBeInTheDocument()
 
     await selectOption(user, screen.getByLabelText('User'), 'user-admin-01')

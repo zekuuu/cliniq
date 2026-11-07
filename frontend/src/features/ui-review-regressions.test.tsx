@@ -11,7 +11,6 @@ vi.mock('react-chartjs-2', () => {
 })
 import { renderWithRouter } from '../test/renderWithRouter'
 import { selectOption } from '../test/selectOption'
-import { incidentCompletionBlocker } from '../lib/itemsGiven'
 import { getGradeLevels, getMockToday, getStudent, listIncidents, listVisits, resetMockDb } from '../lib/mock-db'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
 import { IncidentReportPage } from './emergency-response/IncidentReportPage'
@@ -40,17 +39,22 @@ describe('UI/UX review regressions', () => {
     const dialog = screen.getByRole('dialog', { name: 'Archive this student record?' })
     expect(recordedWrites()).toEqual([])
 
+    // The reason is required: without it nothing is archived.
+    await user.click(within(dialog).getByRole('button', { name: 'Archive Record' }))
+    expect(within(dialog).getByText('Choose the reason for archiving.')).toBeInTheDocument()
+    expect(recordedWrites()).toEqual([])
+    await selectOption(user, within(dialog).getByLabelText(/^Reason/), 'Transferred')
     await user.click(within(dialog).getByRole('button', { name: 'Archive Record' }))
     expect(await screen.findByText('Archived')).toBeInTheDocument()
-    expect((await getStudent('student-0001')).archived).toBe(true)
+    expect(await getStudent('student-0001')).toMatchObject({ archived: true, archiveReason: 'Transferred', archivedSchoolYear: expect.stringMatching(/^\d{4}–\d{4}$/) })
     expect(recordedWrites().map((entry) => entry.actionType)).toEqual(['archive'])
     expect(screen.queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument()
   })
 
   it('labels incident vitals in plain language and confirms report approval', async () => {
     const user = userEvent.setup()
-    // Panel review IN-3: only a record with care, a notification or a referral can be approved.
-    const incident = (await listIncidents()).find((item) => !incidentCompletionBlocker(item))!
+    // Only a completed (Stage 2) record can be approved.
+    const incident = (await listIncidents()).find((item) => item.stage === 2)!
     renderWithRouter(<IncidentReportPage incidentId={incident.id} />)
 
     await screen.findByRole('heading', { name: 'Incident Report' })
@@ -98,7 +102,7 @@ describe('UI/UX review regressions', () => {
 
     expect(await screen.findByText(`${total} records shown`)).toBeInTheDocument()
     expect(screen.getByText(`Showing 1–10 of ${total} visits`)).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Next' }))
+    await user.click(screen.getByRole('button', { name: 'Next page' }))
     expect(screen.getByText(`Showing 11–20 of ${total} visits`)).toBeInTheDocument()
     await user.type(screen.getByLabelText('Search'), '00000026')
     expect(await screen.findByText(/^Showing 1–/)).toBeInTheDocument()
@@ -220,7 +224,7 @@ describe('UI/UX review Group B decisions', () => {
 
     await screen.findByRole('heading', { name: 'New Visit' })
     expect(screen.getByText(/not identified yet/i)).toBeInTheDocument()
-    await selectOption(user, screen.getByLabelText(/^complaint/i), 'Headache')
+    await selectOption(user, screen.getByLabelText(/^symptom/i), 'Headache')
     await user.type(screen.getByLabelText(/treatment/i), 'Rested in clinic.')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
     expect(screen.getByText(/choose the student/i)).toBeInTheDocument()
@@ -260,7 +264,8 @@ describe('UI/UX review Group B decisions', () => {
 
     const table = await screen.findByRole('table', { name: 'Filtered audit log' })
     expect(table.textContent).not.toMatch(/\b(visit|incident|item|student|user|followup)-(staff-|admin-)?\d{2,4}\b/)
-    // Students appear by full LRN (review round 2, R33).
-    expect(table.textContent).toMatch(/(Visit|Incident)LRN \d{12}/)
+    // Students appear by masked LRN on screen, never the full digits (Zean, November 7, 2026; was full, R33).
+    expect(table.textContent).toMatch(/(Visit|Incident)LRN ••••••••\d{4}/)
+    expect(table.textContent).not.toMatch(/LRN \d{12}/)
   })
 })

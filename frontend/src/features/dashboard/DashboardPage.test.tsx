@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { renderWithRouter } from '../../test/renderWithRouter'
@@ -22,7 +22,7 @@ describe('Clinic Overview Dashboard', () => {
     renderWithRouter(<DashboardPage />)
     const summary = await screen.findByRole('region', { name: 'Summary counts' })
     // Action cards first, then the totals (R2).
-    const order = ['Unfinished incident records', 'Follow-ups to review', 'Pending excuse letters', 'Clinic visits', 'Incidents', 'Active students']
+    const order = ['Pending excuse letters', 'Unfinished incident records', 'Follow-ups to review', 'Active students', 'Clinic visits', 'Incidents']
     const label = (text: string) => within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === text)
     expect(within(summary).getAllByText((_, element) => element?.tagName === 'P' && order.includes(element.textContent ?? '')).map((p) => p.textContent)).toEqual(order)
     // One colour per meaning (ADR-062).
@@ -53,24 +53,11 @@ describe('Clinic Overview Dashboard', () => {
     expect(list()).toHaveLength(5)
   })
 
-  it.each([false, true])('prints the Frequent-visitor section only with the switch on (%s)', async (on) => {
+  it.each([false, true])('shows the Frequent-visitor section only with the switch on (%s)', async (on) => {
     db().config.showFrequentVisitors = on
     renderWithRouter(<DashboardPage />)
     await screen.findByRole('region', { name: 'Summary counts' })
     expect(Boolean(screen.queryByRole('heading', { name: /frequent-visitor warnings/i }))).toBe(on)
-    // The print listener is attached in an effect, so retry until the printout mounts.
-    await waitFor(() => {
-      act(() => {
-        window.dispatchEvent(new Event('beforeprint'))
-      })
-      expect(document.body.querySelector('[data-print-document]')?.textContent).toMatch(/Clinic Overview/)
-    })
-    const doc = document.body.querySelector('[data-print-document]')
-    expect(doc?.textContent?.includes('Frequent visitors')).toBe(on)
-    expect(doc?.textContent?.includes('and frequent visitors')).toBe(on)
-    act(() => {
-      window.dispatchEvent(new Event('afterprint'))
-    })
   })
 
   it('drills Staff into range-aware logs and attention filters', async () => {
@@ -106,7 +93,7 @@ describe('Clinic Overview Dashboard', () => {
     expect(within(summary).getAllByRole('link').filter((link) => !link.textContent?.includes('View full report'))).toHaveLength(2)
     expect(within(summary).queryByRole('link', { name: /visits|follow-ups|letters/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /low stock/i })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /print/i })).toHaveAttribute('aria-disabled', 'true')
-    expect(screen.getByText('Printing is done by the clinician.')).toBeInTheDocument()
+    // No print on the Dashboard for anyone (ADR-070); the Admin's Reports Print stays disabled (ADR-038).
+    expect(screen.queryByRole('button', { name: /print/i })).not.toBeInTheDocument()
   })
 })

@@ -10,6 +10,9 @@ import type { Student } from '../types/entities'
  * `find` is the feature's own lookup (its `api/` module), so this hook stays free of data access.
  * `K` is what a pick hands it: a student id, or a patient search result.
  */
+/** The inline message when no student is chosen. */
+export const CHOOSE_STUDENT_MESSAGE = 'Choose the student: type the LRN or name, then pick from the list.'
+
 export function useIdentifiedStudent<T = Student, K = string>(
   /** A reopened incident's patient; may arrive once the form's data has loaded. */
   preselected: T | null | undefined,
@@ -23,9 +26,7 @@ export function useIdentifiedStudent<T = Student, K = string>(
     student,
     error,
     /** Inline check, run with the rest of the form's validation. */
-    validate(
-      message = 'Choose the student: type the LRN or name, then pick from the list.',
-    ): boolean {
+    validate(message = CHOOSE_STUDENT_MESSAGE): boolean {
       if (student) return true
       setError(message)
       return false

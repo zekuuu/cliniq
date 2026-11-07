@@ -54,6 +54,8 @@ const paths = {
   chevronDown: <path d="m6 9 6 6 6-6" />,
   chevronLeft: <path d="m15 18-6-6 6-6" />,
   chevronRight: <path d="m9 18 6-6-6-6" />,
+  chevronsLeft: <path d="m11 17-5-5 5-5m7 10-5-5 5-5" />,
+  chevronsRight: <path d="m6 17 5-5-5-5m7 10 5-5-5-5" />,
   clipboardList: (
     <>
       <rect x="8" y="2" width="8" height="4" rx="1" />
@@ -74,6 +76,14 @@ const paths = {
       <path d="m21 3-9 9M15 3h6v6" />
     </>
   ),
+  flag: <path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528" />,
+  keyboard: (
+    <>
+      <path d="M10 8h.01M12 12h.01M14 8h.01M16 12h.01M18 8h.01M6 8h.01M7 16h10M8 12h.01" />
+      <rect width="20" height="16" x="2" y="4" rx="2" />
+    </>
+  ),
+  folder: <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />,
   fileText: (
     <>
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />

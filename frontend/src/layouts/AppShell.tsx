@@ -7,11 +7,16 @@ import { Button, Modal } from '../components'
 import { cn } from '../lib/cn'
 import { ADMIN_PRINT_NOTE } from '../components'
 import { canPrint } from '../hooks/usePrinting'
-import { getAdminIdleMinutes, logoutMockSession, ROLE_LABELS, type SessionUser } from '../lib/mock-db'
+import { getAdminIdleMinutes, getOwnAccount, logoutMockSession, type SessionUser } from '../lib/mock-db'
 import { showKeyboardShortcuts } from '../lib/shortcuts'
+import { ACCOUNT_CHANGED_EVENT } from '../lib/accountEvents'
 import { BrandLogo, Sidebar } from './Sidebar'
 import { navGroupsFor, type NavKey } from './navigation'
 import { ReportIssueModal } from '../features/issue-reports/ReportIssueModal'
+import { EditProfileDialog } from '../features/account/EditProfileDialog'
+import { AuthenticatorDialog } from '../features/account/AuthenticatorDialog'
+import { getAuthenticatorStatus } from '../lib/mock-db'
+import { AccountMenu } from './AccountMenu'
 import { paths } from '../routes/paths'
 
 /**
@@ -58,6 +63,13 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const [isReportIssueOpen, setIsReportIssueOpen] = useState(false)
   const [reportIssueNotice, setReportIssueNotice] = useState<string | null>(null)
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [isAuthenticatorOpen, setIsAuthenticatorOpen] = useState(false)
+  const [authenticatorVersion, setAuthenticatorVersion] = useState(0)
+  const authenticator = useAsyncData(`authenticator-status|${user.id}|${authenticatorVersion}`, getAuthenticatorStatus)
+  // Bumped after Edit profile saves, so the menu reads the account again (ADR-066).
+  const [accountVersion, setAccountVersion] = useState(0)
+  const { data: account } = useAsyncData(`own-account|${user.id}|${accountVersion}`, () => getOwnAccount())
   const navGroups = navGroupsFor(user.role)
   const printBlocked = !canPrint(user)
   // ADR-048: only the Admin is signed out after `config.adminIdleMinutes` without activity.
@@ -138,39 +150,20 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
             <BrandLogo compact />
           </div>
           <LiveClock />
-          <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-2.5">
-            {/* Keyboard help belongs to the desktop workstation; it has no use on a touch screen. */}
-            <button
-              type="button"
-              aria-label="Show keyboard shortcuts"
-              onClick={showKeyboardShortcuts}
-              className="mr-1 hidden h-8 cursor-pointer items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none md:inline-flex"
-            >
-              Shortcuts
-            </button>
-            <span
-              aria-hidden="true"
-              className="flex size-9 items-center justify-center rounded-full bg-brand-green-light text-xs font-bold text-text-primary ring-2 ring-background"
-            >
-              <Icon name="user" size={20} />
-            </span>
-            <span className="hidden flex-col leading-tight sm:flex">
-              <span className="text-sm font-semibold text-text-primary">{user.name}</span>
-              <span className="text-xs text-text-secondary">{ROLE_LABELS[user.role]}</span>
-            </span>
-            <Link to={paths.changePassword} aria-label="Change password" title="Change password" className="inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-sm text-text-secondary transition-colors hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green">
-              <Icon name="lock" />
-            </Link>
-            <button
-              type="button"
-              aria-label={isLoggingOut ? 'Signing out' : 'Sign out'}
-              title="Sign out"
-              disabled={isLoggingOut}
-              onClick={() => setIsConfirmingSignOut(true)}
-              className="ml-4 inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-sm text-error transition-[filter] hover:brightness-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100 motion-reduce:transition-none"
-            >
-              <Icon name="logout" />
-            </button>
+          {/* The avatar, name and role are one button that opens the account menu (ADR-066): Edit profile,
+              Change password, Keyboard shortcuts, Report an issue, Privacy Policy and Sign out. */}
+          <div className="ml-auto flex shrink-0 items-center">
+            <AccountMenu
+              user={user}
+              account={account ?? null}
+              signingOut={isLoggingOut}
+              onEditProfile={() => setIsEditingProfile(true)}
+              onAuthenticator={() => setIsAuthenticatorOpen(true)}
+              authenticatorEnabled={authenticator.data?.enabled ?? false}
+              onShortcuts={showKeyboardShortcuts}
+              onReportIssue={openReportIssue}
+              onSignOut={() => setIsConfirmingSignOut(true)}
+            />
           </div>
         </header>
         <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 focus:outline-none">
@@ -253,6 +246,24 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
           <Button variant="primary" data-autofocus>Stay signed in</Button>
         </div>
       </Modal>
+      <AuthenticatorDialog
+        open={isAuthenticatorOpen}
+        viewer={user}
+        onClose={() => setIsAuthenticatorOpen(false)}
+        onChanged={() => setAuthenticatorVersion((version) => version + 1)}
+      />
+      <EditProfileDialog
+        open={isEditingProfile}
+        account={account ?? null}
+        onClose={() => setIsEditingProfile(false)}
+        onSaved={() => {
+          setIsEditingProfile(false)
+          setAccountVersion((version) => version + 1)
+          setReportIssueNotice('Profile updated.')
+          // App reads the signed-in user again, so every place that shows the name updates at once.
+          window.dispatchEvent(new CustomEvent(ACCOUNT_CHANGED_EVENT))
+        }}
+      />
       <ReportIssueModal
         open={isReportIssueOpen}
         user={user}

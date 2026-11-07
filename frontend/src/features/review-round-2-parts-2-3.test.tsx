@@ -217,7 +217,7 @@ describe('R19: the staff department or role, from those in use', () => {
     const field = await screen.findByRole('combobox', { name: /^Department or role/ })
     await user.type(field, 'g')
     const options = screen.getAllByRole('option').map((option) => option.textContent)
-    expect(options).toEqual(['Grade 4 adviser', 'Grade 9 adviser', 'Grounds', 'Other (specify)'])
+    expect(options).toEqual(['Other (specify)', 'Grade 4 adviser', 'Grade 9 adviser', 'Grounds'])
     await user.click(screen.getByRole('option', { name: 'Grounds' }))
     expect(field).toHaveValue('Grounds')
     await user.clear(field)
@@ -261,8 +261,8 @@ describe('R22: the Staff chip is grey, so it stands apart from Student', () => {
   })
 })
 
-describe('R23: Cancel on a half-filled notification attempt', () => {
-  it.each([['the Cancel button'], ['Escape']])('discards it with %s, logging nothing', async (how) => {
+describe('R23: Escape on a half-filled notification attempt', () => {
+  it.each([['Escape']])('discards it with %s, logging nothing', async (how) => {
     resetMockDb()
     const user = userEvent.setup({ delay: null })
     renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
@@ -270,30 +270,26 @@ describe('R23: Cancel on a half-filled notification attempt', () => {
     await selectOption(user, screen.getByLabelText('Outcome'), 'No answer')
     await user.type(screen.getByLabelText('Attempt note'), 'Line busy')
     if (how === 'Escape') await user.keyboard('{Escape}')
-    else await user.click(screen.getByRole('button', { name: 'Cancel attempt' }))
     expect(screen.getByLabelText('Attempt note')).toHaveValue('')
     expect(screen.getByLabelText('Outcome')).toHaveTextContent('Reached')
     expect(screen.queryByText('No answer', { selector: 'li *' })).not.toBeInTheDocument()
   })
 })
 
-describe('R24: "Nothing further was needed or done" asks for its reason plainly', () => {
-  it('shows the reason right under the box, focuses it, and says what Complete is waiting for', async () => {
+describe('An added notification attempt can be removed before Complete Incident (Zean, November 5, 2026)', () => {
+  it('shows an X on each added attempt that takes it off the list, and the Cancel button is gone', async () => {
     resetMockDb()
     const user = userEvent.setup({ delay: null })
     renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
     await screen.findByRole('heading', { name: 'Complete Incident Record' })
-    await user.click(screen.getByRole('checkbox', { name: /Nothing further was needed or done/ }))
-    const reason = screen.getByRole('textbox', { name: /^Why was nothing further needed\? \(one line, required\)/ })
-    expect(reason).toHaveFocus()
-    const complete = screen.getByRole('button', { name: 'Complete Incident' })
-    expect(complete).toHaveAccessibleDescription('Write one line on why nothing further was needed.')
-    await user.click(complete)
-    expect(reason).toHaveAccessibleDescription(/Write one line on why nothing further was needed\./)
-    await user.type(reason, 'Felt better after resting; no care given.')
-    expect(complete).not.toHaveAccessibleDescription(/Write one line/)
-    await user.click(complete)
-    expect(await screen.findByText(/incident completed/i)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Cancel attempt' })).not.toBeInTheDocument()
+    await selectOption(user, screen.getByLabelText('Outcome'), 'No answer')
+    await user.type(screen.getByLabelText('Attempt note'), 'Line busy')
+    await user.click(screen.getByRole('button', { name: 'Add Attempt' }))
+    const remove = await screen.findByRole('button', { name: /^Remove attempt: No answer at / })
+    await user.click(remove)
+    expect(screen.queryByRole('button', { name: /^Remove attempt/ })).not.toBeInTheDocument()
+    expect(screen.getByText('No notification attempts added yet.')).toBeInTheDocument()
   })
 })
 
@@ -317,7 +313,7 @@ describe('R26: the Inventory list is paged', () => {
     const total = (await listInventory()).length
     expect(total).toBeGreaterThan(10)
     expect(within(table).getAllByRole('row')).toHaveLength(11)
-    await user.click(screen.getByRole('button', { name: 'Next' }))
+    await user.click(screen.getByRole('button', { name: 'Next page' }))
     expect(within(screen.getByRole('table', { name: 'Inventory items' })).getAllByRole('row')).toHaveLength(total - 10 + 1)
     await user.type(screen.getByLabelText('Search'), 'para')
     expect(await screen.findByText('Page 1 of 1')).toBeInTheDocument()
@@ -363,23 +359,24 @@ describe('R29 and R30: complaint figures print once', () => {
     return document.body.querySelector<HTMLElement>('[data-print-document]')!
   }
 
-  it('prints the Monthly Report complaints as the table only, and the weekly table once', async () => {
+  // Zean, November 5, 2026: R29 dropped the chart but left two complaint tables; only the weekly one stays.
+  it('prints the Monthly Report complaints once, as the weekly table only', async () => {
     const doc = await printReport('Monthly Report')
     expect(within(doc).queryByRole('figure')).not.toBeInTheDocument()
-    expect(within(doc).getByRole('table', { name: 'Clinic visits by complaint, with share' })).toBeInTheDocument()
-    expect(within(doc).getAllByRole('table', { name: 'Clinic visits by complaint and week' })).toHaveLength(1)
+    expect(within(doc).queryByRole('table', { name: 'Clinic visits by symptom, with share' })).not.toBeInTheDocument()
+    expect(within(doc).getAllByRole('table', { name: 'Clinic visits by symptom and week' })).toHaveLength(1)
     act(() => {
       window.dispatchEvent(new Event('afterprint'))
     })
   })
 
   it('prints the Complaint Summary chart above its table, not side by side, and no weekly table', async () => {
-    const doc = await printReport('Complaint summary')
+    const doc = await printReport('Symptom summary')
     const figure = within(doc).getByRole('figure')
-    const table = within(doc).getByRole('table', { name: 'Clinic visits by complaint, with share' })
+    const table = within(doc).getByRole('table', { name: 'Clinic visits by symptom, with share' })
     expect(figure.parentElement!.className).not.toMatch(/grid-cols-2/)
     expect(figure.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(within(doc).queryByRole('table', { name: 'Clinic visits by complaint and week' })).not.toBeInTheDocument()
+    expect(within(doc).queryByRole('table', { name: 'Clinic visits by symptom and week' })).not.toBeInTheDocument()
     act(() => {
       window.dispatchEvent(new Event('afterprint'))
     })
@@ -398,7 +395,7 @@ describe('R31: "Include recorded conditions and allergies" switched off on Edit'
     render(<MemoryRouter initialEntries={[`/reports/sports/${report.id}/edit`]}><AppRoutes user={STAFF} onLogout={() => {}} /></MemoryRouter>)
     const box = await screen.findByRole('checkbox', { name: /Include recorded conditions and allergies/ }, { timeout: 5000 })
     expect(box).toBeChecked()
-    expect(screen.getByText(/complaint prints either way/)).toBeInTheDocument()
+    expect(screen.getByText(/symptoms always print/)).toBeInTheDocument()
     await user.click(box)
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     const page = await screen.findByRole('table', { name: 'Sports Report preview' }, { timeout: 5000 })

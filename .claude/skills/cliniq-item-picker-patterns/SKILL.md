@@ -15,6 +15,7 @@ Use this with `cliniq-dropdown-patterns` (the panel look), `cliniq-input-pattern
 - **Nearing-expiry items stay pickable**, with a warning badge ("Expires in 11d"). Items with no expiration date are always pickable.
 - It's an "add" control: picking calls `onPick` and clears the search, ready for the next item. For a single-item form (Dispense), show the picked item in place of the picker with a bare remove icon to change it.
 - The panel uses the shared dropdown surface and `placeDropdownPanel` from `components/ui/dropdownClassName.ts`, so it pins to the field in viewport coordinates like `Select`.
+- **Suggested medicines (ADR-071, Zean, Saturday, November 7, 2026 — 04:18 PHT).** Pass the visit's chosen symptoms as `symptoms` (New Visit, Visit Details edit). Items whose "Commonly used for" tags (`usedFor`) match come first under **Suggested for these symptoms**, with the note "Suggestions come from the tags set on each item. The clinician decides." The rest sit behind a last option row, **Show all medicines (N more)**, collapsed by default and opened by click or Enter (it then reads "Show suggested only"). Typing always searches every item. A suggestion never hides, disables or blocks an item, and stock, expiry and allergy warnings stay exactly as above. With no symptom, or no tagged match, the list is the plain Medicines/Supplies one.
 
 ## The lines (`ItemsGivenField`)
 

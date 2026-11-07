@@ -221,9 +221,26 @@ export function Combobox<T>({
             invalid: Boolean(error),
             className:
               // No chevron: it would promise a list the field may not have yet (StudentPicker lists nothing on focus).
-              cn('w-full cursor-text pr-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green', icon && 'pl-9!'),
+              cn('w-full cursor-text pr-9 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green', icon && 'pl-9!'),
           })}
         />
+        {/* Clears the text, like every text field (Zean, November 5, 2026). */}
+        {value && (
+          <button
+            type="button"
+            aria-label="Clear"
+            aria-controls={inputId}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => {
+              onValueChange('')
+              setOpen(false)
+              inputRef.current?.focus()
+            }}
+            className="absolute top-1/2 right-2 inline-flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-sm text-text-secondary transition-colors hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
+          >
+            <Icon name="x" size={16} />
+          </button>
+        )}
         {showPanel && (
           <div ref={panelRef} className={cn(DROPDOWN_PANEL, 'fixed overflow-y-auto scrollbar-thin')}>
             <div id={listboxId} role="listbox" aria-label={ariaLabel ?? label}>

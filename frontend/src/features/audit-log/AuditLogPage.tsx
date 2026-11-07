@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Lrn } from '../../components/ui/MaskedLrn'
 import {
   Button,
   Card,
@@ -26,6 +27,7 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { describeRange, rangeForPreset, type DateRange } from '../../lib/dateRange'
 import { formatDateRange, formatDateTime, todayISO } from '../../lib/dates'
+import type { ISODate } from '../../types/entities'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import { ROLE_LABELS, auditTargetTypes, type AuditLogRow, type AuditTargetType, type SessionUser } from '../../lib/mock-db'
 import type { AuditActionType } from '../../types/entities'
@@ -73,6 +75,7 @@ const targetLabels: Record<AuditTargetType, string> = {
   'sports-report': 'Sports Report',
   staff: 'Staff',
   'backup-location': 'Backup location',
+  'school-year': 'School year',
 }
 
 interface AuditLogFilters {
@@ -129,8 +132,8 @@ function recordCell(row: AuditLogRow, viewer: SessionUser) {
   if (!row.target) return <span className="text-text-secondary">No record</span>
   const path = targetPath(row, viewer)
   if (!row.target.label) return path ? <ListItemLink to={path}>View<span className="sr-only"> {row.target.kind}</span></ListItemLink> : emptyCell
-  // A student-related record shows its full LRN (review round 2, R33), never the name.
-  const label = row.target.studentId ? `LRN ${row.target.label}` : row.target.label
+  // A student-related record shows its masked LRN on screen, never the name; only the printout shows it in full (Zean, November 7, 2026; was full on both, R33).
+  const label = row.target.studentId ? <><span aria-hidden="true">LRN </span><Lrn lrn={row.target.label} /></> : row.target.label
   return path ? <ListItemLink to={path}>{label}</ListItemLink> : label
 }
 
@@ -167,6 +170,7 @@ function AuditLogPrint({ rows, filters, users, viewer }: { rows: AuditLogRow[]; 
           { header: 'Date and time', width: '22%', cell: (row) => formatDateTime(row.dateTime) },
           { header: 'Who', width: '24%', cell: (row) => <>{row.userName}{row.userRole && <span className="block text-[8.5pt] text-text-secondary">{ROLE_LABELS[row.userRole]}</span>}</> },
           { header: 'Action', width: '26%', cell: (row) => <>{actionStatusMap[row.actionType].label}{row.summary && <span className="block text-[8.5pt] text-text-secondary">{row.summary}</span>}</> },
+          // The printout keeps the full LRN; the screen masks it (Zean, November 7, 2026).
           { header: 'Record', cell: (row) => (row.target ? [row.target.kind, row.target.label].filter(Boolean).join(' · ') : 'No record') },
         ]}
       />
@@ -174,8 +178,12 @@ function AuditLogPrint({ rows, filters, users, viewer }: { rows: AuditLogRow[]; 
   )
 }
 
-export function AuditLogPage({ viewer }: { viewer: SessionUser }) {
-  const defaultRange = rangeForPreset('all', todayISO())
+/**
+ * `embedded` (the Archive page's Audit log tab): just the entries card, no page header or printout, and
+ * `range` sets its starting period (a school year). The log itself is never trimmed (ADR-057).
+ */
+export function AuditLogPage({ viewer, embedded = false, range: startRange }: { viewer: SessionUser; embedded?: boolean; range?: { from: ISODate; to: ISODate } }) {
+  const defaultRange: DateRange = startRange ? { preset: 'custom', ...startRange } : rangeForPreset('all', todayISO())
   const [filters, setFilters] = useState<AuditLogFilters>({ search: '', range: defaultRange, userId: '', actionTypes: [], targetTypes: [] })
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = usePageSize()
@@ -234,18 +242,7 @@ export function AuditLogPage({ viewer }: { viewer: SessionUser }) {
     updateFilters({ search: '', range: defaultRange, userId: '', actionTypes: [], targetTypes: [] })
   }
 
-  return (
-    <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
-      <Card className="p-5 print:hidden">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-text-primary">Audit Log</h1>
-            <p className="mt-1 text-sm text-text-secondary">Review accountable system activity. Audit entries are permanent and cannot be edited or deleted.</p>
-          </div>
-          <PrintButton viewer={viewer} />
-        </div>
-      </Card>
-
+  const entries = (
       <Card aria-labelledby="audit-log-title">
         <CardHeader titleId="audit-log-title" title="Audit entries" description={`${sortedRows.length.toLocaleString('en-PH')} entr${sortedRows.length === 1 ? 'y' : 'ies'} shown · ${describeRange(range)}`} icon={<Icon name="clipboardList" />} actions={<Button variant="neutral" onClick={clearFilters} className="print:hidden">Clear Filters</Button>} />
         <CardBody className="flex flex-col gap-4">
@@ -261,6 +258,22 @@ export function AuditLogPage({ viewer }: { viewer: SessionUser }) {
           </div>
         </CardBody>
       </Card>
+  )
+  if (embedded) return entries
+
+  return (
+    <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      <Card className="p-5 print:hidden">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-text-primary">Audit Log</h1>
+            <p className="mt-1 text-sm text-text-secondary">Review accountable system activity. Audit entries are permanent and cannot be edited or deleted.</p>
+          </div>
+          <PrintButton viewer={viewer} />
+        </div>
+      </Card>
+
+      {entries}
       <AuditLogPrint rows={sortedRows} filters={filters} users={data.users} viewer={viewer} />
     </div>
   )

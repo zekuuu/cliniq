@@ -10,6 +10,8 @@ import {
   ComboboxWithOther,
   DatePicker,
   ErrorState,
+  FormSection,
+  FORM_DIVIDER,
   Icon,
   Input,
   MaskedLrn,
@@ -153,22 +155,7 @@ function DuplicateDialog({
   )
 }
 
-/** One titled group of the form; groups after the first sit under a divider. */
-function FormSection({ id, title, description, children }: { id: string; title: string; description: string; children: ReactNode }) {
-  return (
-    <section aria-labelledby={id} className="flex flex-col gap-4 border-t border-border pt-5 first-of-type:border-t-0 first-of-type:pt-0">
-      <div>
-        <h2 id={id} className="text-sm font-bold text-text-primary">
-          {title}
-        </h2>
-        <p className="mt-0.5 text-xs text-text-secondary">{description}</p>
-      </div>
-      {children}
-    </section>
-  )
-}
-
-const RELATIONSHIP_SUGGESTIONS =['Mother', 'Father', 'Guardian', 'Sister or brother', 'Relative']
+const RELATIONSHIP_SUGGESTIONS = ['Mother', 'Father', 'Guardian', 'Sister or brother', 'Relative']
 
 /** Saving needs no contact (ADR-059; the record shows as Incomplete until one is added), but a started one must be complete. */
 function contactStarted(contact: StudentFormValues['emergencyContacts'][number]): boolean {
@@ -197,6 +184,28 @@ function validate(values: StudentFormValues, today: ISODate): StudentFormErrors 
   })
   // Allergies and conditions may be left empty: an empty field reads "None recorded" (ADR-051).
   return errors
+}
+
+const MISSING = 'Missing. Fill this in to complete the record.'
+
+/**
+ * Edit only: the fields an imported record still lacks (the same ones `missingRequiredFields` counts),
+ * marked in red until filled, so Staff who step away and come back see what's left (Zean,
+ * November 5, 2026). Saving never blocks on them (ADR-054).
+ */
+function completionGaps(values: StudentFormValues): StudentFormErrors {
+  const gaps: StudentFormErrors = {}
+  if (!values.firstName.trim()) gaps.firstName = MISSING
+  if (!values.lastName.trim()) gaps.lastName = MISSING
+  if (!values.gradeLevel) gaps.gradeLevel = MISSING
+  if (!values.sex) gaps.sex = MISSING
+  if (!values.birthDate) gaps.birthDate = MISSING
+  values.emergencyContacts.forEach((contact, index) => {
+    if (!contact.name.trim()) gaps[contactErrorKey(index, 'name')] = MISSING
+    if (!contact.relationship.trim()) gaps[contactErrorKey(index, 'relationship')] = MISSING
+    if (!contact.phone.trim()) gaps[contactErrorKey(index, 'phone')] = MISSING
+  })
+  return gaps
 }
 
 function StudentFormEditor({
@@ -238,6 +247,22 @@ function StudentFormEditor({
     mode === 'edit'
       ? 'Update the record fields Staff maintain directly.'
       : 'Encode a new student record with the LRN from the school records.'
+
+  // A real error wins over the "Missing" mark; a cleared error (undefined) doesn't hide it.
+  const shown = useMemo<StudentFormErrors>(() => {
+    if (mode !== 'edit') return errors
+    const defined = Object.fromEntries(Object.entries(errors).filter(([, message]) => message))
+    return { ...completionGaps(values), ...defined }
+  }, [mode, errors, values])
+
+  // Edit Record from the queue lands on the first missing field, not the top of the form.
+  const landed = useRef(false)
+  useEffect(() => {
+    if (landed.current || mode !== 'edit') return
+    landed.current = true
+    const count = Object.keys(completionGaps(values)).length
+    if (count) invalid.report(count)
+  }, [mode, values, invalid])
 
   const requiredCount = useMemo(
     () => Object.keys(validate(values, data.today)).length,
@@ -419,22 +444,23 @@ function StudentFormEditor({
                   inputMode="numeric"
                   autoComplete="off"
                   value={values.lrn}
-                  error={errors.lrn ?? (liveDuplicates.lrnTaken ? DUPLICATE_LRN_MESSAGE : undefined)}
+                  error={shown.lrn ?? (liveDuplicates.lrnTaken ? DUPLICATE_LRN_MESSAGE : undefined)}
                   hint="12 digits. Spaces and dashes are removed."
                   onChange={(event) => setField('lrn', normalizeLrn(event.target.value))}
                 />
               )}
               {/* R12: one answer of two, as radio buttons (the Staff form's SexRadios, ADR-063). */}
-              <SexRadios value={values.sex} error={errors.sex} onChange={(value) => setField('sex', value)} />
+              <SexRadios value={values.sex} error={shown.sex} onChange={(value) => setField('sex', value)} />
               <div className="flex flex-col gap-2">
                 <DatePicker
                   label="Birthdate"
+                  placeholder="Optional"
                   value={values.birthDate}
                   max={data.today}
-                  error={errors.birthDate}
+                  error={shown.birthDate}
                   onChange={(value) => setField('birthDate', value)}
                 />
-                {ageNote && !errors.birthDate && (
+                {ageNote && !shown.birthDate && (
                   <p
                     role="status"
                     className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-xs text-text-primary"
@@ -447,7 +473,7 @@ function StudentFormEditor({
               <div className="flex flex-col gap-2 md:col-span-3">
                 <NameFields
                   values={values}
-                  errors={errors}
+                  errors={shown}
                   hint="Write the name as it appears on the school's list."
                   onChange={(field, value) => setField(field, value)}
                 />
@@ -477,7 +503,7 @@ function StudentFormEditor({
                   label="Reason for the name correction"
                   required
                   value={nameReason}
-                  error={errors.nameCorrectionReason}
+                  error={shown.nameCorrectionReason}
                   hint="For example, a misspelling corrected against the school records. Saved in the audit log."
                   onChange={(event) => {
                     setNameReason(event.target.value)
@@ -496,10 +522,10 @@ function StudentFormEditor({
                 value={values.gradeLevel}
                 placeholder="Select grade level"
                 options={data.gradeLevels.map((grade) => ({ value: grade, label: grade }))}
-                error={errors.gradeLevel}
+                error={shown.gradeLevel}
                 onChange={(value) => setField('gradeLevel', value)}
               />
-              <Input label="Section" value={values.section} onChange={(event) => setField('section', event.target.value)} />
+              <Input label="Section" placeholder="Optional" value={values.section} onChange={(event) => setField('section', event.target.value)} />
               </div>
             </FormSection>
 
@@ -517,7 +543,7 @@ function StudentFormEditor({
                           aria-label={`${label} name`}
                           required={contactStarted(contact)}
                           value={contact.name}
-                          error={errors[contactErrorKey(index, 'name')]}
+                          error={shown[contactErrorKey(index, 'name')]}
                           onChange={(event) => setEmergencyContact(index, 'name', event.target.value)}
                         />
                         <ComboboxWithOther
@@ -529,7 +555,7 @@ function StudentFormEditor({
                           required={contactStarted(contact)}
                           value={contact.relationship}
                           options={RELATIONSHIP_SUGGESTIONS}
-                          error={errors[contactErrorKey(index, 'relationship')]}
+                          error={shown[contactErrorKey(index, 'relationship')]}
                           onValueChange={(value) => setEmergencyContact(index, 'relationship', value)}
                         />
                         <Input
@@ -539,7 +565,7 @@ function StudentFormEditor({
                           aria-label={`${label} phone`}
                           required={contactStarted(contact)}
                           value={contact.phone}
-                          error={errors[contactErrorKey(index, 'phone')]}
+                          error={shown[contactErrorKey(index, 'phone')]}
                           onChange={(event) => setEmergencyContact(index, 'phone', event.target.value)}
                         />
                       </div>
@@ -558,12 +584,12 @@ function StudentFormEditor({
 
             <FormSection id="medical-title" title="Medical history" description="Allergies and conditions the clinic should know before treating.">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <HealthListField label="Allergies" list={STARTER_ALLERGIES} value={values.allergies} error={errors.allergies} onValueChange={(value) => setField('allergies', value)} />
-                <HealthListField label="Medical conditions" list={STARTER_CONDITIONS} value={values.medicalConditions} error={errors.medicalConditions} onValueChange={(value) => setField('medicalConditions', value)} />
+                <HealthListField label="Allergies" list={STARTER_ALLERGIES} value={values.allergies} error={shown.allergies} onValueChange={(value) => setField('allergies', value)} />
+                <HealthListField label="Medical conditions" list={STARTER_CONDITIONS} value={values.medicalConditions} error={shown.medicalConditions} onValueChange={(value) => setField('medicalConditions', value)} />
               </div>
             </FormSection>
 
-            <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
+            <div className={`flex flex-wrap justify-end gap-2 pt-4 ${FORM_DIVIDER}`}>
               <Button variant="neutral" onClick={cancel}>
                 Cancel
               </Button>

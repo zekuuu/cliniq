@@ -1,3 +1,4 @@
+import { SelectWithOther } from '../../components'
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { clearSavedMessage, peekSavedMessage } from '../../lib/savedMessage'
@@ -80,14 +81,21 @@ function Skeletons({ back }: { back: ReactNode }) {
   )
 }
 
+/** Why a staff record is archived (professor's consultation, November 6, 2026); "Other" asks which. */
+const REASONS = ['Resigned', 'Retired', 'End of contract', 'Transferred']
+
 function Header({ person, viewer, onArchived }: { person: Personnel; viewer: SessionUser; onArchived: () => void }) {
   const [confirming, setConfirming] = useState(false)
   const [archiving, setArchiving] = useState(false)
+  const [reason, setReason] = useState('')
+  const [reasonError, setReasonError] = useState('')
 
   async function archive() {
+    if (!reason.trim()) return setReasonError('Choose the reason for archiving.')
     setArchiving(true)
     try {
-      await archiveStaffRecord(person.id, viewer)
+      await archiveStaffRecord(person.id, viewer, reason)
+      setConfirming(false)
       onArchived()
     } finally {
       setArchiving(false)
@@ -135,8 +143,22 @@ function Header({ person, viewer, onArchived }: { person: Personnel; viewer: Ses
       <Modal open={confirming} title="Archive this staff record?" onClose={() => setConfirming(false)}>
         <p className="text-sm text-text-secondary">
           {person.fullName} ({person.staffNumber}) will be hidden from the Staff List and the patient search. Nothing
-          is deleted: the record, visits and incidents stay available under "Show archived".
+          is deleted: the record, visits and incidents stay available under "Show archived" and on the Archive page.
         </p>
+        <div className="mt-4"><SelectWithOther
+          label="Reason"
+          otherLabel="Specify the reason"
+          required
+          value={reason}
+          onChange={(value) => {
+            setReason(value)
+            setReasonError('')
+          }}
+          options={REASONS}
+          placeholder="Select reason"
+          maxLength={80}
+          error={reasonError}
+        /></div>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <Button variant="neutral" data-autofocus onClick={() => setConfirming(false)}>
             Cancel
@@ -144,10 +166,7 @@ function Header({ person, viewer, onArchived }: { person: Personnel; viewer: Ses
           <Button
             variant="secondary"
             loading={archiving}
-            onClick={() => {
-              setConfirming(false)
-              void archive()
-            }}
+            onClick={() => void archive()}
           >
             Archive Record
           </Button>

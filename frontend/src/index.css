@@ -18,6 +18,16 @@
  *   `-fill` is the card tint; `-text` is the words and icons, 4.5:1 or better on its fill and on white.
  * - text-muted is 2.68:1 on white: use it for disabled/decorative only, never readable info text.
  */
+/* A field's hover only when the pointer is on the field (Zean, November 7, 2026). Browsers also give a
+   field :hover while its <label> is hovered; this skips that case: no ancestor with a hovered label. */
+@custom-variant hover-field {
+  @media (hover: hover) {
+    &:hover:not(:is(:has(> label:hover) *)) {
+      @slot;
+    }
+  }
+}
+
 @theme static {
   --color-*: initial;
   --color-white: #ffffff;
@@ -108,6 +118,21 @@
     from {
       opacity: 0;
       transform: translateY(-0.25rem);
+    }
+  }
+
+  /* A soft green halo that spreads out from around an element twice, then stops (the Archive's End or
+     Start button, opened from the Dashboard reminder). The element itself does not change. */
+  --animate-halo: halo 1.6s ease-out 2;
+  @keyframes halo {
+    0% {
+      box-shadow: 0 0 0 0 rgb(3 153 53 / 0.7);
+    }
+    45% {
+      box-shadow: 0 0 0 10px rgb(3 153 53 / 0.4);
+    }
+    100% {
+      box-shadow: 0 0 0 18px rgb(3 153 53 / 0);
     }
   }
 

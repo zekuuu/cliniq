@@ -1,3 +1,6 @@
+import { SelectWithOther } from '../../components'
+import { Lrn } from '../../components/ui/MaskedLrn'
+import { SYMPTOM } from '../../lib/labels'
 import {
   BackButton,
   Badge,
@@ -112,12 +115,15 @@ function ProfileHeader({
   const staffCanAct = viewer.role === 'staff'
   const [confirmingArchive, setConfirmingArchive] = useState(false)
   const [archiving, setArchiving] = useState(false)
+  const [reason, setReason] = useState('')
+  const [reasonError, setReasonError] = useState('')
   const age = ageOn(student.birthDate, getMockToday())
 
   async function archive() {
+    if (!reason.trim()) return setReasonError('Choose the reason for archiving.')
     setArchiving(true)
     try {
-      await archiveStudentRecord(student.id, viewer)
+      await archiveStudentRecord(student.id, viewer, reason)
       setConfirmingArchive(false)
       onArchived()
     } finally {
@@ -140,7 +146,7 @@ function ProfileHeader({
             )}
           </div>
           <p className="mt-1 text-sm text-text-secondary">
-            LRN {student.lrn} · {student.gradeLevel}
+            LRN <Lrn lrn={student.lrn} full /> · {student.gradeLevel}
             {age !== null && ` · ${ageText(age)}`}
           </p>
         </div>
@@ -176,9 +182,23 @@ function ProfileHeader({
         onClose={() => setConfirmingArchive(false)}
       >
         <p className="text-sm text-text-secondary">
-          {student.fullName} (LRN {student.lrn}) will be hidden from active lists. Nothing is
-          deleted: the record, visits, and incidents stay available under "Include archived".
+          {student.fullName} (LRN <Lrn lrn={student.lrn} full />) will be hidden from active lists. Nothing is
+          deleted: the record, visits, and incidents stay available under "Include archived" and on the Archive page.
         </p>
+        <div className="mt-4"><SelectWithOther
+          label="Reason"
+          otherLabel="Specify the reason"
+          required
+          value={reason}
+          onChange={(value) => {
+            setReason(value)
+            setReasonError('')
+          }}
+          options={REASONS}
+          placeholder="Select reason"
+          maxLength={80}
+          error={reasonError}
+        /></div>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <Button variant="neutral" data-autofocus onClick={() => setConfirmingArchive(false)}>
             Cancel
@@ -186,10 +206,7 @@ function ProfileHeader({
           <Button
             variant="secondary"
             loading={archiving}
-            onClick={() => {
-              setConfirmingArchive(false)
-              void archive()
-            }}
+            onClick={() => void archive()}
           >
             Archive Record
           </Button>
@@ -243,7 +260,7 @@ function OverviewCard({ student }: { student: Student }) {
         )}
         <div>
           <p className="text-xs font-semibold text-text-secondary">LRN</p>
-          <p className="text-sm font-semibold text-text-primary tabular-nums">{student.lrn}</p>
+          <p className="text-sm font-semibold text-text-primary"><Lrn lrn={student.lrn} full /></p>
         </div>
         <div>
           <p className="text-xs font-semibold text-text-secondary">Sex</p>
@@ -483,7 +500,7 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
           empty="No clinic visits are recorded for this student."
           columns={[
             { header: 'Date and time', width: '24%', cell: (visit) => formatDateTime(visit.dateTime) },
-            { header: 'Complaint', width: '20%', cell: (visit) => complaintWithExtras(visit) },
+            { header: SYMPTOM, width: '20%', cell: (visit) => complaintWithExtras(visit) },
             { header: 'Care given', cell: visitCareSummary },
             { header: 'Disposition', width: '18%', cell: (visit) => dispositionLabel[visit.disposition] },
           ]}
@@ -497,7 +514,7 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
           empty="No emergency incidents are recorded for this student."
           columns={[
             { header: 'Date and time', width: '24%', cell: (incident) => formatDateTime(incident.time) },
-            { header: 'Complaint', width: '20%', cell: (incident) => incident.complaint },
+            { header: SYMPTOM, width: '20%', cell: (incident) => incident.complaint },
             {
               header: 'Care and referral',
               cell: (incident) =>
@@ -530,6 +547,9 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
  * Student Profile (Screen #7 / Reference 3). This is a deliberate single-student lookup, so the
  * full name is correct per ADR-004 and `.claude/skills/cliniq-display-privacy`.
  */
+/** Why a student record is archived (professor's consultation, November 6, 2026). A mid-year transfer is "Transferred" with its date; "Other" asks which. */
+const REASONS = ['Transferred', 'Graduated', 'Left the school']
+
 export function StudentProfilePage({
   viewer = getMockSessionUser(),
   studentId,

@@ -48,6 +48,8 @@ const StudentProfilePage = page(
 const StaffListPage = page(() => import('../features/staff-records/StaffListPage'), 'StaffListPage')
 const StaffProfilePage = page(() => import('../features/staff-records/StaffProfilePage'), 'StaffProfilePage')
 const StaffFormPage = page(() => import('../features/staff-records/StaffFormPage'), 'StaffFormPage')
+const StaffImportPage = page(() => import('../features/staff-records/StaffImportPage'), 'StaffImportPage')
+const StaffIncompleteRecordsPage = page(() => import('../features/staff-records/StaffIncompleteRecordsPage'), 'StaffIncompleteRecordsPage')
 const VisitLogListPage = page(
   () => import('../features/clinic-visits/VisitLogListPage'),
   'VisitLogListPage',
@@ -112,6 +114,7 @@ const BackupStatusPage = page(
   'BackupStatusPage',
 )
 const AuditLogPage = page(() => import('../features/audit-log/AuditLogPage'), 'AuditLogPage')
+const ArchivePage = page(() => import('../features/archive/ArchivePage'), 'ArchivePage')
 const ChangePasswordPage = page(() => import('../features/auth/ChangePasswordPage'), 'ChangePasswordPage')
 const PrivacyPolicyPage = page(
   () => import('../features/legal/PrivacyPolicyPage'),
@@ -268,6 +271,20 @@ const APP_ROUTES: AppRoute[] = [
     roles: ['staff'],
     nav: 'staff',
     render: (viewer) => <StaffFormPage viewer={viewer} />,
+  },
+  {
+    path: paths.staffImport,
+    title: 'Import Staff List',
+    roles: ['staff'],
+    nav: 'staff',
+    render: (viewer) => <StaffImportPage viewer={viewer} />,
+  },
+  {
+    path: paths.staffIncomplete,
+    title: 'Incomplete Staff Records',
+    roles: ['staff'],
+    nav: 'staff',
+    render: (viewer) => <StaffIncompleteRecordsPage viewer={viewer} />,
   },
   {
     path: '/staff/:personnelId',
@@ -451,6 +468,14 @@ const APP_ROUTES: AppRoute[] = [
     roles: ['staff', 'admin'],
     nav: 'auditLog',
     render: (viewer) => <AuditLogPage viewer={viewer} />,
+  },
+  {
+    path: paths.archive,
+    title: 'Archive',
+    // Read-only for both; the Admin sees no Staff tab (ADR-038, ADR-043).
+    roles: ['staff', 'admin'],
+    nav: 'archive',
+    render: (viewer) => <ArchivePage viewer={viewer} />,
   },
   {
     path: paths.changePassword,

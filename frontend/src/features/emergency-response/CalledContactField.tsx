@@ -8,14 +8,17 @@ export function CalledContactField({
   draft,
   onChange,
   errors,
+  className = 'flex flex-col gap-3',
 }: {
   contacts: EmergencyContact[]
   draft: CalledContactDraft
   onChange: (draft: CalledContactDraft) => void
   errors: CalledContactErrors
+  /** `contents` lets a parent grid place the select beside another field; the Other fields then take the full row. */
+  className?: string
 }) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className={className}>
       <Select
         label="Who was called"
         value={draft.choice}
@@ -23,13 +26,14 @@ export function CalledContactField({
         options={[
           ...contacts.map((contact, index) => ({
             value: String(index),
-            label: `${contact.name} (${contact.relationship}) · ${contact.phone}`,
+            // The number first, so a long name or relationship is what gets cut in a narrow field, never the number (Zean, November 5, 2026).
+            label: `${contact.phone} · ${contact.name} (${contact.relationship})`,
           })),
           { value: OTHER_CONTACT, label: 'Other (type the name and number)' },
         ]}
       />
       {draft.choice === OTHER_CONTACT && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2">
           <Input
             label="Name of person called"
             required

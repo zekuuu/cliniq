@@ -1,3 +1,7 @@
+> **Note, Saturday, November 07, 2026 — 11:43 PHT:** the Clinic Overview printout was removed altogether; Reports keeps its four monthly reports. See [ADR-074](ADR-074-No-Clinic-Overview-Printout.md).
+
+> **Note, Saturday, November 07, 2026 — 05:13 PHT:** Zean, in chat, Saturday, November 7, 2026 — 04:18 PHT, after the professor's consultation of November 6: "The Clinic Overview print leaves the Dashboard and moves to Reports." The Dashboard's print and save actions are removed and a "Clinic Overview" report in Reports reuses `DashboardPrint` unchanged with the same period choices (built in Part 2 of the consultation job). See [ADR-070](ADR-070-Consultation-Wording-Dashboard-Print-Moves-To-Reports.md).
+
 # ADR-045: The Dashboard prints the open tab
 
 **Date:** Monday, October 26, 2026 — 11:13 PHT

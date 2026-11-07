@@ -43,7 +43,8 @@ export function LogbookFields({
             step="0.1"
             inputMode="decimal"
             label="Body temperature (°C)"
-            hint="Optional. Leave blank if not taken."
+            placeholder="Optional"
+            hint="Leave blank if not taken."
             value={values.temperatureC}
             onChange={(event) => set('temperatureC', event.target.value)}
           />

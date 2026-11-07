@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Modal, Skeleton } from '../../components'
+import { Badge, Button, Card, NUMBERED_LIST, CardBody, CardHeader, EmptyState, ErrorState, Icon, Modal, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDateTime } from '../../lib/dates'
 import { getMockSessionUser, NoBackupLocationError } from '../../lib/mock-db'
@@ -157,7 +157,7 @@ export function BackupStatusPage() {
                     )}
                     <section className="rounded-md border border-border bg-surface p-4">
                         <h2 className="text-sm font-semibold text-text-primary">Guided recovery checklist</h2>
-                        <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-text-secondary">
+                        <ol className={`mt-3 text-sm text-text-secondary ${NUMBERED_LIST}`}>
                             <li>Confirm the backup file exists on each enabled backup location, in its <code>.cliniq\backups</code> folder.</li>
                             <li>Check that the file size is plausible compared with the previous backup.</li>
                             <li>
@@ -170,7 +170,10 @@ export function BackupStatusPage() {
                         <ol className="mt-2 divide-y divide-border rounded-md border border-border">
                             {current.history.slice(0, 5).map((run) => (
                                 <li key={run.lastRun} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
-                                    <span className="text-text-primary">{formatDateTime(run.lastRun)}</span>
+                                    <span className="text-text-primary">
+                                        {formatDateTime(run.lastRun)}
+                                        {run.locationNames?.length ? <span className="text-text-secondary"> · to {run.locationNames.join(', ')}</span> : null}
+                                    </span>
                                     <span className={run.status === 'failed' ? 'font-semibold text-error' : 'text-text-secondary'}>
                                         {run.status === 'failed' ? 'Failed' : `Completed · ${formatSize(run.fileSizeBytes)}${run.verifiedByUserId ? ' · verified' : ''}`}
                                     </span>

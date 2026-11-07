@@ -9,6 +9,11 @@ const OTHER_VALUE = '__other__'
  * (cliniq-combobox-patterns): Other is always the first option, stays visibly selected, and reveals
  * a focused text field whose text is the value. The option label itself is never stored. Used by the
  * visit and incident Complaint fields.
+ *
+ * Layout (Zean, November 5, 2026): the dropdown and the Other box share one 2-column row (the form
+ * grid: `sm:grid-cols-2 gap-3`), so the box fades in beside the dropdown instead of pushing the form
+ * down, and picking any other option in the dropdown switches back with no extra button. The hint
+ * shows once, under the dropdown. Don't wrap it in `FIELD_HALF`: it lines up on its own.
  */
 export function SelectWithOther({
   label,
@@ -42,7 +47,7 @@ export function SelectWithOther({
   const [otherSelected, setOtherSelected] = useState(false)
   const usingOther = otherSelected || (Boolean(value) && !options.includes(value))
   return (
-    <>
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <Select
         label={label}
         autoFocus={autoFocus}
@@ -66,10 +71,10 @@ export function SelectWithOther({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           maxLength={maxLength}
-          hint={hint}
           error={error}
+          className="animate-expand-down motion-reduce:animate-none"
         />
       )}
-    </>
+    </div>
   )
 }

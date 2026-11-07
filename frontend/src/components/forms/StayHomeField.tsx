@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { Input } from '../ui/Input'
 
 /**
@@ -15,6 +16,7 @@ export function StayHomeField({
   onChange: (next: { checked: boolean; note: string }) => void
   disabled?: boolean
 }) {
+  const descriptionId = useId()
   return (
     <div className="flex flex-col gap-2">
       <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none has-disabled:cursor-not-allowed">
@@ -22,10 +24,18 @@ export function StayHomeField({
           type="checkbox"
           checked={checked}
           disabled={disabled}
+          aria-label="Stay home until cleared"
+          aria-describedby={descriptionId}
           onChange={(event) => onChange({ checked: event.target.checked, note })}
           className="mt-0.5 size-4 cursor-pointer accent-brand-green-dark disabled:cursor-not-allowed"
         />
-        <span className="text-sm font-semibold text-text-primary">Stay home until cleared</span>
+        {/* The description (Zean, November 5, 2026) is outside the checkbox's name, so the name stays short. */}
+        <span>
+          <span className="block text-sm font-semibold text-text-primary">Stay home until cleared</span>
+          <span id={descriptionId} className="block text-xs text-text-secondary">
+            Tick if they should not return to school until the clinic says they may. Your note is shown with it.
+          </span>
+        </span>
       </label>
       {checked && (
         <Input

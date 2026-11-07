@@ -85,7 +85,7 @@ describe('FollowUpListPage', () => {
 
   it('pages the list', async () => {
     await renderList()
-    expect(screen.getByRole('button', { name: 'Next' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Next page' })).toBeInTheDocument()
     expect(screen.getByText(/^Showing 1–/)).toBeInTheDocument()
   })
 

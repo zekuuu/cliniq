@@ -168,7 +168,7 @@ describe('Dashboard links to Reports (C10)', () => {
     expect(link.compareDocumentPosition(cardLinks[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it('puts the Common complaints link in the card footer, not its header, and opens the Complaint summary', async () => {
+  it('puts the Frequent symptoms link in the card footer, not its header, and opens the Symptom summary', async () => {
     const user = userEvent.setup({ delay: null })
     render(
       <MemoryRouter>
@@ -179,16 +179,16 @@ describe('Dashboard links to Reports (C10)', () => {
       </MemoryRouter>,
     )
     await user.click(await screen.findByRole('tab', { name: /Trends/ }))
-    const link = await screen.findByRole('link', { name: 'View full report: Complaint summary' })
-    const card = screen.getByRole('region', { name: 'Common complaints' })
-    const heading = within(card).getByRole('heading', { name: 'Common complaints' })
+    const link = await screen.findByRole('link', { name: 'View full report: Symptom summary' })
+    const card = screen.getByRole('region', { name: 'Frequent symptoms' })
+    const heading = within(card).getByRole('heading', { name: 'Frequent symptoms' })
     const footer = link.closest('footer')!
     expect(card).toContainElement(footer)
     expect(footer).toHaveClass('justify-end', 'print:hidden')
     expect(heading.parentElement!.parentElement!.parentElement).not.toContainElement(link)
     expect(heading.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     await user.click(link)
-    expect(await screen.findByRole('tab', { name: 'Complaint summary', selected: true })).toBeInTheDocument()
+    expect(await screen.findByRole('tab', { name: 'Symptom summary', selected: true })).toBeInTheDocument()
   })
 })
 

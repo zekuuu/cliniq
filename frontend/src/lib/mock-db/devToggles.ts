@@ -10,6 +10,7 @@
  *   ?mockLatency=1200     explicit latency in ms
  *   ?mockPersist=on|off   keep writes in localStorage across reloads (off clears the saved copy)
  *   ?mockReset=1          discard every write and reload from mock-db.json
+ *   ?mockToday=2027-04-10 pretend today is that date (seed and reminders follow it) until the next reload without it
  */
 
 export type MockMode = 'normal' | 'error' | 'empty' | 'slow'
@@ -76,6 +77,12 @@ export function persistParam(): 'on' | 'off' | null {
 
 export function resetParam(): boolean {
   return param('mockReset') === '1'
+}
+
+/** `?mockToday=YYYY-MM-DD`, for testing date-driven behaviour such as the school-year reminders. */
+export function todayParam(): string | null {
+  const value = param('mockToday')
+  return value && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) ? value : null
 }
 
 /** Reads one query-string value, for in-screen state and preview switches (ADR-012). */

@@ -73,50 +73,10 @@ describe('purpose-built printouts', () => {
     expect(document.body.querySelector('[data-print-document]')).toBeNull()
   })
 
-  it('Dashboard: a Clinic Overview Report with the screen’s figures and full LRNs, no names (ADR-044)', async () => {
+  it('Dashboard: no Print at all (ADR-070, ADR-074)', async () => {
     renderWithRouter(<DashboardPage viewer={STAFF} />)
     await screen.findByRole('region', { name: 'Summary counts' })
-    expectScreenControlHidden('Print / Save as PDF')
-    // The Dashboard opens on Today.
-    const summary = await getDashboardSummary({ range: rangeForPreset('today', todayISO()) })
-    const doc = print()
-    expectDocument(doc, 'Clinic Overview')
-    expect(doc.querySelector('[data-print-scope]')).toHaveTextContent('Visits and incidents for today')
-    expect(doc).not.toHaveTextContent('Complaints (visits and incidents)')
-    expect(doc.querySelector('[data-print-scope]')).not.toHaveTextContent('1900')
-    const figures = within(doc)
-      .getAllByRole('definition')
-      .map((dd) => dd.textContent)
-    for (const value of [
-      summary.counts.visits,
-      summary.counts.incidents,
-      summary.counts.activeStudents,
-    ])
-      expect(figures).toContain(String(value))
-    expect(doc).toHaveTextContent(`${summary.counts.pendingRecords} incomplete records · ${summary.counts.lowStockItems} low stock`)
-    for (const row of summary.dueFollowUps) expect(doc).toHaveTextContent(row.patient.number)
-    expect(doc.textContent).not.toContain('•')
-    expect(doc).toHaveTextContent('Excuse letters awaiting approval')
-    await expectNoNamesOrIds(doc)
-  })
-
-  it('Dashboard: on the Trends tab, prints the Trends content only, with the sex and grade breakdown', async () => {
-    renderWithRouter(<DashboardPage viewer={STAFF} />, { route: '/?view=trends' })
-    await screen.findByRole('region', { name: 'Demographic analysis' })
-    const doc = print()
-    expectDocument(doc, 'Clinic Trends Report')
-    expect(doc.querySelector('[data-print-scope]')).toHaveTextContent('Dashboard tab: Trends')
-    expect(within(doc).getByRole('table', { name: 'By sex' })).toBeInTheDocument()
-    expect(within(doc).getByRole('table', { name: 'By grade level' })).toBeInTheDocument()
-    expect(doc).toHaveTextContent('Complaints (visits and incidents)')
-    expect(doc).not.toHaveTextContent('Items needing attention')
-    await expectNoNamesOrIds(doc)
-  })
-
-  it('Dashboard: the Admin gets no printout and a disabled Print (ADR-038 item 3)', async () => {
-    renderWithRouter(<DashboardPage viewer={ADMIN} />)
-    await screen.findByRole('region', { name: 'Summary counts' })
-    expect(screen.getByRole('button', { name: 'Print / Save as PDF' })).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.queryByRole('button', { name: 'Print / Save as PDF' })).not.toBeInTheDocument()
     act(() => {
       window.dispatchEvent(new Event('beforeprint'))
     })
@@ -156,9 +116,9 @@ describe('purpose-built printouts', () => {
       window.dispatchEvent(new Event('afterprint'))
     })
 
-    await user.click(screen.getByRole('tab', { name: 'Complaint summary' }))
+    await user.click(screen.getByRole('tab', { name: 'Symptom summary' }))
     doc = print()
-    expectDocument(doc, /^Complaint summary — /)
+    expectDocument(doc, /^Symptom summary — /)
     expect(doc).toHaveTextContent('Aggregated counts only')
     await expectNoNamesOrIds(doc)
   })
@@ -238,6 +198,9 @@ describe('purpose-built printouts', () => {
       `${rows.length} entries. Filters: all dates; all users; all actions; all targets`,
     )
     expect(within(doc).getAllByRole('row')).toHaveLength(rows.length + 1)
+    // The printout keeps the full LRN; the screen masks it (Zean, November 7, 2026).
+    const student = rows.find((row) => row.target?.studentId && row.target.label)!
+    expect(doc).toHaveTextContent(student.target!.label!)
     await expectNoNamesOrIds(doc)
   })
 

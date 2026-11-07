@@ -1,3 +1,4 @@
+import { Lrn } from '../../components/ui/MaskedLrn'
 import { useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import {
@@ -117,7 +118,7 @@ function PrintableLetter({
         </div>
         {/* Internal record status: on screen only, never on paper (panel review EX-4). */}
         <div className="rounded-md border border-border bg-surface px-3 py-2 text-xs print:hidden">
-          Student: {context.student.fullName} · LRN {context.student.lrn}
+          Student: {context.student.fullName} · LRN <Lrn lrn={context.student.lrn} full />
           <br />
           Clinic visit: {formatDateTime(context.visit.dateTime)}
           <br />
@@ -295,7 +296,7 @@ function ExcuseLetterEditor({
               Excuse Letter
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
-              {context.student.fullName} · LRN {context.student.lrn} · visit on{' '}
+              {context.student.fullName} · LRN <Lrn lrn={context.student.lrn} full /> · visit on{' '}
               {formatDateTime(context.visit.dateTime)}
             </p>
           </div>

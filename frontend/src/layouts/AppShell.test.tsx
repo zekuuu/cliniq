@@ -6,6 +6,7 @@ import { getRecordedAuditEntries } from '../lib/mock-db'
 import { verifyBackup } from '../features/backup/api/backupApi'
 import { AppShell } from './AppShell'
 import { navGroupsFor } from './navigation'
+import { openAccountMenu } from '../test/accountMenu'
 
 /**
  * The global focus ring is a 2px outline 2px outside the element, so an `overflow` container cuts it
@@ -71,7 +72,7 @@ describe('App Shell / Navigation', () => {
       .forEach((logo) => expect(logo).toHaveAttribute('src', '/MCA_Logo.png'))
   })
 
-  it('puts an icon-only red logout action beside the signed-in user', () => {
+  it('puts a red Sign out action in the account menu (ADR-066)', async () => {
     renderWithRouter(
       <AppShell
         user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
@@ -82,7 +83,8 @@ describe('App Shell / Navigation', () => {
       </AppShell>,
     )
 
-    expect(screen.getByRole('button', { name: 'Sign out' })).toHaveClass('text-error')
+    await openAccountMenu(userEvent.setup())
+    expect(screen.getByRole('menuitem', { name: 'Sign out' })).toHaveClass('text-error')
   })
 
   it('marks the Backup navigation item when it needs attention', async () => {
@@ -147,7 +149,7 @@ describe('App Shell / Navigation', () => {
     )
   })
 
-  it('shows a plain Shortcuts label while keeping its accessible purpose', () => {
+  it('shows a Keyboard shortcuts item with its ? tip in the account menu', async () => {
     renderWithRouter(
       <AppShell
         user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
@@ -158,8 +160,13 @@ describe('App Shell / Navigation', () => {
       </AppShell>,
     )
 
-    expect(screen.getByRole('button', { name: 'Show keyboard shortcuts' })).toHaveTextContent('Shortcuts')
-    expect(screen.getByRole('button', { name: 'Show keyboard shortcuts' })).not.toHaveTextContent('?')
+    // ADR-066: the header's Shortcuts button moved into the account menu as a plain-language item.
+    await openAccountMenu(userEvent.setup())
+    expect(screen.getByRole('menuitem', { name: 'Keyboard shortcuts' })).toHaveTextContent('Keyboard shortcuts')
+    // Its shortcut shows as a tip, hidden from the accessible name (Zean, November 5, 2026).
+    const item = screen.getByRole('menuitem', { name: 'Keyboard shortcuts' })
+    expect(item).toHaveAttribute('aria-keyshortcuts', '?')
+    expect(item.querySelector('kbd')).toHaveTextContent('?')
   })
 
   it('uses a readable monospaced treatment for the live workstation clock', () => {
@@ -262,7 +269,8 @@ describe('App Shell / Navigation', () => {
       </AppShell>,
     )
 
-    await user.click(screen.getByRole('button', { name: 'Sign out' }))
+    await openAccountMenu(user)
+    await user.click(screen.getByRole('menuitem', { name: 'Sign out' }))
     await user.click(await screen.findByRole('button', { name: 'Sign Out' }))
 
     await waitFor(() => expect(onLogout).toHaveBeenCalledOnce())
@@ -287,10 +295,12 @@ describe('App Shell / Navigation', () => {
       </AppShell>,
     )
 
-    await user.click(screen.getByRole('button', { name: 'Sign out' }))
+    await openAccountMenu(user)
+    await user.click(screen.getByRole('menuitem', { name: 'Sign out' }))
     await user.click(await screen.findByRole('button', { name: 'Sign Out' }))
 
-    expect(screen.getByRole('button', { name: 'Signing out' }).querySelector('svg')).not.toHaveClass(
+    await openAccountMenu(user)
+    expect(screen.getByRole('menuitem', { name: 'Signing out' }).querySelector('svg')).not.toHaveClass(
       'animate-spin',
     )
   })
@@ -306,6 +316,7 @@ describe('App Shell / Navigation', () => {
       'auditLog',
       'accounts',
       'backup',
+      'archive',
     ])
     expect(groups.map((group) => group.label)).toContain('Patient Care')
   })
@@ -324,6 +335,7 @@ describe('App Shell / Navigation', () => {
       'reports',
       'backup',
       'auditLog',
+      'archive',
     ])
   })
 

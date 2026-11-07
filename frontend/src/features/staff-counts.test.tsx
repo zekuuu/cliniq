@@ -5,9 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { getCalendarDays, getDashboardSummary, listIncidents, listVisits, recordVisit, type SessionUser } from '../lib/mock-db'
 import { db } from '../lib/mock-db/store'
 import { rangeForPreset } from '../lib/dateRange'
-import { splitText } from '../lib/patients'
 import { AppRoutes } from '../routes/AppRoutes'
-import { DashboardPrint } from './dashboard/components/DashboardPrint'
 
 /** Counts, Audit Log and Privacy Policy with staff patients (ADR-043 part 4). */
 
@@ -55,17 +53,6 @@ describe('totals include staff and show the split (D14)', () => {
     expect(after.demographics.gradeLevel).toEqual(before.demographics.gradeLevel)
     expect(after.frequentVisitors).toEqual(before.frequentVisitors)
     expect(after.counts.split.visits.staff).toBe(before.counts.split.visits.staff + 4)
-  })
-
-  it('prints the split on the Clinic Overview Report', async () => {
-    const summary = await getDashboardSummary({ range: ALL })
-    render(<MemoryRouter><DashboardPrint summary={summary} range={ALL} viewer={STAFF} letters={[]} filterLabel="" view="overview" /></MemoryRouter>)
-    act(() => {
-      window.dispatchEvent(new Event('beforeprint'))
-    })
-    const doc = document.body.querySelector<HTMLElement>('[data-print-document]')!
-    expect(doc).toHaveTextContent(splitText(summary.counts.split.visits))
-    expect(doc).toHaveTextContent(splitText(summary.counts.split.incidents))
   })
 })
 

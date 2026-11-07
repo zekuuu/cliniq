@@ -1,3 +1,4 @@
+import { symptom, symptoms } from '../../../lib/labels'
 import { formatDate, formatDateRange, startOfWeek } from '../../../lib/dates'
 import type { DateRange } from '../../../lib/dateRange'
 import type { ComplaintTrends, DashboardSummary } from '../../../types/dashboard'
@@ -29,9 +30,9 @@ export function overviewSentence(summary: DashboardSummary): string {
   if (!top) return line
   const total = complaints.reduce((sum, c) => sum + c.total, 0)
   const tied = complaints.filter((c) => c.total === top.total)
-  if (tied.length === 1) return `${line} Most common complaint: ${top.complaint} (${top.total} of ${total}).`
-  if (tied.length === 2) return `${line} Most common complaints: ${tied[0].complaint} and ${tied[1].complaint} (${top.total} each).`
-  return `${line} ${tied.length} complaints tied as the most common, with ${count(top.total, 'case')} each.`
+  if (tied.length === 1) return `${line} Most frequent ${symptom}: ${top.complaint} (${top.total} of ${total}).`
+  if (tied.length === 2) return `${line} Most frequent ${symptoms}: ${tied[0].complaint} and ${tied[1].complaint} (${top.total} each).`
+  return `${line} ${tied.length} ${symptoms} tied as the most frequent, with ${count(top.total, 'case')} each.`
 }
 
 /**

@@ -1,10 +1,10 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
-import { getDashboardSummary, listPendingExcuseLetters, getMonthlyReport, getPersonnel, getRecordedAuditEntries, recordVisit, saveIncidentStageOne, savePersonnel, type PersonnelInput, type SessionUser } from '../lib/mock-db'
+import { getDashboardSummary, getMonthlyReport, getPersonnel, getRecordedAuditEntries, recordVisit, saveIncidentStageOne, savePersonnel, type PersonnelInput, type SessionUser } from '../lib/mock-db'
 import { db } from '../lib/mock-db/store'
-import { rangeForPreset, type DateRange } from '../lib/dateRange'
+import { rangeForPreset } from '../lib/dateRange'
 import { AppShell } from '../layouts/AppShell'
 import { AppRoutes } from '../routes/AppRoutes'
 import { splitText } from '../lib/patients'
@@ -12,9 +12,9 @@ import { renderWithRouter } from '../test/renderWithRouter'
 import { selectOption } from '../test/selectOption'
 import { CalendarPage } from './dashboard/CalendarPage'
 import { DashboardPage } from './dashboard/DashboardPage'
-import { DashboardPrint } from './dashboard/components/DashboardPrint'
-import type { DashboardSummary, DueFollowUpRow, InventoryAlertRow } from '../types/dashboard'
+import type { DashboardSummary, InventoryAlertRow } from '../types/dashboard'
 import { stockStatus } from './dashboard/lib/alerts'
+import { openAccountMenu } from '../test/accountMenu'
 
 /** Groupmate's frontend review, round 2, Part 1 (ADR-062, ADR-063). */
 
@@ -29,24 +29,29 @@ const ALL = rangeForPreset('all', db().today)
 
 const ready = () => screen.findByRole('region', { name: 'Summary counts' })
 
-function printed(summary: DashboardSummary, range: DateRange, letters: Parameters<typeof DashboardPrint>[0]['letters'] = []) {
-  render(<MemoryRouter><DashboardPrint summary={summary} range={range} viewer={STAFF} letters={letters} filterLabel="" view="overview" /></MemoryRouter>)
-  act(() => {
-    window.dispatchEvent(new Event('beforeprint'))
-  })
-  return document.body.querySelector<HTMLElement>('[data-print-document]')!
-}
-
 describe('R2 and R3: the Dashboard cards', () => {
   it('puts what needs doing before the totals', async () => {
     renderWithRouter(<DashboardPage viewer={STAFF} />)
     const summary = await ready()
-    expect(within(summary).getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Needs attention now', 'Activity summary'])
+    expect(within(summary).getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Needs attention now', 'To do', 'Activity summary'])
     const attention = within(summary).getByRole('region', { name: 'Needs attention now' })
+    const todo = within(summary).getByRole('region', { name: 'To do' })
     const activity = within(summary).getByRole('region', { name: 'Activity summary' })
-    for (const name of ['Unfinished incident records', 'Follow-ups to review', 'Pending excuse letters'])
-      expect(within(attention).getByRole('link', { name })).toBeInTheDocument()
+    // Today's work apart from what can wait: Stage 2 is optional (ADR-065), follow-ups have their own dates.
+    expect(within(attention).getByRole('link', { name: 'Pending excuse letters' })).toBeInTheDocument()
+    for (const name of ['Unfinished incident records', 'Follow-ups to review']) expect(within(todo).getByRole('link', { name })).toBeInTheDocument()
+    // The chips share one row under both sections, urgent first (Zean, November 5, 2026).
+    const chips = [...within(summary).getAllByRole('link', { name: /expired or expiring|incomplete student records|low stock/ })].map((link) => link.textContent)
+    expect(chips.map((text) => text?.replace(/^\d+ /, ''))).toEqual(['expired or expiring', 'incomplete student records', 'low stock'])
+    expect(within(attention).queryByRole('link', { name: /expired or expiring/ })).not.toBeInTheDocument()
     for (const name of ['Clinic visits', 'Incidents', 'Active students']) expect(within(activity).getByRole('link', { name })).toBeInTheDocument()
+  })
+
+  it('shows Admin only the Activity summary, with no action sections or chips', async () => {
+    renderWithRouter(<DashboardPage viewer={ADMIN} />)
+    const summary = await ready()
+    expect(within(summary).getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Activity summary'])
+    expect(within(summary).queryByRole('link', { name: /expired or expiring|incomplete student records|low stock/ })).not.toBeInTheDocument()
   })
 
   it('keeps the whole card clickable while hovered', async () => {
@@ -76,7 +81,10 @@ describe('R2 and R3: the Dashboard cards', () => {
     expect(within(summary).getByRole('link', { name: /incomplete student records/ })).toHaveClass('shadow-clickable')
     expect(within(summary).getByRole('link', { name: /low stock/ })).toHaveClass('bg-warning-fill')
     expect(within(summary).getByRole('link', { name: /expired or expiring/ })).toHaveClass('bg-error-fill')
-    expect(within(summary).getByRole('link', { name: /low stock/ })).not.toHaveClass('border')
+    // Every chip has its tone's outline (professor's consultation, November 6, 2026).
+    expect(within(summary).getByRole('link', { name: /low stock/ })).toHaveClass('border', 'border-warning')
+    expect(within(summary).getByRole('link', { name: /expired or expiring/ })).toHaveClass('border', 'border-error')
+    expect(within(summary).getByRole('link', { name: /incomplete student records/ })).toHaveClass('border', 'border-text-muted')
   })
 
   it('puts the number first in a students and staff split', () => {
@@ -121,7 +129,7 @@ describe('R4: Trends order', () => {
     const trend = await screen.findByRole('heading', { name: /Visits trend/ })
     const demographic = screen.getByRole('region', { name: 'Demographic analysis' })
     expect(trend.compareDocumentPosition(demographic) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    const common = screen.getByRole('heading', { name: 'Common complaints' })
+    const common = screen.getByRole('heading', { name: 'Frequent symptoms' })
     expect(common.compareDocumentPosition(demographic) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })
@@ -216,7 +224,8 @@ describe('R6: Sign out', () => {
     const user = userEvent.setup()
     const onLogout = vi.fn()
     shell(onLogout)
-    await user.click(screen.getByRole('button', { name: 'Sign out' }))
+    await openAccountMenu(user)
+    await user.click(screen.getByRole('menuitem', { name: 'Sign out' }))
     const dialog = await screen.findByRole('dialog', { name: 'Sign out of CLINIQ?' })
     expect(within(dialog).getByRole('button', { name: 'Cancel' })).toHaveFocus()
     expect(onLogout).not.toHaveBeenCalled()
@@ -229,17 +238,25 @@ describe('R6: Sign out', () => {
     const user = userEvent.setup()
     const onLogout = vi.fn()
     shell(onLogout)
-    await user.click(screen.getByRole('button', { name: 'Sign out' }))
+    await openAccountMenu(user)
+    await user.click(screen.getByRole('menuitem', { name: 'Sign out' }))
     await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Sign Out' }))
     await waitFor(() => expect(onLogout).toHaveBeenCalledOnce())
   })
 
-  it('leaves the lock control (Change password) without a confirmation, and apart from Sign out', () => {
+  // ADR-066: both moved into the account menu; Sign out stays last, after a separator, and still confirms.
+  it('leaves Change password without a confirmation, and apart from Sign out', async () => {
+    const user = userEvent.setup()
     shell(vi.fn())
-    const lock = screen.getByRole('link', { name: 'Change password' })
-    const signOut = screen.getByRole('button', { name: 'Sign out' })
-    for (const control of [lock, signOut]) expect(control.className).toContain('size-11')
-    expect(signOut.className).toContain('ml-4')
+    const menu = await openAccountMenu(user)
+    const items = within(menu).getAllByRole('menuitem')
+    const lock = within(menu).getByRole('menuitem', { name: 'Change password' })
+    const signOut = within(menu).getByRole('menuitem', { name: 'Sign out' })
+    expect(lock).toHaveAttribute('href', '/account/password')
+    expect(items.at(-1)).toBe(signOut)
+    expect(signOut.previousElementSibling).toHaveAttribute('role', 'separator')
+    // Compact 36px rows (Zean, November 5, 2026).
+    for (const control of [lock, signOut]) expect(control.className).toContain('min-h-9')
   })
 })
 
@@ -252,7 +269,7 @@ describe('the Overview tab', () => {
   })
 })
 
-describe('R8: the Clinic Overview printout', () => {
+describe('R8: stock status wording', () => {
   it('names an expiry on a low-stock label only when the item is expiring, like the screen', () => {
     const row = (flags: InventoryAlertRow['flags'], daysUntilExpiry: number | null) => ({ flags, daysUntilExpiry }) as InventoryAlertRow
     expect(stockStatus(row(['low_stock'], 400))).toBe('Low')
@@ -261,86 +278,6 @@ describe('R8: the Clinic Overview printout', () => {
     expect(stockStatus(row(['expired'], -4))).toBe('Expired 4 days ago')
   })
 
-  it('prints stock status as a pale tag with no outline, like the inspiration', async () => {
-    const year = rangeForPreset('thisYear', db().today)
-    const doc = printed(await getDashboardSummary({ range: year }, STAFF), year)
-    const tags = [...doc.querySelectorAll<HTMLElement>('[data-print-stock] [data-stock-tag]')]
-    expect(tags.length).toBeGreaterThan(0)
-    for (const tag of tags) {
-      expect(tag.className.split(' ')).not.toContain('border')
-      expect(tag.className).toMatch(/bg-(error|warning)-fill/)
-    }
-    expect(tags.find((tag) => /^Expired/.test(tag.textContent ?? ''))).toHaveClass('bg-error-fill', 'text-error-text')
-    expect(tags.find((tag) => tag.textContent === 'Low')).toHaveClass('bg-warning-fill', 'text-warning-text')
-  })
-
-  it('embeds the letterhead logo, so it is not blank when printing starts', async () => {
-    const year = rangeForPreset('thisYear', db().today)
-    const doc = printed(await getDashboardSummary({ range: year }, STAFF), year)
-    expect(doc.querySelector('header img')?.getAttribute('src')).toMatch(/^data:image[/]png/)
-  })
-
-  it('keeps the page calm: short muted labels, a labelled attention line, one heading size', async () => {
-    const year = rangeForPreset('thisYear', db().today)
-    const doc = printed(await getDashboardSummary({ range: year }, STAFF), year, await listPendingExcuseLetters())
-    const strip = doc.querySelector('[data-print-strip]')!
-    const labels = [...strip.querySelectorAll('dt')]
-    expect(labels.map((dt) => dt.textContent)).toEqual(['Visits', 'Incidents', 'Active students', 'Excuse letters', 'Follow-ups'])
-    for (const dt of labels) expect(dt).toHaveClass('text-text-secondary')
-    expect(strip.textContent).toContain('Awaiting approval')
-    expect(strip.textContent).toContain('Excludes archived')
-    expect(doc.querySelector('[data-print-attention]')?.textContent).toMatch(/^Needs attention: /)
-    expect(doc.querySelector('[data-print-letters]')?.textContent ?? '').toMatch(/Visit [A-Z][a-z]{2} \d/)
-    // No rule under a heading: the page had too many lines (Zean, November 3, 2026).
-    for (const h2 of doc.querySelectorAll('h2')) {
-      expect(h2).toHaveClass('text-[12pt]')
-      expect(h2).not.toHaveClass('border-b')
-    }
-  })
-
-  it('runs in action order for a year', async () => {
-    const year = rangeForPreset('thisYear', db().today)
-    const summary = await getDashboardSummary({ range: year }, STAFF)
-    const doc = printed(summary, year)
-    expect(within(doc).getByRole('heading', { level: 1, name: 'Clinic Overview' })).toBeInTheDocument()
-    expect(doc.querySelector('[data-print-summary]')?.textContent).toMatch(/^\d+ visits? and \d+ incidents? this period\./)
-    const order = ['[data-print-strip]', '[data-print-attention]', '[data-print-followups]', '[data-print-letters]', '[data-print-stock]', '[data-print-details]']
-    const nodes = order.map((selector) => doc.querySelector(selector)!)
-    nodes.forEach((node) => expect(node).toBeInTheDocument())
-    for (let i = 1; i < nodes.length; i++) expect(nodes[i - 1].compareDocumentPosition(nodes[i]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(doc.querySelector('[data-print-attention]')?.textContent).toMatch(/\d+ incomplete records · \d+ low stock · \d+ expired or expiring/)
-  })
-
-  it('has no summary sentence for one day', async () => {
-    const day = rangeForPreset('today', db().today)
-    const doc = printed(await getDashboardSummary({ range: day }, STAFF), day)
-    expect(doc.querySelector('[data-print-summary]')).toBeNull()
-    expect(doc).toHaveTextContent('Visits and incidents for today')
-  })
-
-  it('groups follow-ups with relative wording', async () => {
-    const summary = await getDashboardSummary({ range: ALL }, STAFF)
-    const row = (daysFromToday: number, dueState: DueFollowUpRow['dueState']): DueFollowUpRow => ({
-      followUp: { id: `f${daysFromToday}`, followUpDate: daysFromToday < 0 ? '2026-10-28' : daysFromToday === 0 ? '2026-11-01' : '2026-11-03', reason: 'Recheck', status: 'pending', relatedRecord: null } as never,
-      patient: { kind: 'student', id: 's', number: '123456789012' },
-      dueState,
-      daysFromToday,
-    })
-    const groups = printed({ ...summary, dueFollowUps: [row(-4, 'overdue'), row(0, 'due_today'), row(2, 'upcoming')] }, ALL).querySelector<HTMLElement>('[data-print-followups]')!
-    expect(groups).toHaveTextContent('Overdue · 1')
-    expect(groups).toHaveTextContent('Due today · 1')
-    expect(groups).toHaveTextContent('Upcoming · 1')
-    expect(groups).toHaveTextContent('Oct 28 · 4 days ago')
-    expect(groups).toHaveTextContent('Today')
-    expect(groups).toHaveTextContent('Nov 3 · in 2 days')
-  })
-
-  it('leaves the excuse letters off the version without them, and uses no grey fill', async () => {
-    // The Admin cannot print at all (ADR-038), so the Admin's version is only the letters-free shape.
-    const doc = printed(await getDashboardSummary({ range: ALL }, ADMIN), ALL, null as never)
-    expect(doc.querySelector('[data-print-letters]')).toBeNull()
-    expect(doc.querySelector('[data-print-strip]')!.className).not.toMatch(/bg-/)
-  })
 })
 
 describe('R9: the yearly Activity calendar', () => {

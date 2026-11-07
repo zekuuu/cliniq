@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import { NAME_PART_MAX } from '../../lib/personName'
 import { cn } from '../../lib/cn'
 import { Input } from '../ui/Input'
@@ -31,6 +31,9 @@ export function NameFields({
   className?: string
 }) {
   const hintId = useId()
+  // "No middle name" (Zean, November 5, 2026): ticking it clears and locks the field, so a blank
+  // middle name is a stated answer, not one left out. Starts unticked; the value stays '' either way.
+  const [noMiddle, setNoMiddle] = useState(false)
   const field = (key: NameKey) => ({
     value: values[key],
     error: errors[key],
@@ -45,7 +48,21 @@ export function NameFields({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Input label="First name" required placeholder="e.g. Maria Angela" {...field('firstName')} />
         <Input label="Last name" required placeholder="e.g. Dela Cruz" {...field('lastName')} />
-        <Input label="Middle name" placeholder="e.g. Santos" {...field('middleName')} />
+        <div className="flex flex-col gap-2">
+          <Input label="Middle name" placeholder={noMiddle ? 'None' : 'e.g. Santos (optional)'} disabled={noMiddle} {...field('middleName')} />
+          <label className="inline-flex cursor-pointer items-center gap-2 self-start text-sm text-text-primary">
+            <input
+              type="checkbox"
+              checked={noMiddle}
+              onChange={(event) => {
+                setNoMiddle(event.target.checked)
+                if (event.target.checked) onChange('middleName', '')
+              }}
+              className="size-4 cursor-pointer accent-brand-green-dark"
+            />
+            No middle name
+          </label>
+        </div>
       </div>
       <p id={hintId} className="text-xs text-text-secondary">{hint}</p>
     </fieldset>

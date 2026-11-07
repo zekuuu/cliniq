@@ -40,7 +40,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 - Search/filter user accounts
 
 **Password Management** *(Staff, Admin/Principal — self-service for whoever is logged in)*
-- Change password (self-service): the signed-in user gives the current password first (`/account/password`, from the top bar)
+- Change password (self-service): the signed-in user gives the current password first (`/account/password`, from the account menu in the header, ADR-066)
 - Force password change on first login
 - Prevent reuse of last 5 passwords
 - Enforce minimum 8-character password length
@@ -109,11 +109,13 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 
 ### 2a. Staff Patients (ADR-043) — *Access: Staff (School Clinician) only*
 Teachers, non-teaching staff and utility workers can be clinic patients. Built Monday, October 26, 2026.
-- **Staff List** (`/staff`): name, Staff No., type, department or role; search by name or Staff No., filter by type, "Show archived". A masterlist, so names are shown.
+- **Staff List** (`/staff`): name, Staff No., type, department or role, record status (Complete / Incomplete, ADR-067); search by name or Staff No., filter by type and record status, "Show archived". "Incomplete records (N)" opens the staff Incomplete Records page; "Import List" opens Import Staff List. A masterlist, so names are shown.
+- **Import Staff List** (`/staff/import`, ADR-069): a CSV, its columns matched, a preview, then apply. A row matches by Staff No., else by name and type, else is added with a new Staff No.; staff missing from the file are left alone; blank cells keep what CLINIQ has, and a contact from the file is added only when the record has none. Required: first and last name (or one full-name column), sex and type; optional: Staff No., middle name, department or role, contact number, emergency contact.
+- **Incomplete Staff Records** (`/staff/incomplete`, ADR-067): records with no emergency contact (or no sex, on old records), laid out like the student queue: open and resolved counts, All / Open / Resolved (default Open), search, Missing fields, Resolution (who and when) and Edit Record, which returns here after a save. A record is resolved when Edit Staff saves it complete.
 - **Staff Profile** (`/staff/:id`): the record, the allergy alert, emergency contacts, and visit, incident and follow-up history; "Record a visit" and "Record an incident" open those forms with the person chosen. Archive, never delete.
-- **Add / Edit Staff**: first name, last name, sex and type required, middle name optional (ADR-064); department or role (a value already in use, or Other to type a new one, at most 60 characters), contact number, emergency contacts, allergies and conditions optional. The Staff No. (`STF-0001`) is assigned by CLINIQ and never edited.
+- **Add / Edit Staff**: first name, last name, sex and type required, middle name optional (ADR-064); department or role (a value already in use by staff of the chosen type, or Other to type a new one, at most 60 characters), contact number, emergency contacts, allergies and conditions optional. Editing an incomplete record marks the missing fields in red and opens on the first (ADR-067). The Staff No. (`STF-0001`) is assigned by CLINIQ and never edited.
 - A visit, incident, follow-up or medicine given is about a student **or** a staff member, exactly one. One patient search on New Visit, New Incident and Dispense labels each result Student or Staff.
-- Not for staff: excuse letter, PE referral, Sports Report, incomplete-records queue, yearly list, Registrar import. An incident's calls go to the **emergency contact**.
+- Not for staff: excuse letter, PE referral, Sports Report, the Registrar import review (staff have their own Incomplete Records page, ADR-067, and import, ADR-069), yearly list, Registrar import. An incident's calls go to the **emergency contact**.
 - Lists with more than one person show the Staff No. (never the name) with a Student or Staff chip, and an Everyone / Students / Staff filter.
 
 ### 3. Clinic Visit Monitoring — *Access: Staff only*
@@ -277,7 +279,7 @@ Staff identify a student through Students search or each form's student picker. 
 - Restock/add stock (row action: quantity received + the **new batch's** required expiration date, or an explicit **no expiration date** confirmation; adds a batch; logs the restock). It never overwrites earlier batches; the dialog warns when expired stock remains. Edit Item no longer edits stock or expiry.
 - **Adjust Stock** (Staff, under the row's **Manage** menu with Batches and Edit; Restock stays the one visible row action, with the help line "Restock when new stock arrives. Adjust Stock to correct a count.", panel review IV-1): choose a batch, then **Add** or **Remove** a positive quantity (no typed minus sign; the batch's resulting stock shows before saving, panel review IV-7) or "set to counted quantity", with a required reason (Expired - disposed / Damaged or spilled / Miscount correction / Other with a required note). The selected batch cannot go below 0. Writes an adjustment transaction and audit entry; a disposal remains in batch movement history.
 - View inventory usage history/log (`/inventory/history`, from the row's Manage menu) — Staff only; shows the masked LRN, never the name
-- A removal of 25% or more of an item on hand, or one that leaves it at zero, needs a written note of at least 20 characters and is flagged "Large write-off" in the Audit Log (ADR-061)
+- A removal of 25% or more of an item on hand, or one that leaves it at zero, is flagged "Large write-off" in the Audit Log (ADR-061); the note is optional for every adjustment (ADR-068)
 
 **Alerts & Thresholds**
 - Set/edit the low-stock threshold per item
@@ -316,7 +318,7 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 
 ### Staff wording and extra complaints (ADR-053, built Friday, October 30, 2026 — 03:36 PHT)
 
-- A visit can carry up to 3 **other complaints** as tags beside the one required complaint (from the same suggestions, or typed); a fourth is refused. Reports and the Dashboard count the main complaint only. The tags show on Visit Details and the Student and Staff Profile histories.
+- A visit can carry up to 3 **other complaints** as tags beside the one required complaint: a dropdown laid out like the Complaint field, with "Other (type your own)" first; pick or type, then Add (November 5, 2026). A fourth is refused. Reports and the Dashboard count the main complaint only. The tags show on Visit Details and the Student and Staff Profile histories.
 - Staff types are Teacher, Non-teaching staff, Utility worker and **Other**.
 - A staff patient's "Returned to class" reads **"Returned to work"** on New Visit, Visit Details, the Visit Log and the Staff Profile; the stored value is the same. The Monthly Report's mixed total reads "Returned to class or work".
 - The Admin's Dashboard incident counts leave staff incidents out, matching the Admin's Incident Log; the clinician's count everyone with the Students and Staff split.

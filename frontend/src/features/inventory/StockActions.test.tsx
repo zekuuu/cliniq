@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { adjustInventoryStock, getInventoryItem, getRecordedAuditEntries, getStudent, isLargeWriteOff, listInventory, resetMockDb } from '../../lib/mock-db'
@@ -29,15 +29,15 @@ describe('Adjust Stock', () => {
     return { user, dialog: screen.getByRole('dialog', { name: `Adjust Stock: ${itemName}` }) }
   }
 
-  it('requires a reason, and a note when the reason is Other', async () => {
+  it('requires a reason; the note stays optional, even for Other (ADR-068)', async () => {
     const { user, dialog } = await openAdjust('Gauze Pads')
     await user.type(within(dialog).getByLabelText(/quantity to remove/i), '2')
     await user.click(within(dialog).getByRole('button', { name: 'Save Adjustment' }))
     expect(within(dialog).getByText('Choose a reason.')).toBeInTheDocument()
+    expect(within(dialog).getByLabelText(/^Note/)).not.toBeRequired()
     await selectOption(user, within(dialog).getByLabelText(/^reason/i), 'Other')
     await user.click(within(dialog).getByRole('button', { name: 'Save Adjustment' }))
-    expect(within(dialog).getByText('Add a note explaining the adjustment.')).toBeInTheDocument()
-    expect(await stock('item-0011')).toBe(40)
+    await waitFor(async () => expect(await stock('item-0011')).toBe(38))
   })
 
   it("can't take stock below 0", async () => {
@@ -173,7 +173,6 @@ describe('Standalone Dispense', () => {
 describe('Large write-off rule (panel review IV-7)', () => {
   const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
   const ADMIN = { id: 'user-admin-01', name: 'Principal', role: 'admin' } as const
-  const LONG_NOTE = 'Water damage in the supply cabinet'
   beforeEach(() => resetMockDb())
 
   it('draws the line at the percent, and at an empty item', () => {
@@ -191,12 +190,11 @@ describe('Large write-off rule (panel review IV-7)', () => {
     return { item, onHand: onHandOf(item), batch: [...item.batches].sort((a, b) => b.quantity - a.quantity)[0] }
   }
 
-  it('refuses a short note on a large removal, and flags the saved one in the audit without the note', async () => {
+  it('saves a large removal with no note, and flags it in the audit (ADR-068)', async () => {
     const { item, onHand, batch } = await target()
     const change = -Math.min(batch.quantity, Math.ceil(onHand / 4))
     db().config.largeWriteOffPercent = 1
-    await expect(adjustInventoryStock(item.id, { batchId: batch.id, change, reason: 'damaged_spilled', note: 'too short' }, STAFF)).rejects.toThrow('at least 20 characters')
-    await adjustInventoryStock(item.id, { batchId: batch.id, change, reason: 'damaged_spilled', note: LONG_NOTE }, STAFF)
+    await adjustInventoryStock(item.id, { batchId: batch.id, change, reason: 'damaged_spilled', note: '' }, STAFF)
     expect(getRecordedAuditEntries().at(-1)!.summary).toBe('Damaged or spilled · Large write-off')
   })
 
@@ -204,8 +202,10 @@ describe('Large write-off rule (panel review IV-7)', () => {
     const { item, batch } = await target()
     db().config.largeWriteOffPercent = 100
     await adjustInventoryStock(item.id, { batchId: batch.id, change: -1, reason: 'damaged_spilled' }, STAFF)
+    expect(getRecordedAuditEntries().at(-1)!.summary).toBe('Damaged or spilled')
     db().config.largeWriteOffPercent = 1
-    await expect(adjustInventoryStock(item.id, { batchId: batch.id, change: -1, reason: 'damaged_spilled' }, STAFF)).rejects.toThrow('large write-off')
+    await adjustInventoryStock(item.id, { batchId: batch.id, change: -1, reason: 'damaged_spilled' }, STAFF)
+    expect(getRecordedAuditEntries().at(-1)!.summary).toBe('Damaged or spilled · Large write-off')
   })
 
   it('does not let the Admin adjust stock', async () => {
@@ -213,13 +213,14 @@ describe('Large write-off rule (panel review IV-7)', () => {
     await expect(adjustInventoryStock(item.id, { batchId: batch.id, change: -1, reason: 'damaged_spilled' }, ADMIN)).rejects.toThrow('Only the School Clinician')
   })
 
-  it('makes the note required on the form once the removal is large', async () => {
+  it('says a large removal is flagged, and keeps the note optional', async () => {
     const user = userEvent.setup()
     db().config.largeWriteOffPercent = 1
     renderWithRouter(<InventoryListPage />)
     await selectOption(user, await screen.findByRole('button', { name: /^Manage Gauze Pads/ }), 'Adjust Stock')
     const dialog = screen.getByRole('dialog', { name: 'Adjust Stock: Gauze Pads' })
     await user.type(within(dialog).getByLabelText(/quantity to remove/i), '1')
-    expect(await within(dialog).findByText(/Large write-off: explain it/)).toBeInTheDocument()
+    expect(await within(dialog).findByText('Large write-off: it is flagged in the Audit Log.')).toBeInTheDocument()
+    expect(within(dialog).getByLabelText(/^Note/)).not.toBeRequired()
   })
 })

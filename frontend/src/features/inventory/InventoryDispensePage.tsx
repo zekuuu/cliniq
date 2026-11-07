@@ -1,4 +1,5 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { Lrn } from '../../components/ui/MaskedLrn'
 import { Link } from 'react-router'
 import { BackButton, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Input, InventoryItemPicker, PatientPicker, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
@@ -7,7 +8,7 @@ import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { formatDateTime } from '../../lib/dates'
 import { allergyMatches, allergyWarningText } from '../../lib/itemsGiven'
 import { StockRuleError } from '../../lib/mock-db'
-import { maskPatientNumber, patientRefOf } from '../../lib/patients'
+import { patientRefOf } from '../../lib/patients'
 import { paths } from '../../routes/paths'
 import type { PatientRef, PatientSearchResult } from '../../types/entities'
 import { dispenseInventoryItem, fetchInventory, findDispensePatient, searchDispensePatients } from './api/inventoryApi'
@@ -37,7 +38,7 @@ export function InventoryDispensePage() {
   const [itemId, setItemId] = useState('')
   const [quantity, setQuantity] = useState('1')
   const [errors, setErrors] = useState<{ recipient?: string; student?: string; item?: string; quantity?: string; save?: string }>({})
-  const [success, setSuccess] = useState('')
+  const [success, setSuccess] = useState<ReactNode>('')
   const [saving, setSaving] = useState(false)
   const { cancel, discardDialog } = useCancelNavigation(
     paths.inventory,
@@ -73,8 +74,9 @@ export function InventoryDispensePage() {
     setSaving(true)
     try {
       const result = await dispenseInventoryItem(item.id, amount, recipient === 'student' ? (patientRef ?? undefined) : undefined)
-      const forWhom = picked ? (picked.kind === 'student' ? `LRN ${maskPatientNumber({ kind: 'student', number: picked.lrn })}` : `Staff No. ${picked.staffNumber}`) : ''
-      setSuccess(`${amount} ${result.item.unit} of ${result.item.name} recorded${recipient === 'student' && picked ? ` for ${forWhom}` : ' for general use'}. Remaining stock: ${result.remainingStock}.${result.belowZero ? ' Stock is now below zero; recount and restock.' : ''}`)
+      // The masked LRN through the shared component, like every list (professor's consultation, November 6, 2026).
+      const forWhom = picked ? (picked.kind === 'student' ? <>LRN <Lrn lrn={picked.lrn} /></> : `Staff No. ${picked.staffNumber}`) : ''
+      setSuccess(<>{amount} {result.item.unit} of {result.item.name} recorded{recipient === 'student' && picked ? <> for {forWhom}</> : ' for general use'}. Remaining stock: {result.remainingStock}.{result.belowZero ? ' Stock is now below zero; recount and restock.' : ''}</>)
       setItemId('')
       setQuantity('1')
       reload()
@@ -102,8 +104,12 @@ export function InventoryDispensePage() {
           <p role="status" className="sr-only">
             {invalid.announcement}
           </p>
+          {/* Paired rows, so no field sits alone in a half-empty row (Zean, November 5, 2026). The picker
+              takes the full row once someone is selected, so the selected card never wraps. */}
+          <div className="grid grid-cols-1 items-start gap-x-3 gap-y-4 sm:grid-cols-2">
           <Select label="For" required value={recipient} placeholder="Choose who this is for" options={recipientOptions} error={errors.recipient} onChange={(value) => { setRecipient(value as Recipient); clear('recipient') }} />
           {recipient === 'student' && (
+            <div className={lookup?.patient ? 'sm:col-span-2' : undefined}>
             <PatientPicker
               search={searchDispensePatients}
               selected={lookup?.patient ?? null}
@@ -113,8 +119,9 @@ export function InventoryDispensePage() {
               hint="Type an LRN, a Staff No. or a name, then pick who received it."
               addStudentHref={paths.studentNew}
               addStaffHref={paths.staffNew}
-            />
+            /></div>
           )}
+          </div>
           {recipient === 'student' && lookup?.todaysVisit && (
             <div role="status" className="rounded-md border border-info bg-info/10 px-4 py-3 text-sm text-text-primary">
               <p className="font-semibold">{lookup.patient.kind === 'student' ? 'This student' : 'This staff member'} already has a visit today ({formatDateTime(lookup.todaysVisit.dateTime)}).</p>
@@ -122,25 +129,29 @@ export function InventoryDispensePage() {
               <Link className="mt-2 inline-flex items-center gap-1 font-semibold text-brand-green-dark underline hover:brightness-75" to={paths.visitDetail(lookup.todaysVisit.id)}>Open today’s visit<Icon name="arrowRight" size={14} /></Link>
             </div>
           )}
+          <div className="grid grid-cols-1 items-start gap-x-3 gap-y-4 sm:grid-cols-2">
           {item ? (
-            <div className="flex flex-col gap-1">
+            <div className="flex min-w-0 flex-col gap-1">
               <p className="text-sm font-semibold text-text-primary">Item <span className="text-error" aria-hidden="true">*</span></p>
               <div className="flex h-10 items-center justify-between gap-3 rounded-md border border-border bg-surface px-3 text-sm">
-                <span className="font-semibold text-text-primary">{item.name} <span className="font-normal text-text-secondary">· {item.currentStock} {item.unit} in stock</span></span>
+                <span className="min-w-0 truncate font-semibold text-text-primary">{item.name} <span className="font-normal text-text-secondary">· {item.currentStock} {item.unit} in stock</span></span>
                 <button type="button" aria-label={`Change item (${item.name})`} onClick={() => setItemId('')} className="inline-flex cursor-pointer rounded-sm text-text-secondary transition-colors hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"><Icon name="xCircle" /></button>
               </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-1">
+            <div className="flex min-w-0 flex-col gap-1">
               <InventoryItemPicker label="Item" items={items} onPick={(id) => { setItemId(id); clear('item') }} />
               {errors.item && <p role="alert" className="text-xs font-semibold text-error">{errors.item}</p>}
             </div>
           )}
+          <div className="flex flex-col gap-1">
+          <Input label="Quantity" required type="number" min="1" step="1" value={quantity} error={errors.quantity} hint={item ? `In ${item.unit}.` : undefined} onChange={(event) => { setQuantity(event.target.value); clear('quantity') }} />
+          {overStock && <p className="flex items-start gap-1 text-xs font-semibold text-warning-text"><Icon name="alertTriangle" size={14} className="mt-px shrink-0" />Only {item.currentStock} {item.unit} in stock. Recording this takes stock below zero; recount and restock.</p>}
+          </div>
+          </div>
           {item && lookup?.patient && allergyMatches(item, lookup.patient.allergies).map((tag) => (
             <p key={tag} role="note" className="flex items-start gap-1 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm font-semibold text-text-primary"><Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning-text" />{allergyWarningText(tag)} You can still record it.</p>
           ))}
-          <Input label="Quantity" required type="number" min="1" step="1" value={quantity} error={errors.quantity} hint={item ? `In ${item.unit}.` : undefined} onChange={(event) => { setQuantity(event.target.value); clear('quantity') }} />
-          {overStock && <p className="flex items-start gap-1 text-xs font-semibold text-warning-text"><Icon name="alertTriangle" size={14} className="mt-px shrink-0" />Only {item.currentStock} {item.unit} in stock. Recording this takes stock below zero; recount and restock.</p>}
           {errors.save && <p role="alert" className="text-sm font-semibold text-error">{errors.save}</p>}
           {success && <p role="status" className="text-sm font-semibold text-success">{success}</p>}
           <div className="flex flex-wrap justify-end gap-2"><Button variant="neutral" onClick={cancel}>Cancel</Button><Button type="submit" variant="primary" icon="checkCircle" loading={saving}>Record Dispensation</Button></div>

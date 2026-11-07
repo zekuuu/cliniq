@@ -111,7 +111,9 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
       personnelId: f.personnelId ?? null,
       followUpDate: resolveSchoolDate(f.followUpDate, today),
     })),
-    inventoryItems: source.inventoryItems.map(({ currentStock, expirationDate, ...item }) => ({
+    // The seed-only `_note` comment is dropped on load.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    inventoryItems: source.inventoryItems.map(({ currentStock, expirationDate, _note: _seedNote, ...item }) => ({
       ...item,
       batches: [{
         id: `${item.id}-batch-0001`,
@@ -138,6 +140,10 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
       recordReviews: fo.recordReviews.map((r) => ({
         ...r,
         importedAt: resolveSchoolDate(r.importedAt, today),
+        resolvedAt: r.resolvedAt ? resolveSchoolDateTime(r.resolvedAt, today) : null,
+      })),
+      personnelReviews: fo.personnelReviews.map((r) => ({
+        ...r,
         resolvedAt: r.resolvedAt ? resolveSchoolDateTime(r.resolvedAt, today) : null,
       })),
       excuseLetterApprovals: fo.excuseLetterApprovals.map((a) => ({

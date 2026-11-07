@@ -36,10 +36,11 @@ import { normalizeComplaint, reportComplaint } from '../complaints'
 import type { Patient, PatientNumber } from '../patients'
 import type { ImportRow } from '../studentImport'
 import type { StudentSex } from '../../types/entities'
-import { incidentCompletionBlocker } from '../itemsGiven'
 import { DISPOSITION_LABELS } from '../dispositions'
 import { EXCUSE_LETTER_RECIPIENT, excuseLetterBody } from '../excuseLetter'
 import { addDays, endOfMonth, isRealDate, monthWeeks, toISODate, type MonthWeek } from '../dates'
+import { generateRecoveryCodes, generateTotpSecret, hashRecoveryCode, otpauthUri, verifyTotp } from '../totp'
+import { currentSchoolYear, schoolYearStep, schoolYearOf, schoolYearSettingsError, type SchoolYear, type SchoolYearSettings } from '../schoolYear'
 import type { BackupAlert, CalendarDay, CalendarDayEvent, DashboardQuery, DashboardSummary, Holiday, HolidayFeed } from '../../types/dashboard'
 import holidayData from './holidays-ph.json'
 import type { FollowUpDueState } from '../../components/status/followUp'
@@ -61,6 +62,9 @@ import {
   inventoryStatusFor,
   missingRequiredFields,
   monthlyCounts,
+  missingStaffFields,
+  staffIncompleteQueue,
+  type StaffIncompleteRow,
   personnelDepartments,
   searchPatients as searchPatientRecords,
   searchPersonnel as searchPersonnelRecords,
@@ -79,6 +83,8 @@ import { clearMockSession, firstViewThisSession, getMockSessionUser, type Sessio
 import { commit, db, restoreDb } from './store'
 import { CALENDAR_EVENT_TITLE_MAX, PERSONNEL_DEPARTMENT_MAX } from './integrity'
 import { cleanNamePart, compareByLastName, formatPersonName, NAME_PART_MAX, nameKey, nameMatches, type NameParts } from '../personName'
+import { isPhilippinePhone } from '../phone'
+import type { StaffImportRow } from '../staffImport'
 import type {
   AdjustmentReason,
   BackupLocation,
@@ -229,6 +235,11 @@ const FIELD_LABELS: Record<string, string> = {
   brand: 'generic or branded',
   department: 'department or role',
   avoidIfAllergicTo: 'avoid if allergic to',
+  schoolYearStartMonth: 'start month',
+  schoolYearStartDay: 'start day',
+  schoolYearEndMonth: 'end month',
+  schoolYearEndDay: 'end day',
+  usedFor: 'commonly used for',
   generalNotes: 'additional notes',
 }
 
@@ -327,6 +338,8 @@ export function resetMockAuth() {
   loginAttempts.clear()
   passwordHistory.clear()
   changedPasswordUsers.clear()
+  pendingAuthenticators.clear()
+  recoveryTokens.clear()
 }
 
 function attemptFor(username: string): LoginAttemptState {
@@ -423,6 +436,235 @@ export async function changeMockPassword(userId: string, nextPassword: string): 
 export async function changeOwnPassword(userId: string, currentPassword: string, nextPassword: string): Promise<void> {
   if (fakePasswordHistory(view(), userId)[0] !== currentPassword) throw new Error('Your current password is incorrect.')
   await changeMockPassword(userId, nextPassword)
+}
+
+// ---- password recovery with an authenticator app (ADR-072) ---------------------------------
+
+/** A secret shown for setup but not yet confirmed with a first code; kept in memory only. */
+const pendingAuthenticators = new Map<string, string>()
+/** One-time permissions to set a new password after a good code, valid 10 minutes. */
+const recoveryTokens = new Map<string, { userId: string; expires: number }>()
+
+/**
+ * One message for every failed recovery: an unknown username, a wrong or old code, an account with no
+ * authenticator, a disabled account. The screen never reveals which usernames exist.
+ */
+export const RECOVERY_FAILED_MESSAGE = 'The code did not work, or the account is not set up for recovery. Ask the Administrator to reset your password.'
+
+export class RecoveryError extends Error {}
+
+function devAccountOf(state: DbState, userId: string) {
+  return state.frontendOnly.devAccounts.find((account) => account.userId === userId)
+}
+
+function actorOf(user: User): SessionUser {
+  return { id: user.id, name: user.name, role: user.role }
+}
+
+/** Checks a 6-digit code, else a recovery code (spent on use). Writes into `state`; true when either worked. */
+async function proveFactor(state: DbState, user: User, proof: string): Promise<'code' | 'recovery' | null> {
+  const record = devAccountOf(state, user.id)?.authenticator
+  if (!record) return null
+  if (await verifyTotp(record.secret, proof, Date.now())) return 'code'
+  const hash = await hashRecoveryCode(proof)
+  if (!record.recoveryCodeHashes.includes(hash)) return null
+  record.recoveryCodeHashes = record.recoveryCodeHashes.filter((other) => other !== hash)
+  audit(state, actorOf(user), 'update', { type: 'user', id: user.id }, 'Used a recovery code')
+  return 'recovery'
+}
+
+/** The signed-in account's recovery status (the account menu). Never the secret. */
+export function getAuthenticatorStatus(): Promise<{ enabled: boolean; recoveryCodesLeft: number }> {
+  return read('authenticator status', (s) => {
+    const record = devAccountOf(s, ownAccount(s).id)?.authenticator
+    return { enabled: Boolean(record), recoveryCodesLeft: record?.recoveryCodeHashes.length ?? 0 }
+  })
+}
+
+/**
+ * Step 1 of setup: a new secret for the signed-in account and its QR link. Replacing an existing one
+ * needs the current code or a recovery code first. Nothing is saved until `confirmAuthenticatorSetup`.
+ */
+export async function startAuthenticatorSetup(proof?: string): Promise<{ secret: string; uri: string }> {
+  await simulateRequest('start authenticator setup')
+  const state = db()
+  const user = ownAccount(state)
+  if (devAccountOf(state, user.id)?.authenticator) {
+    if (!proof || !(await proveFactor(state, user, proof))) throw new RecoveryError('That code did not work. Enter the 6-digit code from the app, or a recovery code.')
+    commit()
+  }
+  const secret = generateTotpSecret()
+  pendingAuthenticators.set(user.id, secret)
+  return { secret, uri: otpauthUri(user.username, secret) }
+}
+
+/** Step 2: the first code from the app proves it was set up. Returns 8 recovery codes, shown once. */
+export async function confirmAuthenticatorSetup(code: string): Promise<{ recoveryCodes: string[] }> {
+  await simulateRequest('confirm authenticator setup')
+  const state = db()
+  const user = ownAccount(state)
+  const secret = pendingAuthenticators.get(user.id)
+  if (!secret) throw new RecoveryError('Start the setup again.')
+  if (!(await verifyTotp(secret, code, Date.now()))) throw new RecoveryError('That code did not work. If codes do not work, check that the phone\'s date and time are set automatically.')
+  const recoveryCodes = generateRecoveryCodes()
+  const recoveryCodeHashes = await Promise.all(recoveryCodes.map(hashRecoveryCode))
+  return write('confirm authenticator setup', (s) => {
+    const account = must(devAccountOf(s, user.id), 'Account')
+    const replacing = Boolean(account.authenticator)
+    account.authenticator = { secret, confirmedAt: now(s), recoveryCodeHashes }
+    pendingAuthenticators.delete(user.id)
+    audit(s, actorOf(user), 'update', { type: 'user', id: user.id }, replacing ? 'Replaced authenticator' : 'Set up authenticator')
+    return { recoveryCodes }
+  })
+}
+
+/** Turns recovery off for the signed-in account, after the current code or a recovery code. */
+export async function turnOffAuthenticator(proof: string): Promise<void> {
+  await simulateRequest('turn off authenticator')
+  const state = db()
+  const user = ownAccount(state)
+  if (!(await proveFactor(state, user, proof))) {
+    commit()
+    throw new RecoveryError('That code did not work. Enter the 6-digit code from the app, or a recovery code.')
+  }
+  await write('turn off authenticator', (s) => {
+    must(devAccountOf(s, user.id), 'Account').authenticator = null
+    audit(s, actorOf(user), 'update', { type: 'user', id: user.id }, 'Turned off authenticator')
+  })
+}
+
+export const RECOVERY_NO_ACCOUNT_MESSAGE = 'No account with that username.'
+export const RECOVERY_DISABLED_MESSAGE = 'This account is disabled. Ask the Administrator.'
+export const RECOVERY_NOT_SET_UP_MESSAGE = 'This account has no authenticator app set up. Ask the Administrator to reset your password.'
+
+/** The recovery attempt for a username, unlocked if its lock has run out; throws while it is locked. */
+function openRecoveryAttempt(normalized: string) {
+  const attempt = attemptFor(normalized)
+  if (attempt.lockedUntil && attempt.lockedUntil > Date.now()) throw new MockAuthError('locked', attempt.lockedUntil)
+  if (attempt.lockedUntil && attempt.lockedUntil <= Date.now()) {
+    attempt.failures = 0
+    attempt.lockedUntil = null
+  }
+  return attempt
+}
+
+/** Counts a failed recovery step toward the sign-in lockout (5 failures, 30 minutes, ADR-015), then throws `message`. */
+async function failRecovery(attempt: ReturnType<typeof attemptFor>, user: User | undefined, message: string): Promise<never> {
+  attempt.failures += 1
+  if (attempt.failures >= 5) {
+    attempt.failures = 0
+    attempt.lockedUntil = Date.now() + 30 * 60 * 1000
+    if (user) await logLockout(user, 'password recovery')
+    throw new MockAuthError('locked', attempt.lockedUntil)
+  }
+  throw new RecoveryError(message)
+}
+
+/**
+ * Forgot password, step 1 (Login): is the username an active account with an authenticator? Says
+ * which it is not (Zean, November 7, 2026, choosing this over ADR-073's single message; it tells a
+ * person at the clinic computer which usernames exist). Each failure counts toward the lockout.
+ */
+export async function checkRecoveryAccount(username: string): Promise<void> {
+  await simulateRequest('check recovery account')
+  const normalized = username.trim().toLowerCase()
+  const attempt = openRecoveryAttempt(normalized)
+  const state = db()
+  const user = state.users.find((candidate) => candidate.username.toLowerCase() === normalized)
+  if (!user) return failRecovery(attempt, undefined, RECOVERY_NO_ACCOUNT_MESSAGE)
+  if (user.deactivatedAt) return failRecovery(attempt, user, RECOVERY_DISABLED_MESSAGE)
+  if (!devAccountOf(state, user.id)?.authenticator) return failRecovery(attempt, user, RECOVERY_NOT_SET_UP_MESSAGE)
+}
+
+/**
+ * Forgot password, step 2 (Login): the username and a 6-digit code or a recovery code. A failed code
+ * keeps the general message and counts toward the sign-in lockout (5 failures, 30 minutes, ADR-015).
+ * Returns a one-time token for the new password.
+ */
+export async function verifyPasswordRecovery(username: string, proof: string): Promise<string> {
+  await simulateRequest('verify password recovery')
+  const normalized = username.trim().toLowerCase()
+  const attempt = openRecoveryAttempt(normalized)
+  const state = db()
+  const user = state.users.find((candidate) => candidate.username.toLowerCase() === normalized)
+  const ok = user && !user.deactivatedAt ? await proveFactor(state, user, proof) : null
+  if (!user || !ok) return failRecovery(attempt, user, RECOVERY_FAILED_MESSAGE)
+  commit()
+  attempt.failures = 0
+  const token = generateTotpSecret()
+  recoveryTokens.set(token, { userId: user.id, expires: Date.now() + 10 * 60 * 1000 })
+  return token
+}
+
+/**
+ * Forgot password, step 2: the new password, by the same rules as Change Password (8 characters, not
+ * one of the last 5). Clears a pending forced change. Audited by action only, never a code or password.
+ */
+export async function resetPasswordWithRecovery(token: string, nextPassword: string): Promise<void> {
+  const grant = recoveryTokens.get(token)
+  if (!grant || grant.expires < Date.now()) {
+    recoveryTokens.delete(token)
+    throw new RecoveryError('This reset has expired. Start again with a new code.')
+  }
+  await changeMockPassword(grant.userId, nextPassword)
+  recoveryTokens.delete(token)
+  await write('reset password with authenticator', (s) => {
+    const user = must(s.users.find((candidate) => candidate.id === grant.userId), 'User')
+    audit(s, actorOf(user), 'update', { type: 'user', id: user.id }, 'Reset password with authenticator')
+  })
+}
+
+/** The approved `users.name` length (Reference-Schema: VARCHAR(120)); the Edit profile dialog uses it too. */
+export const USER_NAME_MAX = 120
+
+/** The signed-in account as the account menu and the Edit profile dialog show it (ADR-066). */
+export interface OwnAccount {
+  name: string
+  username: string
+  role: UserRole
+  profilePicture: string | null
+  lastLogin: ISODateTime | null
+}
+
+/** The signed-in, active account. Never takes a user id from the caller (ADR-066). */
+function ownAccount(state: DbState): User {
+  const session = getMockSessionUser()
+  const user = must(state.users.find((u) => u.id === session.id), 'Account')
+  if (user.deactivatedAt) throw new Error('This account is disabled.')
+  return user
+}
+
+export function getOwnAccount(): Promise<OwnAccount> {
+  return read('own account', (s) => {
+    const user = ownAccount(s)
+    return { name: user.name, username: user.username, role: user.role, profilePicture: user.profilePicture ?? null, lastLogin: user.lastLogin }
+  })
+}
+
+/**
+ * Self-service Edit profile (ADR-066): the signed-in user changes their own display name and picture.
+ * The username and role stay with the Admin. Each change is audited by field name only, never the old
+ * or new name and never image data (ADR-016, ADR-017).
+ */
+export function updateOwnProfile(input: { name: string; profilePicture: string | null }): Promise<OwnAccount> {
+  return write('update own profile', (s) => {
+    const user = ownAccount(s)
+    const name = input.name.trim().replace(/\s+/g, ' ')
+    if (!name) throw new Error('Enter your full name.')
+    if (name.length > USER_NAME_MAX) throw new Error(`Keep your name to ${USER_NAME_MAX} characters or fewer.`)
+    const picture = input.profilePicture ?? null
+    if (picture !== null && !picture.startsWith('data:image/')) throw new Error('Choose a JPEG, PNG, or WebP image.')
+    const actor: SessionUser = { id: user.id, name: user.name, role: user.role }
+    if (name !== user.name) {
+      user.name = name
+      audit(s, actor, 'update', { type: 'user', id: user.id }, 'Changed own name')
+    }
+    if (picture !== (user.profilePicture ?? null)) {
+      user.profilePicture = picture
+      audit(s, actor, 'update', { type: 'user', id: user.id }, 'Changed own profile picture')
+    }
+    return { name: user.name, username: user.username, role: user.role, profilePicture: user.profilePicture ?? null, lastLogin: user.lastLogin }
+  })
 }
 
 function userName(state: DbState, id: string | null): string | null {
@@ -857,11 +1099,44 @@ export function saveStudent(
   })
 }
 
-/** Archive, never delete (data retention policy): hidden from active lists, kept for 5 years. */
-export function archiveStudent(studentId: string, actor?: SessionUser): Promise<Student> {
+/** The school-year dates in settings (professor's consultation, November 6, 2026). */
+function schoolYearSettingsOf(s: DbState): SchoolYearSettings {
+  const { schoolYearStartMonth, schoolYearStartDay, schoolYearEndMonth, schoolYearEndDay } = s.config
+  return { schoolYearStartMonth, schoolYearStartDay, schoolYearEndMonth, schoolYearEndDay, schoolYearStarts: s.config.schoolYearStarts ?? [] }
+}
+
+/** The four date settings only, for the settings form and its audit summary. */
+function schoolYearDatesOf(s: DbState): SchoolYearSettings {
+  const { schoolYearStartMonth, schoolYearStartDay, schoolYearEndMonth, schoolYearEndDay } = s.config
+  return { schoolYearStartMonth, schoolYearStartDay, schoolYearEndMonth, schoolYearEndDay }
+}
+
+/**
+ * What an archived record stores: when, why, and the school year's label at that moment, so a later
+ * change of the school-year dates never moves it (professor's consultation, November 6, 2026).
+ */
+function archiveDetails(s: DbState, reason: string): { archived: true; archivedAt: ISODateTime; archiveReason: string; archivedSchoolYear: string } {
+  const at = now(s)
+  return { archived: true, archivedAt: at, archiveReason: reason, archivedSchoolYear: schoolYearOf(at.slice(0, 10), schoolYearSettingsOf(s)).label }
+}
+
+/** Longest archive reason ("Other" specified). */
+export const ARCHIVE_REASON_MAX = 80
+
+function cleanReason(reason: string): string {
+  const cleaned = reason.replace(/\s+/g, ' ').trim().slice(0, ARCHIVE_REASON_MAX)
+  if (!cleaned) throw new Error('Give the reason for archiving.')
+  return cleaned
+}
+
+/**
+ * Archive, never delete (data retention policy): hidden from active lists, kept for 5 years. The reason
+ * is required (a mid-year transfer is "Transferred" with its date). The audit entry names no reason.
+ */
+export function archiveStudent(studentId: string, actor: SessionUser | undefined, reason: string): Promise<Student> {
   return write('archive student', (s) => {
     const record = studentOf(s, studentId)
-    record.archived = true
+    Object.assign(record, archiveDetails(s, cleanReason(reason)))
     audit(s, actorOr(actor), 'archive', { type: 'student', id: record.id })
     return toStudent(record)
   })
@@ -987,7 +1262,7 @@ export function applyStudentImport(rows: ImportRow[], options: { fileName: strin
     const listed = new Set(rows.map((row) => row.lrn))
     for (const student of s.students) {
       if (options.archiveIds.includes(student.id) && !student.archived && !listed.has(student.lrn)) {
-        student.archived = true
+        Object.assign(student, archiveDetails(s, 'Not on the new list'))
         result.archived += 1
       }
     }
@@ -1004,6 +1279,179 @@ export type IncompleteRecord = IncompleteRecordRow & { resolvedByName: string | 
 export function getIncompleteRecordQueue(options: { fullLrn?: boolean } = {}): Promise<IncompleteRecord[]> {
   return read('incomplete records', (s) =>
     incompleteRecordQueue(s, options.fullLrn).map((row) => ({ ...row, resolvedByName: userName(s, row.review?.resolvedByUserId ?? null) })),
+  )
+}
+
+/** ADR-067: completing an incomplete staff record resolves it on the staff Incomplete Records page, crediting whoever did it. */
+function resolveIfCompleted(s: DbState, record: SeedPersonnel, wasIncomplete: boolean, by: SessionUser) {
+  if (!wasIncomplete || missingStaffFields(record).length) return
+  const reviews = (s.frontendOnly.personnelReviews ??= [])
+  let review = reviews.find((r) => r.personnelId === record.id)
+  if (!review) {
+    review = { personnelId: record.id, resolvedByUserId: null, resolvedAt: null }
+    reviews.push(review)
+  }
+  review.resolvedByUserId = by.id
+  review.resolvedAt = now(s)
+}
+
+// ---- staff list import (ADR-069, mock level) -------------------------------------------------
+
+export interface StaffImportProblem {
+  /** The row in the file, counting the header as row 1. */
+  line: number
+  name: string
+  problem: string
+}
+
+export interface StaffImportPreview {
+  newCount: number
+  /** Rows that match a staff record already in CLINIQ, and how many of those change. */
+  continuingCount: number
+  changedCount: number
+  problems: StaffImportProblem[]
+}
+
+export interface StaffImportResult {
+  created: number
+  updated: number
+  flagged: number
+}
+
+interface StaffImportPlan {
+  row: StaffImportRow
+  record: SeedPersonnel | null
+  fields: Pick<SeedPersonnel, 'firstName' | 'lastName' | 'middleName' | 'sex' | 'type' | 'department'> & Partial<Pick<SeedPersonnel, 'contactInfo' | 'emergencyContacts'>>
+}
+
+/**
+ * Checks every row and works out what it would do. A row with a Staff No. updates that record; without
+ * one it matches a staff member by full name and type, or is added. A flagged row is left out.
+ */
+function planStaffImport(s: DbState, rows: StaffImportRow[]) {
+  const seenNumbers = new Map<string, number>()
+  for (const row of rows) if (row.staffNumber) seenNumbers.set(row.staffNumber.toUpperCase(), (seenNumbers.get(row.staffNumber.toUpperCase()) ?? 0) + 1)
+  const problems: StaffImportProblem[] = []
+  const plans: StaffImportPlan[] = []
+  const claimed = new Set<string>()
+  rows.forEach((row, index) => {
+    const line = index + 2
+    const name = [row.firstName, row.lastName].filter(Boolean).join(' ')
+    const type = s.config.personnelTypes.find((candidate) => candidate.toLowerCase() === row.type.toLowerCase())
+    const contactStarted = Boolean(row.contactName || row.contactRelationship || row.contactPhone)
+    const number = row.staffNumber.toUpperCase()
+    const byNumber = number ? s.personnel.find((p) => p.staffNumber === number) : undefined
+    const byName = number
+      ? undefined
+      : s.personnel.filter((p) => p.type === type && nameKey(formatPersonName(p)) === nameKey(formatPersonName({ firstName: row.firstName, lastName: row.lastName, middleName: row.middleName || null })))
+    const problem = !row.firstName || !row.lastName
+      ? 'The name is incomplete.'
+      : !importSex(row.sex)
+        ? 'Sex must be Male or Female.'
+        : !type
+          ? `"${row.type}" is not a staff type (${s.config.personnelTypes.join(', ')}).`
+          : number && (seenNumbers.get(number) ?? 0) > 1
+            ? 'This Staff No. appears more than once in the file.'
+            : number && !byNumber
+              ? `No staff record has the Staff No. ${number}. Leave it blank to add a new staff member.`
+              : byName && byName.length > 1
+                ? 'More than one staff member has this name and type. Add the Staff No. to this row.'
+                : row.department.length > PERSONNEL_DEPARTMENT_MAX
+                  ? `Department or role can be at most ${PERSONNEL_DEPARTMENT_MAX} characters.`
+                  : contactStarted && !(row.contactName && row.contactRelationship && row.contactPhone)
+                    ? 'The emergency contact needs a name, relationship and phone.'
+                    : contactStarted && !isPhilippinePhone(row.contactPhone)
+                      ? 'The emergency contact phone is not a Philippine number.'
+                      : null
+    const record = byNumber ?? byName?.[0] ?? null
+    if (!problem && record && claimed.has(record.id)) {
+      problems.push({ line, name, problem: 'Another row in the file is the same staff member.' })
+      return
+    }
+    if (problem) {
+      problems.push({ line, name, problem })
+      return
+    }
+    if (record) claimed.add(record.id)
+    plans.push({
+      row,
+      record,
+      fields: {
+        firstName: cleanNamePart(row.firstName),
+        lastName: cleanNamePart(row.lastName),
+        middleName: cleanNamePart(row.middleName) || null,
+        sex: importSex(row.sex)!,
+        type: type!,
+        department: row.department || (record?.department ?? null),
+        // Blank cells keep what CLINIQ has; a contact from the file is added only when the record has none.
+        ...(row.contactInfo ? { contactInfo: row.contactInfo } : {}),
+        ...(contactStarted && !record?.emergencyContacts.length
+          ? { emergencyContacts: [{ name: row.contactName, relationship: row.contactRelationship, phone: row.contactPhone, verified: false }] }
+          : {}),
+      },
+    })
+  })
+  return { plans, problems }
+}
+
+const staffImportChanges = (plan: StaffImportPlan) =>
+  !plan.record || plan.record.archived || Object.entries(plan.fields).some(([key, value]) => JSON.stringify(plan.record![key as keyof SeedPersonnel]) !== JSON.stringify(value))
+
+/** The preview before anything is applied. Reads only. */
+export function previewStaffImport(rows: StaffImportRow[], actor?: SessionUser): Promise<StaffImportPreview> {
+  return read('staff import preview', (s) => {
+    requireClinician(actorOr(actor))
+    const { plans, problems } = planStaffImport(s, rows)
+    const known = plans.filter((plan) => plan.record)
+    return { newCount: plans.length - known.length, continuingCount: known.length, changedCount: known.filter(staffImportChanges).length, problems }
+  })
+}
+
+/**
+ * Applies a reviewed staff list (ADR-069): adds new staff with a new Staff No., updates the matched
+ * ones and restores a matched archived record. Staff missing from the file are left alone. A list
+ * that changes nothing writes nothing. The audit entry holds counts, never names.
+ */
+export function applyStaffImport(rows: StaffImportRow[], options: { fileName: string; actor?: SessionUser }): Promise<StaffImportResult> {
+  return write('apply staff import', (s) => {
+    const by = actorOr(options.actor)
+    requireClinician(by)
+    const { plans, problems } = planStaffImport(s, rows)
+    const result: StaffImportResult = { created: 0, updated: 0, flagged: problems.length }
+    for (const plan of plans) {
+      if (plan.record) {
+        if (!staffImportChanges(plan)) continue
+        const wasIncomplete = missingStaffFields(plan.record).length > 0
+        Object.assign(plan.record, plan.fields, { archived: false })
+        resolveIfCompleted(s, plan.record, wasIncomplete, by)
+        result.updated += 1
+      } else {
+        s.personnel.push({
+          id: nextId('personnel', s.personnel),
+          staffNumber: nextStaffNumber(s),
+          contactInfo: '',
+          allergies: [],
+          medicalConditions: [],
+          emergencyContacts: [],
+          archived: false,
+          ...plan.fields,
+        })
+        result.created += 1
+      }
+    }
+    if (!result.created && !result.updated) return result
+    const id = `staff-import-${s.auditLog.filter((entry) => entry.targetRecord?.type === 'staff-import').length + 1}`
+    audit(s, by, 'submit', { type: 'staff-import', id }, `${result.created} added, ${result.updated} updated, ${result.flagged} flagged`)
+    return result
+  })
+}
+
+export type StaffIncompleteRecord = StaffIncompleteRow & { resolvedByName: string | null }
+
+/** The staff Incomplete Records page (ADR-067). */
+export function getStaffIncompleteQueue(): Promise<StaffIncompleteRecord[]> {
+  return read('staff incomplete records', (s) =>
+    staffIncompleteQueue(s).map((row) => ({ ...row, resolvedByName: userName(s, row.review?.resolvedByUserId ?? null) })),
   )
 }
 
@@ -1056,7 +1504,7 @@ export function getPersonnelTypes(): Promise<string[]> {
 }
 
 /** Department or role values already in use, as suggestions (D4). */
-export function getPersonnelDepartments(): Promise<string[]> {
+export function getPersonnelDepartments(): Promise<Record<string, string[]>> {
   return read('staff departments', personnelDepartments)
 }
 
@@ -1137,8 +1585,10 @@ export function savePersonnel(
     if (options.personnelId) {
       const record = personnelOf(s, options.personnelId)
       const summary = changedSummary(record, fields)
+      const wasIncomplete = missingStaffFields(record).length > 0
       Object.assign(record, fields)
       audit(s, by, 'update', { type: 'staff', id: record.id }, summary)
+      resolveIfCompleted(s, record, wasIncomplete, by)
       return { personnel: toPersonnel(record), action: 'update' as const }
     }
     const record: SeedPersonnel = { id: nextId('personnel', s.personnel), staffNumber: nextStaffNumber(s), ...fields, archived: false }
@@ -1149,12 +1599,12 @@ export function savePersonnel(
 }
 
 /** Archive, never delete (D9): hidden from active lists and the patient search, kept in history. */
-export function archivePersonnel(personnelId: string, actor?: SessionUser): Promise<Personnel> {
+export function archivePersonnel(personnelId: string, actor: SessionUser | undefined, reason: string): Promise<Personnel> {
   return write('archive staff', (s) => {
     const by = actorOr(actor)
     requireClinician(by)
     const record = personnelOf(s, personnelId)
-    record.archived = true
+    Object.assign(record, archiveDetails(s, cleanReason(reason)))
     audit(s, by, 'archive', { type: 'staff', id: record.id })
     return toPersonnel(record)
   })
@@ -1812,15 +2262,7 @@ export function completeIncidentStageTwo(
     const incident = must(s.incidents.find((i) => i.id === input.incidentId), 'Incident')
     const lines = input.itemsGiven ?? []
     const noFurtherActionReason = input.noFurtherActionReason?.trim() || null
-    // An empty record can't be completed (panel review IN-3); checked before any stock moves.
-    const blocker = incidentCompletionBlocker({
-      vitals: input.vitals,
-      itemsGiven: incident.stage === 2 ? incident.itemsGiven : lines,
-      parentNotifications: [...incident.parentNotifications, ...input.newParentNotifications],
-      hospitalReferral: input.hospitalReferral,
-      noFurtherActionReason,
-    })
-    if (blocker) throw new Error(blocker)
+    // Care, a call and a referral are all optional (ADR-065 reverses panel review IN-3).
     const notes = input.generalNotes === undefined ? (incident.generalNotes ?? null) : input.generalNotes.trim() || null
     const notesChanged = notes !== (incident.generalNotes ?? null)
     if (notesChanged && incidentApproved(s, incident.id)) throw new IncidentApprovedError()
@@ -1926,8 +2368,6 @@ export function approveIncidentReport(incidentId: string, actor?: SessionUser): 
     const incident = must(s.incidents.find((i) => i.id === incidentId), 'Incident')
     // Only a completed (Stage 2) record is signed off (Zean, Thursday, October 22, 2026).
     if (incident.stage === 1) throw new Error('Complete Stage 2 before approving this report.')
-    const blocker = incidentCompletionBlocker(incident)
-    if (blocker) throw new Error(blocker)
     audit(s, actorOr(actor), 'approve', { type: 'incident-report', id: incidentId })
   })
 }
@@ -2109,13 +2549,21 @@ export type InventoryInput = Omit<InventoryItem, 'id' | 'batches'> & {
 export function saveInventoryItem(input: InventoryInput, options: { itemId?: string; actor?: SessionUser } = {}): Promise<InventoryItem> {
   return write('save inventory item', (s) => {
     const existing = options.itemId ? must(s.inventoryItems.find((i) => i.id === options.itemId), 'Inventory item') : null
-    const { currentStock, expirationDate, noExpirationConfirmed, avoidIfAllergicTo, ...rest } = input
+    const { currentStock, expirationDate, noExpirationConfirmed, avoidIfAllergicTo, usedFor, ...rest } = input
     // Distinct words (first spelling kept), blanks dropped.
     const tags = (avoidIfAllergicTo ?? [])
       .map((tag) => tag.trim())
       .filter((tag, index, all) => tag && all.findIndex((other) => other.toLowerCase() === tag.toLowerCase()) === index)
     // An item that never had tags stays without the field, so an unrelated edit isn't audited as a tag change.
-    const fields = { ...rest, ...((tags.length || existing?.avoidIfAllergicTo?.length) && { avoidIfAllergicTo: tags }) }
+    // "Commonly used for": known symptom options only, in the list's order (consultation, November 6, 2026).
+    const symptoms = s.frontendOnly.visitComplaintTypes.map((type) => type.label).filter((label) => (usedFor ?? []).includes(label))
+    if ((usedFor ?? []).some((tag) => !symptoms.includes(tag))) throw new StockRuleError('Choose symptoms from the list.')
+    const fields = {
+      ...rest,
+      ...((tags.length || existing?.avoidIfAllergicTo?.length) && { avoidIfAllergicTo: tags }),
+      // Omitted (an older caller) leaves the tags alone; an item that never had any stays without the field.
+      ...(usedFor !== undefined && (symptoms.length || existing?.usedFor?.length) && { usedFor: symptoms }),
+    }
     // The first batch follows Restock's rule (ADR-035): a date, or an explicit "no expiration". A blank
     // date alone is never read as "no expiration". An existing item's expiry changes only through Restock.
     if (!existing && expirationDate === null && !noExpirationConfirmed)
@@ -2228,9 +2676,6 @@ export const ADJUSTMENT_REASON_LABELS: Record<AdjustmentReason, string> = {
 export type StaffAdjustmentReason = Exclude<AdjustmentReason, 'visit_edited'>
 export const STAFF_ADJUSTMENT_REASONS: StaffAdjustmentReason[] = ['expired_disposed', 'damaged_spilled', 'miscount_correction', 'other']
 
-/** The shortest written note a large write-off accepts; a preset reason alone is not enough. */
-export const LARGE_WRITE_OFF_NOTE_MIN = 20
-
 /**
  * Panel review IV-7: a removal of `percent` or more of the item on hand, or one that empties the
  * item, is a large write-off. `onHand` is the whole item before the change, all batches.
@@ -2265,7 +2710,6 @@ export function adjustInventoryStock(itemId: string, input: StockAdjustmentInput
     const item = must(s.inventoryItems.find((i) => i.id === itemId), 'Inventory item')
     if (!STAFF_ADJUSTMENT_REASONS.includes(input.reason)) throw new StockRuleError('Choose a reason for the adjustment.')
     const note = input.note?.trim() || null
-    if (input.reason === 'other' && !note) throw new StockRuleError('Add a note explaining the adjustment.')
     const batch = must(item.batches.find((candidate) => candidate.id === input.batchId) ?? item.batches[0], 'Batch')
     const counted = input.countedQuantity
     if (counted !== undefined && (!Number.isInteger(counted) || counted < 0))
@@ -2278,8 +2722,6 @@ export function adjustInventoryStock(itemId: string, input: StockAdjustmentInput
       throw new StockRuleError('Choose an expired batch to record expired stock disposal.')
     const onHand = item.batches.reduce((total, candidate) => total + candidate.quantity, 0)
     const large = isLargeWriteOff(change, onHand, s.config.largeWriteOffPercent)
-    if (large && (note?.length ?? 0) < LARGE_WRITE_OFF_NOTE_MIN)
-      throw new StockRuleError(`This is a large write-off. Write a note of at least ${LARGE_WRITE_OFF_NOTE_MIN} characters.`)
     batch.quantity += change
     const txn: InventoryTransaction = {
       id: nextId('txn', s.frontendOnly.inventoryTransactions),
@@ -2696,7 +3138,8 @@ export function recordBackupNow(actor?: SessionUser): Promise<BackupStatusView> 
     for (const location of enabled) Object.assign(location, { lastBackupAt: at, lastResult: location.status === 'found' ? 'ok' : 'failed' })
     const ok = !enabled.length || enabled.some((l) => l.lastResult === 'ok')
     const lastOk = backupStatus(s).history.find((b) => b.status === 'ok')
-    const record = { lastRun: at, fileSizeBytes: ok ? Math.round((lastOk?.fileSizeBytes ?? 18_000_000) * 1.002) : 0, status: ok ? ('ok' as const) : ('failed' as const), verifiedByUserId: null }
+    // The names are copied, so the history still reads them after a location is disabled.
+    const record = { lastRun: at, fileSizeBytes: ok ? Math.round((lastOk?.fileSizeBytes ?? 18_000_000) * 1.002) : 0, status: ok ? ('ok' as const) : ('failed' as const), verifiedByUserId: null, locationNames: enabled.map((l) => l.label) }
     s.backupLogs.push(record)
     audit(s, by, 'create', { type: 'backup', id: record.lastRun }, `Backup started from the Backup page (${enabled.length} ${enabled.length === 1 ? 'location' : 'locations'})`)
     return { ...backupStatus(s), verifiedByName: null }
@@ -2709,7 +3152,10 @@ export function recordBackupNow(actor?: SessionUser): Promise<BackupStatusView> 
 export function getDashboardSummary(query: DashboardQuery, viewer?: SessionUser): Promise<DashboardSummary> {
   return read('dashboard summary', (s) => {
     const seen = viewer?.role === 'admin' ? { ...s, incidents: s.incidents.filter(visibleTo(viewer)) } : s
-    return { ...buildDashboardSummary(seen, query, new Date().toISOString()), backupAlert: backupAlertFor(s) }
+    const step = schoolYearStep(schoolYearSettingsOf(s), s.today)
+    // Staff end and start school years by hand; once the next step is due, the Dashboard reminds them (Zean, November 7, 2026).
+    const schoolYearReminder = viewer?.role !== 'admin' && (step.due || step.soon) ? { kind: step.kind, label: step.label, dueOn: step.dueOn, overdue: step.due } : null
+    return { ...buildDashboardSummary(seen, query, new Date().toISOString()), backupAlert: backupAlertFor(s), schoolYearReminder }
   })
 }
 
@@ -2762,22 +3208,53 @@ function cleanLocation(input: BackupLocationInput): BackupLocationInput {
  * Adds or edits a backup location (ADR-052), audited. A browser can't reach a drive, so a new location
  * reads "found" until the backend checks it.
  */
-export function saveBackupLocation(input: BackupLocationInput, options: { id?: string; actor?: SessionUser } = {}): Promise<BackupLocation> {
+/**
+ * Adds a backup location. A location is never edited (professor's consultation, November 6, 2026):
+ * to change one, add a new location and disable the old one, so old backups stay where they were and
+ * each run keeps the names it used.
+ */
+export function saveBackupLocation(input: BackupLocationInput, options: { actor?: SessionUser } = {}): Promise<BackupLocation> {
   return write('save backup location', (s) => {
     const by = actorOr(options.actor)
     const fields = cleanLocation(input)
-    if (options.id) {
-      const location = must(s.frontendOnly.backupLocations.find((l) => l.id === options.id), 'Backup location')
-      const summary = changedSummary(location, fields)
-      Object.assign(location, fields)
-      audit(s, by, 'update', { type: 'backup-location', id: location.id }, summary)
-      return location
-    }
     const location: BackupLocation = { id: nextId('backup-location', s.frontendOnly.backupLocations), ...fields, enabled: true, status: 'found', lastBackupAt: null, lastResult: null }
     s.frontendOnly.backupLocations.push(location)
     audit(s, by, 'create', { type: 'backup-location', id: location.id })
     return location
   })
+}
+
+/** A drive the clinic computer can back up to (ADR-052: the backend lists them). */
+export interface BackupDrive {
+  /** The drive's root, e.g. `E:\`. */
+  root: string
+  name: string
+  kind: 'internal' | 'removable'
+  freeSpace: string
+}
+
+/**
+ * PROVISIONAL (ADR-052): a browser can't see the clinic computer's drives, so the mock lists a fixed set
+ * of drives and folders. The backend replaces this with the real drives and folders of the computer it
+ * runs on; nothing here is ever written.
+ */
+const MOCK_DRIVES: BackupDrive[] = [
+  { root: 'C:\\', name: 'Local Disk', kind: 'internal', freeSpace: '86 GB free' },
+  { root: 'D:\\', name: 'Data', kind: 'internal', freeSpace: '412 GB free' },
+  { root: 'E:\\', name: 'USB Drive', kind: 'removable', freeSpace: '58 GB free' },
+]
+const MOCK_FOLDERS: Record<string, string[]> = {
+  'C:\\': ['CLINIQ', 'ProgramData', 'Users'],
+  'C:\\Users': ['Clinic'],
+  'C:\\Users\\Clinic': ['Documents', 'Desktop'],
+  'D:\\': ['Backups', 'Shared'],
+  'D:\\Backups': ['Clinic'],
+  'E:\\': ['Backups', 'School files'],
+}
+
+/** The drives, and the folders directly inside `path` (none when `path` is empty or unknown). */
+export function listBackupFolders(path: string): Promise<{ drives: BackupDrive[]; folders: string[] }> {
+  return read('backup folders', () => ({ drives: MOCK_DRIVES, folders: MOCK_FOLDERS[path] ?? [] }))
 }
 
 /** Locations are never deleted, only disabled and enabled again (ADR-052). */
@@ -2923,8 +3400,6 @@ export function deleteCalendarEvent(id: string, actor?: SessionUser): Promise<vo
 
 export const SPORTS_REPORT_TEXT_MAX = 120
 export const SPORTS_REPORT_WINDOWS: SportsReportWindow[] = [30, 60, 90, 'school_year']
-/** The school year runs June 15 to April 14 (the Principal, October 2026; Issues-and-TODOs "The school and its master list"). */
-const SCHOOL_YEAR_START = '06-15'
 
 /** Sports Reports belong to the clinician (ADR-034): the Admin/Principal can't open them, and there is no instructor account. */
 export class SportsReportPermissionError extends Error {
@@ -2937,11 +3412,10 @@ function requireStaff(actor: SessionUser) {
   if (actor.role !== 'staff') throw new SportsReportPermissionError()
 }
 
-/** First day of the look-back window ending today: the last N days including today, or June 15 of the current school year. */
-export function sportsReportWindowStart(window: SportsReportWindow, today: ISODate): ISODate {
+/** First day of the look-back window ending today: the last N days including today, or the start of the current school year (from settings). */
+export function sportsReportWindowStart(window: SportsReportWindow, today: ISODate, settings?: SchoolYearSettings): ISODate {
   if (window !== 'school_year') return addDays(today, -(window - 1))
-  const year = Number(today.slice(0, 4))
-  return today.slice(5) >= SCHOOL_YEAR_START ? `${year}-${SCHOOL_YEAR_START}` : `${year - 1}-${SCHOOL_YEAR_START}`
+  return currentSchoolYear(settings, today).from
 }
 
 export interface SportsReportInput {
@@ -3085,7 +3559,7 @@ export function getSportsReportContent(id: string, actor?: SessionUser): Promise
   return read('sports report content', (s) => {
     requireStaff(actorOr(actor))
     const report = must(s.frontendOnly.sportsReports.find((r) => r.id === id), 'Sports Report')
-    const from = sportsReportWindowStart(report.window, s.today)
+    const from = sportsReportWindowStart(report.window, s.today, schoolYearSettingsOf(s))
     const to = s.today
     const inWindow = (value: ISODateTime) => value.slice(0, 10) >= from && value.slice(0, 10) <= to
     const students = studentsById(s)
@@ -3226,3 +3700,141 @@ export function listIssueReports(): Promise<IssueReport[]> {
 export function listAuditLog(query: AuditLogQuery): Promise<AuditLogList> {
   return read('audit log', (s) => auditLogList(s, query))
 }
+
+// ---- school years and the Archive (professor's consultation, November 6, 2026) --------------
+
+export function getSchoolYearSettings(): Promise<SchoolYearSettings> {
+  return read('school year settings', schoolYearDatesOf)
+}
+
+export class SchoolYearSettingsError extends Error {}
+
+/** Staff only; audited by field name, never the dates. Stored archive years are not touched. */
+export function saveSchoolYearSettings(input: SchoolYearSettings, actor?: SessionUser): Promise<SchoolYearSettings> {
+  return write('save school year settings', (s) => {
+    const by = actorOr(actor)
+    if (by.role !== 'staff') throw new SchoolYearSettingsError('Only the clinic staff can change the school year dates.')
+    const problem = schoolYearSettingsError(input)
+    if (problem) throw new SchoolYearSettingsError(problem)
+    const { schoolYearStartMonth, schoolYearStartDay, schoolYearEndMonth, schoolYearEndDay } = input
+    const dates = { schoolYearStartMonth, schoolYearStartDay, schoolYearEndMonth, schoolYearEndDay }
+    const summary = changedSummary(schoolYearDatesOf(s), dates)
+    Object.assign(s.config, dates)
+    if (summary) audit(s, by, 'update', { type: 'school-year', id: 'school-year' }, summary)
+    return schoolYearDatesOf(s)
+  })
+}
+
+/**
+ * Staff end the current school year by hand (Zean, November 7, 2026): today is its last class day and
+ * the break begins tomorrow. Records made in the break stay in this year until the next is started.
+ */
+export function endSchoolYear(actor?: SessionUser): Promise<SchoolYear> {
+  return write('end school year', (s) => {
+    const by = actorOr(actor)
+    if (by.role !== 'staff') throw new SchoolYearSettingsError('Only the clinic staff can end a school year.')
+    const current = currentSchoolYear(schoolYearSettingsOf(s), s.today)
+    const starts = s.config.schoolYearStarts ?? []
+    const record = starts.find((start) => start.label === current.label)
+    if (!record) throw new SchoolYearSettingsError('Start a school year before ending one.')
+    if (record.endedOn) throw new SchoolYearSettingsError(`School year ${current.label} has already ended.`)
+    s.config.schoolYearStarts = starts.map((start) => (start === record ? { ...start, endedOn: s.today, endedBy: by.id } : start))
+    audit(s, by, 'update', { type: 'school-year', id: 'school-year' }, `Ended school year ${current.label}`)
+    return currentSchoolYear(schoolYearSettingsOf(s), s.today)
+  })
+}
+
+/**
+ * Staff start the next school year by hand, after ending the current one (Zean, November 7, 2026). It
+ * begins today; the year before (and its break) ends yesterday. Records keep the year they were filed under.
+ */
+export function startSchoolYear(actor?: SessionUser): Promise<SchoolYear> {
+  return write('start school year', (s) => {
+    const by = actorOr(actor)
+    if (by.role !== 'staff') throw new SchoolYearSettingsError('Only the clinic staff can start a school year.')
+    const settings = schoolYearSettingsOf(s)
+    const current = currentSchoolYear(settings, s.today)
+    if (current.started && !current.endedOn) throw new SchoolYearSettingsError(`End school year ${current.label} first.`)
+    if (current.from === s.today) throw new SchoolYearSettingsError('A school year was already started today.')
+    if (current.endedOn === s.today) throw new SchoolYearSettingsError(`School year ${current.label} ended today. Start the next one from tomorrow.`)
+    const { label } = schoolYearStep(settings, s.today)
+    s.config.schoolYearStarts = [...(s.config.schoolYearStarts ?? []), { label, startedOn: s.today, startedBy: by.id }]
+    audit(s, by, 'create', { type: 'school-year', id: 'school-year' }, `Started school year ${label}`)
+    return currentSchoolYear(schoolYearSettingsOf(s), s.today)
+  })
+}
+
+export interface ArchivedRecordRow {
+  id: string
+  kind: 'student' | 'personnel'
+  fullName: string
+  /** Masked LRN for a student, the Staff No. for staff. */
+  number: string
+  /** The grade (student) or staff type at the time of archiving. */
+  group: string
+  archivedAt: ISODateTime | null
+  archiveReason: string | null
+  archivedSchoolYear: string
+}
+
+export interface ArchiveView {
+  settings: SchoolYearSettings
+  current: SchoolYear
+  /** What Staff do next: end the current year, or start the next; when it is due by the dates, and whether that day has come. */
+  step: { kind: 'end' | 'start'; label: string; dueOn: string; due: boolean; soon: boolean }
+  /** Who started and who ended the current year, by name, or null. */
+  currentStartedBy: string | null
+  currentEndedBy: string | null
+  /** Every school year with archived records or clinic records, plus the current one, newest first. */
+  years: Array<Pick<SchoolYear, 'label' | 'from' | 'to'>>
+  /** The newest year with an archived record, or null when nothing is archived. */
+  defaultYear: string | null
+  students: ArchivedRecordRow[]
+  /** Staff only (ADR-043): the Admin gets none. */
+  staff: ArchivedRecordRow[]
+}
+
+/** The Archive page's data: read-only, Staff and Admin (ADR-038). */
+export function getArchive(viewer?: SessionUser): Promise<ArchiveView> {
+  return read('archive', (s) => {
+    const settings = schoolYearSettingsOf(s)
+    const current = currentSchoolYear(settings, s.today)
+    // A record archived before the school years were stored is filed under its archive date's year.
+    const yearOf = (record: { archivedSchoolYear?: string | null; archivedAt?: string | null }) =>
+      record.archivedSchoolYear ?? (record.archivedAt ? schoolYearOf(record.archivedAt.slice(0, 10), settings).label : current.label)
+    const students = s.students
+      .filter((st) => st.archived)
+      .map((st): ArchivedRecordRow => ({ id: st.id, kind: 'student', fullName: formatPersonName(st), number: maskLrn(st.lrn), group: st.gradeLevel, archivedAt: st.archivedAt ?? null, archiveReason: st.archiveReason ?? null, archivedSchoolYear: yearOf(st) }))
+    const staff = viewer?.role === 'admin' ? [] : s.personnel
+      .filter((pe) => pe.archived)
+      .map((pe): ArchivedRecordRow => ({ id: pe.id, kind: 'personnel', fullName: formatPersonName(pe), number: pe.staffNumber, group: pe.type, archivedAt: pe.archivedAt ?? null, archiveReason: pe.archiveReason ?? null, archivedSchoolYear: yearOf(pe) }))
+    const byNewest = (a: ArchivedRecordRow, b: ArchivedRecordRow) => (b.archivedAt ?? '').localeCompare(a.archivedAt ?? '') || a.fullName.localeCompare(b.fullName)
+    const archivedYears = [...students, ...staff].map((row) => row.archivedSchoolYear)
+    // Reports and the audit log are computed from dates, so every year with a visit, incident or entry is listed.
+    const recordYears = [...s.visits.map((v) => v.dateTime), ...s.incidents.map((i) => i.time), ...s.auditLog.map((a) => a.timestamp)]
+      .filter(Boolean)
+      .map((at) => schoolYearOf(String(at).slice(0, 10), settings).label)
+    const labels = [...new Set([current.label, ...archivedYears, ...recordYears])].sort().reverse()
+    const years = labels.map((label) => {
+      if (label === current.label) return { label, from: current.from, to: current.to }
+      const started = settings.schoolYearStarts?.find((start) => start.label === label)
+      const startYear = Number(label.slice(0, 4))
+      const year = schoolYearOf(started?.startedOn ?? `${startYear}-${String(settings.schoolYearStartMonth).padStart(2, '0')}-${String(settings.schoolYearStartDay).padStart(2, '0')}`, settings)
+      return { label, from: year.from, to: year.to }
+    })
+    const record = settings.schoolYearStarts?.find((start) => start.label === current.label)
+    const nameOf = (id?: string) => (id ? (s.users.find((user) => user.id === id)?.name ?? 'Unknown user') : null)
+    return {
+      settings: schoolYearDatesOf(s),
+      current,
+      step: schoolYearStep(settings, s.today),
+      currentStartedBy: nameOf(record?.startedBy),
+      currentEndedBy: nameOf(record?.endedBy),
+      years,
+      defaultYear: archivedYears.length ? [...archivedYears].sort().reverse()[0] : null,
+      students: students.sort(byNewest),
+      staff: staff.sort(byNewest),
+    }
+  })
+}
+

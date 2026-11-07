@@ -1,3 +1,4 @@
+import { Lrn } from '../../components/ui/MaskedLrn'
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
   BackButton,
@@ -6,6 +7,8 @@ import {
   CardBody,
   CardHeader,
   EmptyState,
+  FormSection,
+  FORM_DIVIDER,
   ErrorState,
   Icon,
   Input,
@@ -219,7 +222,7 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
               {identified.student
-                ? `${identified.student.fullName} · LRN ${identified.student.lrn} · ${identified.student.gradeLevel}`
+                ? <>{identified.student.fullName} · LRN <Lrn lrn={identified.student.lrn} full /> · {identified.student.gradeLevel}</>
                 : 'Student not identified yet. Search by LRN or name below.'}
             </p>
           </div>
@@ -252,7 +255,9 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
               </Button>
             }
           />
-          <CardBody className="flex flex-col gap-4">
+          <CardBody className="flex flex-col gap-5">
+            <FormSection id="pe-source-title" title="Referral source" description="The student, who referred them, and the activity.">
+            <div className={identified.student ? undefined : 'md:w-[calc(50%-0.5rem)]'}>
             <StudentPicker
               search={searchReferralStudents}
               selected={identified.student}
@@ -260,7 +265,7 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
               onSelect={(picked) => void identified.select(picked.id)}
               error={identified.error}
               addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
-            />
+            /></div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Input
                 label="Referred by"
@@ -277,6 +282,9 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
                 onChange={(event) => setField('activity', event.target.value)}
               />
             </div>
+            </FormSection>
+
+            <FormSection id="pe-findings-title" title="Findings" description="What happened and what the clinic did.">
             {/* ADR-053: on screen only, never on paper. */}
             <p className="text-xs font-semibold text-text-secondary print:hidden">Starting wording, to be confirmed: the three fields below start with suggested phrases you can edit.</p>
             <TextareaField
@@ -297,6 +305,9 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
               error={errors.treatment}
               onChange={(value) => setField('treatment', value)}
             />
+            </FormSection>
+
+            <FormSection id="pe-outcome-title" title="Outcome" description="Where the student goes next.">
             <div>
               <p className="mb-1 text-sm font-semibold text-text-primary">Disposition</p>
               <SegmentedControl
@@ -321,8 +332,9 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
                 className="rounded-md border border-border bg-surface"
               />
             )}
+            </FormSection>
 
-            <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
+            <div className={`flex flex-wrap justify-end gap-2 pt-4 ${FORM_DIVIDER}`}>
               <Button type="button" variant="neutral" onClick={cancel}>
                 Cancel
               </Button>

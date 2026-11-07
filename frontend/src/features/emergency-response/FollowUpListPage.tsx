@@ -1,4 +1,6 @@
 import { useState, type ReactNode } from 'react'
+import { useSaveFeedback } from '../../hooks/useSaveFeedback'
+import { SaveFeedback } from '../../components/forms/SaveFeedback'
 import { usePatientFilter } from '../../hooks/usePatientFilter'
 import { addDays, formatDate, todayISO } from '../../lib/dates'
 import {
@@ -72,9 +74,14 @@ const OUTCOME_OPTIONS = [
 
 type FollowUpSortKey = 'student' | 'reason' | 'due' | 'status'
 
+/** Words for the confirmation message. */
+const FOLLOW_UP_STATUS_WORDS: Record<FollowUpStatus, string> = { completed: 'completed', missed: 'missed', cancelled: 'cancelled', pending: 'pending' }
+
 export function FollowUpListPage() {
   const [statusFilter, setStatusFilter] = useState<'' | FollowUpStatus>('')
   const [statusOverrides, setStatusOverrides] = useState<Record<string, FollowUpStatus>>({})
+  // An inline row action: the row flips at once, a message confirms it, and a failure puts it back (useSaveFeedback).
+  const feedback = useSaveFeedback()
   const [confirming, setConfirming] = useState<null | { item: FollowUpRow; status: 'missed' | 'cancelled' }>(null)
   // Panel review FU-4: Missed and Cancelled need a reason; Missed then offers "Set a new date".
   const [reason, setReason] = useState('')
@@ -130,7 +137,13 @@ export function FollowUpListPage() {
     // Optimistic: the row flips immediately; the data layer writes the status and its audit entry.
     setStatusOverrides((current) => ({ ...current, [item.id]: next }))
     setConfirming(null)
-    await updateFollowUpStatus(item.id, next, getMockSessionUser(), why)
+    const saved = await feedback.run(() => updateFollowUpStatus(item.id, next, getMockSessionUser(), why), {
+      saved: `Follow-up marked ${FOLLOW_UP_STATUS_WORDS[next]}.`,
+    })
+    if (!saved.ok) {
+      setStatusOverrides((current) => Object.fromEntries(Object.entries(current).filter(([id]) => id !== item.id)))
+      return
+    }
     if (next === 'missed' || next === 'cancelled') reload()
     if (next === 'missed') offerNewDate(item)
   }
@@ -279,6 +292,7 @@ export function FollowUpListPage() {
           }
         />
         <CardBody>
+          <SaveFeedback result={feedback.result} className="mb-3" />
           {rows.length ? (
             <>
               <DataTable
@@ -339,7 +353,7 @@ export function FollowUpListPage() {
               <Button variant="neutral" data-autofocus onClick={() => setConfirming(null)}>
                 Keep Pending
               </Button>
-              <Button variant="primary" onClick={confirmClosing}>
+              <Button variant="primary" loading={feedback.saving} onClick={confirmClosing}>
                 {confirming.status === 'missed' ? 'Mark as Missed' : 'Cancel Follow-Up'}
               </Button>
             </div>

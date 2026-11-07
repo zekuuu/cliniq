@@ -52,6 +52,7 @@ import {
   type VisitDetailValues,
 } from './api/visitDetailApi'
 import { dispositionLabel, dispositionOptionsFor, DISPOSITION_TONES as dispositionTone } from '../../lib/dispositions'
+import { RELEASED_TO, SYMPTOM, symptom, symptoms } from '../../lib/labels'
 
 interface Errors extends DispositionErrors, LogbookErrors {
   visitTime?: string
@@ -87,6 +88,7 @@ function VisitDetailSkeleton({ back }: { back: ReactNode }) {
 
 function TextareaField({
   label,
+  placeholder,
   value,
   onChange,
   error,
@@ -94,6 +96,7 @@ function TextareaField({
   hint,
 }: {
   label: string
+  placeholder?: string
   value: string
   onChange: (value: string) => void
   error?: string
@@ -110,6 +113,7 @@ function TextareaField({
       </label>
       <textarea
         id={id}
+        placeholder={placeholder}
         rows={4}
         value={value}
         aria-invalid={error ? true : undefined}
@@ -172,12 +176,12 @@ function VisitPrint({ visit, viewer }: { visit: VisitDetail; viewer: SessionUser
           fields={[
             { label: 'Date and time', value: formatDateTime(visit.dateTime) },
             ...(visit.timeOut ? [{ label: 'Time out', value: formatClock(visit.timeOut) }] : []),
-            { label: 'Complaint', value: visit.complaint },
-            ...(visit.extraComplaints.length ? [{ label: 'Other complaints', value: visit.extraComplaints.join(', ') }] : []),
+            { label: SYMPTOM, value: visit.complaint },
+            ...(visit.extraComplaints.length ? [{ label: `Other ${symptoms}`, value: visit.extraComplaints.join(', ') }] : []),
             ...(visit.temperatureC !== null ? [{ label: 'Body temperature', value: `${formatDecimal(visit.temperatureC)} °C` }] : []),
             { label: 'Disposition', value: dispositionLabel(visit.disposition, student.kind) },
             ...(visit.referredTo ? [{ label: 'Referred to', value: visit.referredTo }] : []),
-            ...(collected ? [{ label: 'Collected by', value: collected }] : []),
+            ...(collected ? [{ label: RELEASED_TO, value: collected }] : []),
             ...(stayHome ? [{ label: 'Stay home', value: stayHome, wide: true }] : []),
           ]}
         />
@@ -271,7 +275,7 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
 
   function validate(): Errors {
     const next: Errors = {}
-    if (!cleanComplaint(values.complaint)) next.complaint = 'Enter the visit complaint.'
+    if (!cleanComplaint(values.complaint)) next.complaint = `Choose the ${symptom} for this visit.`
     if (!values.visitDate || !values.visitClock) next.visitTime = 'Enter the visit date and time.'
     else if (`${values.visitDate}T${values.visitClock}` > `${todayISO()}T${currentClock()}`) next.visitTime = "The visit date and time can't be in the future."
     if (lines.some((line) => line.quantity < 1)) next.itemsGiven = 'Each quantity must be at least 1.'
@@ -499,7 +503,8 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                 <TextareaField
                   label="Treatment notes"
                   required={false}
-                  hint="Optional. Care that isn't stock: rest, cold compress, wound cleaning, advice."
+                  placeholder="Optional"
+                  hint="Care that isn't stock: rest, cold compress, wound cleaning, advice."
                   value={values.treatment}
                   onChange={(value) => setField('treatment', value)}
                 />
@@ -517,6 +522,7 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                   lines={lines}
                   saved={visit.itemsGiven}
                   allergies={visit.student.allergies}
+                  symptoms={[values.complaint, ...values.extraComplaints]}
                   error={errors.itemsGiven}
                   onChange={(next) => {
                     setLines(next)
@@ -529,7 +535,7 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                   <SegmentedControl
                     label="Disposition"
                     // Four options: two by two on a phone, one row from sm up (panel review VS-1 added Resting).
-                    className="max-sm:grid max-sm:w-full max-sm:grid-cols-2"
+                    className="gap-1.5! border border-border max-sm:grid max-sm:w-full max-sm:grid-cols-2"
                     value={values.disposition}
                     onChange={setDisposition}
                     options={dispositionOptionsFor(visit.student.kind)}
@@ -541,7 +547,7 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                   values={values}
                   onChange={(next) => {
                     setValues((current) => ({ ...current, ...next }))
-                    setErrors((current) => ({ ...current, excusedUntil: undefined }))
+                    setErrors((current) => ({ ...current, excusedUntil: undefined, collectedRelationshipOther: undefined }))
                     setSaved(null)
                   }}
                   errors={errors}
@@ -596,12 +602,12 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
             ) : (
               <div className="flex flex-col gap-4">
                 <section>
-                  <h2 className="text-sm font-bold text-text-primary">Complaint</h2>
+                  <h2 className="text-sm font-bold text-text-primary">{SYMPTOM}</h2>
                   <p className="mt-1 text-sm text-text-primary">{visit.complaint}</p>
                 </section>
                 {visit.extraComplaints.length > 0 && (
                   <section>
-                    <h2 className="text-sm font-bold text-text-primary">Other complaints</h2>
+                    <h2 className="text-sm font-bold text-text-primary">Other {symptoms}</h2>
                     <p className="mt-1 text-sm text-text-primary">{visit.extraComplaints.join(', ')}</p>
                   </section>
                 )}
@@ -641,7 +647,7 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                 )}
                 {visit.collectedBy && (
                   <section>
-                    <h2 className="text-sm font-bold text-text-primary">Collected by</h2>
+                    <h2 className="text-sm font-bold text-text-primary">{RELEASED_TO}</h2>
                     <p className="mt-1 text-sm text-text-primary">
                       {[visit.collectedBy.name, visit.collectedBy.relationship && `(${visit.collectedBy.relationship})`].filter(Boolean).join(' ')}
                       {visit.collectedBy.time && ` · ${formatClock(visit.collectedBy.time)}`}

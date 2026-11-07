@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
@@ -14,18 +14,19 @@ function renderLogin() {
 }
 
 describe('LoginPage', () => {
-  it('shows the lockup, one Sign In heading and the school name in the panel, without a footer', () => {
+  it('shows the lockup (panel on phones, photo from md), one Sign In heading and the school name, without a footer', () => {
     renderLogin()
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(screen.getByRole('heading', { level: 1, name: 'Sign In' })).toBeInTheDocument()
-    expect(screen.getByText('CLINIQ')).toBeInTheDocument()
-    expect(screen.getByText('Mendez Christian Academy')).toBeInTheDocument()
+    // Two lockups by design; CSS shows only one at a time (md:hidden in the panel, hidden md:flex on the photo).
+    expect(screen.getAllByText('CLINIQ')).toHaveLength(2)
+    expect(screen.getAllByText('Mendez Christian Academy')).toHaveLength(2)
     expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
     expect(screen.queryByText(/assigned clinic account/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/clinic account/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/all rights reserved/i)).not.toBeInTheDocument()
-    expect(screen.getByAltText('Mendez Christian Academy logo')).toHaveAttribute('src', '/MCA_Logo.png')
+    for (const logo of screen.getAllByAltText('Mendez Christian Academy logo')) expect(logo).toHaveAttribute('src', '/MCA_Logo.png')
   })
 
   it('focuses the first invalid field after a failed submit', async () => {
@@ -38,19 +39,25 @@ describe('LoginPage', () => {
     await user.type(screen.getByLabelText(/Username/), 'demo.nurse')
     await user.click(screen.getByRole('button', { name: 'Sign In' }))
     expect(screen.getByLabelText(/^Password/)).toHaveFocus()
+    // No clear (X) button on the username (Zean, November 5, 2026).
+    expect(screen.queryByRole('button', { name: 'Clear' })).not.toBeInTheDocument()
   })
 
-  it('explains that password reset is not available yet, without resetting anything', async () => {
+  // ADR-072: the dialog is now the authenticator recovery flow (see features/account/Authenticator.test.tsx).
+  it('opens the recovery flow, names the Administrator fallback, and resets nothing on Cancel', async () => {
     const user = userEvent.setup()
     renderLogin()
 
     const trigger = screen.getByRole('button', { name: 'Forgot password?' })
     await user.click(trigger)
     const dialog = screen.getByRole('dialog', { name: 'Forgot your password?' })
-    expect(dialog).toHaveTextContent(/not available in CLINIQ yet/i)
-    expect(dialog.querySelector('input')).toBeNull()
+    expect(dialog).toHaveTextContent(/authenticator app/i)
+    expect(dialog).toHaveTextContent(/ask the Administrator to reset your password/i)
+    // The username comes first; the code boxes follow once it is checked (Zean, November 7, 2026).
+    expect(within(dialog).getByLabelText(/^Username/)).toBeInTheDocument()
+    expect(within(dialog).queryByLabelText(/code/i)).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Close' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(trigger).toHaveFocus()
   })

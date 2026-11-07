@@ -46,3 +46,20 @@ export function buttonClassName({
     className,
   )
 }
+
+/** Each action verb's "-ing" form, for the busy label ("Save Visit" reads "Saving…"). */
+const BUSY_VERBS: Record<string, string> = {
+  add: 'Adding', apply: 'Applying', approve: 'Approving', back: 'Backing up', change: 'Changing', complete: 'Completing',
+  confirm: 'Confirming', create: 'Creating', disable: 'Disabling', dispense: 'Dispensing', enable: 'Enabling', import: 'Importing',
+  mark: 'Marking', record: 'Recording', report: 'Reporting', reset: 'Resetting', restock: 'Restocking', save: 'Saving',
+  send: 'Sending', set: 'Setting', sign: 'Signing in', submit: 'Submitting', turn: 'Turning', update: 'Updating',
+}
+
+/**
+ * The label a busy button reads (professor's consultation, November 6, 2026: no silent saves): the
+ * action's own "-ing" form with an ellipsis, or the label unchanged when it isn't a known action.
+ */
+export function busyLabel(label: string): string | null {
+  const verb = BUSY_VERBS[label.trim().split(/\s+/)[0]?.toLowerCase() ?? '']
+  return verb ? `${verb}…` : null
+}

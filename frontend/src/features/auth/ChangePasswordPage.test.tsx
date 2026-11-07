@@ -6,6 +6,7 @@ import { authenticateMockUser, changeOwnPassword, getRecordedAuditEntries, reset
 import { AppRoutes } from '../../routes/AppRoutes'
 import { paths } from '../../routes/paths'
 import { ChangePasswordPage } from './ChangePasswordPage'
+import { openAccountMenu } from '../../test/accountMenu'
 
 vi.mock('react-chartjs-2', () => {
   const Stub = (props: { 'aria-label'?: string }) => <div role="img" aria-label={props['aria-label']} />
@@ -87,7 +88,9 @@ describe('Change Password', () => {
         <Path />
       </MemoryRouter>,
     )
-    await userEvent.setup().click(await screen.findByRole('link', { name: 'Change password' }))
+    const user = userEvent.setup()
+    await openAccountMenu(user)
+    await user.click(screen.getByRole('menuitem', { name: 'Change password' }))
     expect(await screen.findByRole('heading', { name: 'Change Password' })).toBeInTheDocument()
     expect(within(screen.getByTestId('path')).getByText(paths.changePassword)).toBeInTheDocument()
   })

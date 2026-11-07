@@ -81,13 +81,25 @@ describe('Pagination page number field (S1)', () => {
   it('follows Previous, Next and a page change from outside (a filter resetting to page 1)', async () => {
     const user = userEvent.setup()
     render(<Pager />)
-    await user.click(screen.getByRole('button', { name: 'Next' }))
+    await user.click(screen.getByRole('button', { name: 'Next page' }))
     expect(field()).toHaveValue('4')
-    await user.click(screen.getByRole('button', { name: 'Previous' }))
-    await user.click(screen.getByRole('button', { name: 'Previous' }))
+    await user.click(screen.getByRole('button', { name: 'Previous page' }))
+    await user.click(screen.getByRole('button', { name: 'Previous page' }))
     expect(field()).toHaveValue('2')
     await user.click(screen.getByRole('button', { name: 'Reset filter' }))
     expect(field()).toHaveValue('1')
+  })
+
+  it('jumps to the first and last page with the double arrows, disabled at each end', async () => {
+    const user = userEvent.setup()
+    render(<Pager />)
+    await user.click(screen.getByRole('button', { name: 'Last page' }))
+    expect(field()).toHaveValue('12')
+    expect(screen.getByRole('button', { name: 'Last page' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Next page' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'First page' }))
+    expect(field()).toHaveValue('1')
+    expect(screen.getByRole('button', { name: 'First page' })).toBeDisabled()
   })
 
   it('keeps the field one width whatever is typed, sized for the page count, with a phone-sized target', () => {
@@ -96,9 +108,9 @@ describe('Pagination page number field (S1)', () => {
     expect(field()).toHaveClass('h-11', 'sm:h-8', 'tabular-nums', 'text-center')
   })
 
-  it('shows no field when there is a single page', () => {
+  it('shows the field on a single page too, so every pager looks the same (Zean, November 5, 2026)', () => {
     render(<Pager start={1} total={7} />)
-    expect(screen.queryByRole('textbox', { name: 'Page number' })).not.toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Page number' })).toHaveValue('1')
     expect(screen.getByText('Page 1 of 1')).toBeInTheDocument()
   })
 

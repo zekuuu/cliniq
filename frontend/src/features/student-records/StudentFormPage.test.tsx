@@ -8,6 +8,7 @@ import { paths } from '../../routes/paths'
 import { StudentFormPage } from './StudentFormPage'
 import { StudentProfilePage } from './StudentProfilePage'
 import { fetchStudentList } from './api/studentListApi'
+import { fetchIncompleteRecords } from './api/incompleteRecordsApi'
 import { renderWithRouter } from '../../test/renderWithRouter'
 
 /** Types a first and last name (and a middle name, when given) into the split name fields (ADR-064). */
@@ -259,6 +260,20 @@ describe('Student Form', () => {
     expect(screen.queryByLabelText('Emergency contact 2 name')).not.toBeInTheDocument()
   })
 
+  it('marks what an incomplete record still lacks and lands on it, until it is filled in', async () => {
+    const user = userEvent.setup({ delay: null })
+    const record = (await fetchIncompleteRecords()).find(
+      (row) => !row.resolvedAt && row.missingFields.length > 0 && row.missingFields.every((field) => field.startsWith('Emergency contact')),
+    )!
+    renderWithRouter(<StudentFormPage studentId={record.studentId} />)
+    const name = await screen.findByLabelText(/contact name/i)
+    await waitFor(() => expect(name).toHaveFocus())
+    expect(name).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getAllByText('Missing. Fill this in to complete the record.').length).toBeGreaterThan(0)
+    await user.type(name, 'Marisol Santos')
+    expect(name).not.toHaveAttribute('aria-invalid', 'true')
+  })
+
   it('supports edit mode, records an update audit entry, and returns to the profile', async () => {
     const user = userEvent.setup({ delay: null })
     const existing = await getStudent((await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id)
@@ -342,7 +357,7 @@ describe('Student Form: First name, Last name and Middle name (S4, ADR-064)', ()
     expect(fields.map((field) => field.getAttribute('placeholder'))).toEqual([
       'e.g. Maria Angela',
       'e.g. Dela Cruz',
-      'e.g. Santos',
+      'e.g. Santos (optional)',
     ])
     expect(screen.getByLabelText(/^First name/)).toBeRequired()
     expect(screen.getByLabelText(/^Last name/)).toBeRequired()
@@ -352,6 +367,19 @@ describe('Student Form: First name, Last name and Middle name (S4, ADR-064)', ()
     expect(screen.getByLabelText('Middle name')).toHaveAttribute('maxlength', '40')
     expect(group).toHaveAccessibleDescription("Write the name as it appears on the school's list.")
     expect(screen.queryByLabelText(/full name/i)).not.toBeInTheDocument()
+  })
+
+  it('clears and locks the middle name when No middle name is ticked (Zean, November 5, 2026)', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<StudentFormPage />)
+    await screen.findByRole('heading', { name: 'Add Student' })
+    const middle = screen.getByLabelText('Middle name')
+    await user.type(middle, 'Santos')
+    await user.click(screen.getByRole('checkbox', { name: 'No middle name' }))
+    expect(middle).toHaveValue('')
+    expect(middle).toBeDisabled()
+    await user.click(screen.getByRole('checkbox', { name: 'No middle name' }))
+    expect(middle).toBeEnabled()
   })
 
   it('saves the parts trimmed and single-spaced, leaves a blank middle name empty, and builds the full name', async () => {

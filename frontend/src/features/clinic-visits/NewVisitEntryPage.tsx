@@ -9,6 +9,9 @@ import {
   CardHeader,
   DatePicker,
   EmptyState,
+  FormSection,
+  FIELD_HALF,
+  FORM_DIVIDER,
   ErrorState,
   Icon,
   Input,
@@ -61,6 +64,7 @@ import {
   type LogbookErrors,
 } from './logbookValues'
 import { dispositionOptionsFor } from '../../lib/dispositions'
+import { symptom, SYMPTOMS_QUESTION } from '../../lib/labels'
 
 /**
  * Complaint types that open "Show more fields" (body temperature) by themselves (ADR-049). Matched
@@ -109,6 +113,7 @@ function VisitSkeleton({ back }: { back: ReactNode }) {
 
 function TextareaField({
   label,
+  placeholder,
   value,
   onChange,
   error,
@@ -117,6 +122,7 @@ function TextareaField({
   rows = 4,
 }: {
   label: string
+  placeholder?: string
   value: string
   onChange: (value: string) => void
   error?: string
@@ -136,6 +142,7 @@ function TextareaField({
       <textarea
         id={id}
         rows={rows}
+        placeholder={placeholder}
         required={required}
         value={value}
         aria-invalid={error ? true : undefined}
@@ -351,7 +358,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
 
   function validate(): Errors {
     const next: Errors = {}
-    if (!cleanComplaint(complaint)) next.complaint = 'Enter the complaint for this visit.'
+    if (!cleanComplaint(complaint)) next.complaint = `Choose the ${symptom} for this visit.`
     if (whenEdited && (!visitDate || !visitClock)) next.visitTime = 'Enter the visit date and time.'
     else if (minutesAgo < -1) next.visitTime = "The visit date and time can't be in the future."
     if (lines.some((line) => line.quantity < 1)) next.itemsGiven = 'Each quantity must be at least 1.'
@@ -361,7 +368,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
     }
     return {
       ...next,
-      ...dispositionErrors(disposition, isStaffPatient ? { ...letterValues, collectedTime: '' } : letterValues, false, visitDate),
+      ...dispositionErrors(disposition, isStaffPatient ? { ...letterValues, collectedTime: '', collectedRelationship: '' } : letterValues, false, visitDate),
       ...logbookErrors(logbook, currentClock(), timeOutRef.current?.validity.badInput),
     }
   }
@@ -562,7 +569,9 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
             icon={<Icon name="stethoscope" />}
             description="Required fields are marked."
           />
-          <CardBody className="flex flex-col gap-4">
+          <CardBody className="flex flex-col gap-5">
+            <FormSection id="visit-patient-title" title="Patient and time" description="Who came in, and when.">
+            <div className={identified.student ? undefined : FIELD_HALF}>
             <PatientPicker
               search={searchVisitPatients}
               selected={identified.student}
@@ -580,7 +589,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
               addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
               addStaffHref={viewer.role === 'staff' ? paths.staffNew : undefined}
               autoFocus={!staffParam}
-            />
+            /></div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <DatePicker
                 label="Visit date"
@@ -607,13 +616,18 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
             </div>
             {isLateEntry && (
               <Input
-                label="Reason for late entry (optional)"
+                className={FIELD_HALF}
+                label="Reason for late entry"
+                placeholder="Optional"
                 value={lateEntryReason}
                 maxLength={200}
                 hint="For example: system was down, paper entry. Saved as a late entry either way."
                 onChange={(event) => setLateEntryReason(event.target.value)}
               />
             )}
+            </FormSection>
+
+            <FormSection id="visit-complaint-title" title="Presenting problem" description={`${SYMPTOMS_QUESTION} Choose all that apply. The first-aid checklist follows the ${symptom}.`}>
             {/* Remounts on the pick, so focus moves on to the next thing to fill in (D4: fewer clicks). */}
             <ComplaintField
               key={identified.student?.id ?? 'none'}
@@ -645,14 +659,18 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
             ) : (
               <EmptyState
                 icon="clipboardList"
-                title="Enter a complaint to show the first-aid checklist"
-                description="The checklist appears when the complaint matches a predefined type."
+                title={`Choose a ${symptom} to show the first-aid checklist`}
+                description={`The checklist appears when the ${symptom} matches a predefined type.`}
                 className="rounded-md border border-border bg-surface"
               />
             )}
+            </FormSection>
+
+            <FormSection id="visit-treatment-title" title="Care given" description="What was done for the patient, and any medicines or supplies used.">
             <TextareaField
               label="Treatment notes"
-              hint="Optional. Care that isn't stock: rest, cold compress, wound cleaning, advice."
+              placeholder="Optional"
+              hint="Care that isn't stock: rest, cold compress, wound cleaning, advice."
               value={treatment}
               onChange={setTreatment}
             />
@@ -674,14 +692,17 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 setErrors((current) => ({ ...current, itemsGiven: undefined }))
               }}
               allergies={allergies}
+              symptoms={[complaint, ...extraComplaints]}
               error={errors.itemsGiven}
             />
+            </FormSection>
+
+            <FormSection id="visit-disposition-title" title="Disposition" description="Where the patient went after the visit, and any follow-up.">
             <div>
-              <p className="mb-1 text-sm font-semibold text-text-primary">Disposition</p>
               <SegmentedControl
                 label="Disposition"
                 // Four options: two by two on a phone, one row from sm up (panel review VS-1 added Resting).
-                className="max-sm:grid max-sm:w-full max-sm:grid-cols-2"
+                className="gap-1.5! border border-border max-sm:grid max-sm:w-full max-sm:grid-cols-2"
                 value={disposition}
                 onChange={(next) => {
                   // Disposition-specific fields start fresh whenever the disposition changes.
@@ -698,7 +719,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
               values={dispositionValues}
               onChange={(next) => {
                 setDispositionValues(next)
-                setErrors((current) => ({ ...current, excusedUntil: undefined }))
+                setErrors((current) => ({ ...current, excusedUntil: undefined, collectedRelationshipOther: undefined }))
               }}
               errors={errors}
               noLetter={isStaffPatient}
@@ -761,7 +782,9 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 </div>
               )}
             </fieldset>
+            </FormSection>
 
+            <FormSection id="visit-logbook-title" title="Logbook details" description="Optional. Temperature, time out, who assisted, the parent or guardian, and remarks.">
             <LogbookFields
               values={logbook}
               onChange={(next) => {
@@ -776,9 +799,10 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
               timeOutRef={timeOutRef}
               ageGroup={identified.student ? ageGroupOf(identified.student, visitDate || today, data.vitalsRanges.usual) : null}
             />
+            </FormSection>
 
             {/* The note gets its own line so the actions stay together instead of Save wrapping alone. */}
-            <div className="flex flex-col gap-2 pt-2">
+            <div className={`flex flex-col gap-2 pt-4 ${FORM_DIVIDER}`}>
               {!treatment.trim() && !lines.length && (
                 <p className="text-xs text-text-secondary">No treatment recorded. You can still save.</p>
               )}
@@ -788,7 +812,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 </Button>
                 <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
                 {preparingLetter && (
-                  <Button type="button" variant="secondary" icon="checkCircle" disabled={saving} onClick={saveAndApproveNow}>
+                  <Button type="button" variant="secondary" icon="checkCircle" loading={saving} onClick={saveAndApproveNow}>
                     Save and approve now
                   </Button>
                 )}

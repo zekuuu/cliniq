@@ -21,7 +21,7 @@ export function dropdownTriggerClassName({
 }: { size?: DropdownSize; invalid?: boolean; className?: string } = {}): string {
   return cn(
     'inline-flex items-center rounded-md border bg-background text-sm font-semibold text-text-primary shadow-card',
-    'cursor-pointer transition-colors duration-150 hover:border-brand-green hover:bg-surface motion-reduce:transition-none',
+    'cursor-pointer transition-colors duration-150 hover-field:border-brand-green hover-field:bg-surface motion-reduce:transition-none',
     'disabled:cursor-not-allowed disabled:opacity-50',
     invalid ? 'border-error' : 'border-border',
     triggerSizeClasses[size],
@@ -41,7 +41,7 @@ export function dropdownChevronClassName(open: boolean): string {
 
 /** Panel surface only. Each dropdown adds its own positioning and trigger-width minimum. */
 export const DROPDOWN_PANEL =
-  'z-30 w-max max-w-[calc(100vw-2rem)] rounded-md border border-border bg-background p-1 shadow-raised'
+  'z-30 w-max max-w-[calc(100vw-2rem)] rounded-md border border-border bg-background p-1 shadow-raised animate-expand-down motion-reduce:animate-none'
 
 const OPTION_ROW =
   'flex w-full cursor-pointer whitespace-nowrap rounded-sm px-2.5 py-1.5 text-left text-sm transition-colors duration-150 motion-reduce:transition-none'

@@ -1,10 +1,12 @@
 import {
   getBackupStatus,
+  listBackupFolders,
   listBackupLocations,
   recordBackupNow,
   saveBackupLocation,
   setBackupLocationEnabled,
   verifyLatestBackup,
+  type BackupDrive,
   type BackupLocation,
   type BackupLocationInput,
   type BackupLocationSettings,
@@ -46,7 +48,7 @@ export function fetchBackupLocations(): Promise<BackupLocationSettings> {
   return listBackupLocations()
 }
 
-export function saveLocation(input: BackupLocationInput, options: { id?: string; actor?: SessionUser }): Promise<BackupLocation> {
+export function saveLocation(input: BackupLocationInput, options: { actor?: SessionUser }): Promise<BackupLocation> {
   return saveBackupLocation(input, options)
 }
 
@@ -56,3 +58,5 @@ export async function setLocationEnabled(id: string, enabled: boolean, actor?: S
   window.dispatchEvent(new CustomEvent(BACKUP_CHANGED_EVENT))
   return location
 }
+
+export { listBackupFolders as fetchBackupFolders, type BackupDrive }

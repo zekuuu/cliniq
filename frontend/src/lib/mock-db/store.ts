@@ -1,6 +1,6 @@
 import { todayISO } from '../dates'
 import type { AuditLogEntry, ISODate } from '../../types/entities'
-import { persistParam, resetParam } from './devToggles'
+import { persistParam, resetParam, todayParam } from './devToggles'
 import { checkSeedIntegrity } from './integrity'
 import { fillApprovedLetterWording, fillGradeAtTime, resolveSeed, seed } from './seed'
 import { splitFullName } from '../personName'
@@ -47,6 +47,8 @@ function applyUrlToggles() {
   const persist = persistParam()
   if (persist) setMockPersistence(persist === 'on')
   if (resetParam()) clearSaved()
+  const today = todayParam()
+  if (today) todayOverride = today
 }
 
 function clearSaved() {

@@ -3,6 +3,8 @@ import { BackButton, Button, Card, CardBody, CardHeader, ErrorState, Icon, Input
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
+import { useSaveFeedback } from '../../hooks/useSaveFeedback'
+import { SaveFeedback } from '../../components/forms/SaveFeedback'
 import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
 import type { UserRole } from '../../types/entities'
@@ -63,7 +65,7 @@ function UserForm({
   const [pictureError, setPictureError] = useState<string>()
   const [preparingPicture, setPreparingPicture] = useState(false)
   const [pendingPictureName, setPendingPictureName] = useState('')
-  const [saved, setSaved] = useState(false)
+  const feedback = useSaveFeedback()
   // What the form last matched in storage: the loaded account, then each saved version.
   const [baseline, setBaseline] = useState({ name: initial?.name ?? '', username: initial?.username ?? '', role: initial?.role ?? '', profilePicture: initial?.profilePicture ?? null })
   const { cancel, discardDialog } = useCancelNavigation(
@@ -86,29 +88,25 @@ function UserForm({
     }
     setErrors(nextErrors)
     invalid.report([nextErrors.name, nextErrors.username, nextErrors.role, nextErrors.temporaryPassword].filter(Boolean).length)
-    setSaved(false)
     if (nextErrors.name || nextErrors.username || nextErrors.role || nextErrors.temporaryPassword || !role) return
     await save(role)
   }
 
   async function save(chosenRole: UserRole) {
-    try {
-      await submitUser(
-        { name, username, role: chosenRole, profilePicture, temporaryPassword: userId ? undefined : temporaryPassword },
-        { userId, actor: viewer },
-      )
-    } catch (cause) {
-      if (cause instanceof DuplicateUsernameError) {
-        setErrors({ username: 'Another account already uses this username. Choose a different one.' })
-        return
-      }
-      if (cause instanceof LastAdminError) {
-        setErrors({ role: cause.message })
-        return
-      }
-      throw cause
-    }
-    setSaved(true)
+    const result = await feedback.run(
+      () => submitUser({ name, username, role: chosenRole, profilePicture, temporaryPassword: userId ? undefined : temporaryPassword }, { userId, actor: viewer }),
+      {
+        saved: 'User saved and audit event recorded.',
+        // These two are field errors, shown beside their fields.
+        failed: (cause) => {
+          if (cause instanceof DuplicateUsernameError) setErrors({ username: 'Another account already uses this username. Choose a different one.' })
+          else if (cause instanceof LastAdminError) setErrors({ role: cause.message })
+          else return undefined
+          return null
+        },
+      },
+    )
+    if (!result.ok) return
     setTemporaryPassword('')
     setBaseline({ name, username, role, profilePicture })
   }
@@ -131,6 +129,8 @@ function UserForm({
             <p role="status" className="sr-only">
               {invalid.announcement}
             </p>
+            {/* Two fields per row (Zean, November 5, 2026). */}
+            <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-2">
             <Input
               label="Full name"
               value={name}
@@ -172,6 +172,7 @@ function UserForm({
                 onChange={(event) => setTemporaryPassword(event.target.value)}
               />
             )}
+            </div>
             <section aria-labelledby="profile-picture-title" className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4">
               <div className="flex items-center gap-3">
                 <UserAvatar name={name || 'New user'} picture={profilePicture} className="size-16 text-lg" />
@@ -235,18 +236,11 @@ function UserForm({
               <Button variant="neutral" onClick={cancel}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary">
+              <Button type="submit" variant="primary" loading={feedback.saving}>
                 {userId ? 'Save Changes' : 'Create User'}
               </Button>
             </div>
-            {saved && (
-              <p
-                role="status"
-                className="rounded-md border border-success bg-success/10 px-3 py-2 text-sm font-semibold text-text-primary"
-              >
-                User saved and audit event recorded.
-              </p>
-            )}
+            <SaveFeedback result={feedback.result} />
           </form>
         </CardBody>
       </Card>

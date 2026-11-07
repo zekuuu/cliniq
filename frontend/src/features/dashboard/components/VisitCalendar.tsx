@@ -81,7 +81,7 @@ function noClassEmpty(holidays: Holiday[], total: number): boolean {
   return total === 0 && holidays.some(isNoClassHoliday)
 }
 
-function Legend({ scale, showHoliday }: { scale: HeatScale; showHoliday: boolean }) {
+function Legend({ scale }: { scale: HeatScale }) {
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
       <span>Cases per day (visits + incidents):</span>
@@ -98,12 +98,6 @@ function Legend({ scale, showHoliday }: { scale: HeatScale; showHoliday: boolean
             {step.label}
           </li>
         ))}
-        {showHoliday && (
-          <li className="flex items-center gap-1">
-            <span aria-hidden="true" className="inline-block size-3.5 rounded-sm border border-border bg-holiday" />
-            Holiday
-          </li>
-        )}
       </ul>
     </div>
   )
@@ -167,6 +161,7 @@ function DayTarget({
   canEdit,
   onSelectDay,
   className,
+  title,
   children,
 }: {
   day: CalendarDay | undefined
@@ -175,12 +170,15 @@ function DayTarget({
   canEdit: boolean
   onSelectDay: (date: ISODate) => void
   className: string
+  /** A hover tooltip, for the yearly squares too small to show labels. */
+  title?: string
   children: ReactNode
 }) {
-  if (!canEdit || !day) return <div className={className}>{children}</div>
+  if (!canEdit || !day) return <div className={className} title={title}>{children}</div>
   return (
     <button
       type="button"
+      title={title}
       aria-label={`${describeDay(day, today, holidays)}. Open day`}
       onClick={() => onSelectDay(day.date)}
       className={cn(
@@ -359,76 +357,135 @@ function MonthView({
   )
 }
 
+/** The yearly grid's key, as chips above the months (Zean, November 6, 2026). */
+function YearLegend({ scale }: { scale: HeatScale }) {
+  return (
+    <ul aria-label="Calendar key" className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-md bg-surface px-3 py-2 text-xs text-text-secondary">
+      <li className="flex items-center gap-1.5">
+        <span aria-hidden="true" className="inline-flex size-4 items-center justify-center rounded-full bg-error text-[0.625rem] font-bold text-white">2</span>
+        Incidents that day
+      </li>
+      <li className="flex items-center gap-1.5">
+        <span aria-hidden="true" className="relative inline-flex size-5 items-center justify-center rounded-md bg-info/15 text-[0.625rem] font-semibold text-info">
+          9<span className="absolute bottom-0.5 left-0.5 size-1.5 rounded-full bg-info" />
+        </span>
+        Holiday
+      </li>
+      <li className="flex items-center gap-1.5">
+        <span aria-hidden="true" className="inline-block size-5 rounded-md bg-background ring-2 ring-brand-yellow ring-inset" />
+        School event (yellow frame)
+      </li>
+      <li className="flex items-center gap-1.5">
+        Visits
+        <span aria-hidden="true" className="flex gap-0.5">
+          {legendSteps(scale).map((step) => (
+            <span key={step.level} className={cn('inline-block size-4 rounded-sm', heatClasses[step.level])} />
+          ))}
+        </span>
+        {legendSteps(scale).map((step) => step.label).join(' · ')}
+      </li>
+      <li className="flex items-center gap-1.5">
+        <span aria-hidden="true" className="inline-block size-5 rounded-md ring-2 ring-text-primary ring-inset" />
+        Today
+      </li>
+    </ul>
+  )
+}
+
+/**
+ * The year at a glance (Zean, November 6, 2026, from a reference the clinic liked): a card per month
+ * with its totals, and day squares that show visits by shade, a holiday by a blue tint and dot, a
+ * school event by a yellow frame, incidents by a red count, and today by a dark ring. Staff can open a
+ * day, as in the month view.
+ */
 function YearView({
   year,
   byDate,
   holidaysOn,
   scale,
   today,
+  canEdit,
+  onSelectDay,
 }: {
   year: string
   byDate: Map<ISODate, CalendarDay>
   holidaysOn: Map<ISODate, Holiday[]>
   scale: HeatScale
   today: ISODate
+  canEdit: boolean
+  onSelectDay: (date: ISODate) => void
 }) {
-  const months = Array.from(
-    { length: 12 },
-    (_, m) => `${year}-${String(m + 1).padStart(2, '0')}-01`,
-  )
+  const months = Array.from({ length: 12 }, (_, m) => `${year}-${String(m + 1).padStart(2, '0')}-01`)
   const holidaysFor = (date: ISODate) => holidaysOn.get(date) ?? NO_HOLIDAYS
-  const activeDays = [...byDate.values()].filter(
-    (d) => d.visits + d.incidents > 0 || dayLabels(d).length > 0 || holidaysFor(d.date).length > 0,
-  )
   return (
     <div className="flex flex-col gap-4">
-      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+      <YearLegend scale={scale} />
+      <ul className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
         {months.map((monthStart) => {
-          const days = [...byDate.values()].filter(
-            (d) => d.date.slice(0, 7) === monthStart.slice(0, 7),
-          )
-          const visits = days.reduce((s, d) => s + d.visits, 0)
-          const incidents = days.reduce((s, d) => s + d.incidents, 0)
+          const days = [...byDate.values()].filter((d) => d.date.slice(0, 7) === monthStart.slice(0, 7))
+          const visits = days.reduce((sum, d) => sum + d.visits, 0)
+          const incidents = days.reduce((sum, d) => sum + d.incidents, 0)
           const monthHolidays = days.flatMap((d) => holidaysFor(d.date).map((h) => `${formatDate(d.date, { month: 'short', day: 'numeric' })} ${holidayName(h)}`))
           return (
-            <li key={monthStart} className="flex flex-col gap-1">
-              <p className="text-xs font-semibold text-text-primary">
-                {formatDate(monthStart, { month: 'long' })}
-                <span className="font-normal text-text-secondary">
-                  {' '}
-                  · {visits} {visits === 1 ? 'visit' : 'visits'} · {incidents}{' '}
-                  {incidents === 1 ? 'incident' : 'incidents'}
+            <li key={monthStart} className="flex flex-col gap-1.5">
+              <p className="flex items-baseline justify-between gap-2">
+                <span className="text-sm font-bold text-text-primary">{formatDate(monthStart, { month: 'long' })}</span>
+                <span className="text-xs text-text-secondary">
+                  {visits} {visits === 1 ? 'visit' : 'visits'}
+                  {incidents > 0 && (
+                    <span className="ml-1.5 font-semibold text-error">
+                      {incidents} {incidents === 1 ? 'incident' : 'incidents'}
+                    </span>
+                  )}
                 </span>
               </p>
               {monthHolidays.length > 0 && <p className="sr-only">Holidays: {monthHolidays.join(', ')}</p>}
-              {/* The mini grid is a visual summary only. The lines above and the Table view carry
-                  the same information for screen readers. */}
-              <div aria-hidden="true" className="grid w-fit grid-cols-7 gap-0.5">
+              <div className="grid grid-cols-7 gap-1">
+                {WEEKDAYS.map((w, i) => (
+                  <abbr key={w} title={WEEKDAYS_LONG[i]} className="text-center text-[0.625rem] font-semibold text-text-secondary no-underline">
+                    {w.slice(0, 1)}
+                  </abbr>
+                ))}
                 {monthGrid(monthStart)
                   .flat()
                   .map((date, i) => {
-                    if (!date) return <span key={`blank-${i}`} className="size-5" />
+                    if (!date) return <span key={`blank-${i}`} aria-hidden="true" />
                     const day = byDate.get(date)
                     const total = day ? day.visits + day.incidents : 0
-                    const future = date > today
                     const holidays = holidaysFor(date)
+                    const hasEvent = !!day && dayLabels(day).length > 0
+                    const isHoliday = holidays.length > 0
+                    // On the darkest green the marks switch to lighter tints so they still stand out (Zean, November 6, 2026).
+                    const dark = !(isHoliday && total === 0) && date <= today && heatLevel(total, scale) === 3
                     return (
-                      <span
+                      <DayTarget
                         key={date}
-                        title={day ? describeDay(day, today, holidays) : undefined}
+                        day={day}
+                        holidays={holidays}
+                        today={today}
+                        canEdit={canEdit}
+                        onSelectDay={onSelectDay}
+                        title={day ? describeDay(day, today, holidays) : holidays.length ? holidays.map(holidayName).join(', ') : undefined}
                         className={cn(
-                          'inline-flex size-5 items-center justify-center rounded-[3px] border text-xs leading-none',
-                          holidays.length && total === 0 ? 'bg-holiday text-text-primary' : future ? heatClasses[0] : heatClasses[heatLevel(total, scale)],
-                          noClassEmpty(holidays, total) && noClassDayClass,
-                          date === today
-                            ? 'border-2 border-brand-green'
-                            : day && dayLabels(day).length
-                              ? 'border-brand-yellow-dark'
-                              : 'border-border',
+                          'relative flex aspect-square items-center justify-center rounded-md text-xs',
+                          isHoliday && total === 0
+                            ? 'bg-info/15 font-semibold text-info'
+                            : date > today
+                              ? heatClasses[0]
+                              : heatClasses[heatLevel(total, scale)],
+                          // The event frame: one bright yellow, inside the square (Zean, November 6, 2026).
+                          date === today ? 'ring-2 ring-text-primary ring-inset' : hasEvent && cn('ring-inset', dark ? 'ring-[3px] ring-[#ffe600]' : 'ring-2 ring-brand-yellow'),
                         )}
                       >
                         {parseISODate(date).getDate()}
-                      </span>
+                        {/* The dot only where another colour hides the holiday tint (a day with visits). */}
+                        {isHoliday && total > 0 && <span aria-hidden="true" className={cn('absolute bottom-1 left-1 size-1.5 rounded-full', dark ? 'bg-[#90caf9]' : 'bg-info')} />}
+                        {day && day.incidents > 0 && (
+                          <span aria-hidden="true" className="absolute -top-1 -right-1 inline-flex size-4 items-center justify-center rounded-full bg-error text-[0.625rem] font-bold text-white ring-2 ring-background">
+                            {day.incidents}
+                          </span>
+                        )}
+                      </DayTarget>
                     )
                   })}
               </div>
@@ -436,22 +493,6 @@ function YearView({
           )
         })}
       </ul>
-      <div>
-        <p className="text-xs font-semibold text-text-primary">
-          Activity, event, and holiday days in {year}
-        </p>
-        <p className="text-xs text-text-secondary">
-          Outlined squares above mark days with an event; today has a green ring. Tan squares mark holidays, striped when
-          there is no class.
-        </p>
-        {activeDays.length === 0 ? (
-          <p className="text-xs text-text-secondary">No clinic activity, events, or holidays this year.</p>
-        ) : (
-          <p className="text-xs text-text-secondary">
-            {activeDays.length} active {activeDays.length === 1 ? 'day' : 'days'} are marked above. Switch to Table view for the full date, count, event, and holiday details.
-          </p>
-        )}
-      </div>
     </div>
   )
 }
@@ -467,12 +508,13 @@ function CalendarTable({
 }) {
   const holidayText = (date: ISODate) =>
     (holidaysOn.get(date) ?? NO_HOLIDAYS).map(holidayName).join(', ')
+  // The year table reads January to December; day views keep newest first (Zean, November 5, 2026).
   const [sort, setSort] = useState<TableSortState<string>>({
     key: view === 'year' ? 'month' : 'date',
-    direction: 'descending',
+    direction: view === 'year' ? 'ascending' : 'descending',
   })
   const effectiveSort = view === 'year' && sort.key === 'date'
-    ? { key: 'month', direction: 'descending' as const }
+    ? { key: 'month', direction: 'ascending' as const }
     : view !== 'year' && sort.key === 'month'
       ? { key: 'date', direction: 'descending' as const }
       : sort
@@ -821,13 +863,16 @@ export function VisitCalendar({
             {period.label}
           </h3>
           <div className="flex items-center gap-2 print:hidden">
+            {/* Arrows without tails, icon only; the name says the period (Zean, November 5, 2026). */}
             <Button
               size="sm"
               variant="neutral"
-              icon="chevronLeft"
+              aria-label={`Previous ${viewNounTitle[view]}`}
+              title={`Previous ${viewNounTitle[view]}`}
+              className="w-8 px-0!"
               onClick={() => setAnchor(shiftAnchor(view, anchor, -1))}
             >
-              Previous<span className="sr-only"> {viewNounTitle[view]}</span>
+              <Icon name="chevronLeft" size={16} />
             </Button>
             <Button size="sm" variant="neutral" onClick={() => setAnchor(today)}>
               Today
@@ -836,10 +881,12 @@ export function VisitCalendar({
               size="sm"
               variant="neutral"
               disabled={nextDisabled}
+              aria-label={`Next ${viewNounTitle[view]}`}
+              title={`Next ${viewNounTitle[view]}`}
+              className="w-8 px-0!"
               onClick={() => setAnchor(shiftAnchor(view, anchor, 1))}
             >
-              Next<span className="sr-only"> {viewNounTitle[view]}</span>
-              <Icon name="chevronRight" />
+              <Icon name="chevronRight" size={16} />
             </Button>
           </div>
         </div>
@@ -894,9 +941,11 @@ export function VisitCalendar({
                     holidaysOn={holidaysOn}
                     scale={scale}
                     today={today}
+                    canEdit={canNavigate}
+                    onSelectDay={setSelectedDate}
                   />
                 )}
-                <Legend scale={scale} showHoliday={view === 'year'} />
+                {view !== 'year' && <Legend scale={scale} />}
               </>
             )}
             {scale.max === 0 && (

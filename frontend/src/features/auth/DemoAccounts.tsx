@@ -21,7 +21,7 @@ export function DemoAccounts() {
         type="button"
         aria-haspopup="dialog"
         onClick={() => setOpen(true)}
-        className="absolute right-4 bottom-4 z-20 inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-text-secondary shadow-card transition-colors hover:bg-surface hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none print:hidden"
+        className="absolute right-4 bottom-10 z-20 md:right-auto md:bottom-4 md:left-4 inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-text-secondary shadow-card transition-colors hover:bg-surface hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none print:hidden"
       >
         <Icon name="users" className="text-brand-green-dark" />
         Demo Accounts

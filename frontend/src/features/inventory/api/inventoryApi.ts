@@ -5,6 +5,7 @@ import {
   listInventoryHistory,
   getMockToday,
   getPatient,
+  getVisitComplaintTypes,
   listInventory,
   listVisits,
   restockInventoryItem as restockInLayer,
@@ -46,10 +47,14 @@ export interface InventoryFormValues {
   brand: '' | ItemBrand
   /** "Avoid if allergic to" words, comma-separated (ADR-049, D8). Optional. */
   avoidIfAllergicTo: string
+  /** "Commonly used for": symptom options (visit complaint-type labels). Optional. */
+  usedFor: string[]
 }
 
 export interface InventoryFormContext {
   item: InventoryItemView | null
+  /** The symptom options the Visit form offers, for "Commonly used for". */
+  symptomOptions: string[]
   /** Every item, for the duplicate-name warning and the unit suggestions (panel review IV-3). */
   items: InventoryItemView[]
 }
@@ -92,8 +97,8 @@ export function fetchInventoryHistory(itemId: string): Promise<InventoryHistoryR
 }
 
 export async function fetchInventoryForm(itemId?: string): Promise<InventoryFormContext> {
-  const [item, items] = await Promise.all([itemId ? getInventoryItem(itemId) : null, listInventory()])
-  return { item, items }
+  const [item, items, types] = await Promise.all([itemId ? getInventoryItem(itemId) : null, listInventory(), getVisitComplaintTypes()])
+  return { item, items, symptomOptions: types.map((type) => type.label) }
 }
 
 export function saveInventoryItem(
@@ -111,6 +116,7 @@ export function saveInventoryItem(
       noExpirationConfirmed: values.noExpirationConfirmed,
       brand: values.brand || null,
       avoidIfAllergicTo: values.avoidIfAllergicTo.split(','),
+      usedFor: values.usedFor,
     },
     options,
   )

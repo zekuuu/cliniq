@@ -1,4 +1,5 @@
 import type { IconName } from '../components'
+import { SHORTCUT_KEYS } from '../lib/shortcuts'
 import { paths } from '../routes/paths'
 import type { UserRole } from '../types/entities'
 
@@ -25,6 +26,7 @@ export type NavKey =
   | 'auditLog'
   | 'accounts'
   | 'backup'
+  | 'archive'
 
 export interface NavItem {
   key: NavKey
@@ -32,12 +34,14 @@ export interface NavItem {
   icon: IconName
   available: boolean
   to?: string
+  /** Its keyboard shortcut, shown as a tip beside the label. */
+  shortcut?: string
 }
 
 const ALL: Record<NavKey, NavItem> = {
-  dashboard: { key: 'dashboard', label: 'Dashboard', icon: 'layoutGrid', available: true, to: paths.dashboard },
+  dashboard: { key: 'dashboard', label: 'Dashboard', icon: 'layoutGrid', available: true, to: paths.dashboard, shortcut: SHORTCUT_KEYS.dashboard },
   calendar: { key: 'calendar', label: 'Activity calendar', icon: 'calendar', available: true, to: paths.calendar },
-  students: { key: 'students', label: 'Students', icon: 'users', available: true, to: paths.students },
+  students: { key: 'students', label: 'Students', icon: 'users', available: true, to: paths.students, shortcut: SHORTCUT_KEYS.studentSearch },
   staff: { key: 'staff', label: 'Staff', icon: 'user', available: true, to: paths.staff },
   visits: { key: 'visits', label: 'Visits', icon: 'stethoscope', available: true, to: paths.visits },
   incidents: { key: 'incidents', label: 'Incidents', icon: 'alertTriangle', available: true, to: paths.incidents },
@@ -47,6 +51,7 @@ const ALL: Record<NavKey, NavItem> = {
   auditLog: { key: 'auditLog', label: 'Audit Log', icon: 'clipboardList', available: true, to: paths.auditLog },
   accounts: { key: 'accounts', label: 'Accounts', icon: 'userCog', available: true, to: paths.users },
   backup: { key: 'backup', label: 'Backup', icon: 'refresh', available: true, to: paths.backup },
+  archive: { key: 'archive', label: 'Archive', icon: 'archive', available: true, to: paths.archive },
 }
 
 export interface NavGroup {
@@ -60,7 +65,7 @@ export function navGroupsFor(role: UserRole): NavGroup[] {
       { label: 'Overview', items: [ALL.dashboard, ALL.calendar] },
       { label: 'Patient Care', items: [ALL.students, ALL.incidents] },
       { label: 'Reporting', items: [ALL.reports, ALL.auditLog] },
-      { label: 'Administration', items: [ALL.accounts, ALL.backup] },
+      { label: 'Administration', items: [ALL.accounts, ALL.backup, ALL.archive] },
     ]
   }
   return [
@@ -68,6 +73,6 @@ export function navGroupsFor(role: UserRole): NavGroup[] {
     // ADR-043: staff patients are the School Clinician's only; the Admin has no Staff item.
     { label: 'Patient Care', items: [ALL.students, ALL.staff, ALL.visits, ALL.incidents, ALL.followUps] },
     { label: 'Operations', items: [ALL.inventory, ALL.reports] },
-    { label: 'Administration', items: [ALL.backup, ALL.auditLog] },
+    { label: 'Administration', items: [ALL.backup, ALL.auditLog, ALL.archive] },
   ]
 }

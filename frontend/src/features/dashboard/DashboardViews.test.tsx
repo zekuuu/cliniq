@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
@@ -37,19 +37,16 @@ describe('Clinic Overview Dashboard: views', () => {
     expect(screen.queryByRole('heading', { name: /^calendar$/i })).not.toBeInTheDocument()
   })
 
-  it('says in the printout when a Trends filter narrows its complaint figures', async () => {
-    // Staff: the Admin can't print (ADR-038 item 3).
+  // ADR-070: the Dashboard no longer prints, so a Trends filter never reaches a printout; the Clinic
+  // Overview report in Reports prints the whole period.
+  it('keeps the Trends filter on screen only, with no Print on the Dashboard', async () => {
     renderDashboard('/?view=trends&sex=female&grade=Grade%205')
     await screen.findByText(/^Filtered:/)
-    // The print listener is attached in an effect, so retry until the printout mounts.
-    await waitFor(() => {
-      act(() => {
-        window.dispatchEvent(new Event('beforeprint'))
-      })
-      expect(document.querySelector('[data-print-document]')?.textContent ?? '').toMatch(
-        /count only Female × Grade 5 visits and incidents/,
-      )
+    expect(screen.queryByRole('button', { name: 'Print / Save as PDF' })).not.toBeInTheDocument()
+    act(() => {
+      window.dispatchEvent(new Event('beforeprint'))
     })
+    expect(document.querySelector('[data-print-document]')).toBeNull()
     act(() => {
       window.dispatchEvent(new Event('afterprint'))
     })
@@ -76,7 +73,7 @@ describe('Clinic Overview Dashboard: views', () => {
     const summary = screen.getByRole('region', { name: 'Summary counts' })
     // ADR-038: Students and Incidents are the only cards the Admin can open.
     // The count cards only; the Monthly Report link sits on the Activity summary heading row.
-    expect(within(summary).getAllByRole('link').filter((link) => !link.textContent?.includes('View full report')).map((link) => link.getAttribute('href')?.split('?')[0])).toEqual(['/incidents', '/students'])
+    expect(within(summary).getAllByRole('link').filter((link) => !link.textContent?.includes('View full report')).map((link) => link.getAttribute('href')?.split('?')[0])).toEqual(['/students', '/incidents'])
     expect(screen.queryByRole('link', { name: 'New Visit' })).not.toBeInTheDocument()
   })
 })

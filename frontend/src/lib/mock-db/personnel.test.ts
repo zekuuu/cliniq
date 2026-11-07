@@ -121,7 +121,7 @@ describe('staff records and history', () => {
     const second = await savePersonnel(newStaff('Ben Test'), { actor: STAFF })
     expect([first.personnel.staffNumber, second.personnel.staffNumber]).toEqual(['STF-0013', 'STF-0014'])
     await savePersonnel({ ...newStaff('Ben Test'), allergies: ['Latex'] }, { personnelId: second.personnel.id, actor: STAFF })
-    await archivePersonnel(first.personnel.id, STAFF)
+    await archivePersonnel(first.personnel.id, STAFF, 'Resigned')
     expect(getRecordedAuditEntries().map((e) => [e.actionType, e.targetRecord?.type, e.summary])).toEqual([
       ['create', 'staff', undefined],
       ['create', 'staff', undefined],
@@ -137,7 +137,7 @@ describe('staff records and history', () => {
 
   it('lets only the School Clinician write staff records', async () => {
     await expect(savePersonnel(newStaff('Ana Test'), { actor: ADMIN })).rejects.toThrow(/Only the clinic staff/)
-    await expect(archivePersonnel(STAFF_MEMBER, ADMIN)).rejects.toThrow(/Only the clinic staff/)
+    await expect(archivePersonnel(STAFF_MEMBER, ADMIN, 'Resigned')).rejects.toThrow(/Only the clinic staff/)
   })
 
   it('searches students and staff in one box, labelled, nothing medical', async () => {

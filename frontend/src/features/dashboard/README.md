@@ -18,7 +18,7 @@ Key operational totals, attention links, trends, and display-private frequent-vi
 `api/dashboardApi.ts`; derived values in `lib/mock-db/dashboard.ts` and this folder's `lib/`.
 
 ## Printouts and tests
-Print produces the "Clinic Overview Report" (`components/DashboardPrint.tsx`, ADR-026) for the open tab only (ADR-045): Overview prints the screen's figures and the lists its cards and chips link to; Trends prints the breakdowns behind its charts as tables. The paper shows the full LRN (ADR-044). It does not print calendar events or holidays, and the Activity calendar has no print action. The Admin / Principal does not print (ADR-038). Tests: the `*.test.tsx` files in this folder and in `components/`.
+The Dashboard has no print (ADR-074); the monthly reports in Reports are the printouts. Tests: the `*.test.tsx` files in this folder and in `components/`.
 
 ## Not built yet
 Nothing decided is waiting here.

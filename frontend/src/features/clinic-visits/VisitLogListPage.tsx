@@ -1,3 +1,4 @@
+import { SYMPTOM, symptom } from '../../lib/labels'
 import { useState, type ReactNode } from 'react'
 import { usePatientFilter } from '../../hooks/usePatientFilter'
 import {
@@ -12,6 +13,7 @@ import {
   EmptyState,
   ErrorState,
   Icon,
+  ShortcutHint,
   Input,
   MultiSelect,
   Pagination,
@@ -22,6 +24,7 @@ import {
   Skeleton,
   type DataTableColumn,
 } from '../../components'
+import { SHORTCUT_KEYS } from '../../lib/shortcuts'
 import { Link, useSearchParams } from 'react-router'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { usePageSize, type PageSize } from '../../hooks/usePageSize'
@@ -220,8 +223,8 @@ export function VisitLogListPage() {
     },
     {
       key: 'summary',
-      header: 'Complaint',
-      sort: sortColumn('record', 'Complaint'),
+      header: SYMPTOM,
+      sort: sortColumn('record', SYMPTOM),
       cell: (row) => (
         <div>
           <p>{row.complaint}</p>
@@ -284,9 +287,10 @@ export function VisitLogListPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Link className={buttonClassName({ variant: 'primary' })} to={paths.visitNew}>
+            <Link className={buttonClassName({ variant: 'primary' })} to={paths.visitNew} aria-keyshortcuts={SHORTCUT_KEYS.newVisit}>
               <Icon name="stethoscope" />
               New Visit
+              <ShortcutHint keys={SHORTCUT_KEYS.newVisit} />
             </Link>
           </div>
         </div>
@@ -312,7 +316,7 @@ export function VisitLogListPage() {
             <Input
               label="Search" type="search"
               value={search}
-              placeholder="LRN, Staff No., complaint or event"
+              placeholder={`LRN, Staff No., ${symptom} or event`}
               onChange={(event) => changeSearch(event.target.value)}
               className="min-w-56 flex-1"
             />

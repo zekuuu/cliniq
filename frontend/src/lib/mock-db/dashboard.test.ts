@@ -1,3 +1,4 @@
+import { DEFAULT_SCHOOL_YEAR } from '../schoolYear'
 import { describe, expect, it } from 'vitest'
 import { rangeForPreset } from '../dateRange'
 import type { FollowUp, InventoryItem, Visit } from '../../types/entities'
@@ -39,6 +40,7 @@ const CONFIG: MockDbConfig = {
   backupKeepLast: 60,
   unusualAgeYears: 3,
   largeWriteOffPercent: 25,
+  ...DEFAULT_SCHOOL_YEAR,
   vitalsUsualRanges: {
     temperatureMinC: 36,
     oxygenSaturationMinPct: 95,
@@ -140,6 +142,7 @@ function dataset(partial: Partial<DbState>): DbState {
       incidentComplaintTypes: [],
       inventoryTransactions: [],
       recordReviews: [],
+      personnelReviews: [],
       excuseLetterApprovals: [],
       peReferrals: [],
       issueReports: [],
