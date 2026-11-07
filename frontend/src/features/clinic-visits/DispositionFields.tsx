@@ -1,10 +1,11 @@
+import { RELEASED_TO } from '../../lib/labels'
 import type { ChangeEvent } from 'react'
 import { Combobox, DatePicker, FIELD_HALF, Input, StayHomeField } from '../../components'
 import { formatDateRange } from '../../lib/dates'
 import type { ExcusedPeriod } from '../../lib/mock-db'
 import type { Disposition } from '../../types/entities'
 import { CertificateWarning } from './CertificateWarning'
-import { hasExcuseLetter, type DispositionErrors, type DispositionValues } from './dispositionValues'
+import { hasExcuseLetter, isOtherRelationship, type DispositionErrors, type DispositionValues } from './dispositionValues'
 import { ExcusedPeriodPresets } from './ExcusedPeriodPresets'
 
 /** Suggestions only; any relationship can be typed (ADR-049, D4). */
@@ -36,9 +37,9 @@ export function DispositionFields({
   const set = <K extends keyof DispositionValues>(field: K, value: DispositionValues[K]) =>
     onChange({ ...values, [field]: value })
 
-  // A student who left the clinic: who collected them. Not for a staff patient, who leaves on their own.
+  // A student who left the clinic: who they were released to. Not for a staff patient, who leaves on their own.
   const collected = hasExcuseLetter(disposition) && !noLetter && (
-    <CollectedByFields values={values} onChange={onChange} error={errors.collectedTime} />
+    <CollectedByFields values={values} onChange={onChange} errors={errors} />
   )
 
   if (approvedPeriod) {
@@ -128,24 +129,28 @@ export function DispositionFields({
   )
 }
 
-/** Who collected the student (ADR-049, D4): name, relationship and time, all optional. */
+/**
+ * Who the student was released to (ADR-049, D4): name, relationship and time, all optional. Choosing
+ * "Other" asks who, and that becomes required. Data names stay `collected…` (labels only).
+ */
 function CollectedByFields({
   values,
   onChange,
-  error,
+  errors,
 }: {
   values: DispositionValues
   onChange: (next: DispositionValues) => void
-  error?: string
+  errors: DispositionErrors
 }) {
   const typed = values.collectedRelationship.trim().toLowerCase()
+  const other = isOtherRelationship(values.collectedRelationship)
   return (
     <fieldset className="rounded-md border border-border p-4">
-      <legend className="px-1 text-sm font-semibold text-text-primary">Who collected the student</legend>
-      <p className="text-xs text-text-secondary">Optional.</p>
-      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <legend className="px-1 text-sm font-semibold text-text-primary">Who the student was released to</legend>
+      <p className="text-xs text-text-secondary">Optional. Record the person's name.</p>
+      <div className="mt-3 grid grid-cols-1 items-start gap-3 sm:grid-cols-3">
         <Input
-          label="Collected by"
+          label={RELEASED_TO}
           value={values.collectedName}
           maxLength={80}
           onChange={(event) => onChange({ ...values, collectedName: event.target.value })}
@@ -162,11 +167,23 @@ function CollectedByFields({
         />
         <Input
           type="time"
-          label="Time collected"
+          label="Time released"
           value={values.collectedTime}
           onChange={(event) => onChange({ ...values, collectedTime: event.target.value })}
-          error={error}
+          error={errors.collectedTime}
         />
+        {other && (
+          <Input
+            className="sm:col-span-3 animate-expand-down motion-reduce:animate-none"
+            label="Specify who"
+            required
+            value={values.collectedRelationshipOther}
+            maxLength={60}
+            placeholder="Neighbour, relative, guardian"
+            onChange={(event) => onChange({ ...values, collectedRelationshipOther: event.target.value })}
+            error={errors.collectedRelationshipOther}
+          />
+        )}
       </div>
     </fieldset>
   )

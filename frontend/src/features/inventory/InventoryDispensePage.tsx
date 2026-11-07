@@ -1,4 +1,5 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { Lrn } from '../../components/ui/MaskedLrn'
 import { Link } from 'react-router'
 import { BackButton, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Icon, Input, InventoryItemPicker, PatientPicker, Select, Skeleton } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
@@ -7,7 +8,7 @@ import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { formatDateTime } from '../../lib/dates'
 import { allergyMatches, allergyWarningText } from '../../lib/itemsGiven'
 import { StockRuleError } from '../../lib/mock-db'
-import { maskPatientNumber, patientRefOf } from '../../lib/patients'
+import { patientRefOf } from '../../lib/patients'
 import { paths } from '../../routes/paths'
 import type { PatientRef, PatientSearchResult } from '../../types/entities'
 import { dispenseInventoryItem, fetchInventory, findDispensePatient, searchDispensePatients } from './api/inventoryApi'
@@ -37,7 +38,7 @@ export function InventoryDispensePage() {
   const [itemId, setItemId] = useState('')
   const [quantity, setQuantity] = useState('1')
   const [errors, setErrors] = useState<{ recipient?: string; student?: string; item?: string; quantity?: string; save?: string }>({})
-  const [success, setSuccess] = useState('')
+  const [success, setSuccess] = useState<ReactNode>('')
   const [saving, setSaving] = useState(false)
   const { cancel, discardDialog } = useCancelNavigation(
     paths.inventory,
@@ -73,8 +74,9 @@ export function InventoryDispensePage() {
     setSaving(true)
     try {
       const result = await dispenseInventoryItem(item.id, amount, recipient === 'student' ? (patientRef ?? undefined) : undefined)
-      const forWhom = picked ? (picked.kind === 'student' ? `LRN ${maskPatientNumber({ kind: 'student', number: picked.lrn })}` : `Staff No. ${picked.staffNumber}`) : ''
-      setSuccess(`${amount} ${result.item.unit} of ${result.item.name} recorded${recipient === 'student' && picked ? ` for ${forWhom}` : ' for general use'}. Remaining stock: ${result.remainingStock}.${result.belowZero ? ' Stock is now below zero; recount and restock.' : ''}`)
+      // The masked LRN through the shared component, like every list (professor's consultation, November 6, 2026).
+      const forWhom = picked ? (picked.kind === 'student' ? <>LRN <Lrn lrn={picked.lrn} /></> : `Staff No. ${picked.staffNumber}`) : ''
+      setSuccess(<>{amount} {result.item.unit} of {result.item.name} recorded{recipient === 'student' && picked ? <> for {forWhom}</> : ' for general use'}. Remaining stock: {result.remainingStock}.{result.belowZero ? ' Stock is now below zero; recount and restock.' : ''}</>)
       setItemId('')
       setQuantity('1')
       reload()

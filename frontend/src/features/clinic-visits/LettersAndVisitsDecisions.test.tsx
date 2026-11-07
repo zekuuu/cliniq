@@ -36,12 +36,12 @@ describe('Letters and visits (ADR-049)', () => {
   }
 
   async function chooseComplaint(user: ReturnType<typeof userEvent.setup>, label: string) {
-    await user.click(screen.getByRole('button', { name: /^Complaint/ }))
+    await user.click(screen.getByRole('button', { name: /^Symptom/ }))
     const option = screen.queryByRole('option', { name: label })
     if (option) return user.click(option)
     // Not among the top suggestions yet: typed under Other, as the clinician would.
     await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
-    await user.type(screen.getByLabelText(/specify other complaint/i), label)
+    await user.type(screen.getByLabelText(/specify other symptom/i), label)
   }
 
   it('"Save and approve now" stores the letter in the same save and writes both audit entries', async () => {
@@ -146,13 +146,13 @@ describe('Letters and visits (ADR-049)', () => {
   it('asks who collected the student only for Sent home and Referred to hospital, and saves it on the visit', async () => {
     const user = await openForm()
     await chooseComplaint(user, 'Dizziness')
-    expect(screen.queryByLabelText('Collected by')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Released to')).not.toBeInTheDocument()
     await user.click(screen.getByRole('radio', { name: 'Resting in clinic' }))
-    expect(screen.queryByLabelText('Collected by')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Released to')).not.toBeInTheDocument()
     await user.click(screen.getByRole('radio', { name: 'Referred to hospital' }))
-    expect(screen.getByLabelText('Collected by')).toBeInTheDocument()
+    expect(screen.getByLabelText('Released to')).toBeInTheDocument()
     await user.click(screen.getByRole('radio', { name: 'Sent home' }))
-    await user.type(screen.getByLabelText('Collected by'), 'Ferdie Quizon')
+    await user.type(screen.getByLabelText('Released to'), 'Ferdie Quizon')
     await user.type(screen.getByLabelText('Relationship'), 'Guardian')
     await user.click(screen.getByLabelText(/prepare an excuse letter/i))
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
@@ -161,6 +161,27 @@ describe('Letters and visits (ADR-049)', () => {
     const saved = await getVisit(entry!.targetRecord!.id)
     expect(saved.collectedBy).toMatchObject({ name: 'Ferdie Quizon', relationship: 'Guardian' })
     expect(saved.collectedBy?.time).toMatch(/^\d{2}:\d{2}$/)
+  })
+
+  it('asks who "Other" is, requires it, and stores who it was (consultation, November 6, 2026)', async () => {
+    const user = await openForm()
+    await chooseComplaint(user, 'Dizziness')
+    await user.click(screen.getByRole('radio', { name: 'Sent home' }))
+    expect(screen.getByRole('group', { name: 'Who the student was released to' })).toBeInTheDocument()
+    expect(screen.queryByLabelText(/^Specify who/)).not.toBeInTheDocument()
+    await user.type(screen.getByLabelText('Released to'), 'Lorna Cruz')
+    await user.type(screen.getByLabelText('Relationship'), 'Other')
+    const who = screen.getByLabelText(/^Specify who/)
+    expect(who).toBeRequired()
+    await user.click(screen.getByLabelText(/prepare an excuse letter/i))
+    await user.click(screen.getByRole('button', { name: 'Save Visit' }))
+    expect(await screen.findByText('Say who the student was released to, for example a neighbour or a relative.')).toBeInTheDocument()
+    expect(getRecordedAuditEntries().some((e) => e.actionType === 'submit' && e.targetRecord?.type === 'visit')).toBe(false)
+    await user.type(screen.getByLabelText(/^Specify who/), 'Neighbour')
+    await user.click(screen.getByRole('button', { name: 'Save Visit' }))
+    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
+    const entry = getRecordedAuditEntries().findLast((e) => e.actionType === 'submit' && e.targetRecord?.type === 'visit')
+    expect((await getVisit(entry!.targetRecord!.id)).collectedBy).toMatchObject({ name: 'Lorna Cruz', relationship: 'Neighbour' })
   })
 
   it('rejects a collection time in the future', async () => {

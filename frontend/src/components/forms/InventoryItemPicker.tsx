@@ -1,5 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { cn } from '../../lib/cn'
+import { complaintGroupKey } from '../../lib/complaints'
+import { symptoms as symptomsWord } from '../../lib/labels'
 import { stockQuantityText, type InventoryFlag } from '../status/inventory'
 import { ITEM_BRAND_LABELS, type ItemBrand } from '../../types/entities'
 import { Badge } from '../ui/Badge'
@@ -19,12 +21,16 @@ export type PickableItem = {
   brand?: ItemBrand | null
   /** "Avoid if allergic to" words (ADR-049, D8). */
   avoidIfAllergicTo?: string[]
+  /** "Commonly used for" symptom options (consultation, November 6, 2026). */
+  usedFor?: string[]
 }
 
 const GROUPS = [
   { category: 'medicine', label: 'Medicines' },
   { category: 'supply', label: 'Supplies' },
 ] as const
+
+type Group = { key: string; label: string; items: PickableItem[] }
 
 function isPickable(item: PickableItem): boolean {
   return !item.flags.includes('expired')
@@ -38,17 +44,25 @@ function isPickable(item: PickableItem): boolean {
  *
  * ARIA 1.2 combobox: focus stays in the text field; Up/Down move through the options, Enter picks,
  * Escape closes (or clears the search when already closed), Tab moves on.
+ *
+ * With `symptoms` chosen (the Visit form), items tagged "Commonly used for" one of them come first
+ * under "Suggested for these symptoms"; the rest sit behind a "Show all medicines" row (collapsed by
+ * default) that Enter or a click opens. Typing always searches every item. Nothing is ever hidden
+ * from search, disabled or blocked by a suggestion: stock, expiry and allergy warnings are unchanged.
  */
 export function InventoryItemPicker({
   items,
   onPick,
   label = 'Add medicine or supply',
   hint,
+  symptoms,
 }: {
   items: ReadonlyArray<PickableItem>
   onPick: (itemId: string) => void
   label?: string
   hint?: string
+  /** The visit's chosen symptoms; omitted or empty lists every item as before. */
+  symptoms?: ReadonlyArray<string>
 }) {
   const id = useId()
   const listboxId = `${id}-listbox`
@@ -58,15 +72,25 @@ export function InventoryItemPicker({
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(-1)
+  const [showAll, setShowAll] = useState(false)
 
   const search = query.trim().toLowerCase()
-  const groups = GROUPS.map((group) => ({
-    ...group,
-    items: items
-      .filter((item) => item.category === group.category && item.name.toLowerCase().includes(search))
-      .sort((a, b) => a.name.localeCompare(b.name)),
-  })).filter((group) => group.items.length)
+  const wanted = new Set((symptoms ?? []).map(complaintGroupKey).filter(Boolean))
+  const isSuggested = (item: PickableItem) => (item.usedFor ?? []).some((tag) => wanted.has(complaintGroupKey(tag)))
+  const matching = items.filter((item) => item.name.toLowerCase().includes(search)).sort((a, b) => a.name.localeCompare(b.name))
+  const suggested = wanted.size ? matching.filter(isSuggested) : []
+  const rest = matching.filter((item) => !suggested.includes(item))
+  // The toggle row shows only for the unfiltered list; a search always shows every match.
+  const hasToggle = suggested.length > 0 && !search && rest.length > 0
+  const collapsed = hasToggle && !showAll
+  const groups: Group[] = [
+    ...(suggested.length ? [{ key: 'suggested', label: `Suggested for these ${symptomsWord}`, items: suggested }] : []),
+    ...(collapsed ? [] : GROUPS.map((group) => ({ key: group.category, label: group.label, items: rest.filter((item) => item.category === group.category) }))),
+  ].filter((group) => group.items.length)
   const flat = groups.flatMap((group) => group.items)
+  /** The "Show all medicines" row is the last option, after every item. */
+  const toggleIndex = hasToggle ? flat.length : -1
+  const optionCount = flat.length + (hasToggle ? 1 : 0)
   const optionId = (index: number) => `${id}-option-${index}`
 
   useEffect(() => {
@@ -89,7 +113,7 @@ export function InventoryItemPicker({
       window.removeEventListener('resize', place)
       window.removeEventListener('scroll', place, true)
     }
-  }, [open, flat.length])
+  }, [open, optionCount])
 
   useEffect(() => {
     if (open && active >= 0) document.getElementById(optionId(active))?.scrollIntoView?.({ block: 'nearest' })
@@ -109,14 +133,15 @@ export function InventoryItemPicker({
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
-      if (!flat.length) return setOpen(true)
+      if (!optionCount) return setOpen(true)
       const step = event.key === 'ArrowDown' ? 1 : -1
       setOpen(true)
-      setActive((current) => (current < 0 && step < 0 ? flat.length - 1 : (current + step + flat.length) % flat.length))
+      setActive((current) => (current < 0 && step < 0 ? optionCount - 1 : (current + step + optionCount) % optionCount))
     } else if (event.key === 'Enter') {
       // Never submit the surrounding form from the search field.
       event.preventDefault()
-      if (open && flat[active]) pick(flat[active])
+      if (open && active === toggleIndex) setShowAll((current) => !current)
+      else if (open && flat[active]) pick(flat[active])
     } else if (event.key === 'Escape') {
       if (open) {
         event.preventDefault()
@@ -165,10 +190,13 @@ export function InventoryItemPicker({
             <p className="px-2.5 py-1.5 text-sm text-text-secondary">No items match “{query.trim()}”.</p>
           )}
           {groups.map((group) => (
-            <div key={group.category} role="group" aria-labelledby={`${id}-${group.category}`}>
-              <p id={`${id}-${group.category}`} className="px-2.5 pt-2 pb-1 text-xs font-semibold text-text-secondary">
+            <div key={group.key} role="group" aria-labelledby={`${id}-${group.key}`}>
+              <p id={`${id}-${group.key}`} className="px-2.5 pt-2 pb-1 text-xs font-semibold text-text-secondary">
                 {group.label}
               </p>
+              {group.key === 'suggested' && (
+                <p className="px-2.5 pb-1 text-xs text-text-secondary">Suggestions come from the tags set on each item. The clinician decides.</p>
+              )}
               {group.items.map((item) => {
                 const optionIndex = flat.indexOf(item)
                 const disabled = !isPickable(item)
@@ -209,6 +237,20 @@ export function InventoryItemPicker({
               })}
             </div>
           ))}
+          {hasToggle && (
+            <div
+              id={optionId(toggleIndex)}
+              role="option"
+              aria-selected={active === toggleIndex}
+              aria-expanded={showAll}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => setShowAll((current) => !current)}
+              onMouseMove={() => setActive(toggleIndex)}
+              className={cn(dropdownOptionClassName(false), 'mt-1 border-t border-border font-semibold text-brand-green-dark', active === toggleIndex && 'bg-surface')}
+            >
+              {showAll ? 'Show suggested only' : `Show all medicines (${rest.length} more)`}
+            </div>
+          )}
         </div>
       )}
     </div>

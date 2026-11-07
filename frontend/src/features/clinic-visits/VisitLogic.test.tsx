@@ -162,7 +162,7 @@ describe('escalate to incident (VS-7, ADR-036, D3)', () => {
     )
     expect(await screen.findByText(/Escalated from a saved visit/)).toBeInTheDocument()
     expect(screen.getByLabelText(/temperature/i)).toHaveValue(37.8)
-    expect(screen.getByLabelText(/complaint/i)).toHaveTextContent('Fainting')
+    expect(screen.getByLabelText(/emergency symptom/i)).toHaveTextContent('Fainting')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
     await screen.findByRole('heading', { name: 'Stage 2 completion' })
     const [incident] = (await listIncidents()).filter((i) => i.sourceVisitId === visit.id)
@@ -182,12 +182,12 @@ describe('escalate to incident (VS-7, ADR-036, D3)', () => {
       </MemoryRouter>,
     )
     await pickStudent(user, '000000260001')
-    await selectOption(user, screen.getByLabelText(/^complaint/i), 'Other (type your own)')
-    await user.type(screen.getByLabelText(/specify other complaint/i), 'fainting')
+    await selectOption(user, screen.getByLabelText(/^symptom/i), 'Other (type your own)')
+    await user.type(screen.getByLabelText(/specify other symptom/i), 'fainting')
     expect(screen.getByText('This looks like an emergency. Escalate to an incident?')).toBeInTheDocument()
     await user.click(screen.getAllByRole('button', { name: 'Escalate to incident' })[0])
     expect(await screen.findByText(/Escalated from the New Visit form/)).toBeInTheDocument()
-    expect(screen.getByLabelText(/complaint/i)).toHaveTextContent('Fainting')
+    expect(screen.getByLabelText(/emergency symptom/i)).toHaveTextContent('Fainting')
     expect((await listVisits()).length).toBe(visitsBefore)
   })
 })
@@ -197,7 +197,7 @@ describe('first-aid checklist wording (VS-6) and one search instruction (VS-12)'
 
   it('calls it the first-aid checklist and says the search instruction once', async () => {
     renderWithRouter(<NewVisitEntryPage />)
-    expect(await screen.findByText('Enter a complaint to show the first-aid checklist')).toBeInTheDocument()
+    expect(await screen.findByText('Choose a symptom to show the first-aid checklist')).toBeInTheDocument()
     expect(screen.getAllByText(/LRN, a Staff No\. or a name/i)).toHaveLength(1)
   })
 })

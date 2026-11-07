@@ -40,6 +40,7 @@ export function ItemsGivenField({
   allergies,
   saved = [],
   error,
+  symptoms,
 }: {
   items: ReadonlyArray<PickableItem>
   lines: ItemLineDraft[]
@@ -49,6 +50,8 @@ export function ItemsGivenField({
   /** The record's lines as last saved. Their stock is already taken, and their snapshots are kept. */
   saved?: ReadonlyArray<ItemGivenLine>
   error?: string
+  /** The visit's chosen symptoms, so the picker lists tagged items first (never hides the rest). */
+  symptoms?: ReadonlyArray<string>
 }) {
   const [announcement, setAnnouncement] = useState('')
   const byId = new Map(items.map((item) => [item.id, item]))
@@ -87,7 +90,7 @@ export function ItemsGivenField({
       <p className="text-xs text-text-secondary">Optional. Each line is taken from inventory when the visit is saved.</p>
 
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,14rem)] sm:items-start">
-        <InventoryItemPicker items={items} onPick={pick} />
+        <InventoryItemPicker items={items} onPick={pick} symptoms={symptoms} />
         <div role="note" aria-label="Allergies" className="rounded-md border border-border px-3 py-2 text-xs text-text-secondary sm:mt-5">
           {allergies === null ? (
             'Allergies appear here once the student is identified.'

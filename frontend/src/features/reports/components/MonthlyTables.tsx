@@ -1,3 +1,4 @@
+import { SYMPTOM, symptom, symptoms } from '../../../lib/labels'
 import { splitText } from '../../../lib/patients'
 import { DataTable, EmptyState, PrintTable } from '../../../components'
 import { formatDate } from '../../../lib/dates'
@@ -18,7 +19,7 @@ function weeklyRows(weekly: Weekly): WeeklyRow[] {
   return [...weekly.rows, { complaint: ALL_COMPLAINTS, counts: weekly.totals, total }]
 }
 
-const ALL_COMPLAINTS = 'All complaints'
+const ALL_COMPLAINTS = `All ${symptoms}`
 
 /** Zeros recede and the "All complaints" row stands out, so the real counts are what the eye finds. */
 function weekCell(row: WeeklyRow, count: number) {
@@ -35,9 +36,9 @@ export function WeeklyComplaintsTable({ weekly }: { weekly: Weekly }) {
   if (!weekly.rows.length) return <EmptyState title="No clinic visits this month" description="Weekly counts appear once visits are recorded." />
   return (
     <DataTable
-      caption="Clinic visits by complaint and week"
+      caption={`Clinic visits by ${symptom} and week`}
       columns={[
-        { key: 'complaint', header: 'Complaint', rowHeader: true, width: '12rem', cell: (row: WeeklyRow) => row.complaint },
+        { key: 'complaint', header: SYMPTOM, rowHeader: true, width: '12rem', cell: (row: WeeklyRow) => row.complaint },
         ...weekly.weeks.map((week, index) => ({ key: week.from, header: weekHeader(week), align: 'right' as const, width: '6rem', cell: (row: WeeklyRow) => weekCell(row, row.counts[index]) })),
         { key: 'total', header: 'Total', align: 'right', width: '5rem', cell: (row: WeeklyRow) => <span className="font-semibold">{row.total}</span> },
       ]}
@@ -53,12 +54,12 @@ export function WeeklyComplaintsTable({ weekly }: { weekly: Weekly }) {
 export function WeeklyComplaintsPrint({ weekly }: { weekly: Weekly }) {
   return (
     <PrintTable
-      caption="Clinic visits by complaint and week"
+      caption={`Clinic visits by ${symptom} and week`}
       rows={weekly.rows.length ? weeklyRows(weekly) : []}
       rowKey={(row) => row.complaint}
       empty="No clinic visits were recorded this month."
       columns={[
-        { header: 'Complaint', cell: (row) => row.complaint },
+        { header: SYMPTOM, cell: (row) => row.complaint },
         ...weekly.weeks.map((week, index) => ({ header: week.label, width: '9%', align: 'right' as const, cell: (row: WeeklyRow) => row.counts[index] })),
         { header: 'Total', width: '9%', align: 'right', cell: (row) => row.total },
       ]}

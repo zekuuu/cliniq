@@ -64,6 +64,7 @@ import {
   type LogbookErrors,
 } from './logbookValues'
 import { dispositionOptionsFor } from '../../lib/dispositions'
+import { symptom, SYMPTOMS_QUESTION } from '../../lib/labels'
 
 /**
  * Complaint types that open "Show more fields" (body temperature) by themselves (ADR-049). Matched
@@ -357,7 +358,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
 
   function validate(): Errors {
     const next: Errors = {}
-    if (!cleanComplaint(complaint)) next.complaint = 'Enter the complaint for this visit.'
+    if (!cleanComplaint(complaint)) next.complaint = `Choose the ${symptom} for this visit.`
     if (whenEdited && (!visitDate || !visitClock)) next.visitTime = 'Enter the visit date and time.'
     else if (minutesAgo < -1) next.visitTime = "The visit date and time can't be in the future."
     if (lines.some((line) => line.quantity < 1)) next.itemsGiven = 'Each quantity must be at least 1.'
@@ -367,7 +368,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
     }
     return {
       ...next,
-      ...dispositionErrors(disposition, isStaffPatient ? { ...letterValues, collectedTime: '' } : letterValues, false, visitDate),
+      ...dispositionErrors(disposition, isStaffPatient ? { ...letterValues, collectedTime: '', collectedRelationship: '' } : letterValues, false, visitDate),
       ...logbookErrors(logbook, currentClock(), timeOutRef.current?.validity.badInput),
     }
   }
@@ -626,7 +627,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
             )}
             </FormSection>
 
-            <FormSection id="visit-complaint-title" title="Presenting problem" description="Why the patient came in. The first-aid checklist follows the complaint.">
+            <FormSection id="visit-complaint-title" title="Presenting problem" description={`${SYMPTOMS_QUESTION} Choose all that apply. The first-aid checklist follows the ${symptom}.`}>
             {/* Remounts on the pick, so focus moves on to the next thing to fill in (D4: fewer clicks). */}
             <ComplaintField
               key={identified.student?.id ?? 'none'}
@@ -658,8 +659,8 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
             ) : (
               <EmptyState
                 icon="clipboardList"
-                title="Enter a complaint to show the first-aid checklist"
-                description="The checklist appears when the complaint matches a predefined type."
+                title={`Choose a ${symptom} to show the first-aid checklist`}
+                description={`The checklist appears when the ${symptom} matches a predefined type.`}
                 className="rounded-md border border-border bg-surface"
               />
             )}
@@ -691,6 +692,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 setErrors((current) => ({ ...current, itemsGiven: undefined }))
               }}
               allergies={allergies}
+              symptoms={[complaint, ...extraComplaints]}
               error={errors.itemsGiven}
             />
             </FormSection>
@@ -717,7 +719,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
               values={dispositionValues}
               onChange={(next) => {
                 setDispositionValues(next)
-                setErrors((current) => ({ ...current, excusedUntil: undefined }))
+                setErrors((current) => ({ ...current, excusedUntil: undefined, collectedRelationshipOther: undefined }))
               }}
               errors={errors}
               noLetter={isStaffPatient}
@@ -810,7 +812,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 </Button>
                 <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
                 {preparingLetter && (
-                  <Button type="button" variant="secondary" icon="checkCircle" disabled={saving} onClick={saveAndApproveNow}>
+                  <Button type="button" variant="secondary" icon="checkCircle" loading={saving} onClick={saveAndApproveNow}>
                     Save and approve now
                   </Button>
                 )}

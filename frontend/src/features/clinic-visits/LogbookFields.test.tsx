@@ -17,7 +17,7 @@ function getSavedVisit() {
 const moreButton = () => screen.getByRole('button', { name: /show (more|fewer) fields/i })
 
 async function pickComplaint(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole('button', { name: /^Complaint/ }))
+  await user.click(screen.getByRole('button', { name: /^Symptom/ }))
   // Not Fever, Headache or Chills: those open the section by themselves (ADR-049).
   await user.click(screen.getByRole('option', { name: 'Dizziness' }))
 }

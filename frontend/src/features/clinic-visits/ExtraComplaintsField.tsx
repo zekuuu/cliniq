@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button, Icon, Input, Select } from '../../components'
 import { cleanComplaint, COMPLAINT_MAX_LENGTH } from '../../lib/complaints'
 import { EXTRA_COMPLAINTS_MAX } from '../../lib/mock-db'
+import { symptom, symptoms } from '../../lib/labels'
 
 const OTHER_VALUE = '__other__'
 
@@ -38,7 +39,7 @@ export function ExtraComplaintsField({
     const complaint = cleanComplaint(text)
     if (!complaint) return
     if (full) {
-      setMessage(`Up to ${EXTRA_COMPLAINTS_MAX} extra complaints. Remove one to add another.`)
+      setMessage(`Up to ${EXTRA_COMPLAINTS_MAX} other ${symptoms}. Remove one to add another.`)
       return
     }
     if (taken.has(complaint.toLowerCase())) {
@@ -55,9 +56,9 @@ export function ExtraComplaintsField({
     <div className="flex flex-col gap-2">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Select
-          label="Other complaints"
+          label={`Other ${symptoms}`}
           value={picked}
-          placeholder={full ? `${EXTRA_COMPLAINTS_MAX} added` : 'Select complaint (optional)'}
+          placeholder={full ? `${EXTRA_COMPLAINTS_MAX} added` : `Select ${symptom} (optional)`}
           disabled={full}
           options={[{ value: OTHER_VALUE, label: 'Other (type your own)' }, ...options.map((option) => ({ value: option, label: option }))]}
           onChange={(next) => {
@@ -70,7 +71,7 @@ export function ExtraComplaintsField({
           {otherOpen && !full && (
             <Input
               className="min-w-0 flex-1 animate-expand-down motion-reduce:animate-none"
-              label="Specify other complaint"
+              label={`Specify other ${symptom}`}
               autoFocus
               value={typed}
               maxLength={COMPLAINT_MAX_LENGTH}
@@ -93,7 +94,7 @@ export function ExtraComplaintsField({
         </div>
       </div>
       <p className="-mt-1 text-xs text-text-secondary">
-        Up to {EXTRA_COMPLAINTS_MAX}.{full ? ' Remove one to add another.' : ''} Reports count the main complaint only.
+        Up to {EXTRA_COMPLAINTS_MAX}.{full ? ' Remove one to add another.' : ''} Reports count only the {symptom} above.
       </p>
       {message && (
         <p role="alert" className="text-xs font-semibold text-error">
@@ -101,7 +102,7 @@ export function ExtraComplaintsField({
         </p>
       )}
       {value.length > 0 && (
-        <ul aria-label="Other complaints" className="flex flex-wrap gap-2">
+        <ul aria-label={`Other ${symptoms}`} className="flex flex-wrap gap-2">
           {value.map((complaint) => (
             <li key={complaint} className="inline-flex items-center gap-1 rounded-md border border-border bg-surface py-1 pr-1 pl-2 text-sm text-text-primary">
               {complaint}

@@ -1,3 +1,4 @@
+import { SYMPTOM, SYMPTOMS, symptom, symptoms } from '../../../lib/labels'
 import { splitText } from '../../../lib/patients'
 import '../../../components/charts/chartSetup'
 import type { Chart, ChartOptions, Plugin, ScriptableContext } from 'chart.js'
@@ -416,11 +417,11 @@ export function TrendTable({ trends }: { trends: Trends }) {
   const columns: Array<DataTableColumn<ComplaintSeries>> = [
     {
       key: 'complaint',
-      header: 'Complaint',
+      header: SYMPTOM,
       cell: (r) => r.complaint,
       rowHeader: true,
       width: complaintColumnWidth,
-      sort: sortColumn('complaint', 'Complaint'),
+      sort: sortColumn('complaint', SYMPTOM),
     },
     ...visibleBuckets.map((b, displayIndex) => {
       const sourceIndex = visibleBucketIndexes[displayIndex]
@@ -465,15 +466,15 @@ export function TrendTable({ trends }: { trends: Trends }) {
         onClick={() => setShowAllComplaints((current) => !current)}
         className="w-fit cursor-pointer rounded-sm px-1 py-0.5 text-xs text-text-secondary underline-offset-2 transition-colors duration-150 hover:text-brand-green-dark hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
       >
-        {showAllComplaints ? 'Hide zero-activity complaint types' : 'Show all complaint types'}
+        {showAllComplaints ? `Hide ${symptoms} with no activity` : `Show all ${symptoms}`}
       </button>
       <p aria-live="polite" className="sr-only">
         {showAllComplaints
-          ? 'Showing all complaint types.'
-          : 'Zero-activity complaint types are hidden.'}
+          ? `Showing all ${symptoms}.`
+          : `${SYMPTOMS} with no activity are hidden.`}
       </p>
       <DataTable
-        caption="Complaint counts per period, visits and incidents combined. A warning icon marks a possible symptom cluster."
+        caption={`${SYMPTOM} counts per period, visits and incidents combined. A warning icon marks a possible ${symptom} cluster.`}
         columns={columns}
         rows={sortedRows}
         rowKey={(r) => r.complaint}
@@ -598,12 +599,12 @@ function CommonComplaintsCard({ trends, clusters, reportMonth }: { trends: Trend
       <CardHeader
         titleId={headingId}
         icon={<Icon name="barChart" />}
-        title="Common complaints"
-        description="Top complaints in this period."
+        title={`Frequent ${symptoms}`}
+        description={`Top ${symptoms} in this period.`}
       />
       <CardBody>
         {trends.series.length === 0 ? (
-          <EmptyState icon="barChart" title="No complaints recorded in this date range" />
+          <EmptyState icon="barChart" title={`No ${symptoms} recorded in this date range`} />
         ) : (
           <>
             <ol className={COMPLAINT_LIST} aria-labelledby={headingId}>
@@ -643,13 +644,13 @@ function CommonComplaintsCard({ trends, clusters, reportMonth }: { trends: Trend
             </ol>
             {trends.otherComplaints.length > 0 && (
               <p className="mt-3 border-t border-border pt-2 text-xs text-text-secondary">
-                {trends.otherComplaints.length} other complaint types, {otherTotal} cases (see the
+                {trends.otherComplaints.length} other {symptoms}, {otherTotal} cases (see the
                 trend’s Table view)
               </p>
             )}
           </>
         )}
-        {reportMonth && <FullReportLink className="mt-4 border-t border-border pt-3" report="Complaint summary" view="health" month={reportMonth} />}
+        {reportMonth && <FullReportLink className="mt-4 border-t border-border pt-3" report={`${SYMPTOM} summary`} view="health" month={reportMonth} />}
       </CardBody>
     </Card>
   )
@@ -1132,7 +1133,7 @@ export function ComplaintTrendsSkeleton() {
               <Icon name="barChart" />
             </span>
             <div className="flex flex-col gap-1.5">
-              <span className="text-base font-semibold text-text-primary">Common complaints</span>
+              <span className="text-base font-semibold text-text-primary">Frequent {symptoms}</span>
               <Skeleton className="h-3 w-44" />
             </div>
           </div>

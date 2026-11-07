@@ -8,7 +8,7 @@ import { renderWithRouter } from '../../test/renderWithRouter'
 import { pickStudent } from '../../test/pickStudent'
 import { NewVisitEntryPage } from './NewVisitEntryPage'
 
-const complaintField = () => screen.getByRole('button', { name: /^Complaint/ })
+const complaintField = () => screen.getByRole('button', { name: /^Symptom/ })
 async function selectComplaint(user: ReturnType<typeof userEvent.setup>, label: string) {
   await user.click(complaintField())
   await user.click(screen.getByRole('option', { name: label }))
@@ -79,7 +79,7 @@ describe('New Visit', () => {
 
     await screen.findByRole('heading', { name: 'New Visit' })
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
-    expect(screen.getByText('Enter the complaint for this visit.')).toBeInTheDocument()
+    expect(screen.getByText('Choose the symptom for this visit.')).toBeInTheDocument()
     // Treatment notes and items given are optional: a quiet, non-blocking note instead of an error.
     expect(screen.queryByText(/enter treatment notes/i)).not.toBeInTheDocument()
     expect(screen.getByText('No treatment recorded. You can still save.')).toBeInTheDocument()
@@ -127,7 +127,7 @@ describe('New Visit', () => {
     expect(initialOptions).toHaveLength(9)
     expect(initialOptions[0]).toHaveTextContent('Other (type your own)')
     await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
-    await user.type(screen.getByLabelText(/specify other complaint/i), '  Nose   bleed ')
+    await user.type(screen.getByLabelText(/specify other symptom/i), '  Nose   bleed ')
     expect(screen.queryByRole('heading', { name: /suggested first-aid steps/i })).not.toBeInTheDocument()
     await user.type(screen.getByLabelText(/treatment/i), 'Pinched nose, leaned forward.')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
@@ -147,7 +147,7 @@ describe('New Visit', () => {
     await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
 
     expect(complaint).toHaveTextContent('Other (type your own)')
-    const otherComplaint = screen.getByLabelText(/specify other complaint/i)
+    const otherComplaint = screen.getByLabelText(/specify other symptom/i)
     expect(otherComplaint).toHaveValue('')
     expect(otherComplaint).toHaveFocus()
     await user.type(otherComplaint, 'Noise-related discomfort')

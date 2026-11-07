@@ -1,3 +1,4 @@
+import { Lrn } from '../../components/ui/MaskedLrn'
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
   BackButton,
@@ -221,7 +222,7 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
               {identified.student
-                ? `${identified.student.fullName} · LRN ${identified.student.lrn} · ${identified.student.gradeLevel}`
+                ? <>{identified.student.fullName} · LRN <Lrn lrn={identified.student.lrn} full /> · {identified.student.gradeLevel}</>
                 : 'Student not identified yet. Search by LRN or name below.'}
             </p>
           </div>

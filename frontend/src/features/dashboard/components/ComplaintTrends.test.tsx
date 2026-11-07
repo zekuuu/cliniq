@@ -145,8 +145,8 @@ describe('TrendTable', () => {
     expect(screen.getByRole('note')).toHaveTextContent(/Possible symptom cluster: Headache, 1 cases/)
     await user.click(screen.getByRole('radio', { name: 'Table' }))
     expect(screen.getByRole('table', { name: /weekday comparison/i })).toBeInTheDocument()
-    expect(screen.getByRole('table', { name: /Complaint counts per period/i })).toBeInTheDocument()
-    expect(screen.getByText(/1 other complaint types, 2 cases \(see the/)).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: /Symptom counts per period/i })).toBeInTheDocument()
+    expect(screen.getByText(/1 other symptoms, 2 cases \(see the/)).toBeInTheDocument()
   })
 
   it('marks the selected demographic filter visibly, not by aria-pressed alone', () => {
@@ -385,7 +385,7 @@ describe('TrendTable', () => {
     expect(screen.getByRole('radio', { name: 'Chart' })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByRole('radio', { name: 'Table' })).toHaveAttribute('aria-checked', 'false')
     expect(screen.getByRole('img', { name: /visits and incidents by week/i })).toBeInTheDocument()
-    expect(screen.queryByRole('table', { name: /complaint counts per period/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('table', { name: /symptom counts per period/i })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('radio', { name: 'Table' }))
     expect(screen.getByRole('columnheader', { name: /Sep 1, 2026/i })).toBeInTheDocument()
@@ -403,7 +403,7 @@ describe('TrendTable', () => {
     expect(within(table).getByText('Sep 14')).toBeInTheDocument()
     // Only Complaint and Total sort; period columns have no sort button.
     expect(within(table).queryByRole('button', { name: /Sort by Sep/ })).not.toBeInTheDocument()
-    expect(within(table).getByRole('button', { name: /^Sort by Complaint/ })).toBeInTheDocument()
+    expect(within(table).getByRole('button', { name: /^Sort by Symptom/ })).toBeInTheDocument()
     const visibleHeaderText = [...table.querySelectorAll('thead th')]
       .map((th) => {
         const copy = th.cloneNode(true) as HTMLElement
@@ -419,11 +419,11 @@ describe('TrendTable', () => {
     render(<ComplaintTrends trends={trends} />)
 
     await user.click(screen.getByRole('radio', { name: 'Table' }))
-    expect(screen.getByRole('table', { name: /complaint counts per period/i })).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: /symptom counts per period/i })).toBeInTheDocument()
 
     await user.click(screen.getByRole('radio', { name: 'Chart' }))
     expect(screen.getByRole('img', { name: /visits and incidents by week/i })).toBeInTheDocument()
-    expect(screen.queryByRole('table', { name: /complaint counts per period/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('table', { name: /symptom counts per period/i })).not.toBeInTheDocument()
   })
 
   it("leaves the chart's full bucket range uncapped", () => {
@@ -436,14 +436,14 @@ describe('TrendTable', () => {
   it('caps period columns, keeps Total descending by default, and notes hidden periods', () => {
     render(<TrendTable trends={trends} />)
 
-    const table = screen.getByRole('table', { name: /complaint counts per period/i })
+    const table = screen.getByRole('table', { name: /symptom counts per period/i })
     expect(table.querySelectorAll('thead th')).toHaveLength(14)
     expect(screen.getByText(/\+ 2 earlier periods — narrow the date range/i)).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: 'Sort by Total, currently descending' }),
     ).toBeInTheDocument()
     expect(screen.getAllByRole('row')[1]).toHaveTextContent('All visits & incidents')
-    expect(screen.getByRole('columnheader', { name: 'Complaint' })).toHaveClass('sticky', 'left-0')
+    expect(screen.getByRole('columnheader', { name: 'Symptom' })).toHaveClass('sticky', 'left-0')
     expect(table.querySelector('col')).toHaveAttribute('style', 'width: calc(100% - 65rem);')
     expect(screen.getByRole('columnheader', { name: 'Total' })).toHaveClass('sticky', 'right-0')
     expect(table.querySelector('thead')).not.toHaveTextContent('Week of')
@@ -456,7 +456,7 @@ describe('TrendTable', () => {
     expect(screen.queryByRole('row', { name: /No activity/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('row', { name: /Earlier only/ })).not.toBeInTheDocument()
 
-    const toggle = screen.getByRole('button', { name: 'Show all complaint types' })
+    const toggle = screen.getByRole('button', { name: 'Show all symptoms' })
     expect(toggle).toHaveAttribute('aria-pressed', 'false')
     await user.click(toggle)
 
@@ -465,18 +465,18 @@ describe('TrendTable', () => {
     expect(earlierOnlyRow).toBeInTheDocument()
     expect(within(earlierOnlyRow).getAllByRole('cell').at(-1)).toHaveTextContent('0')
     expect(
-      screen.getByRole('button', { name: 'Hide zero-activity complaint types' }),
+      screen.getByRole('button', { name: 'Hide symptoms with no activity' }),
     ).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('keeps the Common complaints totals unchanged when table rows are revealed', async () => {
+  it('keeps the Frequent symptoms totals unchanged when table rows are revealed', async () => {
     const user = userEvent.setup()
     render(<ComplaintTrends trends={trends} />)
 
     await user.click(screen.getByRole('radio', { name: 'Table' }))
-    const commonTotal = screen.getByText(/other complaint types, 2 cases/i)
+    const commonTotal = screen.getByText(/other symptoms, 2 cases/i)
     const before = commonTotal.textContent
-    await user.click(screen.getByRole('button', { name: 'Show all complaint types' }))
+    await user.click(screen.getByRole('button', { name: 'Show all symptoms' }))
 
     expect(commonTotal).toHaveTextContent(before ?? '')
   })

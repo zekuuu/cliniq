@@ -1,3 +1,4 @@
+import { SYMPTOM, symptom } from '../../lib/labels'
 import { useState, type ReactNode } from 'react'
 import { usePatientFilter } from '../../hooks/usePatientFilter'
 import {
@@ -222,8 +223,8 @@ export function VisitLogListPage() {
     },
     {
       key: 'summary',
-      header: 'Complaint',
-      sort: sortColumn('record', 'Complaint'),
+      header: SYMPTOM,
+      sort: sortColumn('record', SYMPTOM),
       cell: (row) => (
         <div>
           <p>{row.complaint}</p>
@@ -315,7 +316,7 @@ export function VisitLogListPage() {
             <Input
               label="Search" type="search"
               value={search}
-              placeholder="LRN, Staff No., complaint or event"
+              placeholder={`LRN, Staff No., ${symptom} or event`}
               onChange={(event) => changeSearch(event.target.value)}
               className="min-w-56 flex-1"
             />

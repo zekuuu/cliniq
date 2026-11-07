@@ -1,3 +1,4 @@
+import { symptoms } from '../../lib/labels'
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import {
@@ -225,7 +226,7 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
               />
               <span>
                 <span className="block text-sm font-semibold text-text-primary">Include recorded conditions and allergies</span>
-                <span className="block text-xs text-text-secondary">Adds each student's allergies and medical conditions to the printout. Visit and incident complaints always print.</span>
+                <span className="block text-xs text-text-secondary">Adds each student's allergies and medical conditions to the printout. Visit and incident {symptoms} always print.</span>
               </span>
             </label>
           </CardBody>

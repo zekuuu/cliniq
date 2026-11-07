@@ -1,3 +1,4 @@
+import { SYMPTOM, symptom } from '../../../lib/labels'
 import '../../../components/charts/chartSetup'
 import type { ChartOptions } from 'chart.js'
 import { useState } from 'react'
@@ -11,7 +12,7 @@ import { sortTableRows, toggleTableSort, type TableSortState } from '../../../li
 import type { ComplaintCount } from '../../../lib/mock-db'
 
 /*
- * Complaint summary (Screen Inventory #21, formerly Health Summaries): clinic visits per complaint for the report month.
+ * Symptom summary (Screen Inventory #21, formerly Health Summaries): clinic visits per complaint for the report month.
  * - Chart by default: one-series horizontal bars sorted by count, which suits comparing sizes across
  *   categories with long labels. One hue (brand-green-dark), since color carries no identity here.
  *   There's deliberately no chart-type picker: the data decides the form.
@@ -93,7 +94,7 @@ function ComplaintBarChart({ rows }: { rows: ComplaintCount[] }) {
     },
   }
 
-  const summary = `Clinic visits by complaint: ${rows
+  const summary = `Clinic visits by ${symptom}: ${rows
     .map((r) => `${r.complaint} ${r.count}`)
     .join('; ')}.`
 
@@ -119,7 +120,7 @@ export function HealthSummary({ rows }: { rows: ComplaintCount[] }) {
       <EmptyState
         icon="barChart"
         title="No clinic visits recorded this month"
-        description="Choose a different report month to see a complaint summary."
+        description={`Choose a different report month to see a ${symptom} summary.`}
       />
     )
   }
@@ -130,7 +131,7 @@ export function HealthSummary({ rows }: { rows: ComplaintCount[] }) {
     onSort: () => setSort((current) => toggleTableSort(current, key)),
   })
   const columns: Array<DataTableColumn<ComplaintCount>> = [
-    { key: 'complaint', header: 'Complaint', rowHeader: true, sort: sortColumn('complaint', 'Complaint'), cell: (r) => r.complaint },
+    { key: 'complaint', header: SYMPTOM, rowHeader: true, sort: sortColumn('complaint', SYMPTOM), cell: (r) => r.complaint },
     { key: 'visits', header: 'Visits', align: 'right', sort: sortColumn('visits', 'Visits'), cell: (r) => r.count },
   ]
   const sortedRows = sortTableRows(rows, sort, (row, key) => key === 'complaint' ? row.complaint : row.count)
@@ -140,11 +141,11 @@ export function HealthSummary({ rows }: { rows: ComplaintCount[] }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-text-primary">
           <span className="font-semibold">{plural(totalVisits, 'visit')}</span> across{' '}
-          {plural(rows.length, 'complaint type')}. Most common:{' '}
+          {plural(rows.length, symptom)}. Most common:{' '}
           <span className="font-semibold">{rows[0].complaint}</span> ({rows[0].count}).
         </p>
         <SegmentedControl
-          label="Show complaint summary as"
+          label={`Show ${symptom} summary as`}
           value={view}
           onChange={setView}
           className="print:hidden"
@@ -168,7 +169,7 @@ export function HealthSummary({ rows }: { rows: ComplaintCount[] }) {
 
       <div data-table="health-summary" className={cn(view === 'chart' && 'hidden print:block')}>
         <DataTable
-          caption="Complaint summary by complaint"
+          caption={`${SYMPTOM} summary by ${symptom}`}
           columns={columns}
           rows={sortedRows}
           rowKey={(r) => r.complaint}

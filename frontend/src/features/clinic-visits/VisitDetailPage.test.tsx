@@ -38,17 +38,17 @@ describe('Visit Details', () => {
 
     await screen.findByRole('heading', { name: 'Visit Details' })
     await user.click(screen.getByRole('button', { name: 'Edit' }))
-    await user.click(screen.getByRole('button', { name: /^Complaint/ }))
+    await user.click(screen.getByRole('button', { name: /^Symptom/ }))
     await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
     await user.click(screen.getByRole('button', { name: 'Remove Paracetamol 500mg' }))
     await user.clear(screen.getByLabelText(/treatment/i))
     expect(screen.getByText('No treatment recorded. You can still save.')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
-    expect(screen.getByText('Enter the visit complaint.')).toBeInTheDocument()
+    expect(screen.getByText('Choose the symptom for this visit.')).toBeInTheDocument()
     expect(screen.queryByText(/enter treatment notes/i)).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /^Complaint/ }))
+    await user.click(screen.getByRole('button', { name: /^Symptom/ }))
     await user.click(screen.getByRole('option', { name: 'Headache' }))
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
@@ -62,7 +62,7 @@ describe('Visit Details', () => {
 
     await screen.findByRole('heading', { name: 'Visit Details' })
     await user.click(screen.getByRole('button', { name: 'Edit' }))
-    await user.click(screen.getByRole('button', { name: /^Complaint/ }))
+    await user.click(screen.getByRole('button', { name: /^Symptom/ }))
     await user.click(screen.getByRole('option', { name: 'Headache' }))
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
@@ -76,11 +76,11 @@ describe('Visit Details', () => {
 
     await screen.findByRole('heading', { name: 'Visit Details' })
     await user.click(screen.getByRole('button', { name: 'Edit' }))
-    const complaint = screen.getByRole('button', { name: /^Complaint/ })
+    const complaint = screen.getByRole('button', { name: /^Symptom/ })
     await user.click(complaint)
     await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
     expect(complaint).toHaveTextContent('Other (type your own)')
-    const otherComplaint = screen.getByLabelText(/specify other complaint/i)
+    const otherComplaint = screen.getByLabelText(/specify other symptom/i)
     expect(otherComplaint).toHaveValue('')
     expect(otherComplaint).toHaveFocus()
     await user.type(otherComplaint, 'Noise-related discomfort')

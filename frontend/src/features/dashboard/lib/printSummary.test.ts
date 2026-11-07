@@ -85,7 +85,7 @@ describe('Dashboard printout summary', () => {
       dueFollowUps: [followUp('overdue')],
       inventoryAlerts: [{ flags: ['expired'] } as DashboardSummary['inventoryAlerts'][number]],
     })
-    expect(overviewSentence(s)).toBe('1 visit and 1 incident this period. Most common complaint: Headache (2 of 2).')
+    expect(overviewSentence(s)).toBe('1 visit and 1 incident this period. Most frequent symptom: Headache (2 of 2).')
   })
 
   it('handles ties', () => {
@@ -109,7 +109,7 @@ describe('Dashboard printout summary', () => {
       },
       dueFollowUps: [followUp('overdue'), followUp('upcoming'), followUp('due_today')],
     })
-    expect(overviewSentence(s)).toBe('5 visits and 0 incidents this period. Most common complaints: Fever and Cough (2 each).')
+    expect(overviewSentence(s)).toBe('5 visits and 0 incidents this period. Most frequent symptoms: Fever and Cough (2 each).')
   })
 
   it('sums a daily trend into weeks without losing a visit', () => {
