@@ -88,8 +88,8 @@ DELIMITER ;
 -- Fixtures
 -- ---------------------------------------------------------------------------------
 
-INSERT INTO users (id, name, username, email, password_hash, role) VALUES
-  (1, 'Nurse', 'nurse', 'nurse@school.test', 'h', 'staff'), (2, 'Principal', 'principal', NULL, 'h', 'admin');
+INSERT INTO users (id, name, username, password_hash, role) VALUES
+  (1, 'Nurse', 'nurse', 'h', 'staff'), (2, 'Principal', 'principal', 'h', 'admin');
 INSERT INTO students (id, lrn, last_name, first_name, sex) VALUES
   (1, '100000000001', 'Nuñez', 'Ana', 'female'), (2, '100000000002', 'Reyes', 'Ben', 'male'), (3, '100000000003', 'Cruz', 'Cara', 'female');
 INSERT INTO personnel (id, staff_number, last_name, first_name, sex, type) VALUES
@@ -128,6 +128,13 @@ INSERT INTO backup_logs (id, run_key, ran_at, status) VALUES (1, 'run-1', '2026-
 INSERT INTO backup_locations (id, label, path) VALUES (1, 'USB', 'E:/');
 INSERT INTO backup_location_results (backup_log_id, backup_location_id, status) VALUES (1, 1, 'ok');
 INSERT INTO holidays (holiday_date, name, kind, source) VALUES ('2026-12-25', 'Christmas', 'regular', 'test');
+-- The frontend seed's school years (ADR-072, ADR-075): 2025–2026 ended, 2026–2027 in session.
+INSERT INTO school_years (id, label, started_on, started_by_user_id, ended_on, ended_by_user_id) VALUES
+  (1, '2025–2026', '2025-06-16', 1, '2026-04-14', 1), (2, '2026–2027', '2026-06-15', 1, NULL, NULL);
+INSERT INTO complaint_types (id, label, sort_order) VALUES (2, 'Fever', 1);
+INSERT INTO inventory_item_symptom_tags (item_id, complaint_type_id) VALUES (1, 1), (1, 2);
+INSERT INTO recovery_codes (id, user_id, code_hash) VALUES (1, 1, 'hash-1'), (2, 2, 'hash-2');
+UPDATE users SET totp_secret = 'encrypted', totp_confirmed_at = '2026-11-07 09:00:00' WHERE id = 1;
 
 SET @u = 'INSERT INTO users (name, username, password_hash, role, is_head_nurse) VALUES ';
 SET @st = 'INSERT INTO students (lrn, last_name, first_name, middle_name, sex) VALUES ';
@@ -151,8 +158,40 @@ CALL t_rejects('chk_users_head_nurse', CONCAT(@u, "('A', 'abc', 'h', 'admin', 1)
 CALL t_rejects('chk_users_username_len', CONCAT(@u, "('A', 'ab', 'h', 'staff', 0)"));
 CALL t_rejects('chk_users_name_len', CONCAT(@u, "(' ', 'abc', 'h', 'staff', 0)"));
 CALL t_rejects('uq_users_username', CONCAT(@u, "('A', 'NURSE', 'h', 'staff', 0)"));
-CALL t_rejects('uq_users_email', "INSERT INTO users (name, username, email, password_hash, role) VALUES ('A', 'abc', 'NURSE@school.test', 'h', 'staff')");
-CALL t_accepts('several accounts may have no email', CONCAT(@u, "('A', 'abc', 'h', 'staff', 0)"));
+CALL t_count('no email column: the email reset is dropped (ADR-073)', '', "information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'email'", 0);
+-- Authenticator recovery (ADR-073).
+CALL t_rejects('chk_users_totp', "UPDATE users SET totp_secret = 'encrypted' WHERE id = 2");
+CALL t_rejects('chk_users_totp', "UPDATE users SET totp_confirmed_at = NOW() WHERE id = 2");
+CALL t_rejects('chk_users_totp_step', "UPDATE users SET last_totp_step = 59000000 WHERE id = 2");
+CALL t_accepts('a confirmed authenticator records its last step', "UPDATE users SET last_totp_step = 59000000 WHERE id = 1");
+CALL t_accepts('turning the authenticator off clears it', "UPDATE users SET totp_secret = NULL, totp_confirmed_at = NULL, last_totp_step = NULL WHERE id = 1");
+CALL t_rejects('uq_recovery_codes_hash', "INSERT INTO recovery_codes (user_id, code_hash) VALUES (2, 'hash-1')");
+CALL t_rejects('chk_recovery_codes_used', "UPDATE recovery_codes SET used_at = created_at - INTERVAL 1 DAY WHERE id = 1");
+CALL t_accepts('a recovery code is spent once', "UPDATE recovery_codes SET used_at = created_at + INTERVAL 1 MINUTE WHERE id = 1");
+CALL t_rejects('fk_recovery_codes_user', "INSERT INTO recovery_codes (user_id, code_hash) VALUES (999, 'hash-x')");
+CALL t_count('deleting a user removes its codes', 'DELETE FROM users WHERE id = 2', 'recovery_codes WHERE user_id = 2', 0);
+-- School-year settings (ADR-072, ADR-075): one row's range; day-for-month and end-not-start are the service's.
+CALL t_rejects('chk_settings_school_year_month', "UPDATE system_settings SET setting_value = '13' WHERE setting_key = 'school_year_start_month'");
+CALL t_rejects('chk_settings_school_year_month', "UPDATE system_settings SET setting_value = '0' WHERE setting_key = 'school_year_end_month'");
+CALL t_rejects('chk_settings_school_year_month', "UPDATE system_settings SET setting_value = 'June' WHERE setting_key = 'school_year_start_month'");
+CALL t_rejects('chk_settings_school_year_day', "UPDATE system_settings SET setting_value = '32' WHERE setting_key = 'school_year_start_day'");
+CALL t_rejects('chk_settings_school_year_day', "UPDATE system_settings SET setting_value = '0' WHERE setting_key = 'school_year_end_day'");
+CALL t_accepts('a school-year date at its limits', "UPDATE system_settings SET setting_value = '31' WHERE setting_key = 'school_year_end_day'");
+CALL t_count('school-year dates default to June 15 and April 14, notice 7 days', '', "system_settings WHERE (setting_key, setting_value) IN (('school_year_start_month','6'),('school_year_start_day','15'),('school_year_end_month','4'),('school_year_end_day','14'),('school_year_notice_days','7'))", 5);
+-- School years started and ended by hand (ADR-075).
+SET @sy = 'INSERT INTO school_years (label, started_on, started_by_user_id, ended_on, ended_by_user_id) VALUES ';
+CALL t_rejects('uq_school_years_label', CONCAT(@sy, "('2026–2027', '2027-06-15', 1, NULL, NULL)"));
+CALL t_rejects('uq_school_years_started_on', "UPDATE school_years SET started_on = '2025-06-16' WHERE id = 2");
+CALL t_rejects('uq_school_years_one_in_session', CONCAT(@sy, "('2027–2028', '2027-06-15', 1, NULL, NULL)"));
+CALL t_accepts('the next year starts once the current one is ended', "INSERT INTO school_years (id, label, started_on, started_by_user_id, ended_on, ended_by_user_id) VALUES (2, '2026–2027', '2026-06-15', 1, '2027-04-14', 1), (3, '2027–2028', '2027-06-15', 1, NULL, NULL) ON DUPLICATE KEY UPDATE ended_on = VALUES(ended_on), ended_by_user_id = VALUES(ended_by_user_id)");
+CALL t_rejects('chk_school_years_label', CONCAT(@sy, "('2027-2028', '2027-06-15', 1, '2028-04-14', 1)"));
+CALL t_rejects('chk_school_years_label', CONCAT(@sy, "('2027–2029', '2027-06-15', 1, '2028-04-14', 1)"));
+CALL t_rejects('chk_school_years_ended_after_start', "UPDATE school_years SET ended_on = '2026-06-14', ended_by_user_id = 1 WHERE id = 2");
+CALL t_accepts('a year may end on the day it started', "UPDATE school_years SET ended_on = '2026-06-15', ended_by_user_id = 1 WHERE id = 2");
+CALL t_rejects('chk_school_years_ended_pair', "UPDATE school_years SET ended_on = '2027-04-14' WHERE id = 2");
+CALL t_rejects('chk_school_years_ended_pair', "UPDATE school_years SET ended_by_user_id = 1 WHERE id = 2");
+CALL t_rejects('fk_school_years_started_by', CONCAT(@sy, "('2030–2031', '2030-06-15', 999, '2031-04-14', 1)"));
+CALL t_count('the current year is the latest start', '', "school_years WHERE id = (SELECT id FROM (SELECT id FROM school_years ORDER BY started_on DESC LIMIT 1) AS latest) AND label = '2026–2027' AND ended_on IS NULL", 1);
 CALL t_accepts('profile picture holds a data URL', "UPDATE users SET profile_picture = CONCAT('data:image/png;base64,', REPEAT('A', 70000)) WHERE id = 1");
 CALL t_rejects('chk_settings_type', "INSERT INTO system_settings (setting_key, setting_value, value_type) VALUES ('x', '1', 'list')");
 CALL t_rejects('fk_settings_user', "UPDATE system_settings SET updated_by_user_id = 999 WHERE setting_key = 'top_complaints'");
@@ -198,6 +237,17 @@ CALL t_rejects('uq_reviews_one_open', "INSERT INTO student_record_reviews (stude
 CALL t_rejects('chk_import_batches_status', "INSERT INTO student_import_batches (label, status, imported_by_user_id) VALUES ('a', 'x', 1)");
 CALL t_rejects('uq_import_batches_file', CONCAT("INSERT INTO student_import_batches (label, source_file_sha256, imported_by_user_id) VALUES ('a', REPEAT('a', 64), 1), ('b', REPEAT('a', 64), 1)"));
 CALL t_rejects('chk_personnel_first_name', CONCAT(@pe, "('STF-0009', 'A', ' ', NULL, 'female', 'Teacher')"));
+-- Archive details (ADR-072): when, why and the school year, all three or none.
+CALL t_rejects('chk_students_archive_details', "UPDATE students SET archived_at = NOW() WHERE id = 1");
+CALL t_rejects('chk_students_archive_details', "UPDATE students SET archive_reason = 'Transferred' WHERE id = 1");
+CALL t_rejects('chk_students_archive_reason', "UPDATE students SET archived_at = NOW(), archive_reason = '  ', archived_school_year = '2026–2027' WHERE id = 1");
+CALL t_rejects("Data too long for column 'archive_reason'", CONCAT("UPDATE students SET archived_at = NOW(), archive_reason = '", REPEAT('a', 81), "', archived_school_year = '2026–2027' WHERE id = 1"));
+CALL t_rejects('chk_students_archived_year', "UPDATE students SET archived_at = NOW(), archive_reason = 'Transferred', archived_school_year = '2026' WHERE id = 1");
+CALL t_accepts('an archived student stores when, why and the year', CONCAT("UPDATE students SET archived_at = NOW(), archive_reason = '", REPEAT('a', 80), "', archived_school_year = '2026–2027' WHERE id = 1"));
+CALL t_rejects('chk_personnel_archive_details', "UPDATE personnel SET archived_at = NOW(), archive_reason = 'Resigned' WHERE id = 1");
+CALL t_rejects('chk_personnel_archive_reason', "UPDATE personnel SET archived_at = NOW(), archive_reason = ' ', archived_school_year = '2026–2027' WHERE id = 1");
+CALL t_rejects('chk_personnel_archived_year', "UPDATE personnel SET archived_at = NOW(), archive_reason = 'Resigned', archived_school_year = '26-27' WHERE id = 1");
+CALL t_accepts('an archived staff member stores when, why and the year', "UPDATE personnel SET archived_at = NOW(), archive_reason = 'Resigned', archived_school_year = '2026–2027' WHERE id = 1");
 CALL t_rejects('chk_personnel_last_name', CONCAT(@pe, "('STF-0009', ' ', 'A', NULL, 'female', 'Teacher')"));
 CALL t_rejects('chk_personnel_middle_name', CONCAT(@pe, "('STF-0009', 'A', 'A', ' ', 'female', 'Teacher')"));
 CALL t_accepts('a staff member with no middle name', CONCAT(@pe, "('STF-0009', 'A', 'A', NULL, 'female', 'Teacher')"));
@@ -215,6 +265,12 @@ CALL t_rejects('chk_items_category', "INSERT INTO inventory_items (name, categor
 CALL t_rejects('chk_items_brand', "INSERT INTO inventory_items (name, category, unit, brand) VALUES ('A', 'medicine', 'x', 'store')");
 CALL t_rejects('chk_items_name', "INSERT INTO inventory_items (name, category, unit) VALUES (' ', 'medicine', 'x')");
 CALL t_rejects('uq_items_active_name', "INSERT INTO inventory_items (name, category, unit) VALUES ('paracetamol', 'medicine', 'x')");
+-- "Commonly used for" (ADR-071).
+CALL t_rejects('uq_item_symptom_tag', "INSERT INTO inventory_item_symptom_tags (item_id, complaint_type_id) VALUES (1, 1)");
+CALL t_rejects('fk_symptom_tags_type', "INSERT INTO inventory_item_symptom_tags (item_id, complaint_type_id) VALUES (2, 999)");
+CALL t_rejects('fk_symptom_tags_type', "DELETE FROM complaint_types WHERE id = 2");
+CALL t_accepts('the same symptom on another item', "INSERT INTO inventory_item_symptom_tags (item_id, complaint_type_id) VALUES (2, 1)");
+CALL t_count('tags come back in the option list order', '', "(SELECT ct.label FROM inventory_item_symptom_tags t JOIN complaint_types ct ON ct.id = t.complaint_type_id WHERE t.item_id = 1 ORDER BY ct.sort_order LIMIT 1) AS first_tag WHERE first_tag.label = 'Headache'", 1);
 CALL t_accepts('an archived item frees its name', "INSERT INTO inventory_items (name, category, unit, archived_at) VALUES ('Paracetamol', 'medicine', 'x', NOW())");
 CALL t_rejects('uq_item_allergy_word', "INSERT INTO inventory_item_allergy_words (item_id, word) VALUES (1, 'aspirin'), (1, 'ASPIRIN')");
 CALL t_accepts('a batch can go below zero', "UPDATE inventory_batches SET quantity = -3 WHERE id = 1");
@@ -303,7 +359,7 @@ CALL t_rejects('chk_txn_sign', CONCAT(@tx, "(1, 'restock', -1, 0, ", @day, ", 1,
 CALL t_rejects('chk_txn_sign', CONCAT(@tx, "(1, 'adjustment', 0, 0, ", @day, ", 1, NULL, NULL, NULL, NULL, 'other', 'x')"));
 CALL t_rejects('chk_txn_reason', CONCAT(@tx, "(1, 'adjustment', -1, 0, ", @day, ", 1, NULL, NULL, NULL, NULL, NULL, NULL)"));
 CALL t_rejects('chk_txn_reason', CONCAT(@tx, "(1, 'restock', 1, 0, ", @day, ", 1, NULL, NULL, NULL, NULL, 'other', 'x')"));
-CALL t_rejects('chk_txn_other_note', CONCAT(@tx, "(1, 'adjustment', -1, 0, ", @day, ", 1, NULL, NULL, NULL, NULL, 'other', ' ')"));
+CALL t_accepts('reason other with no note (ADR-068)', CONCAT(@tx, "(1, 'adjustment', -1, 0, ", @day, ", 1, NULL, NULL, NULL, NULL, 'other', NULL)"));
 CALL t_rejects('chk_txn_one_link', CONCAT(@tx, "(1, 'dispense', -1, 0, ", @day, ", 1, 1, NULL, 1, 1, NULL, NULL)"));
 CALL t_rejects('chk_txn_link_has_patient', CONCAT(@tx, "(1, 'dispense', -1, 0, ", @day, ", 1, NULL, NULL, 1, NULL, NULL, NULL)"));
 CALL t_rejects('chk_txn_one_patient', CONCAT(@tx, "(1, 'dispense', -1, 0, ", @day, ", 1, 1, 1, NULL, NULL, NULL, NULL)"));

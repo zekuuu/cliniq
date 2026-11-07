@@ -3,6 +3,8 @@
 --
 -- STATUS: Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057); changes after this go through a new decision.
 -- Laravel migrations are built from it in phase B1.
+-- Changed after the approval through ADR-071 (item symptom tags), ADR-072 and ADR-075 (school years, archive details),
+-- and ADR-073 (authenticator recovery; the email reset and users.email dropped). Saturday, November 07, 2026 — 13:21 PHT.
 --
 -- NOT a migration source. Laravel migrations are the real thing; this file exists so the
 -- design can be loaded into a real database and tested (constraints, composite keys, checks).
@@ -30,7 +32,6 @@ CREATE TABLE users (
   id                    BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   name                  VARCHAR(120)    NOT NULL,
   username              VARCHAR(50)     NOT NULL,
-  email                 VARCHAR(190)    NULL,
   profile_picture       MEDIUMTEXT      NULL,
   password_hash         VARCHAR(255)    NOT NULL,
   role                  VARCHAR(12)     NOT NULL,
@@ -41,11 +42,18 @@ CREATE TABLE users (
   locked_until          DATETIME        NULL,
   last_login_at         DATETIME        NULL,
   deactivated_at        DATETIME        NULL,
+  -- Authenticator recovery (ADR-073): the TOTP secret, encrypted at rest by the application (Laravel Crypt, key outside the
+  -- database); set only once the first code confirms it; never returned after setup.
+  totp_secret           TEXT            NULL,
+  totp_confirmed_at     DATETIME        NULL,
+  -- The last accepted 30-second step, so a code is never accepted twice (replay).
+  last_totp_step        BIGINT UNSIGNED NULL,
   created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_users_username (username),
-  UNIQUE KEY uq_users_email (email),
+  CONSTRAINT chk_users_totp CHECK ((totp_secret IS NULL) = (totp_confirmed_at IS NULL)),
+  CONSTRAINT chk_users_totp_step CHECK (last_totp_step IS NULL OR totp_secret IS NOT NULL),
   CONSTRAINT chk_users_role CHECK (role IN ('staff','admin')),
   CONSTRAINT chk_users_head_nurse CHECK (is_head_nurse = 0 OR role = 'staff'),
   CONSTRAINT chk_users_username_len CHECK (CHAR_LENGTH(TRIM(username)) >= 3),
@@ -62,6 +70,21 @@ CREATE TABLE password_histories (
   CONSTRAINT fk_password_histories_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- One-time recovery codes (ADR-073): 8 per set, stored only as a slow hash (bcrypt/argon2). Replacing the set deletes
+-- the old rows; a used code keeps its row with used_at set and is never accepted again.
+CREATE TABLE recovery_codes (
+  id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id     BIGINT UNSIGNED NOT NULL,
+  code_hash   VARCHAR(255)    NOT NULL,
+  created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  used_at     DATETIME        NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_recovery_codes_hash (code_hash),
+  KEY idx_recovery_codes_user (user_id, used_at),
+  CONSTRAINT chk_recovery_codes_used CHECK (used_at IS NULL OR used_at >= created_at),
+  CONSTRAINT fk_recovery_codes_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE system_settings (
   setting_key         VARCHAR(80)  NOT NULL,
   setting_value       VARCHAR(255) NOT NULL,
@@ -71,6 +94,12 @@ CREATE TABLE system_settings (
   updated_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (setting_key),
   CONSTRAINT chk_settings_type CHECK (value_type IN ('int','decimal','string','bool')),
+  -- The school-year dates (ADR-072, ADR-075). Day-for-month (February counts 28) and "end not equal to start" span two
+  -- rows, so the settings service checks them; these catch a month or day out of range on one row.
+  CONSTRAINT chk_settings_school_year_month CHECK (setting_key NOT IN ('school_year_start_month','school_year_end_month')
+    OR (setting_value REGEXP '^[0-9]{1,2}$' AND CAST(setting_value AS UNSIGNED) BETWEEN 1 AND 12)),
+  CONSTRAINT chk_settings_school_year_day CHECK (setting_key NOT IN ('school_year_start_day','school_year_end_day')
+    OR (setting_value REGEXP '^[0-9]{1,2}$' AND CAST(setting_value AS UNSIGNED) BETWEEN 1 AND 31)),
   CONSTRAINT fk_settings_user FOREIGN KEY (updated_by_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -94,6 +123,32 @@ CREATE TABLE number_sequences (
   last_value     INT UNSIGNED NOT NULL DEFAULT 0,
   updated_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (sequence_name, scope)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- School years, started and ended by hand by Staff (ADR-072, ADR-075). The current year is the latest row; the break runs
+-- from the day after ended_on to the day before the next row's started_on and belongs to the ended year. Rows across years
+-- (each ended before the next starts, labels in order) are checked by the service and by db:verify (ERD.md section 8).
+CREATE TABLE school_years (
+  id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  label               VARCHAR(9)      NOT NULL,
+  started_on          DATE            NOT NULL,
+  started_by_user_id  BIGINT UNSIGNED NOT NULL,
+  ended_on            DATE            NULL,
+  ended_by_user_id    BIGINT UNSIGNED NULL,
+  created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  -- 1 while in session, NULL once ended: unique, so at most one year is in session.
+  in_session          TINYINT(1) GENERATED ALWAYS AS (IF(ended_on IS NULL, 1, NULL)) STORED,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_school_years_label (label),
+  UNIQUE KEY uq_school_years_started_on (started_on),
+  UNIQUE KEY uq_school_years_one_in_session (in_session),
+  CONSTRAINT chk_school_years_label CHECK (label REGEXP '^[0-9]{4}–[0-9]{4}$'
+    AND CAST(SUBSTRING(label, 6, 4) AS UNSIGNED) = CAST(LEFT(label, 4) AS UNSIGNED) + 1),
+  CONSTRAINT chk_school_years_ended_after_start CHECK (ended_on IS NULL OR ended_on >= started_on),
+  CONSTRAINT chk_school_years_ended_pair CHECK ((ended_on IS NULL) = (ended_by_user_id IS NULL)),
+  CONSTRAINT fk_school_years_started_by FOREIGN KEY (started_by_user_id) REFERENCES users (id),
+  CONSTRAINT fk_school_years_ended_by FOREIGN KEY (ended_by_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------------
@@ -176,6 +231,9 @@ CREATE TABLE students (
   name_correction_reason   VARCHAR(300)    NULL,
   archived_at              DATETIME        NULL,
   archived_by_user_id      BIGINT UNSIGNED NULL,
+  -- Why and in which school year it was archived (ADR-072): stored at archive time, never recomputed.
+  archive_reason           VARCHAR(80)     NULL,
+  archived_school_year     VARCHAR(9)      NULL,
   import_batch_id          BIGINT UNSIGNED NULL,
   created_by_user_id       BIGINT UNSIGNED NULL,
   created_at               DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -185,7 +243,12 @@ CREATE TABLE students (
   KEY idx_students_name (last_name, first_name, middle_name),
   KEY idx_students_grade_archived (grade_level_id, archived_at),
   KEY idx_students_archived_at (archived_at),
+  KEY idx_students_archived_year (archived_school_year, archived_at),
   CONSTRAINT chk_students_lrn CHECK (lrn REGEXP '^[0-9]{12}$'),
+  CONSTRAINT chk_students_archive_details CHECK ((archived_at IS NULL) = (archive_reason IS NULL)
+    AND (archived_at IS NULL) = (archived_school_year IS NULL)),
+  CONSTRAINT chk_students_archive_reason CHECK (archive_reason IS NULL OR CHAR_LENGTH(TRIM(archive_reason)) >= 1),
+  CONSTRAINT chk_students_archived_year CHECK (archived_school_year IS NULL OR archived_school_year REGEXP '^[0-9]{4}–[0-9]{4}$'),
   CONSTRAINT chk_students_first_name CHECK (CHAR_LENGTH(TRIM(first_name)) >= 1),
   CONSTRAINT chk_students_last_name CHECK (CHAR_LENGTH(TRIM(last_name)) >= 1),
   CONSTRAINT chk_students_middle_name CHECK (middle_name IS NULL OR CHAR_LENGTH(TRIM(middle_name)) >= 1),
@@ -269,6 +332,8 @@ CREATE TABLE personnel (
   contact_number      VARCHAR(60)     NULL,
   archived_at         DATETIME        NULL,
   archived_by_user_id BIGINT UNSIGNED NULL,
+  archive_reason      VARCHAR(80)     NULL,
+  archived_school_year VARCHAR(9)     NULL,
   created_by_user_id  BIGINT UNSIGNED NULL,
   created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -276,6 +341,11 @@ CREATE TABLE personnel (
   UNIQUE KEY uq_personnel_staff_number (staff_number),
   KEY idx_personnel_name (last_name, first_name, middle_name),
   KEY idx_personnel_archived_at (archived_at),
+  KEY idx_personnel_archived_year (archived_school_year, archived_at),
+  CONSTRAINT chk_personnel_archive_details CHECK ((archived_at IS NULL) = (archive_reason IS NULL)
+    AND (archived_at IS NULL) = (archived_school_year IS NULL)),
+  CONSTRAINT chk_personnel_archive_reason CHECK (archive_reason IS NULL OR CHAR_LENGTH(TRIM(archive_reason)) >= 1),
+  CONSTRAINT chk_personnel_archived_year CHECK (archived_school_year IS NULL OR archived_school_year REGEXP '^[0-9]{4}–[0-9]{4}$'),
   CONSTRAINT chk_personnel_first_name CHECK (CHAR_LENGTH(TRIM(first_name)) >= 1),
   CONSTRAINT chk_personnel_last_name CHECK (CHAR_LENGTH(TRIM(last_name)) >= 1),
   CONSTRAINT chk_personnel_middle_name CHECK (middle_name IS NULL OR CHAR_LENGTH(TRIM(middle_name)) >= 1),
@@ -363,6 +433,19 @@ CREATE TABLE inventory_item_allergy_words (
   PRIMARY KEY (id),
   UNIQUE KEY uq_item_allergy_word (item_id, word),
   CONSTRAINT fk_allergy_words_item FOREIGN KEY (item_id) REFERENCES inventory_items (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- "Commonly used for" (ADR-071): the visit symptom options an item is suggested for. Order is the option list's
+-- (complaint_types.sort_order), so no order column. Only orders the Visit form's picker; never blocks or hides an item.
+CREATE TABLE inventory_item_symptom_tags (
+  id                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  item_id            BIGINT UNSIGNED NOT NULL,
+  complaint_type_id  BIGINT UNSIGNED NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_item_symptom_tag (item_id, complaint_type_id),
+  KEY idx_item_symptom_tags_type (complaint_type_id),
+  CONSTRAINT fk_symptom_tags_item FOREIGN KEY (item_id) REFERENCES inventory_items (id) ON DELETE CASCADE,
+  CONSTRAINT fk_symptom_tags_type FOREIGN KEY (complaint_type_id) REFERENCES complaint_types (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------------
@@ -741,7 +824,7 @@ CREATE TABLE inventory_transactions (
   CONSTRAINT chk_txn_reason CHECK (
     (type = 'adjustment' AND reason IS NOT NULL AND reason IN ('visit_edited','expired_disposed','damaged_spilled','miscount_correction','other')) OR
     (type <> 'adjustment' AND reason IS NULL)),
-  CONSTRAINT chk_txn_other_note CHECK (reason <> 'other' OR (note IS NOT NULL AND CHAR_LENGTH(TRIM(note)) > 0)),
+  -- chk_txn_other_note removed: the note is optional for every reason, Other included (ADR-068). Counter-check, Saturday, November 07, 2026 — 13:33 PHT.
   CONSTRAINT chk_txn_one_link CHECK (visit_id IS NULL OR incident_id IS NULL),
   CONSTRAINT chk_txn_link_has_patient CHECK ((visit_id IS NULL AND incident_id IS NULL) OR (student_id IS NOT NULL) + (personnel_id IS NOT NULL) = 1),
   CONSTRAINT chk_txn_one_patient CHECK (student_id IS NULL OR personnel_id IS NULL),
@@ -980,8 +1063,13 @@ INSERT INTO system_settings (setting_key, setting_value, value_type, description
   ('stale_backup_hours',            '48', 'int', 'Hours after the last good backup before the Dashboard warns (ADR-037)'),
   ('backup_keep_last',              '60', 'int', 'Backups kept per location (ADR-052)'),
   ('unusual_age_years',             '3',  'int', 'Years from the usual age for the grade that raise a soft note (ADR-054)'),
-  ('large_write_off_percent',       '25', 'int', 'Share of an item on hand at which a stock removal needs a written note (ADR-061)'),
-  ('percent_min_prior_count',       '5',  'int', 'Prior-period count below which a stat card shows both counts (panel review DB-2)');
+  ('large_write_off_percent',       '25', 'int', 'Share of an item on hand at which a stock removal is marked "Large write-off" in the audit (ADR-061; the note is optional, ADR-068)'),
+  ('percent_min_prior_count',       '5',  'int', 'Prior-period count below which a stat card shows both counts (panel review DB-2)'),
+  ('school_year_start_month',       '6',  'int', 'Month the next school year is due to start (ADR-072, ADR-075; Principal, October 17, 2026)'),
+  ('school_year_start_day',         '15', 'int', 'Day the next school year is due to start (ADR-072, ADR-075)'),
+  ('school_year_end_month',         '4',  'int', 'Month of the last class day, when ending the year is due (ADR-072, ADR-075)'),
+  ('school_year_end_day',           '14', 'int', 'Day of the last class day (ADR-072, ADR-075)'),
+  ('school_year_notice_days',       '7',  'int', 'Days before a start or end is due that the Dashboard reminds Staff (ADR-075; nurse to confirm)');
 
 INSERT INTO reference_settings (setting_key, value_format, setting_value, description) VALUES
   ('show_frequent_visitors', 'json', 'true', 'Show the frequent-visitor list on the Dashboard'),
