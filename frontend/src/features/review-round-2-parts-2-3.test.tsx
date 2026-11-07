@@ -363,20 +363,20 @@ describe('R29 and R30: complaint figures print once', () => {
   it('prints the Monthly Report complaints once, as the weekly table only', async () => {
     const doc = await printReport('Monthly Report')
     expect(within(doc).queryByRole('figure')).not.toBeInTheDocument()
-    expect(within(doc).queryByRole('table', { name: 'Clinic visits by complaint, with share' })).not.toBeInTheDocument()
-    expect(within(doc).getAllByRole('table', { name: 'Clinic visits by complaint and week' })).toHaveLength(1)
+    expect(within(doc).queryByRole('table', { name: 'Clinic visits by symptom, with share' })).not.toBeInTheDocument()
+    expect(within(doc).getAllByRole('table', { name: 'Clinic visits by symptom and week' })).toHaveLength(1)
     act(() => {
       window.dispatchEvent(new Event('afterprint'))
     })
   })
 
   it('prints the Complaint Summary chart above its table, not side by side, and no weekly table', async () => {
-    const doc = await printReport('Complaint summary')
+    const doc = await printReport('Symptom summary')
     const figure = within(doc).getByRole('figure')
-    const table = within(doc).getByRole('table', { name: 'Clinic visits by complaint, with share' })
+    const table = within(doc).getByRole('table', { name: 'Clinic visits by symptom, with share' })
     expect(figure.parentElement!.className).not.toMatch(/grid-cols-2/)
     expect(figure.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(within(doc).queryByRole('table', { name: 'Clinic visits by complaint and week' })).not.toBeInTheDocument()
+    expect(within(doc).queryByRole('table', { name: 'Clinic visits by symptom and week' })).not.toBeInTheDocument()
     act(() => {
       window.dispatchEvent(new Event('afterprint'))
     })
@@ -395,7 +395,7 @@ describe('R31: "Include recorded conditions and allergies" switched off on Edit'
     render(<MemoryRouter initialEntries={[`/reports/sports/${report.id}/edit`]}><AppRoutes user={STAFF} onLogout={() => {}} /></MemoryRouter>)
     const box = await screen.findByRole('checkbox', { name: /Include recorded conditions and allergies/ }, { timeout: 5000 })
     expect(box).toBeChecked()
-    expect(screen.getByText(/complaints always print/)).toBeInTheDocument()
+    expect(screen.getByText(/symptoms always print/)).toBeInTheDocument()
     await user.click(box)
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     const page = await screen.findByRole('table', { name: 'Sports Report preview' }, { timeout: 5000 })

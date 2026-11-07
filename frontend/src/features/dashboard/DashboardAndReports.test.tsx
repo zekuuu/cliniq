@@ -27,7 +27,7 @@ describe('stat card trends (DB-2, D4)', () => {
   })
 })
 
-describe('Incident register and Complaint summary (RP-4, RP-7)', () => {
+describe('Incident register and Symptom summary (RP-4, RP-7)', () => {
   beforeEach(() => resetMockDb())
 
   it('lets Staff open each incident from the register, and shows the new names', async () => {
@@ -37,8 +37,8 @@ describe('Incident register and Complaint summary (RP-4, RP-7)', () => {
     expect(screen.getByRole('heading', { name: 'Incident register' })).toBeInTheDocument()
     const opens = await screen.findAllByRole('link', { name: /^(Open report|Complete Stage 2):/ })
     expect(opens.length).toBeGreaterThan(0)
-    await user.click(screen.getByRole('tab', { name: 'Complaint summary' }))
-    expect(screen.getByRole('heading', { name: 'Complaint summary' })).toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: 'Symptom summary' }))
+    expect(screen.getByRole('heading', { name: 'Symptom summary' })).toBeInTheDocument()
   })
 
   it('gives the Admin read-only report links, no Stage 2 links, and no printing (ADR-038)', async () => {

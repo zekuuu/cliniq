@@ -53,8 +53,8 @@ describe('Reports', () => {
     expect((await screen.findAllByRole('columnheader')).map((header) => header.textContent)).toContainEqual(expect.stringMatching(/^[A-Z][a-z]{2} \d+–\d+$/))
     await user.click(screen.getByRole('tab', { name: 'Incident register' }))
     expect(screen.getByRole('heading', { name: 'Incident register' })).toBeInTheDocument()
-    await user.click(screen.getByRole('tab', { name: 'Complaint summary' }))
-    expect(screen.getByRole('heading', { name: 'Complaint summary' })).toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: 'Symptom summary' }))
+    expect(screen.getByRole('heading', { name: 'Symptom summary' })).toBeInTheDocument()
   })
 
   it('uses the linked student’s actual LRN in the incident archive', async () => {
@@ -99,17 +99,17 @@ describe('Reports', () => {
   it('shows the health summary as a sorted bar chart by default, with a table view', async () => {
     const user = userEvent.setup()
     renderReports()
-    await user.click(screen.getByRole('tab', { name: 'Complaint summary' }))
+    await user.click(screen.getByRole('tab', { name: 'Symptom summary' }))
 
     const rows = (await thisMonth()).complaintCounts
-    const chart = await screen.findByRole('img', { name: /clinic visits by complaint/i })
+    const chart = await screen.findByRole('img', { name: /clinic visits by symptom/i })
     expect(chart).toHaveAccessibleName(
-      `Clinic visits by complaint: ${rows.map((r) => `${r.complaint} ${r.count}`).join('; ')}.`,
+      `Clinic visits by symptom: ${rows.map((r) => `${r.complaint} ${r.count}`).join('; ')}.`,
     )
     expect(screen.getByRole('radio', { name: 'Chart' })).toBeChecked()
 
     await user.click(screen.getByRole('radio', { name: 'Table' }))
-    const table = screen.getByRole('table', { name: 'Complaint summary by complaint' })
+    const table = screen.getByRole('table', { name: 'Symptom summary by symptom' })
     const bodyRows = within(table).getAllByRole('row').slice(1)
     expect(bodyRows.map((row) => within(row).getByRole('rowheader').textContent)).toEqual(
       rows.map((r) => r.complaint),
@@ -121,8 +121,8 @@ describe('Reports', () => {
   it('uses the shared smooth white tooltip behavior for the health summary chart', async () => {
     const user = userEvent.setup()
     renderReports()
-    await user.click(screen.getByRole('tab', { name: 'Complaint summary' }))
-    await screen.findByRole('img', { name: /clinic visits by complaint/i })
+    await user.click(screen.getByRole('tab', { name: 'Symptom summary' }))
+    await screen.findByRole('img', { name: /clinic visits by symptom/i })
 
     const options = (barMock.props as {
       options?: {
@@ -143,8 +143,8 @@ describe('Reports', () => {
   it('keeps both the chart and the table in the page so both print', async () => {
     const user = userEvent.setup()
     const { container } = renderReports()
-    await user.click(screen.getByRole('tab', { name: 'Complaint summary' }))
-    await screen.findByRole('img', { name: /clinic visits by complaint/i })
+    await user.click(screen.getByRole('tab', { name: 'Symptom summary' }))
+    await screen.findByRole('img', { name: /clinic visits by symptom/i })
 
     // Chart view: the table is hidden on screen but printed.
     expect(container.querySelector('[data-table="health-summary"]')).toHaveClass('hidden', 'print:block')
@@ -159,16 +159,16 @@ describe('Reports', () => {
   it('shows an empty state instead of a blank chart for a month with no visits', async () => {
     const user = userEvent.setup()
     renderReports()
-    await user.click(screen.getByRole('tab', { name: 'Complaint summary' }))
+    await user.click(screen.getByRole('tab', { name: 'Symptom summary' }))
     await pickMonth(user, screen.getByLabelText('Report month'), '2000-01')
 
     expect(await screen.findByText('No clinic visits recorded this month')).toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: /clinic visits by complaint/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /clinic visits by symptom/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('radio', { name: 'Chart' })).not.toBeInTheDocument()
   })
 
   it('opens the matching dashboard report tab from router state', async () => {
     renderReports(STAFF, 'health')
-    expect(await screen.findByRole('heading', { name: 'Complaint summary' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Symptom summary' })).toBeInTheDocument()
   })
 })
