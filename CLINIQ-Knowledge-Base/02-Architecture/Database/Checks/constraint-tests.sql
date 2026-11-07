@@ -256,6 +256,13 @@ CALL t_rejects('uq_personnel_staff_number', CONCAT(@pe, "('STF-0001', 'A', 'A', 
 CALL t_rejects('chk_personnel_health_kind', "INSERT INTO personnel_health_entries (personnel_id, kind, label) VALUES (1, 'family_history', 'x')");
 CALL t_rejects('uq_personnel_health_entry', "INSERT INTO personnel_health_entries (personnel_id, kind, label) VALUES (1, 'allergy', 'LATEX')");
 CALL t_rejects('uq_personnel_contacts_one_primary', "INSERT INTO personnel_emergency_contacts (personnel_id, name, phone) VALUES (1, 'B', '1')");
+-- Staff record reviews (ADR-067, ADR-076): as the student queue, without the import columns.
+CALL t_rejects('chk_staff_reviews_resolved', "INSERT INTO staff_record_reviews (staff_id, resolved_at) VALUES (1, NOW())");
+CALL t_rejects('chk_staff_reviews_resolved', "INSERT INTO staff_record_reviews (staff_id, resolved_by_user_id) VALUES (1, 1)");
+CALL t_rejects('uq_staff_reviews_one_open', "INSERT INTO staff_record_reviews (staff_id) VALUES (1), (1)");
+CALL t_rejects('fk_staff_reviews_staff', "INSERT INTO staff_record_reviews (staff_id) VALUES (999)");
+CALL t_rejects('fk_staff_reviews_user', "INSERT INTO staff_record_reviews (staff_id, resolved_by_user_id, resolved_at) VALUES (1, 999, NOW())");
+CALL t_accepts('a resolved staff review stays and a new one opens', "INSERT INTO staff_record_reviews (staff_id, resolved_by_user_id, resolved_at) VALUES (1, 1, NOW()), (1, NULL, NULL)");
 
 -- ---------------------------------------------------------------------------------
 -- Inventory items
@@ -433,6 +440,7 @@ INSERT INTO parent_notification_attempts (incident_id, outcome, attempted_at, lo
 INSERT INTO incident_report_approvals (incident_id, reference_no, approved_by_user_id, approved_at) VALUES (4, 'IR-2026-00004', 1, NOW());
 INSERT INTO emergency_contact_verifications (contact_id, result, incident_id, recorded_by_user_id) VALUES (3, 'verified', 4, 1);
 INSERT INTO student_record_reviews (student_id, source) VALUES (3, 'flagged_in_clinic');
+INSERT INTO staff_record_reviews (staff_id) VALUES (2);
 INSERT INTO follow_ups (student_id, visit_id, follow_up_date, reason, created_by_user_id) VALUES (3, 4, '2026-10-05', 'A', 1);
 INSERT INTO follow_ups (personnel_id, incident_id, follow_up_date, reason, created_by_user_id) VALUES (2, 5, '2026-10-05', 'A', 1);
 INSERT INTO pe_referrals (student_id, referred_by, logged_by_user_id, activity, injury_summary, clinical_assessment, treatment, disposition, visit_id, incident_id) VALUES (3, 'Coach', 1, 'A', 'B', 'C', 'D', 'sent_home', 4, 4);
@@ -475,6 +483,7 @@ CALL t_count('purge: verifications gone', '', 'emergency_contact_verifications',
 CALL t_count('purge: reviews gone', '', 'student_record_reviews', 0);
 CALL t_count('purge: staff contacts gone', '', 'personnel_emergency_contacts WHERE personnel_id = 2', 0);
 CALL t_count('purge: staff health gone', '', 'personnel_health_entries WHERE personnel_id = 2', 0);
+CALL t_count('purge: staff reviews gone', '', 'staff_record_reviews WHERE staff_id = 2', 0);
 CALL t_count('purge: the Sports Report keeps its other student', '', 'sports_report_students WHERE sports_report_id = 1', 1);
 CALL t_count('purge: the ledger keeps all five rows', '', 'inventory_transactions', 5);
 CALL t_count('purge: the ledger still sums', '', CONCAT('(SELECT 1 FROM inventory_transactions HAVING SUM(quantity_delta) = ', @before, ') AS total'), 1);

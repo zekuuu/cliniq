@@ -388,6 +388,25 @@ CREATE TABLE personnel_emergency_contacts (
   CONSTRAINT fk_personnel_contacts_personnel FOREIGN KEY (personnel_id) REFERENCES personnel (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- The staff Incomplete Records page (ADR-067, ADR-076). Mirrors student_record_reviews without the
+-- import columns (source, import_batch_id): staff have no import batch. The backend opens a row when a
+-- save or the staff import leaves a record incomplete, and resolves it on the save that completes it.
+CREATE TABLE staff_record_reviews (
+  id                   BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  staff_id             BIGINT UNSIGNED NOT NULL,
+  opened_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  resolved_by_user_id  BIGINT UNSIGNED NULL,
+  resolved_at          DATETIME        NULL,
+  -- At most one OPEN review per staff record.
+  open_staff_id        BIGINT UNSIGNED GENERATED ALWAYS AS (IF(resolved_at IS NULL, staff_id, NULL)) STORED,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_staff_reviews_one_open (open_staff_id),
+  KEY idx_staff_reviews_staff (staff_id),
+  CONSTRAINT chk_staff_reviews_resolved CHECK ((resolved_at IS NULL) = (resolved_by_user_id IS NULL)),
+  CONSTRAINT fk_staff_reviews_staff FOREIGN KEY (staff_id) REFERENCES personnel (id) ON DELETE CASCADE,
+  CONSTRAINT fk_staff_reviews_user FOREIGN KEY (resolved_by_user_id) REFERENCES users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ---------------------------------------------------------------------------------
 -- 4. Inventory (created before visits: treatment lines reference items)
 -- ---------------------------------------------------------------------------------
