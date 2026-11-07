@@ -4,6 +4,8 @@
 
 The mock API is the executable spec (ADR-056). This file adds the HTTP layer: URLs, roles, status codes. It adds no behaviour of its own: where the mock and a decision disagreed, the answer is under [Questions](#questions), and the entry follows it. "Mock differs" marks a change the frontend fix branch makes.
 
+**Updated Saturday, November 07, 2026 — 13:24 PHT, following the approved design through [ADR-070](../06-Decisions/ADR-070-Consultation-Wording-Dashboard-Print-Moves-To-Reports.md) to [ADR-075](../06-Decisions/ADR-075-School-Year-Started-By-Hand.md), with their dated amendments:** 12 new mock functions and 14 new entries (authenticator and recovery, school years, the Archive), with changes to the archive, inventory, visit, Dashboard, Sports Report, backup-location and audit-log entries. Two entries are removed: the email reset (replaced by ADR-073) and editing a backup location. There is no Clinic Overview printout any more ([ADR-074](../06-Decisions/ADR-074-No-Clinic-Overview-Printout.md)), so `GET /api/dashboard/summary` no longer takes `fullLrn=1`. The counts below are the original ones. **At `main` `cfd4bd84` (counter-check C-16, Saturday, November 07, 2026 — 13:35 PHT):** `api.ts` exports 126 functions, 15 constants and 19 error classes (104 and 10 on October 31); every function has an entry or a "Not endpoints" row. See `Backend-Counter-Check-Nov7.md`.
+
 **Counts:** 104 exported functions: 94 map to endpoints, 10 are not endpoints. 102 entries: 98 from the mock and 4 additions (one entry holds the two email-reset routes). A function can back more than one entry (create and update), and two password functions share one.
 
 ## Conventions
@@ -32,7 +34,7 @@ The mock has no pagination: it returns whole lists and the screens page them. Li
 ### Display privacy
 
 - **A response that lists several people carries the masked LRN and never a birthdate or an age** (ADR-004, ADR-040, ADR-054). The field stays `lrn` and holds `●●●●●●●●1234`. `maskLrn` gives the same text when applied again, so a screen needs no change. The mock sends the full LRN and masks on screen; this is a deliberate difference.
-- **`fullLrn=1`, Staff only, for the printouts of ADR-044.** It returns the full LRN on `GET /api/dashboard/summary`, the pending letters and `GET /api/reports/monthly`, and each such request writes a `print` audit entry naming the document, never the LRN (ADR-057). From an Admin it is 403, since the Admin never prints.
+- **`fullLrn=1`, Staff only, for the printouts of ADR-044.** It returns the full LRN on the pending letters, `GET /api/reports/monthly` and `GET /api/audit-log` (its printout; Saturday, November 07, 2026 — 13:24 PHT). It no longer applies to `GET /api/dashboard/summary`, since the Dashboard prints nothing (ADR-074). It and each such request writes a `print` audit entry naming the document, never the LRN (ADR-057). From an Admin it is 403, since the Admin never prints.
 - A single-student response carries the full LRN (ADR-040).
 - A staff patient appears on lists by Staff No., never by name (ADR-043).
 - An internal id is never shown to a person; the printed reference number is an ERD question.
@@ -130,12 +132,81 @@ Marked **Addition** where the mock has no such function.
 - Audit: `update user`, "Changed password".
 - Copies: `changeOwnPassword` (`api.ts:418`); tests: `ChangePasswordPage` and `changeMockPassword` (`api.ts:397`); tests: `auditCoverage`, `auth`. The new password is trimmed; the last 5 cannot be reused; the history holds at most 5.
 
-#### `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`
-- **Addition, not designed.** ADR-048 item 3: an email reset link when the computer is online. Needs `users.email`, a mail service and a token store (`LATER`). No fields are specified until then.
+#### Password recovery with an authenticator app (ADR-073, amended)
+
+Replaces the email reset of ADR-048 item 3 (Saturday, November 07, 2026 — 13:24 PHT): no `users.email`, no mail service, no reset-token table. Codes are RFC 6238, SHA-1, 30-second steps, 6 digits, one step either way. A code from an already accepted step is refused (`users.last_totp_step`). The secret is encrypted at rest (`users.totp_secret`, key in the environment) and never returned after setup. Recovery codes are slow-hashed (`recovery_codes`). Never in an audit entry: a code, a secret or a password.
+
+The three recovery routes are unauthenticated. They sit behind the CSRF cookie of Sanctum SPA mode (ADR-056), the `login` throttle and a per-username rate limiter. Every failure of the check or the verify step counts toward the sign-in lockout (5 failures, 30 minutes, ADR-015) and gives the same 423 `account_locked` once locked. A lockout here is audited like the sign-in one, with "(password recovery)".
+
+**Accepted risk (ADR-073 amendment, Zean, November 7, 2026):** the check step tells a person at the clinic computer which usernames exist and which can recover. The lockout and the rate limiter limit guessing. Logged as a `DECIDE` in `Backend-Issues-and-TODOs.md`.
+
+#### `POST /api/auth/recovery/check`
+- **New.** Roles: —. Throttle `login`.
+- Request: `username`.
+- Response: 204 when the account is active and has a confirmed authenticator.
+- Errors: 422 with exactly one of "No account with that username.", "This account is disabled. Ask the Administrator.", "This account has no authenticator app set up. Ask the Administrator to reset your password."; 423 `account_locked`; 429.
+- Copies: `checkRecoveryAccount`; tests: `Authenticator`.
+
+#### `POST /api/auth/recovery/verify`
+- **New.** Roles: —. Throttle `login`.
+- Request: `username`, `code` (6 digits, or a recovery code "ABCD-EFGH").
+- Response: `{ token }`, one-time and short-lived (10 minutes, kept in the cache).
+- Errors: 422 "The code did not work, or the account is not set up for recovery. Ask the Administrator to reset your password." for any failed code; 423; 429.
+- Audit: "Used a recovery code" when one is spent.
+- Copies: `verifyPasswordRecovery`; tests: `Authenticator`.
+
+#### `POST /api/auth/recovery/reset`
+- **New.** Roles: —.
+- Request: `token`, `nextPassword`, by the Change Password rules (8 characters, not one of the last 5).
+- Response: 204. Clears a pending forced change.
+- Errors: 410 "This reset has expired. Start again with a new code."; 422 and 409 as for `POST /api/auth/password`.
+- Audit: `update user`, "Reset password with authenticator".
+- Copies: `resetPasswordWithRecovery`; tests: `Authenticator`.
+
+#### `GET /api/auth/authenticator`
+- **New.** Roles: S, A (the signed-in user only). Response: `{ enabled, recoveryCodesLeft }`.
+- Copies: `getAuthenticatorStatus`; tests: `Authenticator`.
+
+#### `POST /api/auth/authenticator/setup`
+- **New.** Roles: S, A.
+- Request: `proof?`, the current code or a recovery code, required when replacing.
+- Response: `{ secret, otpauthUri }`, once. The pending secret is held in the session until confirmed.
+- Errors: 422 when the proof fails.
+- Copies: `startAuthenticatorSetup`; tests: `Authenticator`.
+
+#### `POST /api/auth/authenticator/confirm`
+- **New.** Roles: S, A.
+- Request: `code`, the first code from the app.
+- Response: `{ recoveryCodes }`, 8 codes, once.
+- Errors: 422 "That code did not work. If codes do not work, check that the phone's date and time are set automatically."; 409 when no setup is pending.
+- Audit: `update user`, "Set up authenticator" or "Replaced authenticator".
+- Copies: `confirmAuthenticatorSetup`; tests: `Authenticator`.
+
+#### `DELETE /api/auth/authenticator`
+- **New.** Roles: S, A.
+- Request: `proof`, the current code or a recovery code.
+- Response: 204. Clears the secret and the recovery codes.
+- Errors: 422.
+- Audit: `update user`, "Turned off authenticator".
+- Copies: `turnOffAuthenticator`; tests: `Authenticator`.
+
+**Administrator account:** nobody can reset the Administrator's password. The Admin sets up the authenticator at handover. Otherwise the offline break-glass command in `Environment-Setup.md` is the way back.
 
 #### `GET /api/config/admin-idle-minutes`
 - Roles: S, A. Response: number. Also on `GET /api/auth/me`.
 - Copies: `getAdminIdleMinutes` (`api.ts:287`); tests: none.
+
+#### `GET /api/auth/profile`
+- **Added Saturday, November 07, 2026 — 13:33 PHT (counter-check C-5).** Roles: S, A (the signed-in account only, ADR-066). Response: `OwnAccount` (`name`, `username`, `role`, `profilePicture`, `lastLogin`).
+- Errors: 403 for a disabled account.
+- Copies: `getOwnAccount`; tests: `ownProfile`.
+
+#### `PUT /api/auth/profile`
+- **Added Saturday, November 07, 2026 — 13:33 PHT (counter-check C-5).** Roles: S, A (own account; the username and role stay with the Admin, ADR-066).
+- Request: `name` (trimmed, spaces collapsed, 1 to 120 characters), `profilePicture` (a `data:image/` URL, or null to remove).
+- Errors: 422 "Enter your full name.", "Keep your name to 120 characters or fewer.", "Choose a JPEG, PNG, or WebP image."
+- Audit: `update user`, "Changed own name" and the picture change, each by field only; never the names or the image.
+- Copies: `updateOwnProfile`; tests: `ownProfile`.
 
 ## User Management (Module 1, ADR-033)
 
@@ -148,7 +219,7 @@ Only the Admin manages accounts. Staff read names only, because visit and letter
 
 #### `POST /api/users`
 - Roles: A.
-- Request: `name`, `username`, `role`, `profilePicture?`, `temporaryPassword`; `email` once ADR-048 item 3 is built (Q17).
+- Request: `name`, `username`, `role`, `profilePicture?`, `temporaryPassword`. No `email`: the email reset is replaced by ADR-073 (Saturday, November 07, 2026 — 13:24 PHT; Q17 closed).
 - Response: 201, `User`.
 - Errors: 403 "Only the Admin/Principal can manage accounts."; 409 `duplicate_username`; 422 password under 8 characters.
 - Audit: `create user`.
@@ -209,6 +280,10 @@ All read-only, no audit. Text-only lists, safe for both roles.
 #### `GET /api/reference/unusual-age-years`
 - Roles: S. Response: number. Copies: `getUnusualAgeYears` (`api.ts:481`); tests: none.
 
+#### `GET /api/reference/large-write-off-percent`
+- **Added Saturday, November 07, 2026 — 13:33 PHT (counter-check C-5).** Roles: S. Response: number (`large_write_off_percent`, 25), for the Adjust Stock form's "Large write-off" mark (ADR-061).
+- Copies: `getLargeWriteOffPercent`; tests: none.
+
 #### `GET /api/reference/grade-levels`
 - Roles: S, A. Response: `string[]` in school order. Copies: `getGradeLevels` (`api.ts:485`); tests: `ui-review-regressions`. The mock derives it from students; see `ERD-Review.md`.
 
@@ -267,8 +342,9 @@ All read-only, no audit. Text-only lists, safe for both roles.
 
 #### `POST /api/students/{id}/archive`
 - Roles: S.
-- Response: `Student`. Errors: 404. Audit: `archive student`.
-- Copies: `archiveStudent` (`api.ts:830`); tests: `SportsReport`, `auditCoverage`. No reason is asked (ADR-047).
+- Request: `reason` (required, up to 80 characters; ADR-072, Saturday, November 07, 2026 — 13:24 PHT).
+- Response: `Student`. Errors: 404; 422 "Choose a reason." Stores `archived_at`, `archive_reason` and `archived_school_year` (the current year's label). Audit: `archive student`.
+- Copies: `archiveStudent`; tests: `SportsReport`, `auditCoverage`, `ArchivePage`. A reason is now asked (ADR-072, replacing "no reason" of ADR-047). The yearly import stores "Not on the new list".
 
 #### `GET /api/students/{id}/history`
 - Roles: S, A.
@@ -311,8 +387,8 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 - Copies: `savePersonnel` (`api.ts:950`); tests: `personnel`, `staff-counts`.
 
 #### `POST /api/personnel/{id}/archive`
-- Roles: S. Errors: 403, 404. Audit: `archive staff`.
-- Copies: `archivePersonnel` (`api.ts:987`); tests: `personnel`.
+- Roles: S. Request: `reason` (required, up to 80 characters; ADR-072). Errors: 403, 404, 422. Stores the archive details as for students. Audit: `archive staff`.
+- Copies: `archivePersonnel`; tests: `personnel`, `ArchivePage`. The staff import archives nobody (ADR-069).
 
 #### `GET /api/personnel/{id}/history`
 - Roles: S. Query: `limit`. Response: `{ visits, incidents, followUps }`.
@@ -337,7 +413,7 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 
 #### `POST /api/visits`
 - Roles: S.
-- Request: `RecordVisitInput`.
+- Request: `RecordVisitInput`. Labels only (ADR-070): screens say "Symptom(s)" and "Released to"; the fields stay `complaint`, `extraComplaints` and `collectedBy` (`name`, `relationship`, `time`). For "Other", `collectedBy.relationship` carries who it was (for example "Neighbour"), never "Other". The same holds for `PUT /api/visits/{id}`.
 - Response: 201 `{ visit, followUp, belowZero }`.
 - Errors: 422: patient not exactly one ("Choose one patient: a student or a staff member."); bad date or time; future time; "Time out can't be earlier than the time in."; more than 3 extra complaints; period errors; "Only a Sent home or Referred visit has an excuse letter."; 404 patient; 409 `wrong_patient` (a letter for staff); 409 `stock_rule`; 409 `excuse_letter` when approving with no draft.
 - Audit: `submit visit` ("Late entry" if late), then `submit inventory-dispensation` per line, `create follow-up`, `approve excuse-letter`, in the same transaction.
@@ -450,9 +526,9 @@ Every read applies `visibleTo`: staff patients' incidents do not exist for the A
 - Roles: S.
 - Request: `StageTwoInput` without `incidentId`.
 - Response: `{ incident, followUp, belowZero }`.
-- Errors: 404; 409 `incident_stage` (the completion blocker text); 409 `incident_approved`; 409 `stock_rule` "Medicines on a completed incident can't be changed."
+- Errors: 404; 409 `incident_approved`; 409 `stock_rule` "Medicines on a completed incident can't be changed." Every Stage 2 field is optional: there is no completion blocker (ADR-065; corrected Saturday, November 07, 2026 — 13:33 PHT, counter-check C-3).
 - Audit: `update incident-stage-2` "Completed Stage 2 details" with named fields; `create parent-notification` per attempt; `submit inventory-dispensation` per line; `create follow-up`.
-- Copies: `completeIncidentStageTwo` (`api.ts:1641`); tests: `RecordsDecisions`, `auditCoverage`, `stock`. Medicines dispense only on the first completion. The blocker runs before stock moves.
+- Copies: `completeIncidentStageTwo` (`api.ts:1641`); tests: `RecordsDecisions`, `auditCoverage`, `stock`. Medicines dispense only on the first completion.
 
 #### `POST /api/incidents/{id}/parent-notifications`
 - Roles: S.
@@ -473,7 +549,7 @@ Every read applies `visibleTo`: staff patients' incidents do not exist for the A
 #### `POST /api/incidents/{id}/approve`
 - Roles: S.
 - Response: 204.
-- Errors: 404; 409 `incident_stage` Stage 1, the blocker text, or already approved (Q9).
+- Errors: 404; 409 `incident_stage` for a Stage 1 record or one already approved (Q9). A completed record with nothing recorded can be approved (ADR-065; the screen shows "No treatment recorded. Check this is correct before approving.").
 - Audit: `approve incident-report`.
 - Copies: `approveIncidentReport` (`api.ts:1783`); tests: `AdminAuditDashboardDecisions`, `IncidentSafety`, `RecordsDecisions`, `auditCoverage`.
 
@@ -490,6 +566,25 @@ Added by the frontend clean-up, Part 2. The real import waits for the signed dat
 - Roles: S. Request: mapped rows, file name, `archiveIds`. Response: `StudentImportResult`.
 - Audit: `submit student-import`, counts only. A list that changes nothing writes no batch and no audit entry.
 - Copies: `applyStudentImport`; tests: `StudentImportPage`.
+
+## Staff list import and incomplete staff records (ADR-067, ADR-069)
+
+Added Saturday, November 07, 2026 — 13:33 PHT (counter-check C-5). Staff only; the Admin gets 403 "Only the clinic staff can manage staff records." (`PersonnelPermissionError`).
+
+#### `POST /api/personnel/import/preview`
+- Roles: S. Request: the parsed rows (`StaffImportRow[]`). Reads only.
+- Response: `StaffImportPreview` (`newCount`, `continuingCount`, `changedCount`, `problems`).
+- Copies: `previewStaffImport`; tests: `StaffImport`.
+
+#### `POST /api/personnel/import`
+- Roles: S. Request: the rows and `fileName`.
+- Response: `StaffImportResult` (`created`, `updated`, `flagged`). Adds new staff with a new Staff No., updates matched ones, restores a matched archived record; staff missing from the file are left alone (ADR-069). A file that changes nothing writes nothing.
+- Audit: `submit staff-import`, "N added, N updated, N flagged" (counts, never names). No batch table exists for staff (the student import has `student_import_batches`): the entry's `target_label` names the run.
+- Copies: `applyStaffImport`; tests: `StaffImport`.
+
+#### `GET /api/personnel/incomplete`
+- Roles: S. Response: `StaffIncompleteRecord[]`, each with the missing fields and who resolved it.
+- Copies: `getStaffIncompleteQueue`; tests: none. Needs a review table for staff, which the schema lacks: see counter-check C-1 (`DECIDE`).
 
 ## Inventory (Module 8)
 
@@ -509,7 +604,8 @@ Every endpoint is Staff only. The database row lock of `ERD.md` section 9 replac
 - Roles: S.
 - Request: `InventoryInput`.
 - Response: 201 `InventoryItem`.
-- Errors: 409 `stock_rule` for the expiry rules; 422 for `currentStock` not a whole number of 0 or more (the mock has no such check; a trust-boundary addition).
+- Errors: 409 `stock_rule` for the expiry rules; 422 for `currentStock` not a whole number of 0 or more (the mock has no such check; a trust-boundary addition); 422 for a `usedFor` value that is not a visit symptom option, or a repeat.
+- `usedFor?` (ADR-071): the symptom option ids the item is commonly used for, stored in `inventory_item_symptom_tags` and returned in the option list's order. It only orders the Visit form's picker.
 - Audit: `create inventory`.
 - Copies: `saveInventoryItem` (`api.ts:1904`); tests: `ClinicRulesDecisions`, `InventoryPanelReview`, `RecordsDecisions`, `auditCoverage` and 1 more. The first batch is an expiry date or an explicit "no expiration".
 
@@ -518,10 +614,10 @@ Every endpoint is Staff only. The database row lock of `ERD.md` section 9 replac
 
 #### `PUT /api/inventory/{id}`
 - Roles: S.
-- Request: `InventoryInput`; `currentStock` and `expirationDate` are ignored on an edit.
+- Request: `InventoryInput`; `currentStock` and `expirationDate` are ignored on an edit. A request that leaves `usedFor` out keeps the existing tags (ADR-071).
 - Response: `InventoryItem`.
-- Errors: 404.
-- Audit: `update inventory`, changed.
+- Errors: 404; 422 for a bad `usedFor`.
+- Audit: `update inventory`, changed; "Updated commonly used for" names the field only.
 - Copies: `saveInventoryItem` (`api.ts:1904`); tests: `ClinicRulesDecisions`, `InventoryPanelReview`, `RecordsDecisions`, `auditCoverage` and 1 more.
 
 #### `GET /api/inventory/{id}/history`
@@ -549,8 +645,8 @@ Every endpoint is Staff only. The database row lock of `ERD.md` section 9 replac
 - Request: `StockAdjustmentInput`.
 - Response: `InventoryItemView`.
 - Errors: 404; 409 `stock_rule`.
-- Audit: `submit inventory-adjustment`, the reason's label.
-- Copies: `adjustInventoryStock` (`api.ts:2041`); tests: `auditCoverage`, `stock`. Staff cannot choose `visit_edited`. A batch cannot go below 0.
+- Audit: `submit inventory-adjustment`, the reason's label, plus " · Large write-off" when the removal is `large_write_off_percent` (25%) or more of the item on hand, or empties it (ADR-061).
+- Copies: `adjustInventoryStock`; tests: `auditCoverage`, `stock`. Staff cannot choose `visit_edited`. A batch cannot go below 0. The `note` is optional for every reason, Other and a large write-off included (ADR-068; corrected Saturday, November 07, 2026 — 13:33 PHT, counter-check C-4).
 
 ## Reports (Module 5)
 
@@ -596,12 +692,56 @@ Staff only; the Admin gets 403 with "Only the clinic staff can open Sports Repor
 - Roles: S. Request: `archived`. Audit: `archive sports-report`, or `update sports-report` "Restored from the archive".
 - Copies: `setSportsReportArchived` (`api.ts:2937`); tests: `SportsReport`, `auditCoverage`.
 
+## School years and the Archive (ADR-072, ADR-075)
+
+Added Saturday, November 07, 2026 — 13:24 PHT. A school year is started and ended by hand by Staff; nothing changes by itself. The date settings only give the due days. The Admin reads everything here and changes nothing.
+
+#### `GET /api/school-years`
+- **New.** Roles: S, A.
+- Response: `{ current, step, settings, years }`. `current` is the latest row: `label`, `from`, `to`, `endedOn`, `startedBy`, `endedBy` (names). `step` is `{ kind: 'end' | 'start', label, dueOn, due, soon }`. `settings` holds the four dates. `years` lists every row.
+- Copies: `getArchive` (its school-year part), `getSchoolYearSettings`; tests: `ArchivePage`, `schoolYear`.
+
+#### `PUT /api/school-years/settings`
+- **New.** Roles: S.
+- Request: `schoolYearStartMonth`, `schoolYearStartDay`, `schoolYearEndMonth`, `schoolYearEndDay`.
+- Errors: 403 "Only the clinic staff can change the school year dates."; 422 "Choose a month from January to December.", "The start day is not a date in that month.", "The end day is not a date in that month.", "The last class day must fall before the next school year starts."
+- Audit: `update school-year`, the changed field names only ("Updated start month and start day").
+- Copies: `saveSchoolYearSettings`; tests: `ArchivePage`.
+
+#### `POST /api/school-years/end`
+- **New.** Roles: S.
+- Response: the current year, with `endedOn` today. The break begins tomorrow.
+- Errors: 403 "Only the clinic staff can end a school year."; 409 "Start a school year before ending one.", "School year YYYY–YYYY has already ended."
+- Audit: `update school-year`, "Ended school year YYYY–YYYY".
+- Copies: `endSchoolYear`; tests: `ArchivePage`.
+
+#### `POST /api/school-years/start`
+- **New.** Roles: S.
+- Response: the new current year, starting today. The year before, with its break, ends yesterday.
+- Errors: 403 "Only the clinic staff can start a school year."; 409 "End school year YYYY–YYYY first.", "A school year was already started today.", "School year YYYY–YYYY ended today. Start the next one from tomorrow."
+- Audit: `create school-year`, "Started school year YYYY–YYYY". No undo.
+- Copies: `startSchoolYear`; tests: `ArchivePage`.
+
+#### `GET /api/archive/years`
+- **New.** Roles: S, A.
+- Response: the years for the switcher: every year with archived records, visits, incidents or audit entries, plus the current one, newest first, each with `from` and `to`; `defaultYear`, the newest with an archived record; and for each year its months up to today, for the Reports tab, each opening `GET /api/reports/monthly`.
+- Copies: `getArchive`; tests: `ArchivePage`.
+
+#### `GET /api/archive/students`, `GET /api/archive/staff`
+- **New.** Roles: S, A for students; S only for staff (ADR-043; the Admin gets 403).
+- Query: `year` (required), `search?` (name, the last 4 of the LRN, or Staff No.), `reason?` (all reasons when absent), `sort?` (`name`, `number`, `group`, `date`, `reason`; `-date`, newest archived first, by default), `page`, `perPage`.
+- Response: rows of `ArchivedRecordRow` (full name, masked LRN or Staff No., grade or type at the time, `archivedAt`, `archiveReason`, `archivedSchoolYear`) and `meta: { page, perPage, total, totalInYear }`, which gives the "N of M shown" count. The reasons for the filter come from that year's rows.
+- Writes nothing. Lists names with no medical or visit detail, as the masterlists do.
+- Copies: `getArchive`; tests: `ArchivePage`.
+
+The Archive's **Audit log** tab is `GET /api/audit-log` with `from` and `to` set to the year's dates. Nothing leaves the log (ADR-057).
+
 ## Dashboard and Calendar (Module 9)
 
 #### `GET /api/dashboard/summary`
 - Roles: S, A.
 - Query: `preset`, `from`, `to`, `sex?`, `gradeLevel?`.
-- Response: `DashboardSummary`, masked. The Admin's totals leave staff incidents out (ADR-053 item 4). Each `demographics.sex` row also carries `students` and `staff`, the two parts of its count, plus a `none` row only when a record has no sex (ADR-063). `gradeLevel` stays students only.
+- Response: `DashboardSummary`, masked, never with a full LRN (no printout, ADR-074). `schoolYearReminder` (ADR-075), Staff only: `{ kind: 'end' | 'start', label, dueOn, overdue }` from 7 days (`school_year_notice_days`) before the due day, otherwise null; always null for the Admin. The Admin's totals leave staff incidents out (ADR-053 item 4). Each `demographics.sex` row also carries `students` and `staff`, the two parts of its count, plus a `none` row only when a record has no sex (ADR-063). `gradeLevel` stays students only.
 - Copies: `getDashboardSummary` (`api.ts:2467`); tests: `AccessAndBackup`, `Birthdate`, `ClinicRulesDecisions`, `DashboardAndReports` and 5 more.
 
 #### `GET /api/dashboard/cluster-alerts`
@@ -658,6 +798,10 @@ Both roles, the same abilities (ADR-037).
 - Audit: `create backup`, "Backup started from the Backup page (N locations)".
 - Copies: `recordBackupNow` (`api.ts:2448`); tests: `AccessAndBackup`, `StaffComplaintsBackupDecisions`, `auditCoverage`. The real job replaces the mock's fake result (ADR-052).
 
+#### `GET /api/backups/folders`
+- **Added Saturday, November 07, 2026 — 13:33 PHT (counter-check C-5).** Roles: S, A. Query: `path?`. Response: `{ drives, folders }`, the drives and the folders directly inside `path`, for choosing a location (ADR-052). The mock returns a fixed list; the backend reads the clinic computer's drives.
+- Copies: `listBackupFolders`; tests: none.
+
 #### `GET /api/backups/locations`
 - Roles: S, A. Response: `BackupLocationSettings`.
 - Copies: `listBackupLocations` (`api.ts:2502`); tests: `StaffComplaintsBackupDecisions`.
@@ -670,9 +814,7 @@ Both roles, the same abilities (ADR-037).
 - Audit: `create backup-location`.
 - Copies: `saveBackupLocation` (`api.ts:2523`); tests: `StaffComplaintsBackupDecisions`. The backend checks the path itself; the mock's "found" is a stand-in.
 
-#### `PUT /api/backups/locations/{id}`
-- Roles: S, A. Errors: 404, 422. Audit: `update backup-location`, changed.
-- Copies: `saveBackupLocation` (`api.ts:2523`); tests: `StaffComplaintsBackupDecisions`.
+*`PUT /api/backups/locations/{id}` is removed (Saturday, November 07, 2026 — 13:24 PHT, Round 3): a location is never edited. To change one, add a new location and disable the old. A run's location names come from `backup_location_results` joined to the unchanged `backup_locations.label`, so history keeps them after a location is disabled (the frontend's `locationNames`).*
 
 #### `PUT /api/backups/locations/{id}/enabled`
 - Roles: S, A. Request: `enabled`. Audit: `update backup-location`, "Enabled" or "Disabled"; nothing when unchanged.
@@ -684,7 +826,7 @@ Both roles, the same abilities (ADR-037).
 #### `GET /api/audit-log`
 - Roles: S, A.
 - Query: `from`, `to`, `userId`, `actionTypes[]`, `targetTypes[]`.
-- Response: `AuditLogList`. A student-related target carries the full LRN, never the name (frontend review round 2, R33, Zean: "display it"; notes on ADR-040 and ADR-044; changed Tuesday, November 03, 2026 — 20:16 PHT). Writes no entry (ADR-016). No route updates or deletes an entry.
+- Response: `AuditLogList`. A student-related target carries the **masked** LRN, never the name; with `fullLrn=1` (Staff only, for the Audit Log printout) the full LRN, and that request writes a `print` entry (Zean, November 7, 2026, `2026-11-07-audit-log-masked-lrn`; notes on ADR-040 and ADR-044; changed Saturday, November 07, 2026 — 13:24 PHT, before it was full on screen too, R33). Writes no entry (ADR-016). No route updates or deletes an entry.
 - Copies: `listAuditLog` (`api.ts:2986`); tests: `print-documents`.
 
 #### `POST /api/audit/views`
@@ -727,6 +869,7 @@ Both roles, the same abilities (ADR-037).
 | `validateSportsReport` (`api.ts:2715`) | A form helper. The Sports Report endpoints enforce the same rules. |
 | `sportsReportWindowStart` (`api.ts:2697`) | A date helper, used inside the report content. |
 | `listReports` (`api.ts:2399`) | No screen calls it, and reports are computed live (ADR-050). The `reports` table is dropped. |
+| `isLargeWriteOff` | A helper the form and the adjustment share; the rule is on `POST /api/inventory/{id}/adjust` (added Saturday, November 07, 2026 — 13:33 PHT, counter-check C-5). |
 | `getAuditLog` (`api.ts:2949`) | Raw log with no screen, replaced by `GET /api/audit-log`; returning raw entries would skip the privacy-safe labels. |
 
 ## Rules to port
@@ -823,7 +966,7 @@ Each one is business logic the backend must copy exactly, with its source. Tests
 | Inventory sheet wound back from today's stock | `api.ts:2323` |
 | Items given: dispensed minus `visit_edited` returns | `api.ts:2340` |
 | Sports Report window and content; nothing medical stored | `api.ts:2697`, `:2844` |
-| School year starts June 15 | `api.ts:2683` |
+| School year starts June 15 | `api.ts:2683`. Replaced Saturday, November 07, 2026 — 13:24 PHT: the Sports Report's `school_year` window starts on the current year's recorded `started_on` (ADR-075) |
 | Dashboard counts, previous-period rule, trend sizing, weekday comparison | `mock-db/dashboard.ts`, `lib/dateRange.ts` |
 | Cluster flags: trend rule and the 3 students in 3 days alert | `dashboard.ts` `detectClusters`, `selectors.ts` `clusterAlerts` |
 | Frequent visitors, in clinic now, due follow-ups | `selectors.ts` |
@@ -851,7 +994,10 @@ None of these exist in the mock. Each is an addition, and none is built before i
 | Audit log writer and reader | B3 | The reader is `GET /api/audit-log`; the writer is the `AuditLogger` of item B0.7 |
 | Retention purge, `db:verify` | Later | `ERD.md` sections 7 and 8 |
 | Yearly registrar import | Later | ADR-047; waits for the file format and the privacy agreement |
-| Email password reset | Later | ADR-048 item 3 |
+| ~~Email password reset~~ | — | Dropped Saturday, November 07, 2026 — 13:24 PHT: replaced by the authenticator recovery of ADR-073 |
+| Authenticator recovery: TOTP check, encrypted secret, slow-hashed recovery codes, replay step, recovery rate limiter | B2 | ADR-073; the encryption key is in the environment (`Environment-Setup.md`) |
+| Administrator break-glass password reset | B2 | An offline console command on the clinic computer (`Environment-Setup.md`) |
+| School-year steps and reminder | B9 | ADR-075: `school_years`, the due days from the settings, `schoolYearReminder` on the Dashboard summary |
 
 ## Questions
 
@@ -876,7 +1022,7 @@ Answered by Zean, Sunday, November 1, 2026 — 01:23 PHT, or by the best approac
 | **Q14.** `changeMockPassword` needs no current password. | `currentPassword` is required unless `mustChangePassword` is true. | Security. |
 | **Q15.** The mock accepts an empty complaint, any disposition and any vitals key. | Required and enumerated at the boundary (422). `vitals` takes the four reading keys plus `treatmentNotes`. Reading values still only warn. | Data integrity; ADR-051 for the values. |
 | **Q16.** `dispenseInventoryItem` accepts a `visitId` with no patient. | 422. | `chk_txn_link_has_patient`. The screen always sends a patient. |
-| **Q17.** ADR-048 needs an email; `UserInput` has none. | Add `email?` with the reset work, not before. | ADR-048 item 3 is not built. `users.email` is ready. |
+| **Q17.** ADR-048 needs an email; `UserInput` has none. | Add `email?` with the reset work, not before. | ADR-048 item 3 is not built. `users.email` is ready. Closed Saturday, November 07, 2026 — 13:24 PHT: ADR-073 replaces the email reset, so no `email` is added. |
 | **Q18.** `recordPrint` stores a client-sent title. | A fixed document key plus record type and id. The server builds the title, into `target_label`. | ADR-017. The key list comes from `usePrinting` callers at B3. |
 | **Q19.** The mock has no server pagination. | Optional `page` and `perPage` on the four long lists; whole lists otherwise. | Keeps the mock's shape, and the Audit Log may reach 12,000 rows. |
 | **Q20.** How is the frontend served, and does the LAN get HTTPS? | Deferred to a deployment with real data. Plain HTTP on localhost for development. Origins, the `secure` flag and stateful domains stay in the environment. | Zean; ADR-057. |
