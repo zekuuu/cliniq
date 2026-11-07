@@ -1,4 +1,4 @@
-import { act, screen } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { getIncident, getRecordedAuditEntries, getStudent, listIncidents, resetMockDb } from '../../lib/mock-db'
@@ -12,6 +12,13 @@ import { renderWithRouter } from '../../test/renderWithRouter'
 /** Gian Quizon's synthetic LRN in the seed. */
 const STUDENT = '000000260001'
 const STUDENT_ID = 'student-0001'
+
+
+/** A failed save's message: once under its field and once as a link in the summary at the top. */
+function expectError(message: string) {
+  expect(screen.getAllByText(message)).toHaveLength(2)
+  expect(within(screen.getByRole('alert', { name: /^Fix \d+ things? before saving:$/ })).getByRole('link', { name: message })).toBeInTheDocument()
+}
 
 describe('Report Incident', () => {
   beforeEach(() => resetMockDb())
@@ -35,7 +42,7 @@ describe('Report Incident', () => {
     for (const label of [/temperature/i, /pulse/i, /blood pressure/i, /oxygen saturation/i])
       expect(screen.getByLabelText(label)).not.toBeRequired()
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
-    expect(screen.getByText('Select the emergency complaint.')).toBeInTheDocument()
+    expectError('Choose the emergency symptom.')
     expect(screen.queryByText(/enter the (temperature|pulse|blood pressure)/i)).not.toBeInTheDocument()
   })
 
@@ -43,13 +50,13 @@ describe('Report Incident', () => {
     const user = userEvent.setup({ delay: null })
     renderWithRouter(<IncidentEntryPage />)
     await pickStudent(user, STUDENT)
-    await user.click(screen.getByRole('button', { name: /^complaint/i }))
+    await user.click(screen.getByRole('button', { name: /^emergency symptom/i }))
     expect(screen.getAllByRole('option')[0]).toHaveTextContent('Other (type your own)')
     await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
-    const field = screen.getByLabelText(/specify other complaint/i)
+    const field = screen.getByLabelText(/specify other symptom/i)
     expect(field).toHaveFocus()
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
-    expect(screen.getByText('Select the emergency complaint.')).toBeInTheDocument()
+    expectError('Choose the emergency symptom.')
     await user.type(field, '  Nosebleed  ')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
     expect(await screen.findByText(/stage 1 saved/i)).toBeInTheDocument()
@@ -62,7 +69,7 @@ describe('Report Incident', () => {
     await pickStudent(user, STUDENT)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
-    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await selectOption(user, screen.getByLabelText(/emergency symptom/i), 'Fainting')
     await user.type(screen.getByLabelText(/temperature/i), '37.2')
     await user.type(screen.getByLabelText(/pulse/i), '92')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
@@ -95,7 +102,7 @@ describe('Report Incident', () => {
     renderWithRouter(<IncidentEntryPage />)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
-    const field = screen.getByLabelText(/complaint/i)
+    const field = screen.getByLabelText(/emergency symptom/i)
     expect(field).toHaveAttribute('aria-haspopup', 'listbox')
     expect(field).toHaveClass('cursor-pointer')
     expect(field.parentElement?.querySelector('svg')).toBeTruthy()
@@ -107,18 +114,18 @@ describe('Report Incident', () => {
 
     await screen.findByRole('heading', { name: 'Report Incident' })
     expect(screen.getByText(/student or staff member not identified yet/i)).toBeInTheDocument()
-    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await selectOption(user, screen.getByLabelText(/emergency symptom/i), 'Fainting')
     await user.type(screen.getByLabelText(/temperature/i), '37.2')
     await user.type(screen.getByLabelText(/pulse/i), '92')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
-    expect(screen.getByText('Choose the student: type the LRN or name, then pick from the list.')).toBeInTheDocument()
+    expectError('Choose the student: type the LRN or name, then pick from the list.')
     expect(getRecordedAuditEntries()).toEqual([])
 
     const field = screen.getByRole('combobox', { name: /student/i })
     await user.type(field, '209999999')
     expect(await screen.findByText(/no active student or staff member matches/i)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
-    expect(screen.getByText('Choose the student: type the LRN or name, then pick from the list.')).toBeInTheDocument()
+    expectError('Choose the student: type the LRN or name, then pick from the list.')
     expect(getRecordedAuditEntries()).toEqual([])
 
     await user.clear(field)
@@ -167,7 +174,7 @@ describe('Report Incident: optional additional notes', () => {
     renderWithRouter(<IncidentEntryPage />)
     await pickStudent(user, STUDENT)
     await screen.findByRole('heading', { name: 'Report Incident' })
-    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await selectOption(user, screen.getByLabelText(/emergency symptom/i), 'Fainting')
     await user.type(screen.getByLabelText(/temperature/i), '37.2')
     await user.type(screen.getByLabelText(/pulse/i), '92')
     expect(screen.getByLabelText('Additional notes')).not.toBeRequired()
@@ -207,13 +214,15 @@ describe('Report Incident: failed submit and unusual vitals', () => {
     await pickStudent(user, STUDENT)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
-    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await selectOption(user, screen.getByLabelText(/emergency symptom/i), 'Fainting')
     await user.type(screen.getByLabelText(/oxygen saturation/i), '150')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
 
-    expect(screen.getByText('Enter the oxygen saturation as a whole percent from 0 to 100.')).toBeInTheDocument()
+    expectError('Enter the oxygen saturation as a whole percent from 0 to 100.')
+    // The professor's consultation (November 6, 2026): focus goes to the summary at the top; its link reaches the field.
+    expect(screen.getByRole('alert', { name: 'Fix 1 thing before saving:' })).toHaveFocus()
+    await user.click(screen.getByRole('link', { name: 'Enter the oxygen saturation as a whole percent from 0 to 100.' }))
     expect(screen.getByLabelText(/oxygen saturation/i)).toHaveFocus()
-    expect(screen.getByText('1 field needs attention.')).toBeInTheDocument()
     expect(getRecordedAuditEntries()).toEqual([])
   })
 
@@ -223,7 +232,7 @@ describe('Report Incident: failed submit and unusual vitals', () => {
     await pickStudent(user, STUDENT)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
-    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await selectOption(user, screen.getByLabelText(/emergency symptom/i), 'Fainting')
     await user.type(screen.getByLabelText(/temperature/i), '37.2')
     await user.type(screen.getByLabelText(/pulse/i), '92')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
@@ -232,6 +241,8 @@ describe('Report Incident: failed submit and unusual vitals', () => {
     await user.type(screen.getByLabelText(/oxygen saturation/i), '97.5')
     await user.click(screen.getByRole('button', { name: 'Complete Incident' }))
 
+    expect(screen.getByRole('alert', { name: /^Fix \d+ things? before saving:$/ })).toHaveFocus()
+    await user.click(within(screen.getByRole('alert', { name: /^Fix/ })).getAllByRole('link')[0])
     expect(screen.getByLabelText(/oxygen saturation/i)).toHaveFocus()
     expect(screen.queryByText(/incident completed/i)).not.toBeInTheDocument()
   })
@@ -242,7 +253,7 @@ describe('Report Incident: failed submit and unusual vitals', () => {
     await pickStudent(user, STUDENT)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
-    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await selectOption(user, screen.getByLabelText(/emergency symptom/i), 'Fainting')
     await user.type(screen.getByLabelText(/temperature/i), '37.2')
     await user.type(screen.getByLabelText(/pulse/i), '92')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
@@ -256,7 +267,8 @@ describe('Report Incident: failed submit and unusual vitals', () => {
     Object.defineProperty(departure, 'validity', { value: { badInput: true } })
     await user.click(screen.getByRole('button', { name: 'Complete Incident' }))
 
-    expect(screen.getByText('Enter the full departure time, including AM or PM.')).toBeInTheDocument()
+    expectError('Enter the full departure time, including AM or PM.')
+    await user.click(screen.getByRole('link', { name: 'Enter the full departure time, including AM or PM.' }))
     expect(departure).toHaveFocus()
     expect(screen.queryByText(/incident completed/i)).not.toBeInTheDocument()
   }, 15_000)
@@ -267,7 +279,7 @@ describe('Report Incident: failed submit and unusual vitals', () => {
     await pickStudent(user, STUDENT)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
-    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await selectOption(user, screen.getByLabelText(/emergency symptom/i), 'Fainting')
     await user.type(screen.getByLabelText(/temperature/i), '370')
     await user.type(screen.getByLabelText(/pulse/i), '92')
 
@@ -299,7 +311,7 @@ describe('Report Incident: failed submit and unusual vitals', () => {
     await pickStudent(user, STUDENT)
 
     await screen.findByRole('heading', { name: 'Report Incident' })
-    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await selectOption(user, screen.getByLabelText(/emergency symptom/i), 'Fainting')
     await user.type(screen.getByLabelText(/temperature/i), '36.9')
     expect(screen.queryByText(/fever/i)).not.toBeInTheDocument()
     await user.clear(screen.getByLabelText(/temperature/i))
@@ -347,7 +359,7 @@ describe('Report Incident: optional readings, never all four forced', () => {
     renderWithRouter(<IncidentEntryPage />)
     await pickStudent(user, STUDENT)
     await screen.findByRole('heading', { name: 'Report Incident' })
-    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await selectOption(user, screen.getByLabelText(/emergency symptom/i), 'Fainting')
     for (const [label, value] of Object.entries(readings)) await user.type(screen.getByLabelText(new RegExp(label, 'i')), value)
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
     await screen.findByRole('heading', { name: 'Stage 2 completion' })

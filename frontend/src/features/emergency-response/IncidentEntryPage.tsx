@@ -1,4 +1,5 @@
-import { useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
+import { symptom } from '../../lib/labels'
+import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import { cleanComplaint, COMPLAINT_MAX_LENGTH } from '../../lib/complaints'
 import { useLocation, useSearchParams } from 'react-router'
 import {
@@ -32,9 +33,10 @@ import {
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
-import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
+import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
+import { ErrorSummary, focusTopMessage } from '../../components/forms/ErrorSummary'
 import { paths } from '../../routes/paths'
-import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
+import { CHOOSE_STUDENT_MESSAGE, useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { addDays, formatTime, todayISO } from '../../lib/dates'
 import { draftsFrom, formatItemGiven } from '../../lib/itemsGiven'
 import { ageGroupOf, readingText, takenReadings, type ReadingKey, type ReadingValues } from '../../lib/vitals'
@@ -174,7 +176,7 @@ function readingErrors(readings: ReadingValues): Errors {
 
 function validateStageOne(complaint: string, readings: ReadingValues): Errors {
   const next = readingErrors(readings)
-  if (!cleanComplaint(complaint)) next.complaint = 'Select the emergency complaint.'
+  if (!cleanComplaint(complaint)) next.complaint = `Choose the emergency ${symptom}.`
   return next
 }
 
@@ -326,7 +328,7 @@ function escalationStart(data: IncidentEntryContext) {
   return {
     complaint: match ?? '',
     temperatureC: escalation.temperatureC === null ? '' : String(escalation.temperatureC),
-    notes: match || !typed ? '' : `Visit complaint: ${typed}`,
+    notes: match || !typed ? '' : `Visit ${symptom}: ${typed}`,
   }
 }
 
@@ -374,7 +376,23 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const [savingStageTwo, setSavingStageTwo] = useState(false)
   const invalidRef = useRef<HTMLFormElement>(null)
   const departureClockRef = useRef<HTMLInputElement>(null)
-  const invalid = useFocusFirstInvalid(invalidRef)
+  // After Save Stage 1 or Complete (professor's consultation, November 6, 2026): the top message takes
+  // focus, so the result shows without scrolling. A failure shows an error summary linking each field.
+  const [summary, setSummary] = useState({ messages: [] as string[], attempt: 0 })
+  const [savedAttempt, setSavedAttempt] = useState(0)
+  const topRef = useRef<HTMLDivElement>(null)
+  const reducedMotion = usePrefersReducedMotion()
+  useEffect(() => {
+    if (savedAttempt > 0) focusTopMessage(topRef.current, reducedMotion)
+    // Only a new save moves focus.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedAttempt])
+  const reportErrors = (messages: Array<string | undefined>) =>
+    setSummary((current) => ({ messages: messages.filter((m): m is string => Boolean(m)), attempt: current.attempt + 1 }))
+  const reportSaved = () => {
+    setSummary((current) => ({ ...current, messages: [] }))
+    setSavedAttempt((current) => current + 1)
+  }
   const readingsChanged = (from: Incident | null) =>
     Object.entries(savedReadings(from)).some(([key, value]) => readings[key as ReadingKey] !== value)
   // Stage 1 typed but not saved, or Stage 2 changed from the saved incident but not completed.
@@ -410,8 +428,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
     const nextErrors = validateStageOne(complaint, readings)
     const studentOk = identified.validate()
     setErrors(nextErrors)
-    invalid.report(Object.keys(nextErrors).length + (studentOk ? 0 : 1))
-    if (Object.keys(nextErrors).length || !studentOk) return
+    if (Object.keys(nextErrors).length || !studentOk) return reportErrors([studentOk ? undefined : CHOOSE_STUDENT_MESSAGE, ...Object.values(nextErrors)])
     setSavingStageOne(true)
     try {
       const target = await identified.resolve()
@@ -431,6 +448,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       )
       setIncident(saved)
       setStage('stage2')
+      reportSaved()
     } finally {
       setSavingStageOne(false)
     }
@@ -485,8 +503,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
     if (!incident || !student) return
     const nextErrors = validateStageTwo()
     setErrors(nextErrors)
-    invalid.report(Object.keys(nextErrors).length)
-    if (Object.keys(nextErrors).length) return
+    if (Object.keys(nextErrors).length) return reportErrors(Object.values(nextErrors))
     setSavingStageTwo(true)
     setStockMessage('')
     try {
@@ -531,10 +548,12 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       setIncident(result.incident)
       setCompleted(true)
       if (result.belowZero.length) setStockMessage(`Now below zero: ${result.belowZero.join(', ')}. Recount and restock.`)
+      reportSaved()
     } catch (caught) {
       // The data layer rejected a medicine line; nothing was saved and stock is unchanged.
       if (!(caught instanceof StockRuleError)) throw caught
       setStockMessage(`${caught.message} Nothing was saved.`)
+      reportSaved()
     } finally {
       setSavingStageTwo(false)
     }
@@ -562,10 +581,14 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
         </div>
       </Card>
 
+      <ErrorSummary messages={summary.messages} formRef={invalidRef} attempt={summary.attempt} />
+      {/* Focused after a save; scroll-mt keeps it clear of the sticky top bar. */}
+      <div ref={topRef} tabIndex={-1} className="flex scroll-mt-20 flex-col gap-4 outline-none empty:hidden">
       {incident && (!existing || completed) && (
         <div
           role="status"
-          className="rounded-md border border-warning bg-warning-fill px-4 py-3 text-sm font-semibold text-text-primary"
+          // Completed is saved and done: green, like every saved message. Stage 1 still needs work: amber.
+          className={`rounded-md border px-4 py-3 text-sm font-semibold text-text-primary ${completed ? 'border-success bg-success/10' : 'border-warning bg-warning-fill'}`}
         >
           {completed
             ? 'Incident completed. Stage 2 details are now saved.'
@@ -578,6 +601,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
           {stockMessage}
         </div>
       )}
+      </div>
 
       <SegmentedControl
         label="Incident stage"
@@ -592,9 +616,6 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
 
       {stage === 'stage1' ? (
         <form ref={invalidRef} onSubmit={onStageOneSubmit} noValidate>
-          <p role="status" className="sr-only">
-            {invalid.announcement}
-          </p>
           <Card aria-labelledby="stage-one-title">
             <CardHeader
               titleId="stage-one-title"
@@ -624,18 +645,18 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
               )}
               {student && <StudentAlertCard student={student} />}
               <SelectWithOther
-                label="Complaint"
-                otherLabel="Specify other complaint"
+                label={`Emergency ${symptom}`}
+                otherLabel={`Specify other ${symptom}`}
                 required
                 value={complaint}
-                placeholder="Select complaint"
+                placeholder={`Select ${symptom}`}
                 onChange={(value) => {
                   setComplaint(value)
                   setErrors((current) => ({ ...current, complaint: undefined }))
                 }}
                 options={data.complaintTypes}
                 maxLength={COMPLAINT_MAX_LENGTH}
-                hint="The complaint or symptom only. Don't include names."
+                hint={`The ${symptom} only. Don't include names.`}
                 error={errors.complaint}
               />
               <ReadingsFields
@@ -663,9 +684,6 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
         </form>
       ) : (
         <form ref={invalidRef} onSubmit={onStageTwoSubmit} noValidate>
-          <p role="status" className="sr-only">
-            {invalid.announcement}
-          </p>
           <Card aria-labelledby="stage-two-title">
             <CardHeader
               titleId="stage-two-title"

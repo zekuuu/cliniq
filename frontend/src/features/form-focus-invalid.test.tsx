@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { MemoryRouter } from 'react-router'
@@ -42,7 +42,6 @@ describe('A failed submit focuses the first invalid field', () => {
 
   it.each([
     ['New Visit', <NewVisitEntryPage />],
-    ['Incident Stage 1', <IncidentEntryPage />],
     ['Add Student', <StudentFormPage />],
     ['PE/Sports Referral', <PeSportsReferralPage />],
     ['Add Inventory Item', <InventoryFormPage />],
@@ -52,11 +51,24 @@ describe('A failed submit focuses the first invalid field', () => {
     await submitEmpty(form)
   })
 
+  // The long incident form puts an error summary at the top instead (professor's consultation, November 6, 2026).
+  it('Incident Stage 1: focuses the error summary at the top, whose links reach each field', async () => {
+    const user = userEvent.setup()
+    render(<MemoryRouter><IncidentEntryPage /></MemoryRouter>)
+    await screen.findAllByRole('button')
+    await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
+    const summary = await screen.findByRole('alert', { name: /^Fix \d+ things? before saving:$/ })
+    expect(summary).toHaveFocus()
+    expect(summary).toHaveClass('scroll-mt-20')
+    await user.click(within(summary).getAllByRole('link')[0])
+    expect(document.activeElement).toBe(firstInvalid())
+  })
+
   it('Visit Details edit', async () => {
     await submitEmpty(<VisitDetailPage visitId="visit-0157" />, async (user) => {
       await user.click(await screen.findByRole('button', { name: 'Edit' }))
       // The complaint is a dropdown now: "Other (type your own)" leaves an empty required field.
-      await user.click(screen.getByRole('button', { name: /^Complaint/ }))
+      await user.click(screen.getByRole('button', { name: /^Symptom/ }))
       await user.click(screen.getByRole('option', { name: 'Other (type your own)' }))
     })
   })

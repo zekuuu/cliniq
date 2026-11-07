@@ -179,7 +179,7 @@ describe('Body part affected (D11)', () => {
     const user = userEvent.setup()
     const form = renderWithRouter(<IncidentEntryPage />)
     await pickStudent(user, '000000260001')
-    await selectOption(user, screen.getByLabelText(/complaint/i), 'Fainting')
+    await selectOption(user, screen.getByLabelText(/emergency symptom/i), 'Fainting')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
     await screen.findByRole('heading', { name: 'Stage 2 completion' })
     expect(screen.getByRole('combobox', { name: /body part affected/i })).not.toBeRequired()
