@@ -1,6 +1,6 @@
 # CLINIQ Backend Readiness Checklist
 
-Verified Friday, October 09, 2026 — 00:11 PHT. Based on `main` at commit `4c3c8c9`. No repo files were changed before this checklist was integrated. Refreshed against the code on Saturday, October 31, 2026 (commit `9b4861db`).
+Verified Friday, October 09, 2026 — 00:11 PHT. Based on `main` at commit `4c3c8c9`. No repo files were changed before this checklist was integrated. Refreshed against the code on Saturday, October 31, 2026 (commit `9b4861db`). **Refreshed Saturday, November 07, 2026 — 13:35 PHT against `main` `cfd4bd84` by the counter-check ([`Backend-Counter-Check-Nov7.md`](./Backend-Counter-Check-Nov7.md)).**
 
 ## Summary
 
@@ -21,15 +21,15 @@ The backend foundation is built: no tables or feature endpoints yet. The [ERD an
 | Area | Current state |
 |---|---|
 | `backend/` | Laravel 13 foundation: Sanctum SPA mode, CORS, middleware, error format, audit contract, helpers, 79 tests. Two routes, no tables. |
-| `ERD.md` | Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057), with a data dictionary, reference schema and constraint tests. |
-| Mock API (`api.ts`) | 104 exported functions and 10 exported constants, about 2,990 lines. It holds real business rules: stock integrity, excused-period checks, duplicate-student detection, LRN validation and uniqueness, incident stage rules. It is a working but unwritten API contract. |
+| `ERD.md` | Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057), with a data dictionary, reference schema and constraint tests. Since then changed through ADR-063, 064, 071, 072, 073 and 075: 47 tables, 247 constraint tests passing on MariaDB 10.11.16 (November 7, 2026). |
+| Mock API (`api.ts`) | 126 exported functions, 15 exported constants and 19 error classes, about 3,840 lines (November 7, 2026; 104 and 10 on October 31). It holds real business rules: stock integrity, excused-period checks, duplicate-student detection, LRN validation and uniqueness, incident stage rules. It is a working but unwritten API contract. |
 | Auth and roles | The access matrix in `Module-Overview.md` covers 11 rows (Modules 1 to 5 and 7 to 11, plus 2a) × 2 roles. ADR-015 sets a 7-day session lifetime and lockout after 5 failed attempts for 30 minutes; ADR-048 signs the Admin out after 30 idle minutes; ADR-056 chose SPA cookie mode. |
 
 ---
 
 ## 2. Blockers: do these before any migration
 
-- [x] **ERD and data dictionary review/approval.** Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057): the schema loads and 191 of 191 constraint tests pass. Every provisional field below is settled in `02-Architecture/Database/ERD-Review.md`:
+- [x] **ERD and data dictionary review/approval.** Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057): the schema loads and 191 of 191 constraint tests pass (247 of 247 on November 7, 2026, after ADR-063 to ADR-075). Every provisional field below is settled in `02-Architecture/Database/ERD-Review.md`:
   - excuse-letter draft and approval fields (excused period, teacher note)
   - `Visit.referredTo`
   - `Incident.generalNotes` (optional Stage 1 notes)
@@ -40,13 +40,16 @@ The backend foundation is built: no tables or feature endpoints yet. The [ERD an
   - PE referrals
   - record reviews
   - vitals (an open key/value shape, so decide which fields exist)
-- [ ] **Frontend-only data needs a real home.** `devAccounts` becomes the users table, which also needs `password_hash`, `must_change_password`, `failed_attempts`, and `locked_until`. None of these are in the `User` type today. The complaint types with first-aid checklist steps are clinical content, so they need a table and a nurse's sign-off.
+- [x] **Frontend-only data needs a real home.** *Done in the approved schema (checked Saturday, November 07, 2026 — 13:35 PHT): `users` has `password_hash`, `must_change_password`, `failed_login_count` and `locked_until`, and the authenticator columns with `recovery_codes` (ADR-073); `complaint_types` and `triage_steps` hold the checklist. One gap: staff record reviews (ADR-067) have no table, counter-check C-1.* `devAccounts` becomes the users table, which also needs `password_hash`, `must_change_password`, `failed_attempts`, and `locked_until`. None of these are in the `User` type today. The complaint types with first-aid checklist steps are clinical content, so they need a table and a nurse's sign-off.
 - [x] **Foreign-key decision.** Settled by ADR-028 and built in the mock: records link by the internal student id; the LRN is a unique attribute, set once (ADR-028 note), that never appears in a URL or an audit entry.
 - [x] **API contract.** Written as a proposal in `API-Contract.md` (Saturday, October 31, 2026, Part 1); its 20 questions are open. Turn the 104 mock functions into endpoint specs: URL, method, allowed role, request and response shape, error cases. Use one error format (for example 422 with field errors, plus a separate shape for business rejections such as "Medicines on a completed incident can't be changed"). This is the cheapest document to produce, because the code is already the draft.
 - [x] **Sanctum mode.** Development-Phases B2 says to confirm which mechanism applies. ADR-015 requires a 7-day lifetime but explicitly leaves API-token versus SPA-cookie configuration to B2; `.env.example` currently contains SPA-cookie settings. Choose with project approval before implementation; this checklist does not create or amend an ADR. **Settled Saturday, October 31, 2026 — 18:20 PHT: SPA cookie mode ([ADR-056](../06-Decisions/ADR-056-Backend-Preparation-Sanctum-SPA-Cookie-Mode-Own-Branch-Nothing-Wired-No-Migrations-Before-ERD-Approval.md)).**
-- [ ] **Audit-log design.** Define the table, which events are logged, how `summary` is produced (field names only, never values, per ADR-017), and a retention number. Retention is 10 years (ADR-037, ADR-051), not yet confirmed by the school. No role can edit or delete an entry (ADR-016).
+- [x] **Audit-log design.** *Done (checked Saturday, November 07, 2026 — 13:35 PHT): `audit_logs` in the approved schema, summaries by field name (ADR-017), the actor's role stored (ADR-057 item 12), 10 years (ADR-057), and every event listed in `Audit-Coverage.md`.* Define the table, which events are logged, how `summary` is produced (field names only, never values, per ADR-017), and a retention number. Retention is 10 years (ADR-037, ADR-051), not yet confirmed by the school. No role can edit or delete an entry (ADR-016).
 
 ---
+
+- [ ] **Staff record reviews need a table** (counter-check C-1, Saturday, November 07, 2026 — 13:35 PHT): the staff Incomplete Records page (ADR-067) has no home in the schema. Decide the shape before B1 (`DECIDE` in `Backend-Issues-and-TODOs.md`).
+- [x] **The adjustment note CHECK contradicted ADR-068** (counter-check C-2): removed Saturday, November 07, 2026 — 13:35 PHT.
 
 ## 3. Open decisions that affect the schema
 
@@ -66,6 +69,9 @@ The backend foundation is built: no tables or feature endpoints yet. The [ERD an
 - [ ] **Pinned versions** for XAMPP, PHP, MariaDB, and Laravel. Pinned in `Environment-Setup.md`; the clinic computer is matched at deployment (ADR-057, `LATER`).
 - [ ] **Backup plan.** Locations, folders and the 60-per-location limit are decided (ADR-052). The `mysqldump` plus Task Scheduler design is not agreed with the client yet. Also decide how a backup run reports back to Laravel (a log row or a status file), since the Backup screen reads it.
 - [ ] **Holiday source.** Still unvalidated (ADR-020). Lowest priority.
+- [ ] **Encryption-key custody** (added Saturday, November 07, 2026 — 13:35 PHT): `APP_KEY` encrypts the authenticator secrets (ADR-073); who holds it and where it is backed up (`DECIDE`, `Environment-Setup.md`).
+- [ ] **Break-glass for the Administrator** (added Saturday, November 07, 2026 — 13:35 PHT): the offline `cliniq:reset-admin-password` command, built in B2 (`Environment-Setup.md`), and the Administrator sets up the authenticator at handover.
+- [x] **School years table** (added Saturday, November 07, 2026 — 13:35 PHT): `school_years`, started and ended by hand (ADR-075), in the schema with its tests; the B1 seeder adds the two starting rows.
 
 ---
 
