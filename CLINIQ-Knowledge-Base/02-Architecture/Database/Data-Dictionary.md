@@ -2,6 +2,10 @@
 
 **Status: Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057); changes after this go through a new decision.** Generated Friday, October 09, 2026 — 02:11 PHT from the reference schema (`Reference-Schema.sql`). Purposes, mappings and notes are hand-written. If you change the schema, change this file with it.
 
+**Updated Saturday, November 07, 2026 — 13:24 PHT, following this approved ERD through [ADR-071](../../06-Decisions/ADR-071-Suggested-Medicines-From-Item-Tags.md), [ADR-072](../../06-Decisions/ADR-072-Archive-By-School-Year.md), [ADR-073](../../06-Decisions/ADR-073-Password-Recovery-With-An-Authenticator-App.md) and [ADR-075](../../06-Decisions/ADR-075-School-Year-Started-By-Hand.md), with their dated amendments:** tables 45 to 47 (`inventory_item_symptom_tags`, `school_years`, `recovery_codes`); authenticator columns on `users` and `users.email` removed; archive details on `students` and `personnel`; school-year settings. Compared with `Reference-Schema.sql` and its 247 constraint tests.
+
+**Labels versus data (ADR-070):** screens say "Symptom(s)" and "Released to"; the data keeps `complaint`, the extra complaints (`visit_extra_complaints`) and `collected_by_name`, `collected_by_relationship`, `collected_by_time`. No column is renamed. When the relationship is "Other", the frontend sends who it was as the relationship text (for example "Neighbour"), never the word "Other".
+
 **Updated Thursday, November 05, 2026 — 01:33 PHT:** `students` and `personnel` store `first_name`, `last_name` and an optional `middle_name` instead of `full_name` ([ADR-064](../../06-Decisions/ADR-064-Names-Stored-As-First-Last-And-Middle-Name.md), which follows this approved ERD and settles D-15); compared with `Reference-Schema.sql` and its constraint tests.
 
 **Updated Sunday, November 1, 2026 — 01:55 PHT with the answers of ADR-057 and the gaps of `ERD-Review.md`.** Written by hand and compared with `Reference-Schema.sql`, which loads on MariaDB 10.11 and passes `Checks/constraint-tests.sql`.
@@ -56,8 +60,11 @@ How to read it: **Tier** is `Core` (a built screen or the mock already needs it)
 | 42 | [`inventory_transaction_batches`](#inventory_transaction_batches) | InventoryTracker | Core | Which batches a stock movement touched (ADR-030). |
 | 43 | [`backup_locations`](#backup_locations) | BackupVerification | Core | Where backups go (ADR-052). |
 | 44 | [`backup_location_results`](#backup_location_results) | BackupVerification | Core | One backup run's result per location (ADR-052). |
+| 45 | [`inventory_item_symptom_tags`](#inventory_item_symptom_tags) | InventoryTracker | Core | The symptoms an item is commonly used for, which order the Visit form's picker (ADR-071). |
+| 46 | [`school_years`](#school_years) | Shared | Core | School years, started and ended by hand by Staff (ADR-072, ADR-075). |
+| 47 | [`recovery_codes`](#recovery_codes) | UserManagement | Core | One-time recovery codes for password recovery, slow-hashed (ADR-073). |
 
-Sanctum's `personal_access_tokens` migration is not published, since no API tokens are issued (ADR-056). Laravel's own `migrations` table and `password_reset_tokens` table (`users.email` reset, ADR-048 item 3) are standard and not redefined here.
+Sanctum's `personal_access_tokens` migration is not published, since no API tokens are issued (ADR-056). Laravel's own `migrations` table is standard and not redefined here. Its `password_reset_tokens` table is **not needed**: the email reset of ADR-048 item 3 is replaced by the authenticator recovery of ADR-073 (Saturday, November 07, 2026 — 13:24 PHT); the one-time reset token after a code is short-lived and kept in the cache, not a table.
 
 ## users
 
@@ -72,7 +79,6 @@ Accounts for Staff and Admin/Principal. Never hard-deleted: a leaver is deactiva
 | `id` **PK** | `bigint unsigned` | no |  |  |
 | `name` | `varchar(120)` | no |  |  |
 | `username` | `varchar(50)` | no |  | Case-insensitive unique (collation). Login looks up by username, so a duplicate could never sign in. Stays reserved after deactivation. |
-| `email` | `varchar(190)` | yes | NULL | For the email password reset (ADR-048). Whether it is unique is in `ERD-Review.md`. |
 | `profile_picture` | `mediumtext` | yes | NULL | Data URL, as the mock stores it (G2); a file path once uploads exist. Never on a list. |
 | `password_hash` | `varchar(255)` | no |  | bcrypt/argon hash from Laravel `Hash`. Never returned by any API. |
 | `role` | `varchar(12)` | no |  | `staff` / `admin`. PE/Sports Instructors have no account (ADR-029). A further value (`canteen`) is an additive CHECK change later. |
@@ -83,10 +89,15 @@ Accounts for Staff and Admin/Principal. Never hard-deleted: a leaver is deactiva
 | `locked_until` | `datetime` | yes | NULL | Set to now + `lockout_minutes` (30) when the limit is hit. Login refuses while in the future. |
 | `last_login_at` | `datetime` | yes | NULL |  |
 | `deactivated_at` | `datetime` | yes | NULL | Non-null = cannot log in. Rows are kept forever. |
+| `totp_secret` | `text` | yes | NULL | The authenticator secret (ADR-073), **encrypted at rest** by the application (Laravel `Crypt`; the key is in the environment, not the database, `Environment-Setup.md`). Stored only once the first code confirms the setup; the secret and otpauth URI are returned once, at setup, and never again. NULL = not set up. |
+| `totp_confirmed_at` | `datetime` | yes | NULL | When the setup was confirmed. Set together with `totp_secret`. |
+| `last_totp_step` | `bigint unsigned` | yes | NULL | The 30-second step of the last accepted code, so the same code is never accepted twice (replay). |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
 
-**Indexes:** UNIQUE `uq_users_username` (`username`); UNIQUE `uq_users_email` (`email`)
+**Indexes:** UNIQUE `uq_users_username` (`username`). (`email` and `uq_users_email` removed Saturday, November 07, 2026 — 13:24 PHT: they existed only for the email reset that ADR-073 replaces; no account needs an email.)
+
+**Authenticator (ADR-073):** codes are RFC 6238, SHA-1, 30-second steps, 6 digits, one step either way. Recovery: check the username, then a code or a recovery code, then the new password by the Change Password rules; every failed check or code counts toward the sign-in lockout (`failed_login_count`, `locked_until`). An unknown username is limited by the rate limiter only.
 
 **Checks:**
 
@@ -94,6 +105,8 @@ Accounts for Staff and Admin/Principal. Never hard-deleted: a leaver is deactiva
 - `chk_users_name_len`: `char_length(trim(name)) >= 1`
 - `chk_users_role`: `role in ('staff','admin')`
 - `chk_users_username_len`: `char_length(trim(username)) >= 3`
+- `chk_users_totp`: `(totp_secret is null) = (totp_confirmed_at is null)`
+- `chk_users_totp_step`: `last_totp_step is null or totp_secret is not null`
 
 ## password_histories
 
@@ -136,6 +149,10 @@ Tunable thresholds and policy numbers that the requirements leave open, so chang
 **Checks:**
 
 - `chk_settings_type`: `value_type in ('int','decimal','string','bool')`
+- `chk_settings_school_year_month`: the two school-year month keys hold a whole number 1 to 12
+- `chk_settings_school_year_day`: the two school-year day keys hold a whole number 1 to 31
+
+**School-year settings (ADR-072, ADR-075):** `school_year_start_month` 6, `school_year_start_day` 15, `school_year_end_month` 4, `school_year_end_day` 14 (the Principal, October 17, 2026), and `school_year_notice_days` 7 (a starting value; the nurse to confirm). Staff edit them; the Admin reads; each change is audited by field name ("Updated start month and start day"). They give only the **due** days: ending is due on the last class day, starting on the start day, and the Dashboard reminds Staff from `school_year_notice_days` before. They never start or end a year. A day must exist in its month (February counts 28) and the end may not equal the start: those span two rows, so the settings service checks them.
 
 ## reference_settings
 
@@ -294,12 +311,14 @@ The student record. The LRN identifies the student to people (masked on lists, A
 | `name_correction_reason` | `varchar(300)` | yes | NULL | The reason given for the latest name correction (at least 3 characters). Also written in the audit summary (ADR-058). |
 | `archived_at` | `datetime` | yes | NULL | Non-null = archived (hidden from default lists). Starts the 5-year retention clock. |
 | `archived_by_user_id` | `bigint unsigned` | yes | NULL |  |
+| `archive_reason` | `varchar(80)` | yes | NULL | Why it was archived (ADR-072): set with `archived_at`, required then, up to 80 characters. The manual Archive asks a reason from a short list plus Other ("Specify the reason"; a mid-year transfer is "Transferred"). The yearly student import writes "Not on the new list" (ADR-047). |
+| `archived_school_year` | `varchar(9)` | yes | NULL | The school year's label at archive time ("2026–2027", en dash), stored and never recomputed, so changing the school-year dates never moves the record (ADR-072). Filled from the current `school_years` row. |
 | `import_batch_id` | `bigint unsigned` | yes | NULL | Set when the record was created by a registrar import. |
 | `created_by_user_id` | `bigint unsigned` | yes | NULL |  |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
 
-**Indexes:** `idx_students_archived_at` (`archived_at`); `idx_students_grade_archived` (`grade_level_id`, `archived_at`); `idx_students_name` (`last_name`, `first_name`, `middle_name`); UNIQUE `uq_students_lrn` (`lrn`)
+**Indexes:** `idx_students_archived_at` (`archived_at`); `idx_students_archived_year` (`archived_school_year`, `archived_at`), for the Archive page; `idx_students_grade_archived` (`grade_level_id`, `archived_at`); `idx_students_name` (`last_name`, `first_name`, `middle_name`); UNIQUE `uq_students_lrn` (`lrn`)
 
 **Foreign keys:** `archived_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `import_batch_id` -> `student_import_batches`(`id`) ON DELETE RESTRICT; `created_by_user_id` -> `users`(`id`) ON DELETE RESTRICT; `grade_level_id` -> `grade_levels`(`id`) ON DELETE RESTRICT
 
@@ -312,6 +331,9 @@ The student record. The LRN identifies the student to people (masked on lists, A
 - `chk_students_middle_name`: `middle_name is null or char_length(trim(middle_name)) >= 1`
 - `chk_students_lrn`: `lrn regexp '^[0-9]{12}$'`
 - `chk_students_sex`: `sex is null or sex in ('female','male')`
+- `chk_students_archive_details`: `(archived_at is null) = (archive_reason is null) and (archived_at is null) = (archived_school_year is null)`: all three on an archived record, none on an active one (ADR-072)
+- `chk_students_archive_reason`: `archive_reason is null or char_length(trim(archive_reason)) >= 1`
+- `chk_students_archived_year`: `archived_school_year is null or archived_school_year regexp '^[0-9]{4}–[0-9]{4}$'`
 
 ## student_health_entries
 
@@ -451,6 +473,8 @@ Medicines and supplies with a maintained stock count. Stock changes only through
 
 **Indexes:** `idx_items_category` (`category`, `archived_at`); UNIQUE `uq_items_active_name` (`active_name`)
 
+**Commonly used for (ADR-071):** an item's symptom tags are rows of [`inventory_item_symptom_tags`](#inventory_item_symptom_tags).
+
 **Checks:**
 
 - `chk_items_category`: `category in ('medicine','supply')`
@@ -472,7 +496,7 @@ A routine clinic visit, about a student or a staff patient, exactly one (ADR-043
 | `grade_level_at_time` | `varchar(40)` | yes | NULL | The grade when saved (ADR-047). Null for a staff patient. |
 | `section_at_time` | `varchar(60)` | yes | NULL | The section when saved, when the student had one (ADR-047). |
 | `visited_at` | `datetime` | no |  | Philippine time. Editable (back-dated entry is real), but the service rejects a future time. `created_at` still records when it was typed. |
-| `complaint` | `varchar(150)` | no |  | Free text, stored in a known suggestion's spelling. Case-insensitive collation also keeps GROUP BY from splitting "Headache" / "headache". |
+| `complaint` | `varchar(150)` | no |  | Shown as "Symptom" (ADR-070; the column keeps its name). Free text, stored in a known suggestion's spelling. Case-insensitive collation also keeps GROUP BY from splitting "Headache" / "headache". |
 | `complaint_type_id` | `bigint unsigned` | yes | NULL | Set when the text matches a predefined type (drives the triage checklist). Nullable. |
 | `treatment_notes` | `text` | yes | NULL | Optional. Care that isn't stock. |
 | `disposition` | `varchar(22)` | no |  | `returned_to_class`, `resting_in_clinic` (panel review part 2, PROVISIONAL), `sent_home`, `referred_to_hospital`. |
@@ -484,7 +508,7 @@ A routine clinic visit, about a student or a staff patient, exactly one (ADR-043
 | `parent_guardian` | `varchar(120)` | yes | NULL | Logbook field, free text. |
 | `remarks` | `text` | yes | NULL | Logbook field, free text. |
 | `collected_by_name` | `varchar(120)` | yes | NULL | Sent home or Referred only (ADR-049). |
-| `collected_by_relationship` | `varchar(40)` | yes | NULL | ADR-049. |
+| `collected_by_relationship` | `varchar(40)` | yes | NULL | ADR-049. Shown as "Released to" (ADR-070). For "Other", the text is who it was (for example "Neighbour"), never the word "Other". |
 | `collected_by_time` | `time` | yes | NULL | ADR-049. |
 | `late_entry` | `tinyint(1)` | no | 0 | PROVISIONAL (panel review part 2). Set when `visited_at` is more than 30 minutes before `created_at`. |
 | `late_entry_reason` | `varchar(200)` | yes | NULL | PROVISIONAL. Optional reason for a late entry. |
@@ -852,7 +876,7 @@ Insert-only ledger of every stock movement. History is never rewritten: a correc
 | `visit_id` | `bigint unsigned` | yes | NULL | Composite FK with student_id, so the visit must be that student's. |
 | `incident_id` | `bigint unsigned` | yes | NULL |  |
 | `reason` | `varchar(20)` | yes | NULL | Adjustments only (CHECK). `visit_edited` is written only by a visit edit and needs a visit. |
-| `note` | `varchar(255)` | yes | NULL | Required when reason = other. |
+| `note` | `varchar(255)` | yes | NULL | Optional for every reason, Other included (ADR-068; it was required for Other until Saturday, November 07, 2026 — 13:33 PHT, counter-check C-2). |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 
 **Indexes:** `idx_txn_incident` (`incident_id`); `idx_txn_item_time` (`item_id`, `occurred_at`); `idx_txn_student_time` (`student_id`, `occurred_at`); `idx_txn_visit` (`visit_id`)
@@ -863,7 +887,6 @@ Insert-only ledger of every stock movement. History is never rewritten: a correc
 
 - `chk_txn_link_has_student`: `visit_id is null and incident_id is null or student_id is not null`
 - `chk_txn_one_link`: `visit_id is null or incident_id is null`
-- `chk_txn_other_note`: `reason <> 'other' or note is not null and char_length(trim(note)) > 0`
 - `chk_txn_reason`: `type = 'adjustment' and reason is not null and reason in ('visit_edited','expired_disposed','damaged_spilled','miscount_correction','other') or type <> 'adjustment' and reason is null`
 - `chk_txn_sign`: `type = 'opening' and quantity_delta >= 0 or type = 'dispense' and quantity_delta < 0 or type = 'restock' and quantity_delta > 0 or type = 'adjustment' and quantity_delta <> 0`
 - `chk_txn_type`: `type in ('opening','dispense','restock','adjustment')`
@@ -884,7 +907,7 @@ A saved Sports Report (ADR-034): a list of students the clinician prints for a P
 | `title` | `varchar(120)` | no |  | 1-120 characters. |
 | `activity` | `varchar(120)` | yes | NULL | For example "Palaro 2026, Boys Basketball". |
 | `requested_by` | `varchar(120)` | no |  | The instructor's name as typed; instructors have no account (ADR-029). |
-| `look_back` | `varchar(11)` | no | '90_days' | `30_days` / `60_days` / `90_days` / `school_year` (June 15 onward). |
+| `look_back` | `varchar(11)` | no | '90_days' | `30_days` / `60_days` / `90_days` / `school_year`: from the current school year's recorded start (`school_years.started_on`, ADR-075), no longer a fixed June 15. |
 | `include_conditions` | `tinyint(1)` | no | 0 | Print recorded conditions and allergies. Off by default. |
 | `archived_at` | `datetime` | yes | NULL | Archived reports are hidden from the list by default; never deleted. |
 | `created_by_user_id` | `bigint unsigned` | no |  |  |
@@ -1112,11 +1135,13 @@ A teacher, non-teaching staff member or utility worker seen at the clinic (ADR-0
 | `contact_number` | `varchar(60)` | yes | NULL |  |
 | `archived_at` | `datetime` | yes | NULL |  |
 | `archived_by_user_id` | `bigint unsigned` | yes | NULL |  |
+| `archive_reason` | `varchar(80)` | yes | NULL | Why it was archived (ADR-072): set with `archived_at`, required then, up to 80 characters. The manual Archive asks a reason from a short list plus Other ("Specify the reason"; a mid-year transfer is "Transferred"). Staff reasons: Resigned, Retired, End of contract, Transferred, Other. The staff import archives nobody (ADR-069), so it never writes these. |
+| `archived_school_year` | `varchar(9)` | yes | NULL | The school year's label at archive time ("2026–2027", en dash), stored and never recomputed, so changing the school-year dates never moves the record (ADR-072). Filled from the current `school_years` row. |
 | `created_by_user_id` | `bigint unsigned` | yes | NULL |  |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
 
-**Indexes:** UNIQUE KEY uq_personnel_staff_number (staff_number); KEY idx_personnel_name (last_name, first_name, middle_name); KEY idx_personnel_archived_at (archived_at)
+**Indexes:** UNIQUE KEY uq_personnel_staff_number (staff_number); KEY idx_personnel_name (last_name, first_name, middle_name); KEY idx_personnel_archived_at (archived_at); KEY idx_personnel_archived_year (archived_school_year, archived_at)
 
 **Checks:**
 
@@ -1126,6 +1151,9 @@ A teacher, non-teaching staff member or utility worker seen at the clinic (ADR-0
 
 The full name is built on read, sorted and searched as for `students` (ADR-064).
 - `chk_personnel_sex`: `sex in ('female','male')`
+- `chk_personnel_archive_details`: `(archived_at is null) = (archive_reason is null) and (archived_at is null) = (archived_school_year is null)`: all three on an archived record, none on an active one (ADR-072)
+- `chk_personnel_archive_reason`: `archive_reason is null or char_length(trim(archive_reason)) >= 1`
+- `chk_personnel_archived_year`: `archived_school_year is null or archived_school_year regexp '^[0-9]{4}–[0-9]{4}$'`
 
 ## personnel_health_entries
 
@@ -1258,7 +1286,7 @@ Which batches one stock movement touched, so a visit edit returns stock to the s
 
 **Module:** BackupVerification  |  **Tier:** Core
 
-A place backups are written to. Never deleted, only disabled (ADR-052).
+A place backups are written to. Never deleted, only disabled (ADR-052). **Never edited** either (Saturday, November 07, 2026 — 13:24 PHT, Round 3): to change one, add a new location and disable the old; the last enabled location cannot be disabled (R32). Because `label` never changes and the row is never deleted, a run's location names ("to USB, Internal drive") come from `backup_location_results` joined to `backup_locations`, so no names column is needed; the frontend's `locationNames` is that join.
 
 **Frontend:** `BackupLocation`.
 
@@ -1302,3 +1330,91 @@ One backup run's result at one location (ADR-052).
 **Checks:**
 
 - `chk_location_result_status`: `status IN ('ok','failed')`
+
+## inventory_item_symptom_tags
+
+**Module:** InventoryTracker  |  **Tier:** Core
+
+"Commonly used for": the visit symptom options an item is suggested for (ADR-071, Saturday, November 07, 2026 — 13:24 PHT). They only put the item first in the Visit form's picker under "Suggested for these symptoms"; they never block or hide an item, and the clinician decides.
+
+**Frontend:** `InventoryItem.usedFor` (a list of option ids, which are the visit complaint-type labels).
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` **PK** | `bigint unsigned` | no |  |  |
+| `item_id` | `bigint unsigned` | no |  |  |
+| `complaint_type_id` | `bigint unsigned` | no |  | A complaint type used in visits (`used_in_visits = 1`; the service checks it). |
+
+**Indexes:** UNIQUE KEY uq_item_symptom_tag (item_id, complaint_type_id); KEY idx_item_symptom_tags_type (complaint_type_id)
+
+**Foreign keys:** `item_id` -> `inventory_items`(`id`) ON DELETE CASCADE; `complaint_type_id` -> `complaint_types`(`id`) ON DELETE RESTRICT
+
+**Rules:** optional; no repeats (the unique key); unknown values are refused (the foreign key, and the service for a type not used in visits); returned in the option list's order (`complaint_types.sort_order`), so the table has no order column. Staff edit it on the item form; a save that leaves `usedFor` out keeps the existing tags. Audit: `update inventory`, "Updated commonly used for" (the field name only). Starter tags in the frontend seed (paracetamol: Headache, Fever; mefenamic acid: Menstrual cramps, Toothache; loperamide: Stomachache) are for the nurse to confirm and are not seeded here.
+
+## school_years
+
+**Module:** Shared  |  **Tier:** Core
+
+School years, started and ended by hand by Staff (ADR-072, ADR-075, Saturday, November 07, 2026 — 13:24 PHT). A year never starts or ends by itself: the settings only say when each step is due.
+
+**Frontend:** `config.schoolYearStarts` (`label`, `startedOn`, `startedBy`, `endedOn?`, `endedBy?`).
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` **PK** | `bigint unsigned` | no |  |  |
+| `label` | `varchar(9)` | no |  | "2026–2027" (en dash), the next in sequence. |
+| `started_on` | `date` | no |  | The day Staff pressed Start school year. |
+| `started_by_user_id` | `bigint unsigned` | no |  | A Staff account. |
+| `ended_on` | `date` | yes | NULL | The last class day, the day Staff pressed End school year. NULL while in session. |
+| `ended_by_user_id` | `bigint unsigned` | yes | NULL | Set together with `ended_on`. |
+| `created_at` | `datetime` | no | current_timestamp() |  |
+| `updated_at` | `datetime` | no | current_timestamp() |  |
+| `in_session` | `tinyint(1)` generated | yes | = if(`ended_on` is null,1,NULL) | Unique, so at most one year is in session. |
+
+**Indexes:** UNIQUE KEY uq_school_years_label (label); UNIQUE KEY uq_school_years_started_on (started_on); UNIQUE KEY uq_school_years_one_in_session (in_session)
+
+**Foreign keys:** `started_by_user_id`, `ended_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
+
+**Checks:**
+
+- `chk_school_years_label`: `label regexp '^[0-9]{4}–[0-9]{4}$'` and the second year is the first plus one
+- `chk_school_years_ended_after_start`: `ended_on is null or ended_on >= started_on`
+- `chk_school_years_ended_pair`: `(ended_on is null) = (ended_by_user_id is null)`
+
+**Rules (service and `db:verify`, since they span rows):** rows in `started_on` order, one per label, labels rising a year at a time; every year but the latest is ended before the next starts.
+
+- **Current year:** the latest row, never derived from today's date. A date before the first recorded start falls back to the date settings.
+- **End school year** (Staff only): today becomes the last class day (`ended_on`), and the break begins the next day. A year cannot be ended twice. Audit: `update school-year`, "Ended school year YYYY–YYYY".
+- **Start school year** (Staff only): refused while the current year is in session ("End school year YYYY–YYYY first."), refused on the day the year was ended ("Start the next one from tomorrow."), and refused twice on one day. The new year begins today; the old year and its break end the day before. Audit: `create school-year`, "Started school year YYYY–YYYY".
+- No undo. The Admin reads only.
+- **A date's school year:** from a row's `started_on` to the day before the next row's `started_on`. The break belongs to the ended year, and records made in it count there. Reports, the Archive's audit tab and the Sports Report window take their year this way; only archived records store a label.
+- **Reminders (Staff only):** in session, ending is due on the last-class-day setting of that year; after the end, starting is due on the first start-day setting after `ended_on`. From `school_year_notice_days` (7) before the due day it is "coming up"; after it, "overdue". The Admin gets none.
+
+**Seed:** the B1 seeder mirrors the frontend seed once the first Staff account exists (accounts are not seeded here): 2025–2026 started June 16, 2025 and ended April 14, 2026; 2026–2027 started June 15, 2026.
+
+## recovery_codes
+
+**Module:** UserManagement  |  **Tier:** Core
+
+One-time recovery codes for password recovery when the phone is lost (ADR-073, Saturday, November 07, 2026 — 13:24 PHT).
+
+**Frontend:** `DevAccount.authenticator.recoveryCodeHashes` (the mock uses SHA-256; the backend uses a slow hash).
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` **PK** | `bigint unsigned` | no |  |  |
+| `user_id` | `bigint unsigned` | no |  |  |
+| `code_hash` | `varchar(255)` | no |  | A **slow hash** (bcrypt or argon2 through Laravel `Hash`), never the code. Codes look like "ABCD-EFGH"; compare upper-cased. |
+| `created_at` | `datetime` | no | current_timestamp() |  |
+| `used_at` | `datetime` | yes | NULL | Set when the code is used; a used code is never accepted again. |
+
+**Indexes:** UNIQUE KEY uq_recovery_codes_hash (code_hash); KEY idx_recovery_codes_user (user_id, used_at)
+
+**Foreign keys:** `user_id` -> `users`(`id`) ON DELETE CASCADE
+
+**Checks:**
+
+- `chk_recovery_codes_used`: `used_at is null or used_at >= created_at`
+
+**Rules:** 8 per set, shown once, at setup. Replacing the authenticator deletes the old set and makes a new one, and turning it off deletes the set. Using one is audited "Used a recovery code" (the user only, never the code).
+
