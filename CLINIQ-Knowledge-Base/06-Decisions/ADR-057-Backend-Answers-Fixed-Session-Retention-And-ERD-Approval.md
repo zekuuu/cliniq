@@ -1,3 +1,5 @@
+> **Note Saturday, November 07, 2026 — 16:15 PHT:** The approved ERD (item 10) gains a 48th table, `staff_record_reviews`, through [ADR-076](ADR-076-Staff-Record-Reviews-In-Their-Own-Table.md). The decision text below is unchanged.
+
 # ADR-057: Backend answers: fixed 7-day session, new error codes, deferred HTTPS, masked LRN, retention, and the ERD approved
 
 **Date:** Sunday, November 1, 2026 — 01:55 PHT

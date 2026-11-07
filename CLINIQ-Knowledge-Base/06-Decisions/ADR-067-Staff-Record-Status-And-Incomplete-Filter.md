@@ -1,3 +1,5 @@
+> **Note Saturday, November 07, 2026 — 16:15 PHT:** The backend stores the staff review queue (item 6) in its own table, `staff_record_reviews`, [ADR-076](ADR-076-Staff-Record-Reviews-In-Their-Own-Table.md). The decision text below is unchanged.
+
 # ADR-067: Staff records have a record status and their own Incomplete Records page
 
 **Date:** Thursday, November 05, 2026 — 21:19 PHT

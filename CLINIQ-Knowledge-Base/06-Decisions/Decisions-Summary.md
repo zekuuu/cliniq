@@ -301,3 +301,7 @@ Reports keeps four tabs: Monthly Report, Incident register, Symptom summary, Inv
 ### ADR-075: Staff start each school year by hand
 
 Staff end a school year by hand ("End school year": today is the last class day, then the break) and start the next by hand after the break ("Start school year"); nothing changes by itself. The date settings give both due days. Staff get a short Dashboard banner 7 days before each, which turns to a warning once overdue. Records made in the break stay in the ended year. Each start is stored and audited. Amends ADR-072. [ADR-075](ADR-075-School-Year-Started-By-Hand.md)
+
+### ADR-076: Staff record reviews live in their own table
+
+The staff Incomplete Records queue (ADR-067) gets its own table, `staff_record_reviews` (`staff_id` to `personnel`, CASCADE). It mirrors the student review table without the import columns, and keeps one open review per staff record. Rows open and resolve on the staff save and import; there is no flag endpoint. A shared table and reusing the student table were rejected. Settles counter-check C-1. [ADR-076](ADR-076-Staff-Record-Reviews-In-Their-Own-Table.md)
