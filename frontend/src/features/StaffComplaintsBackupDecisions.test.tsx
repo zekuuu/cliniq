@@ -53,7 +53,7 @@ describe('Staff wording, extra complaints and backup locations', () => {
     expect(after.find((row) => row.complaint === 'Headache')?.count ?? 0).toBe(before.find((row) => row.complaint === 'Headache')?.count ?? 0)
 
     renderWithRouter(<VisitDetailPage visitId={visit.id} />)
-    expect(await screen.findByRole('heading', { name: 'Other complaints' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Other symptoms' })).toBeInTheDocument()
     expect(screen.getByText('Headache, Chills')).toBeInTheDocument()
   })
 
@@ -70,8 +70,8 @@ describe('Staff wording, extra complaints and backup locations', () => {
     const { ExtraComplaintsField } = await import('./clinic-visits/ExtraComplaintsField')
     renderWithRouter(<ExtraComplaintsField value={['Headache', 'Chills', 'Dizziness']} onChange={() => {}} main="Fever" suggestions={['Toothache']} />)
     // A dropdown like the Complaint field (Zean, November 5, 2026): full, it's disabled and says why.
-    expect(screen.getByRole('button', { name: /^Other complaints/ })).toBeDisabled()
-    expect(screen.getByText('Up to 3. Remove one to add another. Reports count the main complaint only.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Other symptoms/ })).toBeDisabled()
+    expect(screen.getByText('Up to 3. Remove one to add another. Reports count only the symptom above.')).toBeInTheDocument()
   })
 
   it('adds a picked suggestion with Add, and a typed one through Other', async () => {
@@ -79,13 +79,13 @@ describe('Staff wording, extra complaints and backup locations', () => {
     const { ExtraComplaintsField } = await import('./clinic-visits/ExtraComplaintsField')
     let value: string[] = []
     const { rerender } = renderWithRouter(<ExtraComplaintsField value={value} onChange={(next) => (value = next)} main="Fever" suggestions={['Toothache', 'Fever']} />)
-    await selectOption(user, screen.getByRole('button', { name: /^Other complaints/ }), 'Toothache')
+    await selectOption(user, screen.getByRole('button', { name: /^Other symptoms/ }), 'Toothache')
     expect(value).toEqual([])
     await user.click(screen.getByRole('button', { name: 'Add' }))
     expect(value).toEqual(['Toothache'])
     rerender(<ExtraComplaintsField value={value} onChange={(next) => (value = next)} main="Fever" suggestions={['Toothache', 'Fever']} />)
-    await selectOption(user, screen.getByRole('button', { name: /^Other complaints/ }), 'Other (type your own)')
-    await user.type(screen.getByLabelText(/^Specify other complaint/), 'Rash{Enter}')
+    await selectOption(user, screen.getByRole('button', { name: /^Other symptoms/ }), 'Other (type your own)')
+    await user.type(screen.getByLabelText(/^Specify other symptom/), 'Rash{Enter}')
     expect(value).toEqual(['Toothache', 'Rash'])
   })
 
@@ -118,18 +118,17 @@ describe('Staff wording, extra complaints and backup locations', () => {
     expect(staff.counts.split.incidents.staff).toBeGreaterThan(0)
   })
 
-  it('adds, edits and disables a backup location, each audited, never deletes it, and backs up to each enabled one', async () => {
+  // A location is never edited (professor's consultation, November 6, 2026): add a new one, disable the old.
+  it('adds and disables a backup location, each audited, never edits or deletes it, and backs up to each enabled one', async () => {
     const added = await saveBackupLocation({ label: 'USB stick', path: 'F:\\' }, { actor: STAFF })
-    await saveBackupLocation({ label: 'USB stick (blue)', path: 'F:\\' }, { id: added.id, actor: STAFF })
     await setBackupLocationEnabled(added.id, false, STAFF)
     const entries = getRecordedAuditEntries().filter((entry) => entry.targetRecord?.type === 'backup-location')
     expect(entries.map((entry) => [entry.actionType, entry.summary])).toEqual([
       ['create', undefined],
-      ['update', 'Updated label'],
       ['update', 'Disabled'],
     ])
     const { locations } = await listBackupLocations()
-    expect(locations.find((location) => location.id === added.id)).toMatchObject({ label: 'USB stick (blue)', enabled: false })
+    expect(locations.find((location) => location.id === added.id)).toMatchObject({ label: 'USB stick', enabled: false })
     expect('deleteBackupLocation' in (await import('../lib/mock-db'))).toBe(false)
 
     await recordBackupNow(STAFF)

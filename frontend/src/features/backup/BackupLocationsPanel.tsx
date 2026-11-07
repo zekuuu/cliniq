@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Badge, Button, Card, CardBody, CardHeader, Combobox, Icon, Modal } from '../../components'
 import { formatDateTime } from '../../lib/dates'
+import { useSaveFeedback } from '../../hooks/useSaveFeedback'
+import { SaveFeedback } from '../../components/forms/SaveFeedback'
 import type { BackupLocation, BackupLocationSettings, SessionUser } from '../../lib/mock-db'
 import { fetchBackupFolders, saveLocation, setLocationEnabled, type BackupDrive } from './api/backupApi'
 
@@ -20,8 +22,9 @@ const BACKUP_FOLDERS = [
 ]
 
 /**
- * Backup locations (ADR-052): the clinician chooses, adds and edits where backups go; a location is
- * never deleted, only disabled. Every change is audited by the data layer.
+ * Backup locations (ADR-052): the clinician chooses and adds where backups go; a location is never
+ * deleted, only disabled, and never edited (professor's consultation, November 6, 2026): to change
+ * one, add a new location and disable the old one. Every change is audited by the data layer.
  */
 export function BackupLocationsPanel({
   settings,
@@ -33,17 +36,17 @@ export function BackupLocationsPanel({
   onChanged: () => void
 }) {
   const canManage = viewer.role === 'staff'
-  const [editing, setEditing] = useState<BackupLocation | 'new' | null>(null)
+  const [adding, setAdding] = useState(false)
   const [label, setLabel] = useState('')
   const [path, setPath] = useState('')
   const [error, setError] = useState('')
-  const [saving, setSaving] = useState(false)
+  const feedback = useSaveFeedback()
   const enabled = settings.locations.filter((location) => location.enabled)
 
-  function open(target: BackupLocation | 'new') {
-    setEditing(target)
-    setLabel(target === 'new' ? '' : target.label)
-    setPath(target === 'new' ? '' : target.path)
+  function open() {
+    setAdding(true)
+    setLabel('')
+    setPath('')
     setError('')
   }
 
@@ -53,14 +56,10 @@ export function BackupLocationsPanel({
       setError('Enter a label and choose a drive or folder.')
       return
     }
-    setSaving(true)
-    try {
-      await saveLocation({ label, path }, { id: editing === 'new' || !editing ? undefined : editing.id, actor: viewer })
-      setEditing(null)
-      onChanged()
-    } finally {
-      setSaving(false)
-    }
+    const result = await feedback.run(() => saveLocation({ label, path }, { actor: viewer }), { saved: `${label.trim()} added. Backups now go there too.` })
+    if (!result.ok) return
+    setAdding(false)
+    onChanged()
   }
 
   async function toggle(location: BackupLocation) {
@@ -74,11 +73,13 @@ export function BackupLocationsPanel({
       <CardHeader
         titleId="backup-locations-title"
         title="Backup locations"
-        description="Each backup is written to every enabled location. Locations are disabled, never deleted."
+        description="Each backup is written to every enabled location. To change a location, add a new one and disable the old one; old backups stay where they were."
         icon={<Icon name="package" />}
-        actions={canManage && <Button variant="secondary" size="sm" onClick={() => open('new')}>Add location</Button>}
+        actions={canManage && <Button variant="secondary" size="sm" onClick={open}>Add location</Button>}
       />
       <CardBody className="flex flex-col gap-4">
+        {/* The modal closes on success, so the confirmation shows here; a failure shows in the modal. */}
+        {!adding && <SaveFeedback result={feedback.result} />}
         {!enabled.length && (
           <p role="alert" className="flex items-start gap-2 rounded-md border border-error bg-error/10 px-3 py-2 text-sm font-semibold text-text-primary">
             <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-error" />
@@ -109,7 +110,6 @@ export function BackupLocationsPanel({
               </div>
               {canManage && (
                 <div className="flex shrink-0 gap-2">
-                  <Button size="sm" variant="neutral" aria-label={`Edit ${location.label}`} onClick={() => open(location)}>Edit</Button>
                   <Button
                     size="sm"
                     variant="secondary"
@@ -141,7 +141,7 @@ export function BackupLocationsPanel({
           <p className="mt-3 text-sm text-text-secondary">Keeps the latest {settings.keepLast} backups per location; older ones are removed.</p>
         </section>
       </CardBody>
-      <Modal open={editing !== null} title={editing === 'new' ? 'Add a backup location' : 'Edit backup location'} onClose={() => setEditing(null)}>
+      <Modal open={adding} title="Add a backup location" onClose={() => setAdding(false)}>
         <form noValidate onSubmit={save} className="flex flex-col gap-4">
           <Combobox
             label="Label"
@@ -157,9 +157,10 @@ export function BackupLocationsPanel({
             error={error && !label.trim() ? error : undefined}
           />
           <FolderPicker value={path} onChange={setPath} error={error && !path.trim() ? 'Choose a drive or folder.' : undefined} />
+          {feedback.result?.kind === 'failed' && <SaveFeedback result={feedback.result} />}
           <div className="flex flex-wrap justify-end gap-2">
-            <Button variant="neutral" data-autofocus onClick={() => setEditing(null)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={saving}>Save location</Button>
+            <Button variant="neutral" data-autofocus onClick={() => setAdding(false)}>Cancel</Button>
+            <Button type="submit" variant="primary" loading={feedback.saving}>Save location</Button>
           </div>
         </form>
       </Modal>

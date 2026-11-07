@@ -48,7 +48,7 @@ export function fetchBackupLocations(): Promise<BackupLocationSettings> {
   return listBackupLocations()
 }
 
-export function saveLocation(input: BackupLocationInput, options: { id?: string; actor?: SessionUser }): Promise<BackupLocation> {
+export function saveLocation(input: BackupLocationInput, options: { actor?: SessionUser }): Promise<BackupLocation> {
   return saveBackupLocation(input, options)
 }
 
