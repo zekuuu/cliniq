@@ -95,7 +95,7 @@ describe('every audited event is written (AU-1)', () => {
     const created = await saveStudent(input, { actor: STAFF, confirmDuplicate: true })
     if (created.status !== 'saved') throw new Error('not saved')
     await saveStudent({ ...input, lastName: 'Pupil B' }, { studentId: created.student.id, actor: STAFF, nameCorrectionReason: 'Typo in the surname' })
-    await archiveStudent(created.student.id, STAFF)
+    await archiveStudent(created.student.id, STAFF, 'Transferred')
     expect(entries().map(([action, type]) => [action, type])).toEqual([
       ['create', 'student'],
       ['update', 'student'],

@@ -35,6 +35,14 @@
     "backupKeepLast": 60,
     "unusualAgeYears": 3,
     "largeWriteOffPercent": 25,
+    "schoolYearStartMonth": 6,
+    "schoolYearStartDay": 15,
+    "schoolYearEndMonth": 4,
+    "schoolYearEndDay": 14,
+    "schoolYearStarts": [
+      { "label": "2025–2026", "startedOn": "2025-06-16", "startedBy": "user-staff-01", "endedOn": "2026-04-14", "endedBy": "user-staff-01" },
+      { "label": "2026–2027", "startedOn": "2026-06-15", "startedBy": "user-staff-01" }
+    ],
     "vitalsUsualRanges": {
       "_note": "Starting ranges, nurse to confirm (ADR-051): common normal ranges by age group. The group follows the age when the student has a birthdate (ADR-054): grades1to6FromAge and grades7to12FromAge are starting values, nurse to confirm. With no birthdate the grade picks it; staff are adults. A reading outside them gets a soft note on the Visit and Incident forms and never blocks. The fever flag stays at vitalsWarningRanges.feverFromC.",
       "temperatureMinC": 36,
@@ -1043,7 +1051,7 @@
           "verified": true
         }
       ],
-      "archived": true
+      "archived": true, "archivedAt": "2026-06-15T10:00:00+08:00", "archiveReason": "Not on the new list", "archivedSchoolYear": "2026–2027"
     },
     {
       "id": "student-0050",
@@ -1063,7 +1071,7 @@
           "verified": false
         }
       ],
-      "archived": true
+      "archived": true, "archivedAt": "2026-06-15T10:00:00+08:00", "archiveReason": "Not on the new list", "archivedSchoolYear": "2026–2027"
     },
     {
       "id": "student-0051",
@@ -1083,7 +1091,7 @@
           "verified": true
         }
       ],
-      "archived": true
+      "archived": true, "archivedAt": "2026-09-14T14:30:00+08:00", "archiveReason": "Transferred", "archivedSchoolYear": "2026–2027"
     },
     {
       "id": "student-0052",
@@ -1103,7 +1111,7 @@
           "verified": true
         }
       ],
-      "archived": true
+      "archived": true, "archivedAt": "2026-03-20T09:00:00+08:00", "archiveReason": "Transferred", "archivedSchoolYear": "2025–2026"
     }
   ],
   "personnel": [
@@ -1355,7 +1363,7 @@
           "verified": true
         }
       ],
-      "archived": true
+      "archived": true, "archivedAt": "2026-07-31T15:00:00+08:00", "archiveReason": "Resigned", "archivedSchoolYear": "2026–2027"
     }
   ],
   "visits": [
@@ -5679,7 +5687,9 @@
       "unit": "tablets",
       "expirationDate": { "daysFromNow": 210 },
       "lowStockThreshold": 50,
-      "brand": null
+      "brand": null,
+      "usedFor": ["Headache", "Fever"],
+      "_note": "Starter tags, to be confirmed by the clinician. Suggestions only; they never hide or block an item."
     },
     {
       "id": "item-0002",
@@ -5689,7 +5699,9 @@
       "unit": "capsules",
       "expirationDate": { "daysFromNow": 18 },
       "lowStockThreshold": 30,
-      "brand": null
+      "brand": null,
+      "usedFor": ["Menstrual cramps", "Toothache"],
+      "_note": "Starter tags, to be confirmed by the clinician. Suggestions only; they never hide or block an item."
     },
     {
       "id": "item-0003",
@@ -5719,7 +5731,9 @@
       "unit": "capsules",
       "expirationDate": { "daysFromNow": 95 },
       "lowStockThreshold": 10,
-      "brand": null
+      "brand": null,
+      "usedFor": ["Stomachache"],
+      "_note": "Starter tags, to be confirmed by the clinician. Suggestions only; they never hide or block an item. The symptom list has no LBM option yet; Stomachache stands in."
     },
     {
       "id": "item-0006",

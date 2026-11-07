@@ -1,3 +1,4 @@
+import { SYMPTOM } from '../labels'
 import type { FollowUpDueState } from '../../components/status/followUp'
 import type { InventoryFlag } from '../../components/status/inventory'
 import { addDays, diffDays, formatDateTime, isWithin } from '../dates'
@@ -47,6 +48,7 @@ export const auditTargetTypes = [
   'sports-report',
   'staff',
   'backup-location',
+  'school-year',
 ] as const
 
 export type AuditTargetType = (typeof auditTargetTypes)[number]
@@ -124,13 +126,14 @@ const AUDIT_RECORD_KINDS: Record<string, string> = {
   'sports-report': 'Sports Report',
   staff: 'Staff',
   'backup-location': 'Backup location',
+  'school-year': 'School year',
   'print-document': 'Printed document',
 }
 
 const REPORT_NAMES: Record<string, string> = {
   monthly: 'Monthly report',
   incident: 'Incident register',
-  health_summary: 'Complaint summary',
+  health_summary: `${SYMPTOM} summary`,
 }
 
 /**
@@ -180,6 +183,7 @@ function auditTargetIdentifier(lookups: ReturnType<typeof auditLookups>, target:
   if (type === 'user') return { label: state.users.find((user) => user.id === target.id)?.name ?? '' }
   if (type === 'sports-report') return { label: state.frontendOnly.sportsReports.find((report) => report.id === target.id)?.title ?? '' }
   if (type === 'calendar-event') return { label: state.frontendOnly.calendarEvents.find((event) => event.id === target.id)?.title ?? '' }
+  if (type === 'school-year') return { label: 'School year dates' }
   if (type === 'backup-location') return { label: state.frontendOnly.backupLocations.find((location) => location.id === target.id)?.label ?? '' }
   if (target.type === 'report') return { label: REPORT_NAMES[target.id] ?? '' }
   if (target.type === 'print-document') return { label: target.id }

@@ -177,6 +177,8 @@ export interface DashboardSummary {
    * failed, or the last successful one is older than `config.staleBackupHours`. Both roles see it.
    */
   backupAlert: BackupAlert | null
+  /** Staff only: ending the current school year, or starting the next, is due by the dates and not done (Zean, November 7, 2026). */
+  schoolYearReminder?: { kind: 'end' | 'start'; label: string; dueOn: string; overdue: boolean } | null
   inventoryAlerts: InventoryAlertRow[]
   complaintTrends: ComplaintTrends
   demographics: DemographicAnalysis

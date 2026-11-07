@@ -46,6 +46,14 @@ export interface Student {
   recordComplete: boolean
   /** Archived students stay in the database but are excluded from active lists by default. */
   archived: boolean
+  /**
+   * Why, when and in which school year the record was archived (professor's consultation, November 6,
+   * 2026). The school year is stored, not derived, so a later change of the school-year dates never
+   * moves an old record. Absent while active. PROVISIONAL, pending the ERD.
+   */
+  archivedAt?: ISODateTime | null
+  archiveReason?: string | null
+  archivedSchoolYear?: string | null
 }
 
 /**
@@ -91,6 +99,14 @@ export interface Personnel {
   /** Ordered; the first is the primary. May be empty: staff need none to be saved. */
   emergencyContacts: EmergencyContact[]
   archived: boolean
+  /**
+   * Why, when and in which school year the record was archived (professor's consultation, November 6,
+   * 2026). The school year is stored, not derived, so a later change of the school-year dates never
+   * moves an old record. Absent while active. PROVISIONAL, pending the ERD.
+   */
+  archivedAt?: ISODateTime | null
+  archiveReason?: string | null
+  archivedSchoolYear?: string | null
 }
 
 /** One result of a deliberate staff search: enough to tell people apart, nothing medical. */
@@ -355,6 +371,12 @@ export interface InventoryItem {
    * warning at the medicine pickers; it never blocks (ADR-018). PROVISIONAL, pending the ERD.
    */
   avoidIfAllergicTo?: string[]
+  /**
+   * "Commonly used for": symptom options (visit complaint-type labels, the option ids) the Staff set.
+   * The Visit form's picker lists matching items first and never hides or blocks the rest (consultation,
+   * November 6, 2026). Optional; missing means no tags. PROVISIONAL, pending the ERD.
+   */
+  usedFor?: string[]
   /** @deprecated Derived on `InventoryItemView`; retained only for transition compatibility. */
   currentStock?: number
   /** @deprecated Derived on `InventoryItemView`; retained only for transition compatibility. */
@@ -375,6 +397,8 @@ export interface BackupLog {
   fileSizeBytes: number
   status: 'ok' | 'failed'
   verifiedByUserId: string | null
+  /** The backup locations' labels as they were when this run wrote to them. Absent on older runs. PROVISIONAL, pending the ERD. */
+  locationNames?: string[]
 }
 
 /**
