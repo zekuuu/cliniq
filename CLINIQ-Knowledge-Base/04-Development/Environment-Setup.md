@@ -112,3 +112,26 @@ schtasks /Create /TN "CLINIQ Scheduler" /SC MINUTE /MO 1 /RU <clinic account> /R
 ```
 
 It will carry the holiday sync (ADR-020) and the backup status (ADR-039, ADR-052). The Foundation adds no scheduled job, so the task is not needed until those phases. A computer that is off misses the minute; each job must therefore catch up on its next run rather than assume it ran.
+
+## Authenticator recovery: the encryption key and the Administrator's break-glass
+
+Added Saturday, November 07, 2026 — 13:24 PHT for [ADR-073](../06-Decisions/ADR-073-Password-Recovery-With-An-Authenticator-App.md). Nothing here is built before phase B2.
+
+**The key.** `users.totp_secret` is encrypted with Laravel `Crypt`, which uses `APP_KEY` in `backend/.env`. The key lives in the environment, never in the database or the repository. If it is lost, every authenticator stops working and has to be set up again. If it leaks with a database copy, the secrets can be read. So:
+
+- Keep `APP_KEY` out of the database backups. A copy goes with the clinic's sealed handover papers, and nowhere on the backup drives in plain text. Who holds it is a `DECIDE` in `Backend-Issues-and-TODOs.md`.
+- Never run `php artisan key:generate` on the clinic computer once accounts exist: it would break every authenticator and every session. To rotate the key, use Laravel's `APP_PREVIOUS_KEYS`.
+
+**Break-glass for the Administrator.** Nobody in the app can reset the Administrator's password (ADR-033, ADR-073). The Administrator sets up the authenticator at handover and keeps the 8 recovery codes. If the password, the phone and the codes are all lost, someone at the clinic computer with Windows access to `C:\CLINIQ\backend` runs this offline:
+
+```bat
+"C:\xampp\php\php.exe" "C:\CLINIQ\backend\artisan" cliniq:reset-admin-password
+```
+
+The command (to be built in B2):
+
+- asks for the Administrator's username and a temporary password at the console, never as an argument;
+- sets `must_change_password = 1`, so the Admin chooses a new one at the next sign-in;
+- clears the lock and writes an audit entry, "Reset password with the break-glass command", by action only.
+
+It works only on the clinic computer, since it needs the files and the database account. Record each use on paper with the Principal.
