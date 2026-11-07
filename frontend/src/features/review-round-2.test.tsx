@@ -286,7 +286,8 @@ describe('R9: the yearly Activity calendar', () => {
     renderWithRouter(<CalendarPage />)
     await screen.findByRole('radiogroup', { name: 'Calendar period' })
     await user.click(screen.getByRole('radio', { name: 'Yearly' }))
-    await screen.findByText(/Activity, event, and holiday days/)
+    // The redesigned year view (1b50a113) shows its key above the months instead of a summary below them.
+    await screen.findByRole('list', { name: 'Calendar key' })
     return user
   }
 
