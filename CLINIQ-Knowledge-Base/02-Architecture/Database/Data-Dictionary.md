@@ -2,6 +2,8 @@
 
 **Status: Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057); changes after this go through a new decision.** Generated Friday, October 09, 2026 — 02:11 PHT from the reference schema (`Reference-Schema.sql`). Purposes, mappings and notes are hand-written. If you change the schema, change this file with it.
 
+**Updated Saturday, November 07, 2026 — 16:12 PHT, following this approved ERD through [ADR-076](../../06-Decisions/ADR-076-Staff-Record-Reviews-In-Their-Own-Table.md):** new table 48, `staff_record_reviews`, for the staff Incomplete Records queue (ADR-067). Settles counter-check C-1.
+
 **Updated Saturday, November 07, 2026 — 13:24 PHT, following this approved ERD through [ADR-071](../../06-Decisions/ADR-071-Suggested-Medicines-From-Item-Tags.md), [ADR-072](../../06-Decisions/ADR-072-Archive-By-School-Year.md), [ADR-073](../../06-Decisions/ADR-073-Password-Recovery-With-An-Authenticator-App.md) and [ADR-075](../../06-Decisions/ADR-075-School-Year-Started-By-Hand.md), with their dated amendments:** tables 45 to 47 (`inventory_item_symptom_tags`, `school_years`, `recovery_codes`); authenticator columns on `users` and `users.email` removed; archive details on `students` and `personnel`; school-year settings. Compared with `Reference-Schema.sql` and its 247 constraint tests.
 
 **Labels versus data (ADR-070):** screens say "Symptom(s)" and "Released to"; the data keeps `complaint`, the extra complaints (`visit_extra_complaints`) and `collected_by_name`, `collected_by_relationship`, `collected_by_time`. No column is renamed. When the relationship is "Other", the frontend sends who it was as the relationship text (for example "Neighbour"), never the word "Other".
@@ -63,6 +65,7 @@ How to read it: **Tier** is `Core` (a built screen or the mock already needs it)
 | 45 | [`inventory_item_symptom_tags`](#inventory_item_symptom_tags) | InventoryTracker | Core | The symptoms an item is commonly used for, which order the Visit form's picker (ADR-071). |
 | 46 | [`school_years`](#school_years) | Shared | Core | School years, started and ended by hand by Staff (ADR-072, ADR-075). |
 | 47 | [`recovery_codes`](#recovery_codes) | UserManagement | Core | One-time recovery codes for password recovery, slow-hashed (ADR-073). |
+| 48 | [`staff_record_reviews`](#staff_record_reviews) | StaffPatients | Core | The staff Incomplete Records queue: who resolved a staff record, and when (ADR-067, ADR-076). |
 
 Sanctum's `personal_access_tokens` migration is not published, since no API tokens are issued (ADR-056). Laravel's own `migrations` table is standard and not redefined here. Its `password_reset_tokens` table is **not needed**: the email reset of ADR-048 item 3 is replaced by the authenticator recovery of ADR-073 (Saturday, November 07, 2026 — 13:24 PHT); the one-time reset token after a code is short-lived and kept in the cache, not a table.
 
@@ -1203,6 +1206,31 @@ A staff patient's emergency contacts, ordered; may be empty.
 | `primary_personnel_id` | `bigint unsigned` | yes | generated |  |
 
 **Indexes:** UNIQUE KEY uq_personnel_contacts_one_primary (primary_personnel_id); KEY idx_personnel_contacts_personnel (personnel_id)
+
+## staff_record_reviews
+
+**Module:** StaffPatients  |  **Tier:** Core
+
+The staff Incomplete Records queue (ADR-067): a review opens when a save or the staff import leaves a staff record incomplete (no emergency contact, or no sex), and the save that completes it resolves it. Mirrors `student_record_reviews` without `source` and `import_batch_id`: staff have no import batch (ADR-076, Saturday, November 07, 2026 — 16:12 PHT).
+
+**Frontend:** `PersonnelReview` in `frontendOnly.personnelReviews` (`personnelId`, `resolvedByUserId`, `resolvedAt`). The mock derives "open" from the missing fields and writes a row only at resolution, so it has no `opened_at`; the backend stores one.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` **PK** | `bigint unsigned` | no |  |  |
+| `staff_id` | `bigint unsigned` | no |  | The staff record (`personnel.id`). Named for the screen's word, ADR-076. |
+| `opened_at` | `datetime` | no | current_timestamp() |  |
+| `resolved_by_user_id` | `bigint unsigned` | yes | NULL |  |
+| `resolved_at` | `datetime` | yes | NULL |  |
+| `open_staff_id` | `bigint unsigned` generated | yes | = if(`resolved_at` is null,`staff_id`,NULL) | Generated; unique, so a staff record has at most one open review. A resolved review stays as history and a new one can open later. |
+
+**Indexes:** `idx_staff_reviews_staff` (`staff_id`); UNIQUE `uq_staff_reviews_one_open` (`open_staff_id`)
+
+**Foreign keys:** `staff_id` -> `personnel`(`id`) ON DELETE CASCADE (goes with its staff record in the purge, step 7); `resolved_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
+
+**Checks:**
+
+- `chk_staff_reviews_resolved`: `resolved_at is null = (resolved_by_user_id is null)`
 
 ## visit_extra_complaints
 
