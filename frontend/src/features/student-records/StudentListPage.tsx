@@ -22,7 +22,7 @@ import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { paths } from '../../routes/paths'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { StudentListRow } from '../../types/entities'
-import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
+import { getArchive, getMockSessionUser, type SessionUser } from '../../lib/mock-db'
 import { fetchGradeLevels, fetchIncompleteCount, fetchStudentList } from './api/studentListApi'
 import { MaskedLrn } from '../../components/ui/MaskedLrn'
 
@@ -159,6 +159,8 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
   const key = `${search}|${gradeLevel}|${includeArchived}|${recordStatus}`
   // R11: a way to the Incomplete Records Queue besides the Dashboard. The queue is Staff only (ADR-038).
   const { data: incompleteCount } = useAsyncData('incomplete-count', fetchIncompleteCount)
+  // The second door to the Archive page (the sidebar is the first); one page, one store.
+  const { data: archive } = useAsyncData(`archive-count|${viewer.role}`, () => getArchive(viewer))
   const { data, status, isRefetching, reload } = useAsyncData(key, () =>
     fetchStudentList({ search, gradeLevel, includeArchived, recordStatus }),
   )
@@ -228,8 +230,13 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
               individual profile.
             </p>
           </div>
+          <div className="ml-auto flex flex-wrap justify-end gap-2">
+              <Link className={buttonClassName({ variant: 'secondary' })} to={paths.archive}>
+                <Icon name="archive" />
+                Archive{archive ? ` (${archive.students.length})` : ''}
+              </Link>
           {viewer.role === 'staff' && (
-            <div className="ml-auto flex flex-wrap justify-end gap-2">
+            <>
               {incompleteCount !== undefined && (
                 <Link className={buttonClassName({ variant: 'secondary' })} to={paths.incompleteRecords}>
                   <Icon name="alertTriangle" />
@@ -244,8 +251,9 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
                 <Icon name="plus" />
                 Add Student
               </Link>
-            </div>
+            </>
           )}
+          </div>
         </div>
       </Card>
 

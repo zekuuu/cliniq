@@ -42,6 +42,6 @@ export async function fetchStudentProfile(
 }
 
 /** Archive hides the student from active lists without deleting anything; the write is audited. */
-export function archiveStudentRecord(studentId: string, actor: SessionUser): Promise<Student> {
-  return archiveStudent(studentId, actor)
+export function archiveStudentRecord(studentId: string, actor: SessionUser, reason: string): Promise<Student> {
+  return archiveStudent(studentId, actor, reason)
 }

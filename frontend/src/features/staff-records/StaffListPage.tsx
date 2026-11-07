@@ -22,7 +22,7 @@ import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { paths } from '../../routes/paths'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { Personnel } from '../../types/entities'
-import { getMockSessionUser, missingStaffFields, type SessionUser } from '../../lib/mock-db'
+import { getArchive, getMockSessionUser, missingStaffFields, type SessionUser } from '../../lib/mock-db'
 import { fetchStaffIncompleteRecords, fetchStaffList, fetchStaffTypes } from './api/staffApi'
 
 function StaffListSkeleton({ back }: { back: ReactNode }) {
@@ -141,6 +141,8 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   )
   // The button counts the open rows on the staff Incomplete Records page.
   const queue = useAsyncData('staff-incomplete-records', fetchStaffIncompleteRecords)
+  // The Archive page's door from here too, as on the Student List (professor's consultation, November 6, 2026).
+  const archive = useAsyncData(`archive-count|${viewer.role}`, () => getArchive(viewer))
   const incompleteCount = queue.data?.filter((record) => record.status === 'open').length ?? 0
 
   const back = <BackButton fallback={paths.dashboard} drillThroughOnly />
@@ -236,6 +238,10 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           </div>
           {/* ml-auto: when the actions wrap under the description they stay right-aligned, as on the Student List. */}
           <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
+            <Link className={buttonClassName({ variant: 'secondary' })} to={paths.archive}>
+              <Icon name="archive" />
+              Archive{archive.data ? ` (${archive.data.staff.length})` : ''}
+            </Link>
             {/* ADR-067: the staff Incomplete Records page, as the Student List's button opens the student queue. */}
             <Link className={buttonClassName({ variant: 'secondary' })} to={paths.staffIncomplete}>
               <Icon name="alertTriangle" />

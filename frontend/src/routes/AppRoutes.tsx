@@ -114,6 +114,7 @@ const BackupStatusPage = page(
   'BackupStatusPage',
 )
 const AuditLogPage = page(() => import('../features/audit-log/AuditLogPage'), 'AuditLogPage')
+const ArchivePage = page(() => import('../features/archive/ArchivePage'), 'ArchivePage')
 const ChangePasswordPage = page(() => import('../features/auth/ChangePasswordPage'), 'ChangePasswordPage')
 const PrivacyPolicyPage = page(
   () => import('../features/legal/PrivacyPolicyPage'),
@@ -467,6 +468,14 @@ const APP_ROUTES: AppRoute[] = [
     roles: ['staff', 'admin'],
     nav: 'auditLog',
     render: (viewer) => <AuditLogPage viewer={viewer} />,
+  },
+  {
+    path: paths.archive,
+    title: 'Archive',
+    // Read-only for both; the Admin sees no Staff tab (ADR-038, ADR-043).
+    roles: ['staff', 'admin'],
+    nav: 'archive',
+    render: (viewer) => <ArchivePage viewer={viewer} />,
   },
   {
     path: paths.changePassword,

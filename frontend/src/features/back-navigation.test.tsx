@@ -53,7 +53,7 @@ describe('Back after a save never returns to the submitted form', () => {
     renderAfterPrevious('/visits/new', <NewVisitEntryPage />)
     await pickStudent(user, STUDENT_LRN)
     await screen.findByRole('heading', { name: 'New Visit' })
-    await selectOption(user, screen.getByLabelText(/^complaint/i), 'Fever')
+    await selectOption(user, screen.getByLabelText(/^symptom/i), 'Fever')
     await user.click(screen.getByRole('radio', { name: 'Sent home' }))
     await pickDate(
       user,
@@ -127,7 +127,7 @@ describe('Back after a save never returns to the submitted form', () => {
     renderAfterPrevious('/incidents/new', <IncidentEntryPage />)
     await pickStudent(user, STUDENT_LRN)
     await screen.findByRole('heading', { name: 'Report Incident' })
-    await selectOption(user, screen.getByLabelText(/^complaint/i), 'Fainting')
+    await selectOption(user, screen.getByLabelText(/^emergency symptom/i), 'Fainting')
     await user.type(screen.getByLabelText(/temperature/i), '37.2')
     await user.type(screen.getByLabelText(/pulse/i), '92')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))

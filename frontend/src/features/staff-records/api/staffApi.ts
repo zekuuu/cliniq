@@ -44,8 +44,8 @@ export async function fetchStaffProfile(personnelId: string, viewer?: SessionUse
   return { personnel, ...history }
 }
 
-export function archiveStaffRecord(personnelId: string, actor: SessionUser): Promise<Personnel> {
-  return archivePersonnel(personnelId, actor)
+export function archiveStaffRecord(personnelId: string, actor: SessionUser, reason: string): Promise<Personnel> {
+  return archivePersonnel(personnelId, actor, reason)
 }
 
 export interface StaffFormValues {

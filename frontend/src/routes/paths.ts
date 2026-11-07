@@ -74,5 +74,7 @@ export const paths = {
   userNew: '/users/new',
   userEdit: (userId: string) => `/users/${encodeURIComponent(userId)}/edit`,
   backup: '/backup',
+  /** Archived records, reports and audit entries by school year (professor's consultation, November 6, 2026). */
+  archive: '/archive',
 } as const
 

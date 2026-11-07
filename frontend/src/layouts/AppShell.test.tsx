@@ -316,6 +316,7 @@ describe('App Shell / Navigation', () => {
       'auditLog',
       'accounts',
       'backup',
+      'archive',
     ])
     expect(groups.map((group) => group.label)).toContain('Patient Care')
   })
@@ -334,6 +335,7 @@ describe('App Shell / Navigation', () => {
       'reports',
       'backup',
       'auditLog',
+      'archive',
     ])
   })
 

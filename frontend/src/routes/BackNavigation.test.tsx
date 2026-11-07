@@ -42,6 +42,8 @@ const NO_BACK: Record<string, string> = {
   'admin /reports': 'Top-level sidebar destination.',
   'staff /audit-log': 'Top-level sidebar destination.',
   'admin /audit-log': 'Top-level sidebar destination.',
+  'staff /archive': 'Top-level sidebar destination; Back only after the Student List\'s Archive button.',
+  'admin /archive': 'Top-level sidebar destination; Back only after the Student List\'s Archive button.',
   'admin /users': 'Top-level sidebar destination.',
   'staff /backup': 'Top-level sidebar destination.',
   'admin /backup': 'Top-level sidebar destination (ADR-037).',
