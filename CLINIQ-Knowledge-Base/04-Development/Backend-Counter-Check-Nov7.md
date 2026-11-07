@@ -13,7 +13,7 @@
 | **DRIFT** (stale wording or number) | 5 | 3 | 1 `LATER`, 1 noted only (C-14) |
 | **NOTE** | 8 | — | 1 `DOC` (C-8), 2 `FIX-FRONTEND` (C-15, C-19) |
 
-**Safe to start B1?** **Not yet: one item first.** C-1 must be decided: where staff record reviews live (ADR-067). Everything else B1 builds (the 47 tables) matches the code and the ADRs after the fixes below. The two `DECIDE` entries from the consultation documents (key custody, the username check) do not change a table, so they do not block B1.
+**Safe to start B1?** **Yes** (updated Saturday, November 07, 2026 — 16:15 PHT): C-1 is settled by [ADR-076](../06-Decisions/ADR-076-Staff-Record-Reviews-In-Their-Own-Table.md), a `staff_record_reviews` table, and nothing else blocks B1. *Before that update:* "Not yet: one item first. C-1 must be decided: where staff record reviews live (ADR-067)." Everything else B1 builds (the 47 tables, 48 with ADR-076) matches the code and the ADRs after the fixes below. The two `DECIDE` entries from the consultation documents (key custody, the username check) do not change a table, so they do not block B1.
 
 ## The numbers
 
@@ -27,7 +27,7 @@
 | Contract entries with no function | 0 | removed earlier the same day: the email reset, the backup-location edit |
 | Entity interfaces / fields | 42 / about 335 to 337 (two counting methods) | `types/entities.ts`, `lib/mock-db/types.ts` |
 | Schema tables / columns | 47 / 227 | `Reference-Schema.sql` |
-| Fields with no column of the same name | all explained, except staff reviews (C-1) | child tables (`allergies`, `itemsGiven`, `usedFor` and others), derived (`fullName`, `recordComplete`, `currentStock`), renames documented in the dictionary (`contactInfo` → `contact_number`, `dateTime` → `visited_at`) |
+| Fields with no column of the same name | all explained, except staff reviews (C-1; settled Saturday, November 07, 2026 — 16:15 PHT by ADR-076) | child tables (`allergies`, `itemsGiven`, `usedFor` and others), derived (`fullName`, `recordComplete`, `currentStock`), renames documented in the dictionary (`contactInfo` → `contact_number`, `dateTime` → `visited_at`) |
 | Audit writer call sites / action-target pairs | 63 / 41 literal pairs plus 3 computed (logout, print, view) | `audit(` in `api.ts`, the definition excluded |
 | Literal audit summaries checked against `Audit-Coverage.md` | 21 | all present; 2 strings were printout text, not audit |
 | Routes | 47: 44 in `APP_ROUTES` (26 `paths.*`, 18 literal with ids) plus login, force password change and the catch-all | `routes/` |
@@ -63,6 +63,7 @@
 - **C-1 BLOCKER, logged `DECIDE`.** Staff record reviews (ADR-067) have no table. The code keeps `frontendOnly.personnelReviews` (`types.ts:436`, `PersonnelReview` at `types.ts:285`; written at `api.ts:1288`, read by `staffIncompleteQueue`, `selectors.ts:318`): a staff id, who resolved it and when. `Reference-Schema.sql` has only `student_record_reviews` (`student_id NOT NULL`, `source`). B1 would build no home for the staff Incomplete Records page. Two shapes:
   - **(a) Recommended:** a `personnel_record_reviews` table mirroring `student_record_reviews` (one open review per staff member, CASCADE from `personnel`).
   - **(b)** Make `student_record_reviews` take `student_id` or `personnel_id`, exactly one.
+  - **Settled Saturday, November 07, 2026 — 16:15 PHT:** Zean chose a separate table, named `staff_record_reviews` with `staff_id`, mirroring the student table without the import columns ([ADR-076](../06-Decisions/ADR-076-Staff-Record-Reviews-In-Their-Own-Table.md)). Schema, dictionary, ERD, overview diagram, contract and tests updated: 254 of 254.
 
   Not fixed: it is a design choice.
 - **C-18 NOTE.** The first audit's missing user fields are all in the schema: `password_hash`, `must_change_password`, `failed_login_count` (the first audit called it `failed_attempts`) and `locked_until`. So are the session rules (ADR-056/057), the TOTP columns and `recovery_codes` (ADR-073).
@@ -87,7 +88,7 @@
 ### 4. Roles and privacy
 
 - **C-7 NOTE.** For the Admin, `getArchive` returns an empty staff list (`api.ts`, `viewer?.role === 'admin' ? []`); the contract answers 403 on `GET /api/archive/staff`. The contract is stricter and the screen never asks (no Staff tab for the Admin). No change.
-- **C-8 NOTE, logged `DOC`.** The Audit Log shows the Admin entries about staff records, labelled by Staff No., without opening them (`AuditLogPage.tsx:104`, `targetPath`). Neither `User-Roles-and-Permissions.md` nor the contract says so. It shows no name or health detail, so it fits ADR-043; one line should say it.
+- **C-8 NOTE, logged `DOC`.** The Audit Log shows the Admin entries about staff records, labelled by Staff No., without opening them (`AuditLogPage.tsx:104`, `targetPath`). Neither `User-Roles-and-Permissions.md` nor the contract says so. *(The contract says so since Saturday, November 07, 2026 — 16:15 PHT; `User-Roles-and-Permissions.md` stays for `main`.)* It shows no name or health detail, so it fits ADR-043; one line should say it.
 - Checked and matching: Admin read-only (ADR-038); no Admin printing; staff patients Staff only (ADR-043); the LRN masked on lists and the Audit Log screen and full on single-student screens and printouts (ADR-040/044, the November 7 note); no LRN in a URL (the `POST` lookups).
 
 ### 5. Audit log
@@ -106,7 +107,7 @@
 
 ### 7. Flows end to end
 
-All the flows the prompt lists can be served with the contract's endpoints in order, now that C-5's entries exist. The staff Incomplete Records page waits for C-1's table.
+All the flows the prompt lists can be served with the contract's endpoints in order, now that C-5's entries exist. The staff Incomplete Records page waits for C-1's table. *(Settled Saturday, November 07, 2026 — 16:15 PHT: it serves from `staff_record_reviews`, ADR-076.)*
 
 ### 8. Seed and fixtures
 
