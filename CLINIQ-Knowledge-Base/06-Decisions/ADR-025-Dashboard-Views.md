@@ -10,7 +10,7 @@ The Clinic Overview Dashboard loaded every section at once: stat cards, three al
 pending excuse letters, complaint trends, and the Visit calendar, one under the other. A groupmate review
 called it cluttered ("masakit sa mata"). On Wednesday, October 14, 2026 an agent decided to collapse only
 the yearly calendar's day list and keep everything else open, because `03-Design/Design-System.md` says
-the low-stock/expiry and follow-up alerts must be visible from the Dashboard (Issues-and-TODOs, "The
+the low-stock/expiry and follow-up alerts must be visible from the Dashboard (Frontend-Issues-and-TODOs, "The
 Dashboard shows too much at once", marked "Decided by the agent, the team may overrule"). The project
 manager overruled it: she asked for toggle buttons, such as a Calendar button that shows only the
 calendar, so the user switches between focused views instead of scrolling past everything.
@@ -59,7 +59,7 @@ This supersedes the October 14 decision to disclose only the yearly day list. Th
 - A nurse who stays on Trends or Calendar sees alerts only as the Overview badge count.
 - New Dashboard sections must be placed in one of the three views (or above them if they are global).
 - Links can open a view directly (`/?view=calendar`).
-- The Reports screen's own tabs still use their older markup (`LATER` in Issues-and-TODOs).
+- The Reports screen's own tabs still use their older markup (`LATER` in Frontend-Issues-and-TODOs).
 - The canonical Frontend Design Reference (Reference 1 layout) needs the view structure.
 
 **Amendment, Thursday, October 15, 2026 — 20:38 (Zean):** the shared `Tabs` gained an optional `actions` slot on the tab row (right of the tabs from `md` up, above them on narrower screens). The Dashboard uses it for Staff's New Visit; Staff's backup indicator moved into the header above Date range and Print. The view structure, `?view=`, and print behavior are unchanged.

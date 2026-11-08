@@ -22,14 +22,14 @@ Files Modified:
 - frontend/src/features/auth/DemoAccounts.tsx (new)
 - frontend/src/features/auth/LoginPage.test.tsx (new)
 - CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md (note on #1 Login)
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
 
 Changes Made:
 - `LoginBackdrop`: a full-bleed, `aria-hidden` layer behind the page. The base is always a `brand-green-dark` → `brand-green` gradient; the photo `<img>` (object-cover) sits on top and unmounts on `onError`, so a missing file shows the gradient with no broken-image icon. No blur, overlay effects, illustration, or animation. `brand-yellow` was deliberately not used: it has no functional job on this screen, and a yellow/green blend would read as decoration.
 - `LoginPage`: the card (unchanged `Card`, `max-w-md`) now opens with `BrandLogo`, a divider, then the existing "Sign In" heading and sentence; the separate "CLINIQ" eyebrow was dropped because the lockup carries it. The form, validation, lockout messaging, and `submit()` are untouched. The page gets bottom padding so the floating trigger never covers the Sign In button.
 - `DemoAccounts`: the floating bottom-right "Demo Accounts" button (the old Shortcuts button's classes, visible at all widths with `aria-haspopup="dialog"` and the `users` icon) opens the shared `Modal` titled "Demo accounts". The Modal holds the simulated-authentication disclaimer, the synthetic-credentials note, and the same four accounts, with a `Close` button that takes initial focus (`data-autofocus`). Deleting this one component, plus its import and `<DemoAccounts />` in LoginPage, removes the button and the disclaimer together.
-- Found during live verification and fixed locally: at 375×667 the dialog was 793px tall and centered in a non-scrolling overlay, so both ✕ and Close were off-screen. `DemoAccounts` now passes `max-h-[calc(100dvh-2rem)] overflow-y-auto` through the Modal's existing `className` prop. The shared `Modal` itself was not changed (logged in Issues-and-TODOs).
+- Found during live verification and fixed locally: at 375×667 the dialog was 793px tall and centered in a non-scrolling overlay, so both ✕ and Close were off-screen. `DemoAccounts` now passes `max-h-[calc(100dvh-2rem)] overflow-y-auto` through the Modal's existing `className` prop. The shared `Modal` itself was not changed (logged in Frontend-Issues-and-TODOs).
 - No "Remember me", no third-party sign-in buttons, no "Forgot password?" link.
 
 Reason: The demo accounts and disclaimer were permanent page content. The screen had no brand presence beyond a text eyebrow, and the requester wanted a professional, restrained login page that can show the school's own photo.

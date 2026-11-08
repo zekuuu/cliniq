@@ -8,7 +8,7 @@
 ## Context
 The shared Cancel on entry and edit forms (`useCancelNavigation`, added in the October 11 fix sweep)
 returned to the previous screen at once, so a mistaken click threw away everything typed: a half-written
-visit, an incident's Stage 1, a new student record. Issues-and-TODOs asked whether entry forms should
+visit, an incident's Stage 1, a new student record. Frontend-Issues-and-TODOs asked whether entry forms should
 confirm before discarding typed input, and the team asked an agent to make the call. `Design-System.md`
 says to confirm an action that can't be undone from the screen it's on and to protect against accidental
 destructive actions, but also not to interrupt harmless, reversible actions.

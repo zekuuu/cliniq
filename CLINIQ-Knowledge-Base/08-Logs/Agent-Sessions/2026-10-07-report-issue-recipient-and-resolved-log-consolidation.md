@@ -2,12 +2,12 @@ Date/Day/Time: Wednesday, October 07, 2026 — 01:22 PHT (system clock)
 Agent: Codex (GPT-5)
 Task: Update the Report an Issue recipient email and consolidate duplicated resolved-issue headings.
 Status: Completed
-Prompt/Request: "Two small cleanups. Per AGENTS.md Step 0, confirm you're reading the current repo state first. 1. Report an Issue recipient: change ISSUE_REPORT_RECIPIENT in frontend/src/features/issue-reports/reportIssueConfig.ts from team@example.com to zkg.balboa@gmail.com. Update any test that asserts the old address, and resolve the \"Recipient email\" entry under \"Report an Issue follow-up\" in Issues-and-TODOs.md. 2. Issues-and-TODOs.md has several sections titled \"Resolved since last update\" scattered through it. Merge them into one section, newest first, keeping every entry's text and timestamp exactly as written. Don't reword or drop anything. Check for other duplicated headings too, and leave all open sections where they are. Log the session with a real timestamp and add a Changelog row."
+Prompt/Request: "Two small cleanups. Per AGENTS.md Step 0, confirm you're reading the current repo state first. 1. Report an Issue recipient: change ISSUE_REPORT_RECIPIENT in frontend/src/features/issue-reports/reportIssueConfig.ts from team@example.com to zkg.balboa@gmail.com. Update any test that asserts the old address, and resolve the \"Recipient email\" entry under \"Report an Issue follow-up\" in Frontend-Issues-and-TODOs.md. 2. Frontend-Issues-and-TODOs.md has several sections titled \"Resolved since last update\" scattered through it. Merge them into one section, newest first, keeping every entry's text and timestamp exactly as written. Don't reword or drop anything. Check for other duplicated headings too, and leave all open sections where they are. Log the session with a real timestamp and add a Changelog row."
 Files Modified:
 - `frontend/src/features/issue-reports/reportIssueConfig.ts`
 - `frontend/src/features/issue-reports/ReportIssueModal.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-07-report-issue-recipient-and-resolved-log-consolidation.md`
 Changes Made:
 - Changed the `mailto:` fallback recipient to `zkg.balboa@gmail.com` and updated its modal regression assertion.

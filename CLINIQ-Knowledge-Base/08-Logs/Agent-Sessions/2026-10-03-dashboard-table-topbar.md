@@ -7,8 +7,8 @@ Files Modified:
 - frontend/src/layouts/AppShell.tsx
 - frontend/src/layouts/AppShell.test.tsx
 - CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Raised the shared sticky AppShell header from `z-10` to `z-30`, above the trend table’s `z-20` sticky edge cells and below the existing modal/toast layers.
 - Added a shell regression assertion for the sticky header stacking class.

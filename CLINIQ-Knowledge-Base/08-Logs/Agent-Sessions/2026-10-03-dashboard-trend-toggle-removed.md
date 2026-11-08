@@ -12,7 +12,7 @@ Files Modified:
 - `frontend/src/features/dashboard/components/ComplaintTrends.tsx`
 - `frontend/src/features/dashboard/components/ComplaintTrends.test.tsx`
 - Reverted to HEAD: `frontend/src/components/ui/SegmentedControl.tsx`, `frontend/src/lib/dateRange.ts`
-- `CLINIQ-Knowledge-Base/03-Design/Screen-Inventory.md`, `04-Development/Frontend-Loop-Engineering.md`, `08-Logs/Changelog.md`, `08-Logs/Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/03-Design/Screen-Inventory.md`, `04-Development/Frontend-Loop-Engineering.md`, `08-Logs/Frontend-Changelog.md`, `08-Logs/Frontend-Issues-and-TODOs.md`
 Changes Made:
 - Removed the "Group trend by" control and its props (`granularity`, `onGranularityChange`) from `ComplaintTrends`; the card header now holds only Chart/Table. The description and single-period note read `trends.granularity`.
 - `trendGranularityFor(preset, window)` replaces the options plan: `today`/`last7`/`last30`/`thisMonth` → day; `thisYear` → month; `all` → month up to two years of recorded history, else year; `custom` → day ≤ 31 days, week ≤ 120 days, month ≤ two years, else year.
@@ -36,6 +36,6 @@ Testing Performed:
   - Alerts row: all three cards render with header and count.
 Known Issues:
 - This year early in January is a single monthly bucket, so it shows the single-period note. That follows the literal "This year: monthly" rule.
-- The blank Alerts middle card remains unreproduced; see Issues-and-TODOs → Verification notes.
+- The blank Alerts middle card remains unreproduced; see Frontend-Issues-and-TODOs → Verification notes.
 - The canonical Frontend Context Brief (#31) still says "common complaints by week/month" and needs its owner's edit.
 Next Steps: None for this change.

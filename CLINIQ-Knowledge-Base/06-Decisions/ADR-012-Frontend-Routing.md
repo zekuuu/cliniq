@@ -27,7 +27,7 @@
 ## Consequences
 - Every new screen adds one entry to the route table instead of its own switching logic.
 - The Performance NFR benefits directly. The main bundle is about 264 kB (React + router + shell), and screens load on demand; chart.js only loads with the Dashboard (about 207 kB chunk).
-- **The production web server must fall back to `index.html`** for unknown non-API paths, or deep links and refreshes will 404. Logged in `08-Logs/Issues-and-TODOs.md`.
+- **The production web server must fall back to `index.html`** for unknown non-API paths, or deep links and refreshes will 404. Logged in `08-Logs/Frontend-Issues-and-TODOs.md`.
 - The mock-session `?role=` preview is kept per browser tab (sessionStorage), so in-app navigation doesn't silently reset the previewed role. It is removed with the mock session when Sanctum lands.
 - **Canonical documents need updating:** the Project Plan's tech-stack section and the Frontend Context Brief don't name a routing library. Add React Router and the path-based convention there so the vault and canonical docs don't drift (see `09-References/Canonical-Documents.md`).
 

@@ -6,7 +6,7 @@ Prompt/Request: "Then for this month Visits trend table, the busiest dates/conte
 Files Modified:
 - frontend/src/features/dashboard/components/ComplaintTrends.tsx
 - frontend/src/features/dashboard/components/ComplaintTrends.test.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-22-dashboard-weekday-comparison-columns.md
 Changes Made:
 - Split the single combined busiest-date cell into paired month groups: Cases and Busiest date & context for the selected month, then the same pair for the comparison month.

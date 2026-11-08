@@ -14,7 +14,7 @@ Files Modified:
 - frontend/src/features/clinic-visits/api/excuseLetterApi.ts, visitDetailApi.ts, visitLogApi.ts; frontend/src/features/emergency-response/api/incidentEntryApi.ts, incidentLogApi.ts, incidentRecordApi.ts (`studentId ?? ''`, type only)
 - Tests updated for the type change only: frontend/src/lib/mock-db/dashboard.test.ts, sync.test.ts; frontend/src/features/clinic-visits/ExcusedPeriod.test.ts, ExcuseLettersAndFollowUps.test.tsx; frontend/src/features/reports/SportsReport.test.tsx
 - CLINIQ-Knowledge-Base/04-Development/Audit-Coverage.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md, Issues-and-TODOs.md, Issues-Done-Archive.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md, Frontend-Issues-and-TODOs.md, Issues-Done-Archive.md
 
 Changes Made:
 - **Data design (shown to Zean before building, per the prompt):** `Personnel` = `id` (`personnel-0001`), `staffNumber` (`STF-0001`, system-assigned, never reused), `fullName`, `type` (a label from `config.personnelTypes`: Teacher, Non-teaching staff, Utility worker), `department` (null or at most 60 characters), `contactInfo`, `allergies`, `medicalConditions`, `emergencyContacts` (may be empty), `archived`. No LRN, grade, sex or completeness. Every field is PROVISIONAL, pending the ERD. The clinical records carry `PatientRef` (`studentId`, `personnelId`, both `string | null`). Seed rows may omit `personnelId`, and `resolveSeed` reads a missing one as null, so no existing JSON row changed.

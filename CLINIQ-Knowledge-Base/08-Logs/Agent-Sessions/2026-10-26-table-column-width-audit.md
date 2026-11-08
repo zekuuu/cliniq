@@ -9,7 +9,7 @@ Files Modified:
 - frontend/src/features/dashboard/components/VisitCalendar.tsx (calendar Table view)
 - frontend/src/features/student-records/IncompleteRecordsQueuePage.tsx
 - frontend/src/features/reports/SportsReportListPage.tsx
-- .claude/skills/cliniq-table-patterns/SKILL.md, CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md, 08-Logs/Changelog.md
+- .claude/skills/cliniq-table-patterns/SKILL.md, CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md, 08-Logs/Frontend-Changelog.md
 Changes Made:
 - Measured all 13 tables in Chromium (Playwright, with a throwaway script in the session scratchpad, not the repo) at 1366px and 1920px. The script logged in with a stored session, opened each screen (the Visit and Incident logs set to All, the Calendar's Table view, the Dashboard Trends table, both Reports tabs, Users as the Admin), and per column checked whether any visible text ran onto a second line, whether any text was cut off with an ellipsis, and whether the table scrolled sideways.
 - Follow-ups: LRN 9rem, Due date 8.5rem, Status 12rem, Actions 12.5rem; Reason takes the rest (it wrapped on 4 of 15 rows; now none).

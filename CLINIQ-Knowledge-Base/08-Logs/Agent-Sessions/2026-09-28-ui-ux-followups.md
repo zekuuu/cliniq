@@ -6,8 +6,8 @@ Task: Add the user's reported QR, student-records, dashboard, visit/incident, pa
 Status: Completed
 Prompt/Request: “for fixes or bugs can you please input these also” followed by the listed QR, Student Records, Dashboard, Student List, Incident/Visit, Parent Notification, and Stage 1 items.
 Files Modified:
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-28-ui-ux-followups.md`
 Changes Made:
 - Added the reported UI/UX follow-ups as an actionable backlog section.

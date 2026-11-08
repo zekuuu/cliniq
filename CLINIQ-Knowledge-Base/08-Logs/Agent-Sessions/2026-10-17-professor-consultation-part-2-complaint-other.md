@@ -8,7 +8,7 @@ Files Modified:
 - `frontend/src/features/clinic-visits/ComplaintField.tsx`
 - `frontend/src/features/clinic-visits/{NewVisitEntryPage.test.tsx,VisitDetailPage.test.tsx}`
 - `.claude/skills/cliniq-combobox-patterns/SKILL.md`
-- `CLINIQ-Knowledge-Base/{01-Requirements/Features/Module-Overview.md,04-Development/Skills-Setup.md,08-Logs/Issues-and-TODOs.md,08-Logs/Changelog.md}`
+- `CLINIQ-Knowledge-Base/{01-Requirements/Features/Module-Overview.md,04-Development/Skills-Setup.md,08-Logs/Frontend-Issues-and-TODOs.md,08-Logs/Frontend-Changelog.md}`
 Changes Made:
 - Added the first Complaint action row, “Other (type your own),” shared by New Visit and Visit Detail.
 - Extended the shared Combobox so an action row can decline its label as the input value; Other clears the focused field and returns `false`, so its literal label is never stored.

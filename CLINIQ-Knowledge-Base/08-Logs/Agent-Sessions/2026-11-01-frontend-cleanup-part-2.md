@@ -3,7 +3,7 @@ Agent: Claude Opus 5.5 (Claude Code)
 Task: Frontend clean-up, Part 2: open frontend features and rules (D1 to D12)
 Status: Completed. Nothing committed.
 Prompt/Request: `Prompt-Frontend-Cleanup-Code-Nov1`, Part 2, recovered from an earlier session's transcript because the file is not on this machine. Zean: "you can now proceed to part 2 until the llast part in backend branch", then "1" (the clean-up, not phases B1 to B10). The prompt's hard limits apply: no file under `backend/`, the mock stays, no commit.
-Files Modified: `frontend/` code and tests; ADR-061 (new), ADR-021 (note), `Decisions-Summary.md`, `Reference-Schema.sql`, `API-Contract.md`, `Audit-Coverage.md`, `Module-Overview.md`, `URL-Parameters.md`, the Issues and Archive files, `Changelog.md`, `Backend-Changelog.md`, this log.
+Files Modified: `frontend/` code and tests; ADR-061 (new), ADR-021 (note), `Decisions-Summary.md`, `Reference-Schema.sql`, `API-Contract.md`, `Audit-Coverage.md`, `Module-Overview.md`, `URL-Parameters.md`, the Issues and Archive files, `Frontend-Changelog.md`, `Backend-Changelog.md`, this log.
 Changes Made:
 
 | Item | Result | Test or check |

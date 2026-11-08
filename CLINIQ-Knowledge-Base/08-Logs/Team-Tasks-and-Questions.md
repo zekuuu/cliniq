@@ -1,6 +1,6 @@
 # Team Tasks and Questions
 
-Things for the clinic, the school or the team to answer or do. They are not code defects, so they are kept here rather than in `Issues-and-TODOs.md` (that file's legend: questions for people outside the team and team tasks are not logged there). Tick an item and add the answer, its date and who gave it when it is done.
+Things for the clinic, the school or the team to answer or do. They are not code defects, so they are kept here rather than in `Frontend-Issues-and-TODOs.md` (that file's legend: questions for people outside the team and team tasks are not logged there). Tick an item and add the answer, its date and who gave it when it is done.
 
 ## Professor's consultation, November 6, 2026 — Saturday, November 07, 2026 — 05:13 PHT
 

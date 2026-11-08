@@ -7,8 +7,8 @@ Files Modified:
 - frontend/src/layouts/AppShell.tsx
 - frontend/src/features/qr-digital-health-id/mobile/QrMobileHubPage.tsx
 - frontend/src/layouts/AppShell.test.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Removed the `animate-spin` class from the desktop shell and shell-free mobile logout icons.
 - Kept the pending logout guard, disabled state, and “Logging out” accessible label so duplicate clicks remain blocked and the audit/session flow is unchanged.

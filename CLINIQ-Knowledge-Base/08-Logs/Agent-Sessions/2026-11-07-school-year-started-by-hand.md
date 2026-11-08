@@ -11,7 +11,7 @@ Files Modified:
 - `frontend/src/types/dashboard.ts`, `features/dashboard/components/AttentionChips.tsx` (the reminder chip).
 - `frontend/src/features/archive/ArchivePage.tsx` (+ test): the "Current school year" card, Start button and confirmation; reworded the dates card.
 - `frontend/src/features/ui-review-regressions.test.tsx`: the Audit Log screen now shows the masked LRN. This test still expected the full LRN and was missed in the earlier masking session ([2026-11-07-audit-log-masked-lrn](2026-11-07-audit-log-masked-lrn.md)).
-- Documents: ADR-075, a note on ADR-072, `Decisions-Summary.md`, `Screen-Inventory.md`, `Changelog.md`.
+- Documents: ADR-075, a note on ADR-072, `Decisions-Summary.md`, `Screen-Inventory.md`, `Frontend-Changelog.md`.
 
 Changes Made:
 - **Start school year** (Archive page, Staff only): a card shows "Current school year: 2026–2027" and who started it and when. It also says when the next year is due, or that it is overdue. The button "Start school year 2027–2028" opens a confirmation. The new year starts today and the old one ends yesterday. The action is audited as "Started school year 2027–2028". Starting twice on the same day is refused. The Admin sees no button.

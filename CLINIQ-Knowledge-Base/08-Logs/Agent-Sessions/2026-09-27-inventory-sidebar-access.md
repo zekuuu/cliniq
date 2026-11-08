@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: “inventory sidebar still disabled”
 Files Modified:
 - `cliniq-frontend/src/layouts/AppShell.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Confirmed `navGroupsFor('staff')` returns Inventory as an enabled link to `/inventory`.
 - Added a regression test asserting the Staff sidebar renders Inventory as a link with the correct route.

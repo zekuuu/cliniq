@@ -20,8 +20,8 @@ Files Modified:
 - .claude/skills/cliniq-display-privacy/SKILL.md
 - .claude/skills/cliniq-print-patterns/SKILL.md
 - CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Student List and Staff List now use the shared `Pagination` with Rows per page 10 or 20 (`usePageSize`), as `cliniq-pagination-patterns` requires. Changing the search, the grade or type filter, or the archived checkbox returns to page 1.
 - Dashboard printout (Clinic Overview Report): the due follow-ups, frequent visitors and excuse letters awaiting approval print the full LRN instead of the masked one. Staff still print by Staff No., and no names are printed. The screen is unchanged. Recorded as ADR-044, and the privacy and print skills were updated. Old rule: every multi-student printout is masked. New rule: the Dashboard printout prints the full LRN.

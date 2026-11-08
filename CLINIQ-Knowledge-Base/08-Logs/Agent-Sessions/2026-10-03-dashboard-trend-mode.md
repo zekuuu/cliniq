@@ -7,8 +7,8 @@ Files Modified:
 - frontend/src/features/dashboard/components/ComplaintTrends.tsx
 - frontend/src/features/dashboard/components/ComplaintTrends.test.tsx
 - CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Kept the Dashboard’s intentional This month default and left the empty frequent-visitor state unchanged.
 - When one period forces the table fallback, the “Show trend as” segmented control now marks Table selected instead of leaving Chart selected.

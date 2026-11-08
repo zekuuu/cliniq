@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: “apply again”
 Files Modified:
 - README.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-01-reapply-course-adviser-readme.md
 Changes Made:
 - Restored the README acknowledgment for Prof. Kryss Coleen Creus, Software Engineering II Course Adviser, CvSU–CEIT.

@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: "Better to keep bg of text box white"
 Files Modified:
 - frontend/src/features/dashboard/components/ComplaintTrends.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-08-visits-trend-white-tooltip.md
 Changes Made:
 - Changed the HTML tooltip surface from brand-green-dark to the standard white panel surface with a border and shadow.

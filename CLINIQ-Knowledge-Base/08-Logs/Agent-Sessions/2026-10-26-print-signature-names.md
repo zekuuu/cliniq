@@ -9,7 +9,7 @@ Files Modified:
 - frontend/src/features/emergency-response/api/incidentRecordApi.ts (`IncidentRecord.principalName`)
 - frontend/src/features/emergency-response/IncidentReportPage.tsx
 - frontend/src/features/print-documents.test.tsx
-- .claude/skills/cliniq-print-patterns/SKILL.md, CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md, CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- .claude/skills/cliniq-print-patterns/SKILL.md, CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md, CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Monthly Report printout: "Prepared by (School Clinician)" prints the signed-in user, and "Reviewed by (Principal)" prints the first active Admin/Principal account's name. The separate "Prepared by <name>, <role>." sentence above the lines is removed, because the signature line now carries it.
 - Incident Report printout: the School Clinician line prints whoever completed Stage 2, or whoever recorded it while at Stage 1. "Parent or guardian informed" (or "Emergency contact informed" for staff) prints the latest notification attempt logged as Reached; it is blank if none. "Principal (if applicable)" prints the Admin/Principal account's name only once the report is approved. Staff approve reports (ADR-038), so the approver's own name would be the wrong person for this line.

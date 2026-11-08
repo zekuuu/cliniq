@@ -24,7 +24,7 @@ Files Modified:
 - frontend/src/features/emergency-response/FollowUpListPage.test.tsx
 - frontend/src/features/print-documents.test.tsx
 - CLINIQ-Knowledge-Base: 01-Requirements/Features/Module-Overview.md, 03-Design/Screen-Inventory.md, 02-Architecture/Database/Data-Dictionary.md, ERD.md, and the canonical CLINIQ_Modules_and_Features.md
-- CLINIQ-Knowledge-Base/08-Logs: Changelog.md, Issues-and-TODOs.md, Issues-Done-Archive.md
+- CLINIQ-Knowledge-Base/08-Logs: Frontend-Changelog.md, Frontend-Issues-and-TODOs.md, Issues-Done-Archive.md
 
 Changes Made:
 - **Wording (EX-4).**

@@ -173,7 +173,7 @@ export interface Visit extends PatientRef {
   /** Referred to hospital only: where the student was referred. PROVISIONAL, pending the ERD. */
   referredTo: string | null
   /*
-   * The clinic's daily logbook columns the Visit lacked (Issues-and-TODOs, "The clinic's two
+   * The clinic's daily logbook columns the Visit lacked (Frontend-Issues-and-TODOs, "The clinic's two
    * logbooks"). All optional. PROVISIONAL, pending the ERD.
    */
   /** Body temperature in °C; the logbook says it can be left blank. */

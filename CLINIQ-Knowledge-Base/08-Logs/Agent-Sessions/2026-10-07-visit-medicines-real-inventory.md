@@ -15,7 +15,7 @@ Files Modified:
 - Screens: `features/clinic-visits/{NewVisitEntryPage,VisitDetailPage}.tsx` + `api/{newVisitApi,visitDetailApi}.ts`; `features/inventory/{InventoryListPage,InventoryFormPage,InventoryDispensePage}.tsx`, new `StockModals.tsx`, `api/inventoryApi.ts`; `features/emergency-response/IncidentEntryPage.tsx` + `api/incidentEntryApi.ts`; `features/student-records/StudentProfilePage.tsx`; `features/qr-digital-health-id/mobile/QrMobileHubPage.tsx`
 - Tests: new `lib/mock-db/stock.test.ts`, `features/clinic-visits/ItemsGiven.test.tsx`, `features/inventory/StockActions.test.tsx`; updated `integrity.test.ts`, `dashboard.test.ts`, `NewVisitEntryPage.test.tsx`, `VisitDetailPage.test.tsx`
 - Skill: new `.claude/skills/cliniq-item-picker-patterns/SKILL.md`
-- Docs: new `06-Decisions/ADR-018-Stock-Integrity-For-Items-Given.md`; `Decisions-Summary.md`, `01-Requirements/Features/Module-Overview.md` (Modules 3 and 8), `03-Design/Screen-Inventory.md` (#11, #12, #28–#30), `04-Development/Skills-Setup.md`, `08-Logs/Issues-and-TODOs.md`, `08-Logs/Changelog.md`
+- Docs: new `06-Decisions/ADR-018-Stock-Integrity-For-Items-Given.md`; `Decisions-Summary.md`, `01-Requirements/Features/Module-Overview.md` (Modules 3 and 8), `03-Design/Screen-Inventory.md` (#11, #12, #28–#30), `04-Development/Skills-Setup.md`, `08-Logs/Frontend-Issues-and-TODOs.md`, `08-Logs/Frontend-Changelog.md`
 
 Changes Made:
 - **Atomic writes:** every mock-layer `write()` now snapshots the store and restores it if the mutation throws, so a rejected line leaves no visit, transaction, stock change, or audit entry behind.
@@ -33,7 +33,7 @@ Testing Performed:
 - Live (Playwright 1.57 driving the Vite dev server with the cached Chromium; the Playwright MCP server wasn't connected in this session, so a local Playwright script was used instead): recorded a visit with Paracetamol ×2 and Gauze ×1 → stock 12→10 and 40→39; Student Profile showed "Given: Paracetamol 500mg × 2 tablets (1 tablet every 6 hours); Gauze Pads × 1 pieces"; ORS (expired) showed `aria-disabled` + Expired badge and a forced click added nothing; edited Paracetamol 2→1 → stock 10→11; Adjust Stock "Expired - disposed" set ORS to 0; Stage 1 showed no picker; Stage 2 Instant Cold Packs ×1 → 18→17. No console errors. Inventory list checked at 1280px and 390px (no horizontal page overflow); Actions/Status column widths set after the first screenshot showed stacked buttons.
 
 Known Issues:
-- Editing an incident's medicines after Stage 2 is complete is rejected pending a product decision (Issues-and-TODOs).
+- Editing an incident's medicines after Stage 2 is complete is rejected pending a product decision (Frontend-Issues-and-TODOs).
 - No inventory usage-history screen exists yet; when built it must show Student Numbers only.
 - The changed screens need a Frontend-Loop-Engineering Phase 2 re-audit; their checkboxes were not changed.
 - The Modules & Features canonical doc needs the ADR-018 rules.

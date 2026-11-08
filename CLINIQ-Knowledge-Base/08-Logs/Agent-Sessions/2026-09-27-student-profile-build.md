@@ -12,7 +12,7 @@ Files Modified:
 - `cliniq-frontend/src/features/student-records/api/studentProfileApi.ts`
 - `cliniq-frontend/src/lib/mocks/session.ts`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-student-profile-build.md`
 Changes Made:
 - Added a mock-backed Student Profile API adapter over the shared dataset.

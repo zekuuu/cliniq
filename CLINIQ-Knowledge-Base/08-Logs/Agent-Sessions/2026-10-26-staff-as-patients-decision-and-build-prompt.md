@@ -6,9 +6,9 @@ Prompt/Request: Zean: "Now the previous meeting consist the adding users not jus
 Files Modified:
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-043-Teachers-And-School-Staff-Are-Clinic-Patients-With-Their-Own-Screens.md (new)
 - CLINIQ-Knowledge-Base/06-Decisions/Decisions-Summary.md
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
 - CLINIQ-Knowledge-Base/08-Logs/Issues-Done-Archive.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-26-staff-as-patients-decision-and-build-prompt.md (new)
 - Outside the repository: Prompt-Build-Staff-As-Clinic-Patients-Oct26.md
 Changes Made:

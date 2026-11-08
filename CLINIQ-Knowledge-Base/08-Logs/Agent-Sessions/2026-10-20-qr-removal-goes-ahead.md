@@ -6,9 +6,9 @@ Prompt/Request: Zean wrote: "No I mean remove QR, but note it as on hold". I ask
 Files Modified:
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-033-Phone-Screens-Removed-Account-Management-To-Admin.md
 - CLINIQ-Knowledge-Base/06-Decisions/Decisions-Summary.md
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
 - CLINIQ-Knowledge-Base/08-Logs/Issues-Done-Archive.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-20-qr-removal-goes-ahead.md (new)
 Changes Made:
 - The prompt `Prompt-Build-Removals-QR-LRN-Mobile-Instructor-UserMgmt.md` no longer has a gate. Order: 1 QR (with the note that it was on hold and a tag command before deleting), 2 phone-only screens, 3 PE Instructor, 4 accounts to the Admin/Principal, 5 LRN. QR now also removes the phone-only navigation mechanism (`mobileOnly`), so the LRN part has no QR pages left to adapt.

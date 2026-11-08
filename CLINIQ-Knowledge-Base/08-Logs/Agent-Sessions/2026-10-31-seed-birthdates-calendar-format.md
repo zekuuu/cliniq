@@ -11,7 +11,7 @@ Prompt/Request: Zean: "make the birthdate data in calendar format like YYYY-MM-D
 - `frontend/src/lib/mock-db/mock-db.json`, `seed.ts`, `types.ts`, `integrity.ts`, `api.ts`, `README.md`
 - `frontend/src/lib/dates.ts`
 - `frontend/src/features/student-records/Birthdate.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 
 ## Changes Made
 

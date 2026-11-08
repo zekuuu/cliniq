@@ -9,7 +9,7 @@ Files Modified:
 - `cliniq-frontend/src/routes/AppRoutes.tsx`
 - `cliniq-frontend/src/layouts/navigation.ts`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Built and routed the Staff Follow-Up List View with status filtering, privacy-safe Student Number rows, visible reason/due-date/status fields, skeleton loading, and empty state.
 - Enabled the Follow-Ups navigation item for Staff.

@@ -7,7 +7,7 @@ Files Modified:
 - cliniq-frontend/src/components/ui/DateRangePicker.tsx
 - cliniq-frontend/src/features/clinic-visits/VisitLogListPage.tsx
 - cliniq-frontend/src/features/clinic-visits/VisitLogListPage.test.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Added an opt-in `customPopover` mode to the shared DateRangePicker. Its Custom range form is absolutely positioned beneath the trigger and above surrounding content instead of participating in the page layout.
 - Enabled that mode for Visit Log List only, preserving other uses of the shared date picker.

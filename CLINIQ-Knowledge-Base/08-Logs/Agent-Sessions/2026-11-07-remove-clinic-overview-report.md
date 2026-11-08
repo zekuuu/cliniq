@@ -8,7 +8,7 @@ Files Modified:
 - Deleted: `frontend/src/features/reports/components/ClinicOverviewReport.tsx`, `frontend/src/features/dashboard/components/DashboardPrint.tsx` (no other user).
 - Changed: `frontend/src/features/reports/ReportsPage.tsx`, `frontend/src/features/emergency-response/IncidentEntryPage.tsx`, `frontend/src/features/dashboard/README.md`.
 - Tests: `consultation-part-2.test.tsx`, `print-documents.test.tsx`, `review-round-2.test.tsx`, `staff-counts.test.tsx`, `dashboard/DashboardPage.test.tsx`, `reports/SportsReport.test.tsx`.
-- Documents: ADR-074 (new), notes on ADR-045 and ADR-070, `Decisions-Summary.md`, `Screen-Inventory.md`, `User-Roles-and-Permissions.md`, skill `cliniq-print-patterns`, `Changelog.md`.
+- Documents: ADR-074 (new), notes on ADR-045 and ADR-070, `Decisions-Summary.md`, `Screen-Inventory.md`, `User-Roles-and-Permissions.md`, skill `cliniq-print-patterns`, `Frontend-Changelog.md`.
 
 Changes Made:
 - Reports has four tabs again (Monthly Report, Incident register, Symptom summary, Inventory sheet). The Clinic Overview printout is gone everywhere (ADR-074).

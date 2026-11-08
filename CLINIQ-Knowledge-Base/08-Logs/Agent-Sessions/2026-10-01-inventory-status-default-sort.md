@@ -7,7 +7,7 @@ Files Modified:
 - frontend/src/features/inventory/InventoryListPage.tsx
 - frontend/src/features/inventory/inventoryStatusSort.ts
 - frontend/src/features/inventory/InventoryListPage.test.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Set the Inventory List's initial active sort to Status, ascending.
 - Added a dedicated status-priority helper: expired/below-zero items first, then nearing expiration, then low stock, then normal items. An item with both near-expiry and low-stock flags remains in the near-expiry priority group, so all warnings remain ahead of normal inventory.

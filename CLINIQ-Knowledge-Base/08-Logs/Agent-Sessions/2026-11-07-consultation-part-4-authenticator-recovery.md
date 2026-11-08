@@ -8,7 +8,7 @@ Files Modified:
 - New: `frontend/src/lib/totp.ts` (+ test), `features/account/AuthenticatorDialog.tsx`, `features/account/Authenticator.test.tsx`, `features/auth/ForgotPasswordDialog.tsx`, `features/auth/lockMessage.ts`.
 - Changed: `lib/mock-db/api.ts` (authenticator and recovery functions), `lib/mock-db/types.ts` (`DevAccount.authenticator`), `features/auth/LoginPage.tsx`, `layouts/AccountMenu.tsx`, `layouts/AppShell.tsx`, `package.json` / `package-lock.json` (`qrcode@1.5.4`, `@types/qrcode@1.5.5` dev).
 - Tests updated: `LoginPage.test.tsx` (the dialog is the flow now), `AccountMenu.test.tsx` (the new item).
-- Documents (all Parts 2 to 4): ADR-072, ADR-073, notes on ADR-048 and ADR-052, `Decisions-Summary.md`, `Screen-Inventory.md`, `User-Roles-and-Permissions.md`, `Audit-Coverage.md`, `Skills-Setup.md`, skills `cliniq-input-patterns` and `cliniq-display-privacy`, `Issues-and-TODOs.md`, `Issues-Done-Archive.md`, `Team-Tasks-and-Questions.md`, `Changelog.md`.
+- Documents (all Parts 2 to 4): ADR-072, ADR-073, notes on ADR-048 and ADR-052, `Decisions-Summary.md`, `Screen-Inventory.md`, `User-Roles-and-Permissions.md`, `Audit-Coverage.md`, `Skills-Setup.md`, skills `cliniq-input-patterns` and `cliniq-display-privacy`, `Frontend-Issues-and-TODOs.md`, `Issues-Done-Archive.md`, `Team-Tasks-and-Questions.md`, `Frontend-Changelog.md`.
 
 Changes Made:
 - **TOTP** (`lib/totp.ts`): HMAC-SHA1 via `crypto.subtle`, 30-second steps, 6 digits, ±1 step; base32 encode/decode (hand-typed keys tolerated); 160-bit random secrets; `otpauth://totp/CLINIQ:<username>?secret=…&issuer=CLINIQ&algorithm=SHA1&digits=6&period=30`; 8 recovery codes "XXXX-XXXX", stored as SHA-256 hex only.

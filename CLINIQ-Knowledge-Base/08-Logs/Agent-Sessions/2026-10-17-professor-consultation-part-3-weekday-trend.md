@@ -7,7 +7,7 @@ Files Modified:
 - `frontend/src/types/dashboard.ts`
 - `frontend/src/lib/mock-db/{dashboard.ts,dashboard.test.ts}`
 - `frontend/src/features/dashboard/{README.md,components/ComplaintTrends.tsx,components/ComplaintTrends.test.tsx}`
-- `CLINIQ-Knowledge-Base/{03-Design/Design-System.md,08-Logs/Issues-and-TODOs.md,08-Logs/Changelog.md}`
+- `CLINIQ-Knowledge-Base/{03-Design/Design-System.md,08-Logs/Frontend-Issues-and-TODOs.md,08-Logs/Frontend-Changelog.md}`
 Changes Made:
 - Calendar-month Trends now aggregate every visit and incident Monday through Sunday for the selected month (or month-to-date) and the comparable prior-month window.
 - Added a grouped bar chart: the selected month is solid, the prior month outlined and labelled, so the series do not rely on color alone.

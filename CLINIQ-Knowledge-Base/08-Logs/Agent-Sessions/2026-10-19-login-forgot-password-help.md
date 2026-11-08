@@ -9,8 +9,8 @@ Files Modified:
 - `frontend/src/features/auth/LoginPage.tsx`
 - `frontend/src/features/auth/LoginPage.test.tsx`
 - `CLINIQ-Knowledge-Base/03-Design/Design-System.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-19-login-forgot-password-help.md` (this file)
 Changes Made:
 - Added a "Forgot password?" text button under the Password field, on the panel's shared left edge (0 px from the heading), 14px semibold `brand-green-dark`, underline on hover, visible focus, 24px tall. Tab order: Username, Password, show/hide, Forgot password?, Sign In.

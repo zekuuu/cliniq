@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: Continue loop engineering from the pasted Frontend-Loop-Engineering operating brief, skipping already-completed kickoff work.
 Files Modified:
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-f2-existing-build-reconcile.md`
 Changes Made:
 - Marked the already-implemented Student Records F2 screens Build-complete: App Shell/Nav, Student List, Add/Edit Student, and Incomplete Records Review Queue.

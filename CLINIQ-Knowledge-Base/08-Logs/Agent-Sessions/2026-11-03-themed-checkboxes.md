@@ -6,7 +6,7 @@ Prompt/Request: "refactor all checkboxes, currently they look generic unstyled c
 Files Modified:
 - frontend/src/index.css
 - CLINIQ-Knowledge-Base/03-Design/Design-System.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Added one `@layer base` rule for `input[type='checkbox']` in `index.css`: `appearance: none`, white box with a 1.5px `text-secondary` border and 4px radius, `brand-green` border on hover, `brand-green-dark` fill with a white SVG tick when checked (white dash when indeterminate), brighter on hover when set, `surface`/`border` when disabled and `text-muted` fill when disabled and set. Transitions off under reduced motion; colours kept when printing; `appearance: auto` under `forced-colors` so Windows High Contrast still shows the box.
 - Every existing checkbox (forms, list bulk-select, MultiSelect, Sports Report, Incident Entry, etc.) picks this up with no call-site change. Their `accent-brand-green-dark` class is now inert but harmless and was left in place to keep the diff small.

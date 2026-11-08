@@ -8,7 +8,7 @@ Prompt/Request: "the archive button in student and staff list only redirect to t
 Files Modified:
 - `frontend/src/features/archive/ArchivePage.tsx`, `frontend/src/features/archive/ArchivePage.test.tsx`
 - `frontend/src/features/student-records/StudentListPage.tsx`, `frontend/src/features/staff-records/StaffListPage.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - The list buttons pass `state={ ...DRILL_THROUGH_STATE, section: 'students' | 'staff' }`.
 - `ArchivePage` reads `state.section`: it opens that tab and, once loaded, scrolls the tabs into view (`scroll-mt-20` clears the sticky top bar; instant with reduced motion). Opened from the sidebar, nothing changes.

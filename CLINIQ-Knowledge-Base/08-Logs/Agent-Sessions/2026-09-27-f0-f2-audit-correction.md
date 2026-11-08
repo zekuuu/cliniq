@@ -5,8 +5,8 @@ Status: Partial
 Prompt/Request: "audit the rest now from phase F0-F2 Frontend-Loop-Engineering.md"
 Files Modified:
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - this session log
 Changes Made:
 - Reconciled the existing F0–F2 completion claim with the current route table, navigation, screen inventory, and deterministic verification.

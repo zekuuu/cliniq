@@ -10,7 +10,7 @@ Files Modified:
 - `cliniq-frontend/src/features/clinic-visits/ExcuseLetterLoading.test.tsx`
 - `cliniq-frontend/src/features/clinic-visits/api/excuseLetterApi.ts`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-excuse-letter-build.md`
 Changes Made:
 - Added the Staff-only Excuse Letter Generator screen backed by a mock visit record.

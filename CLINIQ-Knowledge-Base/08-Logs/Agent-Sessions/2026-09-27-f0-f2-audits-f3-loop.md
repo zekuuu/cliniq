@@ -12,7 +12,7 @@ Files Modified:
 - `cliniq-frontend/src/features/clinic-visits/NewVisitEntryPage.tsx`
 - `cliniq-frontend/src/routes/AppRoutes.tsx`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - this session log
 Changes Made:
 - Completed the F0â€“F2 countercheck/audit record for shared components and all built frontend screens: privacy, audit-trail calls, interactive states, custom selects, skeleton loading, accessibility semantics, color tokens, route handoffs, and mock-flow simulation.

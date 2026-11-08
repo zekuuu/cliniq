@@ -8,7 +8,7 @@ Prompt/Request: “Also display the sampleaccounts there for demo pur0oses”
 Files Modified:
 - `frontend/src/features/auth/LoginPage.tsx`
 - `frontend/src/lib/mock-db/README.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - this session log
 Changes Made: Added a responsive, labelled “Sample accounts for this demo” panel showing all four synthetic usernames, passwords, roles, and scenario notes. Added an explicit warning that the credentials are not real clinic or production accounts. Corrected the mock-data README wording to reflect that the auth screens now exist.
 Reason: Make the frontend-first Login flow immediately usable during client demonstrations without implying that the displayed credentials are production authentication data.

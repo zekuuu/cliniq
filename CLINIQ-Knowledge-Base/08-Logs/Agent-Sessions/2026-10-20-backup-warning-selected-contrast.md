@@ -6,7 +6,7 @@ Prompt/Request: "now it's not contrast when the page is selected"
 Files Modified:
 - `frontend/src/layouts/Sidebar.tsx`
 - `frontend/src/layouts/AppShell.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Made the Backup warning badge white with an amber alert glyph only while Backup is the selected green sidebar item; its normal inactive state remains solid amber with a white glyph.
 - Added selected-state regression coverage.

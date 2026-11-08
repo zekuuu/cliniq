@@ -6,7 +6,7 @@ Prompt/Request: "Fix the navbar it should be same color as sidebar not the backg
 Files Modified:
 - `cliniq-frontend/src/layouts/AppShell.tsx`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-navbar-sidebar-color-fix.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Changed the sticky top navbar from the page surface tint to `bg-background`, matching the sidebar's surface token.
 - Added a tokenized bottom border so the white navbar remains visually separated from the gray page content while sticky.

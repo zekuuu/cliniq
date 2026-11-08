@@ -3,7 +3,7 @@ Agent: Claude Opus 5.5 (Claude Code)
 Task: Close the two open `FIX` entries from Frontend clean-up, Part 1
 Status: Completed. Nothing committed.
 Prompt/Request: Zean chose "Back in the Audit Log" for the name-correction reason. On a Missed row that has a new date: "then remove the old one maybe", then "If rescheduled status, it might stay in the page and in the long run it could flood".
-Files Modified: `lib/mock-db/api.ts`, `lib/mock-db/selectors.ts`, `FollowUpListPage.tsx`, `contractFixes.test.ts`, `StudentFormPage.test.tsx`, `FollowUpListPage.test.tsx`, `API-Contract.md`, `Data-Dictionary.md`, `Module-Overview.md`, ADR-017 (dated note), new ADR-058, `Decisions-Summary.md`, `Issues-and-TODOs.md`, `Issues-Done-Archive.md`, `Changelog.md`
+Files Modified: `lib/mock-db/api.ts`, `lib/mock-db/selectors.ts`, `FollowUpListPage.tsx`, `contractFixes.test.ts`, `StudentFormPage.test.tsx`, `FollowUpListPage.test.tsx`, `API-Contract.md`, `Data-Dictionary.md`, `Module-Overview.md`, ADR-017 (dated note), new ADR-058, `Decisions-Summary.md`, `Frontend-Issues-and-TODOs.md`, `Issues-Done-Archive.md`, `Frontend-Changelog.md`
 Changes Made:
 - The audit summary carries the reason again (ADR-058). `nameCorrectionReason` stays on the record.
 - `hasLaterFollowUp` finds a follow-up created later with the same patient, record and reason. `rescheduleFollowUp` refuses a second new date, and the row loses its button. The old row is kept: records are archived, not deleted.

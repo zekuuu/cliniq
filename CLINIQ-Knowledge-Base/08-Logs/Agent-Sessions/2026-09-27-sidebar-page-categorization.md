@@ -8,7 +8,7 @@ Files Modified:
 - `cliniq-frontend/src/layouts/navigation.ts`
 - `cliniq-frontend/src/components/icons/Icon.tsx`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-sidebar-page-categorization.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Replaced the flat sidebar list with grouped navigation sections.
 - Added Staff categories: Overview, Student Care, Operations, and Administration.

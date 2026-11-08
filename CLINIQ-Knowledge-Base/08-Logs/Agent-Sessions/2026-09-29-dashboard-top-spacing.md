@@ -6,7 +6,7 @@ Prompt/Request: “For the main screen content, adjust the top margin because it
 Files Modified:
 - `frontend/src/features/` screen wrappers
 - `frontend/src/routes/` screen wrappers
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-29-dashboard-top-spacing.md`
 Changes Made: Standardized screen-level wrappers to `pt-10 pb-8`, while preserving internal component spacing and print overrides.
 Reason: The top spacing was reduced from 12 to 10 and the bottom spacing was set to 8 for a balanced page frame.

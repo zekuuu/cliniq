@@ -1,11 +1,11 @@
 Date/Day/Time: Tuesday, October 20, 2026 — 15:00 PHT
 Agent: Claude (Sonnet 5.5), chat session, not Claude Code; no application code touched
-Task: Group the open DECIDE entries in Issues-and-TODOs by who has to answer, so the file reads as a set of questions to ask and decisions to make
+Task: Group the open DECIDE entries in Frontend-Issues-and-TODOs by who has to answer, so the file reads as a set of questions to ask and decisions to make
 Status: Completed
-Prompt/Request: Zean wrote that Issues-and-TODOs "will be flooded" and "already have many pending and unchecked, what can we do". I proposed, among other steps, grouping the open decisions by who must answer, and asked whether to do it. He answered: "for the third, yes that's actually good" (the third item of my three questions was: group the open decisions by who must answer, and move the resolved entries to an archive file).
+Prompt/Request: Zean wrote that Frontend-Issues-and-TODOs "will be flooded" and "already have many pending and unchecked, what can we do". I proposed, among other steps, grouping the open decisions by who must answer, and asked whether to do it. He answered: "for the third, yes that's actually good" (the third item of my three questions was: group the open decisions by who must answer, and move the resolved entries to an archive file).
 Files Modified:
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-20-open-decisions-by-owner.md (new)
 Changes Made:
 - New section "Open decisions by who must answer", placed above "Open decisions, waiting on someone outside the dev team". It lists the title of each of the 82 open DECIDE entries once, under one of six groups: waiting on the clinician (21), waiting on the school (14), yearly student list and school-year rollover (7), database design before any migration (3), depends on the QR, Instructor and LRN decisions on HOLD (5), ours to decide (32). A note at the top of the section says how the grouping was made and that Zean can move a line.

@@ -119,4 +119,4 @@ Per ADR-006, frontend leads and backend follows *per feature*, not "all frontend
 
 ## Definition of Done, Every Phase
 
-Regardless of frontend or backend: update the relevant `01`–`05` vault section if the phase changed how something works, add an `08-Logs/Agent-Sessions/` entry in the standard format (including the real timestamp — see `AGENTS.md`), add a one-line `Changelog.md` pointer, and update `Issues-and-TODOs.md` if anything was found or resolved. A phase isn't finished when the code works; it's finished when the next agent could pick up from here without re-asking what happened.
+Regardless of frontend or backend: update the relevant `01`–`05` vault section if the phase changed how something works, add an `08-Logs/Agent-Sessions/` entry in the standard format (including the real timestamp — see `AGENTS.md`), add a one-line `Frontend-Changelog.md` pointer, and update `Frontend-Issues-and-TODOs.md` if anything was found or resolved. A phase isn't finished when the code works; it's finished when the next agent could pick up from here without re-asking what happened.

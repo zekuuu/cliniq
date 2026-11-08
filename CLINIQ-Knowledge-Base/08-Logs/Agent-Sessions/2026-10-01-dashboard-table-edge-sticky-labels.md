@@ -8,8 +8,8 @@ Prompt/Request: Make the Total column sticky so it remains visible during sidewa
 Files Modified:
 - `.claude/skills/cliniq-table-patterns/SKILL.md`
 - `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
 - `frontend/src/components/ui/DataTable.tsx`
 - `frontend/src/components/ui/DataTable.test.tsx`
 - `frontend/src/features/dashboard/components/ComplaintTrends.tsx`

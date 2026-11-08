@@ -10,7 +10,7 @@ Files Modified:
 - `cliniq-frontend/src/features/student-records/StudentFormLoading.test.tsx`
 - `cliniq-frontend/src/features/student-records/api/studentFormApi.ts`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-add-edit-student-build.md`
 Changes Made:
 - Added the Staff-only Add/Edit Student form using the established card/form pattern.

@@ -6,7 +6,7 @@ Prompt/Request: "remove the New record badge and similar badge that looks like i
 Files Modified:
 - `frontend/src/features/student-records/StudentFormPage.tsx`
 - `frontend/src/features/student-records/StudentFormPage.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-24-student-form-redundant-badges.md`
 Changes Made:
 - Removed the passive `New record` / `Editing existing` badge because the page title already communicates whether the user is adding or editing a student.

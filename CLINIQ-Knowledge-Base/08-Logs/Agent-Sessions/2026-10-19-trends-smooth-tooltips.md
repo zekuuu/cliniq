@@ -12,7 +12,7 @@ Files Modified:
 - `frontend/src/features/dashboard/components/ComplaintTrends.tsx`
 - `frontend/src/features/dashboard/components/ComplaintTrends.test.tsx`
 - `frontend/src/features/dashboard/DashboardViews.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-19-trends-smooth-tooltips.md` (this file)
 
 Changes Made:

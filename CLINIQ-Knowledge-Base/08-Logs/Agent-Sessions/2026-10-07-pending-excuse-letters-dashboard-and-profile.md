@@ -12,7 +12,7 @@ Files Modified:
 - New `frontend/src/features/dashboard/components/PendingExcuseLetters.tsx`; `DashboardPage.tsx` renders it for Staff only, below the alert groups.
 - `frontend/src/features/student-records/StudentProfilePage.tsx`: pending rows show a "Pending approval" badge and a "Review letter" link to the letter page; approved rows keep "View visit".
 - Tests: `DashboardPage.test.tsx`, `StudentProfilePage.test.tsx`, `ExcusedPeriod.test.ts`.
-- Docs: `Module-Overview.md` (Modules 3 and 9), `ADR-011` (amendment), `Issues-and-TODOs.md`, `Changelog.md`, this log.
+- Docs: `Module-Overview.md` (Modules 3 and 9), `ADR-011` (amendment), `Frontend-Issues-and-TODOs.md`, `Frontend-Changelog.md`, this log.
 
 Changes Made: as listed. Decisions: the list has its own fetch, separate from the date-range summary, because a draft is current state like a due follow-up. Admin never requests it. The card is hidden when there are no drafts, so it doesn't sit empty on most days. Rows link the Student Number to the profile and "Review letter" to the letter. Display privacy: the Dashboard list shows the Student Number only (ADR-004); the profile is a single deliberate lookup. Audit trail: read-only, no new writes.
 
@@ -22,8 +22,8 @@ Testing Performed:
 - `npm run typecheck`: clean.
 - `npm test`: 61 files, 341 tests passed.
 - `npm run build`: succeeded.
-- Live Playwright script (MCP not attached; scratchpad `playwright-core`, cached Chromium, `vite` on 5199, `?mockPersist=on`): saved a Sent home visit with a draft and left without reviewing. The Dashboard listed it (2026-00001) and the seed draft (2021-00005), with no names. "Review letter" opened the Draft letter. The profile showed "Pending approval" with "Review letter". After approval the row left the Dashboard. Admin saw no card. No console errors. The one failed check, a 375px overflow, also appears for Admin without this card: it comes from the Visit Calendar and is logged in Issues-and-TODOs.
+- Live Playwright script (MCP not attached; scratchpad `playwright-core`, cached Chromium, `vite` on 5199, `?mockPersist=on`): saved a Sent home visit with a draft and left without reviewing. The Dashboard listed it (2026-00001) and the seed draft (2021-00005), with no names. "Review letter" opened the Draft letter. The profile showed "Pending approval" with "Review letter". After approval the row left the Dashboard. Admin saw no card. No console errors. The one failed check, a 375px overflow, also appears for Admin without this card: it comes from the Visit Calendar and is logged in Frontend-Issues-and-TODOs.
 
-Known Issues: see "Pending excuse letters on the Dashboard and profile" in `Issues-and-TODOs.md`.
+Known Issues: see "Pending excuse letters on the Dashboard and profile" in `Frontend-Issues-and-TODOs.md`.
 
 Next Steps: Phase 2 re-audit of the Dashboard (#31) and Student Profile (#7); fix the Visit Calendar's 375px overflow; carry the ADR-011 amendment into the canonical documents.

@@ -9,7 +9,7 @@ Files Modified:
 - `frontend/README.md`, `backend/README.md`, `CLINIQ-Knowledge-Base/README.md`
 - `frontend/src/components/README.md`, `hooks/README.md`, `lib/README.md`, `lib/mock-db/README.md`, `types/README.md`
 - `frontend/src/features/*/README.md` (all ten existing ones, rewritten to the six headings) and three new ones: `auth/`, `issue-reports/`, `legal/`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`, `Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`, `Frontend-Issues-and-TODOs.md`
 Changes Made:
 - Root README: what CLINIQ is and for whom; how the roles are named (School Clinician, Admin / Principal; "Staff" means staff patients in the app); the words the screens use; current state with a Built table (every route opened in the running app), Decided, not built (ADR-047 to ADR-053), Not started and Deferred; how to run; a map from each part of the Project Plan and SRS to its current source; a short developer section. Removed the stale "approximately 37 screens", "34-table", "18 open decisions" and "26 short explanations (ADR-001 to ADR-026)".
 - README_ORIGINAL: first line naming it the longer overview; database MariaDB (XAMPP), MySQL-compatible; Calendar as its own screen (ADR-032), not a Dashboard view; "first-aid checklist" instead of Smart Triage; staff patients added; backend parts marked planned; "16 bespoke skills" and "11 modules" counts removed; Node version corrected; client contact title "School Head Nurse" (source: Team-and-Roles.md, Project Plan Section 2.1), with the app role named.

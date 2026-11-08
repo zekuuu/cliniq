@@ -6,9 +6,9 @@ Prompt/Request: Zean wrote: "make the prompt to implement the removal of qr feat
 Files Modified:
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-033-Phone-Screens-Removed-Account-Management-To-Admin.md (new)
 - CLINIQ-Knowledge-Base/06-Decisions/Decisions-Summary.md
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
 - CLINIQ-Knowledge-Base/08-Logs/Issues-Done-Archive.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-20-removals-prompt-and-adr-033.md (new)
 Changes Made:
 - ADR-033: the phone-only screens are removed; account management moves to the Admin/Principal; the QR removal waits for the client's hosting answer (QR stays dropped in the plan, ADR-027); the last active Admin can never be disabled or demoted.

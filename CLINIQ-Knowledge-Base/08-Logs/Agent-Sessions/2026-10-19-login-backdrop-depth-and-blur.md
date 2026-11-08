@@ -8,8 +8,8 @@ Prompt/Request: Zean: "do 1 and 2. for the blur it should be noticeable that ima
 Files Modified:
 - `frontend/src/features/auth/LoginBackdrop.tsx`
 - `CLINIQ-Knowledge-Base/03-Design/Design-System.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-19-login-backdrop-depth-and-blur.md` (this file)
 Changes Made:
 - Overlay: flat `brand-green-dark/45` → bottom-to-top gradient `brand-green-dark` 75% → 35% at 55% → 20% at the top.

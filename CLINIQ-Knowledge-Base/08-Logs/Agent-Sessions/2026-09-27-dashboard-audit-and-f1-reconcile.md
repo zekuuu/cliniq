@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: Continue loop engineering using `Frontend-Loop-Engineering.md`; the kickoff work has already been partially completed.
 Files Modified:
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-dashboard-audit-and-f1-reconcile.md`
 Changes Made:
 - Audited the existing Clinic Overview Dashboard against the documented Reference 1, Screen #31, Module 9, design-system, display-privacy, audit-trail, and interactive-state requirements.

@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: "Every directory and every individual file linked in the new README needs a real, specific description." Read the linked Project Context and Requirements files before describing them; preserve all prior task requirements.
 Files Modified:
 - README.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-01-readme-link-descriptions.md
 Changes Made:
 - Added source-specific two-sentence descriptions for all six README sections.

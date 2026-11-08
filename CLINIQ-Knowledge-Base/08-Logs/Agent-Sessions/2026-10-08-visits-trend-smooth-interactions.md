@@ -6,7 +6,7 @@ Prompt/Request: "Make the chart in visits trend more interactively smooth"
 Files Modified:
 - frontend/src/features/dashboard/components/ComplaintTrends.tsx
 - frontend/src/features/dashboard/components/ComplaintTrends.test.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-08-visits-trend-smooth-interactions.md
 Changes Made:
 - Added a 280ms ease-out chart entrance plus 160ms point, hover, and tooltip transitions.

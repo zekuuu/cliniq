@@ -12,7 +12,7 @@ Files Modified:
 - New: `frontend/src/components/ui/CodeInput.tsx`.
 - Changed: `frontend/src/features/auth/ForgotPasswordDialog.tsx`, `frontend/src/lib/mock-db/api.ts` (`checkRecoveryAccount`, three messages, shared failure counting), `frontend/src/features/account/AuthenticatorDialog.tsx` (code boxes at setup), `frontend/src/components/ui/Modal.tsx`, `frontend/src/index.css` (`hover-field` variant), `frontend/src/components/ui/Input.tsx`, `Textarea.tsx`, `dropdownClassName.ts`, `frontend/src/components/index.ts`.
 - Tests: `features/account/Authenticator.test.tsx`, `features/auth/LoginPage.test.tsx`, `components/ui/Select.test.tsx`.
-- Documents: an amendment note on ADR-073; skills `cliniq-modal-patterns`, `cliniq-input-patterns` and `cliniq-interactive-states`; `Skills-Setup.md`; `Changelog.md`.
+- Documents: an amendment note on ADR-073; skills `cliniq-modal-patterns`, `cliniq-input-patterns` and `cliniq-interactive-states`; `Skills-Setup.md`; `Frontend-Changelog.md`.
 
 Changes Made:
 - **Forgot password in three steps.** Step 1 asks for the username, checked first: no account, disabled, or no authenticator, each saying which. Each failure counts toward the 5-try lockout. Step 2 shows the account name and six code boxes that continue by themselves after the sixth digit, or "Use a recovery code instead". Step 3 asks for the new password. A wrong code clears the boxes and gives the general message.

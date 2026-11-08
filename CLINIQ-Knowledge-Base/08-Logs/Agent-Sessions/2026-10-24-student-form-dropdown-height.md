@@ -6,7 +6,7 @@ Prompt/Request: "fix drop down fields not same height size with other input fiel
 Files Modified:
 - `frontend/src/features/student-records/StudentFormPage.tsx`
 - `frontend/src/features/student-records/StudentFormPage.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-24-student-form-dropdown-height.md`
 Changes Made:
 - Removed the compact `sm` size override from the Grade level and Sex selects, restoring the shared 40px (`md`) dropdown trigger used by standard form inputs.
@@ -15,8 +15,8 @@ Reason: The compact 32px override made those two selects visibly shorter than th
 Testing Performed:
 - `npm.cmd run test -- src/features/student-records/StudentFormPage.test.tsx -t "uses standard-height dropdowns"` — passed (1 test).
 - `npm.cmd run typecheck` — passed.
-- A broader Student Form test-file run encountered two existing duplicate-LRN/audit timing failures while other test processes were active; the focused regression test passes independently. This aligns with the existing CPU-load test-flakiness note in `Issues-and-TODOs.md`.
+- A broader Student Form test-file run encountered two existing duplicate-LRN/audit timing failures while other test processes were active; the focused regression test passes independently. This aligns with the existing CPU-load test-flakiness note in `Frontend-Issues-and-TODOs.md`.
 Known Issues:
-- No new issues. The existing Select listbox axe finding and test-load flakiness remain tracked in `Issues-and-TODOs.md`.
+- No new issues. The existing Select listbox axe finding and test-load flakiness remain tracked in `Frontend-Issues-and-TODOs.md`.
 Next Steps:
 - No follow-up is required for this scoped visual correction.

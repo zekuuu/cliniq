@@ -3,7 +3,7 @@ Agent: Claude Opus 5.5 (Claude Code)
 Task: Follow-ups to Frontend clean-up, Part 1: Edit Staff Back, Follow-Ups header, the patient badge, the "in clinic now" chip
 Status: Completed. Nothing committed.
 Prompt/Request: "Edit Staff has the same Back defect as Edit Student. fix", then, with three screenshots: "Then fix this layout. Also remove this button in clinic now, we dont need that. Then also fix this badge wrapping"
-Files Modified: `StaffFormPage.tsx`, `StaffProfilePage.tsx`, `FollowUpListPage.tsx`, `PatientFilterSelect.tsx`, `PatientNumber.tsx`, `VisitLogListPage.tsx`, `AttentionChips.tsx`, `routes/paths.ts`, `frontend-cleanup.test.tsx`, `URL-Parameters.md`, `Issues-and-TODOs.md`, `Issues-Done-Archive.md`, `Changelog.md`
+Files Modified: `StaffFormPage.tsx`, `StaffProfilePage.tsx`, `FollowUpListPage.tsx`, `PatientFilterSelect.tsx`, `PatientNumber.tsx`, `VisitLogListPage.tsx`, `AttentionChips.tsx`, `routes/paths.ts`, `frontend-cleanup.test.tsx`, `URL-Parameters.md`, `Frontend-Issues-and-TODOs.md`, `Issues-Done-Archive.md`, `Frontend-Changelog.md`
 Changes Made:
 - Edit Staff returns with `navigate(-1)` and `lib/savedMessage.ts`, as Edit Student does.
 - Follow-Ups header: Patient and Status both have their label beside the field.

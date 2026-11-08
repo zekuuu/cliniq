@@ -1,18 +1,18 @@
 Date/Day/Time: Sunday, October 11, 2026 — 11:55 PHT (system clock)
 Agent: Claude Code (Claude Opus 5.5)
-Task: Restructure `Issues-and-TODOs.md` into a tagged, sorted checklist (formatting and classification only)
+Task: Restructure `Frontend-Issues-and-TODOs.md` into a tagged, sorted checklist (formatting and classification only)
 Status: Completed
-Prompt/Request: "Turn `Issues-and-TODOs.md` into a sorted checklist." Zean asked for every bullet to get exactly one tag (`FIX`, `AUDIT`, `DOC`, `DECIDE`, `LATER` with `- [ ]`; `NOTE`, `VERIFY` with no checkbox; `DONE` with `- [x]`), a legend and an "Open work at a glance" block under the title, rewritten standing rules under "Format for new entries", and six script-run preservation checks. Constraints: do not fix, resolve, re-open, reword, move, or delete anything; keep every section and its order; no ADR; do not commit or push; do not use Microsoft Edge; append one sentence to step 4 of "After you finish" in `CLAUDE.md` and `AGENTS.md`.
+Prompt/Request: "Turn `Frontend-Issues-and-TODOs.md` into a sorted checklist." Zean asked for every bullet to get exactly one tag (`FIX`, `AUDIT`, `DOC`, `DECIDE`, `LATER` with `- [ ]`; `NOTE`, `VERIFY` with no checkbox; `DONE` with `- [x]`), a legend and an "Open work at a glance" block under the title, rewritten standing rules under "Format for new entries", and six script-run preservation checks. Constraints: do not fix, resolve, re-open, reword, move, or delete anything; keep every section and its order; no ADR; do not commit or push; do not use Microsoft Edge; append one sentence to step 4 of "After you finish" in `CLAUDE.md` and `AGENTS.md`.
 
 Files Modified:
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLAUDE.md` ("After you finish" step 4 only)
 - `AGENTS.md` ("After you finish" step 4 only)
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-11-issues-todos-tagged-checklist.md` (this file)
 
 Changes Made:
-- Ran `git fetch --all` and checked both branches. The live `Issues-and-TODOs.md` was last changed in `7d6a2a5`, which is already in local `main`. `feature/clinic-overview-dashboard` last touched it on October 1, so it is older. Local `main` is two commits behind `origin/main`, but those commits change only `setup-step.md` and `package.json`.
+- Ran `git fetch --all` and checked both branches. The live `Frontend-Issues-and-TODOs.md` was last changed in `7d6a2a5`, which is already in local `main`. `feature/clinic-overview-dashboard` last touched it on October 1, so it is older. Local `main` is two commits behind `origin/main`, but those commits change only `setup-step.md` and `package.json`.
 - Tagged all 165 list items (bullets, plus the seven numbered open questions under "Open design questions", which use `1. [ ] **[DECIDE]**`). A script applied the tags from a map of original line numbers.
 - Added the legend table and the "Open work at a glance" block under the title. The block has script-computed counts, the 22 open `FIX` items with their sections, and one line for each other open tag. A `---` rule ends the block.
 - Kept the existing "Format for new entries" sentence and added the Adding / Resolving / Always rules after it.

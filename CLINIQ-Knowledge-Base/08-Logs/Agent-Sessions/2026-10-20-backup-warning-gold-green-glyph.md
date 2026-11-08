@@ -6,7 +6,7 @@ Prompt/Request: "make it green"
 Files Modified:
 - `frontend/src/layouts/Sidebar.tsx`
 - `frontend/src/layouts/AppShell.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Changed the selected-state Backup warning triangle from charcoal to `brand-green-dark`, matching the selected navigation row while retaining its gold background.
 Reason: The glyph now visually belongs to the selected Backup item without losing the badge contrast.

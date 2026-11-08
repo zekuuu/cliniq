@@ -1,11 +1,11 @@
 Date/Day/Time: Saturday, October 17, 2026 — 08:01 PHT
 Agent: Claude (Sonnet 5.5), chat session, not Claude Code; no application code touched
-Task: Merge the October 16 professor and team-meeting entries in Issues-and-TODOs into one section, and add a preparation section for the meeting with the Principal and the clinic
+Task: Merge the October 16 professor and team-meeting entries in Frontend-Issues-and-TODOs into one section, and add a preparation section for the meeting with the Principal and the clinic
 Status: Completed
 Prompt/Request: Zean: "All the Issues and TODOs from the Meeting we did, the consultation with the prof, and the concern with the prof should be in one section so I can easily review them and they're related. Also add another section for the meeting with the principal and clinic. If there are any Issues and TODOs we need to add there. All entries should be detailed and complete."
 Files Modified:
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-027-Drop-QR-And-Student-Number.md and ADR-028-LRN-As-Student-Identifier.md (the section name they cite)
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-17-sections-merged-and-principal-clinic-meeting.md (new)
 Changes Made:

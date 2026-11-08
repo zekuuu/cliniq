@@ -3,7 +3,7 @@ Agent: Claude Opus 5.5 (Claude Code)
 Task: Frontend review round 2, Part 2 (R10 to R24): Students, Staff, Visits, Incidents, Login
 Status: Completed except R18 (Zean kept it as is) and the browser checks of R10. Not committed.
 Prompt/Request: "Complete Part 2 and Part 3" of `Prompt Frontend review, round 2` (groupmate's review, Monday, November 2, 2026). Decisions from Part 1 applied: R14 "Flag as incomplete", R16 "Type-ahead, starter list". New question: R18, answered "Keep Other only".
-Files Modified: `features/student-records/` (StudentListPage, StudentFormPage, StudentProfilePage, api/studentListApi, api/studentFormApi), `features/staff-records/` (StaffFormPage, api/staffApi), `features/clinic-visits/` (NewVisitEntryPage, VisitLogListPage), `features/emergency-response/` (IncidentEntryPage, api/incidentEntryApi), `components/forms/ComboboxWithOther.tsx` (new), `components/forms/HealthListField.tsx` (new), `config/healthStarterList.ts` (new), `components/ui/PatientNumber.tsx`, `components/forms/PatientPicker.tsx`, `components/forms/SelectWithOther.tsx` (comment), `components/print/Print.tsx`, `components/index.ts`, `lib/mock-db/selectors.ts`, `lib/itemsGiven.ts`, `lib/patients.ts`, `routes/paths.ts`, tests (new `features/review-round-2-parts-2-3.test.tsx` and updates), ADR-054 and ADR-049 notes, `cliniq-combobox-patterns`, `Skills-Setup.md`, `Changelog.md`.
+Files Modified: `features/student-records/` (StudentListPage, StudentFormPage, StudentProfilePage, api/studentListApi, api/studentFormApi), `features/staff-records/` (StaffFormPage, api/staffApi), `features/clinic-visits/` (NewVisitEntryPage, VisitLogListPage), `features/emergency-response/` (IncidentEntryPage, api/incidentEntryApi), `components/forms/ComboboxWithOther.tsx` (new), `components/forms/HealthListField.tsx` (new), `config/healthStarterList.ts` (new), `components/ui/PatientNumber.tsx`, `components/forms/PatientPicker.tsx`, `components/forms/SelectWithOther.tsx` (comment), `components/print/Print.tsx`, `components/index.ts`, `lib/mock-db/selectors.ts`, `lib/itemsGiven.ts`, `lib/patients.ts`, `routes/paths.ts`, tests (new `features/review-round-2-parts-2-3.test.tsx` and updates), ADR-054 and ADR-049 notes, `cliniq-combobox-patterns`, `Skills-Setup.md`, `Frontend-Changelog.md`.
 Changes Made:
 
 | Point | Result | Test |
@@ -26,5 +26,5 @@ Changes Made:
 
 Reason: The groupmate's review and Zean's answers.
 Testing Performed: Tests written first and seen failing, except R15 (component and test written in one step) and R13's preselect test (rewritten after a timeout). Typecheck 0, lint 0, 997 of 997 three times, build 0 (with Part 3). Not seen in a browser; no axe run.
-Known Issues: See the VERIFY and DOC entries of "Frontend review round 2, Parts 2 and 3" in Issues-and-TODOs.
+Known Issues: See the VERIFY and DOC entries of "Frontend review round 2, Parts 2 and 3" in Frontend-Issues-and-TODOs.
 Next Steps: Browser checks; canonical documents.

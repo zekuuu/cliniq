@@ -8,7 +8,7 @@ Files Modified:
 - cliniq-frontend/src/features/reports/lib/complaintCounts.ts (new)
 - cliniq-frontend/src/features/reports/ReportsPage.tsx (health view now renders `<HealthSummary>`)
 - cliniq-frontend/src/features/reports/ReportsPage.test.tsx (chart mock + 3 new tests)
-- CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md (#21 build note), 08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md (#21 build note), 08-Logs/Frontend-Changelog.md
 Changes Made:
 - Chart form follows the dataviz method: visits per complaint are magnitudes across categories, so the chart is horizontal bars sorted most to fewest. It's one series, so there's one hue (`brand-green-dark`, contrast already validated in the Design System) and no legend. Bars have rounded data-ends and are anchored flat to the baseline. Hover tooltips read "N visits". The screen-reader label lists every complaint and count.
 - Chart | Table toggle uses the shared `SegmentedControl` and is hidden in print.

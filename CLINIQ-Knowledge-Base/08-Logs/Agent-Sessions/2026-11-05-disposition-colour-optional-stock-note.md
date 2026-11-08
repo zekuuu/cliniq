@@ -12,7 +12,7 @@ Files Modified:
 - frontend/src/components/forms/FollowUpPrompt.tsx (reverted to committed), frontend/src/features/clinic-visits/NewVisitEntryPage.tsx (follow-up box reverted)
 - frontend/src/features/inventory/StockModals.tsx, frontend/src/lib/mock-db/api.ts, frontend/src/lib/mock-db/integrity.ts; tests: frontend/src/features/inventory/StockActions.test.tsx, frontend/src/lib/mock-db/stock.test.ts
 - frontend/src/features/clinic-visits/DispositionFields.tsx
-- Docs: ADR-068 (renamed ADR-068-Adjust-Stock-Note-Is-Optional.md), ADR-061, Decisions-Summary.md, Module-Overview.md, Issues-and-TODOs.md
+- Docs: ADR-068 (renamed ADR-068-Adjust-Stock-Note-Is-Optional.md), ADR-061, Decisions-Summary.md, Module-Overview.md, Frontend-Issues-and-TODOs.md
 Changes Made:
 - Follow-up prompt back to its neutral look (both copies).
 - Disposition (New Visit and the Visit Details edit form): every box shows its Visit Log badge tone (Returned to class/work green, Resting in clinic blue, Sent home amber, Referred to hospital red): a soft tint while not chosen, the solid colour with a 2px ring and semibold text when chosen (white on green 5.7:1, blue 4.6:1, red 5.0:1; dark on amber about 7:1). One border around the group of four, 6px between the boxes ("add a bit of gap between the buttons") ("add outer outline", clarified "I mean outer outline that cover those 4"; per-box outlines tried first and removed). `SegmentOption.className` and `selectedClassName` added to the shared SegmentedControl; other segmented controls unchanged.

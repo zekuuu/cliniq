@@ -12,7 +12,7 @@ Files Modified:
 - frontend/src/lib/tableSort.ts
 - frontend/src/lib/tableSort.test.ts
 - .claude/skills/cliniq-sorting-patterns/SKILL.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Set Last login, Expiration, Due date, Imported, Month, and Date table columns as their screens' active initial sort, all descending.
 - Preserved the existing descending defaults for Visit Log, Incident Log, Audit Log, and Incident Archive.

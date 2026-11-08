@@ -9,7 +9,7 @@ Files Modified:
 - `frontend/src/features/dashboard/components/ComplaintTrends.tsx`
 - `frontend/src/features/dashboard/DashboardPage.test.tsx`
 - `.claude/skills/cliniq-table-patterns/SKILL.md`
-- `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`, `08-Logs/Changelog.md`, `08-Logs/Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`, `08-Logs/Frontend-Changelog.md`, `08-Logs/Frontend-Issues-and-TODOs.md`
 Changes Made:
 - Confirmed the repo state (HEAD 165a5af, in sync with origin; this session's earlier uncommitted trend changes present) and that commit ddb21d8 exists.
 - Read `DataTable.tsx` and `ComplaintTrends.tsx`. The diagnosis did not hold: with `table-layout: fixed`, column widths that add up to more than the container make the table grow past it.
@@ -29,4 +29,4 @@ Testing Performed:
   - Complaint and Total were pinned at left, middle, and right positions in both ranges.
   - Zero-activity toggle on Last 30 days: rows 10 → 13 → 10 with identical column widths (212, 12 × 128, 80) and constant table width. Complaint-name column width still derives from the longest name (26ch with the full complaint set).
 Known Issues: Only Chromium was available for live testing. If the scroll loss was seen in another browser, the explicit width should cover it, but it hasn't been confirmed there.
-Next Steps: If scrolling still fails somewhere, record the browser, width, and range in Issues-and-TODOs.
+Next Steps: If scrolling still fails somewhere, record the browser, width, and range in Frontend-Issues-and-TODOs.

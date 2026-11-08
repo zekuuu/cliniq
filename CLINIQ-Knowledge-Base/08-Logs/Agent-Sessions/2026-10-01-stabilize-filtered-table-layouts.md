@@ -18,8 +18,8 @@ Files Modified:
 - frontend/src/features/dashboard/components/ComplaintTrends.tsx
 - frontend/src/features/dashboard/components/VisitCalendar.tsx
 - frontend/src/features/user-management/UserListPage.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Added an opt-in fixed table layout and column-width support to the shared DataTable.
 - Applied the fixed layout to every current DataTable, covering filter, search, date-range, pagination, report-period, and dashboard-derived table contents.

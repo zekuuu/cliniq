@@ -13,8 +13,8 @@ Files Modified:
 - CLINIQ-Knowledge-Base/06-Decisions/Decisions-Summary.md
 - .claude/skills/cliniq-print-patterns/SKILL.md
 - CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - `DashboardPrint` takes `view`, and `DashboardPage` passes the open tab. The scope line starts "Dashboard tab: Overview" or "Dashboard tab: Trends".
 - Overview prints the Clinic Overview Report. The key figures are now the screen's five stat cards, in the screen's order: Active students, Clinic visits, Pending excuse letters (Staff only), Incidents, and Due & overdue follow-ups. Before, the printout had its own set of figures. An "Also needing attention" row carries the chip counts: Incomplete records, Low-stock items, and Expired or expiring. Then come the written summary and the lists the cards link to: follow-ups, frequent visitors, excuse letters, and low-stock items.

@@ -6,12 +6,12 @@ Prompt/Request: Zean quoted ADR-029's line "CLINIQ will run locally. The Princip
 Files Modified:
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-029-Local-Deployment-Roles.md
 - CLINIQ-Knowledge-Base/06-Decisions/Decisions-Summary.md
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-17-principal-clinic-meeting-findings.md (one sentence)
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-17-principal-network-correction.md (new)
 Changes Made:
-- The wrong premise ("no Wi-Fi", "far from the clinic") came from the machine summary of the October 16 team meeting and was repeated in ADR-029 and in Issues-and-TODOs. It is replaced by Zean's account: the office has Wi-Fi, on a different network from the clinic's, so the Principal cannot reach a system that runs only on the clinic's local network.
+- The wrong premise ("no Wi-Fi", "far from the clinic") came from the machine summary of the October 16 team meeting and was repeated in ADR-029 and in Frontend-Issues-and-TODOs. It is replaced by Zean's account: the office has Wi-Fi, on a different network from the clinic's, so the Principal cannot reach a system that runs only on the clinic's local network.
 - The reason matters for what follows: the barrier is two separate networks, not a missing connection. Whether the two can be connected (or the clinic computer put on both) is now an explicit question for the teacher who manages the school's computers, with the privacy point that it widens who can reach a system holding children's health data. The earlier "will the school go online?" framing remains as one of two routes.
 - No decision changed: the Principal still signs in at the clinic computer (ADR-029).
 Reason: A correct statement of why the Principal cannot reach the system decides which options are worth asking the school about.

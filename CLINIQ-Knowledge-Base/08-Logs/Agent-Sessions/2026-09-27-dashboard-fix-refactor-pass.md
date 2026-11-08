@@ -7,7 +7,7 @@ Files Modified:
 - `.claude/skills/cliniq-display-privacy/SKILL.md`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-dashboard-fix-refactor-pass.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `cliniq-frontend/src/components/icons/Icon.tsx`
 - `cliniq-frontend/src/components/ui/Button.tsx`
 - `cliniq-frontend/src/components/ui/DateRangePicker.tsx`

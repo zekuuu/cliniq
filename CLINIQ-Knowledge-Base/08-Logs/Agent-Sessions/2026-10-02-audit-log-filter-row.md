@@ -9,7 +9,7 @@ Files Modified:
 - frontend/src/components/ui/DateRangePicker.tsx
 - frontend/src/features/clinic-visits/VisitLogListPage.test.tsx
 - .claude/skills/cliniq-date-range-patterns/SKILL.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Audit Log: filter row is now a wrapping flex row — Search (flexible), Date range (content width), User (w-48), Action type / Target (w-48). Clear Filters moved to the card header actions (top-right) and also clears the search. The skeleton matches the new row.
 - Search filters the loaded rows on the text the table already shows (user name, action label, target type, target label), so it can't surface hidden student details (cliniq-display-privacy). The entry count and empty state use the searched rows.
@@ -54,14 +54,14 @@ Known Issues: Sighted users can no longer see which record a navigable entry tar
 
 Follow-up — Friday, October 2, 2026 — 00:28 PHT
 Prompt/Request: User felt the Audit Log was "missing informations" but couldn't name it. I identified the missing "which record" (lost to the bare "View" link) and proposed: a short-form target, the actor's role, and a "what changed" line. The user replied "yes" to all.
-Files Modified: frontend/src/types/entities.ts; frontend/src/lib/mock-db/{api.ts, selectors.ts, integrity.ts, mock-db.json}; frontend/src/features/audit-log/{AuditLogPage.tsx, AuditLogPage.test.tsx}; frontend/src/features/ui-review-regressions.test.tsx; 06-Decisions/ADR-017 + Decisions-Summary; 02-Architecture/Database/ERD.md; 08-Logs/Issues-and-TODOs.md.
+Files Modified: frontend/src/types/entities.ts; frontend/src/lib/mock-db/{api.ts, selectors.ts, integrity.ts, mock-db.json}; frontend/src/features/audit-log/{AuditLogPage.tsx, AuditLogPage.test.tsx}; frontend/src/features/ui-review-regressions.test.tsx; 06-Decisions/ADR-017 + Decisions-Summary; 02-Architecture/Database/ERD.md; 08-Logs/Frontend-Issues-and-TODOs.md.
 Changes Made:
 - AuditLogEntry.summary (optional, field names only). Mock `audit()` takes it; `changedSummary()` names the fields that actually changed for student, visit, user, and inventory saves. Fixed summaries: "Changed password", "Completed Stage 2 details", "Marked <status>", "Verified backup". Five seeded update entries got summaries. The validator allows it as an optional non-empty string.
 - AuditLogRow: added userRole and summary. The target is now {type, recordType, kind, id, label}, with label a short identifier (Student Number / item / user / report name, or empty). The visit/incident datetime was dropped from the label. incident-stage-* and incident-report now bucket as Incident (they had fallen through to Report and linked to the Reports page). Excuse letters, referrals, and issue reports no longer link to Reports.
 - UI: Who = name + ROLE_LABELS role; Action = badge + optional summary; Target = muted kind · ListItemLink identifier (plain bold when not navigable). Search also matches role, summary, and kind. Target sort uses kind + identifier.
 - Updated the regression test that locked the old long label format. The "no internal ids" assertion is unchanged.
 Testing Performed: tsc clean; vitest 49 files / 222 tests pass; visual check at 1440px (default list and "updated" search).
-Known Issues: Canonical Frontend Context Brief §5 still needs the summary field (flagged in Issues-and-TODOs).
+Known Issues: Canonical Frontend Context Brief §5 still needs the summary field (flagged in Frontend-Issues-and-TODOs).
 
 ---
 

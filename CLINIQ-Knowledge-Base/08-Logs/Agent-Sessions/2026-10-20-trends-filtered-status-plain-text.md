@@ -6,7 +6,7 @@ Prompt/Request: "you overdid, just text Filtered: Male then easy to click clear"
 Files Modified:
 - `frontend/src/features/dashboard/DashboardPage.tsx`
 - `frontend/src/components/icons/Icon.tsx` (removed the `filter` icon added at 19:32, now unused)
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - The note beside the Overview/Trends tabs is now plain 14px text, "Filtered: **Female × Grade 5**" (the filter value semibold, `text-primary`), with no pill, border, fill or icon.
 - Clear is a semibold, underlined `brand-green-dark` text button with a 32px-tall hit area (`h-8 px-2`); hover darkens to `text-primary`; it keeps the shared focus ring. Placement beside the tabs (19:32 change) is unchanged.

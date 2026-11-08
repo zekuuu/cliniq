@@ -10,7 +10,7 @@ Files Modified:
 - `cliniq-frontend/src/routes/paths.ts`
 - `cliniq-frontend/src/routes/AppRoutes.tsx`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Built and routed the Staff desktop QR lookup hub with shared scanner/manual fallback and Student quick-actions.
 - Built the Staff QR print view with selectable student preview, Student Number QR encoding preview, and print-safe sticker layout.

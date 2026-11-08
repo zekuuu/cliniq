@@ -6,7 +6,7 @@ Prompt/Request: "Also another one wouldn't it be better if it has outer bg color
 Files Modified:
 - `frontend/src/layouts/Sidebar.tsx`
 - `frontend/src/layouts/AppShell.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Wrapped the Backup warning icon in a pale warning-colored, bordered circular background while preserving its accessible name and collapsed-sidebar placement.
 - Extended the sidebar regression test to assert the notification-badge treatment.

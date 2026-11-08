@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: "audit trends tab, there's a big space below the pie chart, wouldn't it be better if enlarge the chart"
 Files Modified:
 - `frontend/src/features/dashboard/components/ComplaintTrends.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Confirmed in Chromium: on desktop (`lg`) the "Visits by Sex" card is stretched to the height of the "Visits by grade level" card beside it, whose 13 grade buttons wrap onto several rows; the donut stayed a fixed 224px (`h-56`), leaving an empty band under the Female/Male buttons (about 180px at 1440, about 280px at 1024). Below `lg` the cards stack and there is no gap.
 - On `lg` the card is a flex column, its body grows (`lg:flex-1`), and the donut's container grows into the free height (`lg:h-auto lg:min-h-56 lg:flex-1`; Chart.js already uses `maintainAspectRatio: false`). Below `lg` it stays `h-56`.

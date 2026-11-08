@@ -7,7 +7,7 @@ Files Modified:
 - frontend/src/index.css
 - frontend/src/features/auth/LoginBackdrop.tsx
 - frontend/src/features/auth/LoginPage.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Diagnosis: the card used `shadow-card`, which is tuned for panels on a white page (4–6% alpha), and the blurred photo is bright, close in value to the white card. So neither shadow nor contrast separated the two layers.
 - `LoginBackdrop`: a `bg-brand-green-dark/45` tint layer above the photo. It renders only while the photo is shown, because the fallback gradient is already dark. It uses an existing brand token, so it adds no new hue; it's a contrast layer, not decoration (no glass effect or texture).

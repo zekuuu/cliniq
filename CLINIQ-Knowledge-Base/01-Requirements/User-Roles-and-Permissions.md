@@ -8,7 +8,7 @@
 
 **Own account (ADR-066):** every role changes its own display name, profile picture and password from the account menu in the header; the username and role stay with the Admin.
 
-**Deferred role (designed, not built):** Canteen Staff — a scoped sign-in with a narrow data scope (food allergies only). See `08-Logs/Issues-and-TODOs.md`.
+**Deferred role (designed, not built):** Canteen Staff — a scoped sign-in with a narrow data scope (food allergies only). See `08-Logs/Frontend-Issues-and-TODOs.md`.
 
 ## Display-Privacy Rule
 A screen showing **multiple students at once** (Visit Log List, Incident Log List, the Dashboard's frequent-visitor section) shows the **masked LRN**, not the name — these are the screens a bystander could glance at. A screen showing **one deliberately-identified student** (full profile, search results, the masterlist) shows the **full name** normally. See `06-Decisions/` for the correction history on this rule — it was originally scoped backwards and fixed once. The Sports Report (Staff only) is a decided exception: it lists students by full name for the PE/Sports Instructor who receives it (ADR-034). The Monthly Report printouts print the full LRN, still with no names; the screens stay masked (ADR-044). A printout about one student shows the full LRN (ADR-040).

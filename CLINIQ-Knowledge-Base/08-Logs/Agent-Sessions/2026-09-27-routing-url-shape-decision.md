@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: Edit Development-Phases.md §0 "Routing library" bullet. Confirm path-based routes (/{screen}, e.g. /students, /qr/scan) over query-param routes (?screen=X), with reasoning: 1:1 mapping onto ADR-008's feature folders; per-screen code-splitting for the 4GB RAM Performance NFR; declarative, auditable role-based route guards; natural nested/dynamic segments (/students/2026-00001/history). Note query params still belong for in-screen filters/view-state (/visits?dateRange=last30days) — path = which screen, query = what state. Leave the library choice open: propose React Router, marked explicitly as proposed, not confirmed. Update AGENTS.md/CLAUDE.md if either references this blocker as fully unresolved.
 Files Modified:
 - CLINIQ-Knowledge-Base/04-Development/Development-Phases.md (§0 intro status line; Routing library bullet)
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Split the Routing library bullet into two halves: URL shape (CONFIRMED: path-based, with the four requested reasons plus the path-vs-query rule) and library (PROPOSED, NOT CONFIRMED: React Router, still blocking until the owner confirms).
 - Noted that the existing `?screen=X` / `&role=` preview switch in `App.tsx` is temporary scaffolding to migrate to paths, not the target design.

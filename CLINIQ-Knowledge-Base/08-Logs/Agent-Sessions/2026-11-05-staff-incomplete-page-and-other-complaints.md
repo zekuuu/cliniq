@@ -11,7 +11,7 @@ Files Modified:
 - Staff: frontend/src/features/staff-records/StaffIncompleteRecordsPage.tsx (new), StaffListPage.tsx, StaffFormPage.tsx, api/staffApi.ts, StaffPages.test.tsx; missingStaffFields.ts removed (moved to selectors.ts, exported from lib/mock-db); frontend/src/routes/paths.ts, AppRoutes.tsx
 - Complaints: frontend/src/features/clinic-visits/ExtraComplaintsField.tsx, NewVisitEntryPage.tsx, VisitDetailPage.tsx; tests: StaffComplaintsBackupDecisions, NewVisitEntryPage, VisitDetailPage, VisitLogListPage, LogbookFields, form-focus-invalid (main Complaint dropdown found by /^Complaint/ now that "Other complaints" is also a dropdown)
 - frontend/src/layouts/AccountMenu.tsx
-- Docs: ADR-067, Decisions-Summary.md, Module-Overview.md, Issues-and-TODOs.md, .claude/skills/cliniq-input-patterns/SKILL.md, Skills-Setup.md
+- Docs: ADR-067, Decisions-Summary.md, Module-Overview.md, Frontend-Issues-and-TODOs.md, .claude/skills/cliniq-input-patterns/SKILL.md, Skills-Setup.md
 Changes Made:
 - `/staff/incomplete` ("Incomplete Staff Records"): the student queue's layout without the Imported column. Rows: active staff with gaps, plus resolved ones. `savePersonnel` resolves a record when an update turns it complete, recording user and time in `frontendOnly.personnelReviews` (seed: empty; integrity-checked). Staff List button links there with N = open rows; the Record status column and filter stay. Edit Staff returns to the page after a save when opened from it (`returnTo` + useGoBack).
 - ADR-067 revised: items 3, 4 and 6; the "filter only" version moved to Alternatives.

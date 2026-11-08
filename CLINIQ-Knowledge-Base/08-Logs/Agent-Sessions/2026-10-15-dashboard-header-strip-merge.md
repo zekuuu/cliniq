@@ -9,8 +9,8 @@ Files Modified:
 - `frontend/src/features/dashboard/components/StaffShortcuts.tsx`
 - `frontend/src/features/dashboard/README.md`
 - `CLINIQ-Knowledge-Base/03-Design/Reference-Screens.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-15-dashboard-header-strip-merge.md` (this file)
 
 Changes Made:

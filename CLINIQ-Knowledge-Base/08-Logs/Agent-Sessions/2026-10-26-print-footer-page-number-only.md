@@ -16,8 +16,8 @@ Files Modified:
 - CLINIQ-Knowledge-Base/06-Decisions/Decisions-Summary.md
 - .claude/skills/cliniq-print-patterns/SKILL.md
 - CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - `PrintDocument` writes a fixed footer: `@bottom-right` "Page X of Y". The `@bottom-left` box with the printed-by and confidentiality text is gone. Also removed: `CONFIDENTIALITY_LINE`, the `confidentiality` prop, `printedByLine` and `cssString`. The Sports Report no longer passes its line. The screen still shows that line.
 - The browser's own header was not changed in code. Chrome draws its header and footer in any page margin with room, even when the page sets its own footer, and "Page X of Y" needs the bottom margin. The user chose to keep the page number. The header is therefore turned off in the print dialog, recorded as a LATER for the deployment checklist.
@@ -36,7 +36,7 @@ Next Steps:
 
 ## Follow-up — Monday, October 26, 2026 — 11:39 PHT
 Prompt/Request: (screenshot of the browser header "10/26/26, 11:36 AM … CLINIQ — Clinic Overview") "remove this headers"
-Files Modified: frontend/src/index.css, frontend/src/components/print/Print.tsx, ADR-046, cliniq-print-patterns, Issues-and-TODOs, Changelog.
+Files Modified: frontend/src/index.css, frontend/src/components/print/Print.tsx, ADR-046, cliniq-print-patterns, Frontend-Issues-and-TODOs, Changelog.
 Changes Made:
 - `@page` margin changed from `14mm 15mm 20mm` to `0 15mm 20mm`. With no top margin, Chrome has no room for its header.
 - `PrintDocument` gains `pt-[14mm] [box-decoration-break:clone]`, so the top gap repeats on every page.

@@ -10,7 +10,7 @@ Files Modified:
 - `cliniq-frontend/src/features/student-records/StudentListLoading.test.tsx`
 - `cliniq-frontend/src/features/student-records/api/studentListApi.ts`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-student-list-build.md`
 Changes Made:
 - Added the Student List masterlist screen with full-name and Student Number search, grade-level filtering, archived-record inclusion, status badges, empty/error/loading states, and temporary `?screen=student-list` preview wiring.

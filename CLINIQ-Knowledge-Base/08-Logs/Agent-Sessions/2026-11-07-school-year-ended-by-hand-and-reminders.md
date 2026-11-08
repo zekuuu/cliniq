@@ -10,7 +10,7 @@ Files Modified:
 - `frontend/src/lib/mock-db/types.ts`, `integrity.ts` (optional end fields, end on or after start, every year but the last ended before the next starts), `mock-db.json` (2025–2026 ended April 14, 2026).
 - `frontend/src/types/dashboard.ts`, `features/dashboard/components/AttentionChips.tsx` (neutral "coming up" chip, warning chip once overdue).
 - `frontend/src/features/archive/ArchivePage.tsx` (+ test): one button for the next step, End or Start, each confirmed; the card says "In session" or "Ended …; on break".
-- Documents: a note on ADR-075, `Decisions-Summary.md`, `Screen-Inventory.md`, `Changelog.md`.
+- Documents: a note on ADR-075, `Decisions-Summary.md`, `Screen-Inventory.md`, `Frontend-Changelog.md`.
 
 Changes Made:
 - **End school year** (Archive page, Staff only): today becomes the last class day and the break begins tomorrow. Audited as "Ended school year 2026–2027". A year can't be ended twice. Visits during the break stay in the ended year until the next one is started.

@@ -6,7 +6,7 @@ Prompt/Request: "Change default sorting to status in follow ups"
 Files Modified:
 - frontend/src/features/emergency-response/FollowUpListPage.tsx
 - frontend/src/features/emergency-response/FollowUpListPage.test.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-22-follow-ups-default-status-sort.md
 Changes Made:
 - Changed the initial Follow-ups table sort from Due date descending to Status ascending.

@@ -6,7 +6,7 @@ Prompt/Request: "fix tab title too, must depend on what current page"
 Files Modified:
 - frontend/src/routes/AppRoutes.tsx
 - frontend/src/routes/AppRoutes.test.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-28-route-tab-titles.md
 Changes Made: Added a title to every route and a small route wrapper that updates `document.title` to `CLINIQ — <current page>`. Added a test confirming the tab title updates during sidebar navigation.
 Reason: The static HTML title always reported Clinic Overview, even when the user was working elsewhere.

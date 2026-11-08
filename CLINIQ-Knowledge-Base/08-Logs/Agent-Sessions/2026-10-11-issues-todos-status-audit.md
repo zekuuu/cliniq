@@ -1,12 +1,12 @@
 Date/Day/Time: Sunday, October 11, 2026 — 12:11 PHT (system clock)
 Agent: Claude Code (Claude Opus 5.5)
-Task: Status audit of open items in `Issues-and-TODOs.md`, and a check of the standing format rules
+Task: Status audit of open items in `Frontend-Issues-and-TODOs.md`, and a check of the standing format rules
 Status: Completed
-Prompt/Request: "Follow-up prompt — Status audit and standing rules for `Issues-and-TODOs.md`." Zean reported that some items still marked open (`- [ ]`) were already done. The request was to find them and close them with evidence: change `- [ ]` to `- [x]`, set the tag to `DONE`, and append `Resolved — verified <real timestamp>: <evidence>`. Only clear evidence closes an item. Partial or branch-only evidence goes in the report. Already-`DONE` items must never be reopened; any that look wrong are reported instead. The request also asked to confirm the "Format for new entries" rules and the `CLAUDE.md`/`AGENTS.md` step-4 sentence, adding only what was missing, and to recompute the "Open work at a glance" block with a script and run five scripted checks. Constraints: no code or issue fixes, no rewording or moving bullets, no groupmate-review bugs, no changes to `Frontend-Loop-Engineering.md` or `.claude/skills/`, no commit or push, no Microsoft Edge.
+Prompt/Request: "Follow-up prompt — Status audit and standing rules for `Frontend-Issues-and-TODOs.md`." Zean reported that some items still marked open (`- [ ]`) were already done. The request was to find them and close them with evidence: change `- [ ]` to `- [x]`, set the tag to `DONE`, and append `Resolved — verified <real timestamp>: <evidence>`. Only clear evidence closes an item. Partial or branch-only evidence goes in the report. Already-`DONE` items must never be reopened; any that look wrong are reported instead. The request also asked to confirm the "Format for new entries" rules and the `CLAUDE.md`/`AGENTS.md` step-4 sentence, adding only what was missing, and to recompute the "Open work at a glance" block with a script and run five scripted checks. Constraints: no code or issue fixes, no rewording or moving bullets, no groupmate-review bugs, no changes to `Frontend-Loop-Engineering.md` or `.claude/skills/`, no commit or push, no Microsoft Edge.
 
 Files Modified:
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-11-issues-todos-status-audit.md` (this file)
 
 Changes Made:

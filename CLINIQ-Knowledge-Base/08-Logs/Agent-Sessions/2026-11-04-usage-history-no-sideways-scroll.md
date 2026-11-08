@@ -3,7 +3,7 @@ Agent: Claude Code (Opus 5.5)
 Task: Undo S2's vertical scroll on Inventory Usage History; stop the table scrolling sideways
 Status: Completed (not committed)
 Prompt/Request: Zean, after the hand-back of [2026-11-04-pager-history-scroll-report-link-name-split](2026-11-04-pager-history-scroll-report-link-name-split.md): "undo S2, scrolling history, what I mean scrollable is why is it scrollable horizontally".
-Files Modified: `frontend/src/components/ui/DataTable.tsx`, `DataTable.test.tsx` (restored to `471f616f`), `frontend/src/features/inventory/InventoryHistoryPage.tsx`, `InventoryHistoryPage.test.tsx`, `.claude/skills/cliniq-table-patterns/SKILL.md`, `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`, `08-Logs/{Changelog,Issues-and-TODOs,Issues-Done-Archive}.md`, this log.
+Files Modified: `frontend/src/components/ui/DataTable.tsx`, `DataTable.test.tsx` (restored to `471f616f`), `frontend/src/features/inventory/InventoryHistoryPage.tsx`, `InventoryHistoryPage.test.tsx`, `.claude/skills/cliniq-table-patterns/SKILL.md`, `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`, `08-Logs/{Changelog,Frontend-Issues-and-TODOs,Issues-Done-Archive}.md`, this log.
 Changes Made:
 - **Undone:** the `DataTable` `maxHeight` option, its tests, the page's bounded height, pinned first column and the S2 test; the skill section about tall tables.
 - **Why it scrolled sideways:** the table had `minTableWidth="72rem"` (1152px), and its fixed columns alone added up to 60rem. The card's scroller is 897px wide at 1280, 983px at 1366 and 1057px at 1440, so it scrolled sideways on every desktop.

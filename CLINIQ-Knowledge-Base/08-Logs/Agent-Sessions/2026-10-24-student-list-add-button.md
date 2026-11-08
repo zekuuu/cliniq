@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: "why was new student or adding a student now gone, it's there before" and then "what I mean is a visible button in student list page"
 Files Modified:
 - frontend/src/features/student-records/StudentListPage.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - The Student List header card now has a primary "Add Student" link-button (plus icon) to `paths.studentNew`. It uses the same layout as the Inventory List's "Add Item": title and description on the left, the action on the right, wrapping on narrow screens.
 Reason: The git history (all 13 versions of StudentListPage.tsx, every branch) shows the Student List never had this button. Add Student was reachable only through the StudentPicker's no-match "Add a student" link on New Visit, PE/Sports Referral, Incident Entry and Dispense. The user wanted a visible entry point on the list. The Student List and Add Student routes are both Staff-only, so the button needs no role gate.

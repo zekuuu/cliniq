@@ -8,7 +8,7 @@
 The Dashboard calendar (Module 9) showed only the free-text event tag Staff typed on a visit or
 incident. An event could not exist on a day with no visits, including any future date. A fuller,
 separately managed school-events calendar was deferred as a future decision (Module-Overview,
-"Future Decision: Full School-Events Calendar"; Project Plan §1.4; Issues-and-TODOs) because two
+"Future Decision: Full School-Events Calendar"; Project Plan §1.4; Frontend-Issues-and-TODOs) because two
 questions were open: who maintains the events, and what the management screens look like.
 
 The project owner has now answered both: Staff maintain the events from the Dashboard calendar, and

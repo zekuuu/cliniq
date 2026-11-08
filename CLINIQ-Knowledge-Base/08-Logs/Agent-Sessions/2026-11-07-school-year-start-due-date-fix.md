@@ -4,7 +4,7 @@ Task: Fix the school-year start reminder after the start date is moved later in 
 Status: Completed
 Prompt/Request: Zean, in chat: "where can I see the reminder. i edited the start date nov 10 first then ended the school year to test it".
 
-Files Modified: `frontend/src/lib/schoolYear.ts`, `frontend/src/lib/schoolYear.test.ts`, `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`.
+Files Modified: `frontend/src/lib/schoolYear.ts`, `frontend/src/lib/schoolYear.test.ts`, `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`.
 
 Changes Made: `nextSchoolYear` put the next start on the start date in the year after the current year began. With the start date set to November 10 and the year ended on November 7, 2026, that gave November 10, 2027, so no reminder showed. The due date is now the first start date after the current year ended (or began, while it is in session): November 10, 2026. The label is unchanged: the next in sequence, 2027–2028.
 

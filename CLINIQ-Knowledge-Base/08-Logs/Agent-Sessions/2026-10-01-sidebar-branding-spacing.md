@@ -9,7 +9,7 @@ Files Modified:
 - `frontend/src/layouts/Sidebar.tsx`
 - `.claude/skills/cliniq-sidebar-patterns/SKILL.md`
 - `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-01-sidebar-branding-spacing.md`
 Changes Made:
 - Moved the non-interactive HealWare attribution from the footer into the expanded sidebar brand stack, directly below Mendez Christian Academy.

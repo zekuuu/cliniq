@@ -8,7 +8,7 @@ Files Modified:
 - frontend/src/features/staff-records/StaffImportPage.tsx (new), StaffListPage.tsx (Import List button), StaffImport.test.tsx (new)
 - frontend/src/routes/paths.ts, frontend/src/routes/AppRoutes.tsx
 - frontend/sample-data/staff-list-sample.csv (new; follow-up "then also provide sample csv for it"), and frontend/sample-data/student-list-sample.csv (moved from frontend/src/test/fixtures/; follow-up "move both sample csv in folder can be easy to find or open"). Inside frontend/ because Vite refuses to load files outside its root.
-- Docs: ADR-069 (new), Decisions-Summary.md, Module-Overview.md, Issues-and-TODOs.md
+- Docs: ADR-069 (new), Decisions-Summary.md, Module-Overview.md, Frontend-Issues-and-TODOs.md
 Changes Made:
 - `/staff/import`, "Import Staff List": drop zone, column matching (guessed from headers; the contact-number guess skips "emergency" headers), preview (new, matched and changed, skipped rows with the reason), confirm, apply. No archive step.
 - Matching and checks per ADR-069. Blank cells keep CLINIQ's value; a contact from the file is added only when the record has none. An archived record matched by Staff No. is restored. A record completed by the import is resolved on the staff Incomplete Records page, credited to the importer (the resolve code now shared with Edit Staff).

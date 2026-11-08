@@ -6,7 +6,7 @@ Prompt/Request: "move it a bit right, close to the edge. also remove the bg hove
 Files Modified:
 - `cliniq-frontend/src/layouts/Sidebar.tsx`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-sidebar-collapse-icon-adjustment.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Shifted the expanded sidebar collapse control closer to the right edge of the sidebar header.
 - Removed the visible hover background from the collapse control so only the icon changes color on hover.

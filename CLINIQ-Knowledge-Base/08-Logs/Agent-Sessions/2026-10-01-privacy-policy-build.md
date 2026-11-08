@@ -16,7 +16,7 @@ Files Modified:
 - `.claude/skills/cliniq-sidebar-patterns/SKILL.md`
 - `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-01-privacy-policy-build.md`
 Changes Made:
 - Added a static semantic Privacy Policy page under the legal feature area, transcribing the reference headings, paragraphs, lists, emphasis, table, disclaimer, and unresolved Contact placeholder without changing the policy text.

@@ -15,7 +15,7 @@ Zean, after the agent's README run listed eleven places where the canonical docu
 - `09-References/Canonical-Documents/CLINIQ_Frontend_Design_Reference.md`
 - `09-References/Canonical-Documents.md` (index: revision number, screen count wording)
 - `README.md` (root; one sentence in "Where to find what" that called the canonical documents out of date)
-- `08-Logs/Issues-and-TODOs.md`, `08-Logs/Issues-Done-Archive.md`, `08-Logs/Changelog.md`
+- `08-Logs/Frontend-Issues-and-TODOs.md`, `08-Logs/Issues-Done-Archive.md`, `08-Logs/Frontend-Changelog.md`
 - Not touched: `CLINIQ_Review_of_Related_Systems.md` (external research), `ERD.md`, `Data-Dictionary.md`, `Reference-Schema.sql`, the vault copies of the canonical documents, code and the other READMEs.
 
 ## Changes Made

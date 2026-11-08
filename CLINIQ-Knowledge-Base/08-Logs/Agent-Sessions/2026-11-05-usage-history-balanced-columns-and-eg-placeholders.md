@@ -3,7 +3,7 @@ Agent: Claude Code (Opus 5.5)
 Task: Balance the Inventory Usage History columns and left-align them; "e.g." in the name placeholders
 Status: Completed (not committed)
 Prompt/Request: Zean, with a screenshot of the table at the page cap: "balance the width to reduce wrapping, also make all left-aligned". Then: "then also reword Example: in placeholder to e.g. instead, is it best".
-Files Modified: `frontend/src/features/inventory/InventoryHistoryPage.tsx`, `InventoryHistoryPage.test.tsx`, `frontend/src/components/forms/NameFields.tsx`, `frontend/src/features/student-records/StudentFormPage.test.tsx`, `.claude/skills/cliniq-table-patterns/SKILL.md`, `08-Logs/{Changelog,Issues-and-TODOs,Issues-Done-Archive}.md`, this log.
+Files Modified: `frontend/src/features/inventory/InventoryHistoryPage.tsx`, `InventoryHistoryPage.test.tsx`, `frontend/src/components/forms/NameFields.tsx`, `frontend/src/features/student-records/StudentFormPage.test.tsx`, `.claude/skills/cliniq-table-patterns/SKILL.md`, `08-Logs/{Changelog,Frontend-Issues-and-TODOs,Issues-Done-Archive}.md`, this log.
 Changes Made:
 - Measured each column's widest one-line content in Chrome (100 rows): Date and time 186px, Item 191, Movement 215, Change 101, Batch 104, Patient 116, By 116 (1029px in all; the table is 1096px at the page cap).
 - Widths: Change 6.5rem, Batch 6.5rem, Patient 7.5rem, By 7.5rem (fixed to their content); Date and time 17.5% and Movement 20% (they grow with the screen); Item takes the rest. The 55rem minimum stays, so no desktop scrolls sideways.

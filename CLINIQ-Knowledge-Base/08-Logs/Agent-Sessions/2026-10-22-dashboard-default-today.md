@@ -8,7 +8,7 @@ Files Modified:
 - frontend/src/features/dashboard/DashboardPage.test.tsx
 - .claude/skills/cliniq-date-range-patterns/SKILL.md
 - CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-22-dashboard-default-today.md
 Changes Made:
 - Changed the Dashboard's initial `DateRange` preset from `thisMonth` to `today`.

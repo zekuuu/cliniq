@@ -10,7 +10,7 @@ Files Modified:
 - `frontend/src/layouts/AppShell.test.tsx`
 - `.claude/skills/cliniq-sidebar-patterns/SKILL.md`
 - `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-01-sidebar-footer-hover-and-divider.md`
 Changes Made:
 - Reduced the sidebar bottom inset so the footer sits lower.

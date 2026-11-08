@@ -13,4 +13,4 @@ Needed a unique, scalable, memorable student identifier to embed in the QR code 
 A lettered code (e.g. `ABC-123`) — rejected for visually ambiguous characters (0/O, 1/I) that hurt manual entry, and for needing a pre-planned combinatorial scheme to avoid running out, unlike a year-prefixed number which scales by construction.
 
 ## Consequences
-**Open question as of the barcode-scanner discussion (see Issues-and-TODOs):** MCA may already have an existing student masterlist with its own embedded barcode per student. If a physical scanner proposal is approved, this ADR may need revisiting — either the existing barcode replaces this scheme, or the two coexist. No decision made yet; do not build against an assumption either way.
+**Open question as of the barcode-scanner discussion (see Frontend-Issues-and-TODOs):** MCA may already have an existing student masterlist with its own embedded barcode per student. If a physical scanner proposal is approved, this ADR may need revisiting — either the existing barcode replaces this scheme, or the two coexist. No decision made yet; do not build against an assumption either way.

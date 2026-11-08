@@ -28,6 +28,6 @@ The user approved adding both the role and a "what changed" line (Friday, Octobe
 - **A separate Details column** — rejected for now. The summary sits under the action badge, so the table keeps four columns.
 
 ## Consequences
-- **Canonical doc needs updating:** `CLINIQ_Frontend_Context_Brief.md` §5's AuditLogEntry line (and `02-Architecture/Database/ERD.md`) should list the optional `summary`. ERD.md was updated here; the canonical brief is flagged in Issues-and-TODOs.md for its owner.
+- **Canonical doc needs updating:** `CLINIQ_Frontend_Context_Brief.md` §5's AuditLogEntry line (and `02-Architecture/Database/ERD.md`) should list the optional `summary`. ERD.md was updated here; the canonical brief is flagged in Frontend-Issues-and-TODOs.md for its owner.
 - **Backend B3 audit infrastructure** must accept an optional summary from each mutation and build it from changed field *names*. The mock `changedSummary()` in `frontend/src/lib/mock-db/api.ts` is the reference behavior.
 - The mock-data validator (`integrity.ts`) now allows `summary` as an optional, non-empty string on audit entries.

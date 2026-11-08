@@ -6,7 +6,7 @@ Prompt/Request: "for collapsed state, hamburger shouldn't inherit the bg color o
 Files Modified:
 - `cliniq-frontend/src/layouts/Sidebar.tsx`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-collapsed-hamburger-icon-only.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Moved the collapsed logo's green tile styling from the whole expand button onto the shield icon span only.
 - Left the hover/focus hamburger state as a bare icon with no inherited logo background.

@@ -3,7 +3,7 @@ Agent: Claude Opus 5.5 (Claude Code)
 Task: Frontend clean-up, Part 3: one final audit, closing the AUDIT entries
 Status: Partial. The automated audit passed and the ten AUDIT entries are closed; the manual checks listed under Known Issues were not done.
 Prompt/Request: `Prompt-Frontend-Cleanup-Code-Nov1`, Part 3 (see the Part 2 log).
-Files Modified: the Issues and Archive files, `Changelog.md`, this log. The audit found nothing to fix in code.
+Files Modified: the Issues and Archive files, `Frontend-Changelog.md`, this log. The audit found nothing to fix in code.
 Changes Made: One Phase 2 pass in place of ten partial ones. All ten open AUDIT entries are resolved and archived, naming this audit.
 Reason: Parts 1 and 2 changed more than the entries listed.
 Testing Performed:

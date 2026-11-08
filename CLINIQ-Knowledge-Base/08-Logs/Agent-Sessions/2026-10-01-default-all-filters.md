@@ -18,7 +18,7 @@ Files Modified:
 - .claude/skills/cliniq-date-range-patterns/SKILL.md
 - .claude/skills/cliniq-multi-select-patterns/SKILL.md
 - CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Put All first in the shared DateRangePicker default order and all explicit operational date-range menus.
 - Changed the dashboard's initial date range from Last 30 days to All.

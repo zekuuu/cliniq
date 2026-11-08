@@ -13,7 +13,7 @@ Files Modified:
 - Pages/APIs now take the record from the URL: StudentProfilePage + studentProfileApi, StudentFormPage + studentFormApi (edit mode now comes from the route instead of `?mode=edit`), VisitDetailPage + visitDetailApi, ExcuseLetterPage + excuseLetterApi, NewVisitEntryPage + newVisitApi, IncidentEntryPage + incidentEntryApi (`studentId` prop renamed to `studentNumber`)
 - Link wiring: QrMobileHubPage (quick actions carry the scanned Student Number), VisitLogListPage ("View Detail" links to `/visits/:id`), StudentProfilePage ("Edit" links to `/students/:n/edit`)
 - Tests: src/test/setup.ts, src/test/renderWithRouter.tsx (new); router-wrapped VisitLogList*, StudentProfile*, QrMobileHub, AppShell tests; updated href/Edit/edit-mode assertions
-- Docs: Development-Phases.md §0, Frontend-Loop-Engineering.md (F0 note), Tech-Stack.md, Environment-Setup.md, Issues-and-TODOs.md, ADR-012 (new), Changelog.md
+- Docs: Development-Phases.md §0, Frontend-Loop-Engineering.md (F0 note), Tech-Stack.md, Environment-Setup.md, Frontend-Issues-and-TODOs.md, ADR-012 (new), Frontend-Changelog.md
 Changes Made:
 - Routes: `/`, `/students`, `/students/new`, `/students/incomplete`, `/students/:studentNumber`, `/students/:studentNumber/edit`, `/visits`, `/visits/new?student=`, `/visits/pe-referral`, `/visits/:visitId`, `/visits/:visitId/excuse-letter`, `/incidents/new?student=`, `/qr/scan`, plus a not-found fallback.
 - Role access is declared per route. Staff can open everything. Admin can open only `/` (Reports isn't built yet). Instructor can open only `/qr/scan` and the read-only profile, and never gets the shell. A disallowed route redirects to the role's home screen.
@@ -27,7 +27,7 @@ Testing Performed:
 - `npx eslint src`: 0 errors, 1 warning (in `FollowUpPrompt.tsx`, which this change didn't touch).
 - `vite preview` + curl: `/`, `/students`, `/students/2026-00001/history`, `/visits?dateRange=last30days`, `/qr/scan` all return 200 with the app shell HTML.
 Known Issues:
-- The production LAN server needs an `index.html` history fallback (logged in Issues-and-TODOs).
+- The production LAN server needs an `index.html` history fallback (logged in Frontend-Issues-and-TODOs).
 - Student List rows don't link to profiles yet (logged; decide during #6 Audit).
 - `?mock=` debug params are dropped on in-app navigation (expected; logged).
 - The routes changed how several already-built screens pick their record, so each screen's Phase 2 Audit should re-check it (logged).

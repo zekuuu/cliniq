@@ -30,7 +30,7 @@ Follow-up (Thursday, November 05, 2026 — 01:14 PHT), prompt: "remove (optional
 
 Follow-up (Thursday, November 05, 2026 — 01:16 PHT), prompt: "now use the same width of that page to other who has small width like add staff, etc":
 - The shared `--container-page-narrow` token in `frontend/src/index.css` is now 52rem (832px), up from 45rem (720px). Every form and detail page that uses `max-w-page-narrow` (18 pages) gets the Student form width. The Student form uses the token again instead of its own `max-w-[52rem]`.
-- `03-Design/Design-System.md` is updated. The canonical Frontend Context Brief and Frontend Design Reference still say 720px; this is logged as a DOC item in Issues-and-TODOs.
+- `03-Design/Design-System.md` is updated. The canonical Frontend Context Brief and Frontend Design Reference still say 720px; this is logged as a DOC item in Frontend-Issues-and-TODOs.
 - The full vitest suite passes: 121 files, 1034 tests.
 
 Follow-up (Thursday, November 05, 2026 — 01:57 PHT), prompt: "Now the add student already has by section dividers, make the horizontal line a bit visible":

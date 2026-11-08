@@ -4,7 +4,7 @@ Task: Make the school-year reminder shorter and more visible
 Status: Completed
 Prompt/Request: Zean, in chat: "i think it's too long, and it shouldn't be on chips location but rather in more visible".
 
-Files Modified: new `frontend/src/features/dashboard/components/SchoolYearBanner.tsx`; `frontend/src/features/dashboard/DashboardPage.tsx`; `frontend/src/features/dashboard/components/AttentionChips.tsx` (the reminder chip removed); `frontend/src/features/archive/ArchivePage.test.tsx`; `Screen-Inventory.md`, `Decisions-Summary.md`, `Changelog.md`.
+Files Modified: new `frontend/src/features/dashboard/components/SchoolYearBanner.tsx`; `frontend/src/features/dashboard/DashboardPage.tsx`; `frontend/src/features/dashboard/components/AttentionChips.tsx` (the reminder chip removed); `frontend/src/features/archive/ArchivePage.test.tsx`; `Screen-Inventory.md`, `Decisions-Summary.md`, `Frontend-Changelog.md`.
 
 Changes Made:
 - The reminder is now a banner directly under the Dashboard header card. It shows on every Dashboard tab, for Staff only. Before, it was a chip in the attention row lower down the Overview tab.

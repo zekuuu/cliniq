@@ -9,7 +9,7 @@ Files Modified:
 - `CLINIQ-Knowledge-Base/02-Architecture/Tech-Stack.md`
 - `CLINIQ-Knowledge-Base/06-Decisions/ADR-015-Session-Lifetime-No-Idle-Timeout.md`
 - obsolete duplicate session-lifetime ADR (deleted)
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-01-documentation-adr-and-tech-stack-cleanup.md`
 Changes Made: Confirmed ADR-015 contains the canonical session-lifetime decision, removed the obsolete ADR-010 duplicate, removed the stale filename instruction from ADR-015 while retaining its renumbering history, and added the requested Routing and Data fetching rows after Styling in the Tech Stack table.
 Reason: Keep the decision records unambiguous and document the two confirmed frontend libraries already used by the project.

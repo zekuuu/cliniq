@@ -8,7 +8,7 @@ Prompt/Request: "Fix it also why is that layout like that"
 Files Modified:
 - `frontend/src/features/clinic-visits/VisitLogListPage.tsx`
 - `frontend/src/features/clinic-visits/VisitLogListPage.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-23-visit-log-status-filter-layout.md`
 Changes Made:
 - Replaced the unlabelled, two-line checkbox stack with one labelled `Visit status` fieldset that aligns with the adjacent 40px filters.

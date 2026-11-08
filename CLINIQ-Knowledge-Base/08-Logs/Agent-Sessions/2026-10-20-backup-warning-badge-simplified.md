@@ -6,7 +6,7 @@ Prompt/Request: "it looks ai-slop"
 Files Modified:
 - `frontend/src/layouts/Sidebar.tsx`
 - `frontend/src/layouts/AppShell.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Replaced the pale, outlined circular warning treatment with one compact 20px solid amber rounded-square badge and a white alert icon.
 - Preserved the existing accessible label, tooltip, placement, and warning conditions.

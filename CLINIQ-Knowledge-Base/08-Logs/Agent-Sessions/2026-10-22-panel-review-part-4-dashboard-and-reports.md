@@ -24,7 +24,7 @@ Files Modified:
 - CLINIQ-Knowledge-Base:
   - 01-Requirements/Features/Module-Overview.md, 03-Design/Screen-Inventory.md, 03-Design/Reference-Screens.md, 04-Development/Development-Phases.md, 00-Project-Core/Team-and-Roles.md
   - canonical CLINIQ_Modules_and_Features.md, CLINIQ_Frontend_Context_Brief.md, CLINIQ_Frontend_Design_Reference.md
-  - 08-Logs (Changelog, Issues-and-TODOs, Issues-Done-Archive)
+  - 08-Logs (Changelog, Frontend-Issues-and-TODOs, Issues-Done-Archive)
 
 Changes Made:
 - **Trends (DB-2, D4).** `trendFor(current, previous, range, minPrior)`:

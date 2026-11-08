@@ -4,9 +4,9 @@ Task: Change the allergy and condition wording from "None" / "Not recorded" to "
 Status: Completed (records and prompt; nothing built)
 Prompt/Request: Zean: "change None to None recorded instead not warning alert".
 Files Modified:
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
 - CLINIQ-Knowledge-Base/08-Logs/Issues-Done-Archive.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-29-allergy-wording-none-recorded.md (new)
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-049-Clinical-Record-Rules-Letters-Allergies-Notes.md (amended)
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-051-Starting-Values-Follow-Up-Closing-Vitals-Ranges-Automatic-Archive-And-Required-Marks.md (item 9 revised)

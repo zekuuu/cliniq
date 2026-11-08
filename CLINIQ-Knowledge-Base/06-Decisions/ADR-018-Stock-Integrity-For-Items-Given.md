@@ -22,10 +22,10 @@ The project owner asked (Wednesday, October 7, 2026) for a visit's treatment to 
 9. **Expiry changes only through Restock.** Restock is a new row action (quantity received + the item's expiration date). Edit Item still sets name, category, unit, and threshold; stock and expiration date are read-only there (still set once on Add Item), and the data layer ignores them on an edit. To replace an expired batch: dispose of the old quantity with Adjust Stock, then Restock with the new date.
 10. **Standalone Dispense** stays for non-visit use. It must name a student or choose "Not for a student (general use)". If the student already has a visit today, a notice links to that visit so the medicine is added there instead. The expired rule applies, and the data layer rejects an unknown Student Number or visit.
 11. **Display.** The visit detail and the student's visit history (Student Profile, and the QR mobile hub's history) show medicines given, e.g. "Paracetamol 500mg × 2 tablets (1 tablet every 6 hours)". Any dispense or transaction history list shows the Student Number, never the name (none exists yet).
-12. **Incidents.** Incident Stage 2 records medicines with the same component; Stage 1 stays fast with no medicine entry. Incident-linked dispenses carry `incidentId`. Lines are dispensed when Stage 2 is first completed; changing them afterwards is rejected until an incident-edit rule is decided (Issues-and-TODOs).
+12. **Incidents.** Incident Stage 2 records medicines with the same component; Stage 1 stays fast with no medicine entry. Incident-linked dispenses carry `incidentId`. Lines are dispensed when Stage 2 is first completed; changing them afterwards is rejected until an incident-edit rule is decided (Frontend-Issues-and-TODOs).
 
 ## Provisional fields (pending the ERD)
-Each of these follows the existing PROVISIONAL / `frontendOnly` convention and is listed in `08-Logs/Issues-and-TODOs.md` for the schema design:
+Each of these follows the existing PROVISIONAL / `frontendOnly` convention and is listed in `08-Logs/Frontend-Issues-and-TODOs.md` for the schema design:
 - `Visit.itemsGiven` and `Incident.itemsGiven`: arrays of `ItemGivenLine` (`itemId`, `itemName`, `unit`, `quantity`, `instructions`).
 - `InventoryTransaction.type` gains `adjustment`; `InventoryTransaction.reason` (`visit_edited` | `expired_disposed` | `damaged_spilled` | `miscount_correction` | `other`), `.note`, and `.incidentId`.
 

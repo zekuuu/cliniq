@@ -9,7 +9,7 @@ Prompt/Request: Zean's build prompt "Build: drop the student's own number, add t
 ## Files Modified
 
 - Frontend: `lib/age.ts` and `lib/age.test.ts` (new), `features/student-records/Birthdate.test.tsx` (new), `types/entities.ts`, `lib/vitals.ts`, `lib/mock-db/` (`api.ts`, `index.ts`, `integrity.ts`, `mock-db.json`, `seed.ts`, `selectors.ts`, `store.ts`, `types.ts`, `README.md`), the Student Form, Profile and List pages and their `api/` modules, New Visit, Visit Details, the Incident form, `PrivacyPolicyPage.tsx`, `scripts/generate-load-data.mjs`, and the tests that named the removed field.
-- Documents: root `README.md`, `features/student-records/README.md`, `Module-Overview.md`, `Screen-Inventory.md`, `Audit-Coverage.md`, `Privacy-Policy.md`, `cliniq-display-privacy` skill, ADR-054, Changelog, Issues-and-TODOs, Issues-Done-Archive.
+- Documents: root `README.md`, `features/student-records/README.md`, `Module-Overview.md`, `Screen-Inventory.md`, `Audit-Coverage.md`, `Privacy-Policy.md`, `cliniq-display-privacy` skill, ADR-054, Changelog, Frontend-Issues-and-TODOs, Issues-Done-Archive.
 
 ## Changes Made
 

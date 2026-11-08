@@ -9,7 +9,7 @@ Files Modified:
 - `frontend/src/features/clinic-visits/VisitLogListPage.test.tsx`
 - `URL-Parameters.md`
 - `CLINIQ-Knowledge-Base/06-Decisions/ADR-012-Frontend-Routing.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-08-visit-log-entry-date-params.md`
 Changes Made:
 - Added a shared date-entry helper/hook that accepts only real ISO calendar dates, applies a valid `from`/`to` pair once as a custom range, and clears only those parameters with React Router replace navigation.

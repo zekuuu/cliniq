@@ -16,8 +16,8 @@ Files Modified:
 - `frontend/src/features/dashboard/DashboardViews.test.tsx`
 - `frontend/src/lib/mock-db/dashboard.test.ts`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-19-dashboard-trends-tab-audit.md` (this file)
 
 Changes Made (each one failed the audit before the fix):

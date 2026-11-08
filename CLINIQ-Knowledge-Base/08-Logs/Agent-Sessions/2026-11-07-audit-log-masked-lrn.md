@@ -4,7 +4,7 @@ Task: Mask the LRN on the Audit Log screen; keep it full on the printout
 Status: Completed
 Prompt/Request: Zean, in chat: "also censor LRN in audit log", then "only show in audit log print".
 
-Files Modified: `frontend/src/features/audit-log/AuditLogPage.tsx`, `frontend/src/features/audit-log/AuditLogPage.test.tsx`, `frontend/src/features/print-documents.test.tsx`, `.claude/skills/cliniq-display-privacy/SKILL.md`, notes on ADR-040 and ADR-044, `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`.
+Files Modified: `frontend/src/features/audit-log/AuditLogPage.tsx`, `frontend/src/features/audit-log/AuditLogPage.test.tsx`, `frontend/src/features/print-documents.test.tsx`, `.claude/skills/cliniq-display-privacy/SKILL.md`, notes on ADR-040 and ADR-044, `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`.
 
 Changes Made:
 - The Record column on screen shows "LRN" plus the shared masked `<Lrn>` (eight dots and the last four digits). Screen readers hear "LRN ending in 1234". This replaces the full LRN of R33 (November 3).

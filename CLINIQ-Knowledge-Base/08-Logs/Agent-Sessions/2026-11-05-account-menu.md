@@ -8,7 +8,7 @@ Files Modified:
 - New: frontend/src/layouts/AccountMenu.tsx, frontend/src/features/account/EditProfileDialog.tsx, frontend/src/lib/accountEvents.ts, frontend/src/test/accountMenu.ts, frontend/src/layouts/AccountMenu.test.tsx, frontend/src/lib/mock-db/ownProfile.test.ts
 - frontend/src/layouts/AppShell.tsx, frontend/src/App.tsx, frontend/src/lib/mock-db/api.ts (`USER_NAME_MAX`, `OwnAccount`, `getOwnAccount`, `updateOwnProfile`), frontend/src/components/icons/Icon.tsx (`keyboard`, `flag`)
 - Tests moved to the menu (same checks, the control is now a menu item): App.test.tsx, layouts/AppShell.test.tsx, features/review-round-2.test.tsx (R6), features/auth/ChangePasswordPage.test.tsx
-- Docs: ADR-066 and Decisions-Summary; 03-Design/Screen-Inventory.md (37 to 39); 04-Development/Audit-Coverage.md; 01-Requirements/User-Roles-and-Permissions.md; 04-Development/Keyboard-Shortcuts-and-Efficiency.md; 01-Requirements/Features/Module-Overview.md; 08-Logs Changelog, Issues-and-TODOs (LATER) and Issues-Done-Archive (3 DONE)
+- Docs: ADR-066 and Decisions-Summary; 03-Design/Screen-Inventory.md (37 to 39); 04-Development/Audit-Coverage.md; 01-Requirements/User-Roles-and-Permissions.md; 04-Development/Keyboard-Shortcuts-and-Efficiency.md; 01-Requirements/Features/Module-Overview.md; 08-Logs Changelog, Frontend-Issues-and-TODOs (LATER) and Issues-Done-Archive (3 DONE)
 Changes Made:
 - **Header:** the clock stays. The avatar (now the user's picture or initials through `UserAvatar`), name and role are one button with a chevron. On a phone only the avatar and chevron show. The Shortcuts button, padlock (Change password) and red sign-out icon are gone. The Admin's idle sign-out, the live clock and `print:hidden` are unchanged.
 - **Menu** (`layouts/AccountMenu.tsx`, the ARIA menu-button pattern):
@@ -46,7 +46,7 @@ Testing Performed:
 - With `print` media emulated, the header is not visible. On a phone the panel spans the viewport (0 to 360px, the scrollbar takes the rest).
 - Screenshots (session scratchpad, outside the repository): `C:\Users\zeank\AppData\Local\Temp\claude\d--zeank-Desktop-Projects-cliniq\ceae7859-e122-4ac4-967b-df0b9aee2365\scratchpad\shots\account\` (staff and admin at 375, 768 and 1280: closed, open, edit-profile).
 Known Issues:
-- The Issues-and-TODOs "Done" count (now 467) was already one higher than the `[DONE]` lines in the archive (463 before, 466 now); that mismatch was there before this session and was not reconciled.
+- The Frontend-Issues-and-TODOs "Done" count (now 467) was already one higher than the `[DONE]` lines in the archive (463 before, 466 now); that mismatch was there before this session and was not reconciled.
 Next Steps: Zean to review the default decisions, the button order and the live-name audit behaviour.
 
 ## For the backend branch

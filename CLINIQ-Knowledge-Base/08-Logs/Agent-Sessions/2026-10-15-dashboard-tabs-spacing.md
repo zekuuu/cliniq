@@ -6,8 +6,8 @@ Prompt/Request: "Prompt — Tighten the gap between the Staff strip (Backup / Ne
 
 Files Modified:
 - `frontend/src/features/dashboard/DashboardPage.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-15-dashboard-tabs-spacing.md` (this file)
 
 Changes Made:

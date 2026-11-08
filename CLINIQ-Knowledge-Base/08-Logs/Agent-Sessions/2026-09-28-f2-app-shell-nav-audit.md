@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: "Continue audit of F2 Frontend-Loop-Engineering.md"
 Files Modified:
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-28-f2-app-shell-nav-audit.md`
 Changes Made:
 - Marked Screen #3 App Shell/Nav as audit-complete with a resumable evidence note.

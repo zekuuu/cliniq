@@ -4,7 +4,7 @@ Task: Make the Dashboard's "incomplete student records" chip outline visible
 Status: Completed
 Prompt/Request: Zean, in chat: "border of incomplete record not visible".
 
-Files Modified: `frontend/src/features/dashboard/components/AttentionChips.tsx`, `frontend/src/features/review-round-2.test.tsx`, `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`.
+Files Modified: `frontend/src/features/dashboard/components/AttentionChips.tsx`, `frontend/src/features/review-round-2.test.tsx`, `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`.
 
 Changes Made: The neutral chip's border was `border-border` (#e0e0e0), nearly invisible on white. It now uses `border-text-muted` (#9e9e9e), so it reads as an outline like the low-stock and expiry chips. The fill, icon and words are unchanged.
 

@@ -8,7 +8,7 @@ Prompt/Request: "then move this section to a single button" (screenshot of the S
 Files Modified:
 - `frontend/src/features/archive/ArchivePage.tsx`, `frontend/src/features/archive/ArchivePage.test.tsx`
 - `frontend/src/features/audit-log/AuditLogPage.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - `SchoolYearSettingsCard` became `SchoolYearDatesDialog`, opened by a "School year dates" button (secondary, calendar icon) beside End/Start in the Current school year card. It shows for both roles; for the Admin the fields are read-only and the only button is Close. It mounts only while open, so each opening starts from the saved dates. Saving closes it, and the success message shows in the card.
 - One card ("Records of <year>", with the date range as the description and the School year picker as the header action) holds the tabs and the open section. The list buttons still scroll to it.

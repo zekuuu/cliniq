@@ -4,9 +4,9 @@ Task: Record Zean's answers to the 21 open decisions and extend the build prompt
 Status: Completed (records and prompt; nothing built)
 Prompt/Request: Zean answered the resent list of open decisions in chat, Thursday, October 29, 2026 — 22:15 PHT, and said the decisions list should only hold things inside the system.
 Files Modified:
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
 - CLINIQ-Knowledge-Base/08-Logs/Issues-Done-Archive.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-29-open-decisions-answered.md (new)
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-052-Backup-Locations-Chosen-In-The-System-With-Automatic-Folders.md (new)
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-053-Extra-Complaint-Tags-Staff-Wording-Admin-Counts-And-Two-Patient-Tables.md (new)

@@ -9,7 +9,7 @@ Changes Made:
 - Deliberately did NOT duplicate the Review of Related Systems document a second time (it's already fully present in 09-References/Canonical-Documents/) — instead rewrote Canonical-Documents.md with genuinely detailed per-document descriptions so it's findable without needing a second copy.
 - While expanding, caught a real inconsistency: Section 5.1 of the Project Plan still said "Laravel's built-in authentication" after the tech stack finalization session (Revision 2.2) had already confirmed Sanctum specifically. Fixed in the canonical document itself (Revision 2.3), not just the vault.
 - Added a standing "Timestamps" rule to AGENTS.md and updated the ADR template and Changelog header accordingly, per the clarified (forward-looking, coding-phase) version of the request.
-- Correctly left untouched, and did not guess at: the four Database/ diagram placeholders (still waiting on the SRS), and every item already listed in Issues-and-TODOs.md (barcode scanner proposal, full calendar ownership, backup layer choice, nurse-absence coverage) — none of these were fabricated to appear more "complete."
+- Correctly left untouched, and did not guess at: the four Database/ diagram placeholders (still waiting on the SRS), and every item already listed in Frontend-Issues-and-TODOs.md (barcode scanner proposal, full calendar ownership, backup layer choice, nurse-absence coverage) — none of these were fabricated to appear more "complete."
 Reason: Explicit request to make the vault fully detailed while explicitly avoiding invented content.
 Testing Performed: N/A — documentation only.
 Known Issues: None new. Existing open items unchanged, still honestly marked as open.

@@ -9,7 +9,7 @@ Files Modified:
 - frontend/src/features/dashboard/components/ComplaintTrends.tsx
 - frontend/src/features/dashboard/components/ComplaintTrends.test.tsx
 - CLINIQ-Knowledge-Base/03-Design/Design-System.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-22-dashboard-sex-chart-colors.md
 Changes Made:
 - Added documented chart-only palette tokens: pink for Female and blue for Male.

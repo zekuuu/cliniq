@@ -9,7 +9,7 @@
 Below `lg` (1024px) the shell hides its sidebar. Staff reach shell screens on a phone from the QR
 quick actions (New Visit, Incident Entry, Dispense, the student profile). Before October 1 those screens
 had no menu, so only the browser's Back button left them. On October 1 an agent added a role-aware
-"Open navigation" menu to the top bar. The Issues-and-TODOs entries asking "Is mobile shell navigation in
+"Open navigation" menu to the top bar. The Frontend-Issues-and-TODOs entries asking "Is mobile shell navigation in
 scope?" stayed open because no decision recorded it, and the team asked an agent to decide.
 
 ## Decision

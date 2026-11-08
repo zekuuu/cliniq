@@ -4,8 +4,8 @@ Task: Put the rarely used Visit fields in an expandable "Show more fields" secti
 Status: Completed (records and prompt); the build is not done
 Prompt/Request: Zean wrote, before running the build prompt: "what if those very optional or like not so typical to input will be in like expandable screen something like Show more fields that extends downwards".
 Files Modified:
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-20-visit-form-show-more-fields.md (new)
 Changes Made:
 - Update on the `FIX` "Add Body temperature, Time out and Assisted by to the Visit form": the five new optional fields go in a collapsed "Show more fields" section; existing fields stay as they are.

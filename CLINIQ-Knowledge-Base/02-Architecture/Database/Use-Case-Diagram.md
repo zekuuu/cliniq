@@ -75,4 +75,4 @@ PE/Sports Instructors are not actors: they have no account (ADR-029). An instruc
 ## Notes
 
 - Every use case above, regardless of role, implicitly includes "gets logged to the audit trail" — not listed as a separate use case per row, since it's a cross-cutting requirement applying to all of them uniformly (Modules & Features, "Audit Trail" section).
-- Future-development roles (Canteen Staff) are deliberately excluded from this diagram — it reflects current, built scope only. See `08-Logs/Issues-and-TODOs.md` for what that role would add if undeferred.
+- Future-development roles (Canteen Staff) are deliberately excluded from this diagram — it reflects current, built scope only. See `08-Logs/Frontend-Issues-and-TODOs.md` for what that role would add if undeferred.
