@@ -1,4 +1,6 @@
 import { useState, type ReactNode } from 'react'
+import { DRILL_THROUGH_STATE } from '../../hooks/useGoBack'
+import { rowsInNewestYear } from '../archive/newestArchivedYear'
 import { Link } from 'react-router'
 import {
   BackButton,
@@ -238,9 +240,9 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           </div>
           {/* ml-auto: when the actions wrap under the description they stay right-aligned, as on the Student List. */}
           <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
-            <Link className={buttonClassName({ variant: 'secondary' })} to={paths.archive}>
+            <Link className={buttonClassName({ variant: 'secondary' })} to={paths.archive} state={{ ...DRILL_THROUGH_STATE, section: 'staff' }}>
               <Icon name="archive" />
-              Archive{archive.data ? ` (${archive.data.staff.length})` : ''}
+              Archive{archive.data ? ` (${rowsInNewestYear(archive.data.staff).length})` : ''}
             </Link>
             {/* ADR-067: the staff Incomplete Records page, as the Student List's button opens the student queue. */}
             <Link className={buttonClassName({ variant: 'secondary' })} to={paths.staffIncomplete}>

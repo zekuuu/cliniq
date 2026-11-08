@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { DRILL_THROUGH_STATE } from '../../hooks/useGoBack'
+import { rowsInNewestYear } from '../archive/newestArchivedYear'
 import { Link, useLocation, useSearchParams } from 'react-router'
 import {
   BackButton,
@@ -231,9 +233,9 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
             </p>
           </div>
           <div className="ml-auto flex flex-wrap justify-end gap-2">
-              <Link className={buttonClassName({ variant: 'secondary' })} to={paths.archive}>
+              <Link className={buttonClassName({ variant: 'secondary' })} to={paths.archive} state={{ ...DRILL_THROUGH_STATE, section: 'students' }}>
                 <Icon name="archive" />
-                Archive{archive ? ` (${archive.students.length})` : ''}
+                Archive{archive ? ` (${rowsInNewestYear(archive.students).length})` : ''}
               </Link>
           {viewer.role === 'staff' && (
             <>

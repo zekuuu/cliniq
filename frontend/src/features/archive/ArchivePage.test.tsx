@@ -1,4 +1,5 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
+import { MemoryRouter, Route, Routes } from 'react-router'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { getArchive, getDashboardSummary, getRecordedAuditEntries, getSchoolYearSettings, endSchoolYear, resetMockDb, saveSchoolYearSettings, sportsReportWindowStart, startSchoolYear } from '../../lib/mock-db'
@@ -12,6 +13,7 @@ import { paths } from '../../routes/paths'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { selectOption } from '../../test/selectOption'
 import { StudentListPage } from '../student-records/StudentListPage'
+import { StaffListPage } from '../staff-records/StaffListPage'
 import { ArchivePage } from './ArchivePage'
 
 /** The Archive by school year (professor's consultation, November 6, 2026; Zean, November 7, 2026 — 04:20 PHT). */
@@ -47,8 +49,9 @@ describe('Archive page', () => {
     const user = await openArchive()
     const table = () => screen.getByRole('table', { name: 'Students archived in 2026–2027' })
     const names = () => within(table()).getAllByRole('rowheader').map((cell) => cell.textContent)
-    // Newest archived first: the September transfer before the two June removals.
-    expect(within(table()).getAllByRole('row')[1]).toHaveTextContent('Transferred')
+    // Full name, A to Z, by default (Zean, November 8, 2026).
+    expect(within(table()).getByRole('columnheader', { name: /Full name/ })).toHaveAttribute('aria-sort', 'ascending')
+    expect(names()).toEqual([...names()].sort((a, b) => a!.localeCompare(b!)))
     expect(screen.getByText('3 of 3 shown')).toBeInTheDocument()
     expect(screen.getByRole('navigation', { name: /pagination/i })).toBeInTheDocument()
 
@@ -67,7 +70,7 @@ describe('Archive page', () => {
 
     await user.click(within(table()).getByRole('button', { name: /Full name/ }))
     const sorted = names()
-    expect(sorted).toEqual([...sorted].sort((a, b) => a!.localeCompare(b!)))
+    expect(sorted).toEqual([...sorted].sort((a, b) => b!.localeCompare(a!)))
   })
 
   it('shows archived staff, the year\'s monthly reports and its audit entries, with no editing controls', async () => {
@@ -79,7 +82,8 @@ describe('Archive page', () => {
     expect(within(months).getAllByRole('link', { name: /^Open the Monthly Report for / })[0]).toHaveAttribute('href', paths.reports)
     expect(within(months).getAllByRole('listitem').at(-1)).toHaveTextContent('June 2026')
     await user.click(screen.getByRole('tab', { name: 'Audit log' }))
-    expect(await screen.findByRole('heading', { name: 'Audit entries' })).toBeInTheDocument()
+    // In the Archive's one card the entries have no card or heading of their own (Zean, November 8, 2026).
+    expect(await screen.findByRole('table', { name: 'Filtered audit log' })).toBeInTheDocument()
     expect(screen.getByText(/entr(y|ies) shown · /)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^(Edit|Archive|Restore|Delete)\b/ })).not.toBeInTheDocument()
   })
@@ -96,7 +100,28 @@ describe('Archive page', () => {
     for (const role of ['staff', 'admin'] as const)
       expect(navGroupsFor(role).find((group) => group.label === 'Administration')?.items.map((item) => item.key)).toContain('archive')
     renderWithRouter(<StudentListPage viewer={ADMIN} />)
-    expect(await screen.findByRole('link', { name: /^Archive \(4\)$/ })).toHaveAttribute('href', paths.archive)
+    expect(await screen.findByRole('link', { name: /^Archive \(3\)$/ })).toHaveAttribute('href', paths.archive)
+  })
+
+  it('opens the right tab with Back from the Student and Staff Lists Archive buttons (Zean, November 8, 2026)', async () => {
+    for (const [List, name, tab] of [[StudentListPage, /^Archive \(\d+\)$/, /^Students/], [StaffListPage, /^Archive \(\d+\)$/, /^Staff/]] as const) {
+      const user = userEvent.setup()
+      const { unmount } = render(
+        <MemoryRouter initialEntries={[paths.students]}>
+          <Routes>
+            <Route path={paths.students} element={<List viewer={STAFF} />} />
+            <Route path={paths.archive} element={<ArchivePage viewer={STAFF} />} />
+          </Routes>
+        </MemoryRouter>,
+      )
+      // The button counts what the Archive opens to: the newest year with that list's records.
+      const link = await screen.findByRole('link', { name })
+      const count = link.textContent!.match(/\((\d+)\)/)![1]
+      await user.click(link)
+      expect(await screen.findByRole('tab', { name: tab, selected: true })).toHaveTextContent(`(${count})`)
+      expect(screen.getByRole('button', { name: /^Back/ })).toBeInTheDocument()
+      unmount()
+    }
   })
 
   it('keeps archived records out of the active totals', async () => {
@@ -134,12 +159,16 @@ describe('school-year settings', () => {
   })
 
   it('saves from the Archive page\'s School year dates card', async () => {
+    // One button opens the dates in a dialog (Zean, November 8, 2026).
     const user = await openArchive()
-    const card = screen.getByRole('region', { name: 'School year dates' })
-    await user.clear(within(card).getByLabelText(/^Starts: day/))
-    await user.type(within(card).getByLabelText(/^Starts: day/), '16')
-    await user.click(within(card).getByRole('button', { name: 'Save dates' }))
-    expect(await within(card).findByRole('status')).toHaveTextContent('School year dates saved.')
+    expect(screen.queryByRole('region', { name: 'School year dates' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'School year dates' }))
+    const dialog = screen.getByRole('dialog', { name: 'School year dates' })
+    await user.clear(within(dialog).getByLabelText(/^Starts: day/))
+    await user.type(within(dialog).getByLabelText(/^Starts: day/), '16')
+    await user.click(within(dialog).getByRole('button', { name: 'Save dates' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(await screen.findByText(/^School year dates saved\./)).toBeInTheDocument()
     expect((await getSchoolYearSettings()).schoolYearStartDay).toBe(16)
   })
 })
