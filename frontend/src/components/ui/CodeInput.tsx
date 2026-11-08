@@ -1,9 +1,12 @@
 import { useId, useState } from 'react'
+import { Input } from './Input'
 
 /**
  * A one-time code as separate boxes, the usual modern pattern (Zean, November 7, 2026). One real
  * `<input>` sits invisibly over the boxes, so typing, Backspace, paste, the phone's code autofill and
- * screen readers all work as on a normal field; the boxes only show it. Digits only.
+ * screen readers all work as on a normal field; the boxes only show it. Digits only. Centered, with
+ * the label above, the hint below, and a 3 + 3 split so six digits read in two chunks (Zean,
+ * November 8, 2026).
  */
 export function CodeInput({
   label,
@@ -29,8 +32,9 @@ export function CodeInput({
   const hintId = hint ? `${id}-hint` : undefined
   const [focused, setFocused] = useState(false)
   const active = Math.min(value.length, length - 1)
+  const split = length % 2 === 0 ? length / 2 : -1
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col items-center gap-2 text-center">
       <label htmlFor={id} className="text-sm font-semibold text-text-primary">
         {label}
       </label>
@@ -43,11 +47,11 @@ export function CodeInput({
               <div
                 key={index}
                 data-code-box
-                className={`flex h-12 w-11 items-center justify-center rounded-md border bg-background text-xl font-semibold text-text-primary tabular-nums shadow-card transition-colors motion-reduce:transition-none ${
-                  current ? 'border-brand-green ring-2 ring-brand-green/30' : char ? 'border-text-muted' : 'border-border'
-                } ${disabled ? 'opacity-50' : ''}`}
+                className={`flex h-14 w-12 items-center justify-center rounded-md border bg-background text-2xl font-semibold text-text-primary tabular-nums shadow-card transition-colors motion-reduce:transition-none ${
+                  index === split ? 'ml-3' : ''
+                } ${current ? 'border-brand-green ring-2 ring-brand-green/30' : char ? 'border-text-muted' : 'border-border'} ${disabled ? 'opacity-50' : ''}`}
               >
-                {char || (current && value.length < length ? <span className="h-6 w-px animate-pulse bg-text-primary motion-reduce:animate-none" /> : null)}
+                {char || (current && value.length < length ? <span className="h-7 w-px animate-pulse bg-text-primary motion-reduce:animate-none" /> : null)}
               </div>
             )
           })}
@@ -76,10 +80,68 @@ export function CodeInput({
         />
       </div>
       {hint && (
-        <p id={hintId} className="text-xs text-text-secondary">
+        <p id={hintId} className="max-w-xs text-xs text-text-secondary">
           {hint}
         </p>
       )}
+    </div>
+  )
+}
+
+const LINK_BUTTON =
+  'w-fit cursor-pointer rounded-sm text-sm font-semibold text-brand-green-dark underline underline-offset-2 transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none'
+
+/**
+ * The 6-digit authenticator code in code boxes, with "Use a recovery code instead" below to swap in
+ * a recovery code (ABCD-EFGH). One look for Forgot password and for replacing or disabling the
+ * authenticator (Zean, November 8, 2026).
+ */
+export function CodeOrRecoveryField({
+  recovery,
+  onRecoveryChange,
+  value,
+  onChange,
+  onComplete,
+  disabled = false,
+}: {
+  recovery: boolean
+  onRecoveryChange: (recovery: boolean) => void
+  value: string
+  onChange: (value: string) => void
+  onComplete?: (value: string) => void
+  disabled?: boolean
+}) {
+  return (
+    <div className="flex flex-col items-center gap-4">
+      {recovery ? (
+        <Input
+          label="Recovery code"
+          autoComplete="off"
+          required
+          value={value}
+          maxLength={9}
+          placeholder="ABCD-EFGH"
+          autoFocus
+          disabled={disabled}
+          onChange={(event) => onChange(event.target.value.toUpperCase())}
+          clearable={false}
+          className="w-full max-w-60"
+          inputClassName="text-center font-mono tracking-wider"
+        />
+      ) : (
+        <CodeInput
+          label="6-digit code"
+          value={value}
+          autoFocus
+          disabled={disabled}
+          onChange={onChange}
+          onComplete={onComplete}
+          hint="If codes do not work, check that the phone's date and time are set automatically."
+        />
+      )}
+      <button type="button" className={LINK_BUTTON} onClick={() => onRecoveryChange(!recovery)}>
+        {recovery ? 'Use the authenticator app instead' : 'Use a recovery code instead'}
+      </button>
     </div>
   )
 }

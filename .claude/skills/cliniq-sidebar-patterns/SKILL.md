@@ -33,3 +33,4 @@ description: Apply when building or changing CLINIQ's shared application sidebar
 
 - Below `lg` the sidebar is hidden; the top bar's "Open navigation" button opens the same role's entries in the shared `Modal` (focus trap, Escape, focus returns to the button). Entries are `min-h-11` (44px) touch targets.
 - The drawer ends with the sidebar footer's Privacy Policy link and Report an Issue button, so phones reach them too.
+- Items within a group sit 2px apart (`gap-0.5`, expanded and collapsed; each item stays 40px tall). The space between groups stays `gap-4` (Zean, Sunday, November 08, 2026 — 17:16 PHT; old: 6px expanded, 4px collapsed).

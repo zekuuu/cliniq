@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Button, CodeInput, Input, Modal, NUMBERED_LIST } from '../../components'
+import { Badge, Button, CodeInput, CodeOrRecoveryField, Modal, NUMBERED_LIST } from '../../components'
 import { PrintDocument, PrintSection } from '../../components/print/Print'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { confirmAuthenticatorSetup, getAuthenticatorStatus, RecoveryError, startAuthenticatorSetup, turnOffAuthenticator, type SessionUser } from '../../lib/mock-db'
@@ -26,14 +26,15 @@ function QrCode({ uri }: { uri: string }) {
 
 /**
  * "Set up authenticator app" (ADR-072), from the account menu, for every role: a QR code and setup key,
- * a first code to confirm, then 8 one-time recovery codes shown once. When set up: Replace or Turn off,
- * each after the current code or a recovery code. The secret is never shown again after setup.
+ * a first code to confirm, then 8 one-time recovery codes shown once. When enabled: Replace or Disable,
+ * each after the current 6-digit code or a recovery code. The secret is never shown again after setup.
  */
 export function AuthenticatorDialog({ open, viewer, onClose, onChanged }: { open: boolean; viewer: SessionUser; onClose: () => void; onChanged: () => void }) {
   const [step, setStep] = useState<Step>({ kind: 'status' })
   const [version, setVersion] = useState(0)
   const status = useAsyncData(`authenticator|${viewer.id}|${version}|${open}`, () => (open ? getAuthenticatorStatus() : Promise.resolve(null)))
   const [code, setCode] = useState('')
+  const [useRecoveryCode, setUseRecoveryCode] = useState(false)
   const [error, setError] = useState('')
   const [working, setWorking] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -42,6 +43,7 @@ export function AuthenticatorDialog({ open, viewer, onClose, onChanged }: { open
   function reset() {
     setStep({ kind: 'status' })
     setCode('')
+    setUseRecoveryCode(false)
     setError('')
     setSaved(false)
   }
@@ -74,12 +76,12 @@ export function AuthenticatorDialog({ open, viewer, onClose, onChanged }: { open
 
   function submitProof(event: FormEvent, then: 'replace' | 'off') {
     event.preventDefault()
-    if (!code.trim()) return setError('Enter the 6-digit code from the app, or a recovery code.')
+    if (useRecoveryCode ? !code.trim() : code.length !== 6) return setError(useRecoveryCode ? 'Enter a recovery code.' : 'Enter the 6-digit code.')
     if (then === 'replace') return void begin(code)
     void run(async () => {
       await turnOffAuthenticator(code)
       reset()
-      setNotice('Authenticator app turned off. Ask the Administrator if you forget your password.')
+      setNotice('Authenticator app disabled. Ask the Administrator if you forget your password.')
       setVersion((v) => v + 1)
       onChanged()
     })
@@ -112,17 +114,21 @@ export function AuthenticatorDialog({ open, viewer, onClose, onChanged }: { open
         {adminNote}
         {notice && <p role="status" className="text-sm font-semibold text-success">{notice}</p>}
         {status.data && (
-          <p className="text-sm text-text-primary">
-            {enabled ? `Authenticator app: set up. ${status.data.recoveryCodesLeft} of 8 recovery codes left.` : 'Authenticator app: not set up.'}
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-md border border-border bg-surface px-3 py-2">
+            <p className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+              Status
+              {enabled ? <Badge tone="success" variant="soft">Enabled</Badge> : <Badge tone="neutral" icon={null}>Not set up</Badge>}
+            </p>
+            {enabled && <p className="text-sm text-text-secondary">{status.data.recoveryCodesLeft} of 8 recovery codes left</p>}
+          </div>
         )}
         {errorLine}
         <div className="flex flex-wrap justify-end gap-2">
           <Button variant="neutral" onClick={requestClose}>Close</Button>
           {enabled ? (
             <>
-              <Button variant="secondary" onClick={() => { setCode(''); setError(''); setStep({ kind: 'prove', then: 'off' }) }}>Turn off</Button>
-              <Button variant="primary" onClick={() => { setCode(''); setError(''); setStep({ kind: 'prove', then: 'replace' }) }}>Replace</Button>
+              <Button variant="secondary" onClick={() => { reset(); setStep({ kind: 'prove', then: 'off' }) }}>Disable</Button>
+              <Button variant="primary" onClick={() => { reset(); setStep({ kind: 'prove', then: 'replace' }) }}>Replace</Button>
             </>
           ) : (
             <Button variant="primary" loading={working} loadingText="Starting…" disabled={!status.data} onClick={() => void begin()}>Set up</Button>
@@ -132,13 +138,24 @@ export function AuthenticatorDialog({ open, viewer, onClose, onChanged }: { open
     )
   else if (step.kind === 'prove')
     body = (
-      <form noValidate onSubmit={(event) => submitProof(event, step.then)} className="flex flex-col gap-4">
-        <p className="text-sm text-text-secondary">{step.then === 'replace' ? 'To replace the authenticator, enter the current 6-digit code or a recovery code. You get a new key and new recovery codes.' : 'To turn the authenticator off, enter the current 6-digit code or a recovery code.'}</p>
-        <Input label="Code" autoComplete="one-time-code" required value={code} maxLength={11} data-autofocus onChange={(event) => setCode(event.target.value)} clearable={false} />
-        {errorLine}
+      <form noValidate onSubmit={(event) => submitProof(event, step.then)} className="flex flex-col gap-5">
+        <div className="flex flex-col gap-1 text-center">
+          <p className="text-base font-semibold text-text-primary">Confirm it is you</p>
+          <p className="text-sm text-text-secondary">
+            {useRecoveryCode ? 'Enter one of your recovery codes. Each works once.' : 'Enter the 6-digit code the authenticator app shows for CLINIQ.'}{' '}
+            {step.then === 'replace' ? 'You then get a new setup key and new recovery codes.' : 'After this, only the Administrator can reset your password.'}
+          </p>
+        </div>
+        <CodeOrRecoveryField
+          recovery={useRecoveryCode}
+          onRecoveryChange={(value) => { setUseRecoveryCode(value); setCode(''); setError('') }}
+          value={code}
+          onChange={(value) => { setCode(value); setError('') }}
+        />
+        {error && <div className="text-center">{errorLine}</div>}
         <div className="flex flex-wrap justify-end gap-2">
           <Button variant="neutral" onClick={reset}>Back</Button>
-          <Button type="submit" variant="primary" loading={working} loadingText="Checking…">{step.then === 'replace' ? 'Continue' : 'Turn off'}</Button>
+          <Button type="submit" variant={step.then === 'off' ? 'destructive' : 'primary'} loading={working} loadingText="Checking…">{step.then === 'replace' ? 'Continue' : 'Disable'}</Button>
         </div>
       </form>
     )
@@ -159,7 +176,7 @@ export function AuthenticatorDialog({ open, viewer, onClose, onChanged }: { open
         </div>
         {/* The same code boxes as Forgot password (Zean, November 7, 2026). */}
         <CodeInput label="6-digit code" value={code} autoFocus onChange={setCode} hint="If codes do not work, check that the phone's date and time are set automatically." />
-        {errorLine}
+        {error && <div className="text-center">{errorLine}</div>}
         <div className="flex flex-wrap justify-end gap-2">
           <Button variant="neutral" onClick={reset}>Cancel</Button>
           <Button type="submit" variant="primary" loading={working} disabled={code.length !== 6}>Confirm</Button>
@@ -196,7 +213,7 @@ export function AuthenticatorDialog({ open, viewer, onClose, onChanged }: { open
     )
 
   return (
-    <Modal open={open} title={step.kind === 'codes' ? 'Save your recovery codes' : 'Authenticator app'} onClose={requestClose}>
+    <Modal open={open} title={step.kind === 'codes' ? 'Save your recovery codes' : step.kind === 'prove' ? (step.then === 'replace' ? 'Replace authenticator app' : 'Disable authenticator app') : 'Authenticator app'} onClose={requestClose}>
       {body}
     </Modal>
   )

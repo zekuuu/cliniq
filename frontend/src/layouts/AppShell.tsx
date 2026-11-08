@@ -171,6 +171,7 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
         </main>
         <AppFooter />
       </div>
+      <ScrollToTopButton />
       <Modal open={isMobileNavOpen} title="Navigation" onClose={() => setIsMobileNavOpen(false)}>
         <nav aria-label="Mobile navigation" className="-m-1 flex max-h-[70dvh] scroll-py-1 flex-col gap-4 overflow-y-auto p-1">
           {navGroups.map((group) => (
@@ -286,5 +287,44 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * "Scroll to top" (Zean, November 8, 2026): a small round arrow fixed bottom-right, mostly inside the
+ * page's side gutter so it covers almost nothing. It appears only once the page has scrolled more than
+ * one screen, when getting back up is real work, and is hidden (and out of the Tab order) otherwise.
+ * It scrolls to the top and moves focus to the main content, so keyboard users land there too.
+ */
+function ScrollToTopButton() {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const update = () => setVisible(window.scrollY > window.innerHeight)
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [])
+  function toTop() {
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })
+    document.getElementById('main-content')?.focus({ preventScroll: true })
+  }
+  return (
+    <button
+      type="button"
+      aria-label="Scroll to top"
+      title="Scroll to top"
+      onClick={toTop}
+      className={cn(
+        'fixed right-4 bottom-4 z-20 inline-flex size-10 cursor-pointer items-center justify-center rounded-full border border-border bg-background text-text-secondary shadow-raised transition-[opacity,translate,color,background-color] duration-200 hover:bg-surface hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none print:hidden',
+        visible ? 'visible translate-y-0 opacity-100' : 'invisible translate-y-2 opacity-0',
+      )}
+    >
+      <Icon name="arrowUp" size={18} />
+    </button>
   )
 }

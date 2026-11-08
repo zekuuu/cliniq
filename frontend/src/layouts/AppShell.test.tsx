@@ -169,6 +169,26 @@ describe('App Shell / Navigation', () => {
     expect(item.querySelector('kbd')).toHaveTextContent('?')
   })
 
+  it('shows Scroll to top only after scrolling past one screen, and scrolls up (Zean, November 8, 2026)', async () => {
+    const scrollTo = vi.fn()
+    vi.stubGlobal('scrollTo', scrollTo)
+    renderWithRouter(
+      <AppShell user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} active="dashboard" onLogout={() => {}}>
+        <div>Screen</div>
+      </AppShell>,
+    )
+    const button = screen.getByRole('button', { name: 'Scroll to top' })
+    expect(button).toHaveClass('invisible')
+    Object.defineProperty(window, 'scrollY', { value: window.innerHeight + 1, configurable: true })
+    window.dispatchEvent(new Event('scroll'))
+    await waitFor(() => expect(button).toHaveClass('visible'))
+    await userEvent.click(button)
+    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ top: 0 }))
+    expect(document.activeElement).toBe(document.getElementById('main-content'))
+    Object.defineProperty(window, 'scrollY', { value: 0, configurable: true })
+    vi.unstubAllGlobals()
+  })
+
   it('uses a readable monospaced treatment for the live workstation clock', () => {
     renderWithRouter(
       <AppShell
