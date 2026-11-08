@@ -121,7 +121,7 @@ All the flows the prompt lists can be served with the contract's endpoints in or
 - **C-6 MISMATCH, logged `DOC` for `main`.** `Screen-Inventory.md` has no entry for the staff list import (`/staff/import`, ADR-069) or the staff Incomplete Records page (`/staff/incomplete`, ADR-067); both are routes in `routes/paths.ts`. It is a shared document edited on `main`, so it is not edited here.
 - **C-9 DRIFT, fixed.** `Backend-Readiness-Checklist.md` said 104 functions and 10 constants, about 2,990 lines, and 191 constraint tests. It left "Frontend-only data needs a real home" and "Audit-log design" unticked although both are settled in the approved schema. It is refreshed (deliverable 3).
 - **C-14 DRIFT, noted.** `Decisions-Summary.md` mixes two heading styles ("## 001 …" for older entries, "### ADR-040: …" for later ones). Every ADR has a line.
-- **C-15 NOTE, for `main`.** The main `Issues-and-TODOs.md` still has "Backend: email password reset" open (`LATER`, line 470); ADR-073 replaced it.
+- **C-15 NOTE, for `main`.** The main `Frontend-Issues-and-TODOs.md` still has "Backend: email password reset" open (`LATER`, line 470); ADR-073 replaced it.
 
 ### 10. Quality gates (`frontend/`, at `cfd4bd84`)
 
@@ -166,6 +166,6 @@ No finding changed: the audit-summary check went by summary text, not by pairs. 
 Ordered by severity, ready to turn into a prompt:
 
 1. **(MISMATCH, C-6)** `Screen-Inventory.md`: add the staff list import (`/staff/import`, ADR-069) and the staff Incomplete Records page (`/staff/incomplete`, ADR-067), with the canonical Frontend Context Brief.
-2. **(NOTE, C-15)** `Issues-and-TODOs.md`: close "Backend: email password reset" (ADR-073 replaced it) and move it to the archive.
+2. **(NOTE, C-15)** `Frontend-Issues-and-TODOs.md`: close "Backend: email password reset" (ADR-073 replaced it) and move it to the archive.
 3. **(NOTE, C-8)** `User-Roles-and-Permissions.md`: one line saying the Admin's Audit Log lists entries about staff records by Staff No., without opening them.
 4. **(NOTE, C-19)** Fix the three old failing tests from `1b50a113` (calendar legend and table months, Student Health Record visit count).

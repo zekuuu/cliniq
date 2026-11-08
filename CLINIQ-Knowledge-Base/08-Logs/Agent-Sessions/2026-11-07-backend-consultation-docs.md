@@ -50,7 +50,7 @@ Testing Performed:
 Known Issues:
 - `Diagrams/ERD-3.5-Inventory` and `ERD-3.6-Access-and-Operations` have no source file and were not regenerated; `ERD.md` marks them, and a `DOC` entry is logged. `ERD-3.2-Students` was already marked.
 - **Not matching the prompt:**
-  - The "Backend: email password reset" entry is not in `Backend-Issues-and-TODOs.md`. It is in the main `Issues-and-TODOs.md` (line 470), which the `backend` branch does not edit (ADR-056). It should be closed on `main`.
+  - The "Backend: email password reset" entry is not in `Backend-Issues-and-TODOs.md`. It is in the main `Frontend-Issues-and-TODOs.md` (line 470), which the `backend` branch does not edit (ADR-056). It should be closed on `main`.
   - The settings CHECKs for "a day valid for the month" and "end not equal to start" cannot be row CHECKs, because they span two settings rows. They are the settings service's.
   - "Every year but the latest ended before the next starts" is cross-row too. The unique `in_session` enforces the core of it, and `db:verify` the rest.
   - No `school_years` seed is in `Reference-Schema.sql`, because accounts are not seeded there; the B1 seeder adds both rows.
