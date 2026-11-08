@@ -144,7 +144,7 @@ export function Sidebar({
               >
                 {group.label}
               </h2>
-              <ul className={cn('flex flex-col', collapsed ? 'items-center gap-1' : 'gap-1.5')}>
+              <ul className={cn('flex flex-col gap-0.5', collapsed && 'items-center')}>
                 {group.items.map((item) => {
                   const isActive = item.key === active
                   const hasBackupWarning = item.key === 'backup' && backupNeedsAttention
