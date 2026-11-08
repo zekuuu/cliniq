@@ -6,8 +6,8 @@ Prompt/Request: “There is a major layout break here” with a Dashboard screen
 Files Modified:
 - `frontend/src/features/dashboard/components/ComplaintTrends.tsx`
 - `frontend/src/features/dashboard/DashboardPage.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Kept the shared fixed-layout DataTable and assigned explicit widths to the complaint, period, and total columns.
 - Added an intrinsic minimum width to this time-series table so it overflows inside the existing keyboard-focusable horizontal scroller instead of compressing every period into the card width.

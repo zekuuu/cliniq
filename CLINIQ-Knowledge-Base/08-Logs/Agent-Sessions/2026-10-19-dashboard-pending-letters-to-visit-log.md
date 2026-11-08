@@ -18,8 +18,8 @@ Files Modified:
 - `CLINIQ-Knowledge-Base/06-Decisions/ADR-011-Dashboard-Scope-Clarifications.md` (amendment)
 - `CLINIQ-Knowledge-Base/01-Requirements/Features/Module-Overview.md`
 - `CLINIQ-Knowledge-Base/03-Design/Reference-Screens.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-19-dashboard-pending-letters-to-visit-log.md` (this file)
 Changes Made:
 - Visit Log: new `letter` query (`'pending' | ''`, optional, so existing callers are unchanged) and `letterPending` on each row, using the Dashboard count's rule (an excuse-letter draft, for a student not archived), so the card's number and the filtered list match. `?letter=pending` applies on arrival (like `?from=&to=` and Inventory's `?attention=`); a visible, clearable `Select` "Excuse letter" ("All visits" / "Pending approval") shows and changes it, resetting to page 1. Rows with a pending letter show "Review Letter" (accessible name "Review Letter for <Student Number>", which contains the visible text) next to "View Details". Empty-state text mentions the new filter.

@@ -6,7 +6,7 @@ Prompt/Request: (screenshot of the Female / Male buttons stretched across the ca
 Files Modified:
 - frontend/src/features/dashboard/components/ComplaintTrends.tsx
 - frontend/src/features/dashboard/components/ComplaintTrends.test.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - The Sex and Grade level buttons under the chart were a stretched grid (2 columns, or 2/3/4 for grades) across the full-width card. Now each button is 12rem wide (`sm:w-48`) in a centered, wrapping row (`FILTER_ROW`); on phones each takes half the row. Applied to the Grade level buttons too, which had the same stretch.
 Reason: User request.

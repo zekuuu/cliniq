@@ -6,7 +6,7 @@ Prompt/Request: "Then also the first point isn't vertically aligned to the horiz
 Files Modified:
 - frontend/src/features/dashboard/components/ComplaintTrends.tsx
 - frontend/src/features/dashboard/components/ComplaintTrends.test.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-08-visits-trend-integer-gridlines.md
 Changes Made:
 - Small trend ranges (maximum count 12 or lower) now use one-count y-axis steps and show up to 13 tick/grid lines.

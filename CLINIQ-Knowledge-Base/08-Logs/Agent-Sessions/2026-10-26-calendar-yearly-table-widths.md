@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: "what about yearly" (after [2026-10-26-calendar-table-narrow-counts](2026-10-26-calendar-table-narrow-counts.md))
 Files Modified:
 - frontend/src/features/dashboard/components/VisitCalendar.tsx (per-month table)
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - The Yearly table (one row per month) had no widths, so its six columns were equal. Now Month 9rem (fits "September 2026"), Visits 4.5rem, Incidents 6rem, Total 4.5rem; Holidays and Events share the rest.
 Reason: User request; the Weekly/Monthly day table already had these widths.

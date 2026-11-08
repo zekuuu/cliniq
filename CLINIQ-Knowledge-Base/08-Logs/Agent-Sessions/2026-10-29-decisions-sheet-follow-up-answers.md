@@ -4,9 +4,9 @@ Task: Record Zean's answers to the 11 follow-up questions on the decisions sheet
 Status: Completed (records and prompt; nothing built)
 Prompt/Request: Zean answered in chat: starting numbers "do what's best and tell me what you set"; Visit versus Incident "common and worse"; follow-ups "auto close"; Sports Report "let the clinician choose which to include"; archive "automatically, then the retention will be 5 years"; vitals "apply the most common ranges"; audit log "our decision based on what the Principal said, 10 years"; sex "of course student form, also in the report"; labels "choose the best neutral one"; required marks "if it lets you save without it, remove the indicator"; deployment "local now"; fix the sheet cell "yes".
 Files Modified:
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
 - CLINIQ-Knowledge-Base/08-Logs/Issues-Done-Archive.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-29-decisions-sheet-follow-up-answers.md (new)
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-051-Starting-Values-Follow-Up-Closing-Vitals-Ranges-Automatic-Archive-And-Required-Marks.md (new)
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-047-Yearly-List-Drives-Grade-And-Section-Visit-Keeps-Its-Grade-Archive-Yearly.md (amended)

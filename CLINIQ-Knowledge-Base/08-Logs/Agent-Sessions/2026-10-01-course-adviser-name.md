@@ -7,7 +7,7 @@ Files Modified:
 - README.md
 - CLINIQ-Knowledge-Base/00-Project-Core/Team-and-Roles.md
 - CLINIQ-Knowledge-Base/09-References/Canonical-Documents/CLINIQ_Project_Plan.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-01-course-adviser-name.md
 Changes Made:
 - Named Prof. Kryss Coleen Creus as the Software Engineering II Course Adviser in the canonical Project Plan and its synchronized Team-and-Roles summary.

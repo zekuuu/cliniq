@@ -50,7 +50,7 @@ The Admin / Principal does not print (ADR-038). Every printout is a purpose-buil
 
 ### Decided, not built
 
-These were decided on Thursday, October 29, 2026. None of them is in the app yet. Everything else decided that day, and ADR-054, was built by Saturday, October 31, 2026 (see the [Changelog](./CLINIQ-Knowledge-Base/08-Logs/Changelog.md)).
+These were decided on Thursday, October 29, 2026. None of them is in the app yet. Everything else decided that day, and ADR-054, was built by Saturday, October 31, 2026 (see the [Changelog](./CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md)).
 
 - The yearly import of the registrar's list that sets grade and section, archives students missing from it after a review list, and starts the 5-year retention from the archive date (ADR-047, ADR-051). Students can be archived one at a time today.
 - Password reset by email when online (ADR-048). Today "Forgot password?" tells the user to ask the Admin / Principal, who resets it.
@@ -96,7 +96,7 @@ The canonical documents in [`09-References/Canonical-Documents/`](./CLINIQ-Knowl
 | Privacy and constraints | [Privacy Policy](./CLINIQ-Knowledge-Base/09-References/Privacy-Policy.md), ADR-004, ADR-028, ADR-040 |
 | Team and schedule | [Team and Roles](./CLINIQ-Knowledge-Base/00-Project-Core/Team-and-Roles.md); timeline and budget in the [Project Plan](./CLINIQ-Knowledge-Base/09-References/Canonical-Documents/CLINIQ_Project_Plan.md), Sections 6 and 7 |
 | Decisions | [Plain-language decisions summary](./CLINIQ-Knowledge-Base/06-Decisions/Decisions-Summary.md) (one short entry per accepted ADR) and the full records in [`06-Decisions/`](./CLINIQ-Knowledge-Base/06-Decisions/) |
-| What changed and what is open | [Changelog](./CLINIQ-Knowledge-Base/08-Logs/Changelog.md), [Issues and TODOs](./CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md) |
+| What changed and what is open | [Changelog](./CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md), [Issues and TODOs](./CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md) |
 
 ## For developers and AI agents
 

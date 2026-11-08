@@ -3,7 +3,7 @@ Agent: Claude Opus 5.5 (Claude Code)
 Task: Frontend clean-up, Part 1: contract fixes, green checks, small fixes (A1 to A5, B1 to B3, C1 to C14)
 Status: Completed. Nothing committed. Parts 2 and 3 not started.
 Prompt/Request: `Prompt-Frontend-Cleanup-Code-Nov1`, run on the `backend` branch from `7dc0d660` (default Part 1). Zean's answers during the run, Sunday, November 1, 2026 — 11:05 PHT: a cancelled follow-up gets no new date (this reverses the contract's and panel review FU-4's "Missed or Cancelled"), and the Privacy Policy wording below is accepted.
-Files Modified: `frontend/` code and tests (group a); `API-Contract.md`, `Module-Overview.md`, `Privacy-Policy.md`, `URL-Parameters.md`, ADR-056 (dated note), `cliniq-sidebar-patterns` skill, `Issues-and-TODOs.md`, `Issues-Done-Archive.md`, `Changelog.md`, this log (group b). No file under `backend/`. `mock-db.json` untouched.
+Files Modified: `frontend/` code and tests (group a); `API-Contract.md`, `Module-Overview.md`, `Privacy-Policy.md`, `URL-Parameters.md`, ADR-056 (dated note), `cliniq-sidebar-patterns` skill, `Frontend-Issues-and-TODOs.md`, `Issues-Done-Archive.md`, `Frontend-Changelog.md`, this log (group b). No file under `backend/`. `mock-db.json` untouched.
 Changes Made:
 
 | Item | Change | Test or check |

@@ -7,8 +7,8 @@ Status: Partial
 Prompt/Request: “Audit everything in Phase F2 now.”
 Files Modified:
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-28-f2-audit-recheck.md`
 Changes Made:
 - Reconciled the current feature branch with live GitHub: `origin/feature/clinic-overview-dashboard` matches local `HEAD`; `origin/main` is behind this branch.

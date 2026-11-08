@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: "you over did, it's too large"
 Files Modified:
 - `frontend/src/features/dashboard/components/ComplaintTrends.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Desktop (`lg`) donut is now a fixed 288px tall (`lg:h-72`) instead of growing to fill the card (388px at 1440, 480px at 1024). The card stays stretched to the grade-level card; its content is centered vertically (`lg:justify-center`), so the leftover height is split above and below instead of forming one band under the Female/Male buttons. Below `lg` unchanged (224px).
 Reason: Zean found the filled-card donut too large.

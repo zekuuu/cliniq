@@ -6,7 +6,7 @@ Prompt/Request: Continue the frontend takeover using `Frontend-Loop-Engineering.
 Files Modified:
 - `cliniq-frontend/src/layouts/AppShell.test.tsx`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-app-shell-nav-build.md`
 Changes Made:
 - Added focused tests proving Staff sees grouped module navigation, Admin/Principal is limited to Dashboard and Reports, and PE/Sports Instructor has no shell navigation groups.

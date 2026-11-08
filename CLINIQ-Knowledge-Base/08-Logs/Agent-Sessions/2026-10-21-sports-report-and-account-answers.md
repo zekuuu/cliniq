@@ -6,9 +6,9 @@ Prompt/Request: Zean answered my open points: ignore the question of who asks th
 Files Modified:
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-034-Sports-Report-For-PE-Instructor.md (new)
 - CLINIQ-Knowledge-Base/06-Decisions/Decisions-Summary.md
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
 - CLINIQ-Knowledge-Base/08-Logs/Issues-Done-Archive.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-21-sports-report-and-account-answers.md (new)
 Changes Made:
 - ADR-034 (the Sports Report) and its summary entry.

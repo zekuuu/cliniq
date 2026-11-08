@@ -7,7 +7,7 @@ Files Modified:
 - frontend/src/components/ui/Input.tsx
 - .claude/skills/cliniq-interactive-states/SKILL.md
 - CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Password reveal toggle: dropped `hover:bg-surface`. Hover now turns the icon from `text-secondary` to `brand-green-dark`. It keeps its 32px invisible hit area, pointer cursor, focus ring, `aria-label`, and `aria-pressed`.
 - `cliniq-interactive-states` (old → new): the skill had no rule for icon-only actions, so they borrowed the secondary-button `surface` tint and looked like boxed buttons. Now:

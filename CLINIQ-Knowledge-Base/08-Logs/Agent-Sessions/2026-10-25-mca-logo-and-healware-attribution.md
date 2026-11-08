@@ -8,7 +8,7 @@ Files Modified:
 - frontend/src/layouts/Sidebar.tsx
 - frontend/src/features/auth/LoginPage.test.tsx, ForcePasswordChangePage.test.tsx, frontend/src/layouts/AppShell.test.tsx
 - .claude/skills/cliniq-sidebar-patterns/SKILL.md
-- CLINIQ-Knowledge-Base/03-Design/Design-System.md, 04-Development/Skills-Setup.md, 08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/03-Design/Design-System.md, 04-Development/Skills-Setup.md, 08-Logs/Frontend-Changelog.md
 Changes Made:
 - Login lockup: `/MCA_Logo.png` (56px) replaces the HealWare logo; the -5px offset for the HealWare PNG's padding is gone (the seal has none), gap 12px.
 - Login footer: "[HealWare mark 20px] Powered by HealWare™ · Privacy Policy · version" (was "Privacy Policy · Powered by HealWare™ · version").

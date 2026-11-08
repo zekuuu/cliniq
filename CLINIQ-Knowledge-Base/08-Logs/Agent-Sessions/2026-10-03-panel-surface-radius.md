@@ -15,7 +15,7 @@ Files Modified:
 - `CLINIQ-Knowledge-Base/09-References/Canonical-Documents/CLINIQ_Frontend_Design_Reference.md`
 - `.claude/skills/cliniq-modal-patterns/SKILL.md`
 - `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-03-panel-surface-radius.md`
 Changes Made:
 - Changed the shared Card and Modal dialog surfaces from `rounded-lg` to `rounded-md`; the Modal close button was already `rounded-md` and remains unchanged.

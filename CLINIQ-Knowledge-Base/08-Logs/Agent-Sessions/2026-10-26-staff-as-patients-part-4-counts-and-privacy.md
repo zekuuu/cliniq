@@ -15,7 +15,7 @@ Files Modified:
 - frontend/src/features/reports/SportsReportListPage.tsx, frontend/src/features/audit-log/AuditLogPage.tsx, frontend/src/features/legal/PrivacyPolicyPage.tsx, frontend/src/lib/patients.ts (`splitText`)
 - New test: frontend/src/features/staff-counts.test.tsx; fixture update: frontend/src/features/dashboard/lib/printSummary.test.ts
 - frontend/src/lib/mock-db/README.md
-- CLINIQ-Knowledge-Base: 01-Requirements/Features/Module-Overview.md (new section 2a, Access Summary row), 01-Requirements/User-Roles-and-Permissions.md, 03-Design/Screen-Inventory.md (9a to 9c), 04-Development/Audit-Coverage.md, 04-Development/Skills-Setup.md, 06-Decisions/ADR-043 (status Built), 08-Logs/Changelog.md, Issues-and-TODOs.md, Issues-Done-Archive.md
+- CLINIQ-Knowledge-Base: 01-Requirements/Features/Module-Overview.md (new section 2a, Access Summary row), 01-Requirements/User-Roles-and-Permissions.md, 03-Design/Screen-Inventory.md (9a to 9c), 04-Development/Audit-Coverage.md, 04-Development/Skills-Setup.md, 06-Decisions/ADR-043 (status Built), 08-Logs/Frontend-Changelog.md, Frontend-Issues-and-TODOs.md, Issues-Done-Archive.md
 
 Changes Made:
 - **Dashboard:**
@@ -73,7 +73,7 @@ Testing Performed:
   - `label-content-name-mismatch` on the shared Date range control (Visit Log, Incident Log, Dashboard, Audit Log), already there;
   - `page-has-heading-one` on load-error states (Staff List `?mock=error`, the Admin's staff-incident error), which is the open FIX "Load-error states have no h1".
 
-Known Issues (logged in Issues-and-TODOs):
+Known Issues (logged in Frontend-Issues-and-TODOs):
 - The Admin's Dashboard incident count includes staff incidents, but the Admin's Incident Log leaves them out (new DECIDE).
 - A staff visit's disposition still reads "Returned to class" (new DECIDE: "Returned to work"?).
 - The Dashboard's due follow-ups show the chip but have no Patient filter, and the Staff Profile has no printout (new LATER).

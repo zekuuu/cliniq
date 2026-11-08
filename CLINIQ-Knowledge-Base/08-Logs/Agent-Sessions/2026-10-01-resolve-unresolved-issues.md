@@ -1,8 +1,8 @@
 Date/Day/Time: Thursday, October 1, 2026 — 00:07 PHT
 Agent: Codex
-Task: Resolve actionable entries in Issues-and-TODOs.md.
+Task: Resolve actionable entries in Frontend-Issues-and-TODOs.md.
 Status: Partial — all actionable frontend defects resolved; decision-dependent and backend-phase items remain open.
-Prompt/Request: “Fix all unresolved issues and bugs in Issues-and-TODOs.md.”
+Prompt/Request: “Fix all unresolved issues and bugs in Frontend-Issues-and-TODOs.md.”
 Files Modified:
 - frontend/src/components/ui/DataTable.tsx
 - frontend/src/components/ui/Input.tsx
@@ -19,8 +19,8 @@ Files Modified:
 - .claude/skills/cliniq-input-patterns/SKILL.md
 - CLINIQ-Knowledge-Base/03-Design/Design-System.md
 - CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/09-References/Canonical-Documents/CLINIQ_Frontend_Context_Brief.md
 - CLINIQ-Knowledge-Base/09-References/Canonical-Documents/CLINIQ_Frontend_Design_Reference.md
 Changes Made:

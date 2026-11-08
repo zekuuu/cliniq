@@ -6,7 +6,7 @@ Prompt/Request: "green bg"
 Files Modified:
 - frontend/src/features/dashboard/components/ComplaintTrends.tsx
 - frontend/src/features/dashboard/components/ComplaintTrends.test.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-08-visits-trend-tooltip-style-refresh.md
 Changes Made:
 - Moved the tooltip class assignment outside its create-only branch, so a retained tooltip element refreshes to the white panel surface on every hover.

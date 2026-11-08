@@ -6,7 +6,7 @@ Prompt/Request: “Bring the root READMEs up to date with the proposed database 
 Files Modified:
 - `README.md`
 - `README_ORIGINAL.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - This session log
 Changes Made:
 - Added root README links to the proposed 34-table ERD, its data dictionary, and its review-only reference DDL; stated that the draft is not final or approved and that migrations remain blocked until approval.

@@ -11,7 +11,7 @@ Files Modified:
 - `cliniq-frontend/src/features/clinic-visits/api/newVisitApi.ts`
 - `cliniq-frontend/src/lib/mocks/audit.ts`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-new-visit-entry-build.md`
 Changes Made:
 - Added `NewVisitEntryPage` with identified student header, custom-styled complaint select, inline Smart Triage checklist, treatment textarea, disposition segmented control, expandable Follow-Up prompt, validation errors, save loading state, success confirmation, and shaped skeleton loading.

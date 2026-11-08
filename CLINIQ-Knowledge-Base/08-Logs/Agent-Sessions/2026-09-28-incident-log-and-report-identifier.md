@@ -16,8 +16,8 @@ Files Modified:
 - `cliniq-frontend/src/routes/paths.ts`
 - `cliniq-frontend/src/layouts/navigation.ts`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-28-incident-log-and-report-identifier.md`
 Changes Made:
 - Added Screen #15 as a Staff-only, lazy-loaded `/incidents` route with Staff navigation.

@@ -8,7 +8,7 @@ Prompt/Request: "fix this graph, there's no like vertical line on the right so i
 Files Modified:
 - `frontend/src/features/dashboard/components/ComplaintTrends.tsx`
 - `frontend/src/features/dashboard/components/ComplaintTrends.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-23-dashboard-grade-chart-right-boundary.md`
 Changes Made:
 - Added a tickless right-hand Chart.js axis that always draws the plot boundary at the chart's actual edge.

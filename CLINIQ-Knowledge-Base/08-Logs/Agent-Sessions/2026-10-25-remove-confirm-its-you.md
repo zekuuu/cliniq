@@ -8,7 +8,7 @@ Files Modified:
 - frontend/src/hooks/useConfirmItsYou.tsx (deleted), frontend/src/test/confirmItsYou.ts (deleted)
 - frontend/src/lib/mock-db/api.ts (`confirmMockPassword` removed), frontend/src/hooks/useCapsLock.ts (comment)
 - Tests: features/backup/AccessAndBackup.test.tsx, features/ui-review-regressions.test.tsx, lib/mock-db/auditCoverage.test.ts
-- CLINIQ-Knowledge-Base: ADR-041 (new), ADR-037 (status note), Decisions-Summary, Module-Overview, Non-Functional-Requirements, Audit-Coverage, Canonical-Documents/CLINIQ_Modules_and_Features.md, Issues-and-TODOs, Issues-Done-Archive, Changelog
+- CLINIQ-Knowledge-Base: ADR-041 (new), ADR-037 (status note), Decisions-Summary, Module-Overview, Non-Functional-Requirements, Audit-Coverage, Canonical-Documents/CLINIQ_Modules_and_Features.md, Frontend-Issues-and-TODOs, Issues-Done-Archive, Changelog
 Changes Made:
 - Archive Record and Approve Report now run straight after their plain confirmation dialogs. Disable/Enable account and role change apply at once; Reset Password opens its dialog directly.
 - The hook, its test helper and the mock password-confirmation call are gone, with the "Confirmed with password" audit entry and the "Confirm it's you" lockout source.

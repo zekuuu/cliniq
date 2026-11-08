@@ -10,7 +10,7 @@ Files Modified:
 - `frontend/src/features/dashboard/components/ComplaintTrends.tsx`
 - `frontend/src/components/charts/smoothTooltip.ts`
 - `frontend/src/features/dashboard/components/ComplaintTrends.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-19-weekday-tooltip-simplified.md` (this file)
 
 Changes Made:

@@ -10,8 +10,8 @@ Files Modified:
 - `frontend/src/features/clinic-visits/NewVisitEntryPage.test.tsx`
 - `.claude/skills/cliniq-combobox-patterns/SKILL.md`
 - `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 
 Changes Made:
 - Old: an unselected New Visit did not deliberately focus its first meaningful field. New: Student lookup receives focus when no student is identified; Complaint receives focus when the route already identifies the student.

@@ -6,7 +6,7 @@ Prompt/Request: "maybe lighter amber, yellow looks awful"
 Files Modified:
 - `frontend/src/layouts/Sidebar.tsx`
 - `frontend/src/layouts/AppShell.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Replaced the selected-state bright-yellow warning badge with the lighter amber warning token and a dark glyph.
 Reason: The bright-yellow contrast treatment was too visually harsh; lighter amber preserves contrast against the selected green row without a white inset.

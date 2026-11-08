@@ -193,7 +193,7 @@ This project takes documentation seriously — every real decision has a paper t
 - 🎨 **[Frontend Design Reference](./CLINIQ-Knowledge-Base/09-References/Canonical-Documents/CLINIQ_Frontend_Design_Reference.md)** — the 5 reference screens, in depth
 - 🔬 **[Review of Related Systems](./CLINIQ-Knowledge-Base/09-References/Canonical-Documents/CLINIQ_Review_of_Related_Systems.md)** — 10 existing systems compared, feature by feature
 - 🗂️ **[Decision Log (ADRs)](./CLINIQ-Knowledge-Base/06-Decisions/)** — why, not just what
-- 📝 **[Changelog](./CLINIQ-Knowledge-Base/08-Logs/Changelog.md)** — everything that's happened, in order
+- 📝 **[Changelog](./CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md)** — everything that's happened, in order
 - 🔒 **[Privacy Policy](./CLINIQ-Knowledge-Base/09-References/Privacy-Policy.md)** — how the system handles student health data
 - 🗄️ **[Database design (proposed draft)](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md)** — ERD, [data dictionary](./CLINIQ-Knowledge-Base/02-Architecture/Database/Data-Dictionary.md), and [reference schema](./CLINIQ-Knowledge-Base/02-Architecture/Database/Reference-Schema.sql); not final or approved
 - 🔗 **[URL Parameters](./URL-Parameters.md)** — active query parameters, examples, and retired `?screen` history

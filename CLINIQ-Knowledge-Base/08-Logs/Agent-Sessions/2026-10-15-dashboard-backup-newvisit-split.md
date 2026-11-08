@@ -15,7 +15,7 @@ Files Modified:
 - `frontend/src/features/dashboard/DashboardViews.test.tsx`, `frontend/src/features/ui-review-regressions.test.tsx`
 - `CLINIQ-Knowledge-Base/03-Design/Reference-Screens.md`
 - `CLINIQ-Knowledge-Base/06-Decisions/ADR-025-Dashboard-Views.md`: amendment note
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`, `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`, `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - this file
 
 Changes Made:

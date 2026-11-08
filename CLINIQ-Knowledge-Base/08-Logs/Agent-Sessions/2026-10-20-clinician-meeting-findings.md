@@ -1,11 +1,11 @@
 Date/Day/Time: Tuesday, October 20, 2026 — 14:58 PHT
 Agent: Claude (Sonnet 5.5), chat session, not Claude Code; no application code touched
-Task: Match the team's meeting with the school clinician, and the two photos of the clinic's own papers, against the open entries in Issues-and-TODOs; resolve what they answer, narrow what they partly answer, and add what is new
+Task: Match the team's meeting with the school clinician, and the two photos of the clinic's own papers, against the open entries in Frontend-Issues-and-TODOs; resolve what they answer, narrow what they partly answer, and add what is new
 Status: Completed
 Prompt/Request: Zean wrote: "There's another meeting we did with the clinician and I have the organized info now, but the issues and TODOs will be flooded now, it already have many pending and unchecked what can we do". After the plan was explained: "okay I'll send the meeting notes, then you can resolve those it answers in pending decide." He uploaded `HEALWARE_MS_CLINICIAN_organized_info.md`. Earlier he asked whether the latest commit had been fetched; it had not, so the live GitHub repository was cloned and the work was done on branch `feat/professor-consultation-oct16` (tip `fee746a`, Tuesday, October 20, 2026 at 00:46 PHT), 20 commits ahead of `main` (`a4c78d0`). After the first version of this record he sent photos of the clinic's monthly cases report and inventory notebook, and answered my three questions: "For second, ignore that completely you dont have to add it" (the roles of Sir Pen and Sir Ghilan and the date of the recording; that item was therefore not added) and "for the third, yes that's actually good" (group the open decisions by who must answer, and archive the resolved entries; recorded in the next two sessions' notes).
 Files Modified:
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-20-clinician-meeting-findings.md (new)
 Changes Made:
 - Matched every open entry (143 by the file's own count) against the meeting and the photos.

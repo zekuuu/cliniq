@@ -4,9 +4,9 @@ Task: Record the fields the clinician writes in her two logbooks, settle what th
 Status: Completed (records and prompt); the builds are not done
 Prompt/Request: Zean wrote: "Also we got the fields that the clinician fills up in their logbook, it can be not strict like not those only, you can still keep or add necessary", followed by the two logbooks: "Clinic Logbook - Daily Visits: Time Visit | Name + Grade Level | Complaint; Body Temp (can leave blank); Treatment Done / Medication | Remarks | Time Out | Assisted By; Parent/Guardian" and "Emergency Logbook - When incident happens: take readings as needed based on situation: Temperature, Pulse, Blood Pressure, Oximeter. Don't force all 4 if not relevant to the case".
 Files Modified:
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
 - CLINIQ-Knowledge-Base/08-Logs/Issues-Done-Archive.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-20-clinic-logbook-fields.md (new)
 Changes Made:
 - New section "The clinic's two logbooks": a NOTE with both logbooks as reported and a field-by-field comparison with the app (checked in `Visit`, `Incident`, `IncidentEntryPage.tsx` on commit fee746a), one new DECIDE for the clinician, two FIX entries.

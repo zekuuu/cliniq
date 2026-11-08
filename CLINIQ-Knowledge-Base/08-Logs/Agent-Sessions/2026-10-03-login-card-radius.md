@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: "can you reduce the round of the card"
 Files Modified:
 - frontend/src/features/auth/LoginPage.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Login card radius 12px → 8px through `rounded-md!` on the Login `Card`. 8px is the existing `--radius-md` token, already used by the card's inputs and Sign In button, so no new radius value was introduced (Design-System.md, "one consistent set of radius values").
 - The important modifier is needed because the shared `cn` helper only joins class names and doesn't resolve conflicts, so `rounded-lg` (from `CARD_SURFACE`) and `rounded-md` would otherwise compete on CSS order. A one-line comment at the call site explains the override.

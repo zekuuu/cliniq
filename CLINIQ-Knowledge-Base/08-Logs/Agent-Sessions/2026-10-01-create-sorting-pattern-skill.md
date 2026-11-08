@@ -7,7 +7,7 @@ Files Modified:
 - .claude/skills/cliniq-sorting-patterns/SKILL.md
 - .claude/skills/cliniq-table-patterns/SKILL.md
 - CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Confirmed there was no standalone sorting skill; sorting was only indirectly mentioned by `cliniq-table-patterns`.
 - Added `cliniq-sorting-patterns` covering shared sortable headers, controlled state, deterministic comparison, default order, pagination reset, accessibility, and tests.

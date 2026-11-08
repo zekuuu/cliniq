@@ -3,7 +3,7 @@ Agent: Claude (chat session)
 Task: Finalize all previously-pending tech stack items (libraries, bundler) with researched, current best choices
 Status: Completed
 Prompt/Request: "also update the stack about additional libraries, you choose which library is best and modern, then for the bundler, choose the same best and modern. resolve also the other but let me know everything you do"
-Files Modified: 02-Architecture/Tech-Stack.md, 04-Development/Environment-Setup.md, 08-Logs/Issues-and-TODOs.md, 08-Logs/Changelog.md, 06-Decisions/ADR-007-Stack-Finalization.md (new), plus the canonical CLINIQ_Project_Plan.md (Section 4.3, Revision 2.2)
+Files Modified: 02-Architecture/Tech-Stack.md, 04-Development/Environment-Setup.md, 08-Logs/Frontend-Issues-and-TODOs.md, 08-Logs/Frontend-Changelog.md, 06-Decisions/ADR-007-Stack-Finalization.md (new), plus the canonical CLINIQ_Project_Plan.md (Section 4.3, Revision 2.2)
 Changes Made:
 - Searched current (2026) maintenance status for each pending item rather than assuming prior knowledge was still accurate.
 - Vite confirmed as build tool (current default for React SPAs).

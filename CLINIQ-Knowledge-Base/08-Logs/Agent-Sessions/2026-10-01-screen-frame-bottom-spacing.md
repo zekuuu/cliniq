@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: “make pb-6”
 Files Modified:
 - `frontend/src/index.css`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-01-screen-frame-bottom-spacing.md`
 Changes Made: Changed the central screen-frame bottom-padding override from `pb-4` to `pb-6`; the shared top padding remains `pt-6` and print-specific padding remains excluded.
 Reason: The user requested additional bottom breathing room.

@@ -6,7 +6,7 @@ Prompt/Request: “Why haven't you made a skill about it, are you able to read a
 Files Modified:
 - .claude/skills/cliniq-table-patterns/SKILL.md
 - CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Added `cliniq-table-patterns` for reusable DataTable behavior across filtered, sorted, paginated, date-range, and report-period views.
 - Documented fixed-layout usage, explicit column widths, meaningful accessible captions, semantic table requirements, and focused regression checks.

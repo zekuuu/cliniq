@@ -1,11 +1,11 @@
 Date/Day/Time: Saturday, October 17, 2026 — 08:08 PHT
 Agent: Claude (Sonnet 5.5), chat session, not Claude Code; no application code touched
-Task: Record the meeting already held with the Principal (and the clinic) in Issues-and-TODOs, as clarifications and revisions of earlier entries plus new entries
+Task: Record the meeting already held with the Principal (and the clinic) in Frontend-Issues-and-TODOs, as clarifications and revisions of earlier entries plus new entries
 Status: Completed
 Prompt/Request: Zean uploaded CLINIQ-Client-Meeting-Finding.pdf and wrote: "New section: 'Meeting with the Principal and the clinic: what to ask, confirm and prepare'. No I mean the meeting that we did with them. The contents might be just a revisions or just a clarifications." (earlier in the session: "All entries should be detailed and complete".)
 Files Modified:
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-029-Local-Deployment-Roles.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-17-principal-clinic-meeting-findings.md (new)
 Changes Made:

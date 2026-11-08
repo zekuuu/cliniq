@@ -4,7 +4,7 @@ Date/Day/Time: Wednesday, September 30, 2026 — 20:19 (system clock)
 Agent: Claude Code (Claude Opus 5.5)
 Task: Apply fixes for the findings logged by the interaction-based UI/UX review (`2026-09-30-interaction-ui-ux-review.md`). Fix confirmed bugs (Group A); surface judgment calls and decision-dependent items (Group B) without implementing them.
 Status: Partial. All 5 Group A findings were fixed and verified live; 21 Group B items await the owner's decision, and the re-opened Audit boxes (#10, #14, #18c) and the F2/F3 exit checks stay unchecked because each depends on a Group B decision.
-Prompt/Request: "Apply fixes for the findings from the UI/UX review session logged in Issues-and-TODOs.md… Fix the confirmed bugs. Do not fix the judgment-call items yourself — surface those for a decision instead… Group A — fix these: every finding with severity broken, inconsistent, or cosmetic… Group B — do not fix, decide first: every finding with severity 'judgment call'… plus anything else the review explicitly logged as needing a visual or product decision… Re-verify live… Don't guess at anything a cited source doesn't actually specify — ask instead of picking an interpretation."
+Prompt/Request: "Apply fixes for the findings from the UI/UX review session logged in Frontend-Issues-and-TODOs.md… Fix the confirmed bugs. Do not fix the judgment-call items yourself — surface those for a decision instead… Group A — fix these: every finding with severity broken, inconsistent, or cosmetic… Group B — do not fix, decide first: every finding with severity 'judgment call'… plus anything else the review explicitly logged as needing a visual or product decision… Re-verify live… Don't guess at anything a cited source doesn't actually specify — ask instead of picking an interpretation."
 
 Files Modified:
 - `frontend/src/components/ui/Modal.tsx`
@@ -15,7 +15,7 @@ Files Modified:
 - `frontend/src/layouts/Sidebar.tsx`
 - `frontend/src/features/student-records/StudentProfilePage.tsx`, `frontend/src/features/emergency-response/IncidentReportPage.tsx` (`autoFocus` → `data-autofocus`)
 - `frontend/src/features/ui-review-regressions.test.tsx`, `frontend/src/features/emergency-response/IncidentEntryPage.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`, `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`, `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`, this log
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`, `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`, `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`, this log
 
 Changes Made:
 - **Step 0.** The working tree was clean at `9949b60`, in sync with `origin/feature/clinic-overview-dashboard`, and that commit contains the review session's work unchanged.
@@ -48,7 +48,7 @@ Testing Performed:
   - axe on every route for all three roles: `landmark-unique` is gone. The only remaining violation is primary-button `color-contrast`, which is in Group B.
 
 Known Issues:
-- 21 Group B items await owner decisions (listed in Issues-and-TODOs.md under the review subsection).
+- 21 Group B items await owner decisions (listed in Frontend-Issues-and-TODOs.md under the review subsection).
 - The Audit boxes for #10, #14, and #18c, and the F2/F3 exit checks, remain unchecked until those decisions are made and implemented.
 - Username uniqueness still needs a database constraint in the backend phase (B2).
 - New: the desktop QR hub's idle skeleton (logged, not fixed).

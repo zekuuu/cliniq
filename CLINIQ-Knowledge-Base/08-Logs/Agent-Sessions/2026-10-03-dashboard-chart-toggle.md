@@ -7,8 +7,8 @@ Files Modified:
 - frontend/src/features/dashboard/components/ComplaintTrends.tsx
 - frontend/src/features/dashboard/components/ComplaintTrends.test.tsx
 - CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Removed the implicit `tooFewBuckets` table override; `showTable` now follows the selected view only.
 - Kept the one-period informational notice, but Chart remains selectable and renders its single data point.

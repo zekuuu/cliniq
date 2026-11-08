@@ -44,7 +44,7 @@ Files Modified:
 - frontend/src/features/dashboard/lib/printSummary.test.ts
 - .claude/skills/cliniq-combobox-patterns/SKILL.md (wording only: the checklist's name)
 - CLINIQ-Knowledge-Base: 01-Requirements/Features/Module-Overview.md, 03-Design/Screen-Inventory.md, 03-Design/Design-System.md, 03-Design/Reference-Screens.md, 02-Architecture/Database/Data-Dictionary.md, ERD.md, Use-Case-Diagram.md, Data-Flow-Diagram.md, 00-Project-Core/Scope.md, 04-Development/Backend-Readiness-Checklist.md, 04-Development/Development-Phases.md, 06-Decisions/ADR-036 (status: built), 09-References/Canonical-Documents.md, and the canonical CLINIQ_Modules_and_Features.md, CLINIQ_Frontend_Context_Brief.md and CLINIQ_Frontend_Design_Reference.md
-- CLINIQ-Knowledge-Base/08-Logs: Changelog.md, Issues-and-TODOs.md, Issues-Done-Archive.md
+- CLINIQ-Knowledge-Base/08-Logs: Frontend-Changelog.md, Frontend-Issues-and-TODOs.md, Issues-Done-Archive.md
 
 Changes Made:
 - **Late entry (VS-8, D1).**

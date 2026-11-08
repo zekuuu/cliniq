@@ -4,9 +4,9 @@ Task: Settle the open DECIDE entries that have an obvious answer, open the build
 Status: Completed (records and prompt); the builds are not done
 Prompt/Request: Zean wrote: "Now for those DECIDE that has obvious answers and don't need me or any other people to answer it, fix them already. For example the 'several emergency contacts per student (the Grade 11 case showed one contact can fail)' then the simplest solution will be is to be able to add multiple emergency contact for students not just one."
 Files Modified:
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
 - CLINIQ-Knowledge-Base/08-Logs/Issues-Done-Archive.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-20-obvious-decisions-resolved.md (new)
 Changes Made:
 - I read all 32 entries in the group "Ours to decide" and picked the ones whose answer follows from the entry itself, the code or Zean's own words and needs no one else. Four were resolved and moved, unchanged apart from the added Resolved text, to the archive under their original headings: "Several emergency contacts per student" (a list of contacts, first is primary, at least one required, no stored maximum), "Should printing or saving a PDF be audit-logged?" (yes, one entry per print from the beforeprint handling), "Student search isn't audit-logged" (no: checked in searchStudents, it returns only id, Student Number, name and grade), and "Same analytics on the Dashboard and in Reports" (the split the entry proposed; nothing removed; "View full report" links).

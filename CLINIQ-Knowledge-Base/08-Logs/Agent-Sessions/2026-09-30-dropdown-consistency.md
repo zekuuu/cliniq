@@ -10,7 +10,7 @@ Files Modified:
 - Screens: `features/clinic-visits/NewVisitEntryPage.tsx`, `features/emergency-response/IncidentEntryPage.tsx`, `features/student-records/StudentListPage.tsx`, `features/student-records/StudentFormPage.tsx`, `features/audit-log/AuditLogPage.tsx`
 - Tests: `frontend/src/test/selectOption.ts` (new helper); `AuditLogPage.test.tsx`, `NewVisitEntryPage.test.tsx`, `IncidentEntryPage.test.tsx`, `FollowUpListPage.test.tsx`, `StudentFormPage.test.tsx`, `StudentListPage.test.tsx`, `ui-review-regressions.test.tsx`
 - Skills: `.claude/skills/cliniq-dropdown-patterns` (edited), plus one-line pointers in `cliniq-multi-select-patterns`, `cliniq-date-range-patterns`, `cliniq-interactive-states`
-- Knowledge base: `03-Design/Design-System.md`, `04-Development/Skills-Setup.md`, `04-Development/Frontend-Loop-Engineering.md` (shared Dropdown/Select re-audit note), `08-Logs/Changelog.md`, `08-Logs/Issues-and-TODOs.md`, this session log
+- Knowledge base: `03-Design/Design-System.md`, `04-Development/Skills-Setup.md`, `04-Development/Frontend-Loop-Engineering.md` (shared Dropdown/Select re-audit note), `08-Logs/Frontend-Changelog.md`, `08-Logs/Frontend-Issues-and-TODOs.md`, this session log
 Changes Made:
 - What was inconsistent (verified in a live Chromium session before changing anything):
   - The reference (Dashboard date range) is a 40px semibold trigger with a 14px chevron and a themed listbox. The same picker on Visit Log, Incident Log, and Audit Log used a smaller 32px variant.
@@ -40,12 +40,12 @@ Testing Performed: Wednesday, September 30, 2026 — 23:22:
 - Live interaction: QR Print (48 options) scrolls inside a 256px panel and typing "2026" jumps to a matching student; Add Student: Tab in, Enter, typing "grade 11" lands on Grade 11 without the space selecting, Enter selects, Tab moves to the next field; Follow-Ups: the last row's panel opens upward and is not clipped, Missed opens the confirmation, and Keep Pending returns focus to the row's trigger.
 - 390px: the row panel is not clipped by the scrolling table; the Dispense panel stays inside the viewport.
 Known Issues:
-- Dropdown value text is semibold (the reference's weight) while text in an `Input` beside it is regular, and dropdowns use `border-border` with a soft shadow while `Input` uses the darker `border-text-secondary`. This is the reference's look applied as asked; it is listed in `Issues-and-TODOs.md` for the owner to confirm.
+- Dropdown value text is semibold (the reference's weight) while text in an `Input` beside it is regular, and dropdowns use `border-border` with a soft shadow while `Input` uses the darker `border-text-secondary`. This is the reference's look applied as asked; it is listed in `Frontend-Issues-and-TODOs.md` for the owner to confirm.
 - In list filter rows the search `Input` is 32px and the dropdown beside it 40px (now the same on Student List, Inventory, Visit Log, and Incident Log). `Input` was out of scope.
 - A placeholder ("Update status", "Select complaint") is still the first row of the list, as it was in the native control.
 - On a 390px screen a very long option label (Dispense item) is cut at the panel's right edge.
 - Found, unrelated to dropdowns: at 390px with a visible vertical scrollbar (375px usable), the top bar's account area overflows the page by 7px.
 - The canonical `CLINIQ_Frontend_Context_Brief.md` and `CLINIQ_Frontend_Design_Reference.md` still describe only the minimum (custom-styled, never native chrome). That remains true; they were not edited. No ADR was written: this is a design-system refinement, not a requirement or scope decision.
 Next Steps:
-- Owner: confirm or reverse the three look choices listed in `Issues-and-TODOs.md`.
+- Owner: confirm or reverse the three look choices listed in `Frontend-Issues-and-TODOs.md`.
 - If the owner wants inputs and dropdowns to share one height and border, change `Input` in one pass across all forms.

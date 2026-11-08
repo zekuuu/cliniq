@@ -4,7 +4,7 @@ Task: Point the Dashboard reminder to the Archive page and highlight the button 
 Status: Completed
 Prompt/Request: Zean, in chat: "I think reword in button, Go to Archive then glow the end or start button there", then "shouldn't these be above the table, since the table could scale, so easy to reach", then "also implement basic functions in archive like filter, pagination, etc".
 
-Files Modified: `frontend/src/features/dashboard/components/SchoolYearBanner.tsx`, `frontend/src/features/archive/ArchivePage.tsx` (+ test), `frontend/src/components/ui/Button.tsx` (a typed `ref` prop, React 19), `Screen-Inventory.md`, `Changelog.md`.
+Files Modified: `frontend/src/features/dashboard/components/SchoolYearBanner.tsx`, `frontend/src/features/archive/ArchivePage.tsx` (+ test), `frontend/src/components/ui/Button.tsx` (a typed `ref` prop, React 19), `Screen-Inventory.md`, `Frontend-Changelog.md`.
 
 Changes Made:
 - **Banner button:** the reminder's button now reads "Go to Archive" instead of "End school year" or "Start school year". It opens the Archive page with router state `highlightSchoolYearStep`.

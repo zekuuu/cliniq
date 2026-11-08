@@ -4,9 +4,9 @@ Task: Record Zean's answer on the logbook's Remarks and Parent/Guardian columns 
 Status: Completed (records and prompt); the build is not done
 Prompt/Request: Zean wrote: "remarks is just like notes so it can be anything, for parent/guardian i think it's the name", answering the open question "Daily logbook: what Parent/Guardian and Remarks mean" that I raised after the logbook fields.
 Files Modified:
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
 - CLINIQ-Knowledge-Base/08-Logs/Issues-Done-Archive.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-20-logbook-remarks-and-parent-guardian.md (new)
 Changes Made:
 - Resolved and moved to the archive: "Daily logbook: what "Parent/Guardian" and "Remarks" mean". Remarks = optional free-text notes, separate from Treatment; Parent/Guardian = optional free-text name.

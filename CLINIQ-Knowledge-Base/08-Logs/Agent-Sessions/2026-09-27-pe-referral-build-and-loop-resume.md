@@ -8,7 +8,7 @@ Files Modified:
 - cliniq-frontend/src/components/ui/Select.tsx, Textarea.tsx, forms/FollowUpPrompt.tsx, components/index.ts (new shared components, not yet used by any screen)
 - cliniq-frontend/src/lib/mocks/latency.ts (new shared mock-mode/latency helper), src/lib/dates.ts (`formatDateTime`)
 - .claude/skills/cliniq-display-privacy/SKILL.md (reason-visibility section now matches ADR-010)
-- CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md, 08-Logs/Changelog.md, 08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md, 08-Logs/Frontend-Changelog.md, 08-Logs/Frontend-Issues-and-TODOs.md
 Changes Made:
 - Phase 0 run once (Changelog, ADRs 001–011, Issues, all three bespoke skills).
 - #14 PE/Sports Injury Referral Form: the previous agent's files existed but were unlogged and failed typecheck; fixed and checked its Build box.
@@ -17,5 +17,5 @@ Changes Made:
 - Shared components for the remaining screens (custom-styled Select per cliniq-interactive-states, Textarea, #18b FollowUpPrompt).
 Reason: Continue Phase 1 from where it stopped, without building ahead or leaving a failing typecheck.
 Testing Performed: `npx tsc -b` clean; `npx vitest run` 27 files / 82 tests passed.
-Known Issues: See Issues-and-TODOs.md, "Phase 2 findings logged during Phase 1" (#10 complaint column, #16 follow-up placement, component consolidation, Login/#2 scope).
+Known Issues: See Frontend-Issues-and-TODOs.md, "Phase 2 findings logged during Phase 1" (#10 complaint column, #16 follow-up placement, component consolidation, Login/#2 scope).
 Next Steps: Next Phase 1 item is #22 QR Code Print View, then #23/#24 desktop hub (extract mobile StudentSummary/StaffActions into `qr-digital-health-id/shared/`), #25 (mobile Emergency button already exists from F1 #4; verify and check off), #15, #17, #18, #18b, #18c, Inventory, Reports, Users, Backup. Use `Select`, `Textarea`, `mockRequest` from the new shared modules.

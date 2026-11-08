@@ -15,7 +15,7 @@ Files Modified:
 - `cliniq-frontend/src/features/qr-digital-health-id/mobile/QrMobileHubPage.tsx`
 - `cliniq-frontend/src/features/qr-digital-health-id/mobile/QrMobileHubPage.test.tsx`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Built Staff-only Inventory List with search, category filter, stock/expiration status, and accessible table fallback.
 - Built Add/Edit Inventory Item with validation, loading skeleton, success/error feedback, and create/update audit events.

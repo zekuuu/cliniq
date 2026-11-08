@@ -13,7 +13,7 @@ Zean, Friday, October 30, 2026 — 21:03 PHT: "In the masterlist the school gave
 - `06-Decisions/ADR-049-...md` and `06-Decisions/ADR-051-...md` (one sentence each on the Status line: amended by ADR-054)
 - `06-Decisions/Decisions-Summary.md` (ADR-054 entry)
 - `09-References/Canonical-Documents/CLINIQ_Modules_and_Features.md`, `CLINIQ_Frontend_Context_Brief.md`, `CLINIQ_Frontend_Design_Reference.md`
-- `08-Logs/Issues-and-TODOs.md`, `08-Logs/Changelog.md`
+- `08-Logs/Frontend-Issues-and-TODOs.md`, `08-Logs/Frontend-Changelog.md`
 - Not touched: the Project Plan (it says nothing about the student's own number or the age group), `ERD.md`, `Data-Dictionary.md`, `Reference-Schema.sql`, the vault copies, the READMEs, code and tests.
 
 ## Changes Made

@@ -20,7 +20,7 @@
     "percentMinPriorCount": 5,
     "staleBackupHours": 48,
     "vitalsWarningRanges": {
-      "_note": "PLACEHOLDER SANITY BOUNDS, NOT CLINICAL THRESHOLDS. Nurse to confirm (Issues-and-TODOs: 'Unusual-vitals thresholds'). A reading outside a range is very unlikely to be real, usually a typing slip such as 370 for 37.0. The Incident and Visit forms show a warning and never block saving. oxygenSaturationPct (the oximeter) is null on purpose: no warning until the clinician gives a range; set {\"min\", \"max\"} here when she does. feverFromC: a temperature at or above it (37 °C, the team's rule of October 20, 2026; clinician to confirm) is flagged as a fever, also never blocking.",
+      "_note": "PLACEHOLDER SANITY BOUNDS, NOT CLINICAL THRESHOLDS. Nurse to confirm (Frontend-Issues-and-TODOs: 'Unusual-vitals thresholds'). A reading outside a range is very unlikely to be real, usually a typing slip such as 370 for 37.0. The Incident and Visit forms show a warning and never block saving. oxygenSaturationPct (the oximeter) is null on purpose: no warning until the clinician gives a range; set {\"min\", \"max\"} here when she does. feverFromC: a temperature at or above it (37 °C, the team's rule of October 20, 2026; clinician to confirm) is flagged as a fever, also never blocking.",
       "temperatureC": { "min": 30, "max": 43 },
       "pulseBpm": { "min": 30, "max": 250 },
       "oxygenSaturationPct": null,

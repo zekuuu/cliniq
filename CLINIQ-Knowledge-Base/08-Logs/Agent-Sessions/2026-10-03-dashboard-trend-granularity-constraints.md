@@ -15,8 +15,8 @@ Files Modified:
 - `frontend/src/features/dashboard/components/AlertLists.tsx`
 - `CLINIQ-Knowledge-Base/03-Design/Screen-Inventory.md`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
 Changes Made:
 - Starting state (verified, Step 0): the 03:43 Codex session had already anchored bounded ranges at their start, added This year, made empty multi-bucket ranges chart as zero lines, and reset granularity on range change. It had not constrained the options (Daily was still selectable on All), and an All range with zero events still built monthly buckets from 1900.
 - `planTrendGranularity(window, wholeHistory)` in the data layer decides which sizes are offered for the actual trend window and which is the default. Daily ≤ 31 days; Weekly 14–371 days; Monthly 56 days–3 years; Yearly > 1 year. All is sized by its recorded history, never offers Daily/Weekly, and always keeps Monthly (unless history > 3 years). Defaults: Daily ≤ 31 days, Weekly ≤ 120, Monthly ≤ 3 years, else Yearly; All opens Monthly up to 2 years of history, else Yearly.
@@ -41,7 +41,7 @@ Testing Performed:
   - `?mock=empty`: This month and This year render flat, connected zero lines (3 and 10 points); Today and All show the empty state (single bucket).
   - Print: Alerts cards grow to their content with no overflow; screen heights unchanged (416px).
 Known Issues:
-- The reported blank middle Alerts card was not reproduced. Checked: 5 widths, every preset (mid-refetch and settled), the `?mock=slow` skeleton, `?mock=empty`, print media, and a generated PDF. The only headerless blank card reproduced was a full-page-screenshot artifact (sticky elements painted at the scroll position, blanking the Visits trend card). Recorded under Issues-and-TODOs → Verification notes.
+- The reported blank middle Alerts card was not reproduced. Checked: 5 widths, every preset (mid-refetch and settled), the `?mock=slow` skeleton, `?mock=empty`, print media, and a generated PDF. The only headerless blank card reproduced was a full-page-screenshot artifact (sticky elements painted at the scroll position, blanking the Visits trend card). Recorded under Frontend-Issues-and-TODOs → Verification notes.
 - When This month is only 1–13 days old, Weekly is disabled because it would be a single bucket. This follows the prompt's stated principle over its example table; it becomes selectable from day 14.
 - The canonical Frontend Context Brief (#31) still says "common complaints by week/month"; Screen-Inventory was updated, and the canonical copy needs the matching edit by its owner.
 Next Steps: If the blank Alerts card reappears, capture the width, range, scroll position, and screenshot method so it can be reproduced.

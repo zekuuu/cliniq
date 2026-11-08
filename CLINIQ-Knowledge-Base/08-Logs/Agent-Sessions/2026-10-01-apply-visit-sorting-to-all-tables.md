@@ -20,7 +20,7 @@ Files Modified:
 - frontend/src/features/dashboard/components/VisitCalendar.tsx
 - .claude/skills/cliniq-sorting-patterns/SKILL.md
 - CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Added shared stable comparison and direction-toggle helpers in `lib/tableSort.ts`.
 - Added Visit-style accessible sortable headers to every current DataTable's meaningful data columns; action columns remain non-sortable.

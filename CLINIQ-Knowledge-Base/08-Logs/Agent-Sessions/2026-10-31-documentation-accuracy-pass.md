@@ -128,7 +128,7 @@ Testing: typecheck and build pass; lint unchanged (1 error, 2 warnings); tests 8
 
 ## Known Issues
 
-- Eight component skills were term-searched, not read line by line. Past `Agent-Sessions/`, `Changelog.md` rows and ADR decision text were history and not checked for accuracy.
+- Eight component skills were term-searched, not read line by line. Past `Agent-Sessions/`, `Frontend-Changelog.md` rows and ADR decision text were history and not checked for accuracy.
 - `Frontend-Loop-Engineering.md` keeps its old notes as history. `Design-Audit-Reference-Mockup.md` still says Student Number: it is a dated audit record, left as written.
 - Edited Mermaid blocks were not rendered. `Diagrams/Module-Linkage.png` and `.svg` are unchanged; only the table beside them changed.
 - Challenge: `Coding-Conventions.md` and `AGENTS.md` say no formatter is prescribed, but ESLint and Prettier are configured. A short decision would settle it.

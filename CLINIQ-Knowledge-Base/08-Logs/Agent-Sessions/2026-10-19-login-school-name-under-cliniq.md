@@ -8,7 +8,7 @@ Prompt/Request: Zean, with a screenshot of the layout B Login: "I think better i
 Files Modified:
 - `frontend/src/features/auth/LoginPage.tsx`
 - `CLINIQ-Knowledge-Base/03-Design/Design-System.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-19-login-school-name-under-cliniq.md` (this file)
 Changes Made:
 - The lockup is now the logo beside a stacked CLINIQ (28px bold, `brand-green-dark`) and "Mendez Christian Academy" (14px medium, `text-secondary`, 4px below), the same stacking as the sidebar's `BrandLogo`. Both lines start at the same x; the text block (49.5px) sits inside the 56px logo height.

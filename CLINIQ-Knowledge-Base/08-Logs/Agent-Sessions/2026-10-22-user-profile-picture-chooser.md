@@ -6,7 +6,7 @@ Prompt/Request: "Then for admin accounts adding user, improve the UI of choosing
 Files Modified:
 - frontend/src/features/user-management/UserFormPage.tsx
 - frontend/src/features/user-management/UserFormPage.test.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-22-user-profile-picture-chooser.md
 Changes Made:
 - Replaced the plain file field with an accessible profile-picture area that shows the account avatar, accepted-file guidance, and a live selection status.

@@ -7,8 +7,8 @@ Files Modified:
 - frontend/public/brand/login-backdrop.jpg (renamed from `frontend/public/opera_Df7WlzAO7a.jpg`: the aerial photo of the three-storey main building, 1920×1049)
 - frontend/public/brand/campus-courtyard.jpg (renamed from `frontend/public/opera_6FHqNtK2Rs.jpg`: the courtyard/flagpole photo, 1920×1080; currently unused)
 - frontend/src/features/auth/LoginBackdrop.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
 Changes Made:
 - Identified which screenshot was which by viewing both, then renamed them into `public/brand/`. The building shot is now the live backdrop.
 - Blurred the photo with CSS (`blur-sm`, 8px) instead of editing the file, so a future official photo dropped at the same path is blurred automatically. The image is scaled to 110% inside the clipped backdrop so the blur's soft edges fall outside the viewport, rather than fading into a green fringe from the fallback gradient.

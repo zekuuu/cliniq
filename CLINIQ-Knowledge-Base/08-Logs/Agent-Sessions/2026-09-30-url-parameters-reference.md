@@ -7,7 +7,7 @@ Files Modified:
 - `URL-Parameters.md`
 - `README.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-30-url-parameters-reference.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Searched the current frontend source, route builders, tests, decision records, and historical session logs for query-string usage.
 - Documented all 10 active query keys: `mock`, `mockEmpty`, `mockLatency`, `mockPersist`, `mockReset`, `role`, `student`, `item`, `user`, and `focus`.

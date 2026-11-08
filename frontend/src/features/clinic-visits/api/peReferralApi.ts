@@ -23,7 +23,7 @@ export interface PeReferralValues {
 /**
  * PLACEHOLDER WORDING. The three clinical defaults are neutral starter text for the nurse to edit,
  * not findings. No requirement specifies them; the School Clinician should confirm or replace them
- * (tracked in Issues-and-TODOs.md).
+ * (tracked in Frontend-Issues-and-TODOs.md).
  */
 /** Starting wording, to be confirmed by the clinic (ADR-053); the form says so on screen. */
 const CLINICAL_DEFAULTS = {

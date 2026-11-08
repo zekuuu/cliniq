@@ -237,7 +237,7 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
               to the roles described in Section 4, and is not shared outside the school except as
               described in this policy.
             </p>
-            {/* ADR-043 (D18): wording pending the school's privacy officer (open DECIDE in Issues-and-TODOs). */}
+            {/* ADR-043 (D18): wording pending the school's privacy officer (open DECIDE in Frontend-Issues-and-TODOs). */}
             <p className={paragraphClass}>
               <strong>Teachers and school staff (PROVISIONAL).</strong> The clinic may also record visits,
               incidents and medicines given for teachers, non-teaching staff and utility workers, with their sex,

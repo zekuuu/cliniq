@@ -11,7 +11,7 @@ Files Modified:
 - cliniq-frontend/src/components/ui/DateRangePicker.tsx
 - cliniq-frontend/src/components/index.ts
 - cliniq-frontend/src/lib/dateRange.ts
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Replaced the standalone date inputs with the shared accessible date-range picker, scoped to Today, Last 7 days (this week), This month, All, and Custom range. All visits is the initial range; a custom range is applied only after confirmation.
 - Added generic sortable table-header support with visible direction arrows, keyboard-operable buttons, and `aria-sort` for the active column.

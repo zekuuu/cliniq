@@ -6,7 +6,7 @@ Prompt/Request: (screenshot of the Excuse Letter header: Print / Save as PDF, Is
 Files Modified:
 - frontend/src/features/clinic-visits/ExcuseLetterPage.tsx
 - .claude/skills/cliniq-page-header-patterns/SKILL.md
-- CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md, 08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md, 08-Logs/Frontend-Changelog.md
 Changes Made:
 - The status badge (Approved / Draft / Superseded / Voided) moved to the top-right of the title row; Print / Save as PDF and Issue a replacement are on their own row below (`mt-4 flex flex-wrap gap-2`), the same layout as Visit Details.
 - Checked the other detail headers: Visit Details already used this layout; Incident Report, Student Profile, Parent Notification and the Sports Report don't put a badge in the button row, so they were left as they are.

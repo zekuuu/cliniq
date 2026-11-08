@@ -6,7 +6,7 @@ Prompt/Request: "Regarding this feature, filter, write the skill about this, so 
 Files Modified:
 - .claude/skills/cliniq-date-range-patterns/SKILL.md
 - CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Created `cliniq-date-range-patterns` for reusable multi-record operational-list date filters.
 - Recorded the approved pattern: Today, This week, This month, All, and Custom range presets; All as the starting range; draft-only custom dates that require Apply; and a custom panel that overlays rather than reflows the surrounding list/table.

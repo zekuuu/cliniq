@@ -2268,7 +2268,7 @@ export function completeIncidentStageTwo(
     if (notesChanged && incidentApproved(s, incident.id)) throw new IncidentApprovedError()
     let belowZero: string[] = []
     // ponytail: medicines are fixed once Stage 2 is complete; changing them later needs an
-    // incident-edit adjustment rule that hasn't been decided (Issues-and-TODOs).
+    // incident-edit adjustment rule that hasn't been decided (Frontend-Issues-and-TODOs).
     if (incident.stage === 2) {
       const same = (a: ItemLineInput[], b: ItemGivenLine[]) =>
         a.length === b.length && a.every((line) => b.some((old) => old.itemId === line.itemId && old.quantity === line.quantity))

@@ -4,9 +4,9 @@ Task: Apply Zean's answers from the decisions sheet to the knowledge base, and w
 Status: Completed (records and prompt; nothing built)
 Prompt/Request: Zean attached the exported "CLINIQ Decisions to Answer" sheet and the sheet link: "We've already completed the spreadsheet questions, tho some are still unanswered but the rest will resolve the DECIDE in Issues and TODO and actually apply some changes and fixes".
 Files Modified:
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
 - CLINIQ-Knowledge-Base/08-Logs/Issues-Done-Archive.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-29-decisions-sheet-answers-applied.md (new)
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-047-Yearly-List-Drives-Grade-And-Section-Visit-Keeps-Its-Grade-Archive-Yearly.md (new)
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-048-Admin-Sign-Out-Acknowledge-Email-Reset-And-Logging-Record-Opens.md (new)

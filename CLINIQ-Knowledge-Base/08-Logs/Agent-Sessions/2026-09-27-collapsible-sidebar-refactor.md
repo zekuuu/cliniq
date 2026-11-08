@@ -8,7 +8,7 @@ Files Modified:
 - `cliniq-frontend/src/layouts/Sidebar.tsx`
 - `cliniq-frontend/src/components/icons/Icon.tsx`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-collapsible-sidebar-refactor.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Extracted the desktop sidebar into a dedicated `Sidebar` component.
 - Added `AppShell` state for expanded/collapsed sidebar layout.

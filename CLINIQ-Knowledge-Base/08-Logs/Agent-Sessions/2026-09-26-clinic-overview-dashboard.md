@@ -19,7 +19,7 @@ Files Modified:
 - src/components/: index.ts, README.md (catalog), icons/Icon.tsx, charts/chartSetup.ts, ui/{Button,Card,Badge,StatusBadge,StatCard,ListRow,ListCard,SegmentedControl,DateRangePicker,Input,DataTable,Skeleton,EmptyState,ErrorState}.tsx, status/{followUp,inventory,frequentVisitor}.ts
 - src/features/dashboard/: README.md, DashboardPage.tsx, types.ts, api/{dashboardApi,aggregate}.ts, lib/calendar.ts, components/{DashboardHeader,StatCardRow,AlertLists,ComplaintTrends,VisitCalendar}.tsx
 - Tests: src/lib/dates.test.ts, src/features/dashboard/api/aggregate.test.ts, src/features/dashboard/DashboardPage.test.tsx
-- Vault: 06-Decisions/ADR-010 (new), ADR-011 (new); 04-Development/Frontend-Loop-Engineering.md (checklist + resume notes), Environment-Setup.md; 02-Architecture/Tech-Stack.md; 03-Design/Design-Audit-Reference-Mockup.md; 05-Testing/Test-Cases.md; 08-Logs/Issues-and-TODOs.md, Changelog.md, this file
+- Vault: 06-Decisions/ADR-010 (new), ADR-011 (new); 04-Development/Frontend-Loop-Engineering.md (checklist + resume notes), Environment-Setup.md; 02-Architecture/Tech-Stack.md; 03-Design/Design-Audit-Reference-Mockup.md; 05-Testing/Test-Cases.md; 08-Logs/Frontend-Issues-and-TODOs.md, Frontend-Changelog.md, this file
 - .claude/skills/cliniq-display-privacy/SKILL.md (open question → resolved; type-level enforcement note)
 
 Changes Made:
@@ -46,7 +46,7 @@ Testing Performed:
 Known Issues:
 - ADR numbering collision, resolved: another session running concurrently (skeleton-loading + modular-backend logs, same day) created ADR-009-Modular-Backend-Architecture while this build ran. This session's ADRs were renumbered to ADR-010 (reason visibility) and ADR-011 (dashboard scope), and every reference was updated. That session's new universal skeleton-loading rule was checked against this build and is met (page and calendar initial loads use skeletons; refetches keep the previous frame dimmed, per the dataviz guidance).
 - Placeholder thresholds (`MOCK_RULES`) are undefined in any document; they need a decision before B9.
-- Design-System.md contradicts its own contrast rules in 4 places (primary/secondary button text, text-muted for timestamps, border for inputs). The stricter reading was implemented; the docs need correcting. See Issues-and-TODOs.
+- Design-System.md contradicts its own contrast rules in 4 places (primary/secondary button text, text-muted for timestamps, border for inputs). The stricter reading was implemented; the docs need correcting. See Frontend-Issues-and-TODOs.
 - Canonical docs need updates for ADR-010 and ADR-011.
 - Whether printing the dashboard is auditable is unconfirmed (currently not logged).
 - Brand yellow isn't used on this screen (no meaningful non-decorative use here); the brand identity will mostly come from the App Shell/logo (#3).

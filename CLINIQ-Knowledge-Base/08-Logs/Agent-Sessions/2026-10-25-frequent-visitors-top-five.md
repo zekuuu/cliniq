@@ -3,7 +3,7 @@ Agent: Claude Code (Claude Opus 5.5)
 Task: Bring back the Dashboard's Frequent-visitor panel, showing only a few students
 Status: Completed
 Prompt/Request: Zean: "I think bring back frequent-visitor but make it not show many"
-Files Modified: frontend/src/features/dashboard/components/AlertLists.tsx, frontend/src/lib/mock-db/{mock-db.json,store.ts,types.ts}, frontend/src/types/dashboard.ts, frontend/src/features/dashboard/{DashboardPage.test.tsx,DashboardViews.test.tsx,README.md}, frontend/src/lib/mock-db/README.md, CLINIQ-Knowledge-Base/01-Requirements/Features/Module-Overview.md, 08-Logs (Changelog, Issues-and-TODOs)
+Files Modified: frontend/src/features/dashboard/components/AlertLists.tsx, frontend/src/lib/mock-db/{mock-db.json,store.ts,types.ts}, frontend/src/types/dashboard.ts, frontend/src/features/dashboard/{DashboardPage.test.tsx,DashboardViews.test.tsx,README.md}, frontend/src/lib/mock-db/README.md, CLINIQ-Knowledge-Base/01-Requirements/Features/Module-Overview.md, 08-Logs (Changelog, Frontend-Issues-and-TODOs)
 Changes Made:
 - `config.showFrequentVisitors` is now true, and the persisted-state migration defaults to true.
 - The Overview panel lists the five students with the most visits (already sorted most visits first). A "Show all <n>" header button expands the list and "Show top 5" collapses it; the count badge keeps the total.

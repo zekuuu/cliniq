@@ -13,8 +13,8 @@ Files Modified:
 - `frontend/src/lib/mock-db/README.md`
 - `frontend/src/lib/mock-db/mock-db.json`
 - `frontend/src/types/entities.ts`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - This session log
 Changes Made:
 - Preserved the uploaded `ERD.md`, `Data-Dictionary.md`, `Reference-Schema.sql`, and `Diagrams/` contents without rewriting them.

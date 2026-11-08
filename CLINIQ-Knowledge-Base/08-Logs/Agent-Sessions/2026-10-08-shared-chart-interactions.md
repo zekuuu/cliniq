@@ -11,7 +11,7 @@ Files Modified:
 - frontend/src/features/dashboard/components/ComplaintTrends.test.tsx
 - frontend/src/features/reports/components/HealthSummary.tsx
 - frontend/src/features/reports/ReportsPage.test.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-08-shared-chart-interactions.md
 Changes Made:
 - Audited frontend Chart.js usage and found one other chart: Reports Health Summary's horizontal bar chart.

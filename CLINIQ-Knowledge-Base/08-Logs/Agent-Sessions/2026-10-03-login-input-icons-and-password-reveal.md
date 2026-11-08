@@ -10,7 +10,7 @@ Files Modified:
 - frontend/src/features/auth/LoginPage.tsx
 - .claude/skills/cliniq-input-patterns/SKILL.md
 - CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Built into the shared `Input` rather than on Login only, because password fields recur (Login, Force Password Change ×2, future account screens), and `cliniq-input-patterns` forbids page-local input styling.
 - `icon?: IconName`: a decorative leading icon in `text-secondary` (#616161, which passes the 3:1 non-text contrast; `text-muted` would not), with the field padded to `pl-9`.

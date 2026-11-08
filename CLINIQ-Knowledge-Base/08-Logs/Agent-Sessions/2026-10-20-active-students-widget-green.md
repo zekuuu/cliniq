@@ -6,7 +6,7 @@ Prompt/Request: "Then also recolor the widget of active student similar to visit
 Files Modified:
 - frontend/src/features/dashboard/components/StatCardRow.tsx
 - frontend/src/features/dashboard/DashboardPage.test.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-20-active-students-widget-green.md (new)
 Changes Made:
 - Changed Active Students from the neutral StatCard tone to the existing green `brand` tone used by Clinic Visits.

@@ -11,7 +11,7 @@ Files Modified:
 - `frontend/src/lib/mock-db/README.md`
 - `frontend/src/lib/mock-db/auth.test.ts`
 - `frontend/src/lib/mock-db/integrity.ts`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - this session log
 Changes Made: Replaced the long synthetic passwords with `demo-nurse`, `demo-admin`, `demo-pe`, and `demo-change` across the mock seed, Login sample-account panel, README, and auth tests. Updated the integrity rule to accept only passwords beginning with `demo-` or `dev-only-`, preserving the explicit fake-credential guard.
 Reason: Make local client demonstrations faster to operate without turning the sample credentials into plausible production secrets.

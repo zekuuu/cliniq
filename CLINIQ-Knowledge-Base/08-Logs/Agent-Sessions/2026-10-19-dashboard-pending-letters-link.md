@@ -9,8 +9,8 @@ Files Modified:
 - `frontend/src/features/dashboard/components/PendingExcuseLetters.tsx`
 - `frontend/src/features/dashboard/components/StatCardRow.tsx`
 - `frontend/src/features/dashboard/DashboardPage.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-19-dashboard-pending-letters-link.md` (this file)
 Changes Made:
 - Cause 1 (the reported bug): the card's `TitleLink` pointed to `#pending-excuse-letters`. React Router's `Link` updates the hash but `BrowserRouter` never scrolls to it, so nothing moved. The list now watches the location: when the hash names it, it scrolls into view (`scroll-mt-20` clears the 64px sticky header) and takes focus (`tabIndex={-1}`, so keyboard and screen-reader users land there too). The effect keys on the location `key`, so a second click works, and on the list appearing, so a direct `/#pending-excuse-letters` load works once the data arrives. The id is one exported constant, `PENDING_EXCUSE_LETTERS_ID`, used by both the card and the list.

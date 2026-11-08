@@ -6,7 +6,7 @@ Prompt/Request: Build a single, centralized mock-data file for the CLINIQ fronte
 
 Phase 0 / pre-work:
 - Repo state: branch `feature/clinic-overview-dashboard` matched its remote at the start. Uncommitted work from earlier sessions (Reports health-summary chart, Follow-Up List fix) was present and kept.
-- Read AGENTS.md, Frontend-Loop-Engineering.md, the Changelog, ADR-004/005/006/008/010–013, Issues-and-TODOs, Frontend Context Brief §4–§6, Screen-Inventory, Module-Overview (Modules 2 and 8), Activity-Diagram, and all three CLINIQ skills.
+- Read AGENTS.md, Frontend-Loop-Engineering.md, the Changelog, ADR-004/005/006/008/010–013, Frontend-Issues-and-TODOs, Frontend Context Brief §4–§6, Screen-Inventory, Module-Overview (Modules 2 and 8), Activity-Diagram, and all three CLINIQ skills.
 - Inventory of mock/hardcoded data before the change: `lib/mocks/dataset.ts` (seeded 930-student generator), read by 14 feature `api/` modules and 6 pages directly. Inline records in `UserListPage` and `session.ts` (users, including the name of a real staff member, the client contact from the KB), `BackupStatusPage` (fixed date/size/status), `NewVisitEntryPage` and `IncidentEntryPage` (complaint lists, triage steps), and several api modules ("Ms. Jennesse Baas", "Staff Nurse", "PE Instructor", `'2026-00001'`). `incompleteRecordsApi` made up missing fields from id parity and import dates from list position. Derived values were computed in the Dashboard aggregator (`MOCK_RULES`), `ReportsPage`, the Reports complaint-count helper, and `InventoryListPage` (its own low-stock check). No write was stored anywhere.
 
 Files Modified:
@@ -17,7 +17,7 @@ Files Modified:
 - Rewritten onto the layer: every other feature `api/` module (dashboard, student-records ×4, clinic-visits ×5, emergency-response ×2, inventory, qr lookup)
 - Pages: FollowUpList, IncidentReport, ParentNotification, InventoryList, InventoryDispense, QrPrint, QrScannerView (demo scan), Reports, HealthSummary, BackupStatus, UserList, UserForm, NewVisitEntry, IncidentEntry, StudentList, IncompleteRecordsQueue, ExcuseLetter; session import path in all pages/layouts/routes
 - Tests updated for the new data and layer; `test/setup.ts` resets the store after each test; `tsconfig.app.json` adds `resolveJsonModule`
-- Docs: `06-Decisions/ADR-014-Central-Mock-Data-Layer.md` (new), `04-Development/Frontend-Loop-Engineering.md` (new Audit checkpoint + F0 item), `08-Logs/Issues-and-TODOs.md`, `08-Logs/Changelog.md`, `cliniq-frontend/src/lib/README.md`
+- Docs: `06-Decisions/ADR-014-Central-Mock-Data-Layer.md` (new), `04-Development/Frontend-Loop-Engineering.md` (new Audit checkpoint + F0 item), `08-Logs/Frontend-Issues-and-TODOs.md`, `08-Logs/Frontend-Changelog.md`, `cliniq-frontend/src/lib/README.md`
 
 Changes Made:
 - **Seed:** 52 students (48 active, 4 archived, 5 deliberately incomplete, all 13 grade levels), 159 visits over ~13 months (a Fever cluster, three frequent visitors, visits today), 23 incidents (2 at Stage 1, 1 with a hospital referral), 14 follow-ups, 14 inventory items, 5 backup logs, 7 audit entries, 4 users (one per role plus a `mustChangePassword` account). The data was generated once by a throwaway script (not committed), then hand-edited. From now on the JSON is the only source.
@@ -39,7 +39,7 @@ Testing Performed:
 - (4) Grep: the only import of `mock-db.json` is `lib/mock-db/seed.ts` (plus the sync test's deliberate mock). Nothing outside the layer imports its internals. There are no remaining `lib/mocks`, `getMockDataset`, `recordMockAudit`, or `MOCK_RULES` references, and no hardcoded user ids, real names, or fixed dates in non-test app code.
 - `npx tsc -b` clean. `npx eslint .`: 0 errors, 1 warning (`FollowUpPrompt.tsx` Fast Refresh, from before this change). `vite build` passes.
 
-Known Issues: see `08-Logs/Issues-and-TODOs.md`, "Central mock data layer (ADR-014) — open items". In short: the threshold values are open product decisions; allergies/conditions can't be checked for "missing"; parent-notification notes, triage steps, and the PE referral → visit link have no §5 home; the main bundle grew from about 264 kB to 355 kB (mock-only); the display-privacy skill still has a stale open-question section; previously audited screens need a re-check against the new checkpoint. Not checked by eye in a real browser.
+Known Issues: see `08-Logs/Frontend-Issues-and-TODOs.md`, "Central mock data layer (ADR-014) — open items". In short: the threshold values are open product decisions; allergies/conditions can't be checked for "missing"; parent-notification notes, triage steps, and the PE referral → visit link have no §5 home; the main bundle grew from about 264 kB to 355 kB (mock-only); the display-privacy skill still has a stale open-question section; previously audited screens need a re-check against the new checkpoint. Not checked by eye in a real browser.
 
 Next Steps:
 - Independent Phase 2 audit of the F0 mock-data item, then re-check the already-audited screens against the "Data through the layer only" checkpoint.

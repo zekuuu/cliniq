@@ -8,7 +8,7 @@ Prompt/Request: "FIX visits trend table, there's hole on right side of total col
 Files Modified:
 - `frontend/src/components/ui/DataTable.tsx`
 - `frontend/src/components/ui/MultiSelect.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-24-trend-table-gap-and-multiselect-label-click.md`
 Changes Made:
 - DataTable: a table with pinned (sticky) columns no longer gets the scroller's `-mx-1 px-1` focus-ring padding. Sticky cells stick inside the scroll container's padding, so the 4px strip beyond the pinned Total (and Complaint) column showed scrolled period cells. Tables without pinned columns keep the padding.

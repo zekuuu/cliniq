@@ -13,7 +13,7 @@ the screen itself with some controls hidden. The page size was never set, so the
 print dialog offered (Letter or A4). The Dashboard printed its widgets on about four pages, with colored
 badges, link icons, and a "Showing…" line; the QR sheet printed its "Print Sticker" button and card
 header. `Design-System.md` already said print layouts are "first-class, not an afterthought", and
-Issues-and-TODOs had two open questions: "Dashboard print length and paper size" and "What is the
+Frontend-Issues-and-TODOs had two open questions: "Dashboard print length and paper size" and "What is the
 Dashboard print for, compared with the Reports print?".
 
 Zean asked that every Print / Save as PDF come out on A4 and be a document with meaningful information
@@ -79,6 +79,6 @@ the Clinic Overview Report whichever view is open.
   printouts never fetch.
 - Firefox and Safari support for `@page` margin boxes is not verified; the target is the clinic
   workstation's Chromium-based browser.
-- **Canonical documents need updating** (flagged as `DOC` in Issues-and-TODOs, not edited here): the
+- **Canonical documents need updating** (flagged as `DOC` in Frontend-Issues-and-TODOs, not edited here): the
   Frontend Design Reference (print layouts, Reference 1's print behavior) and the Frontend Context
   Brief (print rules), plus Modules & Features where it describes the Dashboard and Audit Log prints.

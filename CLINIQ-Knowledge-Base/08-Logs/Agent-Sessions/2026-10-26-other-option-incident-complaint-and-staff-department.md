@@ -10,7 +10,7 @@ Files Modified:
 - frontend/src/features/emergency-response/IncidentEntryPage.tsx (Stage 1 Complaint)
 - frontend/src/features/staff-records/StaffFormPage.tsx (Department or role)
 - Tests: frontend/src/features/emergency-response/IncidentEntryPage.test.tsx, frontend/src/features/staff-records/StaffPages.test.tsx
-- .claude/skills/cliniq-combobox-patterns/SKILL.md, CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md, 01-Requirements/Features/Module-Overview.md, 08-Logs/Changelog.md, 08-Logs/Issues-and-TODOs.md
+- .claude/skills/cliniq-combobox-patterns/SKILL.md, CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md, 01-Requirements/Features/Module-Overview.md, 08-Logs/Frontend-Changelog.md, 08-Logs/Frontend-Issues-and-TODOs.md
 
 Changes Made:
 - The visit Complaint's select-plus-Other logic moved, unchanged, into a shared `SelectWithOther`: Other first, visibly selected, revealing a focused text field whose text is the value; the option label is never stored.

@@ -8,8 +8,8 @@ Prompt/Request: “Total count is incorrect, when I show all complaints there's 
 Files Modified:
 - `frontend/src/features/dashboard/components/ComplaintTrends.tsx`
 - `frontend/src/features/dashboard/components/ComplaintTrends.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
 Changes Made:
 - Recomputed TrendTable row totals from the visible post-cap period indexes.
 - Recomputed the table’s “All visits & incidents” total from the same visible periods.

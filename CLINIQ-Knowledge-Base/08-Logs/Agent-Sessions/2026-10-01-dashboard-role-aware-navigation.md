@@ -11,7 +11,7 @@ Files Modified:
 - frontend/src/features/dashboard/components/StatCardRow.tsx
 - frontend/src/features/dashboard/components/AlertLists.tsx
 - frontend/src/features/dashboard/components/VisitCalendar.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-01-dashboard-role-aware-navigation.md
 Changes Made:
 - Staff stat cards now link through existing `paths` builders to Visits, Incidents, Incomplete Records, Inventory, and Students. Admin receives the same static cards.

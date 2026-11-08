@@ -7,7 +7,7 @@ Files Modified:
 - Data: `frontend/src/lib/mock-db/holidays-ph.json` (new), `lib/mock-db/api.ts` (`getHolidays`), `lib/mock-db/devToggles.ts` (`holidays` for `?mockEmpty=`), `lib/mock-db/README.md`, `types/dashboard.ts` (`Holiday`, `HolidayKind`, `HolidayFeed`)
 - Dashboard: `features/dashboard/api/dashboardApi.ts` (`fetchHolidays`), `features/dashboard/lib/calendar.ts` (chip class, kind labels, `holidayName`, `isNoClassHoliday`, stripe class, `holidaysByDate`), `features/dashboard/components/VisitCalendar.tsx`, `features/dashboard/components/DayEventsPanel.tsx`
 - Tests: `lib/mock-db/holidays.test.ts` (new), `features/dashboard/components/VisitCalendar.holidays.test.tsx` (new), `features/dashboard/DashboardPage.test.tsx` (Year-view heading text), `features/dashboard/DashboardLoading.test.tsx` (mock export)
-- Docs: `06-Decisions/ADR-020-Calendar-Holiday-Layer.md` (new), `06-Decisions/Decisions-Summary.md`, `01-Requirements/Features/Module-Overview.md` (Module 9), `04-Development/Development-Phases.md` (Phase B9 sync job), `08-Logs/Issues-and-TODOs.md`, `URL-Parameters.md`, `08-Logs/Changelog.md`
+- Docs: `06-Decisions/ADR-020-Calendar-Holiday-Layer.md` (new), `06-Decisions/Decisions-Summary.md`, `01-Requirements/Features/Module-Overview.md` (Module 9), `04-Development/Development-Phases.md` (Phase B9 sync job), `08-Logs/Frontend-Issues-and-TODOs.md`, `URL-Parameters.md`, `08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Step 0: `main` matched `origin/main`; the events work (ADR-019, commit 6913451) had landed; `feature/clinic-overview-dashboard` had nothing ahead of `main`.
 - 2026 holidays verified on Wednesday, October 07, 2026. officialgazette.gov.ph returned HTTP 403 (Cloudflare challenge) to automated requests, so Proclamation No. 1006, s. 2025 (signed 3 September 2025) was read in full from the Supreme Court E-Library copy, and Proclamations No. 1189, s. 2026 (Eid'l Fitr, 20 March, signed 12 March 2026) and No. 1264, s. 2026 (Eid'l Adha, 27 May, signed 21 May 2026) from Lawphil. 21 entries: 10 regular, 8 special non-working (incl. the 4 "additional" days), 1 special working (EDSA anniversary, 25 February), 2 Islamic. All `confirmed: true`. No later amending proclamation for 2026 was found.
@@ -23,7 +23,7 @@ Known Issues:
 - The bundled list covers 2026 only; from 1 January 2027 the calendar shows the warning until 2027 is added (by hand now, by the backend job later).
 - The 2026 dates should still be confirmed by a person on the Official Gazette pages (automated access was blocked).
 - Canonical documents need the update listed in ADR-020.
-- Pre-existing: the Calendar header overflows at 390px (Issues-and-TODOs); not changed here.
+- Pre-existing: the Calendar header overflows at 390px (Frontend-Issues-and-TODOs); not changed here.
 Next Steps:
 - Add 2027 once its proclamation is issued (the 2026 one was signed 3 September 2025; this session did not check whether the 2027 one is out), or build the Phase B9 sync job and pick a source using ADR-020's evaluation steps.
 - Update the canonical documents named in ADR-020.

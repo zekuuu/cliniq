@@ -9,7 +9,7 @@ Files Modified:
 - `frontend/src/features/inventory/InventoryDispensePage.tsx`
 - `frontend/src/features/inventory/InventoryFormPage.tsx`
 - `frontend/src/features/inventory/StockActions.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-24-remove-redundant-inventory-and-visit-badges.md`
 Changes Made:
 - Removed the `Staff form` badge from New Visit because the Staff-only route and page title already establish its purpose.

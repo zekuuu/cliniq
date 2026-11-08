@@ -9,7 +9,7 @@ Files Modified:
 - `frontend/src/features/auth/LoginPage.tsx`
 - `frontend/src/features/auth/LoginPage.test.tsx`
 - `CLINIQ-Knowledge-Base/03-Design/Design-System.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-19-login-remove-authorized-use-line.md` (this file)
 Changes Made: Deleted the line and its wrapper; the panel now ends with one 12px `text-secondary` line, "Privacy Policy · Powered by HealWare™ · v0.1.0". The test now checks the notice is absent. Sign-in audit logging is unchanged.
 Reason: Zean's request.

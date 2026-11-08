@@ -22,7 +22,7 @@ Files Modified:
 - `frontend/src/layouts/AppShell.test.tsx`, `frontend/src/components/ui/DataTable.test.tsx`, `frontend/src/components/ui/DatePicker.test.tsx` (regression tests)
 - `.claude/skills/cliniq-interactive-states/SKILL.md`, `.claude/skills/cliniq-dropdown-patterns/SKILL.md`, `.claude/skills/cliniq-table-patterns/SKILL.md`
 - `CLINIQ-Knowledge-Base/03-Design/Design-System.md`, `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`, `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`, `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
 Changes Made:
 - **Cause, sidebar (the reported case).** The sidebar `<nav>` is `overflow-y-auto`; CSS then clips the horizontal axis too. The global ring (`outline: 2px`, `outline-offset: 2px`, unchanged) is drawn 4px outside a link that is exactly as wide as the nav, so the nav cut 4px off the left edge (right room was exactly 0), and 4px off the top/bottom of the first/last item when the nav scrolls. **Fix:** `-m-1 p-1` with `w-[calc(100%+0.5rem)]` and `pr-2` (was `pr-1`), plus `scroll-py-1`. All 11 Staff links keep the same position and width (x 16, width 235, same y at 1440×900). Measured room for "Audit Log": left −4 → 0, right 0 → 4. The collapsed rail (4.75rem) also gets `scrollbar-thin`: found only by the visible run on Zean's Windows screen, a full-width Windows scrollbar on the scrolling nav (short window) left 36px for the 40px icons, cutting their ring by 1.2px.
 - **Phone navigation dialog:** the same pattern and fix (`-m-1 p-1 scroll-py-1`); room −4/−4 → 0/0.

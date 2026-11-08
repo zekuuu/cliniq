@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: (screenshot of the Visit details card: "Sent home" badge top-right and again under Disposition) "redundant here"
 Files Modified:
 - frontend/src/features/clinic-visits/VisitDetailPage.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - The "Visit details" card header no longer has a badge. In view mode it repeated the Disposition field below it; in edit mode it said "Editing", repeating the "Edit visit details" title (`cliniq-page-header-patterns`: no passive badge that repeats the title). The page-level status badge at the top of the screen is unchanged.
 Reason: User request.

@@ -21,7 +21,7 @@ Files Modified:
 - `frontend/src/components/KeyboardShortcuts.tsx`, `frontend/src/lib/mock-db/selectors.ts`
 - `frontend/src/routes/AppRoutes.tsx`, `frontend/src/routes/paths.ts`
 - `frontend/src/features/ui-review-regressions.test.tsx` (new)
-- `URL-Parameters.md`, `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`, `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`, `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`, this log
+- `URL-Parameters.md`, `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`, `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`, `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`, this log
 
 Changes Made:
 - **Setup.** Registered the Playwright MCP server in `.mcp.json`. This session is non-interactive and cannot restart to load it, so the review drove the same Chromium build (`ms-playwright/chromium-1228`) through the Playwright library from a scratch script. It was a real browser against the live dev server at `http://localhost:5173`, with genuine clicks, typing, keyboard Tab/Escape, hover, and viewport changes. Step 0: the working tree was clean at `782eb1c` and matched `origin/feature/clinic-overview-dashboard`; `main` has not received this branch's work.
@@ -33,7 +33,7 @@ Changes Made:
   - axe-core (WCAG 2 A/AA plus best-practice) on every route for all three roles.
   
   Screenshots were viewed only to judge layout; none are stored as evidence.
-- **Fixes.** 19 issues, all listed in Issues-and-TODOs.md under "Interaction-based UI/UX review — Wednesday, September 30, 2026 — 19:55". The main ones:
+- **Fixes.** 19 issues, all listed in Frontend-Issues-and-TODOs.md under "Interaction-based UI/UX review — Wednesday, September 30, 2026 — 19:55". The main ones:
   - Stage 2 can now reopen a saved incident (`/incidents/:incidentId/complete`).
   - Emergency Stage 1 no longer silently attaches a demo student.
   - The Student Profile Archive action works, behind a confirmation.
@@ -65,7 +65,7 @@ Testing Performed:
   - Instructor logout at 390px redirecting to `/login`.
 
 Known Issues:
-- 26 logged findings in Issues-and-TODOs.md. The ones needing an owner decision first:
+- 26 logged findings in Frontend-Issues-and-TODOs.md. The ones needing an owner decision first:
   - PE Referral (#14) has no entry point and no student selection.
   - The Visit Log hides the complaint despite ADR-010.
   - The Follow-Up List lacks Missed/Cancelled actions and a detail view.

@@ -4,9 +4,9 @@ Task: Simplify the allergy and condition design and rename the student's own num
 Status: Completed (records and prompt; nothing built)
 Prompt/Request: Zean: "in allergies and conditions I think better to use minimal states to avoid confusion and reduce workload; then student's own number might also be confusing like student number".
 Files Modified:
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
 - CLINIQ-Knowledge-Base/08-Logs/Issues-Done-Archive.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-29-allergy-fields-and-mobile-number-wording.md (new)
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-049-Clinical-Record-Rules-Letters-Allergies-Notes.md (amended)
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-051-Starting-Values-Follow-Up-Closing-Vitals-Ranges-Automatic-Archive-And-Required-Marks.md (item 9 revised)

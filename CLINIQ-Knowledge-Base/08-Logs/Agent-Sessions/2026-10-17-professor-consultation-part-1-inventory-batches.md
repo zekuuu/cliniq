@@ -7,7 +7,7 @@ Files Modified:
 - `frontend/src/types/entities.ts`
 - `frontend/src/lib/mock-db/{api.ts,selectors.ts,seed.ts,store.ts,types.ts,dashboard.ts,dashboard.test.ts,stock.test.ts}`
 - `frontend/src/features/inventory/{README.md,InventoryListPage.tsx,InventoryListPage.test.tsx,StockModals.tsx,StockActions.test.tsx,api/inventoryApi.ts,api/inventoryApi.test.ts}`
-- `CLINIQ-Knowledge-Base/{01-Requirements/Features/Module-Overview.md,02-Architecture/Database/ERD.md,06-Decisions/ADR-018-Stock-Integrity-For-Items-Given.md,06-Decisions/ADR-030-Inventory-Batches-And-Expired-Stock.md,06-Decisions/Decisions-Summary.md,08-Logs/Issues-and-TODOs.md}`
+- `CLINIQ-Knowledge-Base/{01-Requirements/Features/Module-Overview.md,02-Architecture/Database/ERD.md,06-Decisions/ADR-018-Stock-Integrity-For-Items-Given.md,06-Decisions/ADR-030-Inventory-Batches-And-Expired-Stock.md,06-Decisions/Decisions-Summary.md,08-Logs/Frontend-Issues-and-TODOs.md}`
 Changes Made:
 - Replaced raw one-date inventory state with received batches and migration of both seed and persisted mock state.
 - Derived usable, expired and total-on-hand quantities; low stock now uses only usable stock.

@@ -6,7 +6,7 @@ Prompt/Request: "try gold"
 Files Modified:
 - `frontend/src/layouts/Sidebar.tsx`
 - `frontend/src/layouts/AppShell.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Changed the selected Backup warning badge from light amber to a muted gold fill (`#c69214`) with a dark glyph. The inactive badge remains semantic amber.
 Reason: Gold retains clear separation from the selected green row without the harshness of bright yellow.

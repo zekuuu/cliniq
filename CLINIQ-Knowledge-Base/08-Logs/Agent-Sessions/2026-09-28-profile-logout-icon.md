@@ -8,7 +8,7 @@ Files Modified:
 - frontend/src/layouts/AppShell.test.tsx
 - CLINIQ-Knowledge-Base/03-Design/Screen-Inventory.md
 - CLINIQ-Knowledge-Base/09-References/Canonical-Documents/CLINIQ_Frontend_Context_Brief.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-28-profile-logout-icon.md
 Changes Made: Replaced the visible logout label with a compact red logout icon directly after the user's name and role. The icon remains a native button with an accessible name, tooltip, focus ring, hover treatment, disabled state, and unchanged audited logout behavior.
 Reason: Match the requested lighter-weight header treatment without losing discoverability for assistive technology or keyboard users.

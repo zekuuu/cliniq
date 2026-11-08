@@ -9,8 +9,8 @@ Files Modified:
 - `frontend/src/features/audit-log/AuditLogPage.tsx`
 - `frontend/src/features/audit-log/AuditLogPage.test.tsx`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - this session log
 Changes Made: Audited the checklist and found one unchecked item: the F3 exit check. Its close conditions also exposed 18 checked F0/F1 rows with blank audit resume notes and an obsolete F3 note referring to blockers resolved in later sessions. Reconciled every blank audit note to the existing current verification evidence, then checked and documented F3. During final validation, lint identified a synchronous state update in the Audit Log pagination reset. Replaced the effect with atomic filter updates that reset the page in the originating interaction, and added a regression test.
 Reason: The checklist must reflect the current live frontend and only be marked demo-ready after the recorded blockers, resume notes, and deterministic verification have been reconciled.

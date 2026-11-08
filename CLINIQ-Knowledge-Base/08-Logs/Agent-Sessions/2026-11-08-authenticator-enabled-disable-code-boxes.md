@@ -10,7 +10,7 @@ Files Modified:
 - `frontend/src/features/account/AuthenticatorDialog.tsx`, `frontend/src/features/account/Authenticator.test.tsx`
 - `frontend/src/features/auth/ForgotPasswordDialog.tsx`
 - `frontend/src/layouts/AccountMenu.tsx`
-- `.claude/skills/cliniq-input-patterns/SKILL.md`, `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`, `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `.claude/skills/cliniq-input-patterns/SKILL.md`, `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`, `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Status row: "Status" with an "Enabled" success badge (or "Not set up") and "N of 8 recovery codes left". Account menu: "Authenticator app: Enabled".
 - "Turn off" renamed "Disable" everywhere (button, dialog title, notice "Authenticator app disabled."); the confirming button is the destructive variant.

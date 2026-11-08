@@ -6,7 +6,7 @@ Prompt/Request: "Then in visits trend table, there's a hole on the right side of
 Files Modified:
 - frontend/src/features/dashboard/components/ComplaintTrends.tsx
 - frontend/src/features/dashboard/components/ComplaintTrends.test.tsx
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-22-dashboard-trend-table-total-edge.md
 Changes Made:
 - Made the Complaint column consume unused table width on short hourly ranges, which keeps Total at the right edge.

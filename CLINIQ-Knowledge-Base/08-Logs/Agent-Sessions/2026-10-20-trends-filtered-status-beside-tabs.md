@@ -8,7 +8,7 @@ Files Modified:
 - `frontend/src/components/ui/Tabs.test.tsx`
 - `frontend/src/components/icons/Icon.tsx` (new `filter` funnel icon)
 - `frontend/src/features/dashboard/DashboardPage.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - The "Filtered: Female × Grade 5 · Clear" note moved from the top of the Trends panel to the tab row, directly after the Overview/Trends tabs, through a new `status` prop on the shared `Tabs`. It shows only while Trends is selected (the filter narrows Trends only). It keeps `role="status"` and its Clear button.
 - Visibility: it was a grey `bg-surface` pill on the `surface` page background, nearly invisible. It is now a white pill with a thin `brand-green` border, `brand-green-dark` semibold text (9.19:1) and a 14px funnel icon; Clear is `text-primary`, underlined. No fill color, no animation.

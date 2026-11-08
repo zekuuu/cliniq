@@ -10,7 +10,7 @@ Files Modified:
 - `cliniq-frontend/src/routes/AppRoutes.tsx`
 - `cliniq-frontend/src/layouts/navigation.ts`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Built a shared print-friendly report workspace covering Monthly Report, Incident Report Archive, and Health Summaries.
 - Added month selection, report tabs, summary counts, privacy-safe Student Number archive rows, complaint aggregates, and Print/Save as PDF.

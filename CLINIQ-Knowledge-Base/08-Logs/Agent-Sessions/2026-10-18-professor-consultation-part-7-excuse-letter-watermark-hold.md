@@ -3,7 +3,7 @@ Agent: Codex
 Task: Professor consultation Part 7 — Excuse Letter watermark hold
 Status: Completed
 Prompt/Request: Do not change the letter; record that the suggested school-logo watermark is held pending school approval.
-Files Modified: `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`; `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`.
+Files Modified: `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`; `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`.
 Changes Made: Marked the open watermark FIX as HOLD, retained the DRAFT mark and boxed approval warning, added the specific school decision and question-file update.
 Reason: Removing draft safeguards before school approval could make an unapproved letter appear valid.
 Testing Performed: Documentation-only change.

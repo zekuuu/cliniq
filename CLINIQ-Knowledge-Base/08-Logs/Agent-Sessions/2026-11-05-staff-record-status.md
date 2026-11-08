@@ -12,7 +12,7 @@ Files Modified:
 - frontend/src/features/staff-records/missingStaffFields.ts (new), StaffListPage.tsx, StaffFormPage.tsx, StaffPages.test.tsx, api/staffApi.ts
 - frontend/src/lib/mock-db/selectors.ts, frontend/src/lib/mock-db/api.ts
 - frontend/src/components/forms/FollowUpPrompt.tsx, frontend/src/features/clinic-visits/NewVisitEntryPage.tsx
-- CLINIQ-Knowledge-Base/06-Decisions/ADR-067-Staff-Record-Status-And-Incomplete-Filter.md (new), Decisions-Summary.md, 01-Requirements/Features/Module-Overview.md, 08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/06-Decisions/ADR-067-Staff-Record-Status-And-Incomplete-Filter.md (new), Decisions-Summary.md, 01-Requirements/Features/Module-Overview.md, 08-Logs/Frontend-Issues-and-TODOs.md
 Changes Made:
 - ADR-067 (amends ADR-043): a staff record is Incomplete with no emergency contact, or no sex (old records). Staff List: Record status column (Complete / Incomplete badges, as on the Student List) and Record status filter; "Incomplete records (N)" secondary button sets the filter to Incomplete (aria-pressed), N over all active staff. Filtered to Incomplete, the table shows Missing fields (the student queue's soft warning badges) and Edit Record. Header buttons right-aligned when they wrap.
 - Edit Staff marks the missing sex and primary emergency contact fields red ("Missing. Fill this in to complete the record.") until filled, and opens on the first. Saving never blocks.

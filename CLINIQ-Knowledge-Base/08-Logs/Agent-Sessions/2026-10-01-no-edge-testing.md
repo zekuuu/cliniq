@@ -7,7 +7,7 @@ Status: Completed
 Prompt/Request: “Can you explicitly tell not to use edge browser to test”
 Files Modified:
 - `AGENTS.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-01-no-edge-testing.md`
 Changes Made:
 - Added a repository-wide rule prohibiting Edge, Edge CDP, headless Edge, and Edge browser-profile or screenshot artifacts for testing and verification.

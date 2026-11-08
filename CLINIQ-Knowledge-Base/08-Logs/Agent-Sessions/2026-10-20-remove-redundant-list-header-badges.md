@@ -8,7 +8,7 @@ Files Modified:
 - frontend/src/features/emergency-response/IncidentLogListPage.tsx
 - .claude/skills/cliniq-page-header-patterns/SKILL.md (new)
 - CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-20-remove-redundant-list-header-badges.md (new)
 Changes Made:
 - Removed the passive `All visits` and date-range badge from the Visit Log header.

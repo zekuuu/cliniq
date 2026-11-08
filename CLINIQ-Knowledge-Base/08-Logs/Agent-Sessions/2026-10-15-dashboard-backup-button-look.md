@@ -6,7 +6,7 @@ Prompt/Request: Zean, after `2026-10-15-dashboard-backup-newvisit-split.md`: "Th
 
 Files Modified:
 - `frontend/src/features/dashboard/components/StaffShortcuts.tsx` (`BackupStatusLink`)
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - this file
 
 Changes Made:

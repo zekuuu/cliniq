@@ -936,7 +936,7 @@ These are deliberate. Each needs a yes/no from the team, and a matching change i
 | Triage | Checklist shown; completion not stored | `triage_checks` stores it | Module 7: "save checklist completion with the visit record". |
 | Triage editing | Static data | `triage_steps` editable | Module 7: Head Nurse can edit content. |
 | Settings | Constants in the mock config | `system_settings` | The requirements call these open decisions. |
-| Reference numbers | Internal ids on printouts (known issue) | `reference_no` from the same counter table | Closes the Issues-and-TODOs item. |
+| Reference numbers | Internal ids on printouts (known issue) | `reference_no` from the same counter table | Closes the Frontend-Issues-and-TODOs item. |
 | Visit logbook fields | `Visit` has five optional fields from the clinic's daily logbook | Columns on `visits`: `temperature_c`, `time_out`, `assisted_by`, `parent_guardian`, `remarks` | Same shape. |
 | Incident readings (Tuesday, October 20, 2026) | `Incident.vitals` holds only the readings taken, any of `temperatureC`, `pulseBpm`, `bloodPressure`, `oxygenSaturationPct` (whole percent 0 to 100; was free text `oxygenSaturation`); none is required at either stage. | `incident_vital_readings` already has nullable columns, including `spo2_percent` (CHECK 30 to 100). | "Don't force all 4 if not relevant to the case." The mock accepts 0 to 100; whether the database keeps 30 as its floor is open. |
 

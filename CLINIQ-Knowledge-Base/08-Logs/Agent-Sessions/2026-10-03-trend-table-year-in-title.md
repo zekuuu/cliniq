@@ -8,7 +8,7 @@ Files Modified:
 - `frontend/src/features/dashboard/components/ComplaintTrends.test.tsx`
 - `frontend/src/features/dashboard/DashboardPage.test.tsx`
 - `.claude/skills/cliniq-table-patterns/SKILL.md`
-- `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`, `08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`, `08-Logs/Frontend-Changelog.md`
 Changes Made:
 - New `tableBucketHeader` shows period headers without the year: daily/weekly `Oct 1` / `Sep 14`, monthly `Mar`. Yearly periods keep their year (it is the period). The year stays in each header as screen-reader-only text, so the column header's accessible name is still `Sep 14, 2026` / `Mar 2026`. Sort-button labels keep the full date (`tableBucketName`, unchanged).
 - `PERIOD_COLUMN_WIDTH` 8rem → 5rem, matching the Total column. The table's explicit min width follows automatically from the column sum.

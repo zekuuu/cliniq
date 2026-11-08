@@ -11,9 +11,9 @@ Changes Made:
 - Added `02-Architecture/Development-Methodology.md` documenting the interface-construction-first approach as ADR-006.
 - Created placeholder files in `02-Architecture/Database/` for the ERD, DFD, Use-Case Diagram, and Activity Diagram, since no SRS has been uploaded yet.
 - Wrote 6 ADRs in `06-Decisions/` covering the major decisions already made this project (tech stack upgrade, QR redesign, PE Instructor access, display-privacy rule and its correction, Student Number scheme, interface-construction approach).
-- Seeded `08-Logs/Changelog.md` from the Project Plan's own revision history (1.0 through 2.1).
-- Seeded `08-Logs/Issues-and-TODOs.md` with every genuinely open item already being tracked in conversation (barcode scanner proposal, full calendar ownership, Canteen access, backup layer, nurse-absence coverage, plus the tech-stack confirmations still pending).
+- Seeded `08-Logs/Frontend-Changelog.md` from the Project Plan's own revision history (1.0 through 2.1).
+- Seeded `08-Logs/Frontend-Issues-and-TODOs.md` with every genuinely open item already being tracked in conversation (barcode scanner proposal, full calendar ownership, Canteen access, backup layer, nurse-absence coverage, plus the tech-stack confirmations still pending).
 Reason: Requested setup, with new requirements folded in before file creation rather than after, per the user's explicit sequencing.
 Testing Performed: N/A — documentation only, no code.
-Known Issues: SRS diagrams not yet created (waiting on upload). Several tech stack additions (Sanctum, Vite, QR libraries, XAMPP standardization) remain proposed, not confirmed — flagged in Issues-and-TODOs.md, not silently assumed.
+Known Issues: SRS diagrams not yet created (waiting on upload). Several tech stack additions (Sanctum, Vite, QR libraries, XAMPP standardization) remain proposed, not confirmed — flagged in Frontend-Issues-and-TODOs.md, not silently assumed.
 Next Steps: Await SRS upload to populate the Database/ diagrams. Await confirmation on the pending tech stack items before any environment setup is executed. First real coding agent session should start by reading AGENTS.md, per the workflow it defines.

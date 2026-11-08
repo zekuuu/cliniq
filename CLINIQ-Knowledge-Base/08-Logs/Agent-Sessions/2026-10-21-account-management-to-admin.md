@@ -6,7 +6,7 @@ Prompt/Request: After Parts 1–3, Zean asked to "finish all the way" (Parts 4, 
 
 Files Modified:
 - frontend: `types/entities.ts` (`User.deactivatedAt`), `lib/mock-db/api.ts` (`AccountPermissionError`, `LastAdminError`, `setUserActive`, `resetUserPassword`, temporary passwords, disabled accounts refused at sign-in), `lib/mock-db/integrity.ts`, `features/user-management/{api/userApi.ts,UserListPage.tsx,UserFormPage.tsx}`, `routes/AppRoutes.tsx`, `layouts/navigation.ts`; tests `features/user-management/accounts.test.ts` (new), `features/user-management/profilePicture.test.ts`, `features/ui-review-regressions.test.tsx`, `layouts/AppShell.test.tsx`, `routes/{AppRoutes,BackNavigation}.test.tsx`.
-- Knowledge base: `01-Requirements/{Features/Module-Overview,User-Roles-and-Permissions}.md`, `02-Architecture/Database/Use-Case-Diagram.md`, `03-Design/Screen-Inventory.md`, canonical Modules & Features, Frontend Context Brief, Frontend Design Reference, ADR-033, `Decisions-Summary.md`, `08-Logs/{Issues-and-TODOs,Issues-Done-Archive,Changelog}.md`, this log.
+- Knowledge base: `01-Requirements/{Features/Module-Overview,User-Roles-and-Permissions}.md`, `02-Architecture/Database/Use-Case-Diagram.md`, `03-Design/Screen-Inventory.md`, canonical Modules & Features, Frontend Context Brief, Frontend Design Reference, ADR-033, `Decisions-Summary.md`, `08-Logs/{Frontend-Issues-and-TODOs,Issues-Done-Archive,Changelog}.md`, this log.
 
 Changes Made:
 - Routes: `/users`, `/users/new`, `/users/:userId/edit` are `roles: ['admin']`; Staff opening them by address land on the Dashboard (the existing guard). Navigation: the Admin sidebar gains Administration → Accounts (Audit Log stays once, under Reporting); the Staff sidebar keeps Backup and Audit Log, without Accounts.

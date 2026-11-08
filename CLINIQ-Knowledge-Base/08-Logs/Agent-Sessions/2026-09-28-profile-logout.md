@@ -14,7 +14,7 @@ Files Modified:
 - frontend/src/routes/AppRoutes.test.tsx
 - CLINIQ-Knowledge-Base/03-Design/Screen-Inventory.md
 - CLINIQ-Knowledge-Base/09-References/Canonical-Documents/CLINIQ_Frontend_Context_Brief.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-28-profile-logout.md
 Changes Made: Added a visible, labelled Log out button beside the signed-in user's name and role. In the frontend-only mock, clicking it appends the required logout audit entry, clears the mock role selection, and shows a signed-out state. The real Sanctum logout endpoint will replace the mock data-layer action when authentication is built.
 Reason: Manual logout is a stated session safeguard and a named audit-trail requirement, especially important because the shared clinic workstation has no idle timeout.

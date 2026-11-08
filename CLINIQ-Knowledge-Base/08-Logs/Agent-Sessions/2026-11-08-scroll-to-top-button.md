@@ -7,7 +7,7 @@ Status: Completed
 Prompt/Request: "then add a screen-wide scroll to top arrow icon, make sure it doesnt mostly block anything in the screen. then make it appear maybe if you think when it's most appropriate"
 Files Modified:
 - `frontend/src/layouts/AppShell.tsx` (`ScrollToTopButton`), `frontend/src/layouts/AppShell.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - A 40px round button with the `arrowUp` icon, fixed 16px from the bottom-right, on every app-shell screen. Pages keep a 32px side gutter (`sm:px-8`), so it sits mostly in the gutter. z-20: under the sticky header (z-30) and dialogs.
 - It appears once the window has scrolled more than one viewport height (when getting back up is real work) and fades out otherwise. While hidden it is `invisible`, so it is out of the Tab order.

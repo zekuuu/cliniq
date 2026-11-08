@@ -20,7 +20,7 @@ Testing Performed:
 - Accessibility coverage: focused tests assert accessible link/field labels and semantic controls. `axe-core` is not installed, so no axe CLI run was available.
 - `impeccable detect` reported one existing design-system choice only: Inter in the shared print footer.
 Known Issues:
-- Full-suite/lint baseline failures remain outside this change: the existing `NewVisitEntryPage.tsx` render-time ref lint error, plus existing test failures documented in Issues-and-TODOs.
+- Full-suite/lint baseline failures remain outside this change: the existing `NewVisitEntryPage.tsx` render-time ref lint error, plus existing test failures documented in Frontend-Issues-and-TODOs.
 - The mock implementation demonstrates the future API contract; Laravel-side audit enforcement remains a backend-phase task.
 Next Steps:
 - Commit the reviewed changes when ready; do not alter the QR-removal, PE/Instructor-removal, or LRN-on-HOLD work as part of this feature.

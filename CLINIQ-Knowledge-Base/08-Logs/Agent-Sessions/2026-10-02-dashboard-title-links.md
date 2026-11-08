@@ -11,7 +11,7 @@ Files Modified:
 - frontend/src/components/index.ts
 - frontend/src/features/dashboard/components/StatCardRow.tsx, AlertLists.tsx
 - frontend/src/features/dashboard/DashboardPage.test.tsx
-- .claude/skills/cliniq-interactive-states/SKILL.md, CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md, CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- .claude/skills/cliniq-interactive-states/SKILL.md, CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md, CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Stat card labels and the Due & upcoming follow-ups / Low-stock & expiring items titles are now the links (Staff only, as before). The separate `View all →` links are gone. Frequent-visitor warnings has no list page, so its title stays plain.
 - Names keep their at-rest color and show a 12px open-link icon with a bold 3px stroke (the user found the default 2px stroke too thin). The icon shares a no-wrap span with the last word so a wrapped label never leaves it on a line by itself.

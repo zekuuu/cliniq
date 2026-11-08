@@ -1,12 +1,12 @@
 Date/Day/Time: Tuesday, October 13, 2026 — 23:08 PHT (system clock; work ran 23:08–23:10 PHT)
 Agent: Claude Code (Claude Opus 5.5)
-Task: Add a second groupmate's review flags to the existing "Groupmate system review" section of `Issues-and-TODOs.md`
+Task: Add a second groupmate's review flags to the existing "Groupmate system review" section of `Frontend-Issues-and-TODOs.md`
 Status: Completed
-Prompt/Request: Zean pasted a prompt titled "Add the second review's flags to `Issues-and-TODOs.md`". A second groupmate sent informal review notes: 6 screenshot pages with Taglish comments, titled "grrr". Run it only after the "Groupmate system review" section is merged; otherwise stop. Add 3 FIX and 4 DECIDE entries, as written, under the section's "Fix these" and "Decide these" sub-headings. File already-fixed or already-listed entries as DONE, or skip them. Append " Also raised by a second reviewer on <NOW>." to 7 named existing entries and change nothing else in them. Recompute "Open work at a glance" by script. Prove by script that old lines are preserved, that the new-bullet count is right, and that each of the 7 entries carries the sentence exactly once. Add this log and one Changelog row. Documentation only: no fixes, no decisions, no code, no ADR, no commit or push.
+Prompt/Request: Zean pasted a prompt titled "Add the second review's flags to `Frontend-Issues-and-TODOs.md`". A second groupmate sent informal review notes: 6 screenshot pages with Taglish comments, titled "grrr". Run it only after the "Groupmate system review" section is merged; otherwise stop. Add 3 FIX and 4 DECIDE entries, as written, under the section's "Fix these" and "Decide these" sub-headings. File already-fixed or already-listed entries as DONE, or skip them. Append " Also raised by a second reviewer on <NOW>." to 7 named existing entries and change nothing else in them. Recompute "Open work at a glance" by script. Prove by script that old lines are preserved, that the new-bullet count is right, and that each of the 7 entries carries the sentence exactly once. Add this log and one Changelog row. Documentation only: no fixes, no decisions, no code, no ADR, no commit or push.
 
 Files Modified:
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md` (Groupmate system review section; at-a-glance block)
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md` (one row)
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md` (Groupmate system review section; at-a-glance block)
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md` (one row)
 - this file
 
 Changes Made:

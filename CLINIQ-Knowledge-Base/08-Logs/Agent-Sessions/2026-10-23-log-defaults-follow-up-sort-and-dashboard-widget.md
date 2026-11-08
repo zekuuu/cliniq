@@ -18,7 +18,7 @@ Files Modified:
 - `frontend/src/features/emergency-response/FollowUpListPage.test.tsx`
 - `frontend/src/features/dashboard/components/StatCardRow.tsx`
 - `frontend/src/features/dashboard/DashboardPage.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-23-log-defaults-follow-up-sort-and-dashboard-widget.md`
 Changes Made:
 - Visit Log and Incident Log open on Today, with All still the first date-menu choice.

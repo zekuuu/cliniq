@@ -19,7 +19,7 @@ Files Modified:
 - CLINIQ-Knowledge-Base:
   - 01-Requirements/Features/Module-Overview.md, canonical CLINIQ_Modules_and_Features.md
   - 04-Development/Audit-Coverage.md
-  - 08-Logs (Changelog, Issues-and-TODOs, Issues-Done-Archive)
+  - 08-Logs (Changelog, Frontend-Issues-and-TODOs, Issues-Done-Archive)
 
 Changes Made:
 - **Title.**

@@ -15,7 +15,7 @@ Next Steps: Zean reviews, commits and merges; the team works through `ERD-Review
 - `StudentSection.test.tsx` (8 tests): saves with and without a section; profile and printout only when present; never on the Student List or Visit Log; `sectionAtTime` kept after a change; none for no section or a staff patient; history rows; audit by field name; integrity check.
 - `ChangePasswordPage.test.tsx` (9 tests, 2 kept): wrong current password; success and audit; the Admin; under 8 characters; mismatch; reuse; top bar for both roles (2); signed-out visitor.
 - `integrity.ts`: `section` and `sectionAtTime` allowed as optional fields. The check rejected them before.
-- Estimated stamps marked "(time estimated)": the accuracy-pass session log 2, `Backend-Changelog.md` 1, `Backend-Issues-and-TODOs.md` 1, `Changelog.md` 1, `Issues-and-TODOs.md` 3, `Issues-Done-Archive.md` 18.
+- Estimated stamps marked "(time estimated)": the accuracy-pass session log 2, `Backend-Changelog.md` 1, `Backend-Issues-and-TODOs.md` 1, `Frontend-Changelog.md` 1, `Frontend-Issues-and-TODOs.md` 3, `Issues-Done-Archive.md` 18.
 - A clearing of a section on a record that had one stores null, not an absent field, so the audit can see the change.
 
 ## Part B: change table

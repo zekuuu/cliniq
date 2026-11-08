@@ -11,7 +11,7 @@ Files Modified:
 - `frontend/src/features/dashboard/README.md`
 - `frontend/src/layouts/Sidebar.tsx`
 - `frontend/src/layouts/AppShell.test.tsx`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Removed both Dashboard “View full report” links so reports remain a dedicated sidebar destination and Dashboard retains its operational hierarchy.
 - Removed the header backup-status control; Date range and Print now form one compact header action group.

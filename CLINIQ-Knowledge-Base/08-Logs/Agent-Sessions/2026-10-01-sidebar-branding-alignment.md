@@ -9,7 +9,7 @@ Files Modified:
 - `frontend/src/layouts/Sidebar.tsx`
 - `.claude/skills/cliniq-sidebar-patterns/SKILL.md`
 - `CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-01-sidebar-branding-alignment.md`
 Changes Made:
 - Restored the collapse control to the shared horizontal header and vertically centered it against the three-line brand stack.

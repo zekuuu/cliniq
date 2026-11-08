@@ -18,6 +18,6 @@ Panel review IN-3 made Stage 2 refuse to complete, and the report refuse approva
 
 ## Consequences
 - An incident can be completed and approved with nothing recorded beyond Stage 1; the approval note asks the approver to check it.
-- Canonical documents still describe IN-3 (Frontend Context Brief, screens 16b and 18, and the Frontend Design Reference); they need the same change (Issues-and-TODOs, DOC).
+- Canonical documents still describe IN-3 (Frontend Context Brief, screens 16b and 18, and the Frontend Design Reference); they need the same change (Frontend-Issues-and-TODOs, DOC).
 - Backend: `incidents.no_further_action_reason` stays for older rows; the completion and approval rules in the API contract drop the care check (log on the `backend` branch).
 - Session: [2026-11-05-stay-home-stage-two-pager-backup-report](../08-Logs/Agent-Sessions/2026-11-05-stay-home-stage-two-pager-backup-report.md)

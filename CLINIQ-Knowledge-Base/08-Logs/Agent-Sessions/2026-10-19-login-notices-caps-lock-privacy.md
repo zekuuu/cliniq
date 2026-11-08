@@ -12,8 +12,8 @@ Files Modified:
 - `frontend/src/routes/AppRoutes.tsx`
 - `frontend/src/routes/AppRoutes.test.tsx`
 - `CLINIQ-Knowledge-Base/03-Design/Design-System.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-19-login-notices-caps-lock-privacy.md` (this file)
 Changes Made:
 - **Caps Lock:** the Password field reads `getModifierState('CapsLock')` on key down and key up and shows the shared `Input` hint "Caps Lock is on." (linked by `aria-describedby`); it clears on blur. A field error replaces the hint, as for every `Input`.

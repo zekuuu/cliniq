@@ -14,7 +14,7 @@ Files Modified:
 - `frontend/src/features/qr-digital-health-id/shared/QrScannerView.tsx`, `mobile/QrMobileHubPage.tsx`, `desktop/QrDesktopHubPage.tsx`, `api/qrLookupApi.ts`
 - Tests: `lib/mock-db/search.test.ts`, `NewVisitEntryPage.test.tsx`, `PeSportsReferralPage.test.tsx`, `IncidentEntryPage.test.tsx`, `StockActions.test.tsx`, `QrMobileHubPage.test.tsx`, `ui-review-regressions.test.tsx`
 - `.claude/skills/cliniq-combobox-patterns/SKILL.md`
-- `CLINIQ-Knowledge-Base/01-Requirements/Features/Module-Overview.md`, `09-References/Canonical-Documents/CLINIQ_Modules_and_Features.md`, `04-Development/Skills-Setup.md`, `08-Logs/Issues-and-TODOs.md`, `08-Logs/Changelog.md`, this file
+- `CLINIQ-Knowledge-Base/01-Requirements/Features/Module-Overview.md`, `09-References/Canonical-Documents/CLINIQ_Modules_and_Features.md`, `04-Development/Skills-Setup.md`, `08-Logs/Frontend-Issues-and-TODOs.md`, `08-Logs/Frontend-Changelog.md`, this file
 
 Changes Made:
 - Search starts at the first character: `STUDENT_SEARCH_MIN_LENGTH` is 1, used by both the picker and the data-layer selector. An empty or whitespace-only field still lists nothing, and results stay capped at 8 active students.

@@ -18,7 +18,7 @@ His answers to Claude's three questions: the ERD is **reviewed first, with no mi
 - `04-Development/Backend-Readiness-Checklist.md` (the "Sanctum mode" item ticked, with ADR-056)
 - `04-Development/Frontend-Loop-Engineering.md` (one sentence: the backend equivalent now exists)
 - `AGENTS.md` and `CLAUDE.md` (one sentence at the end of step 4, kept identical in both)
-- `08-Logs/Issues-and-TODOs.md` (a pointer to the backend file and one `DOC`), `08-Logs/Changelog.md` (a pointer and one row)
+- `08-Logs/Frontend-Issues-and-TODOs.md` (a pointer to the backend file and one `DOC`), `08-Logs/Frontend-Changelog.md` (a pointer and one row)
 - `08-Logs/Backend-Issues-and-TODOs.md` and `08-Logs/Backend-Changelog.md` (new: the backend's own logs, Zean, 18:24 PHT, so the `backend` branch and `main` never conflict)
 - Prompts, outside the repository: `Prompt-Audit-Documentation-Against-Code-Oct31.md`, `Prompt-Backend-Preparation-Oct31.md`
 - Not touched: `backend/`, `frontend/`, the canonical documents, `ERD.md`, `Data-Dictionary.md`, `Reference-Schema.sql`, the other READMEs, the Privacy Policy.

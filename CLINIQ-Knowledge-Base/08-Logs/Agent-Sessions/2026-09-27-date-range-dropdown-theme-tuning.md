@@ -7,7 +7,7 @@ Files Modified:
 - `cliniq-frontend/src/components/ui/DateRangePicker.tsx`
 - `cliniq-frontend/src/features/dashboard/DashboardPage.test.tsx`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-date-range-dropdown-theme-tuning.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 Changes Made:
 - Replaced the visible native select chrome with a small custom preset trigger/listbox using existing CLINIQ icons, spacing, radius, border, hover, focus, and shadow tokens.
 - Kept the final styling intentionally quiet after feedback: neutral border, compact menu, subtle selected state, no bright selected row, and no oversized icon tile.

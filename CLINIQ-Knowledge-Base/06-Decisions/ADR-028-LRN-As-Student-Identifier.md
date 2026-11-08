@@ -15,7 +15,7 @@ The source is an organized summary of an automatic transcript; the speakers are 
 3. **A student can be found by** name plus section, birthday, or LRN.
 4. **CLINIQ stays independent** of the school's NFC ID system (ADR-027). The LRN is a national learner number, not data from that system.
 
-**Not decided here** (open `DECIDE` entries in Issues-and-TODOs.md, section "Professor consultation and team meeting, October 16"): whether lists, printouts and the audit trail show the LRN in full or partly hidden; the LRN's format check, what to do when it is missing or wrong, and whether a hidden internal id stays as the database key; and the school's confirmation that every student has an LRN.
+**Not decided here** (open `DECIDE` entries in Frontend-Issues-and-TODOs.md, section "Professor consultation and team meeting, October 16"): whether lists, printouts and the audit trail show the LRN in full or partly hidden; the LRN's format check, what to do when it is missing or wrong, and whether a hidden internal id stays as the database key; and the school's confirmation that every student has an LRN.
 
 ## Alternatives Considered
 - **Mostly the student name, LRN as an extra** (Zean's answer earlier that evening, recorded in ADR-027). Replaced by this ADR: names can be mistyped or repeated.

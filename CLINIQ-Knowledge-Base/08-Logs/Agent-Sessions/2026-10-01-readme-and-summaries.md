@@ -9,7 +9,7 @@ Files Modified:
 - CLINIQ-Knowledge-Base/02-Architecture/Tech-Stack-Summary.md
 - CLINIQ-Knowledge-Base/06-Decisions/Decisions-Summary.md
 - CLINIQ-Knowledge-Base/09-References/Canonical-Documents-Summary.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-01-readme-and-summaries.md
 Changes Made:
 - Renamed the former root README without changing its content and created a concise GitHub-facing README with the requested six sections.

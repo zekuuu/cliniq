@@ -10,7 +10,7 @@ Files Modified:
 - `cliniq-frontend/src/features/emergency-response/IncidentEntryLoading.test.tsx`
 - `cliniq-frontend/src/features/emergency-response/api/incidentEntryApi.ts`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-incident-entry-build.md`
 Changes Made:
 - Added `IncidentEntryPage` with identified student header, Stage 1 fast-capture form, warning-styled Stage 1 save action, Stage 2 completion form, lifecycle status badges, Stage 1 summary, full vitals, treatment notes, hospital referral fields, parent-notification attempt log, optional follow-up prompt, validation, success states, and shaped skeleton loading.

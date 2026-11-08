@@ -14,8 +14,8 @@ Files Modified:
 - `frontend/src/routes/paths.ts`
 - `frontend/src/App.tsx`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - this session log
 Changes Made: Built the first two F2 screens: `/login` and `/force-password-change`. The frontend-only mock boundary supports synthetic username/password login, generic credential errors, five-failure/30-minute lockout, login audit entries, role-aware redirects, first-login password change, 8-character minimum, recent-password reuse prevention, password-update audit entries, and no idle timeout logic. Connected both screens to the existing route table and application session callback.
 Reason: F2 begins with Authentication items #1 and #2. Backend Sanctum does not exist yet, so the implementation is intentionally a replaceable mock adapter and does not claim to provide production authentication or server-side authorization.

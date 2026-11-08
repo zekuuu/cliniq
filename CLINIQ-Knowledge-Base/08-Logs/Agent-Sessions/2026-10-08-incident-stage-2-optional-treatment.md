@@ -16,8 +16,8 @@ Files Modified:
 - `frontend/src/lib/mock-db/stock.test.ts`
 - `CLINIQ-Knowledge-Base/01-Requirements/Features/Module-Overview.md`
 - `CLINIQ-Knowledge-Base/06-Decisions/ADR-018-Stock-Integrity-For-Items-Given.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md`
 Changes Made:
 - Removed Incident Stage 2's treatment-notes required marker and “Enter treatment notes.” validation; medicine/supply lines remain optional.
 - Added the shared incident-care summary so empty treatment renders as “No treatment recorded” in the Stage 2 completion view, Student Profile, PE/Sports mobile history, and the printable Incident Report.
@@ -29,7 +29,7 @@ Testing Performed:
 - `npm.cmd test -- IncidentEntryPage IncidentReportPage integrity stock` — passed (5 files, 67 tests).
 - `npm.cmd run typecheck` — passed.
 - `npm.cmd run build` — passed.
-- `npm.cmd test` — 62 files / 345 tests run; 4 pre-existing, time-of-day-sensitive `NewVisitEntryPage` assertions failed just after midnight because a new 00:03 visit sorts before seed visits later the same day. Logged in `Issues-and-TODOs.md`; focused incident coverage passed.
+- `npm.cmd test` — 62 files / 345 tests run; 4 pre-existing, time-of-day-sensitive `NewVisitEntryPage` assertions failed just after midnight because a new 00:03 visit sorts before seed visits later the same day. Logged in `Frontend-Issues-and-TODOs.md`; focused incident coverage passed.
 - Live Playwright MCP verification could not run because the configured Playwright MCP server was not exposed to this session. No substitute browser was used.
 Known Issues:
 - The full-suite New Visit ordering assertions are time-of-day-sensitive shortly after midnight; unrelated to this change and logged for follow-up.

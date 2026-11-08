@@ -6,7 +6,7 @@ Prompt/Request: "The click area must also feel like it's the icon not a button".
 Files Modified:
 - frontend/src/components/ui/Input.tsx
 - .claude/skills/cliniq-interactive-states/SKILL.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Reveal toggle: removed the fixed `size-8` box and its centering. The `<button>` now wraps only the 16px icon, positioned `right-3` (12px), which mirrors the leading lock icon's `left-3`. The focus ring is `rounded-sm` with offset 2, so it outlines the glyph rather than a square.
 - `cliniq-interactive-states` (old → new): the previous rule kept "an invisible hit area of at least 32px". Now the click area is sized to the icon, with no padding or fixed box, so the pointer cursor and hover begin only over the icon. It's still a real, labelled `<button type="button">`; "not a button" now means neither styled nor sized as one.

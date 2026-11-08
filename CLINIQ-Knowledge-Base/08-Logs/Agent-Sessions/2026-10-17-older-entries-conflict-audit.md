@@ -4,8 +4,8 @@ Task: Find and fix open entries that conflict with the decisions to drop the QR 
 Status: Completed
 Prompt/Request: Zean: "in Issues and TODOs on top of the Professor consultation and team meeting, October 16 section, there are still issues and todos there that can conflict and has been decided below, like there are still fix QR but then the earlier decision is to remove QR, etc. So if ever I do Do all FIX in the file it could duplicate like fix the qr then later on remove the qr."
 Files Modified:
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-17-older-entries-conflict-audit.md (new)
 Changes Made:
 - Read all 109 open entries above the October 16 section. A keyword search (QR, scan, sticker, lookup, Student Number, Instructor, NFC, Principal, online, email) flagged 26 candidates; each was read in full.

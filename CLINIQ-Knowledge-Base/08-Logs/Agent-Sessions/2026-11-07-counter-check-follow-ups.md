@@ -7,7 +7,7 @@ Prompt/Request: "Prompt — Four follow-ups from the backend counter-check (docs
 Files Modified:
 - CLINIQ-Knowledge-Base/03-Design/Screen-Inventory.md
 - CLINIQ-Knowledge-Base/01-Requirements/User-Roles-and-Permissions.md
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md, Issues-Done-Archive.md, Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md, Issues-Done-Archive.md, Frontend-Changelog.md
 - frontend/src/features/review-round-2.test.tsx
 - frontend/src/features/print-documents.test.tsx
 

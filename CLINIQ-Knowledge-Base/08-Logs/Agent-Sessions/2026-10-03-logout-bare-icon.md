@@ -7,7 +7,7 @@ Files Modified:
 - frontend/src/layouts/AppShell.tsx (Log out button class only; this file also has another agent's uncommitted changes, which were left untouched)
 - frontend/src/features/qr-digital-health-id/mobile/QrMobileHubPage.tsx (Log out button class only)
 - .claude/skills/cliniq-interactive-states/SKILL.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 Changes Made:
 - Both Log out controls (the desktop shell header, and the mobile QR hub header the PE Instructor uses) drop the `hover:bg-error/10` box and the fixed `size-8`/`size-10` box. The button now wraps only the 16px icon.
 - Hover darkens the red icon with `hover:brightness-75`. That's the same darkening approach as the destructive button's `hover:brightness-90`, slightly stronger because a thin 16px stroke barely shows a 10% change.

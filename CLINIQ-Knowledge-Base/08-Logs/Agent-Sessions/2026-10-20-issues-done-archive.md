@@ -1,17 +1,17 @@
 Date/Day/Time: Tuesday, October 20, 2026 — 15:01 PHT
 Agent: Claude (Sonnet 5.5), chat session, not Claude Code; no application code touched
-Task: Move the resolved entries out of Issues-and-TODOs into an archive file so the file is shorter, without deleting any entry
+Task: Move the resolved entries out of Frontend-Issues-and-TODOs into an archive file so the file is shorter, without deleting any entry
 Status: Completed
-Prompt/Request: Zean wrote that Issues-and-TODOs "will be flooded" and "already have many pending and unchecked, what can we do". I proposed moving the resolved entries to an archive file, saying it needed his approval because it bends the rule that Issues entries are never deleted. He answered: "for the third, yes that's actually good" (the third item of my three questions was: group the open decisions by who must answer, and move the resolved entries to an archive file).
+Prompt/Request: Zean wrote that Frontend-Issues-and-TODOs "will be flooded" and "already have many pending and unchecked, what can we do". I proposed moving the resolved entries to an archive file, saying it needed his approval because it bends the rule that Issues entries are never deleted. He answered: "for the third, yes that's actually good" (the third item of my three questions was: group the open decisions by who must answer, and move the resolved entries to an archive file).
 Files Modified:
-- CLINIQ-Knowledge-Base/08-Logs/Issues-and-TODOs.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Issues-and-TODOs.md
 - CLINIQ-Knowledge-Base/08-Logs/Issues-Done-Archive.md (new)
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-20-issues-done-archive.md (new)
 - AGENTS.md and CLAUDE.md (one clause in "After you finish", step 4; the two files stay the same except for their title line)
 Changes Made:
 - All 180 resolved entries (`- [x] **[DONE]**`) were moved, **unchanged**, to `Issues-Done-Archive.md`, under the same section headings and in the same order. The archive's top explains what it is. Nothing was edited or deleted.
-- In `Issues-and-TODOs.md` six sections that had only resolved entries (including "Resolved since last update", which held 54) now say "All entries in this section are resolved" with a link to the archive; no heading was removed. The legend's DONE row says the entries are kept in the archive; the summary block reads "Done: 180 (all in `Issues-Done-Archive.md`)".
+- In `Frontend-Issues-and-TODOs.md` six sections that had only resolved entries (including "Resolved since last update", which held 54) now say "All entries in this section are resolved" with a link to the archive; no heading was removed. The legend's DONE row says the entries are kept in the archive; the summary block reads "Done: 180 (all in `Issues-Done-Archive.md`)".
 - Rule change, approved by Zean: "Format for new entries" now says that a resolved entry is moved, unchanged, to the archive under the same section heading (the old rule only said not to delete it); AGENTS.md and CLAUDE.md say the same in their "After you finish" step 4. The principle that entries are never deleted is unchanged: they are moved.
 - The file went from about 311 KB to about 185 KB. The rest is open entries, which are very long.
 Reason: 180 of the file's 330 entries were resolved and made it hard to see what is still open.

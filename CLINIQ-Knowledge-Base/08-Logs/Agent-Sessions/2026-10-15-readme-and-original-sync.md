@@ -9,7 +9,7 @@ Prompt/Request: A written prompt from the person, titled "Bring `README.md`, `RE
 - Part B (`README_ORIGINAL.md`): keep voice, layout, emoji and badges; minimal factual edits to Key Features, the status badge and "Nothing is scaffolded yet" block, Getting Started (real commands, run them), the project tree (QR folders, skills as a pointer plus count, root files), Tech Stack (only false rows; MySQL stays), Roadmap (honest status only if recorded), Team/Documentation/License (add Privacy Policy and database files if missing).
 - Part C: fix only false or missing-but-important facts in every folder README (QR feature and subfolders, Dashboard, components, layouts, hooks, routes, lib, mock-db, types, one-line feature READMEs, `frontend/README.md` with the zip warning kept, `backend/README.md`, `CLINIQ-Knowledge-Base/README.md`).
 - Part D (canonical documents): "RUN PART D: no" — only report the open canonical-drift `DOC` entries and their ADRs.
-- Do not put unconfirmed client-meeting findings in any README. Verify links, stale phrases, numbers, commands, `git diff --stat`, `AGENTS.md` = `CLAUDE.md`, and `format:check` where it applies. Record a session log, a Changelog row, and an Issues-and-TODOs DONE entry plus LATER/DOC entries for what was left; recompute "Open work at a glance" by script.
+- Do not put unconfirmed client-meeting findings in any README. Verify links, stale phrases, numbers, commands, `git diff --stat`, `AGENTS.md` = `CLAUDE.md`, and `format:check` where it applies. Record a session log, a Changelog row, and an Frontend-Issues-and-TODOs DONE entry plus LATER/DOC entries for what was left; recompute "Open work at a glance" by script.
 
 Files Modified:
 - README.md
@@ -26,7 +26,7 @@ Files Modified:
 - frontend/src/layouts/README.md
 - frontend/src/lib/README.md
 - CLINIQ-Knowledge-Base/README.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md, Issues-and-TODOs.md, this file
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md, Frontend-Issues-and-TODOs.md, this file
 
 Changes Made (old → new):
 - `README.md`: (1) added one status sentence to the intro: frontend built on sample (mock) data, backend not built, database design a proposed draft awaiting approval. (2) Key Decisions: "16 short explanations of the distinct accepted decisions, including the current session-lifetime rule from ADR-015 rather than the obsolete duplicate record" → "26 short explanations of the accepted decisions (ADR-001 to ADR-026)", naming session lifetime (ADR-015), Back, QR phone-only, Dashboard views, A4 printouts, unsaved-changes confirmation, phone navigation. The duplicate clause was dropped because the duplicate record (`ADR-010-Session-Lifetime-No-Idle-Timeout.md`) no longer exists in `06-Decisions/`. Intro sentence "…and the audit-log screen" → "…the audit-log screen, and the newer interface rules". (3) Screens: added links to `Design-System.md` and `Reference-Screens.md`. Screen count left at "approximately 37" because `Screen-Inventory.md` still says "~37" itself (see Known Issues).
@@ -56,6 +56,6 @@ Known Issues:
 - `03-Design/Screen-Inventory.md` still says "Total: ~37 screens/views" while it lists 39 numbered entries, and screen #23 still reads "Scan/Lookup Hub (Staff, computer or mobile)" against ADR-023. It must stay in sync with Frontend Context Brief Section 4 (a canonical document), so it was left for the canonical sync. Logged as `DOC`.
 - The Dashboard still passes `printAll` to `Tabs`, which no longer has any effect because the ADR-026 printout hides the app. Code change, out of scope. Logged as `LATER`.
 - `setup-step.md` step 6 tells the reader to replace the frontend `dev` script with a `cmd`-only `if exist … git pull …` command, and the root `package.json` `dev` script also runs `git pull origin main`. The READMEs document the plain `npm run dev`. Logged as `NOTE`.
-- Part D not run. Open canonical-drift `DOC` entries: listed in the final report and in Issues-and-TODOs.
+- Part D not run. Open canonical-drift `DOC` entries: listed in the final report and in Frontend-Issues-and-TODOs.
 
 Next Steps: Person decides on Part D (canonical sync), including Screen-Inventory/Brief Section 4.

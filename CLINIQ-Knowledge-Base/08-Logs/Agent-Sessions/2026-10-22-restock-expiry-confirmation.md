@@ -15,7 +15,7 @@ Files Modified:
 - CLINIQ-Knowledge-Base/06-Decisions/ADR-035-Restock-Expiry-Confirmation.md
 - CLINIQ-Knowledge-Base/06-Decisions/Decisions-Summary.md
 - CLINIQ-Knowledge-Base/09-References/Canonical-Documents/CLINIQ_Modules_and_Features.md
-- CLINIQ-Knowledge-Base/08-Logs/Changelog.md
+- CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md
 - CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-10-22-restock-expiry-confirmation.md
 Changes Made:
 - Made a restock batch expiration date required by default.

@@ -14,7 +14,7 @@ Files Modified:
 - `cliniq-frontend/src/features/qr-digital-health-id/shared/QrScannerView.test.tsx`
 - `cliniq-frontend/src/features/qr-digital-health-id/shared/useQrScanner.ts`
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-qr-mobile-build.md`
 Changes Made:
 - Installed the confirmed `qr-scanner` dependency.

@@ -5,7 +5,7 @@ Status: Completed
 Prompt/Request: “continue the loop engineering”
 Files Modified:
 - `CLINIQ-Knowledge-Base/04-Development/Frontend-Loop-Engineering.md`
-- `CLINIQ-Knowledge-Base/08-Logs/Changelog.md`
+- `CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md`
 - `CLINIQ-Knowledge-Base/08-Logs/Agent-Sessions/2026-09-27-qr-mobile-loop-continuation.md`
 Changes Made:
 - Reviewed the QR mobile hub and shared scanner against the Screen Inventory, design system, display-privacy, audit-trail, and interactive-state requirements.
