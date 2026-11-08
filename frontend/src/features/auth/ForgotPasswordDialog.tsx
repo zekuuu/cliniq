@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Button, CodeInput, Input, Modal } from '../../components'
+import { Button, CodeOrRecoveryField, Input, Modal } from '../../components'
 import { checkRecoveryAccount, MockAuthError, RecoveryError, resetPasswordWithRecovery, verifyPasswordRecovery, RECOVERY_FAILED_MESSAGE } from '../../lib/mock-db'
 import { lockedMessage } from './lockMessage'
 
@@ -88,7 +88,6 @@ export function ForgotPasswordDialog({ open, onClose, onReset }: { open: boolean
   }
 
   const errorLine = error && <p role="alert" className="text-sm font-semibold text-error">{error}</p>
-  const linkButton = 'w-fit cursor-pointer rounded-sm text-sm font-semibold text-brand-green-dark underline underline-offset-2 transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none'
 
   let body
   if (step === 'account')
@@ -108,21 +107,23 @@ export function ForgotPasswordDialog({ open, onClose, onReset }: { open: boolean
     )
   else if (step === 'code')
     body = (
-      <form noValidate onSubmit={(event) => { event.preventDefault(); void verify(code) }} className="flex flex-col gap-4">
-        <p className="text-sm text-text-secondary">
-          Account <span className="font-semibold text-text-primary">{username.trim()}</span>.{' '}
-          {useRecoveryCode ? 'Enter one of your recovery codes. Each works once.' : 'Open the authenticator app and enter the 6-digit code it shows for CLINIQ.'}
-        </p>
-        {useRecoveryCode ? (
-          <Input label="Recovery code" autoComplete="off" required value={code} maxLength={9} placeholder="ABCD-EFGH" autoFocus onChange={(event) => { setCode(event.target.value.toUpperCase()); setError('') }} clearable={false} />
-        ) : (
-          // Continues by itself once the sixth digit is in.
-          <CodeInput label="6-digit code" value={code} autoFocus disabled={working} onChange={(value) => { setCode(value); setError('') }} onComplete={(value) => void verify(value)} hint="If codes do not work, check that the phone's date and time are set automatically." />
-        )}
-        <button type="button" className={linkButton} onClick={() => { setUseRecoveryCode((value) => !value); setCode(''); setError('') }}>
-          {useRecoveryCode ? 'Use the authenticator app instead' : 'Use a recovery code instead'}
-        </button>
-        {errorLine}
+      <form noValidate onSubmit={(event) => { event.preventDefault(); void verify(code) }} className="flex flex-col gap-5">
+        <div className="flex flex-col gap-1 text-center">
+          <p className="text-base font-semibold text-text-primary">{username.trim()}</p>
+          <p className="text-sm text-text-secondary">
+            {useRecoveryCode ? 'Enter one of your recovery codes. Each works once.' : 'Open the authenticator app and enter the 6-digit code it shows for CLINIQ.'}
+          </p>
+        </div>
+        {/* The 6-digit code continues by itself once the sixth digit is in. */}
+        <CodeOrRecoveryField
+          recovery={useRecoveryCode}
+          onRecoveryChange={(value) => { setUseRecoveryCode(value); setCode(''); setError('') }}
+          value={code}
+          disabled={working && !useRecoveryCode}
+          onChange={(value) => { setCode(value); setError('') }}
+          onComplete={(value) => void verify(value)}
+        />
+        {error && <div className="text-center">{errorLine}</div>}
         <div className="flex flex-wrap justify-end gap-2">
           <Button variant="neutral" onClick={() => { setStep('account'); setCode(''); setError('') }}>Back</Button>
           <Button type="submit" variant="primary" loading={working} loadingText="Checking…">Continue</Button>
