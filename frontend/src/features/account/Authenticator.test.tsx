@@ -144,7 +144,7 @@ describe('the screens', () => {
     renderWithRouter(<AuthenticatorDialog open viewer={ADMIN} onClose={() => {}} onChanged={() => {}} />)
     const dialog = await screen.findByRole('dialog', { name: 'Authenticator app' })
     expect(within(dialog).getByText(/nobody else can reset your password/)).toBeInTheDocument()
-    expect(await within(dialog).findByText('Authenticator app: not set up.')).toBeInTheDocument()
+    expect(await within(dialog).findByText('Not set up')).toBeInTheDocument()
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     await user.click(within(dialog).getByRole('button', { name: 'Set up' }))
     expect(await within(dialog).findByText('Setup key')).toBeInTheDocument()
@@ -157,6 +157,22 @@ describe('the screens', () => {
     expect(screen.getByRole('button', { name: 'Done' })).toBeDisabled()
     await user.click(screen.getByLabelText('I have saved the codes'))
     expect(screen.getByRole('button', { name: 'Done' })).toBeEnabled()
+  })
+
+  it('shows Enabled, and disables with the code boxes or a recovery code (Zean, November 8, 2026)', async () => {
+    const { recoveryCodes } = await setUp()
+    renderWithRouter(<AuthenticatorDialog open viewer={NURSE} onClose={() => {}} onChanged={() => {}} />)
+    const dialog = await screen.findByRole('dialog', { name: 'Authenticator app' })
+    expect(await within(dialog).findByText('Enabled')).toBeInTheDocument()
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    await user.click(within(dialog).getByRole('button', { name: 'Disable' }))
+    expect(screen.getByRole('dialog', { name: 'Disable authenticator app' })).toBe(dialog)
+    expect(dialog.querySelectorAll('[data-code-box]')).toHaveLength(6)
+    await user.click(within(dialog).getByRole('button', { name: 'Use a recovery code instead' }))
+    await user.type(within(dialog).getByLabelText(/^Recovery code/), recoveryCodes[0])
+    await user.click(within(dialog).getByRole('button', { name: 'Disable' }))
+    expect(await within(dialog).findByText(/Authenticator app disabled/)).toBeInTheDocument()
+    expect(await getAuthenticatorStatus()).toEqual({ enabled: false, recoveryCodesLeft: 0 })
   })
 
   it('resets from Login and fills in the username', async () => {
