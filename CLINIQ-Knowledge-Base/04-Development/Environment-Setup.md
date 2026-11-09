@@ -84,7 +84,7 @@ cd cliniq-scaffold
 
 ## Serve `backend/public` from Apache
 
-Point Apache at Laravel's `public` folder only, never at `backend/` itself: `.env` sits there. CLINIQ is reached at `http://localhost` on the clinic PC only (ADR-079 on main, pending merge). Add this to `C:\xampp\apache\conf\extra\httpd-vhosts.conf`, with the real folder:
+Point Apache at Laravel's `public` folder only, never at `backend/` itself: `.env` sits there. CLINIQ is reached at `http://localhost` on the clinic PC only (ADR-079). Add this to `C:\xampp\apache\conf\extra\httpd-vhosts.conf`, with the real folder:
 
 ```apache
 <VirtualHost 127.0.0.1:80>
@@ -104,7 +104,7 @@ In `C:\xampp\apache\conf\httpd.conf`, change `Listen 80` to `Listen 127.0.0.1:80
 
 ## Clinic PC only
 
-Rewritten Sunday, November 08, 2026 — 18:35 PHT for ADR-079 (on main, pending merge), which reinforces ADR-029: CLINIQ is deployed on the clinic PC only. Nobody reaches it from another computer, and the Principal receives a monthly PDF. This replaces the earlier note that another device on the LAN could reach it (ADR-029 note of October 31, 2026).
+Rewritten Sunday, November 08, 2026 — 18:35 PHT for ADR-079, which reinforces ADR-029: CLINIQ is deployed on the clinic PC only. Nobody reaches it from another computer, and the Principal receives a monthly PDF. This replaces the earlier note that another device on the LAN could reach it (ADR-029 note of October 31, 2026).
 
 **Address and network**
 

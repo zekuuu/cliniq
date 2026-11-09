@@ -2,7 +2,7 @@
 
 **Status: Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057); changes after this go through a new decision.** Generated Friday, October 09, 2026 — 02:11 PHT from the reference schema (`Reference-Schema.sql`). Purposes, mappings and notes are hand-written. If you change the schema, change this file with it.
 
-**Updated Sunday, November 08, 2026 — 18:35 PHT, following ADR-078 (on main, pending merge):** the idle sign-out settings of `system_settings` (see that table). No new table or column.
+**Updated Sunday, November 08, 2026 — 18:35 PHT, following ADR-078:** the idle sign-out settings of `system_settings` (see that table). No new table or column.
 
 **Updated Saturday, November 07, 2026 — 16:12 PHT, following this approved ERD through [ADR-076](../../06-Decisions/ADR-076-Staff-Record-Reviews-In-Their-Own-Table.md):** new table 48, `staff_record_reviews`, for the staff Incomplete Records queue (ADR-067). Settles counter-check C-1.
 
@@ -160,7 +160,7 @@ Tunable thresholds and policy numbers that the requirements leave open, so chang
 
 **School-year settings (ADR-072, ADR-075):** `school_year_start_month` 6, `school_year_start_day` 15, `school_year_end_month` 4, `school_year_end_day` 14 (the Principal, October 17, 2026), and `school_year_notice_days` 7 (a starting value; the nurse to confirm). Staff edit them; the Admin reads; each change is audited by field name ("Updated start month and start day"). They give only the **due** days: ending is due on the last class day, starting on the start day, and the Dashboard reminds Staff from `school_year_notice_days` before. They never start or end a year. A day must exist in its month (February counts 28) and the end may not equal the start: those span two rows, so the settings service checks them.
 
-**Idle sign-out settings (ADR-078 on main, pending merge; amends ADR-015, ADR-048, ADR-057):** `idle_signout_minutes_staff` 60 and `idle_signout_minutes_admin` 30, each a whole number of minutes from 10 to 240 (`chk_settings_idle_signout`). They replace `admin_idle_minutes`. The API names are `idleSignoutMinutesStaff` and `idleSignoutMinutesAdmin`. Staff edit them; the Admin reads. Each change is audited by field name only ("Updated Staff idle sign-out"), never the values. The idle middleware reads the signed-in role's key; the 7-day maximum from sign-in still applies (`API-Contract.md`, Sign-in).
+**Idle sign-out settings (ADR-078; amends ADR-015, ADR-048, ADR-057):** `idle_signout_minutes_staff` 60 and `idle_signout_minutes_admin` 30, each a whole number of minutes from 10 to 240 (`chk_settings_idle_signout`). They replace `admin_idle_minutes`. The API names are `idleSignoutMinutesStaff` and `idleSignoutMinutesAdmin`. Staff edit them; the Admin reads. Each change is audited by field name only ("Updated Staff idle sign-out"), never the values. The idle middleware reads the signed-in role's key; the 7-day maximum from sign-in still applies (`API-Contract.md`, Sign-in).
 
 ## reference_settings
 

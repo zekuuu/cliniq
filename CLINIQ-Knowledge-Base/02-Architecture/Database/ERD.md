@@ -3,7 +3,7 @@
 > **STATUS: Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057); changes after this go through a new decision.** Drafted Friday, October 09, 2026 — 00:29 PHT. Migrations are built from it in phase B1, in the order of section 13.
 >
 
-> **Updated Sunday, November 08, 2026 — 18:35 PHT, following ADR-078 (on main, pending merge), which amends ADR-015, ADR-048 and ADR-057:** `system_settings` replaces `admin_idle_minutes` with two keys, `idle_signout_minutes_staff` (60) and `idle_signout_minutes_admin` (30), each 10 to 240 by `chk_settings_idle_signout`. Staff edit them; the Admin reads. No new table or column. 260 constraint tests pass.
+> **Updated Sunday, November 08, 2026 — 18:35 PHT, following ADR-078, which amends ADR-015, ADR-048 and ADR-057:** `system_settings` replaces `admin_idle_minutes` with two keys, `idle_signout_minutes_staff` (60) and `idle_signout_minutes_admin` (30), each 10 to 240 by `chk_settings_idle_signout`. Staff edit them; the Admin reads. No new table or column. 260 constraint tests pass.
 >
 > **Updated Saturday, November 07, 2026 — 16:12 PHT, following this approved ERD through [ADR-076](../../06-Decisions/ADR-076-Staff-Record-Reviews-In-Their-Own-Table.md):** a new table `staff_record_reviews` holds the staff Incomplete Records queue (ADR-067), mirroring `student_record_reviews` without the import columns. 48 tables; 254 constraint tests pass on MariaDB 10.11.16; the overview diagram is regenerated. Settles counter-check C-1.
 >
