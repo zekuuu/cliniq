@@ -57,8 +57,7 @@ function ForcePasswordChangeForm({ userId, onComplete }: { userId: string; onCom
         <BackButton to={paths.login} label="Back to Sign In" className="mb-2!" />
         <header>
           <BrandLogo />
-          <p className="mt-6 border-t border-border pt-5 text-xs font-semibold uppercase tracking-[0.16em] text-brand-green-dark">Account setup</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-text-primary">Change Your Password</h1>
+          <h1 className="mt-6 border-t border-border pt-5 text-2xl font-bold tracking-tight text-text-primary">Change Your Password</h1>
           <p className="mt-1 text-sm text-text-secondary">Set a new password before opening CLINIQ for the first time.</p>
         </header>
         <form className="mt-6 flex flex-col gap-4" onSubmit={submit} noValidate>

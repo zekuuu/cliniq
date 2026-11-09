@@ -135,10 +135,8 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
     const inGrade = await fetchGradeStudents(grade)
     const known = new Set(students.map((student) => student.studentId))
     const toAdd = inGrade.filter((student) => !known.has(student.id))
-    if (!toAdd.length) {
-      setStudentNotice(inGrade.length ? `Every active student in ${grade} is already on this report.` : `${grade} has no active students.`)
-      return
-    }
+    // Shown as the grade field's error, right under it (Zean, November 8, 2026).
+    if (!toAdd.length) return setGradeError(inGrade.length ? `Every active student in ${grade} is already on this report.` : `${grade} has no active students.`)
     setGradeConfirm({ grade, toAdd, skipped: inGrade.length - toAdd.length })
   }
   function confirmAddGrade() {
@@ -247,19 +245,29 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
               search={searchSportsReportStudents}
               onSelect={pickStudent}
             />
-            <div className="flex items-end gap-2">
-              <Select
-                className="min-w-0 flex-1"
-                label="Or add a whole grade level"
-                value={grade}
-                options={(grades ?? []).map((level) => ({ value: level, label: level }))}
-                placeholder="Choose a grade level"
-                error={gradeError}
-                onChange={setGrade}
-              />
-              <Button type="button" variant="secondary" onClick={() => void askAddGrade()}>
-                Add Grade
-              </Button>
+            {/* The error sits under the row, so Add Grade stays level with the drop-down. */}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-end gap-2">
+                <Select
+                  className="min-w-0 flex-1"
+                  label="Or add a whole grade level"
+                  value={grade}
+                  options={(grades ?? []).map((level) => ({ value: level, label: level }))}
+                  placeholder="Choose a grade level"
+                  onChange={(value) => {
+                    setGrade(value)
+                    setGradeError(undefined)
+                  }}
+                />
+                <Button type="button" variant="secondary" onClick={() => void askAddGrade()}>
+                  Add Grade
+                </Button>
+              </div>
+              {gradeError && (
+                <p role="alert" className="text-xs font-semibold text-error">
+                  {gradeError}
+                </p>
+              )}
             </div>
             </div>
             <p role="status" className="text-sm text-text-secondary empty:hidden">
