@@ -22,14 +22,21 @@ function AppContent() {
     return () => window.removeEventListener(ACCOUNT_CHANGED_EVENT, refresh)
   }, [])
 
+  // Minutes of the last idle sign-out, for Login's message; cleared on the next sign-in (ADR-078).
+  const [idleSignedOut, setIdleSignedOut] = useState<number | null>(null)
+
   function signIn(nextUser: SessionUser) {
+    setIdleSignedOut(null)
     startMockSession(nextUser)
     setUser(nextUser)
   }
 
-  // The shell's Log out control (or the Admin's idle sign-out, ADR-048) has already audited the
+  // The shell's Log out control (or the idle sign-out, ADR-048 and ADR-078) has already audited the
   // logout and cleared the stored session.
   function signOut(idleMinutes?: number) {
+    // Held here, not only in router state: the old route's Login redirect replaced that state and the
+    // "signed out after N minutes" message was lost (ADR-078).
+    setIdleSignedOut(idleMinutes ?? null)
     setUser(null)
     navigate(paths.login, { replace: true, state: idleMinutes ? { signedOutAfterMinutes: idleMinutes } : null })
   }
@@ -40,6 +47,7 @@ function AppContent() {
         user={user}
         onLogin={signIn}
         onLogout={signOut}
+        signedOutAfterMinutes={idleSignedOut}
       />
       <KeyboardShortcuts />
     </>

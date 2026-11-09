@@ -2,7 +2,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { Button, Input } from '../../components'
 import { ForgotPasswordDialog } from './ForgotPasswordDialog'
-import { lockedMessage } from './lockMessage'
+import { lockedMessage, withAttemptsLeft } from './lockMessage'
 import { useCapsLock } from '../../hooks/useCapsLock'
 import { authenticateMockUser, beginPasswordChange, MockAuthError, type SessionUser } from '../../lib/mock-db'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
@@ -17,7 +17,7 @@ function returnPath(state: unknown): string | null {
   return typeof from === 'string' && from.startsWith('/') && !from.startsWith('//') ? from : null
 }
 
-export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void }) {
+export function LoginPage({ onLogin, signedOutAfterMinutes }: { onLogin: (user: SessionUser) => void; signedOutAfterMinutes?: number | null }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [username, setUsername] = useState('')
@@ -31,7 +31,8 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
   const formRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(formRef)
   // ADR-048: the Admin's idle sign-out says why the session ended.
-  const idleMinutes = (location.state as { signedOutAfterMinutes?: unknown } | null)?.signedOutAfterMinutes
+  // From the app (an idle sign-out, ADR-078), or from router state.
+  const idleMinutes = signedOutAfterMinutes ?? (location.state as { signedOutAfterMinutes?: unknown } | null)?.signedOutAfterMinutes
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -60,7 +61,7 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
       if (cause instanceof MockAuthError && cause.reason === 'locked') {
         setError(lockedMessage(cause.lockedUntil))
       } else {
-        setError('Unable to sign in with those credentials.')
+        setError(withAttemptsLeft('Unable to sign in with those credentials.', cause instanceof MockAuthError ? cause.remaining : undefined))
       }
     } finally {
       setLoading(false)
@@ -90,7 +91,7 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
             <p className="mt-2 text-center text-sm text-text-secondary">Use your CLINIQ account to open the clinic records.</p>
             {typeof idleMinutes === 'number' && (
               <p role="status" className="mt-4 rounded-md border border-info bg-info/10 px-3 py-2 text-sm text-text-primary">
-                You were signed out after {idleMinutes} minutes of inactivity.
+                You were signed out after {idleMinutes} minutes of inactivity. Sign in again.
               </p>
             )}
             <form ref={formRef} className="mt-8 flex w-full flex-col gap-4" onSubmit={submit} noValidate>

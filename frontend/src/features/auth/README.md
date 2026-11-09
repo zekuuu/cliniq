@@ -10,7 +10,7 @@ Login and the forced password change for a new account.
 
 ## Rules that matter
 - Every screen needs a real sign-in; no URL parameter signs anyone in or picks a role (ADR-002, security clarification).
-- A session lasts one week (ADR-015). The School Clinician has no idle timer; the Admin / Principal is signed out after 30 idle minutes, with a notice a minute before (ADR-048, `hooks/useIdleSignOut.ts`, `config.adminIdleMinutes`).
+- A session lasts at most one week (ADR-015). Each role is signed out after its idle setting, Staff 60 and Admin 30 minutes by default, with a warning two minutes before (ADR-048, ADR-078, `hooks/useIdleSignOut.ts`, `config.idleSignoutMinutesStaff` / `idleSignoutMinutesAdmin`).
 - No password re-entry before sensitive actions (ADR-041).
 
 ## Data and API files

@@ -3,6 +3,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { getRecordedAuditEntries } from '../lib/mock-db'
+import { db } from '../lib/mock-db/store'
 import { verifyBackup } from '../features/backup/api/backupApi'
 import { AppShell } from './AppShell'
 import { navGroupsFor } from './navigation'
@@ -85,6 +86,23 @@ describe('App Shell / Navigation', () => {
 
     await openAccountMenu(userEvent.setup())
     expect(screen.getByRole('menuitem', { name: 'Sign out' })).toHaveClass('text-error')
+  })
+
+  it('marks the Archive item when ending the school year is due today, and not before (Zean, November 8, 2026)', async () => {
+    const shell = () => (
+      <AppShell user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} active="dashboard" onLogout={() => {}}>
+        <div>Screen</div>
+      </AppShell>
+    )
+    db().today = '2027-04-13'
+    const { unmount } = renderWithRouter(shell())
+    await screen.findByRole('img', { name: 'Backup needs attention' })
+    expect(screen.queryByRole('img', { name: /School year/ })).not.toBeInTheDocument()
+    unmount()
+    db().today = '2027-04-14'
+    renderWithRouter(shell())
+    expect(await screen.findByRole('img', { name: 'School year 2026–2027 ends today' })).toHaveClass('bg-warning-fill')
+    expect(screen.getByRole('link', { name: /archive.*ends today/i })).toHaveAttribute('href', '/archive')
   })
 
   it('marks the Backup navigation item when it needs attention', async () => {
@@ -325,7 +343,7 @@ describe('App Shell / Navigation', () => {
     )
   })
 
-  it('limits Admin/Principal navigation to Dashboard, Calendar, Students, Incidents, Reports, Audit Log, Accounts and Backup (ADR-033, ADR-037, ADR-038)', () => {
+  it('limits Admin/Principal navigation to Dashboard, Calendar, Students, Incidents, Reports, Audit Log, Accounts, Backup, Archive and Settings (ADR-033, ADR-037, ADR-038, ADR-078)', () => {
     const groups = navGroupsFor('admin')
     expect(groups.flatMap((group) => group.items.map((item) => item.key))).toEqual([
       'dashboard',
@@ -337,6 +355,7 @@ describe('App Shell / Navigation', () => {
       'accounts',
       'backup',
       'archive',
+      'settings',
     ])
     expect(groups.map((group) => group.label)).toContain('Patient Care')
   })
@@ -356,6 +375,7 @@ describe('App Shell / Navigation', () => {
       'backup',
       'auditLog',
       'archive',
+      'settings',
     ])
   })
 
