@@ -11,7 +11,7 @@ The backend foundation is built: no tables or feature endpoints yet. The [ERD an
 1. ERD and data dictionary
 2. API contract
 3. Sanctum, foreign-key, and audit-log decisions
-4. Phone HTTPS test
+4. Clinic-PC deployment checks (section 4)
 5. Client items
 
 ---
@@ -23,7 +23,7 @@ The backend foundation is built: no tables or feature endpoints yet. The [ERD an
 | `backend/` | Laravel 13 foundation: Sanctum SPA mode, CORS, middleware, error format, audit contract, helpers, 79 tests. Two routes, no tables. |
 | `ERD.md` | Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057), with a data dictionary, reference schema and constraint tests. Since then changed through ADR-063, 064, 071, 072, 073 and 075: 47 tables, 247 constraint tests passing on MariaDB 10.11.16 (November 7, 2026). |
 | Mock API (`api.ts`) | 126 exported functions, 15 exported constants and 19 error classes, about 3,840 lines (November 7, 2026; 104 and 10 on October 31). It holds real business rules: stock integrity, excused-period checks, duplicate-student detection, LRN validation and uniqueness, incident stage rules. It is a working but unwritten API contract. |
-| Auth and roles | The access matrix in `Module-Overview.md` covers 11 rows (Modules 1 to 5 and 7 to 11, plus 2a) × 2 roles. ADR-015 sets a 7-day session lifetime and lockout after 5 failed attempts for 30 minutes; ADR-048 signs the Admin out after 30 idle minutes; ADR-056 chose SPA cookie mode. |
+| Auth and roles | The access matrix in `Module-Overview.md` covers 11 rows (Modules 1 to 5 and 7 to 11, plus 2a) × 2 roles. ADR-015 sets a 7-day session lifetime and lockout after 5 failed attempts for 30 minutes; each role is signed out after its own idle minutes, Staff 60 and Admin 30, both settings (ADR-048, amended by ADR-078 on main, pending merge; Sunday, November 08, 2026 — 18:35 PHT); ADR-056 chose SPA cookie mode. |
 
 ---
 
@@ -64,7 +64,9 @@ The backend foundation is built: no tables or feature endpoints yet. The [ERD an
 
 ## 4. Environment and deployment (not documented anywhere)
 
-- [ ] **HTTPS on the LAN.** Deferred to a deployment with real data (ADR-057, `LATER`): development runs on Zean's machine on localhost, so nothing crosses the LAN yet. Real data must not cross it until HTTPS exists.
+- [x] **HTTPS on the LAN.** ~~Deferred to a deployment with real data (ADR-057, `LATER`).~~ *Closed Sunday, November 08, 2026 — 18:35 PHT as decided: not needed. CLINIQ runs on the clinic PC only at `http://localhost`, so no request crosses a network (ADR-079 on main, pending merge). If the PC ever joins the school network, HTTPS returns with a new decision (`Environment-Setup.md`, "Clinic PC only").*
+- [ ] **Clinic PC only** (added Sunday, November 08, 2026 — 18:35 PHT, ADR-079 on main, pending merge): Apache on `127.0.0.1:80` with `Require local`; Windows Firewall blocks inbound; nothing forwarded from the router; no fixed IP, hostname or certificate; the clinic values of `APP_URL`, CORS, Sanctum stateful domain, session domain and `SESSION_SECURE_COOKIE=false`; the start-up check on the `secure` flag (B2). All in `Environment-Setup.md`.
+- [ ] **The shared, unlocked room** (added Sunday, November 08, 2026 — 18:35 PHT): Windows sign-in password and screen lock after 5 to 10 minutes; BitLocker if Windows Pro; one Staff account per person; at least one backup drive kept out of the room, since a backup only on the PC's own disk is not enough.
 - [ ] **PHP version.** The development XAMPP has PHP 8.5.12 and Laravel 13 fits it (`Environment-Setup.md`). The clinic computer's check is deferred to deployment (ADR-057, `LATER`), because development and testing stay on Zean's machine.
 - [ ] **Pinned versions** for XAMPP, PHP, MariaDB, and Laravel. Pinned in `Environment-Setup.md`; the clinic computer is matched at deployment (ADR-057, `LATER`).
 - [ ] **Backup plan.** Locations, folders and the 60-per-location limit are decided (ADR-052). The `mysqldump` plus Task Scheduler design is not agreed with the client yet. Also decide how a backup run reports back to Laravel (a log row or a status file), since the Backup screen reads it.

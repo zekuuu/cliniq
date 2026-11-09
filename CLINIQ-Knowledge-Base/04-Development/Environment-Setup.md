@@ -64,7 +64,7 @@ Do this once on Zean's own machine. XAMPP's MariaDB ships listening on the netwo
    Migrations use a separate account with schema rights, and `cliniq_app` keeps only `SELECT` and `INSERT` on `audit_logs` (`ERD.md` section 13).
 4. Stop using `root` in `.env`: set `DB_USERNAME=cliniq_app` and its password.
 
-The clinic computer repeats these steps, and it needs HTTPS before real data crosses the LAN (ADR-057).
+The clinic computer repeats these steps. Real data never crosses a network: CLINIQ runs on the clinic PC only (see "Clinic PC only" below).
 
 ## Scaffold
 
@@ -84,24 +84,59 @@ cd cliniq-scaffold
 
 ## Serve `backend/public` from Apache
 
-Point Apache at Laravel's `public` folder only, never at `backend/` itself: `.env` sits there. Add this to `C:\xampp\apache\conf\extra\httpd-vhosts.conf`, with the real folder and the clinic's LAN range:
+Point Apache at Laravel's `public` folder only, never at `backend/` itself: `.env` sits there. CLINIQ is reached at `http://localhost` on the clinic PC only (ADR-079 on main, pending merge). Add this to `C:\xampp\apache\conf\extra\httpd-vhosts.conf`, with the real folder:
 
 ```apache
-<VirtualHost *:80>
-    ServerName cliniq.local
+<VirtualHost 127.0.0.1:80>
+    ServerName localhost
     DocumentRoot "C:/CLINIQ/backend/public"
     <Directory "C:/CLINIQ/backend/public">
         AllowOverride All
         Options -Indexes +FollowSymLinks
         Require local
-        Require ip <clinic LAN range, for example 192.168.1>
     </Directory>
 </VirtualHost>
 ```
 
-Add `127.0.0.1 cliniq.local` to `C:\Windows\System32\drivers\etc\hosts` on the clinic computer. Another device on the LAN (ADR-029 note) uses the computer's LAN address or an entry in its own hosts file. That address also goes into the allowed origins, the Sanctum stateful domains and the session cookie domain (Part 2, item B0.4).
+In `C:\xampp\apache\conf\httpd.conf`, change `Listen 80` to `Listen 127.0.0.1:80`, so Apache does not answer on the network at all. MariaDB is already bound to `127.0.0.1` (above). No hosts-file entry is needed.
 
-**Deferred (`LATER`, ADR-057):** how the built frontend is served in production, and HTTPS on the LAN. Development uses plain HTTP on localhost. Real data must not cross the LAN until HTTPS exists: passwords and health records would travel unencrypted, and the session cookie could not be `secure`. The origins, the `secure` flag and the stateful domains stay in `.env`, so deployment needs no code change.
+**Deferred (`LATER`, ADR-057):** how the built frontend is served in production. Whatever is chosen, it is served from the same `http://localhost` as the API.
+
+## Clinic PC only
+
+Rewritten Sunday, November 08, 2026 — 18:35 PHT for ADR-079 (on main, pending merge), which reinforces ADR-029: CLINIQ is deployed on the clinic PC only. Nobody reaches it from another computer, and the Principal receives a monthly PDF. This replaces the earlier note that another device on the LAN could reach it (ADR-029 note of October 31, 2026).
+
+**Address and network**
+
+- The address is `http://localhost`, typed on the clinic PC.
+- No fixed IP, no hostname, no router entries, no certificate.
+- Windows Firewall blocks inbound connections to Apache (port 80) and MariaDB (port 3306). Nothing is forwarded from the router.
+- HTTPS is not needed: no request leaves the PC, so nothing travels over a network to be read. This closes the "HTTPS on the LAN" item of ADR-057.
+
+**Environment values for the clinic PC** (all in `backend/.env`, so a later network decision needs no code change):
+
+| Key | Clinic PC | Why |
+|---|---|---|
+| `APP_URL` | `http://localhost` | The one address |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost` | The frontend is served from the same origin |
+| `SANCTUM_STATEFUL_DOMAINS` | `localhost` | Port 80, so no port is added (Sanctum needs the port only when the address has one) |
+| `SESSION_DOMAIN` | empty (null) | A host-only cookie for `localhost`; no `Domain` attribute is needed |
+| `SESSION_SECURE_COOKIE` | `false` | Plain HTTP; see below |
+
+`backend/.env.example` keeps the development values (`http://localhost:5173`, `localhost:5173`).
+
+**The `secure` cookie flag on `http://localhost` (checked Sunday, November 08, 2026 — 18:35 PHT).** MDN's `Set-Cookie` reference says a `Secure` cookie is sent only over `https:` "except on localhost", that insecure (`http:`) sites cannot set `Secure` cookies, and that the HTTPS requirement is ignored when localhost sets one. So a `Secure` cookie could work on `http://localhost` in current browsers, but only through that browser exception. CLINIQ does not rely on it: `SESSION_SECURE_COOKIE=false` while the address is plain `http://localhost`, and `true` the day HTTPS is added. The real backend must check this at start-up (B2): if `APP_URL` starts with `https://` and the flag is off, or the flag is on and `APP_URL` is `http://` on any host other than `localhost`, it refuses to start with a clear message. The second case would otherwise fail silently: the browser drops the cookie and nobody can sign in. Sources: [MDN Set-Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie), [Laravel Sanctum, SPA authentication](https://laravel.com/docs/12.x/sanctum#spa-authentication).
+
+**The room is shared and unlocked.** The clinic PC therefore needs:
+
+- a Windows sign-in password, and the screen locked after 5 to 10 minutes idle (a Windows setting, separate from CLINIQ's idle sign-out);
+- BitLocker on the drive if the PC runs Windows Pro;
+- one Staff account per person, including whoever covers for the nurse; no shared account;
+- backups kept away from the room (below).
+
+**Backups.** A backup stored only on the clinic PC's own disk is not enough: a theft, a fire or a failed disk takes the data and the backup together. At least one enabled backup location (ADR-052) must be a drive that is taken out of the room after the backup.
+
+**If the school later joins the PC to the main school network.** That needs a new decision. What would change: a hostname for the PC; a Windows Firewall rule that allows only approved addresses; HTTPS with a local certificate; and the environment values above (`APP_URL`, the CORS origin, the Sanctum stateful domain, `SESSION_SECURE_COOKIE=true`). Apache's `Listen` and `Require` lines change with them. No code changes.
 
 ## Scheduler on Windows
 
