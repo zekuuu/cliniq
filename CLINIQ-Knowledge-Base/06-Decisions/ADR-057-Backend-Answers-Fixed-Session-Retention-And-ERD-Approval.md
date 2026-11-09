@@ -1,3 +1,4 @@
+> **Note Monday, November 09, 2026 — 18:08 PHT:** ADR-078 (on main) adds a per-role idle sign-out inside the fixed 7-day session: Staff after `idle_signout_minutes_staff` (60) and the Admin after `idle_signout_minutes_admin` (30), each 10 to 240, answered with 401 `session_idle`; the 7-day limit still answers `session_expired`. ADR-079 (on main) settles the deferred HTTPS item: CLINIQ runs on the clinic PC only at `http://localhost`, so no HTTPS is needed unless the PC joins the school network (a new decision). The decision text below is unchanged.
 > **Note Saturday, November 07, 2026 — 16:15 PHT:** The approved ERD (item 10) gains a 48th table, `staff_record_reviews`, through [ADR-076](ADR-076-Staff-Record-Reviews-In-Their-Own-Table.md). The decision text below is unchanged.
 
 # ADR-057: Backend answers: fixed 7-day session, new error codes, deferred HTTPS, masked LRN, retention, and the ERD approved
