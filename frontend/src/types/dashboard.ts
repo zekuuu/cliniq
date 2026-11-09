@@ -148,6 +148,15 @@ export interface ComplaintTrends {
   weekdayComparison?: WeekdayComparison
 }
 
+/** The school-year reminder: overdue is past the due day; dueToday is the day itself (Zean, November 8, 2026). */
+export interface SchoolYearReminder {
+  kind: 'end' | 'start'
+  label: string
+  dueOn: string
+  overdue: boolean
+  dueToday: boolean
+}
+
 export interface DashboardSummary {
   /** Server's "today". Due/upcoming follow-ups are computed against this at request time. */
   today: ISODate
@@ -178,7 +187,7 @@ export interface DashboardSummary {
    */
   backupAlert: BackupAlert | null
   /** Staff only: ending the current school year, or starting the next, is due by the dates and not done (Zean, November 7, 2026). */
-  schoolYearReminder?: { kind: 'end' | 'start'; label: string; dueOn: string; overdue: boolean } | null
+  schoolYearReminder?: SchoolYearReminder | null
   inventoryAlerts: InventoryAlertRow[]
   complaintTrends: ComplaintTrends
   demographics: DemographicAnalysis

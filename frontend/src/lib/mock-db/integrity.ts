@@ -28,7 +28,7 @@ const ARCHIVE_FIELDS = ['archivedAt', 'archiveReason', 'archivedSchoolYear']
 
 const FIELDS = {
   top: ['meta', 'config', 'users', 'students', 'personnel', 'visits', 'incidents', 'followUps', 'inventoryItems', 'reports', 'backupLogs', 'auditLog', 'frontendOnly'],
-  config: ['_note', 'showFrequentVisitors', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'personnelTypes', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges', 'medicalCertificateAfterDays', 'adminIdleMinutes', 'clusterMinStudents', 'clusterWindowDays', 'followUpOverdueAfterDays', 'followUpAutoCloseDays', 'vitalsUsualRanges', 'backupKeepLast', 'unusualAgeYears', 'largeWriteOffPercent', 'schoolYearStartMonth', 'schoolYearStartDay', 'schoolYearEndMonth', 'schoolYearEndDay', 'schoolYearStarts'],
+  config: ['_note', 'showFrequentVisitors', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'personnelTypes', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges', 'medicalCertificateAfterDays', 'idleSignoutMinutesStaff', 'idleSignoutMinutesAdmin', 'clusterMinStudents', 'clusterWindowDays', 'followUpOverdueAfterDays', 'followUpAutoCloseDays', 'vitalsUsualRanges', 'backupKeepLast', 'unusualAgeYears', 'largeWriteOffPercent', 'schoolYearStartMonth', 'schoolYearStartDay', 'schoolYearEndMonth', 'schoolYearEndDay', 'schoolYearStarts'],
   users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture', 'deactivatedAt'],
   students: ['id', 'lrn', 'firstName', 'lastName', 'middleName', 'gradeLevel', 'birthDate', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
   personnel: ['id', 'staffNumber', 'firstName', 'lastName', 'middleName', 'sex', 'type', 'department', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived'],
@@ -423,18 +423,20 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     const w = `inventoryItems[${i}] (${String(item.id)})`
     checkFields(w, item, FIELDS.inventoryItems, ['usedFor'])
     oneOf(`${w}.category`, item.category, ENUMS.category)
-    // "Commonly used for": symptom options only, no repeats (consultation, November 6, 2026).
+    // "Commonly used for": symptom options or "Other" words, no repeats (consultation, November 6, 2026; Other: November 8).
     if (item.usedFor !== undefined) {
       if (!Array.isArray(item.usedFor)) fail(`${w}.usedFor: must be a list of symptom options`)
       else {
         item.usedFor.forEach((tag) => {
-          if (!visitComplaints.has(String(tag))) fail(`${w}.usedFor: "${String(tag)}" isn't in frontendOnly.visitComplaintTypes`)
+          if (typeof tag !== 'string' || !tag.trim()) fail(`${w}.usedFor: "${String(tag)}" must be a symptom option or a typed word`)
         })
         if (new Set(item.usedFor).size !== item.usedFor.length) fail(`${w}.usedFor: lists a symptom twice`)
         // The save stores tags in the list's order, so a seed in another order would audit as an edit.
         const tags = item.usedFor.map(String)
-        if (tags.join('|') !== [...visitComplaints].filter((label) => tags.includes(label)).join('|'))
-          fail(`${w}.usedFor: list the symptoms in frontendOnly.visitComplaintTypes order`)
+        // Options first, in list order; typed "Other" words after them.
+        const options = tags.filter((tag) => visitComplaints.has(tag))
+        if ([...options, ...tags.filter((tag) => !visitComplaints.has(tag))].join('|') !== tags.join('|') || options.join('|') !== [...visitComplaints].filter((label) => tags.includes(label)).join('|'))
+          fail(`${w}.usedFor: list the symptom options in frontendOnly.visitComplaintTypes order, then any other words`)
       }
     }
     if (item.brand !== undefined && item.brand !== null) oneOf(`${w}.brand`, item.brand, ['generic', 'branded'])

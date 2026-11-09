@@ -124,8 +124,12 @@ export function migratePersistedState(saved: Saved): Saved {
     record.personnelId ??= null
   // October 29, 2026 (ADR-049): the medical-certificate limit, and the wording stored on approved letters.
   if (typeof config.medicalCertificateAfterDays !== 'number') config.medicalCertificateAfterDays = seed.config.medicalCertificateAfterDays
-  // ADR-048 and ADR-050: the Admin's idle sign-out and the cluster alert's numbers.
-  for (const key of ['adminIdleMinutes', 'clusterMinStudents', 'clusterWindowDays', 'followUpOverdueAfterDays', 'followUpAutoCloseDays'] as const)
+  // ADR-078: the Admin's idle minutes (ADR-048) became one of two idle settings; keep a saved value.
+  const legacy = config as { adminIdleMinutes?: unknown }
+  if (typeof config.idleSignoutMinutesAdmin !== 'number' && typeof legacy.adminIdleMinutes === 'number') config.idleSignoutMinutesAdmin = legacy.adminIdleMinutes
+  delete legacy.adminIdleMinutes
+  // ADR-048, ADR-050 and ADR-078: the idle sign-out and the cluster alert's numbers.
+  for (const key of ['idleSignoutMinutesStaff', 'idleSignoutMinutesAdmin', 'clusterMinStudents', 'clusterWindowDays', 'followUpOverdueAfterDays', 'followUpAutoCloseDays'] as const)
     if (typeof config[key] !== 'number') config[key] = seed.config[key]
   // ADR-051: the usual vitals ranges, and the frequent-visitor window's new starting value.
   if (!config.vitalsUsualRanges) config.vitalsUsualRanges = structuredClone(seed.config.vitalsUsualRanges)
