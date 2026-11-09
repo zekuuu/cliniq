@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { addDays } from '../../lib/dates'
 import { getInventoryItem, getMockToday, listInventory, resetMockDb, restockInventoryItem, saveInventoryItem, StockRuleError } from '../../lib/mock-db'
+import { db } from '../../lib/mock-db/store'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { selectOption } from '../../test/selectOption'
 import { findDuplicateItem, unitSuggestions } from './api/inventoryApi'
@@ -51,8 +52,14 @@ describe('Add Item expiry (IV-2, ADR-035, D10)', () => {
     await user.click(screen.getByRole('button', { name: 'Add Item' }))
     expect(screen.getByText('Choose an expiration date, or confirm this item has no expiration date.')).toBeInTheDocument()
     await user.click(screen.getByLabelText(/this item has no expiration date/i))
+    // "Commonly used for" is required (Zean, November 8, 2026); "Other" takes a symptom not in the list.
+    await user.click(screen.getByRole('button', { name: 'Add Item' }))
+    expect(screen.getByText('Choose at least one symptom this item is commonly used for.')).toBeInTheDocument()
+    await user.click(screen.getByRole('checkbox', { name: 'Other' }))
+    await user.type(screen.getByRole('textbox', { name: /^Other/ }), 'eye irritation, ')
     await user.click(screen.getByRole('button', { name: 'Add Item' }))
     expect(await screen.findByText('Saline solution was added successfully.')).toBeInTheDocument()
+    expect(db().inventoryItems.find((i) => i.name === 'Saline solution')?.usedFor).toEqual(['eye irritation'])
   })
 })
 
