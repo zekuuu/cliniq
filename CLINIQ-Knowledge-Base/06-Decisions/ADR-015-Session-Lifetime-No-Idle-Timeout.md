@@ -2,6 +2,7 @@
 
 **Date:** Monday, September 28, 2026 — actual time not available (no system clock access in this environment)
 **Status:** Accepted. **Amended by ADR-048, built Friday, October 30, 2026 — 00:17 PHT** ([Part 3 session](../08-Logs/Agent-Sessions/2026-10-30-decisions-build-part-3-admin-audit-and-dashboard.md)): the Admin account is signed out after `config.adminIdleMinutes` (30) without pointer, key or scroll activity, with a notice a minute before; the clinician still has no idle timeout.
+> **Note (Sunday, November 08, 2026 — 20:32 PHT):** ADR-078 gives the clinician an idle sign-out too: 60 minutes by default, a setting (10 to 240) that Staff edit on the Settings page, with a warning two minutes before. The one-week maximum stays as the outer limit.
 **Note (Wednesday, October 21, 2026 — 01:47):** the PE/Sports Instructor role, the phone-only screens and the `?student=` parameter this ADR may mention were removed (ADR-029, ADR-033, [2026-10-21-remove-phone-screens-and-instructor](../08-Logs/Agent-Sessions/2026-10-21-remove-phone-screens-and-instructor.md)); the rest of the decision stands.
 **Note (Thursday, October 29, 2026 — 12:33 PHT):** the Admin is now signed out after 30 idle minutes (a `config` value); the clinician still has no idle timeout (ADR-048, Zean). Not built yet.
 
@@ -14,7 +15,7 @@ Module 1 originally specified an automatic session timeout after 15 minutes idle
 - **Remove the 15-minute idle timeout.**
 - **One session lifetime for every role** (Staff, Admin/Principal, PE/Sports Instructor): 1 week, until the login token expires. After 7 days the user logs in again.
 - **Frontend:** no inactivity timer or auto-logout logic. An expired token simply returns the user to Login.
-- **Unchanged:** account lockout (5 failed attempts, 30-minute lock), Force Password Change, password rules, and the audit trail.
+- **Account lockout:** 5 failed attempts, 5-minute lock (was 30 minutes until Sunday, November 8, 2026 — 22:06 PHT; Zean: "make it lower since it doesn't need highest security"). From 3 attempts left, the error says "Your account will be locked after N more failed attempts." **Unchanged:** Force Password Change, password rules, and the audit trail.
 - **Written as a fixed lifetime from login.** If the team instead wants the session to renew with activity (a sliding expiry), that's a separate rule and would need its own decision.
 
 ## Alternatives Considered

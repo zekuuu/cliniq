@@ -297,3 +297,15 @@ Reports keeps four tabs: Monthly Report, Incident register, Symptom summary, Inv
 ### ADR-075: Staff start each school year by hand
 
 Staff end a school year by hand ("End school year": today is the last class day, then the break) and start the next by hand after the break ("Start school year"); nothing changes by itself. The date settings give both due days. Staff get a short Dashboard banner 7 days before each, which turns to a warning once overdue. Records made in the break stay in the ended year. Each start is stored and audited. Amends ADR-072. [ADR-075](ADR-075-School-Year-Started-By-Hand.md)
+
+### ADR-077: The Admin's Reports page is a month drop-down with the monthly reports, view only
+
+The Admin sees a Report month drop-down (the current school year, newest first, then earlier recorded years) and the four monthly reports as a list. Open shows the Staff printout component as an on-screen A4 sheet with Back, with masked LRNs and no Print, Save, Download or export. Staff-only report routes redirect the Admin to `/reports`. Refines ADR-074 and ADR-038. [ADR-077](ADR-077-Admin-Reports-Month-List-View-Only.md)
+
+### ADR-078: Staff are signed out after idle time (default 60 minutes); idle times are settings
+
+Both roles are signed out after idle time: Staff after `idleSignoutMinutesStaff` (60) and the Admin after `idleSignoutMinutesAdmin` (30), each 10 to 240 whole minutes. Staff edit them on a new Settings page; the Admin reads them; changes are audited by field name. Keys, pointer, scroll, touch and API calls count as activity. A warning with a live countdown comes two minutes before (Stay signed in, Sign out now, Escape stays) and says when unsaved changes will be lost. The audit entry is "Signed out (idle)". The 7-day maximum stays. Each covering person has their own Staff account. Amends ADR-015 and ADR-048. [ADR-078](ADR-078-Staff-Idle-Signout-Idle-Times-Are-Settings.md)
+
+### ADR-079: CLINIQ is deployed on the clinic PC only; the Principal gets a monthly PDF
+
+CLINIQ runs on the clinic PC only, at `http://localhost`: no LAN access, no fixed address or hostname, no HTTPS, inbound connections blocked by Windows Firewall, nothing forwarded from the router. The clinician sends the Principal the Monthly Report as a PDF (printed, or saved with the browser's Save as PDF); the Admin account is used on the clinic PC. The shared, unlocked room needs a Windows password and screen lock, BitLocker on Windows Pro, backups kept away from the room, and one Staff account per person. Joining the school network later is a new decision. Reinforces ADR-029. [ADR-079](ADR-079-Clinic-PC-Only-Principal-Gets-Monthly-PDF.md)

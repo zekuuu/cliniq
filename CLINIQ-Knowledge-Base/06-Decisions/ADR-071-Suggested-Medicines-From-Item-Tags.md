@@ -2,6 +2,7 @@
 
 **Date:** Saturday, November 07, 2026 — 05:13 PHT
 **Status:** Accepted (Zean, in chat, Saturday, November 7, 2026 — 04:18 PHT: "suggested first, with 'Show all medicines'", the suggestions coming from tags the nurse sets on each item). Relates to ADR-018 (stock rules) and ADR-049 (allergy warnings, no medicine-to-allergen map). **Built** Saturday, November 07, 2026 — 05:13 PHT ([session](../08-Logs/Agent-Sessions/2026-11-07-consultation-part-1-symptoms-released-to-suggested-medicines.md)).
+**Amended Sunday, November 08, 2026 — 22:36 PHT** (Zean, in chat: "Make the 'Commonly used for' required, then add other to add more symptoms that aren't in the checklist"): the list is now **required** (at least one) on the item form, and an **Other** tick opens a comma-separated text field for symptoms not in the checklist. Other words are stored after the options and match a visit's typed symptom by the same grouping key. Items saved before stay as they are until edited.
 
 ## Context
 The professor's consultation (Friday, November 6, 2026) asked that the Visit form help the nurse find the usual medicine for what the student feels. CLINIQ has no drug data, and ADR-049 rejected a medicine-to-allergen map because the nurse would have to maintain it and dispensing is her professional decision.
