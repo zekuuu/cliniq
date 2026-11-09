@@ -29,9 +29,12 @@ describe('frontend-first authentication boundary', () => {
 
   it('returns a generic failure and locks the account on the fifth failed attempt', async () => {
     for (let attempt = 1; attempt <= 4; attempt += 1) {
-      await expect(authenticateMockUser('demo.nurse', 'wrong-password')).rejects.toMatchObject({ reason: 'invalid_credentials' })
+      await expect(authenticateMockUser('demo.nurse', 'wrong-password')).rejects.toMatchObject({ reason: 'invalid_credentials', remaining: 5 - attempt })
     }
-    await expect(authenticateMockUser('demo.nurse', 'wrong-password')).rejects.toMatchObject({ reason: 'locked' })
+    const before = Date.now()
+    const locked = await authenticateMockUser('demo.nurse', 'wrong-password').catch((cause: { reason: string; lockedUntil: number }) => cause)
+    expect(locked).toMatchObject({ reason: 'locked' })
+    expect((locked as { lockedUntil: number }).lockedUntil - before).toBeLessThanOrEqual(5 * 60 * 1000 + 5000)
     await expect(authenticateMockUser('demo.nurse', 'demo-nurse')).rejects.toMatchObject({ reason: 'locked' })
   })
 
