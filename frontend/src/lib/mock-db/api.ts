@@ -1,3 +1,4 @@
+import { emit, IDLE_SETTINGS_CHANGED_EVENT } from '../sessionActivity'
 import { isLrn, maskLrn, normalizeLrn } from '../lrn'
 import type {
   AuditActionType,
@@ -41,7 +42,7 @@ import { EXCUSE_LETTER_RECIPIENT, excuseLetterBody } from '../excuseLetter'
 import { addDays, endOfMonth, isRealDate, monthWeeks, toISODate, type MonthWeek } from '../dates'
 import { generateRecoveryCodes, generateTotpSecret, hashRecoveryCode, otpauthUri, verifyTotp } from '../totp'
 import { currentSchoolYear, schoolYearStep, schoolYearOf, schoolYearSettingsError, type SchoolYear, type SchoolYearSettings } from '../schoolYear'
-import type { BackupAlert, CalendarDay, CalendarDayEvent, DashboardQuery, DashboardSummary, Holiday, HolidayFeed } from '../../types/dashboard'
+import type { BackupAlert, CalendarDay, CalendarDayEvent, DashboardQuery, DashboardSummary, Holiday, SchoolYearReminder, HolidayFeed } from '../../types/dashboard'
 import holidayData from './holidays-ph.json'
 import type { FollowUpDueState } from '../../components/status/followUp'
 import { buildCalendarDays, buildDashboardSummary } from './dashboard'
@@ -215,6 +216,8 @@ function audit(
 }
 
 const FIELD_LABELS: Record<string, string> = {
+  idleSignoutMinutesStaff: 'Staff idle sign-out minutes',
+  idleSignoutMinutesAdmin: 'Admin idle sign-out minutes',
   lrn: 'LRN',
   gradeLevel: 'grade level',
   contactInfo: 'contact info',
@@ -299,9 +302,50 @@ export async function recordView(target: { type: keyof typeof VIEW_SUMMARIES; id
   })
 }
 
-/** Minutes of inactivity before the Admin is signed out (ADR-048). */
-export function getAdminIdleMinutes(): Promise<number> {
-  return read('admin idle minutes', (s) => s.config.adminIdleMinutes)
+/** The two idle sign-out settings (ADR-078): Staff default 60, Admin default 30, each 10 to 240 minutes. */
+export interface IdleSignoutSettings {
+  idleSignoutMinutesStaff: number
+  idleSignoutMinutesAdmin: number
+}
+
+export const IDLE_SIGNOUT_MIN = 10
+export const IDLE_SIGNOUT_MAX = 240
+
+export class IdleSignoutSettingsError extends Error {}
+
+function idleSettingsOf(s: DbState): IdleSignoutSettings {
+  return { idleSignoutMinutesStaff: s.config.idleSignoutMinutesStaff, idleSignoutMinutesAdmin: s.config.idleSignoutMinutesAdmin }
+}
+
+/** Whole minutes from 10 to 240 (ADR-078). */
+export function validIdleMinutes(value: number): boolean {
+  return Number.isInteger(value) && value >= IDLE_SIGNOUT_MIN && value <= IDLE_SIGNOUT_MAX
+}
+
+export function getIdleSignoutSettings(): Promise<IdleSignoutSettings> {
+  return read('idle sign-out settings', idleSettingsOf)
+}
+
+/** Minutes of inactivity before this role is signed out (ADR-048, ADR-078). */
+export function getIdleSignoutMinutes(role: SessionUser['role']): Promise<number> {
+  return read('idle sign-out minutes', (s) => (role === 'admin' ? s.config.idleSignoutMinutesAdmin : s.config.idleSignoutMinutesStaff))
+}
+
+/** Staff only; audited by field name, never the minutes. The shell reads them again for the next countdown. */
+export async function saveIdleSignoutSettings(input: IdleSignoutSettings, actor?: SessionUser): Promise<IdleSignoutSettings> {
+  const saved = await write('save idle sign-out settings', (s) => {
+    const by = actorOr(actor)
+    if (by.role !== 'staff') throw new IdleSignoutSettingsError('Only the clinic staff can change the sign-out times.')
+    const values = { idleSignoutMinutesStaff: input.idleSignoutMinutesStaff, idleSignoutMinutesAdmin: input.idleSignoutMinutesAdmin }
+    if (!validIdleMinutes(values.idleSignoutMinutesStaff) || !validIdleMinutes(values.idleSignoutMinutesAdmin))
+      throw new IdleSignoutSettingsError(`Enter whole minutes from ${IDLE_SIGNOUT_MIN} to ${IDLE_SIGNOUT_MAX}.`)
+    const summary = changedSummary(idleSettingsOf(s), values)
+    Object.assign(s.config, values)
+    if (summary) audit(s, by, 'update', { type: 'settings', id: 'idle-signout' }, summary)
+    return idleSettingsOf(s)
+  })
+  emit(IDLE_SETTINGS_CHANGED_EVENT)
+  return saved
 }
 
 // ---- authentication (frontend-first mock only) --------------------------------------------
@@ -316,13 +360,20 @@ export type MockAuthFailure = 'invalid_credentials' | 'locked'
 export class MockAuthError extends Error {
   readonly reason: MockAuthFailure
   readonly lockedUntil?: number
+  /** Failed attempts left before the lockout, on `invalid_credentials`. */
+  readonly remaining?: number
 
-  constructor(reason: MockAuthFailure, lockedUntil?: number) {
+  constructor(reason: MockAuthFailure, lockedUntil?: number, remaining?: number) {
     super(reason)
     this.reason = reason
     this.lockedUntil = lockedUntil
+    this.remaining = remaining
   }
 }
+
+/** Sign-in and password recovery share one lockout: 5 failures in a row, locked for 5 minutes (ADR-015). */
+export const LOCKOUT_ATTEMPTS = 5
+export const LOCKOUT_MINUTES = 5
 
 interface LoginAttemptState {
   failures: number
@@ -359,11 +410,25 @@ function fakePasswordHistory(state: DbState, userId: string): string[] {
   return history
 }
 
-/** Audit entry for a lockout: 5 wrong passwords in a row, locked for 30 minutes. Never the passwords. */
+/** Audit entry for a lockout. Never the passwords. */
 function logLockout(user: Pick<SessionUser, 'id' | 'name' | 'role'>, where: string): Promise<void> {
   return write('lockout', (s) => {
-    audit(s, { id: user.id, name: user.name, role: user.role }, 'login', { type: 'user', id: user.id }, `Account locked for 30 minutes after 5 wrong passwords (${where})`)
+    audit(s, { id: user.id, name: user.name, role: user.role }, 'login', { type: 'user', id: user.id }, `Account locked for ${LOCKOUT_MINUTES} minutes after ${LOCKOUT_ATTEMPTS} wrong passwords (${where})`)
   })
+}
+
+/**
+ * Counts one failure. Locks the account (and logs it) on the last one, throwing `locked`; otherwise
+ * returns how many attempts are left. A lockout is a security event, so it is logged against the
+ * account (Zean, Friday, October 23, 2026). An unknown username has no account to attribute it to.
+ */
+async function recordFailure(attempt: LoginAttemptState, user: Pick<SessionUser, 'id' | 'name' | 'role'> | undefined, where: string): Promise<number> {
+  attempt.failures += 1
+  if (attempt.failures < LOCKOUT_ATTEMPTS) return LOCKOUT_ATTEMPTS - attempt.failures
+  attempt.failures = 0
+  attempt.lockedUntil = Date.now() + LOCKOUT_MINUTES * 60 * 1000
+  if (user) await logLockout(user, where)
+  throw new MockAuthError('locked', attempt.lockedUntil)
 }
 
 /**
@@ -387,16 +452,8 @@ export async function authenticateMockUser(username: string, password: string): 
   const account = user && state.frontendOnly.devAccounts.find((candidate) => candidate.userId === user.id)
   const currentPassword = account ? fakePasswordHistory(state, user.id)[0] : null
   if (!user || !account || user.deactivatedAt || currentPassword !== password) {
-    attempt.failures += 1
-    if (attempt.failures >= 5) {
-      attempt.failures = 0
-      attempt.lockedUntil = Date.now() + 30 * 60 * 1000
-      // A lockout is a security event, so it is logged against the account (Zean, Friday, October 23,
-      // 2026). An unknown username has no account to attribute it to; a single wrong password isn't logged.
-      if (user) await logLockout(user, 'sign-in')
-      throw new MockAuthError('locked', attempt.lockedUntil)
-    }
-    throw new MockAuthError('invalid_credentials')
+    const remaining = await recordFailure(attempt, user, 'sign-in')
+    throw new MockAuthError('invalid_credentials', undefined, remaining)
   }
 
   attempt.failures = 0
@@ -451,7 +508,15 @@ const recoveryTokens = new Map<string, { userId: string; expires: number }>()
  */
 export const RECOVERY_FAILED_MESSAGE = 'The code did not work, or the account is not set up for recovery. Ask the Administrator to reset your password.'
 
-export class RecoveryError extends Error {}
+export class RecoveryError extends Error {
+  /** Failed attempts left before the lockout, when the failure counts toward it. */
+  readonly remaining?: number
+
+  constructor(message: string, remaining?: number) {
+    super(message)
+    this.remaining = remaining
+  }
+}
 
 function devAccountOf(state: DbState, userId: string) {
   return state.frontendOnly.devAccounts.find((account) => account.userId === userId)
@@ -548,16 +613,10 @@ function openRecoveryAttempt(normalized: string) {
   return attempt
 }
 
-/** Counts a failed recovery step toward the sign-in lockout (5 failures, 30 minutes, ADR-015), then throws `message`. */
-async function failRecovery(attempt: ReturnType<typeof attemptFor>, user: User | undefined, message: string): Promise<never> {
-  attempt.failures += 1
-  if (attempt.failures >= 5) {
-    attempt.failures = 0
-    attempt.lockedUntil = Date.now() + 30 * 60 * 1000
-    if (user) await logLockout(user, 'password recovery')
-    throw new MockAuthError('locked', attempt.lockedUntil)
-  }
-  throw new RecoveryError(message)
+/** Counts a failed recovery step toward the sign-in lockout (ADR-015), then throws `message`. */
+async function failRecovery(attempt: LoginAttemptState, user: User | undefined, message: string): Promise<never> {
+  const remaining = await recordFailure(attempt, user, 'password recovery')
+  throw new RecoveryError(message, remaining)
 }
 
 /**
@@ -578,7 +637,7 @@ export async function checkRecoveryAccount(username: string): Promise<void> {
 
 /**
  * Forgot password, step 2 (Login): the username and a 6-digit code or a recovery code. A failed code
- * keeps the general message and counts toward the sign-in lockout (5 failures, 30 minutes, ADR-015).
+ * keeps the general message and counts toward the sign-in lockout (ADR-015).
  * Returns a one-time token for the new password.
  */
 export async function verifyPasswordRecovery(username: string, proof: string): Promise<string> {
@@ -2398,12 +2457,12 @@ export function listFollowUps(query: { status?: FollowUpStatus | '' } = {}): Pro
   })
 }
 
-/** Missed and Cancelled need a reason (panel review FU-4); it stays on the follow-up, not in the audit trail. */
+/** Cancelled needs a reason (panel review FU-4); Missed's is optional (Zean, November 8, 2026). It stays on the follow-up, not in the audit trail. */
 export function setFollowUpStatus(id: string, status: FollowUpStatus, actor?: SessionUser, reason?: string): Promise<FollowUp> {
   return write('update follow-up', (s) => {
     const followUp = must(s.followUps.find((f) => f.id === id), 'Follow-up')
     const why = reason?.trim() || null
-    if ((status === 'missed' || status === 'cancelled') && !why) throw new Error(`Give the reason this follow-up is ${status}.`)
+    if (status === 'cancelled' && !why) throw new Error(`Give the reason this follow-up is ${status}.`)
     const summary = followUp.status === status ? undefined : `Marked ${status}`
     followUp.status = status
     if (status === 'missed' || status === 'cancelled') followUp.statusReason = why
@@ -2546,6 +2605,20 @@ export type InventoryInput = Omit<InventoryItem, 'id' | 'batches'> & {
  * and expiration date: stock moves only through dispense, restock, and adjustment transactions, and
  * the expiration date only through Restock (ADR-018).
  */
+export const USED_FOR_REQUIRED = 'Choose at least one symptom this item is commonly used for.'
+
+/** Trimmed, non-blank words, first spelling kept, none repeating each other or `taken` (any case). */
+function distinctWords(words: string[], taken: string[] = []): string[] {
+  const seen = new Set(taken.map((word) => word.toLowerCase()))
+  return words
+    .map((word) => word.trim())
+    .filter((word) => {
+      if (!word || seen.has(word.toLowerCase())) return false
+      seen.add(word.toLowerCase())
+      return true
+    })
+}
+
 export function saveInventoryItem(input: InventoryInput, options: { itemId?: string; actor?: SessionUser } = {}): Promise<InventoryItem> {
   return write('save inventory item', (s) => {
     const existing = options.itemId ? must(s.inventoryItems.find((i) => i.id === options.itemId), 'Inventory item') : null
@@ -2555,9 +2628,11 @@ export function saveInventoryItem(input: InventoryInput, options: { itemId?: str
       .map((tag) => tag.trim())
       .filter((tag, index, all) => tag && all.findIndex((other) => other.toLowerCase() === tag.toLowerCase()) === index)
     // An item that never had tags stays without the field, so an unrelated edit isn't audited as a tag change.
-    // "Commonly used for": known symptom options only, in the list's order (consultation, November 6, 2026).
-    const symptoms = s.frontendOnly.visitComplaintTypes.map((type) => type.label).filter((label) => (usedFor ?? []).includes(label))
-    if ((usedFor ?? []).some((tag) => !symptoms.includes(tag))) throw new StockRuleError('Choose symptoms from the list.')
+    // "Commonly used for" (consultation, November 6, 2026): the list's options in its order, then any
+    // "Other" symptoms typed in, distinct and trimmed. At least one when given (Zean, November 8, 2026).
+    const known = s.frontendOnly.visitComplaintTypes.map((type) => type.label)
+    const symptoms = [...known.filter((label) => (usedFor ?? []).includes(label)), ...distinctWords((usedFor ?? []).filter((tag) => !known.includes(tag.trim())), known)]
+    if (usedFor !== undefined && !symptoms.length) throw new StockRuleError(USED_FOR_REQUIRED)
     const fields = {
       ...rest,
       ...((tags.length || existing?.avoidIfAllergicTo?.length) && { avoidIfAllergicTo: tags }),
@@ -3027,6 +3102,14 @@ function itemsGivenInMonth(s: DbState, month: string): MonthlyReportData['itemsG
     .sort((a, b) => a.itemName.localeCompare(b.itemName))
 }
 
+/** "YYYY-MM" of the newest visit or incident up to today, else today's month: the Admin Reports page's default (ADR-077). */
+export function getLatestRecordedMonth(): Promise<string> {
+  return read('latest report month', (s) => {
+    const dates = [...countedVisits(s).map((v) => v.dateTime), ...s.incidents.map((i) => i.time)].filter((d) => d.slice(0, 10) <= s.today)
+    return dates.reduce((latest, d) => (d > latest ? d : latest), '').slice(0, 7) || s.today.slice(0, 7)
+  })
+}
+
 /** `month` is "YYYY-MM". Everything is generated from raw records on each call. */
 export function getMonthlyReport(month: string): Promise<MonthlyReportData> {
   return read('monthly report', (s) => {
@@ -3152,11 +3235,23 @@ export function recordBackupNow(actor?: SessionUser): Promise<BackupStatusView> 
 export function getDashboardSummary(query: DashboardQuery, viewer?: SessionUser): Promise<DashboardSummary> {
   return read('dashboard summary', (s) => {
     const seen = viewer?.role === 'admin' ? { ...s, incidents: s.incidents.filter(visibleTo(viewer)) } : s
-    const step = schoolYearStep(schoolYearSettingsOf(s), s.today)
-    // Staff end and start school years by hand; once the next step is due, the Dashboard reminds them (Zean, November 7, 2026).
-    const schoolYearReminder = viewer?.role !== 'admin' && (step.due || step.soon) ? { kind: step.kind, label: step.label, dueOn: step.dueOn, overdue: step.due } : null
-    return { ...buildDashboardSummary(seen, query, new Date().toISOString()), backupAlert: backupAlertFor(s), schoolYearReminder }
+    return { ...buildDashboardSummary(seen, query, new Date().toISOString()), backupAlert: backupAlertFor(s), schoolYearReminder: schoolYearReminderOf(s, viewer) }
   })
+}
+
+/**
+ * Staff end and start school years by hand; from a week before the next step is due, the Dashboard
+ * reminds them (Zean, November 7, 2026). Due today or overdue is a warning, also on the sidebar's
+ * Archive item (Zean, November 8, 2026). The Admin gets none.
+ */
+function schoolYearReminderOf(s: DbState, viewer?: SessionUser): SchoolYearReminder | null {
+  const step = schoolYearStep(schoolYearSettingsOf(s), s.today)
+  if (viewer?.role === 'admin' || !(step.due || step.soon)) return null
+  return { kind: step.kind, label: step.label, dueOn: step.dueOn, overdue: s.today > step.dueOn, dueToday: s.today === step.dueOn }
+}
+
+export function getSchoolYearReminder(viewer?: SessionUser): Promise<SchoolYearReminder | null> {
+  return read('school year reminder', (s) => schoolYearReminderOf(s, viewer))
 }
 
 /**
@@ -3702,6 +3797,11 @@ export function listAuditLog(query: AuditLogQuery): Promise<AuditLogList> {
 }
 
 // ---- school years and the Archive (professor's consultation, November 6, 2026) --------------
+
+/** The date settings with the school years Staff started (ADR-075): the Admin's Report month drop-down (ADR-077). Read only. */
+export function getSchoolYearHistory(): Promise<SchoolYearSettings> {
+  return read('school year history', schoolYearSettingsOf)
+}
 
 export function getSchoolYearSettings(): Promise<SchoolYearSettings> {
   return read('school year settings', schoolYearDatesOf)

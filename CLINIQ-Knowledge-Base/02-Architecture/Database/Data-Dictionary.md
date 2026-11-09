@@ -91,7 +91,7 @@ Accounts for Staff and Admin/Principal. Never hard-deleted: a leaver is deactiva
 | `must_change_password` | `tinyint(1)` | no | 1 | Forces the Force Password Change screen after login. Default 1 for new accounts. |
 | `password_changed_at` | `datetime` | yes | NULL |  |
 | `failed_login_count` | `smallint unsigned` | no | 0 | Reset to 0 on success. At `lockout_max_attempts` (5) the account locks. |
-| `locked_until` | `datetime` | yes | NULL | Set to now + `lockout_minutes` (30) when the limit is hit. Login refuses while in the future. |
+| `locked_until` | `datetime` | yes | NULL | Set to now + `lockout_minutes` (5) when the limit is hit. Login refuses while in the future. |
 | `last_login_at` | `datetime` | yes | NULL |  |
 | `deactivated_at` | `datetime` | yes | NULL | Non-null = cannot log in. Rows are kept forever. |
 | `totp_secret` | `text` | yes | NULL | The authenticator secret (ADR-073), **encrypted at rest** by the application (Laravel `Crypt`; the key is in the environment, not the database, `Environment-Setup.md`). Stored only once the first code confirms the setup; the secret and otpauth URI are returned once, at setup, and never again. NULL = not set up. |

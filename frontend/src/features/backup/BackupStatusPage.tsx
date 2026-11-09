@@ -43,6 +43,7 @@ export function BackupStatusPage() {
     // Panel review BK-2: either role can start a backup here. It runs to every enabled location (ADR-052).
     async function runBackup() {
         setBackingUp(true)
+        setBackedUp(false)
         setBackupError('')
         try {
             setUpdated(await backUpNow(viewer))
@@ -57,7 +58,7 @@ export function BackupStatusPage() {
     }
     const locationsPanel = locations.data && <BackupLocationsPanel settings={locations.data} viewer={viewer} onChanged={locations.reload} />
     const backUpNowButton = (
-        <Button variant="secondary" icon="refresh" loading={backingUp} onClick={() => void runBackup()}>
+        <Button variant="secondary" icon="refresh" loading={backingUp} done={backedUp} onClick={() => void runBackup()}>
             Back up now
         </Button>
     )

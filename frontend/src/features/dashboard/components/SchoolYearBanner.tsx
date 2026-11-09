@@ -13,16 +13,20 @@ export function SchoolYearBanner({ reminder }: { reminder: NonNullable<Dashboard
   const date = formatDate(reminder.dueOn)
   const text = reminder.overdue
     ? `School year ${reminder.label} was due to ${ending ? 'end' : 'start'} ${date}.`
-    : `School year ${reminder.label} ${ending ? 'ends' : 'starts'} ${date}.`
-  const tone = reminder.overdue ? 'border-warning bg-warning-fill' : 'border-info bg-info-fill'
+    : reminder.dueToday
+      ? `School year ${reminder.label} ${ending ? 'ends' : 'starts'} today.`
+      : `School year ${reminder.label} ${ending ? 'ends' : 'starts'} ${date}.`
+  // Due today warns like overdue (Zean, November 8, 2026).
+  const warn = reminder.overdue || reminder.dueToday
+  const tone = warn ? 'border-warning bg-warning-fill' : 'border-info bg-info-fill'
   return (
     <div role="status" className={`flex flex-wrap items-center justify-between gap-3 rounded-md border px-4 py-3 print:hidden ${tone}`}>
       <p className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-        <Icon name={reminder.overdue ? 'alertTriangle' : 'calendarClock'} size={16} className={reminder.overdue ? 'text-warning-text' : 'text-info-text'} />
+        <Icon name={warn ? 'alertTriangle' : 'calendarClock'} size={16} className={warn ? 'text-warning-text' : 'text-info-text'} />
         {text}
       </p>
       {/* The Archive page highlights its End or Start button when opened from here. */}
-      <Link to={paths.archive} state={{ highlightSchoolYearStep: true }} className={buttonClassName({ size: 'sm', variant: reminder.overdue ? 'primary' : 'secondary' })}>
+      <Link to={paths.archive} state={{ highlightSchoolYearStep: true }} className={buttonClassName({ size: 'sm', variant: warn ? 'primary' : 'secondary' })}>
         Go to Archive
       </Link>
     </div>

@@ -5,7 +5,8 @@ import { BACKUP_CHANGED_EVENT, fetchBackupStatus } from '../features/backup/api/
 import { useAsyncData } from '../hooks/useAsyncData'
 import { cn } from '../lib/cn'
 import { navGroupsFor, type NavKey } from './navigation'
-import type { SessionUser } from '../lib/mock-db'
+import { getSchoolYearReminder, type SessionUser } from '../lib/mock-db'
+import { SCHOOL_YEAR_CHANGED_EVENT } from '../lib/accountEvents'
 import { paths } from '../routes/paths'
 import { APP_VERSION } from '../config/appVersion'
 
@@ -56,6 +57,18 @@ export function Sidebar({
   const backupNeedsAttention = Boolean(
     backup && (!backup.latest || backup.latest.status === 'failed' || backup.needsVerification),
   )
+  // Staff only (the Admin gets no reminder): ending or starting the school year is due today or overdue (Zean, November 8, 2026).
+  const { data: schoolYear, reload: reloadSchoolYear } = useAsyncData(`sidebar-school-year|${user.role}`, () => getSchoolYearReminder(user))
+  useEffect(() => {
+    window.addEventListener(SCHOOL_YEAR_CHANGED_EVENT, reloadSchoolYear)
+    return () => window.removeEventListener(SCHOOL_YEAR_CHANGED_EVENT, reloadSchoolYear)
+  }, [reloadSchoolYear])
+  const schoolYearWarning =
+    schoolYear && (schoolYear.overdue || schoolYear.dueToday)
+      ? `School year ${schoolYear.label} ${schoolYear.dueToday ? `${schoolYear.kind === 'end' ? 'ends' : 'starts'} today` : `is overdue to ${schoolYear.kind}`}`
+      : null
+  const warningFor = (key: NavKey) =>
+    key === 'backup' && backupNeedsAttention ? 'Backup needs attention' : key === 'archive' ? schoolYearWarning : null
   const groups = navGroupsFor(user.role)
   const labelVisibility = collapsed ? 'sr-only' : ''
   const location = useLocation()
@@ -147,8 +160,8 @@ export function Sidebar({
               <ul className={cn('flex flex-col gap-0.5', collapsed && 'items-center')}>
                 {group.items.map((item) => {
                   const isActive = item.key === active
-                  const hasBackupWarning = item.key === 'backup' && backupNeedsAttention
-                  const itemLabel = hasBackupWarning ? `${item.label}, needs attention` : item.label
+                  const warning = warningFor(item.key)
+                  const itemLabel = warning ? `${item.label}, needs attention` : item.label
                   if (item.available && item.to) {
                     return (
                       <li key={item.key}>
@@ -169,11 +182,11 @@ export function Sidebar({
                           <Icon name={item.icon} />
                           <span className={labelVisibility}>{item.label}</span>
                           {item.shortcut && !collapsed && <ShortcutHint keys={item.shortcut} />}
-                          {hasBackupWarning && (
+                          {warning && (
                             <span
                               role="img"
-                              aria-label="Backup needs attention"
-                              title="Backup needs attention"
+                              aria-label={warning}
+                              title={warning}
                               className={cn(
                                 'flex shrink-0 items-center justify-center',
                                 isActive ? 'bg-[#c69214] text-brand-green-dark' : 'bg-warning-fill text-warning-text',

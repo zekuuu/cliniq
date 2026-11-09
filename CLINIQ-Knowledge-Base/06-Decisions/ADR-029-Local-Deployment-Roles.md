@@ -6,6 +6,8 @@
 
 **Note (Saturday, October 31, 2026 — 19:36 PHT):** Zean: CLINIQ is hosted on the clinic computer and deployed over the LAN too, so another device on the clinic's network can reach it. Remote and cloud hosting stay out of scope. The Principal's office is still a different network, so item 2 stands.
 
+**Note (Monday, November 09, 2026 — 18:08 PHT):** ADR-079 replaces the October 31 note above: CLINIQ runs on the clinic PC only, at `http://localhost`, and no other device on the clinic's network reaches it. The Principal receives the Monthly Report as a PDF from the clinician; the Admin account is used on the clinic PC.
+
 ## Context
 CLINIQ will run locally. The Principal's office has Wi-Fi, but it is a different network from the clinic's, so the Principal cannot reach a system that runs only on the clinic's local network (Zean, Saturday, October 17, 2026 — 10:52; an earlier version of this ADR said the office had no Wi-Fi, which was wrong). The PE/Sports Instructor cannot reach a system on the clinic's network from outside it either. With the QR feature dropped (ADR-027), the Instructor's only screen is gone as well. The professor had advised keeping the scope to the main functions, asking the Principal what he actually needs (the professor expected the printed monthly report), and asking before adding features.
 

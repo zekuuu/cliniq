@@ -20,7 +20,7 @@ Kept in sync with the canonical Project Plan, Section 1.4. If you edit one, edit
 - Reports Generation (monthly reports with a weekly breakdown, incident reports, complaint summaries, a monthly inventory print, and Sports Reports for PE instructors)
 - The team-proposed enhancements described in Section 5.3: First-aid checklist quick-reference, Medicine & Supply Inventory Tracker, Clinic Overview Dashboard with an Activity calendar (school events and national holidays), and Backup Verification Assistant
 - An Audit Log Viewer that lets Staff and the Admin/Principal read back the audit trail
-- Deployment on the clinic's existing single computer using XAMPP (Apache, PHP and MariaDB), served over the LAN; the Admin/Principal signs in at the clinic computer
+- Deployment on the clinic's existing single computer using XAMPP (Apache, PHP and MariaDB), used only on that computer at `http://localhost` (ADR-079); the Admin/Principal signs in at the clinic computer, and the Principal receives the Monthly Report as a PDF
 - RA 10173 (Data Privacy Act of 2012)–aligned data handling, audit logging, and daily backups kept on the clinic computer and an external drive
 - Staff training and a User Acceptance Testing (UAT) phase at the client site
 

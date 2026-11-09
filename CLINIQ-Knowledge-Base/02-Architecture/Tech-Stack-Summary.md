@@ -1,6 +1,6 @@
 # Tech Stack Summary
 
-CLINIQ is designed as three connected parts: a browser-based screen for users, a server that applies the clinic's rules and protects access, and a database that stores records. The system is meant to be hosted on the clinic computer and served over the local network (LAN), so its core work does not depend on the public internet.
+CLINIQ is designed as three connected parts: a browser-based screen for users, a server that applies the clinic's rules and protects access, and a database that stores records. The system is meant to be hosted on the clinic computer and used only there, at `http://localhost` (ADR-079), so its core work does not depend on the public internet.
 
 ## What users see
 
@@ -20,4 +20,4 @@ XAMPP is the shared local setup for the school and development computers. During
 
 Dashboard charts use Chart.js through react-chartjs-2 because it is lighter on the school's 4 GB workstation than the alternative considered. Automated checks use Pest for the server side and Vitest with React Testing Library for the user-facing screens.
 
-The same arrangement can later move from the local network to a remote host because the browser app already talks to the server through a defined service boundary. That move would change where the system is hosted, not require rebuilding its overall structure.
+The same arrangement can later move from the clinic PC to a networked or remote host (a new decision, ADR-079) because the browser app already talks to the server through a defined service boundary. That move would change where the system is hosted, not require rebuilding its overall structure.

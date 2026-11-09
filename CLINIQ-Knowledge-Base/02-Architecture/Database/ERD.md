@@ -786,7 +786,7 @@ An approved letter can be replaced: the old row becomes `superseded`, and a visi
 
 **Backup.** A run writes to every enabled `backup_locations` row (ADR-052). The scheduled script writes a status file; Laravel ingests it into `backup_logs` and one `backup_location_results` row per location (idempotent by `run_key`) → the nurse verifies (a failed run cannot be verified).
 
-**User.** Created with `must_change_password = 1` → active → locked after 5 failures for 30 minutes → deactivated when they leave. Never deleted. Optionally sets up an authenticator (ADR-073): the confirmed, encrypted `totp_secret` and 8 `recovery_codes`; replacing the authenticator replaces both, turning it off clears both.
+**User.** Created with `must_change_password = 1` → active → locked after 5 failures for 5 minutes → deactivated when they leave. Never deleted. Optionally sets up an authenticator (ADR-073): the confirmed, encrypted `totp_secret` and 8 `recovery_codes`; replacing the authenticator replaces both, turning it off clears both.
 
 **School year** (ADR-072, ADR-075). Staff start a year (a `school_years` row, `started_on` today) → in session → Staff end it (`ended_on` today, the last class day) → on break; the break belongs to that year → Staff start the next. Nothing changes by itself: the settings only say when ending or starting is due, and the Dashboard reminds Staff 7 days before and once it is overdue.
 

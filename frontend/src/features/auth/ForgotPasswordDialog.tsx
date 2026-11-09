@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Button, CodeOrRecoveryField, Input, Modal } from '../../components'
 import { checkRecoveryAccount, MockAuthError, RecoveryError, resetPasswordWithRecovery, verifyPasswordRecovery, RECOVERY_FAILED_MESSAGE } from '../../lib/mock-db'
-import { lockedMessage } from './lockMessage'
+import { lockedMessage, withAttemptsLeft } from './lockMessage'
 
 type Step = 'account' | 'code' | 'reset'
 
@@ -34,7 +34,7 @@ export function ForgotPasswordDialog({ open, onClose, onReset }: { open: boolean
 
   function showFailure(cause: unknown) {
     if (cause instanceof MockAuthError && cause.reason === 'locked') setError(lockedMessage(cause.lockedUntil))
-    else if (cause instanceof RecoveryError) setError(cause.message)
+    else if (cause instanceof RecoveryError) setError(withAttemptsLeft(cause.message, cause.remaining))
     else setError(RECOVERY_FAILED_MESSAGE)
   }
 

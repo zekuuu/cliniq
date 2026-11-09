@@ -2,7 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { getArchive, getDashboardSummary, getRecordedAuditEntries, getSchoolYearSettings, endSchoolYear, resetMockDb, saveSchoolYearSettings, sportsReportWindowStart, startSchoolYear } from '../../lib/mock-db'
+import { getArchive, getDashboardSummary, getSchoolYearReminder, getRecordedAuditEntries, getSchoolYearSettings, endSchoolYear, resetMockDb, saveSchoolYearSettings, sportsReportWindowStart, startSchoolYear } from '../../lib/mock-db'
 import { DashboardPage } from '../dashboard/DashboardPage'
 import { db } from '../../lib/mock-db/store'
 import { rangeForPreset } from '../../lib/dateRange'
@@ -182,7 +182,7 @@ describe('ending and starting a school year by hand (Zean, November 7, 2026)', (
     const data = await getArchive(STAFF)
     expect(data.current).toMatchObject({ label: '2026–2027', from: '2026-06-15', endedOn: null })
     expect(data.step).toEqual({ kind: 'end', label: '2026–2027', dueOn: '2027-04-14', due: true, soon: false })
-    expect((await summaryOn('2027-04-20')).schoolYearReminder).toEqual({ kind: 'end', label: '2026–2027', dueOn: '2027-04-14', overdue: true })
+    expect((await summaryOn('2027-04-20')).schoolYearReminder).toEqual({ kind: 'end', label: '2026–2027', dueOn: '2027-04-14', overdue: true, dueToday: false })
     expect((await summaryOn('2027-04-20', ADMIN)).schoolYearReminder).toBeNull()
     renderWithRouter(<DashboardPage viewer={STAFF} />)
     // A banner under the header, short, with one action (Zean, November 7, 2026).
@@ -197,10 +197,19 @@ describe('ending and starting a school year by hand (Zean, November 7, 2026)', (
     db().today = '2027-04-06'
     expect((await summaryOn('2027-04-06')).schoolYearReminder).toBeNull()
     db().today = '2027-04-07'
-    expect((await summaryOn('2027-04-07')).schoolYearReminder).toEqual({ kind: 'end', label: '2026–2027', dueOn: '2027-04-14', overdue: false })
+    expect((await summaryOn('2027-04-07')).schoolYearReminder).toEqual({ kind: 'end', label: '2026–2027', dueOn: '2027-04-14', overdue: false, dueToday: false })
     renderWithRouter(<DashboardPage viewer={STAFF} />)
     const banner = (await screen.findByText('School year 2026–2027 ends Apr 14, 2027.')).closest('[role="status"]')!
     expect(banner).toHaveClass('border-info')
+  })
+
+  it('warns on the due day itself, on the Dashboard and on the sidebar Archive item (Zean, November 8, 2026)', async () => {
+    db().today = '2027-04-14'
+    expect((await summaryOn('2027-04-14')).schoolYearReminder).toEqual({ kind: 'end', label: '2026–2027', dueOn: '2027-04-14', overdue: false, dueToday: true })
+    renderWithRouter(<DashboardPage viewer={STAFF} />)
+    const banner = (await screen.findByText('School year 2026–2027 ends today.')).closest('[role="status"]')!
+    expect(banner).toHaveClass('border-warning')
+    expect(await getSchoolYearReminder(ADMIN)).toBeNull()
   })
 
   it('ends the year (Staff only, audited); the break belongs to it; the next start is reminded a week before', async () => {
@@ -215,9 +224,9 @@ describe('ending and starting a school year by hand (Zean, November 7, 2026)', (
     expect((await getArchive(STAFF)).current).toMatchObject({ label: '2026–2027', endedOn: '2027-04-14' })
     expect((await summaryOn('2027-05-20')).schoolYearReminder).toBeNull()
     db().today = '2027-06-08'
-    expect((await summaryOn('2027-06-08')).schoolYearReminder).toEqual({ kind: 'start', label: '2027–2028', dueOn: '2027-06-15', overdue: false })
+    expect((await summaryOn('2027-06-08')).schoolYearReminder).toEqual({ kind: 'start', label: '2027–2028', dueOn: '2027-06-15', overdue: false, dueToday: false })
     db().today = '2027-06-20'
-    expect((await summaryOn('2027-06-20')).schoolYearReminder).toEqual({ kind: 'start', label: '2027–2028', dueOn: '2027-06-15', overdue: true })
+    expect((await summaryOn('2027-06-20')).schoolYearReminder).toEqual({ kind: 'start', label: '2027–2028', dueOn: '2027-06-15', overdue: true, dueToday: false })
   })
 
   it('starts the next year after the break (Staff only, audited); the year before ends yesterday', async () => {

@@ -67,10 +67,12 @@ describe('FollowUpListPage', () => {
 
     await selectOption(user, screen.getAllByRole('button', { name: /update status for/i })[0], option)
     const confirm = screen.getByRole('dialog', { name: title })
-    // Panel review FU-4: a reason is required.
-    await user.click(within(confirm).getByRole('button', { name: confirmLabel }))
-    expect(within(confirm).getByText('Give the reason.')).toBeInTheDocument()
-    expect(getRecordedAuditEntries()).toEqual([])
+    // Panel review FU-4: Cancelled needs a reason; Missed's is optional (Zean, November 8, 2026).
+    if (status === 'cancelled') {
+      await user.click(within(confirm).getByRole('button', { name: confirmLabel }))
+      expect(within(confirm).getByText('Give the reason.')).toBeInTheDocument()
+      expect(getRecordedAuditEntries()).toEqual([])
+    }
     await user.type(within(confirm).getByRole('textbox', { name: /reason/i }), 'Parent asked to reschedule')
     await user.click(within(confirm).getByRole('button', { name: confirmLabel }))
     // Missed then offers "Set a new date"; declining it creates nothing. Cancelled closes for good.

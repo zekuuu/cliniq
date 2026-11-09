@@ -338,6 +338,7 @@ function StudentFormEditor({
     invalid.report(Object.keys(nextErrors).length)
     if (Object.keys(nextErrors).length > 0) return
 
+    setSuccessMessage('')
     setIsSaving(true)
     try {
       let result
@@ -593,7 +594,7 @@ function StudentFormEditor({
               <Button variant="neutral" onClick={cancel}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" icon="checkCircle" loading={isSaving}>
+              <Button type="submit" variant="primary" icon="checkCircle" loading={isSaving} done={Boolean(successMessage)}>
                 {mode === 'edit' ? 'Save Changes' : 'Save Student'}
               </Button>
             </div>

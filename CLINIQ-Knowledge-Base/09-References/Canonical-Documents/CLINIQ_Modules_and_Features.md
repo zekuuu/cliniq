@@ -21,7 +21,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 **Login Authentication** *(Staff, Admin/Principal — everyone with an account)*
 - Log in (username/password)
 - Log out
-- A Staff session lasts 1 week, until the login token expires — there is no idle timeout, so urgent work is never interrupted (ADR-015). The Admin/Principal is signed out after 30 idle minutes, with a notice about a minute before (ADR-048)
+- Each role is signed out after its idle setting: Staff after 60 minutes and the Admin/Principal after 30 by default, each 10 to 240, set by Staff on the Settings page, with a two-minute warning and countdown; a session also ends 7 days after sign-in. Each covering person has their own Staff account (ADR-015, ADR-048, ADR-078)
 - Account lockout after 5 consecutive failed attempts (30-minute lock)
 - Every login logged with who and when (see Audit Trail, below)
 
@@ -211,7 +211,8 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 **Monthly Reports**
 - Generate monthly report — *Staff*
 - View monthly report — *Staff, Admin/Principal*
-- Print/export monthly report as PDF — *Staff* (the Admin/Principal reads it on screen; ADR-038)
+- Print/export monthly report as PDF — *Staff* (the Admin/Principal reads it on screen; ADR-038). The clinician sends the Monthly Report to the Principal as a PDF (ADR-079)
+- The Admin/Principal's Reports page is a Report month drop-down and the four monthly reports; each opens as a view-only sheet with masked LRNs and no print, save or export (ADR-077)
 - The report has a **weekly breakdown** like the clinic's paper report, and exact counts with no masking of small groups; Sex counts are included (ADR-050, 051). There is no "Finalize month": reports are computed live (ADR-050)
 - A separate **monthly inventory print** lists, per item, New Purchase, Total Available and Ending Inventory (ADR-050)
 - Complaints are grouped by a clean list: trimmed, case-insensitive and matched to the suggestion list, with no merge screen (ADR-050)

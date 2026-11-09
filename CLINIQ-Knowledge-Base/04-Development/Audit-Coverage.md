@@ -13,7 +13,7 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 |---|---|---|---|---|
 | Signs in | `login` | user | — | `lib/mock-db/auth.test.ts` |
 | Signs out (account menu, then the confirmation) | `logout` | — | — | `layouts/AppShell.test.tsx` |
-| Gets locked out (5 wrong passwords in a row at sign-in; locked 30 minutes) | `login` | user | "Account locked for 30 minutes after 5 wrong passwords (sign-in)" | `features/backup/AccessAndBackup.test.tsx` |
+| Gets locked out (5 wrong passwords in a row at sign-in; locked 5 minutes) | `login` | user | "Account locked for 5 minutes after 5 wrong passwords (sign-in)" | `features/backup/AccessAndBackup.test.tsx` |
 | Changes their password (first sign-in, or Change Password) | `update` | user | "Changed password" | — |
 | Changes their own name in Edit profile (account menu, ADR-066) | `update` | user | "Changed own name" (never the old or new name) | `lib/mock-db/ownProfile.test.ts`, `layouts/AccountMenu.test.tsx` |
 | Changes or removes their own picture in Edit profile (ADR-066) | `update` | user | "Changed own profile picture" (never image data) | `lib/mock-db/ownProfile.test.ts`, `layouts/AccountMenu.test.tsx` |
@@ -59,7 +59,8 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | Creates / edits / duplicates / archives / restores a Sports Report | `create` / `update` / `create` / `archive` / `update` | sports-report | "Duplicated from another Sports Report", "Restored from the archive"; a report holds students only, no note (November 3, 2026) | `features/reports/SportsReport.test.tsx` |
 | Prints or saves as PDF | `print` | the printed record, or print-document | the document's title or scope. Never written for the Admin, who can't print, or for a draft excuse letter (ADR-038) | `components/print/Print.test.tsx` |
 | Admin/Principal or the clinician opens a student or staff profile or an incident report | `view` ("Viewed a record") | student / staff / incident | "Opened student profile" / "Opened staff profile" / "Opened incident report". Once per record per sign-in session (ADR-038 item 4; the clinician's since ADR-048, Friday, October 30, 2026 — 00:17 PHT). Lists and searches are not logged | `features/admin-read-only.test.tsx`, `features/AdminAuditDashboardDecisions.test.tsx` |
-| The Admin is signed out after the idle limit (ADR-048) | `logout` | — | "Signed out after 30 minutes of inactivity" | `features/AdminAuditDashboardDecisions.test.tsx` |
+| Staff or the Admin is signed out after their idle limit (ADR-048, ADR-078) | `logout` | — | "Signed out (idle)": user and action only, no minutes. "Sign out now" in the warning is an ordinary sign-out | `features/idle-signout.test.tsx`, `features/AdminAuditDashboardDecisions.test.tsx` |
+| Changes the idle sign-out settings (ADR-078, Staff only) | `update` | settings (`idle-signout`) | "Updated Staff idle sign-out minutes" (field names only) | `features/idle-signout.test.tsx` |
 | Adjusts stock by a large amount (ADR-061) | `submit` | inventory-adjustment | The reason, then "· Large write-off" | `features/inventory/StockActions.test.tsx` |
 | Applies a yearly student list (ADR-047) | `submit` | student-import | Counts only: added, updated, archived, flagged | `features/student-records/StudentImportPage.test.tsx` |
 | Reports an issue | `create` | issue-report | — | `features/issue-reports/api/issueReportApi.test.ts` |
@@ -68,7 +69,7 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 
 | Action | Logged? | Should it be? |
 |---|---|---|
-| Staff opening a visit or a report (reading a health record). Opening a student or staff profile or an incident report **is** logged for both roles since Friday, October 30, 2026 — 00:17 PHT (ADR-048, above) | No | Visits and reports stay unlogged (ADR-048 chose profiles and incident reports). RA 10173 accountability favours logging access to health records; ADR-016 decided that reading the Audit Log itself is not logged. Logging every profile view adds many rows. A `DECIDE` is logged. |
+| Staff or the Admin opening a visit or a report (reading a health record; the Admin's view-only report sheet, ADR-077, follows Staff and writes nothing). Opening a student or staff profile or an incident report **is** logged for both roles since Friday, October 30, 2026 — 00:17 PHT (ADR-048, above) | No | Visits and reports stay unlogged (ADR-048 chose profiles and incident reports). RA 10173 accountability favours logging access to health records; ADR-016 decided that reading the Audit Log itself is not logged. Logging every profile view adds many rows. A `DECIDE` is logged. |
 | Searching for a student (Student List, pickers) | No | Probably not: the opened record is the access worth logging. |
 | A single wrong password at sign-in | No | No: decided with the lockout below (Zean, Friday, October 23, 2026). Five in a row are logged as a lockout. |
 | Viewing the Dashboard, Calendar, Trends or lists | No | No: aggregate or masked (ADR-004, ADR-028). |

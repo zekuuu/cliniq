@@ -23,7 +23,7 @@ The backend foundation is built: no tables or feature endpoints yet. The [ERD an
 | `backend/` | Laravel 13 foundation: Sanctum SPA mode, CORS, middleware, error format, audit contract, helpers, 79 tests. Two routes, no tables. |
 | `ERD.md` | Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057), with a data dictionary, reference schema and constraint tests. Since then changed through ADR-063, 064, 071, 072, 073 and 075: 47 tables, 247 constraint tests passing on MariaDB 10.11.16 (November 7, 2026). |
 | Mock API (`api.ts`) | 126 exported functions, 15 exported constants and 19 error classes, about 3,840 lines (November 7, 2026; 104 and 10 on October 31). It holds real business rules: stock integrity, excused-period checks, duplicate-student detection, LRN validation and uniqueness, incident stage rules. It is a working but unwritten API contract. |
-| Auth and roles | The access matrix in `Module-Overview.md` covers 11 rows (Modules 1 to 5 and 7 to 11, plus 2a) × 2 roles. ADR-015 sets a 7-day session lifetime and lockout after 5 failed attempts for 30 minutes; each role is signed out after its own idle minutes, Staff 60 and Admin 30, both settings (ADR-048, amended by ADR-078 on main, pending merge; Sunday, November 08, 2026 — 18:35 PHT); ADR-056 chose SPA cookie mode. |
+| Auth and roles | The access matrix in `Module-Overview.md` covers 11 rows (Modules 1 to 5 and 7 to 11, plus 2a) × 2 roles. ADR-015 sets a 7-day session lifetime and lockout after 5 failed attempts for 5 minutes; each role is signed out after its own idle minutes, Staff 60 and Admin 30, both settings (ADR-048, amended by ADR-078 on main, pending merge; Sunday, November 08, 2026 — 18:35 PHT); ADR-056 chose SPA cookie mode. |
 
 ---
 

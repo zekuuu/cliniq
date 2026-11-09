@@ -19,7 +19,7 @@ Brought up to date with ADR-001 to ADR-053 on Thursday, October 29, 2026. It say
 - **Backend (separate, consumed via REST API):** Laravel (PHP), MariaDB (XAMPP, MySQL-compatible), Laravel Sanctum for authentication.
 - **Build target:** `npm run build` produces static assets served by Laravel/Apache on the clinic computer — no SSR, no edge functions, no cloud-only APIs. Assume everything must work with zero internet access.
 - **State/data fetching:** one small shared helper for loading, errors and retry, with each feature keeping its own request functions (ADR-013). Until the backend exists every request goes through the central mock-data layer (ADR-014); screens never read the mock data directly.
-- **Auth model:** token-based login against Laravel Sanctum; two roles gate the UI (Staff, Admin/Principal — see Section 3). A **Staff** session lasts 1 week, until the token expires, with no idle timeout, so do not build inactivity-logout logic for Staff (ADR-015). The **Admin/Principal** is signed out after 30 idle minutes, with a notice about a minute before (ADR-048). When a token expires, the user simply lands back on Login.
+- **Auth model:** token-based login against Laravel Sanctum; two roles gate the UI (Staff, Admin/Principal — see Section 3). Each role is signed out after its idle setting (Staff 60 minutes, Admin/Principal 30, each 10 to 240, set by Staff on the Settings page), with a warning and countdown two minutes before; a session also ends 7 days after sign-in (ADR-015, ADR-048, ADR-078). When a token expires, the user simply lands back on Login.
 
 ## 3. User Roles & Permissions
 
@@ -38,7 +38,7 @@ Brought up to date with ADR-001 to ADR-053 on Thursday, October 29, 2026. It say
 Give the agent this full list — it maps directly to the module groups (baseline + enhancements) in Modules & Features. The numbers are identifiers, kept stable so references stay valid; they are not a count, and removed screens leave gaps. Each screen is one route in the app.
 
 ### Auth & Shell
-1. **Login** — username/password, role-aware redirect after login; a Staff session lasts 1 week until the token expires, with no idle timeout, while the Admin/Principal is signed out after 30 idle minutes (ADR-048); a "Forgot password?" link starts the email reset when the computer is online, with the Admin's reset as the fallback
+1. **Login** — username/password, role-aware redirect after login; each role is signed out after its idle setting (Staff 60, Admin/Principal 30 minutes; ADR-078), and Login then says so; a "Forgot password?" link starts the email reset when the computer is online, with the Admin's reset as the fallback
 2. **Force Password Change** — shown on first login (backend enforces this)
 3. **App Shell/Nav** — role-aware sidebar or nav; Staff sees all modules, Admin sees Dashboard, Activity calendar, Students and Incidents (read only, ADR-038), Reports, Audit Log, Accounts and Backup. For the Admin, Ctrl+P / Cmd+P does nothing and the browser's own Print prints only "Printing is done by the clinician." (ADR-038). The desktop header shows the signed-in user's name and role with a red, icon-only Log out control carrying an accessible label.
 
@@ -79,7 +79,7 @@ Give the agent this full list — it maps directly to the module groups (baselin
 18c. **Follow-Up List View (Staff)** — all follow-ups, filterable by status (Pending / Completed / Missed / Cancelled); each pending row has one status control to mark it Completed, Missed, or Cancelled (Missed and Cancelled ask for confirmation; Completed, the expected outcome, does not). Shows **masked LRN**, not full name, per the display-privacy rule (multi-student list). There is no separate follow-up detail screen Missed and Cancelled ask for a required reason (shown under the status), then offer "Set a new date". A pending follow-up is overdue 3 days after its date and closes itself as Missed with a "No response" note after 7 days (ADR-051).
 
 ### Reports Generation
-19. **Monthly Report View/Generate** — with a weekly breakdown and exact counts (ADR-050); the clinician can also print the **monthly inventory print** (New Purchase, Total Available, Ending Inventory per item). The Admin reads it on screen and cannot print
+19. **Monthly Report View/Generate** — with a weekly breakdown and exact counts (ADR-050); the clinician can also print the **monthly inventory print** (New Purchase, Total Available, Ending Inventory per item). The Admin reads it on screen and cannot print: the Admin's Reports page is a Report month drop-down and the four monthly reports, each opened as a view-only sheet (ADR-077)
 20. **Incident register** (formerly Incident Report Archive; rows open the report, or Complete Stage 2)
 21. **Complaint summary** (formerly Health Summaries View)
 21a. **Sports Reports** (ADR-034, Staff only; entry from Reports): the saved-reports list, the builder (title, activity, requested by, look-back window, conditions option, students by name or LRN search or a whole grade; no per-student note since November 3, 2026), and the report view with its preview and A4 printout.
@@ -275,7 +275,7 @@ Where a requirement doesn't specify behavior, use established usability judgment
 
 ## 8. Non-Functional Requirements
 
-- No external CDN dependencies that require live internet access at runtime (LAN-only deployment).
+- No external CDN dependencies that require live internet access at runtime (clinic-PC-only deployment, ADR-079).
 - RA 10173 (Philippine Data Privacy Act) awareness: only Staff and, read-only, the Admin/Principal see student health data (the Admin does not print and does not see staff patients); every login, action, print and profile or incident-report opening is logged (see the AuditLogEntry entity above) so access stays attributable and auditable. PE/Sports Instructors have no account (ADR-029).
 - Role-based UI gating must be enforced by the backend too — don't rely on hiding buttons in the frontend as the only access control.
 

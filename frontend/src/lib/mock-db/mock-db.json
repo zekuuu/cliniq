@@ -27,7 +27,8 @@
       "feverFromC": 37
     },
     "medicalCertificateAfterDays": 3,
-    "adminIdleMinutes": 30,
+    "idleSignoutMinutesStaff": 60,
+    "idleSignoutMinutesAdmin": 30,
     "clusterMinStudents": 3,
     "clusterWindowDays": 3,
     "followUpOverdueAfterDays": 3,

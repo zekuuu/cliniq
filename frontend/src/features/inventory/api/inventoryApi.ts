@@ -47,8 +47,10 @@ export interface InventoryFormValues {
   brand: '' | ItemBrand
   /** "Avoid if allergic to" words, comma-separated (ADR-049, D8). Optional. */
   avoidIfAllergicTo: string
-  /** "Commonly used for": symptom options (visit complaint-type labels). Optional. */
+  /** "Commonly used for": the ticked symptom options (visit complaint-type labels). Required with `usedForOther` (Zean, November 8, 2026). */
   usedFor: string[]
+  /** "Other" symptoms not in the list, comma-separated; null while "Other" is unticked. */
+  usedForOther: string | null
 }
 
 export interface InventoryFormContext {
@@ -116,7 +118,7 @@ export function saveInventoryItem(
       noExpirationConfirmed: values.noExpirationConfirmed,
       brand: values.brand || null,
       avoidIfAllergicTo: values.avoidIfAllergicTo.split(','),
-      usedFor: values.usedFor,
+      usedFor: [...values.usedFor, ...(values.usedForOther ?? '').split(',')],
     },
     options,
   )

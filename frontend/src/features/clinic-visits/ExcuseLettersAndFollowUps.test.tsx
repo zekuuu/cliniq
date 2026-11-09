@@ -93,18 +93,20 @@ describe('replacement letters (EX-3)', () => {
   })
 })
 
-describe('Missed and Cancelled need a reason (FU-4)', () => {
+describe('Cancelled needs a reason; Missed may have one (FU-4; Zean, November 8, 2026)', () => {
   beforeEach(() => resetMockDb())
 
-  it('refuses a missing reason, keeps it on the follow-up, and "Set a new date" creates a pending copy', async () => {
-    const [pending] = await listFollowUps({ status: 'pending' })
-    await expect(setFollowUpStatus(pending.id, 'missed')).rejects.toThrow(/reason/)
+  it('marks Missed without a reason, refuses Cancelled without one, keeps a given reason, and "Set a new date" creates a pending copy', async () => {
+    const [pending, other] = await listFollowUps({ status: 'pending' })
+    await expect(setFollowUpStatus(other.id, 'cancelled')).rejects.toThrow(/reason/)
+    await setFollowUpStatus(other.id, 'missed')
+    expect((await listFollowUps({ status: 'missed' })).find((f) => f.id === other.id)?.statusReason).toBeNull()
     await setFollowUpStatus(pending.id, 'missed', undefined, 'Student transferred section')
     expect((await listFollowUps({ status: 'missed' })).find((f) => f.id === pending.id)?.statusReason).toBe('Student transferred section')
     await expect(rescheduleFollowUp(pending.id, addDays(getMockToday(), -1))).rejects.toThrow(/past/)
     const next = await rescheduleFollowUp(pending.id, addDays(getMockToday(), 3))
     expect(next).toMatchObject({ status: 'pending', studentId: pending.studentId, reason: pending.reason, relatedRecord: pending.relatedRecord })
-    expect(getRecordedAuditEntries().map((e) => e.actionType)).toEqual(['update', 'create'])
+    expect(getRecordedAuditEntries().map((e) => e.actionType)).toEqual(['update', 'update', 'create'])
   })
 })
 

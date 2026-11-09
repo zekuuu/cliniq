@@ -17,7 +17,7 @@
 
 ## Open work at a glance
 
-Open: FIX 4 · AUDIT 0 · DOC 31 · DECIDE 1 · LATER 13 | Notes: NOTE 77 · VERIFY 30 | Done: 487 (all in `Issues-Done-Archive.md`) (recounted Sunday, November 08, 2026 — 17:42 PHT)
+Open: FIX 4 · AUDIT 0 · DOC 31 · DECIDE 1 · LATER 13 | Notes: NOTE 77 · VERIFY 30 | Done: 491 (all in `Issues-Done-Archive.md`) (recounted Monday, November 09, 2026 — 18:08 PHT)
 
 **Open `FIX` items:** Import page empty steps fail colour contrast (Pager field, history scroll, report link and name split); keyboard-shortcut tips fail colour contrast (Professor's consultation, November 6: Parts 2 to 4); close "Backend: email password reset" on `main`, and the three old failing frontend tests (Moved from Backend-Issues-and-TODOs).
 
@@ -178,7 +178,7 @@ All entries in this section are resolved. They are in [Issues-Done-Archive.md](I
 
 ### Documents
 
-- [ ] **[DOC]** **Course documents may not match the real stack** (Review #3, HIGH, VERIFY). The reviewer's copy of the architecture, style and deployment documents says HTML/CSS/JS, PHP, MySQL and XAMPP, while the system runs on React + Vite. The repo's `Tech-Stack.md` already says React, TypeScript, Vite and Laravel, so the gap is in the course deliverables outside the knowledge base. Update those diagrams (architecture style, such as layered; deployment: clinic computer, server, backup drive, school LAN) to match. The database-engine wording (MariaDB vs MySQL) is the open decision already listed above and must be settled first.
+- [ ] **[DOC]** **Course documents may not match the real stack** (Review #3, HIGH, VERIFY). The reviewer's copy of the architecture, style and deployment documents says HTML/CSS/JS, PHP, MySQL and XAMPP, while the system runs on React + Vite. The repo's `Tech-Stack.md` already says React, TypeScript, Vite and Laravel, so the gap is in the course deliverables outside the knowledge base. Update those diagrams (architecture style, such as layered; deployment: clinic computer, server, backup drive, school LAN) to match. *Update (Monday, November 09, 2026 — 18:08 PHT): the deployment diagram has no school LAN now: the clinic PC only, at `http://localhost`, with backups kept away from the room (ADR-079).* The database-engine wording (MariaDB vs MySQL) is the open decision already listed above and must be settled first.
 
 ### Notes (nothing to fix)
 

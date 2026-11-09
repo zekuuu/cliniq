@@ -83,7 +83,7 @@ export function FollowUpListPage() {
   // An inline row action: the row flips at once, a message confirms it, and a failure puts it back (useSaveFeedback).
   const feedback = useSaveFeedback()
   const [confirming, setConfirming] = useState<null | { item: FollowUpRow; status: 'missed' | 'cancelled' }>(null)
-  // Panel review FU-4: Missed and Cancelled need a reason; Missed then offers "Set a new date".
+  // Panel review FU-4: Cancelled needs a reason; Missed's is optional (Zean, November 8, 2026) and then offers "Set a new date".
   const [reason, setReason] = useState('')
   const [reasonError, setReasonError] = useState('')
   const [rescheduling, setRescheduling] = useState<null | FollowUpRow>(null)
@@ -153,7 +153,7 @@ export function FollowUpListPage() {
   }
   function confirmClosing() {
     if (!confirming) return
-    if (!reason.trim()) {
+    if (confirming.status === 'cancelled' && !reason.trim()) {
       setReasonError('Give the reason.')
       return
     }
@@ -339,7 +339,8 @@ export function FollowUpListPage() {
             <Textarea
               className="mt-4"
               label="Reason"
-              required
+              required={confirming.status === 'cancelled'}
+              placeholder={confirming.status === 'missed' ? 'Optional' : undefined}
               rows={2}
               maxLength={300}
               value={reason}

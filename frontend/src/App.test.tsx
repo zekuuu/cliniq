@@ -114,3 +114,27 @@ describe('login gate', () => {
     expect(getAuthenticatedUser()).toBeNull()
   })
 })
+
+describe('idle sign-out in the running app (ADR-078)', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    window.sessionStorage.clear()
+    resetMockDb()
+  })
+
+  it('lands on Login with the inactivity message', async () => {
+    const { act } = await import('@testing-library/react')
+    const { startMockSession } = await import('./lib/mock-db')
+    vi.useFakeTimers()
+    try {
+      startMockSession({ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' })
+      openAt('/settings')
+      await act(() => vi.advanceTimersByTimeAsync(2_000))
+      await act(() => vi.advanceTimersByTimeAsync(60 * 60_000 + 2_000))
+      expect(window.location.pathname).toBe('/login')
+      expect(screen.getByText('You were signed out after 60 minutes of inactivity. Sign in again.')).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})

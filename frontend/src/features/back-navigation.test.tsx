@@ -114,6 +114,7 @@ describe('Back after a save never returns to the submitted form', () => {
     await user.type(screen.getByLabelText(/low-stock threshold/i), '2')
     // ADR-035 on Add Item: a date, or the explicit no-expiration tick.
     await user.click(screen.getByLabelText(/this item has no expiration date/i))
+    await user.click(screen.getByRole('checkbox', { name: 'Headache' }))
     await user.click(screen.getByRole('button', { name: 'Add Item' }))
     await screen.findByText('Saline solution was added successfully.')
 

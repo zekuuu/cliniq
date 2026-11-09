@@ -47,6 +47,8 @@ const NO_BACK: Record<string, string> = {
   'admin /users': 'Top-level sidebar destination.',
   'staff /backup': 'Top-level sidebar destination.',
   'admin /backup': 'Top-level sidebar destination (ADR-037).',
+  'staff /settings': 'Top-level sidebar destination (ADR-078).',
+  'admin /settings': 'Top-level sidebar destination (ADR-078).',
 }
 
 /** A real record for each route parameter, from the mock seed. */

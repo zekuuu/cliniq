@@ -69,7 +69,8 @@ describe('Audit Log and Privacy Policy', () => {
         <AppRoutes user={STAFF} onLogout={() => {}} />
       </MemoryRouter>,
     )
-    await screen.findByRole('heading', { name: 'Audit Log' })
+    // A lazy route: its first import can pass 1 s under the parallel suite (as in AppRoutes.test.tsx).
+    await screen.findByRole('heading', { name: 'Audit Log' }, { timeout: 5000 })
     await user.click(screen.getByRole('button', { name: /target \/ module/i }))
     await user.click(screen.getByRole('checkbox', { name: 'Staff' }))
     await user.keyboard('{Escape}')

@@ -47,10 +47,10 @@ No role can view information for a student they have not specifically looked up 
 
 ## 6. How CLINIQ protects this information
 
-- Accounts are protected by individual logins; sessions last one week before requiring the user to sign in again.
-- Repeated failed login attempts lock the account for 30 minutes.
+- Accounts are protected by individual logins. A person is signed out after a period without activity (60 minutes for clinic staff and 30 for the Admin, by default) and at the latest one week after signing in (ADR-078).
+- Repeated failed login attempts lock the account for 5 minutes.
 - Every access and change to a record is logged, with who performed it and when.
-- The system runs on the school's local network; it is not exposed to the public internet.
+- The system runs only on the clinic's computer; other computers and the internet cannot reach it (ADR-079).
 - Daily backups are kept and periodically verified.
 
 ## 7. Minors' information

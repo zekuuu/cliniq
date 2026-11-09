@@ -128,8 +128,10 @@ export interface MockDbConfig {
    * is usually needed; never blocks (ADR-049). Starting value; the school sets the real limit.
    */
   medicalCertificateAfterDays: number
-  /** Minutes without pointer, key or scroll activity before the Admin is signed out (ADR-048). The clinician has no timeout. */
-  adminIdleMinutes: number
+  /** Minutes without activity before Staff are signed out (ADR-078). 10 to 240; Staff edit. */
+  idleSignoutMinutesStaff: number
+  /** Minutes without activity before the Admin is signed out (ADR-048, a setting since ADR-078). 10 to 240; Staff edit. */
+  idleSignoutMinutesAdmin: number
   /** A possible cluster: at least this many students with the same complaint and grade (ADR-050)... */
   clusterMinStudents: number
   /** ...within this many calendar days, today included. Starting values, nurse to confirm. */

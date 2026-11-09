@@ -1,3 +1,4 @@
+import { API_ACTIVITY_EVENT, emit } from '../sessionActivity'
 /**
  * MOCK ONLY: dev switches for previewing loading, empty, and error states. They exist because the
  * universal skeleton/empty/error requirements (Design-System.md) can't be audited without them.
@@ -63,8 +64,10 @@ export function latencyMs(): number {
   return mockMode() === 'slow' ? SLOW_LATENCY_MS : DEFAULT_LATENCY_MS
 }
 
-/** Waits like a LAN request would, then rejects in `?mock=error` mode. Instant under Vitest. */
+/** Waits like a request to the local server would, then rejects in `?mock=error` mode. Instant under Vitest. */
 export async function simulateRequest(label: string): Promise<void> {
+  // Every API call counts as activity for the idle sign-out (ADR-078).
+  emit(API_ACTIVITY_EVENT)
   const ms = latencyMs()
   if (ms > 0) await new Promise((resolve) => setTimeout(resolve, ms))
   if (mockMode() === 'error') throw new Error(`Mock failure: ${label}`)

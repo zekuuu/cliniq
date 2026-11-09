@@ -1,4 +1,5 @@
-import { useContext, type RefObject } from 'react'
+import { useContext, useEffect, type RefObject } from 'react'
+import { markFormDirty } from '../../lib/sessionActivity'
 import { UNSAFE_DataRouterContext, useBlocker } from 'react-router'
 import { Button } from '../ui/Button'
 import { Modal } from '../ui/Modal'
@@ -32,5 +33,7 @@ function RouteLeaveGuard({ dirty, allowed }: { dirty: boolean; allowed?: RefObje
  * `useBlocker` needs the data router `App` uses; under a plain test router there is nothing to guard.
  */
 export function UnsavedChangesGuard({ dirty, allowed }: { dirty: boolean; allowed?: RefObject<boolean> }) {
+  // The idle sign-out warns that unsaved changes will be lost (ADR-078).
+  useEffect(() => (dirty ? markFormDirty() : undefined), [dirty])
   return useContext(UNSAFE_DataRouterContext) ? <RouteLeaveGuard dirty={dirty} allowed={allowed} /> : null
 }

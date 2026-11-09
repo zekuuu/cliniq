@@ -1070,7 +1070,7 @@ INSERT INTO system_settings (setting_key, setting_value, value_type, description
   ('cluster_ratio',                 '2',  'decimal', 'Multiple of that complaint average that counts as a cluster (open product decision)'),
   ('top_complaints',                '5',  'int', 'Top complaints drawn on the trend chart'),
   ('lockout_max_attempts',          '5',  'int', 'Failed logins before an account locks (ADR-015)'),
-  ('lockout_minutes',               '30', 'int', 'Lock duration in minutes (ADR-015)'),
+  ('lockout_minutes',               '5',  'int', 'Lock duration in minutes (ADR-015)'),
   ('password_min_length',           '8',  'int', 'Minimum password length (Module 1)'),
   ('password_history_count',        '5',  'int', 'Previous passwords that cannot be reused (Module 1)'),
   ('retention_years_after_archive', '5',  'int', 'Years an archived student or staff-patient record is kept before deletion (ADR-057)'),

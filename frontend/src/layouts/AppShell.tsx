@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { useIdleSignOut } from '../hooks/useIdleSignOut'
 import { Link } from 'react-router'
@@ -7,7 +7,8 @@ import { Button, Modal } from '../components'
 import { cn } from '../lib/cn'
 import { ADMIN_PRINT_NOTE } from '../components'
 import { canPrint } from '../hooks/usePrinting'
-import { getAdminIdleMinutes, getOwnAccount, logoutMockSession, type SessionUser } from '../lib/mock-db'
+import { getIdleSignoutMinutes, getOwnAccount, logoutMockSession, type SessionUser } from '../lib/mock-db'
+import { anyFormDirty, IDLE_SETTINGS_CHANGED_EVENT, subscribeDirtyForms } from '../lib/sessionActivity'
 import { showKeyboardShortcuts } from '../lib/shortcuts'
 import { ACCOUNT_CHANGED_EVENT } from '../lib/accountEvents'
 import { BrandLogo, Sidebar } from './Sidebar'
@@ -56,6 +57,16 @@ function LiveClock() {
   )
 }
 
+/** "1:30" from 90 seconds. */
+function countdown(seconds: number) {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+}
+
+/** The last announcement point reached: each half minute, then each of the last 10 seconds. */
+function announced(seconds: number): number {
+  return seconds <= 10 ? seconds : Math.ceil(seconds / 30) * 30
+}
+
 export function AppShell({ user, active, children, onLogout }: AppShellProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
@@ -72,13 +83,20 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
   const { data: account } = useAsyncData(`own-account|${user.id}|${accountVersion}`, () => getOwnAccount())
   const navGroups = navGroupsFor(user.role)
   const printBlocked = !canPrint(user)
-  // ADR-048: only the Admin is signed out after `config.adminIdleMinutes` without activity.
-  const { data: idleMinutes } = useAsyncData(`admin-idle|${user.role}`, () =>
-    user.role === 'admin' ? getAdminIdleMinutes() : Promise.resolve(null),
-  )
-  const idleWarning = useIdleSignOut(idleMinutes ?? null, () => {
-    void logoutMockSession(user, `Signed out after ${idleMinutes} minutes of inactivity`).then(() => onLogout(idleMinutes ?? undefined))
+  // ADR-078: each role is signed out after its own idle setting (Staff 60, Admin 30 by default).
+  // Saving the settings bumps the version, so the next countdown uses the new value.
+  const [idleVersion, setIdleVersion] = useState(0)
+  useEffect(() => {
+    const changed = () => setIdleVersion((version) => version + 1)
+    window.addEventListener(IDLE_SETTINGS_CHANGED_EVENT, changed)
+    return () => window.removeEventListener(IDLE_SETTINGS_CHANGED_EVENT, changed)
+  }, [])
+  const { data: idleMinutes } = useAsyncData(`idle-minutes|${user.role}|${idleVersion}`, () => getIdleSignoutMinutes(user.role))
+  const idle = useIdleSignOut(idleMinutes ?? null, () => {
+    // User and action only; Login says how many minutes (ADR-078).
+    void logoutMockSession(user, 'Signed out (idle)').then(() => onLogout(idleMinutes ?? undefined))
   })
+  const formDirty = useSyncExternalStore(subscribeDirtyForms, anyFormDirty)
 
   // ADR-038 item 3: Ctrl+P / Cmd+P does nothing for the Admin. The browser's own menu can't be
   // blocked; then the page prints only the note below instead of the screen (index.css).
@@ -238,13 +256,26 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
           </Button>
         </div>
       </Modal>
-      <Modal open={idleWarning} title="Still there?" onClose={() => {}}>
-        <p className="text-sm text-text-secondary">
-          For privacy, the Admin account signs out after {idleMinutes} minutes without activity. You will be signed out in about a minute.
+      {/* ADR-078: Escape, the backdrop and the X all mean Stay signed in. */}
+      <Modal open={idle.secondsLeft !== null} title="Still there?" onClose={idle.stay}>
+        <p className="text-sm text-text-primary">
+          You will be signed out in <span className="font-semibold tabular-nums">{countdown(idle.secondsLeft ?? 0)}</span> because of inactivity.
+          {formDirty && <span className="font-semibold"> Unsaved changes will be lost.</span>}
         </p>
-        <div className="mt-5 flex justify-end">
-          {/* Any key, click or scroll keeps the session; the button gives that an obvious target. */}
-          <Button variant="primary" data-autofocus>Stay signed in</Button>
+        <p className="mt-2 text-sm text-text-secondary">
+          For privacy on a shared computer, CLINIQ signs out after {idleMinutes} minutes without activity.
+        </p>
+        {/* Announced politely, every 30 seconds and in the last 10, not every second. */}
+        <p role="status" className="sr-only">
+          {idle.secondsLeft !== null ? `You will be signed out in ${countdown(announced(idle.secondsLeft))} because of inactivity.` : null}
+        </p>
+        <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <Button variant="neutral" onClick={() => void handleLogout()}>
+            Sign out now
+          </Button>
+          <Button variant="primary" data-autofocus onClick={idle.stay}>
+            Stay signed in
+          </Button>
         </div>
       </Modal>
       <AuthenticatorDialog

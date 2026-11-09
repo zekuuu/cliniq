@@ -1,3 +1,4 @@
+> **Note, Sunday, November 08, 2026 — 20:32 PHT:** ADR-078 makes the Admin's 30 minutes a setting (`idleSignoutMinutesAdmin`, 10 to 240, Staff edit) and adds `idleSignoutMinutesStaff` (60) for the clinician. The warning now comes two minutes before, and the audit entry reads "Signed out (idle)" with no minutes.
 > **Note, Saturday, November 07, 2026 — 06:37 PHT:** Zean, in chat, Saturday, November 7, 2026 — 04:20 PHT: "Password recovery by authenticator app ... which works offline. It is not 'Sign in with Google'." The **email password reset** below is **replaced** by [ADR-073](ADR-073-Password-Recovery-With-An-Authenticator-App.md); no email address is needed on accounts. The rest of this ADR stands.
 
 # ADR-048: Admin sign-out, Acknowledge on an incident report, email password reset, and logging who opens a record

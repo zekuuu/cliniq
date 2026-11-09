@@ -35,6 +35,11 @@ Every printout has:
 
 - **A4 portrait** (`@page { size: A4 }` in `frontend/src/index.css`). The school has not yet confirmed
   A4 is its paper; the team chose it.
+- **The saved PDF's file name:** a report meant to be sent as a PDF passes `fileName` to
+  `PrintDocument`, for example "CLINIQ Monthly Report, November 2026". While printing it becomes the tab
+  title, which Chrome offers as the file name, and the screen's title comes back afterwards (ADR-079).
+- **Before sending a PDF** (the Principal's Monthly Report, ADR-079): in Chrome's print window choose
+  Save as PDF, paper size A4, margins Default, and untick "Headers and footers".
 - A **landscape** page (`landscape` prop, `@page landscape`) only for a table that can't be read in
   portrait. None needs it today; the Audit Log reads in portrait.
 - Body text about 10pt, tables no smaller than 9pt, the excuse letter, incident report and visit

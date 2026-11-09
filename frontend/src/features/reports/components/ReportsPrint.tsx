@@ -11,6 +11,7 @@ import {
 import { formatDateTime } from '../../../lib/dates'
 import { ROLE_LABELS, type ComplaintCount, type SessionUser } from '../../../lib/mock-db'
 import { DISPOSITION_LABELS } from '../../../lib/dispositions'
+import { maskPatientNumber } from '../../../lib/patients'
 import type { MonthlyReportData } from '../api/reportsApi'
 import { InventorySheetPrint, VisitsBySexPrint, WeeklyComplaintsPrint } from './MonthlyTables'
 
@@ -60,7 +61,8 @@ function ComplaintBreakdown({ rows, empty, chart = false }: { rows: ComplaintCou
   )
 }
 
-function IncidentTable({ rows }: { rows: ArchiveRow[] }) {
+/** `masked`: the on-screen copy keeps the screen rule, masked LRNs (ADR-040 item 2); paper prints the full LRN (ADR-044). */
+function IncidentTable({ rows, masked = false }: { rows: ArchiveRow[]; masked?: boolean }) {
   return (
     <PrintTable
       caption="Incidents"
@@ -68,7 +70,7 @@ function IncidentTable({ rows }: { rows: ArchiveRow[] }) {
       rowKey={(row) => row.id}
       empty="No incidents were recorded this month."
       columns={[
-        { header: 'LRN or Staff No.', width: '18%', cell: (row) => row.patient.number },
+        { header: 'LRN or Staff No.', width: '18%', cell: (row) => (masked ? maskPatientNumber(row.patient) : row.patient.number) },
         { header: 'Date and time', width: '26%', cell: (row) => formatDateTime(row.time) },
         { header: SYMPTOM, cell: (row) => row.complaint },
         { header: 'Stage and status', width: '26%', cell: stageText },
@@ -85,6 +87,7 @@ export function ReportsPrint({
   archiveRows,
   archiveOrder,
   viewer,
+  readOnly = false,
 }: {
   view: ReportView
   data: MonthlyReportData
@@ -96,6 +99,11 @@ export function ReportsPrint({
   /** How the archive is sorted, in words, e.g. "date, newest first". */
   archiveOrder: string
   viewer: SessionUser
+  /**
+   * The Admin's view-only copy (ADR-077): the same document shown on screen as a paper sheet, with
+   * masked LRNs and no "Prepared by" name (the clinician who prints signs it). Nothing prints from it.
+   */
+  readOnly?: boolean
 }) {
   const totalVisits = data.complaintCounts.reduce((sum, row) => sum + row.count, 0)
 
@@ -103,10 +111,12 @@ export function ReportsPrint({
     return (
       <PrintDocument
         viewer={viewer}
+        onScreen={readOnly}
         title={`Incident register — ${month}`}
+        fileName={`CLINIQ Incident register, ${month}`}
         scope={`Incidents recorded in ${month}: ${data.incidents.length} ${data.incidents.length === 1 ? 'incident' : 'incidents'}, sorted by ${archiveOrder}. Students are identified by their LRN, staff by Staff No.`}
       >
-        <IncidentTable rows={archiveRows} />
+        <IncidentTable rows={archiveRows} masked={readOnly} />
       </PrintDocument>
     )
 
@@ -114,7 +124,9 @@ export function ReportsPrint({
     return (
       <PrintDocument
         viewer={viewer}
+        onScreen={readOnly}
         title={`Monthly Inventory — ${month}`}
+        fileName={`CLINIQ Inventory sheet, ${month}`}
         scope={`Medicines and supplies in ${month}: ${data.inventory.length} ${data.inventory.length === 1 ? 'item' : 'items'}. Computed from the recorded stock movements.`}
       >
         <InventorySheetPrint rows={data.inventory} />
@@ -123,7 +135,7 @@ export function ReportsPrint({
           Purchase. Ending Inventory: stock at the end of the month, after dispensing, adjustments and expiry
           write-offs.
         </PrintNote>
-        <PrintSignatures lines={[{ heading: 'Prepared by:', name: viewer.name, position: ROLE_LABELS.staff }]} />
+        <PrintSignatures lines={[{ heading: 'Prepared by:', name: readOnly ? undefined : viewer.name, position: ROLE_LABELS.staff }]} />
       </PrintDocument>
     )
 
@@ -131,7 +143,9 @@ export function ReportsPrint({
     return (
       <PrintDocument
         viewer={viewer}
+        onScreen={readOnly}
         title={`${SYMPTOM} summary — ${month}`}
+        fileName={`CLINIQ ${SYMPTOM} summary, ${month}`}
         scope={`Clinic visits per ${symptom} in ${month}: ${totalVisits} ${totalVisits === 1 ? 'visit' : 'visits'} across ${data.complaintCounts.length} ${data.complaintCounts.length === 1 ? symptom : symptoms}.`}
       >
         <ComplaintBreakdown
@@ -160,7 +174,9 @@ export function ReportsPrint({
   return (
     <PrintDocument
       viewer={viewer}
+      onScreen={readOnly}
       title={`Monthly Clinic Report — ${month}`}
+      fileName={`CLINIQ Monthly Report, ${month}`}
       scope={`Clinic visits, incidents, and follow-ups dated in ${month}, with ${previousMonth} beside the totals. Totals and masked LRNs only; no student is named.`}
     >
       <PrintSection title="Totals">
@@ -247,12 +263,12 @@ export function ReportsPrint({
       </PrintSection>
 
       <PrintSection title="Incidents">
-        <IncidentTable rows={data.incidents} />
+        <IncidentTable rows={data.incidents} masked={readOnly} />
       </PrintSection>
 
       <PrintSignatures
         lines={[
-          { heading: 'Prepared by:', name: viewer.name, position: ROLE_LABELS.staff },
+          { heading: 'Prepared by:', name: readOnly ? undefined : viewer.name, position: ROLE_LABELS.staff },
           { heading: 'Reviewed by:', name: data.principalName ?? undefined, position: 'Principal' },
         ]}
       />

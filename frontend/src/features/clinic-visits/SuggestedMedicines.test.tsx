@@ -115,7 +115,7 @@ describe('"Commonly used for" on the item form (Staff)', () => {
   it('saves the tags in the list order and audits the field name only', async () => {
     const user = userEvent.setup()
     renderWithRouter(<InventoryFormPage />, { route: '/inventory/new?item=item-0003' })
-    const group = await screen.findByRole('group', { name: 'Commonly used for' })
+    const group = await screen.findByRole('group', { name: /^Commonly used for/ })
     await user.click(within(group).getByRole('checkbox', { name: 'Fever' }))
     await user.click(within(group).getByRole('checkbox', { name: 'Allergic reaction' }))
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
@@ -135,7 +135,7 @@ describe('"Commonly used for" on the item form (Staff)', () => {
 
   it('shows the starter tags on a seeded item', async () => {
     renderWithRouter(<InventoryFormPage />, { route: '/inventory/new?item=item-0001' })
-    const group = await screen.findByRole('group', { name: 'Commonly used for' })
+    const group = await screen.findByRole('group', { name: /^Commonly used for/ })
     expect(within(group).getByRole('checkbox', { name: 'Fever' })).toBeChecked()
     expect(within(group).getByRole('checkbox', { name: 'Headache' })).toBeChecked()
     expect(within(group).getByRole('checkbox', { name: 'Toothache' })).not.toBeChecked()
@@ -166,9 +166,11 @@ describe('seed integrity for "Commonly used for"', () => {
     return checkSeedIntegrity(copy as never).join('\n')
   }
 
-  it('accepts the seed and rejects an unknown symptom, a repeat or the wrong order', () => {
+  it('accepts the seed and an "Other" word, and rejects a blank, a repeat or the wrong order', () => {
     expect(checkSeedIntegrity(seed)).toEqual([])
-    expect(broken((items) => (items[0].usedFor = ['Sore eyes']))).toMatch(/usedFor: "Sore eyes" isn't in frontendOnly.visitComplaintTypes/)
+    expect(broken((items) => (items[0].usedFor = ['Fever', 'Sore eyes']))).toBe('')
+    expect(broken((items) => (items[0].usedFor = ['Sore eyes', 'Fever']))).toMatch(/visitComplaintTypes order/)
+    expect(broken((items) => (items[0].usedFor = [' ']))).toMatch(/must be a symptom option or a typed word/)
     expect(broken((items) => (items[0].usedFor = ['Fever', 'Fever']))).toMatch(/lists a symptom twice/)
     expect(broken((items) => (items[0].usedFor = ['Fever', 'Headache']))).toMatch(/visitComplaintTypes order/)
   })

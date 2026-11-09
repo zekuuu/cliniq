@@ -27,6 +27,7 @@ export type NavKey =
   | 'accounts'
   | 'backup'
   | 'archive'
+  | 'settings'
 
 export interface NavItem {
   key: NavKey
@@ -52,6 +53,7 @@ const ALL: Record<NavKey, NavItem> = {
   accounts: { key: 'accounts', label: 'Accounts', icon: 'userCog', available: true, to: paths.users },
   backup: { key: 'backup', label: 'Backup', icon: 'refresh', available: true, to: paths.backup },
   archive: { key: 'archive', label: 'Archive', icon: 'archive', available: true, to: paths.archive },
+  settings: { key: 'settings', label: 'Settings', icon: 'clock', available: true, to: paths.settings },
 }
 
 export interface NavGroup {
@@ -65,7 +67,7 @@ export function navGroupsFor(role: UserRole): NavGroup[] {
       { label: 'Overview', items: [ALL.dashboard, ALL.calendar] },
       { label: 'Patient Care', items: [ALL.students, ALL.incidents] },
       { label: 'Reporting', items: [ALL.reports, ALL.auditLog] },
-      { label: 'Administration', items: [ALL.accounts, ALL.backup, ALL.archive] },
+      { label: 'Administration', items: [ALL.accounts, ALL.backup, ALL.archive, ALL.settings] },
     ]
   }
   return [
@@ -73,6 +75,6 @@ export function navGroupsFor(role: UserRole): NavGroup[] {
     // ADR-043: staff patients are the School Clinician's only; the Admin has no Staff item.
     { label: 'Patient Care', items: [ALL.students, ALL.staff, ALL.visits, ALL.incidents, ALL.followUps] },
     { label: 'Operations', items: [ALL.inventory, ALL.reports] },
-    { label: 'Administration', items: [ALL.backup, ALL.auditLog, ALL.archive] },
+    { label: 'Administration', items: [ALL.backup, ALL.auditLog, ALL.archive, ALL.settings] },
   ]
 }

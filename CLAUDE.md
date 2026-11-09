@@ -1,6 +1,6 @@
 # CLAUDE.md — Start Here
 
-You are working on **CLINIQ: Intelligent Clinic Tracking and Monitoring System**, a clinic tracking system for Mendez Christian Academy (a Philippine private school, ~900 students, one nurse, one shared workstation, hosted on the clinic computer, LAN-only deployment). This file is the entry point — read it before touching any code or documentation.
+You are working on **CLINIQ: Intelligent Clinic Tracking and Monitoring System**, a clinic tracking system for Mendez Christian Academy (a Philippine private school, ~900 students, one nurse, one shared workstation, hosted on the clinic computer and used only there at `http://localhost`, no LAN access, ADR-079). This file is the entry point — read it before touching any code or documentation.
 
 ## Before you start any task
 

@@ -271,7 +271,7 @@ All twenty-nine distinct features identified across the ten reviewed systems and
 | Usage Reporting | – | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | – | – | ✓ | **✓** |
 | Inventory Visibility Across Rooms / Locations | – | – | ✓ | – | – | – | ✓ | – | – | – | – |
 
-\* CLINIQ runs on the client's local LAN for this implementation; the React + Laravel architecture is API-driven, so a move to remote/cloud hosting later is a deployment change, not a redesign (Project Plan, Section 1.4).
+\* CLINIQ runs on the clinic PC only for this implementation, with no LAN access (ADR-079); the React + Laravel architecture is API-driven, so a move to remote/cloud hosting later is a deployment change, not a redesign (Project Plan, Section 1.4).
 
 ---
 

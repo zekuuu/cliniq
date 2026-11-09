@@ -114,7 +114,7 @@ describe('lockouts are audit-logged (Zean, Friday, October 23, 2026)', () => {
     expect(getRecordedAuditEntries()).toEqual([])
     await expect(authenticateMockUser('demo.nurse', 'wrong-4')).rejects.toMatchObject({ reason: 'locked' })
     expect(getRecordedAuditEntries()).toEqual([
-      expect.objectContaining({ userId: STAFF.id, actionType: 'login', targetRecord: { type: 'user', id: STAFF.id }, summary: 'Account locked for 30 minutes after 5 wrong passwords (sign-in)' }),
+      expect.objectContaining({ userId: STAFF.id, actionType: 'login', targetRecord: { type: 'user', id: STAFF.id }, summary: 'Account locked for 5 minutes after 5 wrong passwords (sign-in)' }),
     ])
     expect(JSON.stringify(getRecordedAuditEntries())).not.toContain('wrong-4')
   })

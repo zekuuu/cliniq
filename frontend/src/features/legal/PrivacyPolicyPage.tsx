@@ -212,16 +212,17 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             </h2>
             <ul className={listClass}>
               <li>
-                Accounts are protected by individual logins; sessions last one week before requiring
-                the user to sign in again.
+                Accounts are protected by individual logins. A person is signed out after a period
+                without activity (60 minutes for clinic staff and 30 for the Admin, by default) and at
+                the latest one week after signing in.
               </li>
-              <li>Repeated failed login attempts lock the account for 30 minutes.</li>
+              <li>Repeated failed login attempts lock the account for 5 minutes.</li>
               <li>
                 Every access and change to a record is logged, with who performed it and when.
               </li>
               <li>
-                The system runs on the school&apos;s local network; it is not exposed to the public
-                internet.
+                The system runs only on the clinic&apos;s computer; other computers and the internet
+                cannot reach it.
               </li>
               <li>Daily backups are kept and periodically verified.</li>
             </ul>

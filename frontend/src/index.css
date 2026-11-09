@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-/* Inter, self-hosted from node_modules and bundled into the build, so it works offline on the LAN. */
+/* Inter, self-hosted from node_modules and bundled into the build, so it works offline on the clinic PC (ADR-079). */
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/cinzel/wght.css';
 

@@ -26,7 +26,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 - Log in (username/password)
 - Log out
 - A session lasts 1 week, until the login token expires. Staff have no idle timeout, so urgent work is never interrupted (ADR-015); the Admin/Principal has the 30-minute idle sign-out above (ADR-048)
-- Account lockout after 5 consecutive failed attempts (30-minute lock)
+- Account lockout after 5 consecutive failed attempts (5-minute lock)
 - Every login logged with who and when (see Audit Trail, below)
 
 **User Account Management** *(Admin/Principal only, ADR-033)*
@@ -176,7 +176,7 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 - View list of all follow-ups (filterable by status)
 - View due/upcoming follow-ups — surfaced on the Clinic Overview Dashboard (Module 9), computed fresh each time the page loads by comparing today's date to the follow-up date, not a background or push-based alert (the system has no external SMS/push service — see Module 9 and the Out of Scope notes)
 - Mark a follow-up Completed, Missed, or Cancelled
-- Missed and Cancelled ask for a confirmation **and a required reason**, kept on the follow-up and shown in the list; after Missed (or once a follow-up reads as Missed, ADR-051), "Set a new date" offers to create a new pending follow-up for the same patient, record and reason, keeping any "Stay home until cleared" (panel review FU-4; a cancelled follow-up gets no new date, Zean, Sunday, November 1, 2026 — 11:05 PHT). Once given a new date, the Missed row leaves the Follow-Ups list; the record stays in the data (Zean, Sunday, November 1, 2026 — 11:58 PHT). Audit-logged
+- Missed and Cancelled ask for a confirmation; Cancelled needs a **required reason** and Missed's is optional (Sunday, November 08, 2026 — 22:36 PHT, Zean), kept on the follow-up and shown in the list; after Missed (or once a follow-up reads as Missed, ADR-051), "Set a new date" offers to create a new pending follow-up for the same patient, record and reason, keeping any "Stay home until cleared" (panel review FU-4; a cancelled follow-up gets no new date, Zean, Sunday, November 1, 2026 — 11:05 PHT). Once given a new date, the Missed row leaves the Follow-Ups list; the record stays in the data (Zean, Sunday, November 1, 2026 — 11:58 PHT). Audit-logged
 
 ### 4. Emergency Response — *Access: Staff; Admin/Principal reads the Incident Log and Incident Report (ADR-038), audit-logged once per report per session*
 
