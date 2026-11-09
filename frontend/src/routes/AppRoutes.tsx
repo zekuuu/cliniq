@@ -96,6 +96,8 @@ const FollowUpListPage = page(
   'FollowUpListPage',
 )
 const ReportsPage = page(() => import('../features/reports/ReportsPage'), 'ReportsPage')
+const AdminReportsPage = page(() => import('../features/reports/AdminReportsPage'), 'AdminReportsPage')
+const SettingsPage = page(() => import('../features/settings/SettingsPage'), 'SettingsPage')
 const SportsReportListPage = page(() => import('../features/reports/SportsReportListPage'), 'SportsReportListPage')
 const SportsReportPage = page(() => import('../features/reports/SportsReportPage'), 'SportsReportPage')
 const SportsReportFormPage = page(() => import('../features/reports/SportsReportFormPage'), 'SportsReportFormPage')
@@ -431,7 +433,8 @@ const APP_ROUTES: AppRoute[] = [
     title: 'Reports',
     roles: ['staff', 'admin'],
     nav: 'reports',
-    render: (viewer) => <ReportsPage viewer={viewer} />,
+    // ADR-077: the Admin gets the month drop-down and the view-only monthly reports, nothing else.
+    render: (viewer) => (viewer.role === 'admin' ? <AdminReportsPage viewer={viewer} /> : <ReportsPage viewer={viewer} />),
   },
   // Sports Reports (ADR-034): the clinician's only; the Admin/Principal can't open them.
   {
@@ -520,6 +523,14 @@ const APP_ROUTES: AppRoute[] = [
     nav: 'backup',
     render: () => <BackupStatusPage />,
   },
+  {
+    // ADR-078: the idle sign-out minutes. Staff edit; the Admin reads.
+    path: paths.settings,
+    title: 'Settings',
+    roles: ['staff', 'admin'],
+    nav: 'settings',
+    render: (viewer) => <SettingsPage viewer={viewer} />,
+  },
 ]
 
 function RouteLoading() {
@@ -555,7 +566,10 @@ export function AppRoutes({
   user,
   onLogout,
   onLogin = () => {},
+  signedOutAfterMinutes = null,
 }: {
+  /** Set after an idle sign-out, so Login can say how many minutes (ADR-078). */
+  signedOutAfterMinutes?: number | null
   /** `null` until someone signs in; every route except Login and Force Password Change then redirects to Login. */
   user: SessionUser | null
   /** `idleMinutes` when the Admin was signed out for inactivity (ADR-048). */
@@ -568,7 +582,7 @@ export function AppRoutes({
         path={paths.login}
         element={
           <PageTitle title="Sign In">
-            <LoginPage onLogin={onLogin} />
+            <LoginPage onLogin={onLogin} signedOutAfterMinutes={signedOutAfterMinutes} />
           </PageTitle>
         }
       />
@@ -609,7 +623,8 @@ export function AppRoutes({
             path={route.path}
             element={
               !allowed ? (
-                <Navigate to={paths.dashboard} replace />
+                // ADR-077: a Staff-only report route (the Sports Report) sends the Admin to the Admin's Reports page.
+                <Navigate to={route.path.startsWith(`${paths.reports}/`) ? paths.reports : paths.dashboard} replace />
               ) : (
                 withShell(user, route.nav, content, onLogout)
               )

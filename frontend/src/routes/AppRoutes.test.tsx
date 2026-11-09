@@ -97,12 +97,27 @@ describe('App routes', () => {
     '/incidents/notifications',
     '/inventory',
     '/follow-ups',
-    '/reports/sports',
   ])('redirects Admin/Principal away from the Staff-only %s to the Dashboard', async (route) => {
     renderAt(route, ADMIN)
 
     expect(await screen.findByRole('heading', { name: 'Clinic Overview' })).toBeInTheDocument()
     expect(screen.getByTestId('path')).toHaveTextContent(/^\/$/)
+  })
+
+  it.each(['/reports/sports', '/reports/sports/new', '/reports/sports/any-id', '/reports/sports/any-id/edit'])(
+    'redirects Admin/Principal from the Staff-only report route %s to the Admin Reports page (ADR-077)',
+    async (route) => {
+      renderAt(route, ADMIN)
+      expect(await screen.findByLabelText('Report month')).toBeInTheDocument()
+      expect(screen.getByTestId('path')).toHaveTextContent(/^\/reports$/)
+      expect(screen.queryByRole('tab', { name: 'Monthly Report' })).not.toBeInTheDocument()
+    },
+  )
+
+  it('keeps the Staff Reports page for Staff', async () => {
+    renderAt('/reports')
+    expect(await screen.findByRole('tab', { name: 'Monthly Report' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Sports Reports/ })).toBeInTheDocument()
   })
 
   it.each([

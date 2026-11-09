@@ -7,8 +7,11 @@ import { buttonClassName } from './buttonClassName'
 type BackTarget =
   /** History back, or `fallback` when this screen was the first one opened. Label: "Back". */
   | { fallback: string; onBack?: never; to?: never; label?: never }
-  /** A form's shared Cancel (`useCancelNavigation`), so Back and Cancel behave identically. */
-  | { onBack: () => void; fallback?: never; to?: never; label?: never }
+  /**
+   * A form's shared Cancel (`useCancelNavigation`), so Back and Cancel behave identically, or an
+   * in-page drill-in's way back (the Admin's report sheet: "Back", ADR-077).
+   */
+  | { onBack: () => void; label?: `Back to ${string}`; fallback?: never; to?: never }
   /** Always goes to one fixed screen. Label "Back", or one that names it ("Back to Sign In"). */
   | { to: string; label?: `Back to ${string}`; fallback?: never; onBack?: never }
 

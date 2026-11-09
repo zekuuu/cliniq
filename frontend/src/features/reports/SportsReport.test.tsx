@@ -211,7 +211,8 @@ describe('Sports Report screens', () => {
           <CurrentPath />
         </MemoryRouter>,
       )
-      expect(screen.getByTestId('path')).toHaveTextContent(/^\/$/)
+      // ADR-077: to the Admin's Reports page, not the Dashboard.
+      expect(screen.getByTestId('path')).toHaveTextContent(/^\/reports$/)
       view.unmount()
     }
     const admin = render(
@@ -221,7 +222,9 @@ describe('Sports Report screens', () => {
     )
     expect(await screen.findByRole('heading', { name: 'Reports', level: 1 }, { timeout: 5000 })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Sports Reports' })).not.toBeInTheDocument()
-    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Monthly Report', 'Incident register', 'Symptom summary', 'Inventory sheet'])
+    // ADR-077: the Admin gets the four monthly reports as a list, not the Staff tabs.
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument()
+    expect(within(await screen.findByRole('list', { name: /^Reports for / })).getAllByRole('button').map((open) => open.getAttribute('aria-label'))).toEqual(['Open Monthly Report', 'Open Incident register', 'Open Symptom summary', 'Open Inventory sheet'])
     admin.unmount()
     render(
       <MemoryRouter initialEntries={['/reports']}>
@@ -335,6 +338,10 @@ describe('Sports Report screens', () => {
       await user.keyboard('{Enter}')
     }
     expect(await screen.findByText(`${student.fullName} is already on this report.`)).toBeInTheDocument()
+    // The grade field's messages are red errors right under it (Zean, November 8, 2026).
+    await user.click(screen.getByRole('button', { name: 'Add Grade' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('Choose a grade level first.')
+    expect(screen.getByRole('alert')).toHaveClass('text-error')
     expect(screen.queryByRole('textbox', { name: /^Note for/ })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Create Report' }))
     expect(await screen.findByTestId('path')).toHaveTextContent(/^\/reports\/sports\/sports-report-\d{4}$/)

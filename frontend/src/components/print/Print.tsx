@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from 'react'
+import { useId, useLayoutEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { canPrint, usePrinting } from '../../hooks/usePrinting'
 import { Button } from '../ui/Button'
@@ -95,6 +95,16 @@ export interface PrintDocumentProps {
   viewer?: SessionUser
   /** Makes the print's audit entry name this record instead of the title (`usePrinting`). */
   auditRecord?: PrintAuditRecord
+  /**
+   * Renders the same document in place as a paper-like A4 sheet on screen, view only (the Admin's
+   * Reports page, ADR-077). No page-number footer, nothing printed from it by the app.
+   */
+  onScreen?: boolean
+  /**
+   * The tab title while printing, which the browser offers as the PDF's file name, e.g. "CLINIQ
+   * Monthly Report, November 2026" (ADR-079). The screen's own title comes back after printing.
+   */
+  fileName?: string
 }
 
 export function PrintDocument({
@@ -104,8 +114,41 @@ export function PrintDocument({
   landscape = false,
   viewer = getMockSessionUser(),
   auditRecord,
+  onScreen = false,
+  fileName,
 }: PrintDocumentProps) {
+  const titleId = useId()
   const printedAt = usePrinting(title, viewer, auditRecord)
+  // A layout effect, so the title is set inside beforeprint, before the print window reads it.
+  useLayoutEffect(() => {
+    if (!printedAt || !fileName || onScreen) return
+    const before = document.title
+    document.title = fileName
+    return () => {
+      document.title = before
+    }
+  }, [printedAt, fileName, onScreen])
+  // Exactly the printed page (Zean, November 8, 2026): A4 at its real size with the print margins
+  // (index.css @page: 15mm sides, 20mm bottom; 14mm top padding). It never shrinks; a narrow screen
+  // scrolls the sheet sideways. ponytail: one tall sheet with no page breaks or page numbers; split it
+  // into pages if the Admin needs to see where paper pages end.
+  if (onScreen)
+    return (
+      <div className="-mx-1 overflow-x-auto px-1 pb-2 print:hidden">
+        <article
+          aria-labelledby={titleId}
+          data-paper-view
+          className={cn(
+            'mx-auto box-border border border-border bg-white px-[15mm] pt-[14mm] pb-[20mm] text-[10pt] leading-snug text-text-primary shadow-card',
+            landscape ? 'min-h-[210mm] w-[297mm]' : 'min-h-[297mm] w-[210mm]',
+          )}
+        >
+          <DocumentBody title={title} titleId={titleId} scope={scope}>
+            {children}
+          </DocumentBody>
+        </article>
+      </div>
+    )
   if (!printedAt) return null
   return createPortal(
     <div
@@ -117,19 +160,32 @@ export function PrintDocument({
       )}
     >
       <style>{FOOTER_CSS}</style>
+      <DocumentBody title={title} scope={scope}>
+        {children}
+      </DocumentBody>
+    </div>,
+    document.body,
+  )
+}
+
+/** Letterhead, title, scope line and content: the same on paper and in the on-screen sheet. */
+function DocumentBody({ title, titleId, scope, children }: { title: string; titleId?: string; scope: ReactNode; children: ReactNode }) {
+  return (
+    <>
       <header className="flex items-center gap-[4mm] border-b-2 border-text-primary pb-[3mm]">
         <img src={LOGO_SRC} alt="" decoding="sync" className="size-[15mm] shrink-0 object-contain" />
         <div className="min-w-0">
           <p className="text-[10.5pt] font-semibold">Mendez Christian Academy — School Clinic</p>
-          <h1 className="text-[16pt] leading-tight font-bold">{title}</h1>
+          <h1 id={titleId} className="text-[16pt] leading-tight font-bold">
+            {title}
+          </h1>
         </div>
       </header>
       <p data-print-scope className="mt-[2.5mm] text-[10.5pt]">
         {scope}
       </p>
       <div className="mt-[4mm]">{children}</div>
-    </div>,
-    document.body,
+    </>
   )
 }
 
