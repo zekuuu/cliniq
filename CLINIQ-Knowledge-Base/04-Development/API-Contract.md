@@ -4,7 +4,7 @@
 
 The mock API is the executable spec (ADR-056). This file adds the HTTP layer: URLs, roles, status codes. It adds no behaviour of its own: where the mock and a decision disagreed, the answer is under [Questions](#questions), and the entry follows it. "Mock differs" marks a change the frontend fix branch makes.
 
-**Updated Sunday, November 08, 2026 — 18:35 PHT, following ADR-078 (on main, pending merge; amends ADR-015, ADR-048 and ADR-057):** idle sign-out is per role, read from the settings (Staff 60, Admin 30, each 10 to 240); a keep-alive endpoint; 401 `session_expired` at the 7-day maximum. See [Idle sign-out](#idle-sign-out). Replaces `GET /api/config/admin-idle-minutes`.
+**Updated Sunday, November 08, 2026 — 18:35 PHT, following ADR-078 (amends ADR-015, ADR-048 and ADR-057):** idle sign-out is per role, read from the settings (Staff 60, Admin 30, each 10 to 240); a keep-alive endpoint; 401 `session_expired` at the 7-day maximum. See [Idle sign-out](#idle-sign-out). Replaces `GET /api/config/admin-idle-minutes`.
 
 **Updated Saturday, November 07, 2026 — 16:12 PHT, following [ADR-076](../06-Decisions/ADR-076-Staff-Record-Reviews-In-Their-Own-Table.md):** staff record reviews live in `staff_record_reviews`; `GET /api/personnel/incomplete` serves from it, and saving or importing staff opens and resolves its rows. The Admin's Audit Log lists staff-record entries by Staff No. Settles counter-check C-1 and C-8.
 
@@ -16,11 +16,11 @@ The mock API is the executable spec (ADR-056). This file adds the HTTP layer: UR
 
 ### Sign-in
 
-Sanctum SPA cookie mode (ADR-056). The browser first calls `GET /sanctum/csrf-cookie`, then sends `POST /api/auth/login` with its credentials and the `X-XSRF-TOKEN` header. Every later request sends the session cookie, and every write echoes the header. No API tokens are issued. The session ends 7 days after sign-in, however active the user is, for both roles (ADR-015, ADR-056, ADR-057): Laravel's lifetime slides, so the sign-in time is stored in the session and a middleware ends it. Each role is also signed out after its own idle minutes without a request: see [Idle sign-out](#idle-sign-out) (ADR-048, ADR-078 on main, pending merge, Q5). Disabling an account ends its sessions (ADR-048): every authenticated request re-reads the account and refuses a disabled one, which needs no list of sessions and so works with the `file` driver. While `mustChangePassword` is true, every route except the password change, sign-out and `GET /api/auth/me` answers 403 `password_change_required`.
+Sanctum SPA cookie mode (ADR-056). The browser first calls `GET /sanctum/csrf-cookie`, then sends `POST /api/auth/login` with its credentials and the `X-XSRF-TOKEN` header. Every later request sends the session cookie, and every write echoes the header. No API tokens are issued. The session ends 7 days after sign-in, however active the user is, for both roles (ADR-015, ADR-056, ADR-057): Laravel's lifetime slides, so the sign-in time is stored in the session and a middleware ends it. Each role is also signed out after its own idle minutes without a request: see [Idle sign-out](#idle-sign-out) (ADR-048, ADR-078, Q5). Disabling an account ends its sessions (ADR-048): every authenticated request re-reads the account and refuses a disabled one, which needs no list of sessions and so works with the `file` driver. While `mustChangePassword` is true, every route except the password change, sign-out and `GET /api/auth/me` answers 403 `password_change_required`.
 
 ### Idle sign-out
 
-Added Sunday, November 08, 2026 — 18:35 PHT for ADR-078 (on main, pending merge), which amends ADR-015, ADR-048 and ADR-057. Replaces the single "Admin idle sign-out" middleware (the `D8` default of the preparation prompt).
+Added Sunday, November 08, 2026 — 18:35 PHT for ADR-078, which amends ADR-015, ADR-048 and ADR-057. Replaces the single "Admin idle sign-out" middleware (the `D8` default of the preparation prompt).
 
 - **Per role.** The idle middleware reads the signed-in role's limit from `system_settings`: `idle_signout_minutes_staff` (API `idleSignoutMinutesStaff`, default 60) or `idle_signout_minutes_admin` (`idleSignoutMinutesAdmin`, default 30), each 10 to 240.
 - **Activity.** Every authenticated API call counts as activity, `POST /api/session/keepalive` included. The session stores the time of the last call and the limit in force at that call.
@@ -92,7 +92,7 @@ This is D5 adjusted to the mock. Added by ADR-057: `invalid_credentials`, `accou
 |---|---|---|---|
 | 401 | `unauthenticated` | No session | `getMockSessionUser` |
 | 401 | `session_expired` | 7 days after sign-in (ADR-057), however active | None |
-| 401 | `session_idle` | Idle past the signed-in role's limit (ADR-048, ADR-078 on main, pending merge) | Frontend timer |
+| 401 | `session_idle` | Idle past the signed-in role's limit (ADR-048, ADR-078) | Frontend timer |
 | 401 | `invalid_credentials` | Wrong password, unknown user, disabled account; one message for all three | `MockAuthError('invalid_credentials')` |
 | 403 | `forbidden` | Wrong role | `AccountPermissionError`, `PersonnelPermissionError`, `SportsReportPermissionError` |
 | 403 | `password_change_required` | Must change the password first | Force Password Change route guard |
@@ -221,12 +221,12 @@ The three recovery routes are unauthenticated. They sit behind the CSRF cookie o
 **Administrator account:** nobody can reset the Administrator's password. The Admin sets up the authenticator at handover. Otherwise the offline break-glass command in `Environment-Setup.md` is the way back.
 
 #### `POST /api/session/keepalive`
-- **New** (Sunday, November 08, 2026 — 18:35 PHT, ADR-078 on main, pending merge). Roles: S, A (any signed-in role). No body.
+- **New** (Sunday, November 08, 2026 — 18:35 PHT, ADR-078). Roles: S, A (any signed-in role). No body.
 - Response: 200 `{ "data": { "idleSecondsLeft": n } }`. The prompt asked for 204 and a returned value, which conflict: a 204 has no body. 200 with the remaining seconds is chosen, so the client shows the two-minute warning from the server's clock.
 - Counts as activity. The frontend sends it at most once a minute while the user is active, and on "Stay signed in". A call within 60 seconds of the last counted activity answers 200 with the current value and writes nothing to the session; the limit is at least 10 minutes, so the warning's button never falls inside that window. A general limit (`throttle:60,1`) answers 429 beyond that.
 - Errors: 401 `session_idle`, 401 `session_expired`.
 - Audit: none.
-- Copies: none in the mock yet; the frontend timer (`main`, ADR-078).
+- Copies: none in the mock yet; the frontend timer (`main`, ADR-078). **Built on `backend` Monday, November 09, 2026 — 18:38 PHT:** `KeepAliveController` behind `auth:sanctum`, `session.fixed`, `session.idle` and `throttle:60,1`; tests in `MiddlewareTest`.
 
 #### `GET /api/settings/idle-signout`
 - **Replaces `GET /api/config/admin-idle-minutes`** (Sunday, November 08, 2026 — 18:35 PHT). Roles: S, A.
@@ -1059,7 +1059,7 @@ Answered by Zean, Sunday, November 1, 2026 — 01:23 PHT, or by the best approac
 | **Q2.** `StudentListRow` carries allergies, conditions and emergency contacts for every student, to the Admin as well. | The row is `id`, `lrn` (masked), `fullName`, `gradeLevel`, `archived`, `recordComplete`, also inside `IncompleteRecord.student`. Mock differs. | Zean; privacy: every reader of the row in `frontend/src` was checked, and none reads the health fields or contacts. |
 | **Q3.** The mock writes the name-correction reason into the audit log. | Reversed by ADR-058: the summary carries the reason, as the mock does, and `students.name_correction_reason` keeps it too. | Zean, Sunday, November 1, 2026 — 11:46 PHT. |
 | **Q4.** Laravel's session lifetime slides. | The session ends 7 days after sign-in. The sign-in time is stored; one middleware in B0.5. | Zean; ADR-015, ADR-056, ADR-057. |
-| **Q5.** The mock's Admin timer counts activity; the server counts requests. | The server counts requests. At integration, the frontend sends a keep-alive while the Admin is active. *Update Sunday, November 08, 2026 — 18:35 PHT: both roles, `POST /api/session/keepalive` (ADR-078 on main, pending merge).* | ADR-048's meaning holds, and the rule still lives on the server. |
+| **Q5.** The mock's Admin timer counts activity; the server counts requests. | The server counts requests. At integration, the frontend sends a keep-alive while the Admin is active. *Update Sunday, November 08, 2026 — 18:35 PHT: both roles, `POST /api/session/keepalive` (ADR-078).* | ADR-048's meaning holds, and the rule still lives on the server. |
 | **Q6.** The mock locks unknown usernames too. | Count them in the cache, by normalized name, so both answer alike. Nothing goes in a table. | Mock behaviour, `ERD.md` D-10. An unknown name that never locks reveals which names exist. |
 | **Q7.** A follow-up that reads as Missed is refused at `api.ts:1836`. | It must be reschedulable. A daily job also writes Missed. Mock differs. | Zean. |
 | **Q7b.** Rescheduling drops the "Stay home until cleared" flag, which a clinician set (ADR-049). | Keep the flag and its note on the new follow-up until the clinician clears them. Mock differs. | Zean; patient safety: a reschedule must not silently lift a stay-home instruction. |
@@ -1075,4 +1075,4 @@ Answered by Zean, Sunday, November 1, 2026 — 01:23 PHT, or by the best approac
 | **Q17.** ADR-048 needs an email; `UserInput` has none. | Add `email?` with the reset work, not before. | ADR-048 item 3 is not built. `users.email` is ready. Closed Saturday, November 07, 2026 — 13:24 PHT: ADR-073 replaces the email reset, so no `email` is added. |
 | **Q18.** `recordPrint` stores a client-sent title. | A fixed document key plus record type and id. The server builds the title, into `target_label`. | ADR-017. The key list comes from `usePrinting` callers at B3. |
 | **Q19.** The mock has no server pagination. | Optional `page` and `perPage` on the four long lists; whole lists otherwise. | Keeps the mock's shape, and the Audit Log may reach 12,000 rows. |
-| **Q20.** How is the frontend served, and does the LAN get HTTPS? | Deferred to a deployment with real data. Plain HTTP on localhost for development. Origins, the `secure` flag and stateful domains stay in the environment. | Zean; ADR-057. *Update Sunday, November 08, 2026 — 18:35 PHT: CLINIQ runs on the clinic PC only at `http://localhost`, so the LAN needs no HTTPS (ADR-079 on main, pending merge; `Environment-Setup.md`, "Clinic PC only").* |
+| **Q20.** How is the frontend served, and does the LAN get HTTPS? | Deferred to a deployment with real data. Plain HTTP on localhost for development. Origins, the `secure` flag and stateful domains stay in the environment. | Zean; ADR-057. *Update Sunday, November 08, 2026 — 18:35 PHT: CLINIQ runs on the clinic PC only at `http://localhost`, so the LAN needs no HTTPS (ADR-079; `Environment-Setup.md`, "Clinic PC only").* |
