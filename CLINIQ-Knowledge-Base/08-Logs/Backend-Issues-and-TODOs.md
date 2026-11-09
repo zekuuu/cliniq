@@ -6,12 +6,13 @@ Everything open about the backend lives here: the Laravel API, the database buil
 
 ## Open work at a glance
 
-Open: FIX 2 · AUDIT 0 · DOC 5 · DECIDE 3 · LATER 22 · FIX-FRONTEND 0 | Notes: NOTE 9 · VERIFY 0 | Done: 10 (recounted Sunday, November 08, 2026 — 18:40 PHT; the earlier 9 missed one)
+Open: FIX 3 · AUDIT 0 · DOC 5 · DECIDE 3 · LATER 24 · FIX-FRONTEND 0 | Notes: NOTE 9 · VERIFY 0 | Done: 10 (recounted Monday, November 09, 2026 — 19:12 PHT)
 
 **Open `FIX` items:**
 
 - [ ] **Backend foundation on the `backend` branch (prepared, not built)** (Backend preparation)
 - [ ] **ERD approved; build phase B1 (migrations) next** (Backend preparation)
+- [ ] **Rename the idle key in `backend/.env.example`** (Left after the per-role idle sign-out)
 
 ---
 
@@ -74,6 +75,12 @@ Backend entries that were logged in the frontend file, moved here unchanged. Ses
 - [ ] **[DOC]** **`personnel.sex` is not yet verified on MariaDB** (found Sunday, November 1, 2026 — 22:36 PHT). The ERD diagram images in `Diagrams/` are not regenerated, `Reference-Schema.sql` was not reloaded, and the two new constraint tests have not run, because this workstation has no MariaDB. [Agent session](Agent-Sessions/2026-11-01-frontend-review-round-2-part-1.md)
 - [ ] **[LATER]** The backup-location dialog now chooses a drive and folder from `listBackupFolders(path)`, which returns PROVISIONAL mock drives (C:, D:, E:) and folders (ADR-052 item 5). The backend needs a Staff-only, read-only endpoint that lists the clinic computer's drives and the folders inside a given path, limited to drive roots and their subfolders; log it in `Backend-Issues-and-TODOs.md` on the `backend` branch. Session: [2026-11-05-backup-location-folder-picker](Agent-Sessions/2026-11-05-backup-location-folder-picker.md)
 - [ ] **[LATER]** Backend docs for ADR-065, on the `backend` branch: the API contract's Stage 2 completion and report approval drop the care check; `incidents.no_further_action_reason` stays only for older rows (Data Dictionary). Log it in `Backend-Issues-and-TODOs.md` there. Session: [2026-11-05-stay-home-stage-two-pager-backup-report](Agent-Sessions/2026-11-05-stay-home-stage-two-pager-backup-report.md)
+
+## Left after the per-role idle sign-out (ADR-078) — Monday, November 09, 2026 — 19:12 PHT
+
+- [ ] **[FIX]** **Rename the idle key in `backend/.env.example`** (logged Monday, November 09, 2026 — 19:12 PHT). `config/cliniq.php` now reads `CLINIQ_IDLE_SIGNOUT_MINUTES_STAFF` (60) and `CLINIQ_IDLE_SIGNOUT_MINUTES_ADMIN` (30); the example file may still name `CLINIQ_ADMIN_IDLE_MINUTES`. The agent could not read the file (a deny rule), so Zean renames it by hand or allows the read. Session: [2026-11-09-backend-per-role-idle-and-keepalive](Agent-Sessions/2026-11-09-backend-per-role-idle-and-keepalive.md)
+- [ ] **[LATER]** **B2: the `SESSION_SECURE_COOKIE` start-up check** (logged Monday, November 09, 2026 — 19:12 PHT). The backend refuses to start when the flag does not match `APP_URL`: on for `https`, off for plain `http://localhost` (ADR-079, `Environment-Setup.md`). Needs no table; can be built any time. Session: [2026-11-09-backend-per-role-idle-and-keepalive](Agent-Sessions/2026-11-09-backend-per-role-idle-and-keepalive.md)
+- [ ] **[LATER]** **B2 after B1's tables: the rest of the session rules** (logged Monday, November 09, 2026 — 19:12 PHT). Write the sign-in time at sign-in (`FixedSessionLifetime::KEY`); the users-table checks (a disabled account, `password_change_required`); read the idle minutes from `system_settings` (`idle_signout_minutes_staff`, `idle_signout_minutes_admin`) through a settings service with a 60-second cache cleared on save, instead of `config/cliniq.php`; `GET` and `PUT /api/settings/idle-signout` (Staff edit, audited by field name). Waits for B1 (migrations; the ERD is approved, ADR-057). Session: [2026-11-09-backend-per-role-idle-and-keepalive](Agent-Sessions/2026-11-09-backend-per-role-idle-and-keepalive.md)
 
 ## Done
 
