@@ -30,5 +30,6 @@ it('fails when an undocumented route appears', function () {
     expect($routes)->toBe([
         'GET|HEAD api/health',
         'GET|HEAD sanctum/csrf-cookie',
+        'POST api/session/keepalive',
     ]);
 });

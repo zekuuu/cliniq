@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shared\Http\Middleware;
 
+use App\Shared\Http\ApiError;
 use Closure;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
@@ -36,7 +37,7 @@ final class FixedSessionLifetime
         } elseif ($now - $signedIn >= config()->integer('cliniq.session_days') * 86400) {
             $this->endSession($request);
 
-            throw new AuthenticationException;
+            throw ApiError::sessionExpired();
         }
 
         return $next($request);

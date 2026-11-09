@@ -13,11 +13,15 @@ return [
     /* Wrong passwords before an account locks (ADR-015). */
     'failed_attempts' => 5,
 
-    /* How long a locked account stays locked (ADR-015). */
-    'lock_minutes' => 30,
+    /* How long a locked account stays locked (ADR-015, lowered to 5 on Sunday, November 8, 2026). */
+    'lock_minutes' => 5,
 
-    /* The Admin is signed out after this many idle minutes; Staff never are (ADR-048). */
-    'admin_idle_minutes' => (int) env('CLINIQ_ADMIN_IDLE_MINUTES', 30),
+    /*
+    | Each role is signed out after this many idle minutes, 10 to 240 (ADR-048, ADR-078). Defaults
+    | until B1 reads `idle_signout_minutes_staff` and `idle_signout_minutes_admin` from `system_settings`.
+    */
+    'idle_signout_minutes_staff' => (int) env('CLINIQ_IDLE_SIGNOUT_MINUTES_STAFF', 60),
+    'idle_signout_minutes_admin' => (int) env('CLINIQ_IDLE_SIGNOUT_MINUTES_ADMIN', 30),
 
     /* Digits in a Learner Reference Number (ADR-028). */
     'lrn_length' => 12,

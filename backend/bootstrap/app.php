@@ -5,11 +5,11 @@ declare(strict_types=1);
 use App\Shared\Http\ApiError;
 use App\Shared\Http\ApiExceptionRenderer;
 use App\Shared\Http\BusinessRuleViolation;
-use App\Shared\Http\Middleware\AdminIdleSignOut;
 use App\Shared\Http\Middleware\DropForeignCorsHeaders;
 use App\Shared\Http\Middleware\EnsureRole;
 use App\Shared\Http\Middleware\FixedSessionLifetime;
 use App\Shared\Http\Middleware\ForceJson;
+use App\Shared\Http\Middleware\IdleSignOut;
 use App\Shared\Http\Middleware\RequestId;
 use App\Shared\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
@@ -27,7 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->throttleApi();
         $middleware->alias([
             'role' => EnsureRole::class,
-            'admin.idle' => AdminIdleSignOut::class,
+            'session.idle' => IdleSignOut::class,
             'session.fixed' => FixedSessionLifetime::class,
         ]);
     })

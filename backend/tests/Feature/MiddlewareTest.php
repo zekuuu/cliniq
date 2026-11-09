@@ -2,10 +2,21 @@
 
 declare(strict_types=1);
 
+use App\Shared\AuditLog\AuditAction;
+use App\Shared\AuditLog\AuditLogger;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Tests\Support\FakeClinicUser;
+
+/** The SPA's origin: Sanctum starts the session only for a request from a stateful domain (ADR-056, ADR-079). */
+function spaOrigin(): string
+{
+    $stateful = config('sanctum.stateful');
+    assert(is_array($stateful) && is_string($stateful[0]));
+
+    return 'http://'.$stateful[0].'/';
+}
 
 beforeEach(function () {
     Route::middleware('api')->prefix('api')->group(function () {
@@ -13,7 +24,7 @@ beforeEach(function () {
     });
     Route::middleware(['api', StartSession::class, 'role:staff'])->get('api/_t/staff', fn () => ['data' => 'ok']);
     Route::middleware(['api', StartSession::class, 'role:staff,admin'])->get('api/_t/both', fn () => ['data' => 'ok']);
-    Route::middleware(['api', StartSession::class, 'session.fixed', 'admin.idle'])->get('api/_t/session', fn () => ['data' => 'ok']);
+    Route::middleware(['api', StartSession::class, 'session.fixed', 'session.idle'])->get('api/_t/session', fn () => ['data' => 'ok']);
 });
 
 it('answers JSON even when the client asks for HTML', function () {
@@ -71,7 +82,7 @@ it('lets each role through the role middleware, and no one else', function () {
     $this->actingAs(FakeClinicUser::staff())->getJson('/api/_t/both')->assertOk();
 });
 
-it('signs the Admin out after the idle limit, and never Staff', function (Closure $user, int $minutes, int $status) {
+it('signs each role out after its own idle limit (ADR-078)', function (Closure $user, int $minutes, int $status) {
     $this->travelTo('2026-11-02 08:00:00');
     $start = now()->getTimestamp();
 
@@ -85,11 +96,41 @@ it('signs the Admin out after the idle limit, and never Staff', function (Closur
         $response->assertJsonPath('code', 'session_idle');
     }
 })->with([
-    'Admin at 29 minutes stays' => [fn () => FakeClinicUser::admin(), 29, 200],
-    'Admin at 31 minutes is out' => [fn () => FakeClinicUser::admin(), 31, 401],
-    'Staff at 31 minutes stays' => [fn () => FakeClinicUser::staff(), 31, 200],
-    'Staff a day later stays' => [fn () => FakeClinicUser::staff(), 1440, 200],
+    'Admin just inside, 29 minutes' => [fn () => FakeClinicUser::admin(), 29, 200],
+    'Admin just past, 30 minutes' => [fn () => FakeClinicUser::admin(), 30, 401],
+    'Staff just inside, 59 minutes' => [fn () => FakeClinicUser::staff(), 59, 200],
+    'Staff just past, 60 minutes' => [fn () => FakeClinicUser::staff(), 60, 401],
 ]);
+
+it('records "Signed out (idle)" with the user and action only', function () {
+    $this->travelTo('2026-11-02 08:00:00');
+    $start = now()->getTimestamp();
+    $this->travel(60)->minutes();
+
+    $this->actingAs(FakeClinicUser::staff())
+        ->withSession(['cliniq.last_request_at' => $start, 'cliniq.signed_in_at' => $start])
+        ->getJson('/api/_t/session')->assertUnauthorized();
+
+    $event = app(AuditLogger::class)->events()[0];
+    expect($event->action)->toBe(AuditAction::Logout)
+        ->and($event->actorId)->toBe('1')
+        ->and($event->targetType)->toBeNull()
+        ->and($event->targetId)->toBeNull()
+        ->and($event->targetLabel)->toBe('Signed out (idle)')
+        ->and($event->fields)->toBe([]);
+});
+
+it('keeps a running countdown on its old limit; a changed setting applies from the next request', function () {
+    $this->travelTo('2026-11-02 08:00:00');
+    $this->actingAs(FakeClinicUser::admin())->getJson('/api/_t/session')->assertOk();
+
+    config(['cliniq.idle_signout_minutes_admin' => 10]);
+    $this->travel(20)->minutes();
+    $this->getJson('/api/_t/session')->assertOk();
+
+    $this->travel(11)->minutes();
+    $this->getJson('/api/_t/session')->assertUnauthorized()->assertJsonPath('code', 'session_idle');
+});
 
 it('moves the idle clock with each request', function () {
     $this->travelTo('2026-11-02 08:00:00');
@@ -112,13 +153,49 @@ it('ends the session 7 days after sign-in however active the user is', function 
 
     $response->assertStatus($status);
     if ($status === 401) {
-        $response->assertJsonPath('code', 'unauthenticated');
+        $response->assertJsonPath('code', 'session_expired');
     }
 })->with([
     'Staff a minute before' => [fn () => FakeClinicUser::staff(), '2026-11-09 07:59:00', 200],
     'Staff at 7 days' => [fn () => FakeClinicUser::staff(), '2026-11-09 08:00:00', 401],
     'Admin a day past' => [fn () => FakeClinicUser::admin(), '2026-11-10 08:00:00', 401],
 ]);
+
+it('answers the keep-alive with the idle seconds left and counts it as activity', function () {
+    $this->travelTo('2026-11-02 08:00:00');
+    $start = now()->getTimestamp();
+    $this->travel(10)->minutes();
+
+    $this->actingAs(FakeClinicUser::staff())
+        ->withSession(['cliniq.last_request_at' => $start, 'cliniq.signed_in_at' => $start])
+        ->withHeader('Referer', spaOrigin())->postJson('/api/session/keepalive')
+        ->assertOk()->assertExactJson(['data' => ['idleSecondsLeft' => 3600]]);
+
+    $this->travel(55)->minutes();
+    $this->getJson('/api/_t/session')->assertOk();
+});
+
+it('leaves the clock alone for a keep-alive within a minute of the last activity', function () {
+    $this->travelTo('2026-11-02 08:00:00');
+    $start = now()->getTimestamp();
+    $this->travel(30)->seconds();
+
+    $this->actingAs(FakeClinicUser::staff())
+        ->withSession(['cliniq.last_request_at' => $start, 'cliniq.signed_in_at' => $start])
+        ->withHeader('Referer', spaOrigin())->postJson('/api/session/keepalive')
+        ->assertOk()->assertExactJson(['data' => ['idleSecondsLeft' => 3570]]);
+});
+
+it('refuses the keep-alive once idle, and without a sign-in', function () {
+    $this->withHeader('Referer', spaOrigin())->postJson('/api/session/keepalive')->assertUnauthorized()->assertJsonPath('code', 'unauthenticated');
+
+    $this->travelTo('2026-11-02 08:00:00');
+    $start = now()->getTimestamp();
+    $this->travel(31)->minutes();
+    $this->actingAs(FakeClinicUser::admin())
+        ->withSession(['cliniq.last_request_at' => $start, 'cliniq.signed_in_at' => $start])
+        ->withHeader('Referer', spaOrigin())->postJson('/api/session/keepalive')->assertUnauthorized()->assertJsonPath('code', 'session_idle');
+});
 
 it('limits sign-in to 10 a minute per IP', function () {
     Route::middleware(['api', 'throttle:login'])->post('api/_t/login', fn () => ['data' => 'ok']);

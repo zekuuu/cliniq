@@ -16,7 +16,8 @@ beforeEach(function () {
         Route::get('rule', fn () => throw new BusinessRuleViolation('stock_rule', "Medicines on a completed incident can't be changed."));
         Route::get('forbidden', fn () => abort(403));
         Route::get('boom', fn () => throw new RuntimeException('SELECT * FROM students WHERE lrn = 123456789012'));
-        Route::get('idle', fn () => throw ApiError::sessionIdle());
+        Route::get('idle', fn () => throw ApiError::sessionIdle(30));
+        Route::get('expired', fn () => throw ApiError::sessionExpired());
         Route::get('credentials', fn () => throw ApiError::invalidCredentials());
         Route::get('password', fn () => throw ApiError::passwordChangeRequired());
         Route::get('locked', fn () => throw ApiError::accountLocked('2026-11-02T08:30:00+08:00'));
@@ -47,6 +48,7 @@ it('renders each status with its code', function (string $uri, int $status, stri
 })->with([
     'unauthenticated' => ['/api/_t/auth', 401, 'unauthenticated'],
     'session idle' => ['/api/_t/idle', 401, 'session_idle'],
+    'session expired' => ['/api/_t/expired', 401, 'session_expired'],
     'invalid credentials' => ['/api/_t/credentials', 401, 'invalid_credentials'],
     'forbidden' => ['/api/_t/forbidden', 403, 'forbidden'],
     'password change' => ['/api/_t/password', 403, 'password_change_required'],
@@ -83,7 +85,8 @@ it('leaks nothing from a 500, even with debug on', function (bool $debug) {
 })->with([false, true]);
 
 it('uses the wording the screens already show', function () {
-    expect(ApiError::sessionIdle()->getMessage())->toBe('You were signed out after 30 minutes of inactivity.')
+    expect(ApiError::sessionIdle(60)->getMessage())->toBe('You were signed out after 60 minutes of inactivity. Sign in again.')
+        ->and(ApiError::sessionExpired()->getMessage())->toBe('Your session ended 7 days after you signed in. Sign in again.')
         ->and(ApiError::invalidCredentials()->getMessage())->toBe('Unable to sign in with those credentials.')
         ->and(ApiError::accountLocked('x')->getMessage())->toStartWith('This account is temporarily locked after repeated failed attempts.');
 });

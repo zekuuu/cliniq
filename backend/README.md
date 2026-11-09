@@ -43,7 +43,7 @@ The module list is ERD rule M-1, which extends ADR-009 (the QR module is gone; t
 
 `tests/Feature/HealthAndRoutesTest.php` fails when a route appears that is not on its list. Add a route to that list and to `API-Contract.md` together.
 
-Middleware for later routes: `auth:sanctum`, then `session.fixed` (ends the session 7 days after sign-in), `admin.idle` (ADR-048) and `role:staff,admin`. B2 stores the sign-in time at sign-in, under `FixedSessionLifetime::KEY`.
+Middleware for later routes: `auth:sanctum`, then `session.fixed` (ends the session 7 days after sign-in, 401 `session_expired`), `session.idle` (each role's idle minutes, ADR-048 and ADR-078; 401 `session_idle`) and `role:staff,admin`. B2 stores the sign-in time at sign-in, under `FixedSessionLifetime::KEY`.
 
 ## What the frontend will one day do
 

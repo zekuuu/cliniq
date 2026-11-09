@@ -19,9 +19,16 @@ final class ApiError extends RuntimeException
         parent::__construct($message);
     }
 
-    public static function sessionIdle(): self
+    /** `$minutes` is the limit that ran out, as Login words it (ADR-078). */
+    public static function sessionIdle(int $minutes): self
     {
-        return new self(401, 'session_idle', 'You were signed out after '.config()->integer('cliniq.admin_idle_minutes').' minutes of inactivity.');
+        return new self(401, 'session_idle', "You were signed out after {$minutes} minutes of inactivity. Sign in again.");
+    }
+
+    /** The fixed 7 days from sign-in have passed (ADR-057). */
+    public static function sessionExpired(): self
+    {
+        return new self(401, 'session_expired', 'Your session ended 7 days after you signed in. Sign in again.');
     }
 
     public static function invalidCredentials(): self

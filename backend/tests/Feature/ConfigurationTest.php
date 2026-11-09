@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 it('holds the business numbers', function () {
     expect(config('cliniq.session_days'))->toBe(7)
         ->and(config('cliniq.failed_attempts'))->toBe(5)
-        ->and(config('cliniq.lock_minutes'))->toBe(30)
-        ->and(config('cliniq.admin_idle_minutes'))->toBe(30)
+        ->and(config('cliniq.lock_minutes'))->toBe(5)
+        ->and(config('cliniq.idle_signout_minutes_staff'))->toBe(60)
+        ->and(config('cliniq.idle_signout_minutes_admin'))->toBe(30)
         ->and(config('cliniq.lrn_length'))->toBe(12);
 });
 
