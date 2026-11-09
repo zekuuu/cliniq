@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Badge, Button, CodeInput, CodeOrRecoveryField, Modal, NUMBERED_LIST } from '../../components'
+import { Badge, Button, DONE_MS, CodeInput, CodeOrRecoveryField, Modal, NUMBERED_LIST } from '../../components'
+import { Icon } from '../../components/icons/Icon'
 import { PrintDocument, PrintSection } from '../../components/print/Print'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { confirmAuthenticatorSetup, getAuthenticatorStatus, RecoveryError, startAuthenticatorSetup, turnOffAuthenticator, type SessionUser } from '../../lib/mock-db'
@@ -39,6 +40,14 @@ export function AuthenticatorDialog({ open, viewer, onClose, onChanged }: { open
   const [working, setWorking] = useState(false)
   const [saved, setSaved] = useState(false)
   const [notice, setNotice] = useState('')
+  // The Copy button reads "Copied" for a moment (Button's done state, Zean, November 8, 2026); reset
+  // after it, so a second copy shows it again.
+  const [copied, setCopied] = useState(false)
+  useEffect(() => {
+    if (!copied) return
+    const timer = setTimeout(() => setCopied(false), DONE_MS)
+    return () => clearTimeout(timer)
+  }, [copied])
 
   function reset() {
     setStep({ kind: 'status' })
@@ -186,15 +195,20 @@ export function AuthenticatorDialog({ open, viewer, onClose, onChanged }: { open
   else
     body = (
       <div className="flex flex-col gap-4">
-        <p className="text-sm font-semibold text-text-primary">Keep these in a safe place. Each works once if you lose your phone.</p>
+        <div role="alert" className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary">
+          <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning-text" />
+          <p><strong>Save these codes now.</strong> Keep them in a safe place. Each works once if you lose your phone.</p>
+        </div>
         <ul aria-label="Recovery codes" className="grid grid-cols-2 gap-2 rounded-md border border-border bg-surface p-3 font-mono text-sm text-text-primary">
           {step.codes.map((recovery) => <li key={recovery}>{recovery}</li>)}
         </ul>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" icon="fileText" onClick={() => void navigator.clipboard?.writeText(step.codes.join('\n')).then(() => setNotice('Codes copied.'))}>Copy</Button>
+          <Button variant="secondary" icon="fileText" done={copied} onClick={() => void navigator.clipboard?.writeText(step.codes.join('\n')).then(() => setCopied(true))}>
+            Copy
+          </Button>
           <Button variant="secondary" icon="printer" onClick={() => window.print()}>Print</Button>
         </div>
-        {notice && <p role="status" className="text-sm text-text-secondary">{notice}</p>}
+        <span role="status" className="sr-only">{copied ? 'Codes copied.' : ''}</span>
         <label className="flex cursor-pointer items-start gap-2 text-sm text-text-primary">
           <input type="checkbox" checked={saved} onChange={(event) => { setSaved(event.target.checked); setError('') }} className="mt-0.5 size-4 cursor-pointer accent-brand-green-dark" />
           I have saved the codes

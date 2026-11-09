@@ -46,7 +46,7 @@ export function ChangePasswordPage({ viewer }: { viewer: SessionUser }) {
           {error && <p role="alert" className="text-sm font-semibold text-error">{error}</p>}
           {saved && <p role="status" className="text-sm font-semibold text-brand-green-dark">Password changed.</p>}
           <div className="mt-2 flex justify-end">
-            <Button type="submit" variant="primary" loading={saving}>Save Password</Button>
+            <Button type="submit" variant="primary" loading={saving} done={Boolean(saved)}>Save Password</Button>
           </div>
         </form>
       </Card>

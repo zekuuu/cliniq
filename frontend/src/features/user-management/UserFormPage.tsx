@@ -236,7 +236,7 @@ function UserForm({
               <Button variant="neutral" onClick={cancel}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" loading={feedback.saving}>
+              <Button type="submit" variant="primary" loading={feedback.saving} done={feedback.result?.kind === 'saved'}>
                 {userId ? 'Save Changes' : 'Create User'}
               </Button>
             </div>

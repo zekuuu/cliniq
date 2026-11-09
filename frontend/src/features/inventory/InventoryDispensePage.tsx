@@ -71,6 +71,7 @@ export function InventoryDispensePage() {
     setErrors(next)
     invalid.report(Object.keys(next).length)
     if (Object.keys(next).length || !item) return
+    setSuccess('')
     setSaving(true)
     try {
       const result = await dispenseInventoryItem(item.id, amount, recipient === 'student' ? (patientRef ?? undefined) : undefined)
@@ -154,7 +155,7 @@ export function InventoryDispensePage() {
           ))}
           {errors.save && <p role="alert" className="text-sm font-semibold text-error">{errors.save}</p>}
           {success && <p role="status" className="text-sm font-semibold text-success">{success}</p>}
-          <div className="flex flex-wrap justify-end gap-2"><Button variant="neutral" onClick={cancel}>Cancel</Button><Button type="submit" variant="primary" icon="checkCircle" loading={saving}>Record Dispensation</Button></div>
+          <div className="flex flex-wrap justify-end gap-2"><Button variant="neutral" onClick={cancel}>Cancel</Button><Button type="submit" variant="primary" icon="checkCircle" loading={saving} done={Boolean(success)}>Record Dispensation</Button></div>
         </form>
       </CardBody></Card>
     </div>

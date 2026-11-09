@@ -389,6 +389,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
     if (nextErrors.timeOut) setMoreOpen(true)
     invalid.report(Object.keys(nextErrors).length + (studentOk ? 0 : 1))
     if (Object.keys(nextErrors).length || !studentOk) return
+    setSaved(null)
     setSaving(true)
     setSaveError('')
     try {
@@ -812,11 +813,11 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 </Button>
                 <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
                 {preparingLetter && (
-                  <Button type="button" variant="secondary" icon="checkCircle" loading={saving} onClick={saveAndApproveNow}>
+                  <Button type="button" variant="secondary" icon="checkCircle" loading={saving} done={Boolean(saved)} onClick={saveAndApproveNow}>
                     Save and approve now
                   </Button>
                 )}
-                <Button type="submit" variant="primary" loading={saving}>
+                <Button type="submit" variant="primary" loading={saving} done={Boolean(saved)}>
                   Save Visit
                 </Button>
               </div>

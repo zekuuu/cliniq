@@ -2,7 +2,7 @@ import type { SVGProps } from 'react'
 
 /**
  * Inline stroke icon set (24×24 grid, 2px stroke, round caps). It's hand-maintained so no icon
- * dependency is added to the confirmed stack (ADR-007) and nothing loads from a CDN (LAN-only).
+ * dependency is added to the confirmed stack (ADR-007) and nothing loads from a CDN (offline, clinic PC only, ADR-079).
  * Icons are decorative by default (`aria-hidden`). Always pair one with a visible text label,
  * because an icon never replaces a label.
  */
@@ -45,6 +45,7 @@ const paths = {
       <path d="M17.5 15.5v2l1.3 1" />
     </>
   ),
+  check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   checkCircle: (
     <>
       <circle cx="12" cy="12" r="10" />

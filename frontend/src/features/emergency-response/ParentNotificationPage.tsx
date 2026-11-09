@@ -38,6 +38,8 @@ export function ParentNotificationPage({ viewer = getMockSessionUser(), incident
     const called = resolveCalledContact(draft, student.emergencyContacts)
     setCalledErrors(called.errors ?? {})
     if (!called.contact) return
+    // Cleared first, so each added attempt shows "Added" on the button again.
+    setSaved(false)
     setSaving(true)
     try {
       const attempt = await logParentNotification(incident.id, outcome, viewer, called.contact)
@@ -57,7 +59,7 @@ export function ParentNotificationPage({ viewer = getMockSessionUser(), incident
         <EmergencyContactList contacts={student.emergencyContacts} emptyMessage={`No emergency contact is recorded for this ${student.kind === 'student' ? 'student' : 'staff member'}.`} />
       </div>
       <CalledContactField contacts={student.emergencyContacts} draft={draft} onChange={(next) => { setCalledDraft(next); setCalledErrors({}) }} errors={calledErrors} />
-      <div className="grid gap-3 sm:grid-cols-[14rem_minmax(0,1fr)_auto] sm:items-end"><Select label="Outcome" value={outcome} options={PARENT_NOTIFICATION_OUTCOMES}onChange={(value) => setOutcome(value as ParentNotificationOutcome)} /><Input label="Attempt note" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Optional context" /><Button variant="primary" onClick={addAttempt} loading={saving}>Add Attempt</Button></div>
+      <div className="grid gap-3 sm:grid-cols-[14rem_minmax(0,1fr)_auto] sm:items-end"><Select label="Outcome" value={outcome} options={PARENT_NOTIFICATION_OUTCOMES}onChange={(value) => setOutcome(value as ParentNotificationOutcome)} /><Input label="Attempt note" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Optional context" /><Button variant="primary" onClick={addAttempt} loading={saving} done={Boolean(saved)}>Add Attempt</Button></div>
       {saved && <p role="status" className="rounded-md border border-success bg-success/10 px-3 py-2 text-sm font-semibold text-text-primary">Notification attempt saved with an audit entry.</p>}
       {attempts.length ? <ol className="divide-y divide-border rounded-md border border-border">{attempts.map((attempt, index) => <li key={`${attempt.timestamp}-${index}`} className="flex flex-wrap items-center justify-between gap-2 p-3"><span className="min-w-0"><span className="block font-semibold text-text-primary">{OUTCOME_LABELS[attempt.outcome]}</span><span className="block text-xs text-text-secondary">Called: {calledContactText(attempt.calledContact)}</span></span><span className="text-sm text-text-secondary">{notes[attempt.timestamp] ? `${notes[attempt.timestamp]} · ` : ''}{formatDateTime(attempt.timestamp)}</span></li>)}</ol> : <p className="text-sm text-text-secondary">No notification attempts have been logged for this incident yet.</p>}
     </CardBody></Card>

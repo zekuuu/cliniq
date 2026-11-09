@@ -338,7 +338,7 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
               <Button type="button" variant="neutral" onClick={cancel}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" icon="checkCircle" loading={saving}>
+              <Button type="submit" variant="primary" icon="checkCircle" loading={saving} done={Boolean(saved)}>
                 Save Referral
               </Button>
             </div>

@@ -63,3 +63,19 @@ export function busyLabel(label: string): string | null {
   const verb = BUSY_VERBS[label.trim().split(/\s+/)[0]?.toLowerCase() ?? '']
   return verb ? `${verb}…` : null
 }
+
+/** Each action verb's past form, for the done label ("Save Changes" reads "Saved"). */
+const DONE_VERBS: Record<string, string> = {
+  add: 'Added', apply: 'Applied', approve: 'Approved', back: 'Backed up', change: 'Changed', complete: 'Completed',
+  confirm: 'Confirmed', copy: 'Copied', create: 'Created', disable: 'Disabled', dispense: 'Dispensed', enable: 'Enabled',
+  import: 'Imported', mark: 'Marked', record: 'Recorded', report: 'Reported', reset: 'Reset', restock: 'Restocked',
+  save: 'Saved', send: 'Sent', set: 'Set', submit: 'Submitted', update: 'Updated', verify: 'Verified',
+}
+
+/**
+ * The label a button reads for a moment after its action worked (Zean, November 8, 2026: "the same
+ * concept as Copied … everywhere"): the action's past form, or null when it isn't a known action.
+ */
+export function doneLabel(label: string): string | null {
+  return DONE_VERBS[label.trim().split(/\s+/)[0]?.toLowerCase() ?? ''] ?? null
+}

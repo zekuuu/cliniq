@@ -295,6 +295,7 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
     if (nextErrors.timeOut) setMoreOpen(true)
     invalid.report(Object.keys(nextErrors).length)
     if (Object.keys(nextErrors).length) return
+    setSaved(null)
     setSaving(true)
     setSaveError('')
     try {
@@ -594,7 +595,7 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                       Save and approve now
                     </Button>
                   )}
-                  <Button type="submit" variant="primary" icon="checkCircle" loading={saving}>
+                  <Button type="submit" variant="primary" icon="checkCircle" loading={saving} done={Boolean(saved)}>
                     Save Changes
                   </Button>
                 </div>

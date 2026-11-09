@@ -160,7 +160,7 @@ export function BackupLocationsPanel({
           {feedback.result?.kind === 'failed' && <SaveFeedback result={feedback.result} />}
           <div className="flex flex-wrap justify-end gap-2">
             <Button variant="neutral" data-autofocus onClick={() => setAdding(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={feedback.saving}>Save location</Button>
+            <Button type="submit" variant="primary" loading={feedback.saving} done={feedback.result?.kind === 'saved'}>Save location</Button>
           </div>
         </form>
       </Modal>
