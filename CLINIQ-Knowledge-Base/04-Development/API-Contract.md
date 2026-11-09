@@ -93,7 +93,7 @@ This is D5 adjusted to the mock. Added by ADR-057: `invalid_credentials`, `accou
 | 401 | `unauthenticated` | No session | `getMockSessionUser` |
 | 401 | `session_expired` | 7 days after sign-in (ADR-057), however active | None |
 | 401 | `session_idle` | Idle past the signed-in role's limit (ADR-048, ADR-078) | Frontend timer |
-| 401 | `invalid_credentials` | Wrong password, unknown user, disabled account; one message for all three | `MockAuthError('invalid_credentials')` |
+| 401 | `invalid_credentials` | Wrong password, unknown user, disabled account; one message for all three; adds `attempts_left` | `MockAuthError('invalid_credentials', undefined, remaining)` |
 | 403 | `forbidden` | Wrong role | `AccountPermissionError`, `PersonnelPermissionError`, `SportsReportPermissionError` |
 | 403 | `password_change_required` | Must change the password first | Force Password Change route guard |
 | 404 | `not_found` | Unknown id, or a record this role may not know of | `NotFoundError` |
@@ -138,8 +138,9 @@ Marked **Addition** where the mock has no such function.
 - Request: `username` (trimmed, lowercased to compare), `password`.
 - Response: `{ user: SessionUser, mustChangePassword }`. Never a password or a token.
 - Errors: 401 `invalid_credentials`, 423 `account_locked`, 429.
-- Audit: `login user`; a lockout writes `login user` with "Account locked for 30 minutes after 5 wrong passwords (sign-in)". A single wrong password writes nothing. No entry for an unknown username.
-- Copies: `authenticateMockUser` (`api.ts:355`); tests: `AccessAndBackup`, `ChangePasswordPage`, `accounts`, `auditCoverage` and 1 more. Five failures lock for 30 minutes and reset the count; an expired lock clears first; a disabled account counts as a failure. Sets `lastLogin` (Q13). Unknown usernames: Q6.
+- Errors carry `attempts_left` (Updated Monday, November 09, 2026 — 20:08 PHT, from `api.ts` `recordFailure` and `features/auth/lockMessage.ts`, `main` `56cb91b`): a wrong password answers 401 `invalid_credentials` with `attempts_left` (4 to 1); the fifth failure locks and answers 423 `account_locked` with `locked_until`. The screen adds "Your account will be locked after N more failed attempt(s)." only when 3 or fewer are left; the locked message is "This account is temporarily locked after repeated failed attempts. Try again at HH:MM."
+- Audit: `login user`; a lockout writes `login user` with "Account locked for 5 minutes after 5 wrong passwords (sign-in)". A single wrong password writes nothing. No entry for an unknown username.
+- Copies: `authenticateMockUser` (`api.ts:355`); tests: `AccessAndBackup`, `ChangePasswordPage`, `accounts`, `auditCoverage` and 1 more. Five failures lock for 5 minutes (`LOCKOUT_ATTEMPTS`, `LOCKOUT_MINUTES`; ADR-015 as amended November 8, 2026) and reset the count; an expired lock clears first; a disabled account counts as a failure. Sets `lastLogin` (Q13). Unknown usernames: Q6.
 
 #### `POST /api/auth/logout`
 - Roles: S, A.
@@ -150,7 +151,7 @@ Marked **Addition** where the mock has no such function.
 
 #### `GET /api/auth/me`
 - **Addition.** Roles: S, A. Allowed during a forced password change.
-- Response: `{ user: SessionUser, mustChangePassword, idleSignoutMinutes, idleSecondsLeft }`. `idleSignoutMinutes` is the signed-in role's limit. The call counts as activity, so `idleSecondsLeft` is the full limit. Replaces the mock's `getAuthenticatedUser` in `session.ts`.
+- Response: `{ user: SessionUser, mustChangePassword, idleSignoutMinutes, idleSecondsLeft }`. `idleSignoutMinutes` is the signed-in role's limit. The call counts as activity, so `idleSecondsLeft` is the full limit. Replaces the mock's `getAuthenticatedUser` in `session.ts`; `idleSignoutMinutes` copies `getIdleSignoutMinutes` (`api.ts:330`).
 
 #### `POST /api/auth/password`
 - Roles: S, A. Allowed during a forced password change.
@@ -164,7 +165,7 @@ Marked **Addition** where the mock has no such function.
 
 Replaces the email reset of ADR-048 item 3 (Saturday, November 07, 2026 — 13:24 PHT): no `users.email`, no mail service, no reset-token table. Codes are RFC 6238, SHA-1, 30-second steps, 6 digits, one step either way. A code from an already accepted step is refused (`users.last_totp_step`). The secret is encrypted at rest (`users.totp_secret`, key in the environment) and never returned after setup. Recovery codes are slow-hashed (`recovery_codes`). Never in an audit entry: a code, a secret or a password.
 
-The three recovery routes are unauthenticated. They sit behind the CSRF cookie of Sanctum SPA mode (ADR-056), the `login` throttle and a per-username rate limiter. Every failure of the check or the verify step counts toward the sign-in lockout (5 failures, 30 minutes, ADR-015) and gives the same 423 `account_locked` once locked. A lockout here is audited like the sign-in one, with "(password recovery)".
+The three recovery routes are unauthenticated. They sit behind the CSRF cookie of Sanctum SPA mode (ADR-056), the `login` throttle and a per-username rate limiter. Every failure of the check or the verify step counts toward the sign-in lockout (5 failures, 5 minutes, ADR-015) and gives the same 423 `account_locked` once locked. Each failure before the lock carries `attempts_left`, as at sign-in. A lockout here is audited like the sign-in one, with "(password recovery)": "Account locked for 5 minutes after 5 wrong passwords (password recovery)".
 
 **Accepted risk (ADR-073 amendment, Zean, November 7, 2026):** the check step tells a person at the clinic computer which usernames exist and which can recover. The lockout and the rate limiter limit guessing. Logged as a `DECIDE` in `Backend-Issues-and-TODOs.md`.
 
@@ -231,13 +232,15 @@ The three recovery routes are unauthenticated. They sit behind the CSRF cookie o
 #### `GET /api/settings/idle-signout`
 - **Replaces `GET /api/config/admin-idle-minutes`** (Sunday, November 08, 2026 — 18:35 PHT). Roles: S, A.
 - Response: `{ idleSignoutMinutesStaff, idleSignoutMinutesAdmin }`.
-- Copies: `getAdminIdleMinutes` (`api.ts:287`) until `main` adds the settings; tests: none.
+- Copies: `getIdleSignoutSettings` (`api.ts:325`); tests: `idle-signout`.
 
 #### `PUT /api/settings/idle-signout`
 - **New** (Sunday, November 08, 2026 — 18:35 PHT). Roles: S. The Admin reads only.
 - Request: `idleSignoutMinutesStaff`, `idleSignoutMinutesAdmin`, whole numbers 10 to 240.
 - Errors: 403 for the Admin; 422 for a value out of range (`chk_settings_idle_signout` backs it). The message text follows the frontend when `main` builds the screen.
-- Audit: `update settings`, the changed field names only ("Updated Staff idle sign-out"), never the values. Clears the settings cache.
+- Audit: `update settings` (`settings/idle-signout`), the changed field names only ("Updated Staff idle sign-out minutes"), never the values. Clears the settings cache.
+- Messages: 403 "Only the clinic staff can change the sign-out times."; 422 "Enter whole minutes from 10 to 240."
+- Copies: `saveIdleSignoutSettings` (`api.ts:335`) and its range check `validIdleMinutes` (`api.ts:321`, a helper, no endpoint of its own); tests: `idle-signout`.
 
 #### `GET /api/auth/profile`
 - **Added Saturday, November 07, 2026 — 13:33 PHT (counter-check C-5).** Roles: S, A (the signed-in account only, ADR-066). Response: `OwnAccount` (`name`, `username`, `role`, `profilePicture`, `lastLogin`).
@@ -705,6 +708,11 @@ Every endpoint is Staff only. The database row lock of `ERD.md` section 9 replac
 - Response: `MonthlyReportData`, computed on each call, masked; `fullLrn=1` for the Staff print. May include staff incidents (Q8). `visitsBySex` is `{ female: { students, staff }, male: { students, staff }, noSexRecorded }` (ADR-063).
 - Copies: `getMonthlyReport` (`api.ts:2358`); tests: `Birthdate`, `ClinicRulesDecisions`, `ReportsDecisions`, `ReportsPage` and 5 more.
 
+#### `GET /api/reports/latest-month`
+- **New** (Monday, November 09, 2026 — 20:08 PHT, ADR-077). Roles: S, A.
+- Response: `{ month }`, `YYYY-MM`: the newest month with a visit or incident up to today, else this month. The Admin's Reports page opens on it.
+- Copies: `getLatestRecordedMonth` (`api.ts:3106`); tests: `AdminReportsPage`.
+
 ## Sports Reports (ADR-034)
 
 Staff only; the Admin gets 403 with "Only the clinic staff can open Sports Reports."
@@ -748,7 +756,12 @@ Added Saturday, November 07, 2026 — 13:24 PHT. A school year is started and en
 #### `GET /api/school-years`
 - **New.** Roles: S, A.
 - Response: `{ current, step, settings, years }`. `current` is the latest row: `label`, `from`, `to`, `endedOn`, `startedBy`, `endedBy` (names). `step` is `{ kind: 'end' | 'start', label, dueOn, due, soon }`. `settings` holds the four dates. `years` lists every row.
-- Copies: `getArchive` (its school-year part), `getSchoolYearSettings`; tests: `ArchivePage`, `schoolYear`.
+- Copies: `getArchive` (its school-year part), `getSchoolYearSettings`, and `getSchoolYearHistory` (`api.ts:3802`: the settings with every recorded start, which the Admin's Report month drop-down lists, ADR-077); tests: `ArchivePage`, `schoolYear`, `AdminReportsPage`.
+
+#### `GET /api/school-years/reminder`
+- **New** (Monday, November 09, 2026 — 20:08 PHT, ADR-075). Roles: S, A (always null for the Admin).
+- Response: `{ kind: 'end' | 'start', label, dueOn, overdue, dueToday }` or null, the same object as `schoolYearReminder` on the Dashboard summary. The sidebar's Archive item reads it on every screen and again after a school year is ended or started or its dates are saved.
+- Copies: `getSchoolYearReminder` (`api.ts:3253`); tests: `ArchivePage`, `AppShell`.
 
 #### `PUT /api/school-years/settings`
 - **New.** Roles: S.
@@ -790,7 +803,7 @@ The Archive's **Audit log** tab is `GET /api/audit-log` with `from` and `to` set
 #### `GET /api/dashboard/summary`
 - Roles: S, A.
 - Query: `preset`, `from`, `to`, `sex?`, `gradeLevel?`.
-- Response: `DashboardSummary`, masked, never with a full LRN (no printout, ADR-074). `schoolYearReminder` (ADR-075), Staff only: `{ kind: 'end' | 'start', label, dueOn, overdue }` from 7 days (`school_year_notice_days`) before the due day, otherwise null; always null for the Admin. The Admin's totals leave staff incidents out (ADR-053 item 4). Each `demographics.sex` row also carries `students` and `staff`, the two parts of its count, plus a `none` row only when a record has no sex (ADR-063). `gradeLevel` stays students only.
+- Response: `DashboardSummary`, masked, never with a full LRN (no printout, ADR-074). `schoolYearReminder` (ADR-075), Staff only: `{ kind: 'end' | 'start', label, dueOn, overdue, dueToday }` (`dueToday` on the due day itself, `overdue` only after it; November 8, 2026) from 7 days (`school_year_notice_days`) before the due day, otherwise null; always null for the Admin. The Admin's totals leave staff incidents out (ADR-053 item 4). Each `demographics.sex` row also carries `students` and `staff`, the two parts of its count, plus a `none` row only when a record has no sex (ADR-063). `gradeLevel` stays students only.
 - Copies: `getDashboardSummary` (`api.ts:2467`); tests: `AccessAndBackup`, `Birthdate`, `ClinicRulesDecisions`, `DashboardAndReports` and 5 more.
 
 #### `GET /api/dashboard/cluster-alerts`
