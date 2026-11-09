@@ -20,7 +20,7 @@ CLINIQ replaces the school clinic's paper logbooks and Excel sheets. It is built
 - **Backend: Not started.** The server side (backend) is not built. [`backend/`](./backend/README.md) holds only a README and an `.env.example`.
 - **Database: Decided, not built.** The database design is a proposed draft awaiting team approval ([ERD](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md)). No migrations exist.
 - **Stack.** React, TypeScript, Vite and Tailwind CSS for the frontend; Laravel with Sanctum for the backend (planned); MariaDB (XAMPP), MySQL-compatible, for the database (planned). See [Tech Stack](./CLINIQ-Knowledge-Base/02-Architecture/Tech-Stack.md) and ADR-007.
-- **Deployment: Decided, not built.** CLINIQ is planned to be hosted on the clinic computer and served over the clinic's local network (LAN). The Admin / Principal signs in at the clinic computer (ADR-029). Remote or cloud hosting is out of scope. Backups stay on the internal and external drives, with no cloud copy (ADR-039).
+- **Deployment: Decided, not built.** CLINIQ is planned to be hosted on the clinic computer and used only on that computer at `http://localhost`; no other computer reaches it (ADR-079). The Admin / Principal signs in at the clinic computer (ADR-029), and the Principal receives the Monthly Report as a PDF. Remote or cloud hosting is out of scope. Backups stay on the internal and external drives, with no cloud copy (ADR-039).
 
 ### Built (on sample data)
 

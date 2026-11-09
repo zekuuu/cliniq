@@ -15,7 +15,7 @@ All items below are **confirmed**, as of September 25, 2026 — the previously "
 | Local dev | **XAMPP**, standardized across all machines | Matches the client's production environment exactly; deliberately not mixing in Laravel Herd |
 | Dashboard charts | **Chart.js** (via `react-chartjs-2`) | Chosen over Recharts specifically for smaller bundle size and Canvas rendering — both matter more here than Recharts' nicer JSX composability, given the 4GB RAM target and the Dashboard's fairly simple chart needs (trend lines, a calendar heatmap, nothing exotic) |
 | Testing | Pest (backend), Vitest + React Testing Library (frontend) | |
-| Deployment (current) | Hosted on the clinic's existing computer, served over the LAN; no internet-facing hosting | ADR-029 note |
+| Deployment (current) | Hosted on the clinic's existing computer and used only there (`http://localhost`); no LAN access, no internet-facing hosting | ADR-029, ADR-079 |
 | Deployment (future) | Remote Server / Cloud | Documented future phase, not current work |
 
 The frontend tools here are installed and in use (`frontend/package.json`). **The backend tools have not been installed or executed yet**: see `04-Development/Environment-Setup.md` for the (still not-yet-run) setup steps.

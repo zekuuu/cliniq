@@ -77,7 +77,7 @@ Accounts for Staff and Admin/Principal. Never hard-deleted: a leaver is deactiva
 | `must_change_password` | `tinyint(1)` | no | 1 | Forces the Force Password Change screen after login. Default 1 for new accounts. |
 | `password_changed_at` | `datetime` | yes | NULL |  |
 | `failed_login_count` | `smallint unsigned` | no | 0 | Reset to 0 on success. At `lockout_max_attempts` (5) the account locks. |
-| `locked_until` | `datetime` | yes | NULL | Set to now + `lockout_minutes` (30) when the limit is hit. Login refuses while in the future. |
+| `locked_until` | `datetime` | yes | NULL | Set to now + `lockout_minutes` (5) when the limit is hit. Login refuses while in the future. |
 | `last_login_at` | `datetime` | yes | NULL |  |
 | `deactivated_at` | `datetime` | yes | NULL | Non-null = cannot log in. Rows are kept forever. |
 | `created_at` | `datetime` | no | current_timestamp() |  |

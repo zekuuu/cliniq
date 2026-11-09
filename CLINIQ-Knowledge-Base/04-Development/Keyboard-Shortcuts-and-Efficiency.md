@@ -21,3 +21,7 @@ This requirement covers **in-app keyboard navigation**: the desktop workstation 
 
 ## Status
 Built (`frontend/src/components/KeyboardShortcuts.tsx`): `Alt + N` New Visit, `Alt + I` Report Incident, `Alt + K` Student Search, `Alt + D` Dashboard, `Shift + Alt + N` save the visit and start another, `?` for the list. The list is also opened from "Keyboard shortcuts" in the account menu (ADR-066, Thursday, November 05, 2026 — 04:49 PHT; it replaced the header's Shortcuts button); no shortcut was added or changed.
+
+**Admin Reports (ADR-077, Sunday, November 08, 2026 — 18:45 PHT):** no new shortcut. Tab order is the Report month drop-down, then each report's **Open** button in list order. Enter on Open shows the report sheet and moves focus to **Back**. Enter on Back returns to the list and puts focus back on the Open button that was used. Tested in `features/reports/AdminReportsPage.test.tsx` and walked in Chrome.
+
+**Idle warning and Settings (ADR-078, Sunday, November 08, 2026 — 20:32 PHT):** no new shortcut. The idle warning opens with focus on **Stay signed in**; Tab moves through Close, Sign out now and Stay signed in inside the dialog; Escape means Stay signed in. Tab, keys and pointer moves do not close the warning, so Sign out now can be reached. On Settings, Tab goes Staff (minutes), Admin (minutes), Save. Tested in `features/idle-signout.test.tsx`; walked in Chrome.

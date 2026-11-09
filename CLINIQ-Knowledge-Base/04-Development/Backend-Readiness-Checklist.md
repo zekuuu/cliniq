@@ -23,7 +23,7 @@ The backend is a blank slate. A [proposed ERD and data dictionary](../02-Archite
 | `backend/` | Only a README and `.env.example`. Laravel is not scaffolded, and `Environment-Setup.md` still says "not yet executed". |
 | `ERD.md` | Proposed draft with a data dictionary and reference schema; it is not final or approved. Development-Phases B1 still prohibits migrations until team approval. |
 | Mock API (`api.ts`) | 104 exported functions and 10 exported constants, about 2,990 lines. It holds real business rules: stock integrity, excused-period checks, duplicate-student detection, LRN validation and uniqueness, incident stage rules. It is a working but unwritten API contract. |
-| Auth and roles | The access matrix in `Module-Overview.md` covers 11 rows (Modules 1 to 5 and 7 to 11, plus 2a) × 2 roles. ADR-015 sets a 7-day session lifetime and lockout after 5 failed attempts for 30 minutes; ADR-048 signs the Admin out after 30 idle minutes; ADR-056 chose SPA cookie mode. |
+| Auth and roles | The access matrix in `Module-Overview.md` covers 11 rows (Modules 1 to 5 and 7 to 11, plus 2a) × 2 roles. ADR-015 sets a 7-day session lifetime and lockout after 5 failed attempts for 5 minutes; ADR-048 signs the Admin out after 30 idle minutes; ADR-056 chose SPA cookie mode. |
 
 ---
 

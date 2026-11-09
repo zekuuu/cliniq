@@ -728,7 +728,7 @@ An approved letter can be replaced: the old row becomes `superseded`, and a visi
 
 **Backup.** A run writes to every enabled `backup_locations` row (ADR-052). The scheduled script writes a status file; Laravel ingests it into `backup_logs` and one `backup_location_results` row per location (idempotent by `run_key`) → the nurse verifies (a failed run cannot be verified).
 
-**User.** Created with `must_change_password = 1` → active → locked after 5 failures for 30 minutes → deactivated when they leave. Never deleted.
+**User.** Created with `must_change_password = 1` → active → locked after 5 failures for 5 minutes → deactivated when they leave. Never deleted.
 
 ---
 
