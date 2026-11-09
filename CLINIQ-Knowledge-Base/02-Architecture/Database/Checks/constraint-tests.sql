@@ -178,6 +178,13 @@ CALL t_rejects('chk_settings_school_year_day', "UPDATE system_settings SET setti
 CALL t_rejects('chk_settings_school_year_day', "UPDATE system_settings SET setting_value = '0' WHERE setting_key = 'school_year_end_day'");
 CALL t_accepts('a school-year date at its limits', "UPDATE system_settings SET setting_value = '31' WHERE setting_key = 'school_year_end_day'");
 CALL t_count('school-year dates default to June 15 and April 14, notice 7 days', '', "system_settings WHERE (setting_key, setting_value) IN (('school_year_start_month','6'),('school_year_start_day','15'),('school_year_end_month','4'),('school_year_end_day','14'),('school_year_notice_days','7'))", 5);
+-- Idle sign-out per role (ADR-078 on main, pending merge): 10 to 240 minutes, Staff 60 and Admin 30 by default.
+CALL t_rejects('chk_settings_idle_signout', "UPDATE system_settings SET setting_value = '9' WHERE setting_key = 'idle_signout_minutes_staff'");
+CALL t_rejects('chk_settings_idle_signout', "UPDATE system_settings SET setting_value = '241' WHERE setting_key = 'idle_signout_minutes_admin'");
+CALL t_rejects('chk_settings_idle_signout', "UPDATE system_settings SET setting_value = '30.5' WHERE setting_key = 'idle_signout_minutes_staff'");
+CALL t_accepts('idle sign-out at its limits', "UPDATE system_settings SET setting_value = IF(setting_key = 'idle_signout_minutes_staff', '10', '240') WHERE setting_key IN ('idle_signout_minutes_staff','idle_signout_minutes_admin')");
+CALL t_count('idle sign-out defaults to Staff 60 and Admin 30', '', "system_settings WHERE (setting_key, setting_value) IN (('idle_signout_minutes_staff','60'),('idle_signout_minutes_admin','30'))", 2);
+CALL t_count('the old admin_idle_minutes key is gone', '', "system_settings WHERE setting_key = 'admin_idle_minutes'", 0);
 -- School years started and ended by hand (ADR-075).
 SET @sy = 'INSERT INTO school_years (label, started_on, started_by_user_id, ended_on, ended_by_user_id) VALUES ';
 CALL t_rejects('uq_school_years_label', CONCAT(@sy, "('2026–2027', '2027-06-15', 1, NULL, NULL)"));

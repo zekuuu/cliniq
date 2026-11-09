@@ -100,6 +100,9 @@ CREATE TABLE system_settings (
     OR (setting_value REGEXP '^[0-9]{1,2}$' AND CAST(setting_value AS UNSIGNED) BETWEEN 1 AND 12)),
   CONSTRAINT chk_settings_school_year_day CHECK (setting_key NOT IN ('school_year_start_day','school_year_end_day')
     OR (setting_value REGEXP '^[0-9]{1,2}$' AND CAST(setting_value AS UNSIGNED) BETWEEN 1 AND 31)),
+  -- Idle sign-out per role (ADR-078 on main, pending merge; amends ADR-015, ADR-048, ADR-057): whole minutes, 10 to 240.
+  CONSTRAINT chk_settings_idle_signout CHECK (setting_key NOT IN ('idle_signout_minutes_staff','idle_signout_minutes_admin')
+    OR (setting_value REGEXP '^[0-9]{2,3}$' AND CAST(setting_value AS UNSIGNED) BETWEEN 10 AND 240)),
   CONSTRAINT fk_settings_user FOREIGN KEY (updated_by_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -1073,7 +1076,8 @@ INSERT INTO system_settings (setting_key, setting_value, value_type, description
   ('retention_years_after_archive', '5',  'int', 'Years an archived student or staff-patient record is kept before deletion (ADR-057)'),
   ('holiday_stale_days',            '45', 'int', 'Warn when the last successful holiday sync is older than this (ADR-020)'),
   ('audit_retention_years',         '10', 'int', 'Years the audit log is kept (ADR-037, ADR-057)'),
-  ('admin_idle_minutes',            '30', 'int', 'Idle minutes before the Admin/Principal is signed out (ADR-048)'),
+  ('idle_signout_minutes_staff',    '60', 'int', 'Idle minutes before a Staff account is signed out, 10 to 240 (ADR-078 on main, pending merge)'),
+  ('idle_signout_minutes_admin',    '30', 'int', 'Idle minutes before the Admin/Principal is signed out, 10 to 240 (ADR-048, ADR-078 on main, pending merge)'),
   ('medical_certificate_after_days','3',  'int', 'Excused days past which a letter warns about a medical certificate (ADR-049)'),
   ('cluster_min_students',          '3',  'int', 'Students with the same complaint and grade that raise the cluster alert (ADR-050)'),
   ('cluster_window_days',           '3',  'int', 'Window of the cluster alert, in days (ADR-050)'),

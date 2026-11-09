@@ -95,7 +95,7 @@ If your viewer does not draw Mermaid, the same picture is exported as an image: 
 | Visits, incidents | Reports | Monthly report with a weekly breakdown, Complaint summary, Incident register | Module 5, ADR-050 |
 | Inventory | Reports | The monthly inventory sheet: New Purchase, Total Available, Ending Inventory | ADR-050 |
 | Student Records, visits, incidents | Sports Report | The students the clinician picks and their visits and incidents in the chosen window; the Admin cannot open it | ADR-034 |
-| User Management | every module | Accounts and roles decide who may see and do what; the Admin / Principal is signed out after 30 idle minutes | ADR-033, ADR-038, ADR-048 |
+| User Management | every module | Accounts and roles decide who may see and do what; each role is signed out after its own idle minutes (Staff 60, Admin / Principal 30, both settings) | ADR-033, ADR-038, ADR-048, ADR-078 (on main, pending merge) |
 | every module | Audit Log | Every save, approval, print and opened profile or incident report is recorded with who and when; Staff and the Admin read it | Audit Trail section, ADR-016 |
 | Backup | the whole database | Copies it to each backup location chosen in the system; local only, no cloud. In the frontend phase the mock only records the run | ADR-039, ADR-052 |
 
