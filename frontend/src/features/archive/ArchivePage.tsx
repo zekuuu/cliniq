@@ -39,6 +39,7 @@ import {
 } from '../../lib/mock-db'
 import { schoolYearSettingsError, type SchoolYearSettings } from '../../lib/schoolYear'
 import { paths } from '../../routes/paths'
+import { SCHOOL_YEAR_CHANGED_EVENT } from '../../lib/accountEvents'
 import { AuditLogPage } from '../audit-log/AuditLogPage'
 
 type ArchiveTab = 'students' | 'staff' | 'reports' | 'audit'
@@ -151,7 +152,8 @@ function recordColumns(
 
 /**
  * One year's archived students or staff, with the lists' usual tools (Zean, November 7, 2026): search
- * by name or number, a reason filter, sortable columns (Full name ascending by default, Zean, November 8, 2026) and pages, as on the
+ * by name or number, a grade level (students) or type (staff) filter as on the Student and Staff Lists
+ * (Zean, November 8, 2026), a reason filter, sortable columns (Full name ascending by default, Zean, November 8, 2026) and pages, as on the
  * Staff List. Keyed by year, so a new year starts on page 1 with no filters.
  */
 function RecordsTable({
@@ -165,6 +167,7 @@ function RecordsTable({
 }) {
   const [search, setSearch] = useState('')
   const [reason, setReason] = useState('')
+  const [group, setGroup] = useState('')
   const [sort, setSort] = useState<TableSortState<RecordSortKey>>({
     key: 'name',
     direction: 'ascending',
@@ -175,9 +178,13 @@ function RecordsTable({
   if (!rows.length) return <EmptyState icon="archive" title={`No ${people} archived in ${year}`} />
 
   const reasons = [...new Set(rows.map((row) => row.archiveReason ?? 'Not recorded'))].sort()
+  // The grade or type when archived, so the options come from the rows ("Grade 2" before "Grade 10").
+  const groups = [...new Set(rows.map((row) => row.group))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+  const groupLabel = kind === 'student' ? 'Grade level' : 'Type'
   const query = search.trim().toLowerCase()
   const listed = rows.filter(
     (row) =>
+      (!group || row.group === group) &&
       (!reason || (row.archiveReason ?? 'Not recorded') === reason) &&
       // A masked LRN still matches its last four digits.
       (!query ||
@@ -204,7 +211,7 @@ function RecordsTable({
   }
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1fr)_16rem]">
+      <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1fr)_14rem_14rem]">
         <Input
           label="Search"
           type="search"
@@ -212,6 +219,17 @@ function RecordsTable({
           placeholder={kind === 'student' ? 'Name or last 4 of LRN' : 'Name or Staff No.'}
           onChange={(event) => {
             setSearch(event.target.value)
+            setPage(1)
+          }}
+        />
+        <Select
+          label={groupLabel}
+          value={group}
+          placeholder={kind === 'student' ? 'All grade levels' : 'All types'}
+          clearable
+          options={groups.map((value) => ({ value, label: value }))}
+          onChange={(value) => {
+            setGroup(value)
             setPage(1)
           }}
         />
@@ -256,7 +274,7 @@ function RecordsTable({
         <EmptyState
           icon="archive"
           title={`No archived ${people} match`}
-          description="Try a different search or reason."
+          description="Try a different search or filter."
         />
       )}
     </div>
@@ -489,7 +507,10 @@ function CurrentSchoolYearCard({
       },
     )
     setConfirming(false)
-    if (result.ok) onChanged()
+    if (result.ok) {
+      onChanged()
+      window.dispatchEvent(new Event(SCHOOL_YEAR_CHANGED_EVENT))
+    }
   }
   const started = `Started ${formatDate(current.from)}${data.currentStartedBy ? ` by ${data.currentStartedBy}` : ''}.`
   const state = current.endedOn
@@ -612,6 +633,7 @@ function SchoolYearDatesDialog({
     if (result.ok) {
       onClose()
       onSaved()
+      window.dispatchEvent(new Event(SCHOOL_YEAR_CHANGED_EVENT))
     }
   }
   return (
