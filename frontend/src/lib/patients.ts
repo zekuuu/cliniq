@@ -18,10 +18,15 @@ export interface PatientNumber {
   number: string
 }
 
-export const PATIENT_KIND_LABELS: Record<PatientKind, string> = { student: 'Student', personnel: 'Staff' }
+export const PATIENT_KIND_LABELS: Record<PatientKind, string> = {
+  student: 'Student',
+  personnel: 'Staff',
+}
 
 export function patientRefOf(patient: { kind: PatientKind; id: string }): PatientRef {
-  return patient.kind === 'student' ? { studentId: patient.id, personnelId: null } : { studentId: null, personnelId: patient.id }
+  return patient.kind === 'student'
+    ? { studentId: patient.id, personnelId: null }
+    : { studentId: null, personnelId: patient.id }
 }
 
 /** The single-person header line: "LRN 000000260001 · Grade 4" or "STF-0002 · Teacher · Science department". */
@@ -59,11 +64,16 @@ export function patientIdText(patient: Patient): string {
 
 /** The field beside the name: grade level for a student, staff type for a staff member. */
 export function patientGroup(patient: Patient): { label: string; value: string } {
-  return patient.kind === 'student' ? { label: 'Grade level', value: patient.gradeLevel } : { label: 'Type', value: patient.type }
+  return patient.kind === 'student'
+    ? { label: 'Grade level', value: patient.gradeLevel }
+    : { label: 'Type', value: patient.type }
 }
 
 /** Who an incident's calls go to, as a title word: "Parent" or "Emergency contact" (D12). */
-export const NOTIFIED_PARTY: Record<PatientKind, string> = { student: 'Parent', personnel: 'Emergency contact' }
+export const NOTIFIED_PARTY: Record<PatientKind, string> = {
+  student: 'Parent',
+  personnel: 'Emergency contact',
+}
 
 export const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 

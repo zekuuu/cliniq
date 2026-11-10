@@ -9,7 +9,9 @@ import { VisitDetailPage } from './VisitDetailPage'
 
 /** The visit this test just saved, found by its submit audit entry (see NewVisitEntryPage.test.tsx). */
 function getSavedVisit() {
-  const entry = getRecordedAuditEntries().findLast((e) => e.actionType === 'submit' && e.targetRecord?.type === 'visit')
+  const entry = getRecordedAuditEntries().findLast(
+    (e) => e.actionType === 'submit' && e.targetRecord?.type === 'visit',
+  )
   if (!entry?.targetRecord) throw new Error('No visit was saved')
   return getVisit(entry.targetRecord.id)
 }
@@ -23,7 +25,8 @@ async function pickComplaint(user: ReturnType<typeof userEvent.setup>) {
 }
 
 // jsdom's time input takes a full "HH:MM" value; a change event sets it the way a finished entry does.
-const setTimeOut = (value: string) => fireEvent.change(screen.getByLabelText('Time out'), { target: { value } })
+const setTimeOut = (value: string) =>
+  fireEvent.change(screen.getByLabelText('Time out'), { target: { value } })
 
 describe('Visit logbook fields ("Show more fields")', () => {
   beforeEach(() => resetMockDb())
@@ -147,7 +150,9 @@ describe('Visit logbook fields ("Show more fields")', () => {
     expect(screen.queryByText(/^Fever:/)).not.toBeInTheDocument()
     await user.clear(screen.getByLabelText('Body temperature (°C)'))
     await user.type(screen.getByLabelText('Body temperature (°C)'), '38.1')
-    expect(screen.getByText('Fever: 38.1 °C (37 °C and up). You can still save.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Fever: 38.1 °C (37 °C and up). You can still save.'),
+    ).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
     expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
@@ -186,7 +191,11 @@ describe('Visit logbook fields ("Show more fields")', () => {
     // The visit has no other logbook value, so Visit Detail leaves those out.
     expect(screen.queryByRole('heading', { name: 'Remarks' })).not.toBeInTheDocument()
     const [entry] = getRecordedAuditEntries()
-    expect(entry).toMatchObject({ actionType: 'update', targetRecord: { type: 'visit', id: 'visit-0158' }, summary: 'Updated time out' })
+    expect(entry).toMatchObject({
+      actionType: 'update',
+      targetRecord: { type: 'visit', id: 'visit-0158' },
+      summary: 'Updated time out',
+    })
   })
 
   it('edit: opens by itself when the visit has a value, and rejects a time out before the time in', async () => {

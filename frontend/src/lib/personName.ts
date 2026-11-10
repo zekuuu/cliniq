@@ -17,11 +17,15 @@ export const cleanNamePart = (value: string) => value.trim().replace(/\s+/g, ' '
 
 /** "First Middle Last", for example "Maria Angela Santos Dela Cruz". */
 export function formatPersonName({ firstName, middleName, lastName }: NameParts): string {
-  return [firstName, middleName, lastName].map((part) => cleanNamePart(part ?? '')).filter(Boolean).join(' ')
+  return [firstName, middleName, lastName]
+    .map((part) => cleanNamePart(part ?? ''))
+    .filter(Boolean)
+    .join(' ')
 }
 
 /** Comparison key: case-, accent- and space-insensitive ("José  Peña" equals "jose pena"). */
-export const nameKey = (value: string) => cleanNamePart(value).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+export const nameKey = (value: string) =>
+  cleanNamePart(value).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
 /** True when every word typed appears in the name, in any order ("dela cruz", "maria santos"). */
 export function nameMatches(fullName: string, query: string): boolean {
@@ -32,7 +36,11 @@ export function nameMatches(fullName: string, query: string): boolean {
 
 /** School-list order: last name, then first name, then middle name. */
 export function compareByLastName(a: NameParts, b: NameParts): number {
-  return a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName) || (a.middleName ?? '').localeCompare(b.middleName ?? '')
+  return (
+    a.lastName.localeCompare(b.lastName) ||
+    a.firstName.localeCompare(b.firstName) ||
+    (a.middleName ?? '').localeCompare(b.middleName ?? '')
+  )
 }
 
 /**

@@ -33,44 +33,139 @@
   },
   "holidays": [
     { "date": "2026-01-01", "name": "New Year's Day", "kind": "regular", "confirmed": true },
-    { "date": "2026-02-17", "name": "Chinese New Year", "kind": "special-non-working", "confirmed": true },
-    { "date": "2026-02-25", "name": "EDSA People Power Revolution Anniversary", "kind": "special-working", "confirmed": true },
-    { "date": "2026-03-20", "name": "Eid'l Fitr (Feast of Ramadhan)", "kind": "islamic", "confirmed": true },
+    {
+      "date": "2026-02-17",
+      "name": "Chinese New Year",
+      "kind": "special-non-working",
+      "confirmed": true
+    },
+    {
+      "date": "2026-02-25",
+      "name": "EDSA People Power Revolution Anniversary",
+      "kind": "special-working",
+      "confirmed": true
+    },
+    {
+      "date": "2026-03-20",
+      "name": "Eid'l Fitr (Feast of Ramadhan)",
+      "kind": "islamic",
+      "confirmed": true
+    },
     { "date": "2026-04-02", "name": "Maundy Thursday", "kind": "regular", "confirmed": true },
     { "date": "2026-04-03", "name": "Good Friday", "kind": "regular", "confirmed": true },
-    { "date": "2026-04-04", "name": "Black Saturday", "kind": "special-non-working", "confirmed": true },
+    {
+      "date": "2026-04-04",
+      "name": "Black Saturday",
+      "kind": "special-non-working",
+      "confirmed": true
+    },
     { "date": "2026-04-09", "name": "Araw ng Kagitingan", "kind": "regular", "confirmed": true },
     { "date": "2026-05-01", "name": "Labor Day", "kind": "regular", "confirmed": true },
     { "date": "2026-05-27", "name": "Eid'l Adha", "kind": "islamic", "confirmed": true },
     { "date": "2026-06-12", "name": "Independence Day", "kind": "regular", "confirmed": true },
-    { "date": "2026-08-21", "name": "Ninoy Aquino Day", "kind": "special-non-working", "confirmed": true },
+    {
+      "date": "2026-08-21",
+      "name": "Ninoy Aquino Day",
+      "kind": "special-non-working",
+      "confirmed": true
+    },
     { "date": "2026-08-31", "name": "National Heroes Day", "kind": "regular", "confirmed": true },
-    { "date": "2026-11-01", "name": "All Saints' Day", "kind": "special-non-working", "confirmed": true },
-    { "date": "2026-11-02", "name": "All Souls' Day", "kind": "special-non-working", "confirmed": true },
+    {
+      "date": "2026-11-01",
+      "name": "All Saints' Day",
+      "kind": "special-non-working",
+      "confirmed": true
+    },
+    {
+      "date": "2026-11-02",
+      "name": "All Souls' Day",
+      "kind": "special-non-working",
+      "confirmed": true
+    },
     { "date": "2026-11-30", "name": "Bonifacio Day", "kind": "regular", "confirmed": true },
-    { "date": "2026-12-08", "name": "Feast of the Immaculate Conception of Mary", "kind": "special-non-working", "confirmed": true },
-    { "date": "2026-12-24", "name": "Christmas Eve", "kind": "special-non-working", "confirmed": true },
+    {
+      "date": "2026-12-08",
+      "name": "Feast of the Immaculate Conception of Mary",
+      "kind": "special-non-working",
+      "confirmed": true
+    },
+    {
+      "date": "2026-12-24",
+      "name": "Christmas Eve",
+      "kind": "special-non-working",
+      "confirmed": true
+    },
     { "date": "2026-12-25", "name": "Christmas Day", "kind": "regular", "confirmed": true },
     { "date": "2026-12-30", "name": "Rizal Day", "kind": "regular", "confirmed": true },
-    { "date": "2026-12-31", "name": "Last Day of the Year", "kind": "special-non-working", "confirmed": true },
+    {
+      "date": "2026-12-31",
+      "name": "Last Day of the Year",
+      "kind": "special-non-working",
+      "confirmed": true
+    },
     { "date": "2027-01-01", "name": "New Year's Day", "kind": "regular", "confirmed": true },
-    { "date": "2027-02-06", "name": "Chinese New Year", "kind": "special-non-working", "confirmed": true },
-    { "date": "2027-02-25", "name": "EDSA People Power Revolution Anniversary", "kind": "special-working", "confirmed": true },
+    {
+      "date": "2027-02-06",
+      "name": "Chinese New Year",
+      "kind": "special-non-working",
+      "confirmed": true
+    },
+    {
+      "date": "2027-02-25",
+      "name": "EDSA People Power Revolution Anniversary",
+      "kind": "special-working",
+      "confirmed": true
+    },
     { "date": "2027-03-25", "name": "Maundy Thursday", "kind": "regular", "confirmed": true },
     { "date": "2027-03-26", "name": "Good Friday", "kind": "regular", "confirmed": true },
-    { "date": "2027-03-27", "name": "Black Saturday", "kind": "special-non-working", "confirmed": true },
+    {
+      "date": "2027-03-27",
+      "name": "Black Saturday",
+      "kind": "special-non-working",
+      "confirmed": true
+    },
     { "date": "2027-04-09", "name": "Araw ng Kagitingan", "kind": "regular", "confirmed": true },
     { "date": "2027-05-01", "name": "Labor Day", "kind": "regular", "confirmed": true },
     { "date": "2027-06-12", "name": "Independence Day", "kind": "regular", "confirmed": true },
-    { "date": "2027-08-21", "name": "Ninoy Aquino Day", "kind": "special-non-working", "confirmed": true },
+    {
+      "date": "2027-08-21",
+      "name": "Ninoy Aquino Day",
+      "kind": "special-non-working",
+      "confirmed": true
+    },
     { "date": "2027-08-30", "name": "National Heroes Day", "kind": "regular", "confirmed": true },
-    { "date": "2027-11-01", "name": "All Saints' Day", "kind": "special-non-working", "confirmed": true },
-    { "date": "2027-11-02", "name": "All Souls' Day", "kind": "special-non-working", "confirmed": true },
+    {
+      "date": "2027-11-01",
+      "name": "All Saints' Day",
+      "kind": "special-non-working",
+      "confirmed": true
+    },
+    {
+      "date": "2027-11-02",
+      "name": "All Souls' Day",
+      "kind": "special-non-working",
+      "confirmed": true
+    },
     { "date": "2027-11-30", "name": "Bonifacio Day", "kind": "regular", "confirmed": true },
-    { "date": "2027-12-08", "name": "Feast of the Immaculate Conception of Mary", "kind": "special-non-working", "confirmed": true },
-    { "date": "2027-12-24", "name": "Christmas Eve", "kind": "special-non-working", "confirmed": true },
+    {
+      "date": "2027-12-08",
+      "name": "Feast of the Immaculate Conception of Mary",
+      "kind": "special-non-working",
+      "confirmed": true
+    },
+    {
+      "date": "2027-12-24",
+      "name": "Christmas Eve",
+      "kind": "special-non-working",
+      "confirmed": true
+    },
     { "date": "2027-12-25", "name": "Christmas Day", "kind": "regular", "confirmed": true },
     { "date": "2027-12-30", "name": "Rizal Day", "kind": "regular", "confirmed": true },
-    { "date": "2027-12-31", "name": "Last Day of the Year", "kind": "special-non-working", "confirmed": true }
+    {
+      "date": "2027-12-31",
+      "name": "Last Day of the Year",
+      "kind": "special-non-working",
+      "confirmed": true
+    }
   ]
 }

@@ -1,4 +1,18 @@
-import { addDays, diffDays, eachDay, endOfMonth, endOfYear, formatDate, formatMonthYear, formatShortDate, isWithin, parseISODate, startOfMonth, startOfWeek, startOfYear } from '../dates'
+import {
+  addDays,
+  diffDays,
+  eachDay,
+  endOfMonth,
+  endOfYear,
+  formatDate,
+  formatMonthYear,
+  formatShortDate,
+  isWithin,
+  parseISODate,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+} from '../dates'
 import { previousPeriod, rangeLengthDays, type DateRange, type DateRangePreset } from '../dateRange'
 import type { ISODate } from '../../types/entities'
 import type {
@@ -55,28 +69,79 @@ export function buildDashboardSummary(
   const trendEvents = [
     ...counted.flatMap((v) => {
       const student = students.get(v.studentId ?? '')
-      return student ? [{ date: dateOf(v.dateTime), hour: hourOf(v.dateTime), complaint: v.complaint, eventTag: v.eventTag, sex: student.sex ?? 'female', gradeLevel: v.gradeLevelAtTime ?? student.gradeLevel, kind: 'visit' as const }] : []
+      return student
+        ? [
+            {
+              date: dateOf(v.dateTime),
+              hour: hourOf(v.dateTime),
+              complaint: v.complaint,
+              eventTag: v.eventTag,
+              sex: student.sex ?? 'female',
+              gradeLevel: v.gradeLevelAtTime ?? student.gradeLevel,
+              kind: 'visit' as const,
+            },
+          ]
+        : []
     }),
     ...state.incidents.flatMap((i) => {
       const student = students.get(i.studentId ?? '')
-      return student ? [{ date: dateOf(i.time), hour: hourOf(i.time), complaint: i.complaint, eventTag: i.eventTag, sex: student.sex ?? 'female', gradeLevel: i.gradeLevelAtTime ?? student.gradeLevel, kind: 'incident' as const }] : []
+      return student
+        ? [
+            {
+              date: dateOf(i.time),
+              hour: hourOf(i.time),
+              complaint: i.complaint,
+              eventTag: i.eventTag,
+              sex: student.sex ?? 'female',
+              gradeLevel: i.gradeLevelAtTime ?? student.gradeLevel,
+              kind: 'incident' as const,
+            },
+          ]
+        : []
     }),
   ]
   const inRangeEvents = trendEvents.filter((event) => isWithin(event.date, from, to))
   // The by-sex count alone takes staff too (ADR-063). The Admin's `state` already leaves staff incidents out (ADR-053).
   const staffSex = new Map(state.personnel.map((p) => [p.id, p.sex]))
   const staffEvents = [
-    ...visitsInRange.flatMap((v) => (v.personnelId ? [{ sex: staffSex.get(v.personnelId) ?? null, gradeLevel: null, kind: 'visit' as const, staff: true }] : [])),
-    ...incidentsInRange.flatMap((i) => (i.personnelId ? [{ sex: staffSex.get(i.personnelId) ?? null, gradeLevel: null, kind: 'incident' as const, staff: true }] : [])),
+    ...visitsInRange.flatMap((v) =>
+      v.personnelId
+        ? [
+            {
+              sex: staffSex.get(v.personnelId) ?? null,
+              gradeLevel: null,
+              kind: 'visit' as const,
+              staff: true,
+            },
+          ]
+        : [],
+    ),
+    ...incidentsInRange.flatMap((i) =>
+      i.personnelId
+        ? [
+            {
+              sex: staffSex.get(i.personnelId) ?? null,
+              gradeLevel: null,
+              kind: 'incident' as const,
+              staff: true,
+            },
+          ]
+        : [],
+    ),
   ]
-  const filteredTrendEvents = trendEvents.filter((event) =>
-    (!query.sex || event.sex === query.sex) && (!query.gradeLevel || event.gradeLevel === query.gradeLevel),
+  const filteredTrendEvents = trendEvents.filter(
+    (event) =>
+      (!query.sex || event.sex === query.sex) &&
+      (!query.gradeLevel || event.gradeLevel === query.gradeLevel),
   )
   const prev = previousPeriod(query.range)
   // A previous period reaching back before the first record would compare against nothing.
-  const firstRecord = [...state.visits.map((v) => dateOf(v.dateTime)), ...state.incidents.map((i) => dateOf(i.time))]
-    .sort()[0]
-  const comparable = query.range.preset !== 'all' && firstRecord !== undefined && prev.from >= firstRecord
+  const firstRecord = [
+    ...state.visits.map((v) => dateOf(v.dateTime)),
+    ...state.incidents.map((i) => dateOf(i.time)),
+  ].sort()[0]
+  const comparable =
+    query.range.preset !== 'all' && firstRecord !== undefined && prev.from >= firstRecord
 
   return {
     today,
@@ -92,12 +157,17 @@ export function buildDashboardSummary(
       activeStudents: state.students.filter((s) => !s.archived).length,
       inClinicNow: inClinicNow(state).length,
       incidentsAwaitingStage2: state.incidents.filter((i) => i.stage === 1).length,
-      split: { visits: patientSplit(visitsInRange), incidents: patientSplit(incidentsInRange), inClinicNow: patientSplit(inClinicNow(state)) },
+      split: {
+        visits: patientSplit(visitsInRange),
+        incidents: patientSplit(incidentsInRange),
+        inClinicNow: patientSplit(inClinicNow(state)),
+      },
     },
     previousCounts: comparable
       ? {
           visits: counted.filter((v) => isWithin(dateOf(v.dateTime), prev.from, prev.to)).length,
-          incidents: state.incidents.filter((i) => isWithin(dateOf(i.time), prev.from, prev.to)).length,
+          incidents: state.incidents.filter((i) => isWithin(dateOf(i.time), prev.from, prev.to))
+            .length,
         }
       : null,
     dueFollowUps: buildDueFollowUps(state),
@@ -109,8 +179,17 @@ export function buildDashboardSummary(
     // Filled in by `getDashboardSummary`, which owns the store's clock (api.ts `backupAlertFor`).
     backupAlert: null,
     inventoryAlerts: buildInventoryAlerts(state),
-    complaintTrends: buildComplaintTrends(filteredTrendEvents, query.range, config, state.frontendOnly.calendarEvents),
-    demographics: buildDemographicAnalysis([...inRangeEvents, ...staffEvents], query, gradeLevels(state)),
+    complaintTrends: buildComplaintTrends(
+      filteredTrendEvents,
+      query.range,
+      config,
+      state.frontendOnly.calendarEvents,
+    ),
+    demographics: buildDemographicAnalysis(
+      [...inRangeEvents, ...staffEvents],
+      query,
+      gradeLevels(state),
+    ),
   }
 }
 
@@ -157,7 +236,11 @@ export function buildInventoryAlerts(state: DbState): InventoryAlertRow[] {
       // actual date so its alert agrees with Inventory instead of rendering an unexplained null.
       const expirationDate = status.expirationDate ?? status.oldestExpiredDate
       const daysUntilExpiry = expirationDate ? diffDays(state.today, expirationDate) : null
-      return { item: { ...item, currentStock: status.currentStock, expirationDate }, flags: status.flags, daysUntilExpiry }
+      return {
+        item: { ...item, currentStock: status.currentStock, expirationDate },
+        flags: status.flags,
+        daysUntilExpiry,
+      }
     })
     .filter((row) => row.flags.length > 0)
     .sort((a, b) => severity(b) - severity(a) || a.item.name.localeCompare(b.item.name))
@@ -258,7 +341,15 @@ export function trendGranularityFor(
     case 'all':
       return days <= 2 * 366 ? 'month' : 'year'
     case 'custom':
-      return days <= 1 ? 'hour' : days <= 31 ? 'day' : days <= 120 ? 'week' : days <= 2 * 366 ? 'month' : 'year'
+      return days <= 1
+        ? 'hour'
+        : days <= 31
+          ? 'day'
+          : days <= 120
+            ? 'week'
+            : days <= 2 * 366
+              ? 'month'
+              : 'year'
   }
 }
 
@@ -274,12 +365,18 @@ export function buildComplaintTrends(
   // their selected start so zero-activity days, weeks, or months remain visible as zero buckets.
   const trendFrom =
     range.preset === 'all'
-      ? events.reduce<ISODate>((earliest, event) => (event.date < earliest ? event.date : earliest), to)
+      ? events.reduce<ISODate>(
+          (earliest, event) => (event.date < earliest ? event.date : earliest),
+          to,
+        )
       : from
   const granularity = trendGranularityFor(range.preset, { from: trendFrom, to })
   const buckets =
     granularity === 'hour'
-      ? buildHourBuckets(to, events.map((e) => e.hour ?? 0))
+      ? buildHourBuckets(
+          to,
+          events.map((e) => e.hour ?? 0),
+        )
       : buildBuckets(trendFrom, to, granularity)
   const byComplaint = new Map<string, number[]>()
   for (const e of events) {
@@ -306,11 +403,18 @@ export function buildComplaintTrends(
     buckets,
     series: all.slice(0, config.topComplaints),
     otherComplaints: all.slice(config.topComplaints),
-    weekdayComparison: isMonthRange(range) ? buildWeekdayComparison(events, range, calendarEvents) : undefined,
+    weekdayComparison: isMonthRange(range)
+      ? buildWeekdayComparison(events, range, calendarEvents)
+      : undefined,
   }
 }
 
-type DemographicEvent = { sex: 'male' | 'female' | null; gradeLevel: string | null; kind: 'visit' | 'incident'; staff?: boolean }
+type DemographicEvent = {
+  sex: 'male' | 'female' | null
+  gradeLevel: string | null
+  kind: 'visit' | 'incident'
+  staff?: boolean
+}
 
 function demographicCounts(
   events: DemographicEvent[],
@@ -339,21 +443,42 @@ export function buildDemographicAnalysis(
   /** Listed even with no cases, so the grade chart keeps every grade in its place. */
   enrolledGrades: string[] = [],
 ): DemographicAnalysis {
-  const sexEvents = inRangeEvents.filter((event) => !query.gradeLevel || event.gradeLevel === query.gradeLevel)
+  const sexEvents = inRangeEvents.filter(
+    (event) => !query.gradeLevel || event.gradeLevel === query.gradeLevel,
+  )
   const gradeEvents = inRangeEvents.filter((event) => !query.sex || event.sex === query.sex)
-  const grades = [...new Set([...enrolledGrades, ...inRangeEvents.flatMap((event) => event.gradeLevel ?? [])])].sort(compareGradeLevels)
-  const sexLabels: Array<[string, string]> = [['female', 'Female'], ['male', 'Male']]
+  const grades = [
+    ...new Set([...enrolledGrades, ...inRangeEvents.flatMap((event) => event.gradeLevel ?? [])]),
+  ].sort(compareGradeLevels)
+  const sexLabels: Array<[string, string]> = [
+    ['female', 'Female'],
+    ['male', 'Male'],
+  ]
   if (sexEvents.some((event) => !event.sex)) sexLabels.push(['none', 'No sex recorded'])
   return {
     sex: demographicCounts(sexEvents, 'sex', sexLabels).map((row) => {
-      const staff = sexEvents.filter((event) => event.staff && (event.sex ?? 'none') === row.key).length
+      const staff = sexEvents.filter(
+        (event) => event.staff && (event.sex ?? 'none') === row.key,
+      ).length
       return { ...row, staff, students: row.count - staff }
     }),
-    gradeLevel: demographicCounts(gradeEvents.filter((event) => event.gradeLevel), 'gradeLevel', grades.map((grade) => [grade, grade])),
+    gradeLevel: demographicCounts(
+      gradeEvents.filter((event) => event.gradeLevel),
+      'gradeLevel',
+      grades.map((grade) => [grade, grade]),
+    ),
   }
 }
 
-const WEEKDAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const WEEKDAY_LABELS = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+]
 
 function weekdayIndex(date: ISODate): number {
   // Sunday first, like the Activity calendar and the Monthly Report (ADR-055).
@@ -361,16 +486,25 @@ function weekdayIndex(date: ISODate): number {
 }
 
 function isMonthRange(range: Pick<DateRange, 'preset' | 'from' | 'to'>): boolean {
-  return range.from === startOfMonth(range.from) && (range.preset === 'thisMonth' || range.to === endOfMonth(range.to))
+  return (
+    range.from === startOfMonth(range.from) &&
+    (range.preset === 'thisMonth' || range.to === endOfMonth(range.to))
+  )
 }
 
-function monthComparisonWindow(range: Pick<DateRange, 'from' | 'to'>): { from: ISODate; to: ISODate } {
+function monthComparisonWindow(range: Pick<DateRange, 'from' | 'to'>): {
+  from: ISODate
+  to: ISODate
+} {
   const previousFrom = startOfMonth(addDays(range.from, -1))
   return {
     from: previousFrom,
     // A completed selected month compares with the completed prior month. Month-to-date compares
     // the same number of elapsed days, avoiding a misleading full-month comparison mid-month.
-    to: range.to === endOfMonth(range.to) ? endOfMonth(previousFrom) : addDays(previousFrom, diffDays(range.from, range.to)),
+    to:
+      range.to === endOfMonth(range.to)
+        ? endOfMonth(previousFrom)
+        : addDays(previousFrom, diffDays(range.from, range.to)),
   }
 }
 
@@ -381,7 +515,8 @@ function annotationsFor(
 ): string[] {
   const labels = new Set(eventTags.filter(Boolean))
   for (const event of calendarEvents) {
-    if (event.startDate <= date && (event.endDate ?? event.startDate) >= date) labels.add(event.title)
+    if (event.startDate <= date && (event.endDate ?? event.startDate) >= date)
+      labels.add(event.title)
   }
   for (const holiday of holidayData.holidays as Array<{ date: ISODate; name: string }>) {
     if (holiday.date === date) labels.add(holiday.name)
@@ -399,18 +534,25 @@ function buildWeekdayComparison(
     WEEKDAY_LABELS.map((_, weekday) => {
       const byDate = new Map<ISODate, { count: number; tags: string[] }>()
       for (const event of events) {
-        if (!isWithin(event.date, window.from, window.to) || weekdayIndex(event.date) !== weekday) continue
+        if (!isWithin(event.date, window.from, window.to) || weekdayIndex(event.date) !== weekday)
+          continue
         const day = byDate.get(event.date) ?? { count: 0, tags: [] }
         day.count += 1
         if (event.eventTag) day.tags.push(event.eventTag)
         byDate.set(event.date, day)
       }
       const total = [...byDate.values()].reduce((sum, day) => sum + day.count, 0)
-      const peak = [...byDate.entries()].sort((a, b) => b[1].count - a[1].count || a[0].localeCompare(b[0]))[0]
+      const peak = [...byDate.entries()].sort(
+        (a, b) => b[1].count - a[1].count || a[0].localeCompare(b[0]),
+      )[0]
       return {
         total,
         peak: peak
-          ? { date: peak[0], count: peak[1].count, annotations: annotationsFor(peak[0], peak[1].tags, calendarEvents) }
+          ? {
+              date: peak[0],
+              count: peak[1].count,
+              annotations: annotationsFor(peak[0], peak[1].tags, calendarEvents),
+            }
           : null,
       }
     })
@@ -438,15 +580,16 @@ export function detectClusters(
   const total = counts.reduce((a, b) => a + b, 0)
   return counts.flatMap((count, i) => {
     const othersAvg = (total - count) / (counts.length - 1)
-    return count >= config.clusterMinCount && count >= othersAvg * config.clusterRatio
-      ? [i]
-      : []
+    return count >= config.clusterMinCount && count >= othersAvg * config.clusterRatio ? [i] : []
   })
 }
 
 export function buildCalendarDays(state: DbState, from: ISODate, to: ISODate): CalendarDay[] {
   const days = new Map<ISODate, CalendarDay>(
-    eachDay(from, to).map((date) => [date, { date, visits: 0, incidents: 0, events: [], eventTags: [] }]),
+    eachDay(from, to).map((date) => [
+      date,
+      { date, visits: 0, incidents: 0, events: [], eventTags: [] },
+    ]),
   )
   const addTag = (day: CalendarDay, tag: string | null) => {
     if (tag && !day.eventTags.includes(tag)) day.eventTags.push(tag)

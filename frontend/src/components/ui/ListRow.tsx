@@ -52,9 +52,7 @@ export function ListRow({
       'cursor-pointer transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-green motion-reduce:transition-none',
   )
 
-  return (
-    <li className={cn(rowClass, className)}>{content}</li>
-  )
+  return <li className={cn(rowClass, className)}>{content}</li>
 }
 
 export interface RowListProps {

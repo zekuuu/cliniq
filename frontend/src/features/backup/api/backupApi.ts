@@ -48,12 +48,19 @@ export function fetchBackupLocations(): Promise<BackupLocationSettings> {
   return listBackupLocations()
 }
 
-export function saveLocation(input: BackupLocationInput, options: { actor?: SessionUser }): Promise<BackupLocation> {
+export function saveLocation(
+  input: BackupLocationInput,
+  options: { actor?: SessionUser },
+): Promise<BackupLocation> {
   return saveBackupLocation(input, options)
 }
 
 /** Disabling or enabling changes which backup the stale warning reads, so the sidebar refreshes too. */
-export async function setLocationEnabled(id: string, enabled: boolean, actor?: SessionUser): Promise<BackupLocation> {
+export async function setLocationEnabled(
+  id: string,
+  enabled: boolean,
+  actor?: SessionUser,
+): Promise<BackupLocation> {
   const location = await setBackupLocationEnabled(id, enabled, actor)
   window.dispatchEvent(new CustomEvent(BACKUP_CHANGED_EVENT))
   return location

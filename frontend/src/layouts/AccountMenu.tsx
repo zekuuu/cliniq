@@ -8,7 +8,14 @@ import { ROLE_LABELS, type OwnAccount, type SessionUser } from '../lib/mock-db'
 import { UserAvatar } from '../features/user-management/UserAvatar'
 import { paths } from '../routes/paths'
 
-type MenuItem = { key: string; label: string; icon: IconName; group: number; shortcut?: string; danger?: boolean } & ({ to: string } | { onSelect: () => void })
+type MenuItem = {
+  key: string
+  label: string
+  icon: IconName
+  group: number
+  shortcut?: string
+  danger?: boolean
+} & ({ to: string } | { onSelect: () => void })
 
 /** Keyboard help belongs to the desktop workstation, as the header's Shortcuts button did (shown from `md`). */
 function isDesktopWidth() {
@@ -58,11 +65,41 @@ export function AccountMenu({
     // Grouped by purpose, a divider between groups: the account, help, then Sign out.
     { key: 'edit', label: 'Edit profile', icon: 'userCog', group: 0, onSelect: onEditProfile },
     { key: 'password', label: 'Change password', icon: 'lock', group: 0, to: paths.changePassword },
-    { key: 'authenticator', label: authenticatorEnabled ? 'Authenticator app: Enabled' : 'Set up authenticator app', icon: 'shieldPlus', group: 0, onSelect: onAuthenticator },
-    ...(desktop ? [{ key: 'shortcuts', label: 'Keyboard shortcuts', icon: 'keyboard' as const, group: 1, shortcut: SHORTCUT_KEYS.shortcutsList, onSelect: onShortcuts }] : []),
+    {
+      key: 'authenticator',
+      label: authenticatorEnabled ? 'Authenticator app: Enabled' : 'Set up authenticator app',
+      icon: 'shieldPlus',
+      group: 0,
+      onSelect: onAuthenticator,
+    },
+    ...(desktop
+      ? [
+          {
+            key: 'shortcuts',
+            label: 'Keyboard shortcuts',
+            icon: 'keyboard' as const,
+            group: 1,
+            shortcut: SHORTCUT_KEYS.shortcutsList,
+            onSelect: onShortcuts,
+          },
+        ]
+      : []),
     { key: 'issue', label: 'Report an issue', icon: 'flag', group: 1, onSelect: onReportIssue },
-    { key: 'privacy', label: 'Privacy Policy', icon: 'fileText', group: 1, to: paths.privacyPolicy },
-    { key: 'signout', label: signingOut ? 'Signing out' : 'Sign out', icon: 'logout', group: 2, danger: true, onSelect: onSignOut },
+    {
+      key: 'privacy',
+      label: 'Privacy Policy',
+      icon: 'fileText',
+      group: 1,
+      to: paths.privacyPolicy,
+    },
+    {
+      key: 'signout',
+      label: signingOut ? 'Signing out' : 'Sign out',
+      icon: 'logout',
+      group: 2,
+      danger: true,
+      onSelect: onSignOut,
+    },
   ]
 
   function openMenu(first: 'first' | 'last') {
@@ -162,13 +199,24 @@ export function AccountMenu({
           <span className="truncate text-sm font-semibold text-text-primary">{name}</span>
           <span className="text-xs text-text-secondary">{ROLE_LABELS[user.role]}</span>
         </span>
-        <Icon name="chevronDown" size={16} className={cn('ml-auto shrink-0 text-text-secondary transition-transform motion-reduce:transition-none', open && 'rotate-180')} />
+        <Icon
+          name="chevronDown"
+          size={16}
+          className={cn(
+            'ml-auto shrink-0 text-text-secondary transition-transform motion-reduce:transition-none',
+            open && 'rotate-180',
+          )}
+        />
       </button>
       {open && (
         <div
           ref={panelRef}
           // Below the header on a phone (a full-width sheet), under the button and right-aligned from `sm`.
-          className={cn('border border-border bg-background shadow-raised', 'fixed inset-x-0 top-16 z-40 max-h-[calc(100dvh-4rem)] overflow-y-auto rounded-none p-1.5 sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-1 sm:w-60 sm:rounded-md md:left-0 md:w-auto', 'animate-expand-down motion-reduce:animate-none')}
+          className={cn(
+            'border border-border bg-background shadow-raised',
+            'fixed inset-x-0 top-16 z-40 max-h-[calc(100dvh-4rem)] overflow-y-auto rounded-none p-1.5 sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-1 sm:w-60 sm:rounded-md md:left-0 md:w-auto',
+            'animate-expand-down motion-reduce:animate-none',
+          )}
         >
           {/* No second avatar: the button right above already shows it. */}
           <div className="min-w-0 border-b border-border px-2.5 pt-1 pb-2 text-xs leading-5 text-text-secondary">
@@ -176,9 +224,21 @@ export function AccountMenu({
             {/* Each detail on its own line and wrapped, never cut off with an ellipsis. */}
             <p>{ROLE_LABELS[user.role]}</p>
             {account && <p className="break-words">Username: {account.username}</p>}
-            {account && <p className="whitespace-nowrap">{account.lastLogin ? `Signed in ${formatDateTime(account.lastLogin)}` : 'Sign-in not recorded'}</p>}
+            {account && (
+              <p className="whitespace-nowrap">
+                {account.lastLogin
+                  ? `Signed in ${formatDateTime(account.lastLogin)}`
+                  : 'Sign-in not recorded'}
+              </p>
+            )}
           </div>
-          <div id={menuId} role="menu" aria-label="Account" onKeyDown={onMenuKeyDown} className="flex flex-col pt-1">
+          <div
+            id={menuId}
+            role="menu"
+            aria-label="Account"
+            onKeyDown={onMenuKeyDown}
+            className="flex flex-col pt-1"
+          >
             {items.map((item, index) => {
               const content = (
                 <>
@@ -192,9 +252,18 @@ export function AccountMenu({
               }
               return (
                 <div key={item.key} className="contents">
-                  {index > 0 && item.group !== items[index - 1].group && <div role="separator" className="my-1 border-t border-border" />}
+                  {index > 0 && item.group !== items[index - 1].group && (
+                    <div role="separator" className="my-1 border-t border-border" />
+                  )}
                   {'to' in item ? (
-                    <Link ref={ref} role="menuitem" tabIndex={-1} to={item.to} onClick={() => close(false)} className={itemClass(item.danger)}>
+                    <Link
+                      ref={ref}
+                      role="menuitem"
+                      tabIndex={-1}
+                      to={item.to}
+                      onClick={() => close(false)}
+                      className={itemClass(item.danger)}
+                    >
                       {content}
                     </Link>
                   ) : (
@@ -206,7 +275,10 @@ export function AccountMenu({
                       aria-keyshortcuts={item.shortcut}
                       disabled={item.key === 'signout' && signingOut}
                       onClick={() => choose(item)}
-                      className={cn(itemClass(item.danger), 'disabled:cursor-not-allowed disabled:opacity-50')}
+                      className={cn(
+                        itemClass(item.danger),
+                        'disabled:cursor-not-allowed disabled:opacity-50',
+                      )}
                     >
                       {content}
                     </button>

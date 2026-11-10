@@ -33,7 +33,10 @@ import type {
  */
 
 /** The Admin's incident totals leave out staff incidents (ADR-053); pass the viewer. */
-export function fetchDashboardSummary(query: DashboardQuery, viewer?: SessionUser): Promise<DashboardSummary> {
+export function fetchDashboardSummary(
+  query: DashboardQuery,
+  viewer?: SessionUser,
+): Promise<DashboardSummary> {
   return getDashboardSummary(query, viewer)
 }
 

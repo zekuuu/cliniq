@@ -69,7 +69,8 @@ function describeDay(day: CalendarDay, today: ISODate, holidays: Holiday[] = NO_
           `${day.incidents} ${day.incidents === 1 ? 'incident' : 'incidents'}`,
         ]
       : []
-  for (const h of holidays) parts.unshift(`holiday: ${holidayName(h)} (${HOLIDAY_KIND_LABEL[h.kind]})`)
+  for (const h of holidays)
+    parts.unshift(`holiday: ${holidayName(h)} (${HOLIDAY_KIND_LABEL[h.kind]})`)
   const labels = dayLabels(day)
   if (labels.length) parts.push(`${labels.length === 1 ? 'event' : 'events'}: ${labels.join(', ')}`)
   const date = formatDate(day.date, { weekday: 'long', month: 'long', day: 'numeric' })
@@ -118,7 +119,11 @@ function DayLabels({
   className?: string
 }) {
   const chips = [
-    ...holidays.map((h) => ({ key: `holiday:${h.name}`, text: `Holiday: ${holidayName(h)}`, holiday: true })),
+    ...holidays.map((h) => ({
+      key: `holiday:${h.name}`,
+      text: `Holiday: ${holidayName(h)}`,
+      holiday: true,
+    })),
     ...dayLabels(day).map((label) => ({ key: label, text: label, holiday: false })),
   ]
   if (!chips.length) return null
@@ -140,7 +145,10 @@ function DayLabels({
       {hidden > 0 && (
         <span
           className="text-xs leading-tight font-semibold text-text-primary"
-          title={chips.slice(MAX_DAY_LABELS).map((c) => c.text).join(', ')}
+          title={chips
+            .slice(MAX_DAY_LABELS)
+            .map((c) => c.text)
+            .join(', ')}
         >
           +{hidden} more
         </span>
@@ -174,7 +182,12 @@ function DayTarget({
   title?: string
   children: ReactNode
 }) {
-  if (!canEdit || !day) return <div className={className} title={title}>{children}</div>
+  if (!canEdit || !day)
+    return (
+      <div className={className} title={title}>
+        {children}
+      </div>
+    )
   return (
     <button
       type="button"
@@ -338,9 +351,7 @@ function MonthView({
                         {!future && day && (
                           <span className="text-sm font-semibold">
                             {casesLabel(total)}
-                            <span className="sr-only">
-                              : {casesBreakdown(day)}
-                            </span>
+                            <span className="sr-only">: {casesBreakdown(day)}</span>
                           </span>
                         )}
                       </span>
@@ -360,32 +371,54 @@ function MonthView({
 /** The yearly grid's key, as chips above the months (Zean, November 6, 2026). */
 function YearLegend({ scale }: { scale: HeatScale }) {
   return (
-    <ul aria-label="Calendar key" className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-md bg-surface px-3 py-2 text-xs text-text-secondary">
+    <ul
+      aria-label="Calendar key"
+      className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-md bg-surface px-3 py-2 text-xs text-text-secondary"
+    >
       <li className="flex items-center gap-1.5">
-        <span aria-hidden="true" className="inline-flex size-4 items-center justify-center rounded-full bg-error text-[0.625rem] font-bold text-white">2</span>
+        <span
+          aria-hidden="true"
+          className="inline-flex size-4 items-center justify-center rounded-full bg-error text-[0.625rem] font-bold text-white"
+        >
+          2
+        </span>
         Incidents that day
       </li>
       <li className="flex items-center gap-1.5">
-        <span aria-hidden="true" className="relative inline-flex size-5 items-center justify-center rounded-md bg-info/15 text-[0.625rem] font-semibold text-info">
+        <span
+          aria-hidden="true"
+          className="relative inline-flex size-5 items-center justify-center rounded-md bg-info/15 text-[0.625rem] font-semibold text-info"
+        >
           9<span className="absolute bottom-0.5 left-0.5 size-1.5 rounded-full bg-info" />
         </span>
         Holiday
       </li>
       <li className="flex items-center gap-1.5">
-        <span aria-hidden="true" className="inline-block size-5 rounded-md bg-background ring-2 ring-brand-yellow ring-inset" />
+        <span
+          aria-hidden="true"
+          className="inline-block size-5 rounded-md bg-background ring-2 ring-brand-yellow ring-inset"
+        />
         School event (yellow frame)
       </li>
       <li className="flex items-center gap-1.5">
         Visits
         <span aria-hidden="true" className="flex gap-0.5">
           {legendSteps(scale).map((step) => (
-            <span key={step.level} className={cn('inline-block size-4 rounded-sm', heatClasses[step.level])} />
+            <span
+              key={step.level}
+              className={cn('inline-block size-4 rounded-sm', heatClasses[step.level])}
+            />
           ))}
         </span>
-        {legendSteps(scale).map((step) => step.label).join(' · ')}
+        {legendSteps(scale)
+          .map((step) => step.label)
+          .join(' · ')}
       </li>
       <li className="flex items-center gap-1.5">
-        <span aria-hidden="true" className="inline-block size-5 rounded-md ring-2 ring-text-primary ring-inset" />
+        <span
+          aria-hidden="true"
+          className="inline-block size-5 rounded-md ring-2 ring-text-primary ring-inset"
+        />
         Today
       </li>
     </ul>
@@ -415,21 +448,32 @@ function YearView({
   canEdit: boolean
   onSelectDay: (date: ISODate) => void
 }) {
-  const months = Array.from({ length: 12 }, (_, m) => `${year}-${String(m + 1).padStart(2, '0')}-01`)
+  const months = Array.from(
+    { length: 12 },
+    (_, m) => `${year}-${String(m + 1).padStart(2, '0')}-01`,
+  )
   const holidaysFor = (date: ISODate) => holidaysOn.get(date) ?? NO_HOLIDAYS
   return (
     <div className="flex flex-col gap-4">
       <YearLegend scale={scale} />
       <ul className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
         {months.map((monthStart) => {
-          const days = [...byDate.values()].filter((d) => d.date.slice(0, 7) === monthStart.slice(0, 7))
+          const days = [...byDate.values()].filter(
+            (d) => d.date.slice(0, 7) === monthStart.slice(0, 7),
+          )
           const visits = days.reduce((sum, d) => sum + d.visits, 0)
           const incidents = days.reduce((sum, d) => sum + d.incidents, 0)
-          const monthHolidays = days.flatMap((d) => holidaysFor(d.date).map((h) => `${formatDate(d.date, { month: 'short', day: 'numeric' })} ${holidayName(h)}`))
+          const monthHolidays = days.flatMap((d) =>
+            holidaysFor(d.date).map(
+              (h) => `${formatDate(d.date, { month: 'short', day: 'numeric' })} ${holidayName(h)}`,
+            ),
+          )
           return (
             <li key={monthStart} className="flex flex-col gap-1.5">
               <p className="flex items-baseline justify-between gap-2">
-                <span className="text-sm font-bold text-text-primary">{formatDate(monthStart, { month: 'long' })}</span>
+                <span className="text-sm font-bold text-text-primary">
+                  {formatDate(monthStart, { month: 'long' })}
+                </span>
                 <span className="text-xs text-text-secondary">
                   {visits} {visits === 1 ? 'visit' : 'visits'}
                   {incidents > 0 && (
@@ -439,10 +483,16 @@ function YearView({
                   )}
                 </span>
               </p>
-              {monthHolidays.length > 0 && <p className="sr-only">Holidays: {monthHolidays.join(', ')}</p>}
+              {monthHolidays.length > 0 && (
+                <p className="sr-only">Holidays: {monthHolidays.join(', ')}</p>
+              )}
               <div className="grid grid-cols-7 gap-1">
                 {WEEKDAYS.map((w, i) => (
-                  <abbr key={w} title={WEEKDAYS_LONG[i]} className="text-center text-[0.625rem] font-semibold text-text-secondary no-underline">
+                  <abbr
+                    key={w}
+                    title={WEEKDAYS_LONG[i]}
+                    className="text-center text-[0.625rem] font-semibold text-text-secondary no-underline"
+                  >
                     {w.slice(0, 1)}
                   </abbr>
                 ))}
@@ -456,7 +506,8 @@ function YearView({
                     const hasEvent = !!day && dayLabels(day).length > 0
                     const isHoliday = holidays.length > 0
                     // On the darkest green the marks switch to lighter tints so they still stand out (Zean, November 6, 2026).
-                    const dark = !(isHoliday && total === 0) && date <= today && heatLevel(total, scale) === 3
+                    const dark =
+                      !(isHoliday && total === 0) && date <= today && heatLevel(total, scale) === 3
                     return (
                       <DayTarget
                         key={date}
@@ -465,7 +516,13 @@ function YearView({
                         today={today}
                         canEdit={canEdit}
                         onSelectDay={onSelectDay}
-                        title={day ? describeDay(day, today, holidays) : holidays.length ? holidays.map(holidayName).join(', ') : undefined}
+                        title={
+                          day
+                            ? describeDay(day, today, holidays)
+                            : holidays.length
+                              ? holidays.map(holidayName).join(', ')
+                              : undefined
+                        }
                         className={cn(
                           'relative flex aspect-square items-center justify-center rounded-md text-xs',
                           isHoliday && total === 0
@@ -474,14 +531,31 @@ function YearView({
                               ? heatClasses[0]
                               : heatClasses[heatLevel(total, scale)],
                           // The event frame: one bright yellow, inside the square (Zean, November 6, 2026).
-                          date === today ? 'ring-2 ring-text-primary ring-inset' : hasEvent && cn('ring-inset', dark ? 'ring-[3px] ring-[#ffe600]' : 'ring-2 ring-brand-yellow'),
+                          date === today
+                            ? 'ring-2 ring-text-primary ring-inset'
+                            : hasEvent &&
+                                cn(
+                                  'ring-inset',
+                                  dark ? 'ring-[3px] ring-[#ffe600]' : 'ring-2 ring-brand-yellow',
+                                ),
                         )}
                       >
                         {parseISODate(date).getDate()}
                         {/* The dot only where another colour hides the holiday tint (a day with visits). */}
-                        {isHoliday && total > 0 && <span aria-hidden="true" className={cn('absolute bottom-1 left-1 size-1.5 rounded-full', dark ? 'bg-[#90caf9]' : 'bg-info')} />}
+                        {isHoliday && total > 0 && (
+                          <span
+                            aria-hidden="true"
+                            className={cn(
+                              'absolute bottom-1 left-1 size-1.5 rounded-full',
+                              dark ? 'bg-[#90caf9]' : 'bg-info',
+                            )}
+                          />
+                        )}
                         {day && day.incidents > 0 && (
-                          <span aria-hidden="true" className="absolute -top-1 -right-1 inline-flex size-4 items-center justify-center rounded-full bg-error text-[0.625rem] font-bold text-white ring-2 ring-background">
+                          <span
+                            aria-hidden="true"
+                            className="absolute -top-1 -right-1 inline-flex size-4 items-center justify-center rounded-full bg-error text-[0.625rem] font-bold text-white ring-2 ring-background"
+                          >
                             {day.incidents}
                           </span>
                         )}
@@ -513,11 +587,12 @@ function CalendarTable({
     key: view === 'year' ? 'month' : 'date',
     direction: view === 'year' ? 'ascending' : 'descending',
   })
-  const effectiveSort = view === 'year' && sort.key === 'date'
-    ? { key: 'month', direction: 'ascending' as const }
-    : view !== 'year' && sort.key === 'month'
-      ? { key: 'date', direction: 'descending' as const }
-      : sort
+  const effectiveSort =
+    view === 'year' && sort.key === 'date'
+      ? { key: 'month', direction: 'ascending' as const }
+      : view !== 'year' && sort.key === 'month'
+        ? { key: 'date', direction: 'descending' as const }
+        : sort
   const sortColumn = (key: string, label: string) => ({
     label,
     direction: effectiveSort.key === key ? effectiveSort.direction : undefined,
@@ -547,11 +622,40 @@ function CalendarTable({
         sort: sortColumn('month', 'Month'),
         cell: (r) => formatDate(`${r.key}-01`, { month: 'long' }),
       },
-      { key: 'visits', header: 'Visits', width: '4.5rem', sort: sortColumn('visits', 'Visits'), cell: (r) => r.visits },
-      { key: 'incidents', header: 'Incidents', width: '6rem', sort: sortColumn('incidents', 'Incidents'), cell: (r) => r.incidents },
-      { key: 'total', header: 'Total', width: '5.5rem', align: 'center', sort: sortColumn('total', 'Total'), cell: (r) => r.visits + r.incidents },
-      { key: 'holidays', header: 'Holidays', sort: sortColumn('holidays', 'Holidays'), cell: (r) => r.holidays.join(', ') || '—' },
-      { key: 'tags', header: 'Events', sort: sortColumn('tags', 'Events'), cell: (r) => r.tags.join(', ') || '—' },
+      {
+        key: 'visits',
+        header: 'Visits',
+        width: '4.5rem',
+        sort: sortColumn('visits', 'Visits'),
+        cell: (r) => r.visits,
+      },
+      {
+        key: 'incidents',
+        header: 'Incidents',
+        width: '6rem',
+        sort: sortColumn('incidents', 'Incidents'),
+        cell: (r) => r.incidents,
+      },
+      {
+        key: 'total',
+        header: 'Total',
+        width: '5.5rem',
+        align: 'center',
+        sort: sortColumn('total', 'Total'),
+        cell: (r) => r.visits + r.incidents,
+      },
+      {
+        key: 'holidays',
+        header: 'Holidays',
+        sort: sortColumn('holidays', 'Holidays'),
+        cell: (r) => r.holidays.join(', ') || '—',
+      },
+      {
+        key: 'tags',
+        header: 'Events',
+        sort: sortColumn('tags', 'Events'),
+        cell: (r) => r.tags.join(', ') || '—',
+      },
     ]
     const sortedRows = sortTableRows(rows, effectiveSort, (row, key) => {
       if (key === 'month') return row.key
@@ -583,11 +687,42 @@ function CalendarTable({
       sort: sortColumn('date', 'Date'),
       cell: (d) => formatDate(d.date, { weekday: 'short', month: 'short', day: 'numeric' }),
     },
-    { key: 'visits', header: 'Visits', width: '4.5rem', align: 'right', sort: sortColumn('visits', 'Visits'), cell: (d) => d.visits },
-    { key: 'incidents', header: 'Incidents', width: '6rem', align: 'right', sort: sortColumn('incidents', 'Incidents'), cell: (d) => d.incidents },
-    { key: 'total', header: 'Total', width: '4.5rem', align: 'right', sort: sortColumn('total', 'Total'), cell: (d) => d.visits + d.incidents },
-    { key: 'holidays', header: 'Holidays', sort: sortColumn('holidays', 'Holidays'), cell: (d) => holidayText(d.date) || '—' },
-    { key: 'tags', header: 'Events', sort: sortColumn('tags', 'Events'), cell: (d) => dayLabels(d).join(', ') || '—' },
+    {
+      key: 'visits',
+      header: 'Visits',
+      width: '4.5rem',
+      align: 'right',
+      sort: sortColumn('visits', 'Visits'),
+      cell: (d) => d.visits,
+    },
+    {
+      key: 'incidents',
+      header: 'Incidents',
+      width: '6rem',
+      align: 'right',
+      sort: sortColumn('incidents', 'Incidents'),
+      cell: (d) => d.incidents,
+    },
+    {
+      key: 'total',
+      header: 'Total',
+      width: '4.5rem',
+      align: 'right',
+      sort: sortColumn('total', 'Total'),
+      cell: (d) => d.visits + d.incidents,
+    },
+    {
+      key: 'holidays',
+      header: 'Holidays',
+      sort: sortColumn('holidays', 'Holidays'),
+      cell: (d) => holidayText(d.date) || '—',
+    },
+    {
+      key: 'tags',
+      header: 'Events',
+      sort: sortColumn('tags', 'Events'),
+      cell: (d) => dayLabels(d).join(', ') || '—',
+    },
   ]
   const sortedRows = sortTableRows(rows, effectiveSort, (row, key) => {
     if (key === 'date') return row.date
@@ -606,7 +741,9 @@ function CalendarTable({
       fixedLayout
     />
   ) : (
-    <p className="text-sm text-text-secondary">No clinic activity, events, or holidays in this period.</p>
+    <p className="text-sm text-text-secondary">
+      No clinic activity, events, or holidays in this period.
+    </p>
   )
 }
 
@@ -664,7 +801,10 @@ function CalendarSkeleton({ view, periodFrom }: { view: CalendarView; periodFrom
                     .flat()
                     .map((date, i) =>
                       date ? (
-                        <span key={date} className="inline-flex size-5 items-center justify-center rounded-[3px] bg-border text-xs leading-none text-text-muted">
+                        <span
+                          key={date}
+                          className="inline-flex size-5 items-center justify-center rounded-[3px] bg-border text-xs leading-none text-text-muted"
+                        >
                           {parseISODate(date).getDate()}
                         </span>
                       ) : (
@@ -698,7 +838,10 @@ function CalendarSkeleton({ view, periodFrom }: { view: CalendarView; periodFrom
               <tr key={wi}>
                 {week.map((date, di) =>
                   date ? (
-                    <td key={date} className="h-24 max-h-24 overflow-hidden rounded-md bg-surface p-2 align-top">
+                    <td
+                      key={date}
+                      className="h-24 max-h-24 overflow-hidden rounded-md bg-surface p-2 align-top"
+                    >
                       <div className="flex items-start justify-between gap-1">
                         <span className="text-xs text-text-secondary">
                           {parseISODate(date).getDate()}

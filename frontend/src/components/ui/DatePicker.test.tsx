@@ -41,7 +41,12 @@ describe('DatePicker keyboard', () => {
 describe('Popovers close when keyboard focus leaves them', () => {
   it('closes the DatePicker calendar', async () => {
     const user = userEvent.setup()
-    render(<><DatePicker label="Date" value="2026-10-08" onChange={vi.fn()} /><button type="button">Next field</button></>)
+    render(
+      <>
+        <DatePicker label="Date" value="2026-10-08" onChange={vi.fn()} />
+        <button type="button">Next field</button>
+      </>,
+    )
     await user.click(screen.getByRole('button', { name: 'Date' }))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     act(() => screen.getByRole('button', { name: 'Next field' }).focus())
@@ -52,7 +57,11 @@ describe('Popovers close when keyboard focus leaves them', () => {
     const user = userEvent.setup()
     render(
       <>
-        <DateRangePicker value={{ preset: 'all', from: '1900-01-01', to: '2026-10-20' }} onChange={vi.fn()} today="2026-10-20" />
+        <DateRangePicker
+          value={{ preset: 'all', from: '1900-01-01', to: '2026-10-20' }}
+          onChange={vi.fn()}
+          today="2026-10-20"
+        />
         <button type="button">Next field</button>
       </>,
     )
@@ -66,7 +75,13 @@ describe('Popovers close when keyboard focus leaves them', () => {
     const user = userEvent.setup()
     render(
       <>
-        <MultiSelect label="Action type" values={[]} options={[{ value: 'archive', label: 'Archive' }]} allLabel="All actions" onChange={vi.fn()} />
+        <MultiSelect
+          label="Action type"
+          values={[]}
+          options={[{ value: 'archive', label: 'Archive' }]}
+          allLabel="All actions"
+          onChange={vi.fn()}
+        />
         <button type="button">Next field</button>
       </>,
     )

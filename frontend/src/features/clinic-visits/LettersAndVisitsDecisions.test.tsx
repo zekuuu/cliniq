@@ -56,12 +56,25 @@ describe('Letters and visits (ADR-049)', () => {
       approveExcuseLetterNow: true,
     })
     const approval = await getExcuseLetterApproval(visit.id)
-    expect(approval).toMatchObject({ excusedFrom: today, excusedUntil: today, recipient: 'Class Adviser' })
+    expect(approval).toMatchObject({
+      excusedFrom: today,
+      excusedUntil: today,
+      recipient: 'Class Adviser',
+    })
     expect(approval?.body).toMatch(/is excused on/)
     expect((await getVisit(visit.id)).excuseLetterDraft).toBeNull()
     const entries = getRecordedAuditEntries()
-    expect(entries.some((e) => e.actionType === 'submit' && e.targetRecord?.id === visit.id)).toBe(true)
-    expect(entries.some((e) => e.actionType === 'approve' && e.targetRecord?.type === 'excuse-letter' && e.targetRecord.id === approval?.id)).toBe(true)
+    expect(entries.some((e) => e.actionType === 'submit' && e.targetRecord?.id === visit.id)).toBe(
+      true,
+    )
+    expect(
+      entries.some(
+        (e) =>
+          e.actionType === 'approve' &&
+          e.targetRecord?.type === 'excuse-letter' &&
+          e.targetRecord.id === approval?.id,
+      ),
+    ).toBe(true)
   })
 
   it('offers "Save and approve now" only while a letter is prepared, and a plain Save still leaves an unprintable draft', async () => {
@@ -88,23 +101,38 @@ describe('Letters and visits (ADR-049)', () => {
     const four = { excusedFrom: '2026-10-01', excusedUntil: '2026-10-04' }
     expect(excusedDays(three)).toBe(3)
     expect(medicalCertificateWarning(three, 3)).toBeNull()
-    expect(medicalCertificateWarning(four, 3)).toBe('More than 3 days: a medical certificate is usually needed.')
+    expect(medicalCertificateWarning(four, 3)).toBe(
+      'More than 3 days: a medical certificate is usually needed.',
+    )
   })
 
   it('shows the certificate warning beside the excused period at 4 days and not at 3', async () => {
-    const { rerender } = render(<CertificateWarning period={{ excusedFrom: '2026-10-01', excusedUntil: '2026-10-04' }} />)
-    expect(await screen.findByRole('note')).toHaveTextContent('More than 3 days: a medical certificate is usually needed.')
-    rerender(<CertificateWarning period={{ excusedFrom: '2026-10-01', excusedUntil: '2026-10-03' }} />)
+    const { rerender } = render(
+      <CertificateWarning period={{ excusedFrom: '2026-10-01', excusedUntil: '2026-10-04' }} />,
+    )
+    expect(await screen.findByRole('note')).toHaveTextContent(
+      'More than 3 days: a medical certificate is usually needed.',
+    )
+    rerender(
+      <CertificateWarning period={{ excusedFrom: '2026-10-01', excusedUntil: '2026-10-03' }} />,
+    )
     expect(screen.queryByRole('note')).not.toBeInTheDocument()
   })
 
   it('keeps the approved wording when the template would now read differently', async () => {
     const visitId = 'visit-0151'
     const before = await fetchExcuseLetterContext(visitId)
-    await approveExcuseLetter(visitId, { ...before.period, recipient: 'Grade 4 Adviser', body: 'Approved wording, as signed.' })
+    await approveExcuseLetter(visitId, {
+      ...before.period,
+      recipient: 'Grade 4 Adviser',
+      body: 'Approved wording, as signed.',
+    })
     // The student's name changes afterwards, which would change the template's first sentence.
     const student = await getStudent(before.student.id)
-    await saveStudent({ ...student, lastName: `${student.lastName} Jr.` }, { studentId: student.id, nameCorrectionReason: 'Registrar correction' })
+    await saveStudent(
+      { ...student, lastName: `${student.lastName} Jr.` },
+      { studentId: student.id, nameCorrectionReason: 'Registrar correction' },
+    )
     const after = await fetchExcuseLetterContext(visitId)
     expect(after.body).toBe('Approved wording, as signed.')
     expect(after.recipient).toBe('Grade 4 Adviser')
@@ -119,7 +147,8 @@ describe('Letters and visits (ADR-049)', () => {
   it('flags "Outcome changed since approval" once the visit is edited to Returned to class', async () => {
     const visitId = 'visit-0139'
     const studentId = (await getVisit(visitId)).studentId!
-    const changed = async () => (await getStudentExcuseLetters(studentId)).find((l) => l.visitId === visitId)?.outcomeChanged
+    const changed = async () =>
+      (await getStudentExcuseLetters(studentId)).find((l) => l.visitId === visitId)?.outcomeChanged
     expect(await changed()).toBe(false)
     const visit = await getVisit(visitId)
     await updateVisit(visitId, { ...visit, disposition: 'returned_to_class' })
@@ -128,14 +157,17 @@ describe('Letters and visits (ADR-049)', () => {
     expect(await screen.findByText('Outcome changed since approval')).toBeInTheDocument()
   })
 
-  it.each(['Fever', 'Headache', 'Chills'])('opens "Show more fields" by itself for %s, and it can be closed', async (complaint) => {
-    const user = await openForm()
-    expect(screen.queryByLabelText('Body temperature (°C)')).not.toBeVisible()
-    await chooseComplaint(user, complaint)
-    expect(screen.getByLabelText('Body temperature (°C)')).toBeVisible()
-    await user.click(screen.getByRole('button', { name: /show fewer fields/i }))
-    expect(screen.queryByLabelText('Body temperature (°C)')).not.toBeVisible()
-  })
+  it.each(['Fever', 'Headache', 'Chills'])(
+    'opens "Show more fields" by itself for %s, and it can be closed',
+    async (complaint) => {
+      const user = await openForm()
+      expect(screen.queryByLabelText('Body temperature (°C)')).not.toBeVisible()
+      await chooseComplaint(user, complaint)
+      expect(screen.getByLabelText('Body temperature (°C)')).toBeVisible()
+      await user.click(screen.getByRole('button', { name: /show fewer fields/i }))
+      expect(screen.queryByLabelText('Body temperature (°C)')).not.toBeVisible()
+    },
+  )
 
   it('leaves "Show more fields" closed for other complaints', async () => {
     const user = await openForm()
@@ -157,7 +189,9 @@ describe('Letters and visits (ADR-049)', () => {
     await user.click(screen.getByLabelText(/prepare an excuse letter/i))
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
     expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
-    const entry = getRecordedAuditEntries().findLast((e) => e.actionType === 'submit' && e.targetRecord?.type === 'visit')
+    const entry = getRecordedAuditEntries().findLast(
+      (e) => e.actionType === 'submit' && e.targetRecord?.type === 'visit',
+    )
     const saved = await getVisit(entry!.targetRecord!.id)
     expect(saved.collectedBy).toMatchObject({ name: 'Ferdie Quizon', relationship: 'Guardian' })
     expect(saved.collectedBy?.time).toMatch(/^\d{2}:\d{2}$/)
@@ -167,7 +201,9 @@ describe('Letters and visits (ADR-049)', () => {
     const user = await openForm()
     await chooseComplaint(user, 'Dizziness')
     await user.click(screen.getByRole('radio', { name: 'Sent home' }))
-    expect(screen.getByRole('group', { name: 'Who the student was released to' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('group', { name: 'Who the student was released to' }),
+    ).toBeInTheDocument()
     expect(screen.queryByLabelText(/^Specify who/)).not.toBeInTheDocument()
     await user.type(screen.getByLabelText('Released to'), 'Lorna Cruz')
     await user.type(screen.getByLabelText('Relationship'), 'Other')
@@ -175,13 +211,26 @@ describe('Letters and visits (ADR-049)', () => {
     expect(who).toBeRequired()
     await user.click(screen.getByLabelText(/prepare an excuse letter/i))
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
-    expect(await screen.findByText('Say who the student was released to, for example a neighbour or a relative.')).toBeInTheDocument()
-    expect(getRecordedAuditEntries().some((e) => e.actionType === 'submit' && e.targetRecord?.type === 'visit')).toBe(false)
+    expect(
+      await screen.findByText(
+        'Say who the student was released to, for example a neighbour or a relative.',
+      ),
+    ).toBeInTheDocument()
+    expect(
+      getRecordedAuditEntries().some(
+        (e) => e.actionType === 'submit' && e.targetRecord?.type === 'visit',
+      ),
+    ).toBe(false)
     await user.type(screen.getByLabelText(/^Specify who/), 'Neighbour')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
     expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
-    const entry = getRecordedAuditEntries().findLast((e) => e.actionType === 'submit' && e.targetRecord?.type === 'visit')
-    expect((await getVisit(entry!.targetRecord!.id)).collectedBy).toMatchObject({ name: 'Lorna Cruz', relationship: 'Neighbour' })
+    const entry = getRecordedAuditEntries().findLast(
+      (e) => e.actionType === 'submit' && e.targetRecord?.type === 'visit',
+    )
+    expect((await getVisit(entry!.targetRecord!.id)).collectedBy).toMatchObject({
+      name: 'Lorna Cruz',
+      relationship: 'Neighbour',
+    })
   })
 
   it('rejects a collection time in the future', async () => {
@@ -218,11 +267,26 @@ describe('Letters and visits (ADR-049)', () => {
       complaint: 'Fever',
       treatment: '',
       disposition: 'sent_home',
-      followUp: { followUpDate: addDays(today, 1), reason: 'Check temperature', notes: null, stayHomeUntilCleared: true, stayHomeNote: 'Until fever-free 24 hours' },
-      excuseLetterDraft: { excusedFrom: today, excusedUntil: today, note: null, stayHomeUntilCleared: true, stayHomeNote: null },
+      followUp: {
+        followUpDate: addDays(today, 1),
+        reason: 'Check temperature',
+        notes: null,
+        stayHomeUntilCleared: true,
+        stayHomeNote: 'Until fever-free 24 hours',
+      },
+      excuseLetterDraft: {
+        excusedFrom: today,
+        excusedUntil: today,
+        note: null,
+        stayHomeUntilCleared: true,
+        stayHomeNote: null,
+      },
       approveExcuseLetterNow: true,
     })
-    expect(followUp).toMatchObject({ stayHomeUntilCleared: true, stayHomeNote: 'Until fever-free 24 hours' })
+    expect(followUp).toMatchObject({
+      stayHomeUntilCleared: true,
+      stayHomeNote: 'Until fever-free 24 hours',
+    })
     expect(await getExcuseLetterApproval(visit.id)).toMatchObject({ stayHomeUntilCleared: true })
 
     renderWithRouter(<ExcuseLetterPage visitId={visit.id} />)

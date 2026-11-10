@@ -52,12 +52,22 @@ export function generateTotpSecret(): string {
 }
 
 async function hmacSha1(key: Uint8Array, message: Uint8Array): Promise<Uint8Array> {
-  const cryptoKey = await crypto.subtle.importKey('raw', key as BufferSource, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign'])
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    key as BufferSource,
+    { name: 'HMAC', hash: 'SHA-1' },
+    false,
+    ['sign'],
+  )
   return new Uint8Array(await crypto.subtle.sign('HMAC', cryptoKey, message as BufferSource))
 }
 
 /** RFC 4226: the code for one counter value. */
-export async function hotp(key: Uint8Array, counter: number, digits = TOTP_DIGITS): Promise<string> {
+export async function hotp(
+  key: Uint8Array,
+  counter: number,
+  digits = TOTP_DIGITS,
+): Promise<string> {
   const message = new Uint8Array(8)
   let rest = counter
   for (let i = 7; i >= 0; i -= 1) {
@@ -66,7 +76,11 @@ export async function hotp(key: Uint8Array, counter: number, digits = TOTP_DIGIT
   }
   const hash = await hmacSha1(key, message)
   const offset = hash[hash.length - 1] & 15
-  const binary = ((hash[offset] & 127) << 24) | (hash[offset + 1] << 16) | (hash[offset + 2] << 8) | hash[offset + 3]
+  const binary =
+    ((hash[offset] & 127) << 24) |
+    (hash[offset + 1] << 16) |
+    (hash[offset + 2] << 8) |
+    hash[offset + 3]
   return String(binary % 10 ** digits).padStart(digits, '0')
 }
 
@@ -81,7 +95,8 @@ export async function verifyTotp(secret: string, code: string, atMs: number): Pr
   if (!/^\d{6}$/.test(typed)) return false
   const key = base32Decode(secret)
   const step = Math.floor(atMs / 1000 / TOTP_STEP_SECONDS)
-  for (let drift = -TOTP_DRIFT_STEPS; drift <= TOTP_DRIFT_STEPS; drift += 1) if ((await hotp(key, step + drift)) === typed) return true
+  for (let drift = -TOTP_DRIFT_STEPS; drift <= TOTP_DRIFT_STEPS; drift += 1)
+    if ((await hotp(key, step + drift)) === typed) return true
   return false
 }
 

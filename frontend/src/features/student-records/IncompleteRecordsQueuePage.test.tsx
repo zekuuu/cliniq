@@ -19,13 +19,15 @@ describe('Incomplete Records', () => {
   it('renders incomplete student records without inline medical values', async () => {
     renderWithRouter(<IncompleteRecordsQueuePage />)
 
-    expect(
-      await screen.findByRole('heading', { name: 'Incomplete Records' }),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Incomplete Records' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Student' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Missing fields' })).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: 'Open' })).toHaveAttribute('aria-checked', 'true')
-    expect(screen.getAllByText(/Emergency contact|Allergies confirmation|Medical conditions confirmation/).length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByText(
+        /Emergency contact|Allergies confirmation|Medical conditions confirmation/,
+      ).length,
+    ).toBeGreaterThan(0)
     expect(screen.queryByText('Peanuts')).not.toBeInTheDocument()
     expect(screen.queryByText('Asthma')).not.toBeInTheDocument()
   })
@@ -49,10 +51,9 @@ describe('Incomplete Records', () => {
     await screen.findByRole('heading', { name: 'Incomplete Records' })
     expect(screen.queryByRole('button', { name: /Mark Reviewed/ })).not.toBeInTheDocument()
     const [record] = await fetchIncompleteRecords()
-    expect(screen.getByRole('link', { name: `Edit Record for ${record.fullName}` })).toHaveAttribute(
-      'href',
-      `/students/${record.studentId}/edit`,
-    )
+    expect(
+      screen.getByRole('link', { name: `Edit Record for ${record.fullName}` }),
+    ).toHaveAttribute('href', `/students/${record.studentId}/edit`)
   })
 
   it('edits a record from the queue, returns to it, and credits who resolved it', async () => {
@@ -70,7 +71,9 @@ describe('Incomplete Records', () => {
     )
     render(<RouterProvider router={router} />)
 
-    await user.click(await screen.findByRole('link', { name: `Edit Record for ${record.fullName}` }))
+    await user.click(
+      await screen.findByRole('link', { name: `Edit Record for ${record.fullName}` }),
+    )
     await screen.findByRole('heading', { name: 'Edit Student' })
     for (const [label, value] of [
       ['Primary emergency contact name', 'Maria Santos'],

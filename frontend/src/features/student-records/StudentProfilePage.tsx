@@ -32,11 +32,23 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { ageOn, ageText } from '../../lib/age'
 import { formatDate, formatDateRange, formatDateTime } from '../../lib/dates'
 import { complaintWithExtras, incidentCareSummary, visitCareSummary } from '../../lib/itemsGiven'
-import { getMockSessionUser, getMockToday, type SessionUser, type StudentExcuseLetter } from '../../lib/mock-db'
+import {
+  getMockSessionUser,
+  getMockToday,
+  type SessionUser,
+  type StudentExcuseLetter,
+} from '../../lib/mock-db'
 import type { Incident, Student, Visit } from '../../types/entities'
-import { DISPOSITION_LABELS as dispositionLabel, DISPOSITION_TONES as dispositionTone } from '../../lib/dispositions'
+import {
+  DISPOSITION_LABELS as dispositionLabel,
+  DISPOSITION_TONES as dispositionTone,
+} from '../../lib/dispositions'
 import { paths } from '../../routes/paths'
-import { archiveStudentRecord, fetchStudentProfile, type StudentProfileData } from './api/studentProfileApi'
+import {
+  archiveStudentRecord,
+  fetchStudentProfile,
+  type StudentProfileData,
+} from './api/studentProfileApi'
 
 const incidentStageMap = {
   1: { label: 'Needs completion', tone: 'unfinished', icon: 'alertTriangle', variant: 'soft' },
@@ -53,7 +65,6 @@ const LETTER_STATUS: Record<StudentExcuseLetter['status'], string> = {
   superseded: 'Superseded',
   voided: 'Voided',
 }
-
 
 function tagList(items: string[], empty: string) {
   if (!items.length) return <p className="text-sm text-text-secondary">{empty}</p>
@@ -155,7 +166,10 @@ function ProfileHeader({
           {/* R13: like the Staff Profile; Staff only, and not for an archived record. */}
           {staffCanAct && !student.archived && (
             <>
-              <Link to={paths.visitNewForStudent(student.id)} className={buttonClassName({ variant: 'primary' })}>
+              <Link
+                to={paths.visitNewForStudent(student.id)}
+                className={buttonClassName({ variant: 'primary' })}
+              >
                 Record a visit
               </Link>
               <Link to={paths.incidentNewForStudent(student.id)} className={buttonClassName()}>
@@ -170,9 +184,9 @@ function ProfileHeader({
           )}
           <PrintButton viewer={viewer} />
           {staffCanAct && !student.archived && (
-              <Button variant="neutral" onClick={() => setConfirmingArchive(true)}>
-                Archive
-              </Button>
+            <Button variant="neutral" onClick={() => setConfirmingArchive(true)}>
+              Archive
+            </Button>
           )}
         </div>
       </div>
@@ -182,32 +196,31 @@ function ProfileHeader({
         onClose={() => setConfirmingArchive(false)}
       >
         <p className="text-sm text-text-secondary">
-          {student.fullName} (LRN <Lrn lrn={student.lrn} full />) will be hidden from active lists. Nothing is
-          deleted: the record, visits, and incidents stay available under "Include archived" and on the Archive page.
+          {student.fullName} (LRN <Lrn lrn={student.lrn} full />) will be hidden from active lists.
+          Nothing is deleted: the record, visits, and incidents stay available under "Include
+          archived" and on the Archive page.
         </p>
-        <div className="mt-4"><SelectWithOther
-          label="Reason"
-          otherLabel="Specify the reason"
-          required
-          value={reason}
-          onChange={(value) => {
-            setReason(value)
-            setReasonError('')
-          }}
-          options={REASONS}
-          placeholder="Select reason"
-          maxLength={80}
-          error={reasonError}
-        /></div>
+        <div className="mt-4">
+          <SelectWithOther
+            label="Reason"
+            otherLabel="Specify the reason"
+            required
+            value={reason}
+            onChange={(value) => {
+              setReason(value)
+              setReasonError('')
+            }}
+            options={REASONS}
+            placeholder="Select reason"
+            maxLength={80}
+            error={reasonError}
+          />
+        </div>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <Button variant="neutral" data-autofocus onClick={() => setConfirmingArchive(false)}>
             Cancel
           </Button>
-          <Button
-            variant="secondary"
-            loading={archiving}
-            onClick={() => void archive()}
-          >
+          <Button variant="secondary" loading={archiving} onClick={() => void archive()}>
             Archive Record
           </Button>
         </div>
@@ -223,7 +236,10 @@ function ProfileHeader({
 function AllergyBanner({ student }: { student: Student }) {
   if (!student.allergies.length && !student.medicalConditions.length) return null
   return (
-    <section aria-label="Allergies and medical conditions" className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-4 py-3 text-sm text-text-primary">
+    <section
+      aria-label="Allergies and medical conditions"
+      className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-4 py-3 text-sm text-text-primary"
+    >
       <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning-text" />
       <div className="flex flex-col gap-0.5">
         {student.allergies.length > 0 && (
@@ -260,16 +276,22 @@ function OverviewCard({ student }: { student: Student }) {
         )}
         <div>
           <p className="text-xs font-semibold text-text-secondary">LRN</p>
-          <p className="text-sm font-semibold text-text-primary"><Lrn lrn={student.lrn} full /></p>
+          <p className="text-sm font-semibold text-text-primary">
+            <Lrn lrn={student.lrn} full />
+          </p>
         </div>
         <div>
           <p className="text-xs font-semibold text-text-secondary">Sex</p>
-          <p className="text-sm font-semibold text-text-primary">{student.sex === 'female' ? 'Female' : 'Male'}</p>
+          <p className="text-sm font-semibold text-text-primary">
+            {student.sex === 'female' ? 'Female' : 'Male'}
+          </p>
         </div>
         {student.birthDate && (
           <div>
             <p className="text-xs font-semibold text-text-secondary">Birthdate</p>
-            <p className="text-sm font-semibold text-text-primary">{formatDate(student.birthDate)}</p>
+            <p className="text-sm font-semibold text-text-primary">
+              {formatDate(student.birthDate)}
+            </p>
           </div>
         )}
         <div>
@@ -300,17 +322,13 @@ function MedicalHistoryCard({ student }: { student: Student }) {
           <h3 id="allergies-heading" className="text-sm font-semibold text-text-primary">
             Allergies
           </h3>
-          <div className="mt-2">
-            {tagList(student.allergies, 'None recorded.')}
-          </div>
+          <div className="mt-2">{tagList(student.allergies, 'None recorded.')}</div>
         </section>
         <section aria-labelledby="conditions-heading">
           <h3 id="conditions-heading" className="text-sm font-semibold text-text-primary">
             Conditions
           </h3>
-          <div className="mt-2">
-            {tagList(student.medicalConditions, 'None recorded.')}
-          </div>
+          <div className="mt-2">{tagList(student.medicalConditions, 'None recorded.')}</div>
         </section>
       </CardBody>
     </Card>
@@ -334,7 +352,9 @@ function VisitHistoryCard({ visits }: { visits: Visit[] }) {
               primary={complaintWithExtras(visit)}
               secondary={visitCareSummary(visit)}
               // The grade the student was in at the time (ADR-047), not today's.
-              meta={[formatDateTime(visit.dateTime), visit.gradeLevelAtTime, visit.sectionAtTime].filter(Boolean).join(' · ')}
+              meta={[formatDateTime(visit.dateTime), visit.gradeLevelAtTime, visit.sectionAtTime]
+                .filter(Boolean)
+                .join(' · ')}
               trailing={
                 <Badge tone={dispositionTone[visit.disposition]} variant="soft" icon="checkCircle">
                   {dispositionLabel[visit.disposition]}
@@ -344,7 +364,10 @@ function VisitHistoryCard({ visits }: { visits: Visit[] }) {
           ))}
         </RowList>
       ) : (
-        <EmptyState title="No visit history yet" description="No clinic visits are recorded for this student." />
+        <EmptyState
+          title="No visit history yet"
+          description="No clinic visits are recorded for this student."
+        />
       )}
     </Card>
   )
@@ -371,7 +394,10 @@ function ExcuseLettersCard({ letters }: { letters: StudentExcuseLetter[] }) {
                     <Badge tone="warning" variant="soft">
                       Pending approval
                     </Badge>
-                    <Link to={paths.excuseLetter(letter.visitId)} className={buttonClassName({ size: 'sm' })}>
+                    <Link
+                      to={paths.excuseLetter(letter.visitId)}
+                      className={buttonClassName({ size: 'sm' })}
+                    >
                       Review letter
                     </Link>
                   </div>
@@ -389,11 +415,17 @@ function ExcuseLettersCard({ letters }: { letters: StudentExcuseLetter[] }) {
                     )}
                     {/* A stored letter (superseded or voided) opens on its own, marked not valid. */}
                     {letter.status !== 'approved' && !letter.id.startsWith('draft-') && (
-                      <Link to={paths.excuseLetterVersion(letter.visitId, letter.id)} className={buttonClassName({ size: 'sm' })}>
+                      <Link
+                        to={paths.excuseLetterVersion(letter.visitId, letter.id)}
+                        className={buttonClassName({ size: 'sm' })}
+                      >
                         View letter
                       </Link>
                     )}
-                    <Link to={paths.visitDetail(letter.visitId)} className={buttonClassName({ size: 'sm' })}>
+                    <Link
+                      to={paths.visitDetail(letter.visitId)}
+                      className={buttonClassName({ size: 'sm' })}
+                    >
                       View visit
                     </Link>
                   </div>
@@ -403,7 +435,10 @@ function ExcuseLettersCard({ letters }: { letters: StudentExcuseLetter[] }) {
           ))}
         </RowList>
       ) : (
-        <EmptyState title="No excuse letters yet" description="No excuse letters are stored or awaiting approval for this student." />
+        <EmptyState
+          title="No excuse letters yet"
+          description="No excuse letters are stored or awaiting approval for this student."
+        />
       )}
     </Card>
   )
@@ -434,8 +469,16 @@ function IncidentHistoryCard({ incidents }: { incidents: Incident[] }) {
                   </span>
                 </>
               }
-              meta={[formatDateTime(incident.time), incident.gradeLevelAtTime, incident.sectionAtTime].filter(Boolean).join(' · ')}
-              trailing={<StatusBadge status={String(incident.stage) as '1' | '2'} map={incidentStageMap} />}
+              meta={[
+                formatDateTime(incident.time),
+                incident.gradeLevelAtTime,
+                incident.sectionAtTime,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+              trailing={
+                <StatusBadge status={String(incident.stage) as '1' | '2'} map={incidentStageMap} />
+              }
             />
           ))}
         </RowList>
@@ -457,7 +500,10 @@ function IncidentHistoryCard({ incidents }: { incidents: Incident[] }) {
 function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer: SessionUser }) {
   const { student, visits, incidents, excuseLetters } = data
   const contact = student.emergencyContacts
-    .map((item, index) => `${index === 0 ? 'Primary: ' : ''}${item.name} (${item.relationship}) · ${item.phone} · ${item.verified ? 'verified' : 'needs verification'}`)
+    .map(
+      (item, index) =>
+        `${index === 0 ? 'Primary: ' : ''}${item.name} (${item.relationship}) · ${item.phone} · ${item.verified ? 'verified' : 'needs verification'}`,
+    )
     .join('\n')
   return (
     <PrintDocument
@@ -474,13 +520,23 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
             { label: 'Grade level', value: student.gradeLevel },
             ...(student.section ? [{ label: 'Section', value: student.section }] : []),
             { label: 'Sex', value: student.sex === 'female' ? 'Female' : 'Male' },
-            ...(student.birthDate ? [{ label: 'Birthdate', value: `${formatDate(student.birthDate)} (age ${ageOn(student.birthDate, getMockToday())})` }] : []),
+            ...(student.birthDate
+              ? [
+                  {
+                    label: 'Birthdate',
+                    value: `${formatDate(student.birthDate)} (age ${ageOn(student.birthDate, getMockToday())})`,
+                  },
+                ]
+              : []),
             {
               label: 'Emergency contacts',
               value: contact || 'No emergency contact recorded.',
               wide: true,
             },
-            { label: 'Record status', value: `${student.recordComplete ? 'Complete' : 'Incomplete'}${student.archived ? ', archived' : ''}` },
+            {
+              label: 'Record status',
+              value: `${student.recordComplete ? 'Complete' : 'Incomplete'}${student.archived ? ', archived' : ''}`,
+            },
           ]}
         />
       </PrintSection>
@@ -499,10 +555,18 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
           rowKey={(visit) => visit.id}
           empty="No clinic visits are recorded for this student."
           columns={[
-            { header: 'Date and time', width: '24%', cell: (visit) => formatDateTime(visit.dateTime) },
+            {
+              header: 'Date and time',
+              width: '24%',
+              cell: (visit) => formatDateTime(visit.dateTime),
+            },
             { header: SYMPTOM, width: '20%', cell: (visit) => complaintWithExtras(visit) },
             { header: 'Care given', cell: visitCareSummary },
-            { header: 'Disposition', width: '18%', cell: (visit) => dispositionLabel[visit.disposition] },
+            {
+              header: 'Disposition',
+              width: '18%',
+              cell: (visit) => dispositionLabel[visit.disposition],
+            },
           ]}
         />
       </PrintSection>
@@ -513,14 +577,22 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
           rowKey={(incident) => incident.id}
           empty="No emergency incidents are recorded for this student."
           columns={[
-            { header: 'Date and time', width: '24%', cell: (incident) => formatDateTime(incident.time) },
+            {
+              header: 'Date and time',
+              width: '24%',
+              cell: (incident) => formatDateTime(incident.time),
+            },
             { header: SYMPTOM, width: '20%', cell: (incident) => incident.complaint },
             {
               header: 'Care and referral',
               cell: (incident) =>
                 `${incidentCareSummary(incident)}. ${incident.hospitalReferral ? `Hospital referral: ${incident.hospitalReferral.destination}` : 'No hospital referral'}.`,
             },
-            { header: 'Status', width: '18%', cell: (incident) => incidentStageMap[incident.stage].label },
+            {
+              header: 'Status',
+              width: '18%',
+              cell: (incident) => incidentStageMap[incident.stage].label,
+            },
           ]}
         />
       </PrintSection>
@@ -532,8 +604,15 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
             rowKey={(letter) => letter.id}
             empty="No excuse letters are stored or awaiting approval for this student."
             columns={[
-              { header: 'Excused period', cell: (letter) => formatDateRange(letter.excusedFrom, letter.excusedUntil) },
-              { header: 'Disposition', width: '30%', cell: (letter) => dispositionLabel[letter.disposition] },
+              {
+                header: 'Excused period',
+                cell: (letter) => formatDateRange(letter.excusedFrom, letter.excusedUntil),
+              },
+              {
+                header: 'Disposition',
+                width: '30%',
+                cell: (letter) => dispositionLabel[letter.disposition],
+              },
               { header: 'Status', width: '24%', cell: (letter) => LETTER_STATUS[letter.status] },
             ]}
           />

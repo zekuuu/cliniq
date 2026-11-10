@@ -38,7 +38,10 @@ export function ExpandableSection({
       >
         <Icon
           name="chevronDown"
-          className={cn('transition-transform duration-150 motion-reduce:transition-none', open && 'rotate-180')}
+          className={cn(
+            'transition-transform duration-150 motion-reduce:transition-none',
+            open && 'rotate-180',
+          )}
         />
         {open ? openLabel : closedLabel}
         {!open && filledCount > 0 && ` (${filledCount} filled)`}

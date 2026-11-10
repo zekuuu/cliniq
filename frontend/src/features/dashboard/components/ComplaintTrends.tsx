@@ -252,7 +252,10 @@ function WeekdayComparisonChart({ comparison }: { comparison: WeekdayComparison 
   const grid = colorToken('border')
   const tick = colorToken('text-secondary')
   const summary = comparison.rows
-    .map((row) => `${row.label}: ${comparison.currentLabel} ${row.current}; ${comparison.previousLabel} ${row.previous}`)
+    .map(
+      (row) =>
+        `${row.label}: ${comparison.currentLabel} ${row.current}; ${comparison.previousLabel} ${row.previous}`,
+    )
     .join('; ')
   return (
     <div className="relative h-72 print:h-auto print:[&_canvas]:h-auto! print:[&_canvas]:w-full!">
@@ -284,11 +287,27 @@ function WeekdayComparisonChart({ comparison }: { comparison: WeekdayComparison 
           responsive: true,
           maintainAspectRatio: false,
           animation: prefersReducedMotion ? false : { duration: 280, easing: 'easeOutCubic' },
-          transitions: { active: { animation: { duration: prefersReducedMotion ? 0 : HOVER_MS, easing: 'easeInOutCubic' } } },
+          transitions: {
+            active: {
+              animation: {
+                duration: prefersReducedMotion ? 0 : HOVER_MS,
+                easing: 'easeInOutCubic',
+              },
+            },
+          },
           interaction: { mode: 'index', axis: 'x', intersect: false },
           scales: {
-            x: { grid: { display: false }, border: { color: grid }, ticks: { color: tick, maxRotation: 0 } },
-            y: { beginAtZero: true, grid: { color: grid }, border: { display: false }, ticks: { color: tick, precision: 0 } },
+            x: {
+              grid: { display: false },
+              border: { color: grid },
+              ticks: { color: tick, maxRotation: 0 },
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: grid },
+              border: { display: false },
+              ticks: { color: tick, precision: 0 },
+            },
           },
           plugins: {
             legend: { display: true, labels: { color: tick, boxWidth: 14 } },
@@ -304,7 +323,9 @@ function WeekdayComparisonChart({ comparison }: { comparison: WeekdayComparison 
                   const peak = comparison.rows[items[0].dataIndex].currentPeak
                   if (!peak) return []
                   const context = peak.annotations.length ? ` · ${peak.annotations.join(', ')}` : ''
-                  return [`Busiest day: ${formatShortDate(peak.date)} (${peak.count} ${peak.count === 1 ? 'case' : 'cases'})${context}`]
+                  return [
+                    `Busiest day: ${formatShortDate(peak.date)} (${peak.count} ${peak.count === 1 ? 'case' : 'cases'})${context}`,
+                  ]
                 },
               },
             },
@@ -319,7 +340,10 @@ function WeekdayComparisonChart({ comparison }: { comparison: WeekdayComparison 
 function WeekdayComparisonTable({ comparison }: { comparison: WeekdayComparison }) {
   return (
     <div className="overflow-x-auto scrollbar-thin">
-      <table className="w-full min-w-[44rem] table-fixed text-sm" aria-label="Visits and incidents by weekday comparison">
+      <table
+        className="w-full min-w-[44rem] table-fixed text-sm"
+        aria-label="Visits and incidents by weekday comparison"
+      >
         <colgroup>
           <col className="w-[14%]" />
           {/* Wide enough for "Visits and incidents" on two lines (panel review 5.1: say what is counted). */}
@@ -330,38 +354,84 @@ function WeekdayComparisonTable({ comparison }: { comparison: WeekdayComparison 
         </colgroup>
         <thead className="border-b border-border text-left text-xs text-text-secondary">
           <tr>
-            <th scope="col" rowSpan={2} className="px-2 py-1.5 font-semibold">Weekday</th>
-            <th scope="colgroup" colSpan={2} className="border-l border-border bg-surface px-2 py-1.5 text-center font-semibold">{comparison.currentLabel}</th>
-            <th scope="colgroup" colSpan={2} className="border-l border-border bg-surface px-2 py-1.5 text-center font-semibold">{comparison.previousLabel}</th>
+            <th scope="col" rowSpan={2} className="px-2 py-1.5 font-semibold">
+              Weekday
+            </th>
+            <th
+              scope="colgroup"
+              colSpan={2}
+              className="border-l border-border bg-surface px-2 py-1.5 text-center font-semibold"
+            >
+              {comparison.currentLabel}
+            </th>
+            <th
+              scope="colgroup"
+              colSpan={2}
+              className="border-l border-border bg-surface px-2 py-1.5 text-center font-semibold"
+            >
+              {comparison.previousLabel}
+            </th>
           </tr>
           <tr>
-            <th scope="col" className="border-l border-border px-2 py-1.5 text-right font-semibold">Visits and incidents</th>
-            <th scope="col" className="px-2 py-1.5 font-semibold">Busiest date &amp; context</th>
-            <th scope="col" className="border-l border-border px-2 py-1.5 text-right font-semibold">Visits and incidents</th>
-            <th scope="col" className="px-2 py-1.5 font-semibold">Busiest date &amp; context</th>
+            <th scope="col" className="border-l border-border px-2 py-1.5 text-right font-semibold">
+              Visits and incidents
+            </th>
+            <th scope="col" className="px-2 py-1.5 font-semibold">
+              Busiest date &amp; context
+            </th>
+            <th scope="col" className="border-l border-border px-2 py-1.5 text-right font-semibold">
+              Visits and incidents
+            </th>
+            <th scope="col" className="px-2 py-1.5 font-semibold">
+              Busiest date &amp; context
+            </th>
           </tr>
         </thead>
         <tbody>
           {comparison.rows.map((row) => (
-            <tr key={row.label} tabIndex={0} className="border-b border-border last:border-0 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-green">
-              <th scope="row" className="px-2 py-2 text-left font-semibold text-text-primary">{row.label}</th>
-              <td className="border-l border-border px-2 py-2 text-right tabular-nums">{row.current}</td>
+            <tr
+              key={row.label}
+              tabIndex={0}
+              className="border-b border-border last:border-0 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-green"
+            >
+              <th scope="row" className="px-2 py-2 text-left font-semibold text-text-primary">
+                {row.label}
+              </th>
+              <td className="border-l border-border px-2 py-2 text-right tabular-nums">
+                {row.current}
+              </td>
               <td className="px-2 py-2 text-xs text-text-secondary">
                 {row.currentPeak ? (
                   <>
-                    <span className="block font-semibold text-text-primary">{formatShortDate(row.currentPeak.date)} · {row.currentPeak.count} {row.currentPeak.count === 1 ? 'case' : 'cases'}</span>
-                    {row.currentPeak.annotations.length > 0 && <span className="block">{row.currentPeak.annotations.join(', ')}</span>}
+                    <span className="block font-semibold text-text-primary">
+                      {formatShortDate(row.currentPeak.date)} · {row.currentPeak.count}{' '}
+                      {row.currentPeak.count === 1 ? 'case' : 'cases'}
+                    </span>
+                    {row.currentPeak.annotations.length > 0 && (
+                      <span className="block">{row.currentPeak.annotations.join(', ')}</span>
+                    )}
                   </>
-                ) : 'No recorded day'}
+                ) : (
+                  'No recorded day'
+                )}
               </td>
-              <td className="border-l border-border px-2 py-2 text-right tabular-nums">{row.previous}</td>
+              <td className="border-l border-border px-2 py-2 text-right tabular-nums">
+                {row.previous}
+              </td>
               <td className="px-2 py-2 text-xs text-text-secondary">
                 {row.previousPeak ? (
                   <>
-                    <span className="block font-semibold text-text-primary">{formatShortDate(row.previousPeak.date)} · {row.previousPeak.count} {row.previousPeak.count === 1 ? 'case' : 'cases'}</span>
-                    {row.previousPeak.annotations.length > 0 && <span className="block">{row.previousPeak.annotations.join(', ')}</span>}
+                    <span className="block font-semibold text-text-primary">
+                      {formatShortDate(row.previousPeak.date)} · {row.previousPeak.count}{' '}
+                      {row.previousPeak.count === 1 ? 'case' : 'cases'}
+                    </span>
+                    {row.previousPeak.annotations.length > 0 && (
+                      <span className="block">{row.previousPeak.annotations.join(', ')}</span>
+                    )}
                   </>
-                ) : 'No recorded day'}
+                ) : (
+                  'No recorded day'
+                )}
               </td>
             </tr>
           ))}
@@ -493,13 +563,7 @@ export function TrendTable({ trends }: { trends: Trends }) {
   )
 }
 
-function VisitsTrendCard({
-  trends,
-  clusters,
-}: {
-  trends: Trends
-  clusters: ClusterNote[]
-}) {
+function VisitsTrendCard({ trends, clusters }: { trends: Trends; clusters: ClusterNote[] }) {
   const headingId = useId()
   const [view, setView] = useState<ViewMode>('chart')
   const years = trendYears(trends)
@@ -522,7 +586,11 @@ function VisitsTrendCard({
             'Visits trend'
           )
         }
-        description={comparison ? `Sunday to Saturday: ${comparison.currentLabel} compared with ${comparison.previousLabel}.` : `Visits and incidents per ${trends.granularity}.`}
+        description={
+          comparison
+            ? `Sunday to Saturday: ${comparison.currentLabel} compared with ${comparison.previousLabel}.`
+            : `Visits and incidents per ${trends.granularity}.`
+        }
         actions={
           <SegmentedControl
             label="Show trend as"
@@ -546,19 +614,21 @@ function VisitsTrendCard({
           <>
             {tooFewBuckets && (
               <p className="text-xs text-text-secondary">
-                This period fits in a single {trends.granularity}, so there’s nothing to compare over time.
-                Choose a longer period to see a trend.
+                This period fits in a single {trends.granularity}, so there’s nothing to compare
+                over time. Choose a longer period to see a trend.
               </p>
             )}
-            {comparison ? showTable ? (
-              // The complaint × day table follows, so every complaint type stays reachable on a
-              // month range too (Common complaints points here for the ones it leaves out).
-              <>
-                <WeekdayComparisonTable comparison={comparison} />
-                <TrendTable trends={trends} />
-              </>
-            ) : (
-              <WeekdayComparisonChart comparison={comparison} />
+            {comparison ? (
+              showTable ? (
+                // The complaint × day table follows, so every complaint type stays reachable on a
+                // month range too (Common complaints points here for the ones it leaves out).
+                <>
+                  <WeekdayComparisonTable comparison={comparison} />
+                  <TrendTable trends={trends} />
+                </>
+              ) : (
+                <WeekdayComparisonChart comparison={comparison} />
+              )
             ) : showTable ? (
               <TrendTable trends={trends} />
             ) : (
@@ -567,7 +637,11 @@ function VisitsTrendCard({
             {/* Weekday bars can't mark the day a cluster fell on, so the note carries it on month ranges. */}
             {clusters.length > 0 && (
               <div role="note" className="flex items-start gap-2 text-xs text-text-primary">
-                <Icon name="alertTriangle" size={14} className="mt-0.5 shrink-0 text-warning-text" />
+                <Icon
+                  name="alertTriangle"
+                  size={14}
+                  className="mt-0.5 shrink-0 text-warning-text"
+                />
                 <p>
                   <span className="font-semibold">Possible symptom cluster: </span>
                   {clusters
@@ -590,7 +664,15 @@ function VisitsTrendCard({
   )
 }
 
-function CommonComplaintsCard({ trends, clusters, reportMonth }: { trends: Trends; clusters: ClusterNote[]; reportMonth?: string }) {
+function CommonComplaintsCard({
+  trends,
+  clusters,
+  reportMonth,
+}: {
+  trends: Trends
+  clusters: ClusterNote[]
+  reportMonth?: string
+}) {
   const headingId = useId()
   const max = Math.max(1, ...trends.series.map((s) => s.total))
   const otherTotal = trends.otherComplaints.reduce((sum, s) => sum + s.total, 0)
@@ -616,7 +698,11 @@ function CommonComplaintsCard({ trends, clusters, reportMonth }: { trends: Trend
                       <span className="flex min-w-0 items-center gap-1.5 text-text-primary">
                         <span className="truncate">{s.complaint}</span>
                         {cluster && (
-                          <Icon name="alertTriangle" size={14} className="shrink-0 text-warning-text" />
+                          <Icon
+                            name="alertTriangle"
+                            size={14}
+                            className="shrink-0 text-warning-text"
+                          />
                         )}
                       </span>
                       <span aria-hidden="true" className="h-3 rounded-full bg-surface">
@@ -650,7 +736,14 @@ function CommonComplaintsCard({ trends, clusters, reportMonth }: { trends: Trend
             )}
           </>
         )}
-        {reportMonth && <FullReportLink className="mt-4 border-t border-border pt-3" report={`${SYMPTOM} summary`} view="health" month={reportMonth} />}
+        {reportMonth && (
+          <FullReportLink
+            className="mt-4 border-t border-border pt-3"
+            report={`${SYMPTOM} summary`}
+            view="health"
+            month={reportMonth}
+          />
+        )}
       </CardBody>
     </Card>
   )
@@ -757,7 +850,12 @@ function casesText(count: number) {
 }
 
 function countsText(rows: DemographicAnalysis['sex']) {
-  return rows.map((row) => `${row.label} ${row.count} (${percent(row.share)}): ${row.students ?? 0} students, ${row.staff ?? 0} staff`).join('; ')
+  return rows
+    .map(
+      (row) =>
+        `${row.label} ${row.count} (${percent(row.share)}): ${row.students ?? 0} students, ${row.staff ?? 0} staff`,
+    )
+    .join('; ')
 }
 
 function plural(count: number, noun: string) {
@@ -1069,7 +1167,13 @@ function DemographicCharts({
   )
 }
 
-export function ComplaintTrends({ trends, demographics, filters, onFiltersChange, reportMonth }: ComplaintTrendsProps) {
+export function ComplaintTrends({
+  trends,
+  demographics,
+  filters,
+  onFiltersChange,
+  reportMonth,
+}: ComplaintTrendsProps) {
   const clusters = useMemo(() => findClusters(trends), [trends])
   return (
     <section aria-label="Trends" className="flex flex-col gap-4">
@@ -1077,7 +1181,13 @@ export function ComplaintTrends({ trends, demographics, filters, onFiltersChange
         <CommonComplaintsCard trends={trends} clusters={clusters} reportMonth={reportMonth} />
         <VisitsTrendCard trends={trends} clusters={clusters} />
       </div>
-      {demographics && filters && onFiltersChange && <DemographicCharts demographics={demographics} filters={filters} onFiltersChange={onFiltersChange} />}
+      {demographics && filters && onFiltersChange && (
+        <DemographicCharts
+          demographics={demographics}
+          filters={filters}
+          onFiltersChange={onFiltersChange}
+        />
+      )}
     </section>
   )
 }

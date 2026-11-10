@@ -13,7 +13,12 @@ import {
   type IncidentTrail,
   type SessionUser,
 } from '../../../lib/mock-db'
-import type { CalledContact, Incident, ItemGivenLine, ParentNotificationOutcome } from '../../../types/entities'
+import type {
+  CalledContact,
+  Incident,
+  ItemGivenLine,
+  ParentNotificationOutcome,
+} from '../../../types/entities'
 import type { Patient } from '../../../lib/patients'
 
 /**
@@ -40,8 +45,14 @@ export interface IncidentRecord {
 }
 
 /** `null` when there is nothing to show: no incidents, or (opened without an id) none pending sign-off. */
-export async function fetchIncidentRecord(incidentId?: string, viewer?: SessionUser): Promise<IncidentRecord | null> {
-  const [incidents, approvedIds] = await Promise.all([listIncidents(undefined, viewer), listApprovedIncidentReportIds()])
+export async function fetchIncidentRecord(
+  incidentId?: string,
+  viewer?: SessionUser,
+): Promise<IncidentRecord | null> {
+  const [incidents, approvedIds] = await Promise.all([
+    listIncidents(undefined, viewer),
+    listApprovedIncidentReportIds(),
+  ])
   const approved = new Set(approvedIds)
   const pending = incidents.filter((item) => !approved.has(item.id))
   const incident = incidentId ? await getIncident(incidentId, viewer) : pending[0]

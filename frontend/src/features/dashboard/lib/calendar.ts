@@ -112,7 +112,10 @@ export const eventChipClass =
 export const MAX_DAY_LABELS = 2
 
 /** A day's labels in display order: its calendar events, then visit/incident tags not already shown. */
-export function dayLabels(day: { events: Array<{ title: string }>; eventTags: string[] }): string[] {
+export function dayLabels(day: {
+  events: Array<{ title: string }>
+  eventTags: string[]
+}): string[] {
   return [...day.events.map((e) => e.title), ...day.eventTags]
 }
 

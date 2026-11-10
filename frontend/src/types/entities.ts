@@ -63,7 +63,10 @@ export interface Student {
 export type StudentListRef = Pick<Student, 'id' | 'lrn'>
 
 /** A student as a multi-student screen may hold it: no birthdate, health fields or contacts (ADR-054, API contract Q2). */
-export type StudentListRow = Pick<Student, 'id' | 'lrn' | 'fullName' | 'gradeLevel' | 'archived' | 'recordComplete'>
+export type StudentListRow = Pick<
+  Student,
+  'id' | 'lrn' | 'fullName' | 'gradeLevel' | 'archived' | 'recordComplete'
+>
 
 /**
  * One result of a deliberate student search (a single lookup, so the name is shown): enough to
@@ -114,8 +117,7 @@ export type PersonnelSearchResult = Pick<Personnel, 'id' | 'staffNumber' | 'full
 
 /** One result of the combined patient search (ADR-043 item 5), labelled by kind. */
 export type PatientSearchResult =
-  | ({ kind: 'student' } & StudentSearchResult)
-  | ({ kind: 'personnel' } & PersonnelSearchResult)
+  ({ kind: 'student' } & StudentSearchResult) | ({ kind: 'personnel' } & PersonnelSearchResult)
 
 /**
  * Who a visit, incident, follow-up or medicine given is about: a student or a staff member, exactly
@@ -144,7 +146,8 @@ export interface User {
  * `resting_in_clinic` (panel review VS-1): kept in the clinic for observation. With no Time out on a
  * visit dated today, the student is "in the clinic now". PROVISIONAL, pending the ERD.
  */
-export type Disposition = 'returned_to_class' | 'sent_home' | 'referred_to_hospital' | 'resting_in_clinic'
+export type Disposition =
+  'returned_to_class' | 'sent_home' | 'referred_to_hospital' | 'resting_in_clinic'
 
 /** Who marked a record "Entered in error", when and why. The record is kept, never deleted. PROVISIONAL, pending the ERD. */
 export interface EnteredInError {
@@ -249,7 +252,8 @@ export interface ItemGivenLine {
 }
 
 /** Panel review IN-6 (D6): one list. Older saved values are migrated in `lib/mock-db/store.ts`. */
-export type ParentNotificationOutcome = 'reached' | 'no_answer' | 'left_message_or_voicemail' | 'wrong_number'
+export type ParentNotificationOutcome =
+  'reached' | 'no_answer' | 'left_message_or_voicemail' | 'wrong_number'
 
 /**
  * Who was called on one attempt: a snapshot of the student's emergency contact at the time, or a
@@ -351,7 +355,10 @@ export interface InventoryBatchAllocation {
 
 export type ItemBrand = 'generic' | 'branded'
 
-export const ITEM_BRAND_LABELS: Record<ItemBrand, string> = { generic: 'Generic', branded: 'Branded' }
+export const ITEM_BRAND_LABELS: Record<ItemBrand, string> = {
+  generic: 'Generic',
+  branded: 'Branded',
+}
 
 export interface InventoryItem {
   id: string
@@ -407,7 +414,16 @@ export interface BackupLog {
  * sign-in session; lists and searches are not logged.
  */
 export type AuditActionType =
-  'login' | 'logout' | 'submit' | 'approve' | 'create' | 'update' | 'delete' | 'archive' | 'print' | 'view'
+  | 'login'
+  | 'logout'
+  | 'submit'
+  | 'approve'
+  | 'create'
+  | 'update'
+  | 'delete'
+  | 'archive'
+  | 'print'
+  | 'view'
 
 export interface AuditLogEntry {
   userId: string

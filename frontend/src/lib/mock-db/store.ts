@@ -80,18 +80,31 @@ export function migratePersistedState(saved: Saved): Saved {
     if (Array.isArray(item.batches)) continue
     const currentStock = typeof item.currentStock === 'number' ? item.currentStock : 0
     const expirationDate = typeof item.expirationDate === 'string' ? item.expirationDate : null
-    item.batches = [{ id: `${String(item.id)}-batch-0001`, quantity: currentStock, expirationDate, receivedDate: saved.state.today }]
+    item.batches = [
+      {
+        id: `${String(item.id)}-batch-0001`,
+        quantity: currentStock,
+        expirationDate,
+        receivedDate: saved.state.today,
+      },
+    ]
     delete item.currentStock
     delete item.expirationDate
   }
-  for (const [index, student] of (saved.state.students as unknown as Array<Record<string, unknown>>).entries()) {
+  for (const [index, student] of (
+    saved.state.students as unknown as Array<Record<string, unknown>>
+  ).entries()) {
     if (student.sex === 'male' || student.sex === 'female') continue
     student.sex = index % 2 === 0 ? 'female' : 'male'
   }
   // ADR-063: staff saved before the field show "Sex not recorded".
-  for (const person of (saved.state.personnel ?? []) as unknown as Array<Record<string, unknown>>) person.sex ??= null
+  for (const person of (saved.state.personnel ?? []) as unknown as Array<Record<string, unknown>>)
+    person.sex ??= null
   // ADR-064 (November 4, 2026): names are stored as parts. A saved full name is split by the import's rule.
-  for (const person of [...saved.state.students, ...(saved.state.personnel ?? [])] as unknown as Array<Record<string, unknown>>) {
+  for (const person of [
+    ...saved.state.students,
+    ...(saved.state.personnel ?? []),
+  ] as unknown as Array<Record<string, unknown>>) {
     if (typeof person.fullName !== 'string') continue
     if (typeof person.firstName !== 'string') Object.assign(person, splitFullName(person.fullName))
     delete person.fullName
@@ -120,29 +133,53 @@ export function migratePersistedState(saved: Saved): Saved {
   // October 26, 2026 (ADR-043): staff patients. An older copy has no staff, and every record in it is a student's.
   if (!Array.isArray(config.personnelTypes)) config.personnelTypes = [...seed.config.personnelTypes]
   saved.state.personnel ??= []
-  for (const record of [...saved.state.visits, ...saved.state.incidents, ...saved.state.followUps, ...saved.state.frontendOnly.inventoryTransactions])
+  for (const record of [
+    ...saved.state.visits,
+    ...saved.state.incidents,
+    ...saved.state.followUps,
+    ...saved.state.frontendOnly.inventoryTransactions,
+  ])
     record.personnelId ??= null
   // October 29, 2026 (ADR-049): the medical-certificate limit, and the wording stored on approved letters.
-  if (typeof config.medicalCertificateAfterDays !== 'number') config.medicalCertificateAfterDays = seed.config.medicalCertificateAfterDays
+  if (typeof config.medicalCertificateAfterDays !== 'number')
+    config.medicalCertificateAfterDays = seed.config.medicalCertificateAfterDays
   // ADR-078: the Admin's idle minutes (ADR-048) became one of two idle settings; keep a saved value.
   const legacy = config as { adminIdleMinutes?: unknown }
-  if (typeof config.idleSignoutMinutesAdmin !== 'number' && typeof legacy.adminIdleMinutes === 'number') config.idleSignoutMinutesAdmin = legacy.adminIdleMinutes
+  if (
+    typeof config.idleSignoutMinutesAdmin !== 'number' &&
+    typeof legacy.adminIdleMinutes === 'number'
+  )
+    config.idleSignoutMinutesAdmin = legacy.adminIdleMinutes
   delete legacy.adminIdleMinutes
   // ADR-048, ADR-050 and ADR-078: the idle sign-out and the cluster alert's numbers.
-  for (const key of ['idleSignoutMinutesStaff', 'idleSignoutMinutesAdmin', 'clusterMinStudents', 'clusterWindowDays', 'followUpOverdueAfterDays', 'followUpAutoCloseDays'] as const)
+  for (const key of [
+    'idleSignoutMinutesStaff',
+    'idleSignoutMinutesAdmin',
+    'clusterMinStudents',
+    'clusterWindowDays',
+    'followUpOverdueAfterDays',
+    'followUpAutoCloseDays',
+  ] as const)
     if (typeof config[key] !== 'number') config[key] = seed.config[key]
   // ADR-051: the usual vitals ranges, and the frequent-visitor window's new starting value.
-  if (!config.vitalsUsualRanges) config.vitalsUsualRanges = structuredClone(seed.config.vitalsUsualRanges)
+  if (!config.vitalsUsualRanges)
+    config.vitalsUsualRanges = structuredClone(seed.config.vitalsUsualRanges)
   // ADR-054: the age limits of the usual-range groups, and the unusual-age note.
   const usual = config.vitalsUsualRanges as Record<string, unknown>
-  for (const key of ['grades1to6FromAge', 'grades7to12FromAge'] as const) usual[key] ??= seed.config.vitalsUsualRanges[key]
-  if (typeof config.unusualAgeYears !== 'number') config.unusualAgeYears = seed.config.unusualAgeYears
-  if (typeof config.largeWriteOffPercent !== 'number') config.largeWriteOffPercent = seed.config.largeWriteOffPercent
+  for (const key of ['grades1to6FromAge', 'grades7to12FromAge'] as const)
+    usual[key] ??= seed.config.vitalsUsualRanges[key]
+  if (typeof config.unusualAgeYears !== 'number')
+    config.unusualAgeYears = seed.config.unusualAgeYears
+  if (typeof config.largeWriteOffPercent !== 'number')
+    config.largeWriteOffPercent = seed.config.largeWriteOffPercent
   // ADR-052 and ADR-053: backup locations, how many backups to keep, and the staff type "Other".
   if (typeof config.backupKeepLast !== 'number') config.backupKeepLast = seed.config.backupKeepLast
   const types = config.personnelTypes as string[]
   if (!types.includes('Other')) types.push('Other')
-  saved.state.frontendOnly.backupLocations ??= resolveSeed(seed, saved.state.today).frontendOnly.backupLocations
+  saved.state.frontendOnly.backupLocations ??= resolveSeed(
+    seed,
+    saved.state.today,
+  ).frontendOnly.backupLocations
   fillApprovedLetterWording(saved.state)
   // October 29, 2026 (ADR-047): visits and incidents keep the grade they were saved in.
   fillGradeAtTime(saved.state)
@@ -200,7 +237,9 @@ export function db(): DbState {
       state.frontendOnly.calendarEvents ??= []
       state.frontendOnly.sportsReports ??= []
       // Sports Report notes were removed (Zean, November 3, 2026); drop any a saved copy still holds.
-      state.frontendOnly.sportsReports.forEach((report) => { report.students = report.students.map(({ studentId }) => ({ studentId })) })
+      state.frontendOnly.sportsReports.forEach((report) => {
+        report.students = report.students.map(({ studentId }) => ({ studentId }))
+      })
       state.frontendOnly.studentImportBatches ??= []
       seedAuditLength = migrated.seedAuditLength
     } else {

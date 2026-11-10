@@ -16,7 +16,15 @@ import {
   type VitalsWarningRanges,
 } from '../../../lib/mock-db'
 import type { Patient } from '../../../lib/patients'
-import type { CollectedBy, Disposition, ExcuseLetterDraft, FollowUp, PatientRef, PatientSearchResult, Visit } from '../../../types/entities'
+import type {
+  CollectedBy,
+  Disposition,
+  ExcuseLetterDraft,
+  FollowUp,
+  PatientRef,
+  PatientSearchResult,
+  Visit,
+} from '../../../types/entities'
 
 export interface NewVisitContext {
   /** Complaint options + their first-aid checklists (mock-only content; see mock-db.json). */
@@ -36,7 +44,10 @@ export interface NewVisitInput extends Partial<VisitLogbookFields>, PatientRef {
   treatment: string
   disposition: Disposition
   triageStepsCompleted: string[]
-  followUp: null | (Pick<FollowUp, 'followUpDate' | 'reason' | 'notes'> & Partial<Pick<FollowUp, 'stayHomeUntilCleared' | 'stayHomeNote'>>)
+  followUp:
+    | null
+    | (Pick<FollowUp, 'followUpDate' | 'reason' | 'notes'> &
+        Partial<Pick<FollowUp, 'stayHomeUntilCleared' | 'stayHomeNote'>>)
   itemsGiven?: ItemLineInput[]
   /** Sent home or referred, letter box ticked: the draft period and note. Not an approved letter. */
   excuseLetterDraft?: ExcuseLetterDraft | null
@@ -61,13 +72,14 @@ export interface NewVisitResult {
 
 /** Everything New Visit needs before the student is picked on the form. */
 export async function fetchNewVisitContext(): Promise<NewVisitContext> {
-  const [complaintTypes, complaintSuggestions, items, vitalsRanges, emergencyComplaints] = await Promise.all([
-    getVisitComplaintTypes(),
-    getVisitComplaintSuggestions(),
-    listInventory(),
-    getVitalsWarningRanges(),
-    getIncidentComplaintTypes(),
-  ])
+  const [complaintTypes, complaintSuggestions, items, vitalsRanges, emergencyComplaints] =
+    await Promise.all([
+      getVisitComplaintTypes(),
+      getVisitComplaintSuggestions(),
+      listInventory(),
+      getVitalsWarningRanges(),
+      getIncidentComplaintTypes(),
+    ])
   return { complaintTypes, complaintSuggestions, items, vitalsRanges, emergencyComplaints }
 }
 

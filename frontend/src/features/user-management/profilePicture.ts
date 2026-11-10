@@ -35,7 +35,17 @@ export async function resizeProfilePicture(file: File): Promise<string> {
     canvas.height = PROFILE_PICTURE_SIZE
     const context = canvas.getContext('2d')
     if (!context) throw new Error('This browser cannot prepare the profile picture.')
-    context.drawImage(image, sourceX, sourceY, side, side, 0, 0, PROFILE_PICTURE_SIZE, PROFILE_PICTURE_SIZE)
+    context.drawImage(
+      image,
+      sourceX,
+      sourceY,
+      side,
+      side,
+      0,
+      0,
+      PROFILE_PICTURE_SIZE,
+      PROFILE_PICTURE_SIZE,
+    )
     return canvas.toDataURL('image/webp', 0.82)
   } finally {
     URL.revokeObjectURL(objectUrl)

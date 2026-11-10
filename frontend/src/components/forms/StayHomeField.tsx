@@ -31,9 +31,12 @@ export function StayHomeField({
         />
         {/* The description (Zean, November 5, 2026) is outside the checkbox's name, so the name stays short. */}
         <span>
-          <span className="block text-sm font-semibold text-text-primary">Stay home until cleared</span>
+          <span className="block text-sm font-semibold text-text-primary">
+            Stay home until cleared
+          </span>
           <span id={descriptionId} className="block text-xs text-text-secondary">
-            Tick if they should not return to school until the clinic says they may. Your note is shown with it.
+            Tick if they should not return to school until the clinic says they may. Your note is
+            shown with it.
           </span>
         </span>
       </label>

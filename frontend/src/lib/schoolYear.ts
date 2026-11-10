@@ -27,7 +27,12 @@ export interface SchoolYearStart {
   endedBy?: string
 }
 
-export const DEFAULT_SCHOOL_YEAR: SchoolYearSettings = { schoolYearStartMonth: 6, schoolYearStartDay: 15, schoolYearEndMonth: 4, schoolYearEndDay: 14 }
+export const DEFAULT_SCHOOL_YEAR: SchoolYearSettings = {
+  schoolYearStartMonth: 6,
+  schoolYearStartDay: 15,
+  schoolYearEndMonth: 4,
+  schoolYearEndDay: 14,
+}
 
 export interface SchoolYear {
   /** "2026–2027" (en dash). */
@@ -60,24 +65,46 @@ export function schoolYearLabel(startYear: number): string {
  * before the next start; the current year stays current until the next is started, however late
  * (Zean, November 7, 2026). Dates before the first recorded start fall back to the date settings.
  */
-export function schoolYearOf(date: ISODate, settings: SchoolYearSettings = DEFAULT_SCHOOL_YEAR): SchoolYear {
-  const starts = [...(settings.schoolYearStarts ?? [])].sort((a, b) => a.startedOn.localeCompare(b.startedOn))
+export function schoolYearOf(
+  date: ISODate,
+  settings: SchoolYearSettings = DEFAULT_SCHOOL_YEAR,
+): SchoolYear {
+  const starts = [...(settings.schoolYearStarts ?? [])].sort((a, b) =>
+    a.startedOn.localeCompare(b.startedOn),
+  )
   let index = -1
   for (let i = 0; i < starts.length; i++) if (starts[i].startedOn <= date) index = i
   if (index < 0) {
     const planned = plannedSchoolYear(date, settings)
     const first = starts[0]
     // Before the first recorded start: never the started year itself, and never past its start.
-    if (!first || planned.label < first.label) return first && planned.to >= first.startedOn ? { ...planned, to: addDays(first.startedOn, -1) } : planned
-    const before = plannedSchoolYear(`${Number(first.label.slice(0, 4)) - 1}-${monthDay(settings.schoolYearStartMonth, settings.schoolYearStartDay)}`, settings)
+    if (!first || planned.label < first.label)
+      return first && planned.to >= first.startedOn
+        ? { ...planned, to: addDays(first.startedOn, -1) }
+        : planned
+    const before = plannedSchoolYear(
+      `${Number(first.label.slice(0, 4)) - 1}-${monthDay(settings.schoolYearStartMonth, settings.schoolYearStartDay)}`,
+      settings,
+    )
     return { ...before, to: addDays(first.startedOn, -1) }
   }
   const start = starts[index]
   const next = starts[index + 1]
   const startYear = Number(start.label.slice(0, 4))
-  const planned = plannedSchoolYear(`${startYear}-${monthDay(settings.schoolYearStartMonth, settings.schoolYearStartDay)}`, settings)
+  const planned = plannedSchoolYear(
+    `${startYear}-${monthDay(settings.schoolYearStartMonth, settings.schoolYearStartDay)}`,
+    settings,
+  )
   const to = next ? addDays(next.startedOn, -1) : date > planned.to ? date : planned.to
-  return { label: start.label, startYear, from: start.startedOn, to, lastClassDay: start.endedOn ?? planned.lastClassDay, started: true, endedOn: start.endedOn ?? null }
+  return {
+    label: start.label,
+    startYear,
+    from: start.startedOn,
+    to,
+    lastClassDay: start.endedOn ?? planned.lastClassDay,
+    started: true,
+    endedOn: start.endedOn ?? null,
+  }
 }
 
 /**
@@ -85,13 +112,23 @@ export function schoolYearOf(date: ISODate, settings: SchoolYearSettings = DEFAU
  * between). In session: end it, due the day after the last class day setting. Ended: start the next
  * one, due on the start setting. `due` is true once that day has come.
  */
-export function schoolYearStep(settings: SchoolYearSettings = DEFAULT_SCHOOL_YEAR, today: ISODate): { kind: 'end' | 'start'; label: string; dueOn: ISODate; due: boolean; soon: boolean } {
+export function schoolYearStep(
+  settings: SchoolYearSettings = DEFAULT_SCHOOL_YEAR,
+  today: ISODate,
+): { kind: 'end' | 'start'; label: string; dueOn: ISODate; due: boolean; soon: boolean } {
   const current = currentSchoolYear(settings, today)
-  const soon = (dueOn: ISODate) => today < dueOn && today >= addDays(dueOn, -SCHOOL_YEAR_NOTICE_DAYS)
+  const soon = (dueOn: ISODate) =>
+    today < dueOn && today >= addDays(dueOn, -SCHOOL_YEAR_NOTICE_DAYS)
   if (current.started && !current.endedOn) {
     // The end is due on the last class day itself.
     const dueOn = plannedSchoolYear(current.from, settings).lastClassDay
-    return { kind: 'end', label: current.label, dueOn, due: today > dueOn, soon: soon(dueOn) || today === dueOn }
+    return {
+      kind: 'end',
+      label: current.label,
+      dueOn,
+      due: today > dueOn,
+      soon: soon(dueOn) || today === dueOn,
+    }
   }
   const next = nextSchoolYear(settings, today)
   return { kind: 'start', ...next, soon: soon(next.dueOn) }
@@ -101,7 +138,10 @@ export function schoolYearStep(settings: SchoolYearSettings = DEFAULT_SCHOOL_YEA
 export const SCHOOL_YEAR_NOTICE_DAYS = 7
 
 /** The next school year: its label, the day it is due by the date settings, and whether that day has come. */
-export function nextSchoolYear(settings: SchoolYearSettings = DEFAULT_SCHOOL_YEAR, today: ISODate): { label: string; dueOn: ISODate; due: boolean } {
+export function nextSchoolYear(
+  settings: SchoolYearSettings = DEFAULT_SCHOOL_YEAR,
+  today: ISODate,
+): { label: string; dueOn: ISODate; due: boolean } {
   const current = currentSchoolYear(settings, today)
   // Due on the first start date after the year ended (or began): a start date changed during the year
   // means this year's date, not next year's.
@@ -131,12 +171,18 @@ function plannedSchoolYear(date: ISODate, settings: SchoolYearSettings): SchoolY
   }
 }
 
-export function currentSchoolYear(settings: SchoolYearSettings = DEFAULT_SCHOOL_YEAR, today: ISODate): SchoolYear {
+export function currentSchoolYear(
+  settings: SchoolYearSettings = DEFAULT_SCHOOL_YEAR,
+  today: ISODate,
+): SchoolYear {
   return schoolYearOf(today, settings)
 }
 
 /** Classes are on (start to the last class day), as against the break before the next start. A started year with no end is in session. */
-export function isInSession(date: ISODate, settings: SchoolYearSettings = DEFAULT_SCHOOL_YEAR): boolean {
+export function isInSession(
+  date: ISODate,
+  settings: SchoolYearSettings = DEFAULT_SCHOOL_YEAR,
+): boolean {
   const year = schoolYearOf(date, settings)
   if (year.started && !year.endedOn) return true
   return date <= year.lastClassDay
@@ -145,13 +191,25 @@ export function isInSession(date: ISODate, settings: SchoolYearSettings = DEFAUL
 /** The first problem with a setting, or null. Messages are plain, for the settings form. */
 export function schoolYearSettingsError(settings: SchoolYearSettings): string | null {
   const months = [settings.schoolYearStartMonth, settings.schoolYearEndMonth]
-  if (months.some((month) => !Number.isInteger(month) || month < 1 || month > 12)) return 'Choose a month from January to December.'
-  if (!Number.isInteger(settings.schoolYearStartDay) || settings.schoolYearStartDay < 1 || settings.schoolYearStartDay > daysIn(settings.schoolYearStartMonth))
+  if (months.some((month) => !Number.isInteger(month) || month < 1 || month > 12))
+    return 'Choose a month from January to December.'
+  if (
+    !Number.isInteger(settings.schoolYearStartDay) ||
+    settings.schoolYearStartDay < 1 ||
+    settings.schoolYearStartDay > daysIn(settings.schoolYearStartMonth)
+  )
     return 'The start day is not a date in that month.'
-  if (!Number.isInteger(settings.schoolYearEndDay) || settings.schoolYearEndDay < 1 || settings.schoolYearEndDay > daysIn(settings.schoolYearEndMonth))
+  if (
+    !Number.isInteger(settings.schoolYearEndDay) ||
+    settings.schoolYearEndDay < 1 ||
+    settings.schoolYearEndDay > daysIn(settings.schoolYearEndMonth)
+  )
     return 'The end day is not a date in that month.'
   // Any other end day falls before the next start, a year after this one.
-  if (monthDay(settings.schoolYearStartMonth, settings.schoolYearStartDay) === monthDay(settings.schoolYearEndMonth, settings.schoolYearEndDay))
+  if (
+    monthDay(settings.schoolYearStartMonth, settings.schoolYearStartDay) ===
+    monthDay(settings.schoolYearEndMonth, settings.schoolYearEndDay)
+  )
     return 'The last class day must fall before the next school year starts.'
   return null
 }

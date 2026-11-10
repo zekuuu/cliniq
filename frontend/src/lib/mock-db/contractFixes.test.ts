@@ -24,19 +24,41 @@ beforeEach(() => resetMockDb())
 describe('API contract fixes', () => {
   it('ADR-058: the audit log carries the name-correction reason, never the names', async () => {
     const student = await getStudent('student-0001')
-    await saveStudent({ ...student, lastName: `${student.lastName} Jr.` }, { studentId: student.id, actor: STAFF, nameCorrectionReason: 'Birthcertificate zebra mismatch' })
+    await saveStudent(
+      { ...student, lastName: `${student.lastName} Jr.` },
+      {
+        studentId: student.id,
+        actor: STAFF,
+        nameCorrectionReason: 'Birthcertificate zebra mismatch',
+      },
+    )
     const entry = getRecordedAuditEntries().at(-1)
-    expect(entry?.summary).toBe('Updated last name. Name corrected; reason: Birthcertificate zebra mismatch')
+    expect(entry?.summary).toBe(
+      'Updated last name. Name corrected; reason: Birthcertificate zebra mismatch',
+    )
     expect(JSON.stringify(getRecordedAuditEntries())).not.toContain(student.fullName)
   })
 
   it('Q7: a follow-up that reads as Missed gets a new date and stays closed', async () => {
-    const pending = await stayHomeFollowUp({ studentId: 'student-0001', personnelId: null }, addDays(getMockToday(), -8))
+    const pending = await stayHomeFollowUp(
+      { studentId: 'student-0001', personnelId: null },
+      addDays(getMockToday(), -8),
+    )
     expect((await listFollowUps()).find((f) => f.id === pending.id)?.status).toBe('missed')
     const next = await rescheduleFollowUp(pending.id, addDays(getMockToday(), 2), STAFF)
-    expect(next).toMatchObject({ status: 'pending', reason: pending.reason, relatedRecord: pending.relatedRecord })
-    expect(db().followUps.find((f) => f.id === pending.id)).toMatchObject({ status: 'missed', statusReason: expect.stringMatching(/No response/) })
-    expect(getRecordedAuditEntries().at(-1)).toMatchObject({ actionType: 'create', targetRecord: { id: next.id } })
+    expect(next).toMatchObject({
+      status: 'pending',
+      reason: pending.reason,
+      relatedRecord: pending.relatedRecord,
+    })
+    expect(db().followUps.find((f) => f.id === pending.id)).toMatchObject({
+      status: 'missed',
+      statusReason: expect.stringMatching(/No response/),
+    })
+    expect(getRecordedAuditEntries().at(-1)).toMatchObject({
+      actionType: 'create',
+      targetRecord: { id: next.id },
+    })
   })
 
   it('Q7: completed, cancelled and still-pending follow-ups get no new date', async () => {
@@ -52,7 +74,10 @@ describe('API contract fixes', () => {
   })
 
   it('a Missed follow-up given a new date leaves the list, stays in the data, and cannot be given another', async () => {
-    const old = await stayHomeFollowUp({ studentId: 'student-0001', personnelId: null }, addDays(getMockToday(), -8))
+    const old = await stayHomeFollowUp(
+      { studentId: 'student-0001', personnelId: null },
+      addDays(getMockToday(), -8),
+    )
     const later = addDays(getMockToday(), 2)
     expect((await listFollowUps()).some((f) => f.id === old.id)).toBe(true)
     const next = await rescheduleFollowUp(old.id, later, STAFF)
@@ -65,7 +90,10 @@ describe('API contract fixes', () => {
     expect((await listFollowUps()).some((f) => f.id === next.id)).toBe(true)
   })
 
-  async function stayHomeFollowUp(patient: { studentId: string; personnelId: null } | { studentId: null; personnelId: string }, followUpDate = getMockToday()) {
+  async function stayHomeFollowUp(
+    patient: { studentId: string; personnelId: null } | { studentId: null; personnelId: string },
+    followUpDate = getMockToday(),
+  ) {
     const { followUp } = await recordVisit({
       ...patient,
       complaint: 'Fever',
@@ -73,31 +101,62 @@ describe('API contract fixes', () => {
       disposition: 'sent_home',
       eventTag: null,
       loggedByUserId: STAFF.id,
-      followUp: { followUpDate, reason: 'Recheck', notes: null, stayHomeUntilCleared: true, stayHomeNote: 'Until fever-free 24 hours' },
+      followUp: {
+        followUpDate,
+        reason: 'Recheck',
+        notes: null,
+        stayHomeUntilCleared: true,
+        stayHomeNote: 'Until fever-free 24 hours',
+      },
     } as never)
     return followUp!
   }
 
-  it.each(['student', 'staff'])('Q7b: a %s patient keeps the stay-home flag and note on the new follow-up', async (kind) => {
-    const [person] = await listPersonnel()
-    const patient = kind === 'student' ? { studentId: 'student-0001', personnelId: null } : { studentId: null, personnelId: person.id }
-    const old = await stayHomeFollowUp(patient)
-    await setFollowUpStatus(old.id, 'missed', STAFF, 'Did not come')
-    const next = await rescheduleFollowUp(old.id, addDays(getMockToday(), 2), STAFF)
-    expect(next).toMatchObject({ ...patient, stayHomeUntilCleared: true, stayHomeNote: 'Until fever-free 24 hours' })
-    expect(db().followUps.find((f) => f.id === old.id)?.status).toBe('missed')
-    const entry = getRecordedAuditEntries().at(-1)
-    expect(entry).toMatchObject({ actionType: 'create', targetRecord: { type: 'follow-up', id: next.id } })
-    expect(JSON.stringify(entry)).not.toContain('fever-free')
-  })
+  it.each(['student', 'staff'])(
+    'Q7b: a %s patient keeps the stay-home flag and note on the new follow-up',
+    async (kind) => {
+      const [person] = await listPersonnel()
+      const patient =
+        kind === 'student'
+          ? { studentId: 'student-0001', personnelId: null }
+          : { studentId: null, personnelId: person.id }
+      const old = await stayHomeFollowUp(patient)
+      await setFollowUpStatus(old.id, 'missed', STAFF, 'Did not come')
+      const next = await rescheduleFollowUp(old.id, addDays(getMockToday(), 2), STAFF)
+      expect(next).toMatchObject({
+        ...patient,
+        stayHomeUntilCleared: true,
+        stayHomeNote: 'Until fever-free 24 hours',
+      })
+      expect(db().followUps.find((f) => f.id === old.id)?.status).toBe('missed')
+      const entry = getRecordedAuditEntries().at(-1)
+      expect(entry).toMatchObject({
+        actionType: 'create',
+        targetRecord: { type: 'follow-up', id: next.id },
+      })
+      expect(JSON.stringify(entry)).not.toContain('fever-free')
+    },
+  )
 
   it('ADR-059: a student saves without an emergency contact and is flagged Incomplete', async () => {
     const student = await getStudent('student-0001')
-    const saved = await saveStudent({ ...student, lrn: '000000269992', firstName: 'No Contact', lastName: 'Yet', middleName: null, emergencyContacts: [] }, { actor: STAFF, confirmDuplicate: true })
+    const saved = await saveStudent(
+      {
+        ...student,
+        lrn: '000000269992',
+        firstName: 'No Contact',
+        lastName: 'Yet',
+        middleName: null,
+        emergencyContacts: [],
+      },
+      { actor: STAFF, confirmDuplicate: true },
+    )
     if (saved.status !== 'saved') throw new Error('not saved')
     expect(saved.student.recordComplete).toBe(false)
     const queue = await getIncompleteRecordQueue()
-    expect(queue.find((row) => row.student.id === saved.student.id)?.missingFields).toContain('Emergency contact')
+    expect(queue.find((row) => row.student.id === saved.student.id)?.missingFields).toContain(
+      'Emergency contact',
+    )
   })
 
   it('Q2: a list row carries only the list columns, with the LRN masked', async () => {

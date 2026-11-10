@@ -2,7 +2,15 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { addDays } from '../../lib/dates'
-import { getInventoryItem, getMockToday, listInventory, resetMockDb, restockInventoryItem, saveInventoryItem, StockRuleError } from '../../lib/mock-db'
+import {
+  getInventoryItem,
+  getMockToday,
+  listInventory,
+  resetMockDb,
+  restockInventoryItem,
+  saveInventoryItem,
+  StockRuleError,
+} from '../../lib/mock-db'
 import { db } from '../../lib/mock-db/store'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { selectOption } from '../../test/selectOption'
@@ -15,29 +23,65 @@ beforeEach(() => window.sessionStorage.setItem('cliniq.pageSize', '50'))
 
 /** Panel review part 5: the Manage menu, expiry on Add Item, the duplicate warning, Add/Remove. */
 
-const NEW_ITEM = { name: 'Saline solution', category: 'supply' as const, currentStock: 10, unit: 'bottles', lowStockThreshold: 2 }
+const NEW_ITEM = {
+  name: 'Saline solution',
+  category: 'supply' as const,
+  currentStock: 10,
+  unit: 'bottles',
+  lowStockThreshold: 2,
+}
 
 describe('Add Item expiry (IV-2, ADR-035, D10)', () => {
   beforeEach(() => resetMockDb())
 
   it('needs a date or the explicit no-expiration confirmation, never both, in the data layer', async () => {
-    await expect(saveInventoryItem({ ...NEW_ITEM, expirationDate: null })).rejects.toBeInstanceOf(StockRuleError)
-    await expect(saveInventoryItem({ ...NEW_ITEM, expirationDate: '2099-01-01', noExpirationConfirmed: true })).rejects.toThrow(/either/)
-    const item = await saveInventoryItem({ ...NEW_ITEM, expirationDate: null, noExpirationConfirmed: true })
+    await expect(saveInventoryItem({ ...NEW_ITEM, expirationDate: null })).rejects.toBeInstanceOf(
+      StockRuleError,
+    )
+    await expect(
+      saveInventoryItem({ ...NEW_ITEM, expirationDate: '2099-01-01', noExpirationConfirmed: true }),
+    ).rejects.toThrow(/either/)
+    const item = await saveInventoryItem({
+      ...NEW_ITEM,
+      expirationDate: null,
+      noExpirationConfirmed: true,
+    })
     expect((await getInventoryItem(item.id)).batches[0].expirationDate).toBeNull()
     // Editing an existing item never touches its expiry, so the rule doesn't apply there.
-    await expect(saveInventoryItem({ ...NEW_ITEM, name: 'Saline 0.9%', expirationDate: null }, { itemId: item.id })).resolves.toBeTruthy()
+    await expect(
+      saveInventoryItem(
+        { ...NEW_ITEM, name: 'Saline 0.9%', expirationDate: null },
+        { itemId: item.id },
+      ),
+    ).resolves.toBeTruthy()
     // Q11: active item names are unique, whatever the unit; an edit may keep its own name.
-    await expect(saveInventoryItem({ ...NEW_ITEM, name: ' saline 0.9% ', unit: 'sachets', expirationDate: null, noExpirationConfirmed: true })).rejects.toBeInstanceOf(StockRuleError)
-    await expect(saveInventoryItem({ ...NEW_ITEM, name: 'SALINE 0.9%', expirationDate: null }, { itemId: item.id })).resolves.toBeTruthy()
+    await expect(
+      saveInventoryItem({
+        ...NEW_ITEM,
+        name: ' saline 0.9% ',
+        unit: 'sachets',
+        expirationDate: null,
+        noExpirationConfirmed: true,
+      }),
+    ).rejects.toBeInstanceOf(StockRuleError)
+    await expect(
+      saveInventoryItem(
+        { ...NEW_ITEM, name: 'SALINE 0.9%', expirationDate: null },
+        { itemId: item.id },
+      ),
+    ).resolves.toBeTruthy()
   })
 
   it('rejects an expiration date in the past on Add Item and Restock; today is allowed (Zean, Sunday, October 25, 2026)', async () => {
     const today = getMockToday()
     const yesterday = addDays(today, -1)
-    await expect(saveInventoryItem({ ...NEW_ITEM, expirationDate: yesterday })).rejects.toThrow(/can't be in the past/)
+    await expect(saveInventoryItem({ ...NEW_ITEM, expirationDate: yesterday })).rejects.toThrow(
+      /can't be in the past/,
+    )
     const item = await saveInventoryItem({ ...NEW_ITEM, expirationDate: today })
-    await expect(restockInventoryItem(item.id, 5, yesterday)).rejects.toThrow(/can't be in the past/)
+    await expect(restockInventoryItem(item.id, 5, yesterday)).rejects.toThrow(
+      /can't be in the past/,
+    )
     await expect(restockInventoryItem(item.id, 5, today)).resolves.toBeTruthy()
   })
 
@@ -50,16 +94,22 @@ describe('Add Item expiry (IV-2, ADR-035, D10)', () => {
     await user.type(screen.getByRole('combobox', { name: /^unit/i }), 'bottles')
     await user.type(screen.getByLabelText(/low-stock threshold/i), '2')
     await user.click(screen.getByRole('button', { name: 'Add Item' }))
-    expect(screen.getByText('Choose an expiration date, or confirm this item has no expiration date.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Choose an expiration date, or confirm this item has no expiration date.'),
+    ).toBeInTheDocument()
     await user.click(screen.getByLabelText(/this item has no expiration date/i))
     // "Commonly used for" is required (Zean, November 8, 2026); "Other" takes a symptom not in the list.
     await user.click(screen.getByRole('button', { name: 'Add Item' }))
-    expect(screen.getByText('Choose at least one symptom this item is commonly used for.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Choose at least one symptom this item is commonly used for.'),
+    ).toBeInTheDocument()
     await user.click(screen.getByRole('checkbox', { name: 'Other' }))
     await user.type(screen.getByRole('textbox', { name: /^Other/ }), 'eye irritation, ')
     await user.click(screen.getByRole('button', { name: 'Add Item' }))
     expect(await screen.findByText('Saline solution was added successfully.')).toBeInTheDocument()
-    expect(db().inventoryItems.find((i) => i.name === 'Saline solution')?.usedFor).toEqual(['eye irritation'])
+    expect(db().inventoryItems.find((i) => i.name === 'Saline solution')?.usedFor).toEqual([
+      'eye irritation',
+    ])
   })
 })
 
@@ -80,8 +130,13 @@ describe('duplicate warning and unit suggestions (IV-3, D9)', () => {
     await screen.findByRole('heading', { name: 'Add Inventory Item' })
     await user.type(screen.getByLabelText(/item name/i), 'paracetamol 500mg')
     await user.type(screen.getByRole('combobox', { name: /^unit/i }), 'tablet')
-    expect(screen.getByText(/Paracetamol 500mg \(tablets\) already exists\. Restock it instead\?/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Go to Paracetamol 500mg' })).toHaveAttribute('href', '/inventory?search=Paracetamol%20500mg')
+    expect(
+      screen.getByText(/Paracetamol 500mg \(tablets\) already exists\. Restock it instead\?/),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Go to Paracetamol 500mg' })).toHaveAttribute(
+      'href',
+      '/inventory?search=Paracetamol%20500mg',
+    )
     expect(screen.getByRole('button', { name: 'Add Item' })).toBeEnabled()
   })
 })
@@ -93,19 +148,32 @@ describe('one main row action and a Manage menu (IV-1), Add or Remove (IV-7)', (
     const user = userEvent.setup()
     renderWithRouter(<InventoryListPage />)
     expect(await screen.findByRole('button', { name: 'Restock Gauze Pads' })).toBeInTheDocument()
-    expect(screen.getByText('Restock when new stock arrives. Adjust Stock to correct a count.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Restock when new stock arrives. Adjust Stock to correct a count.'),
+    ).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /^Manage Gauze Pads/ }))
-    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['Adjust Stock', 'Batches', 'Usage history', 'Edit'])
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      'Adjust Stock',
+      'Batches',
+      'Usage history',
+      'Edit',
+    ])
   })
 
   it('adds a positive quantity with Add and shows the result before saving', async () => {
     const user = userEvent.setup()
     renderWithRouter(<InventoryListPage />)
-    await selectOption(user, await screen.findByRole('button', { name: /^Manage Gauze Pads/ }), 'Adjust Stock')
+    await selectOption(
+      user,
+      await screen.findByRole('button', { name: /^Manage Gauze Pads/ }),
+      'Adjust Stock',
+    )
     const dialog = screen.getByRole('dialog', { name: 'Adjust Stock: Gauze Pads' })
     await user.click(within(dialog).getByRole('radio', { name: 'Add' }))
     await user.type(within(dialog).getByLabelText(/quantity to add/i), '5')
-    expect(within(dialog).getByText('This batch after saving: 45 pieces (now 40)')).toBeInTheDocument()
+    expect(
+      within(dialog).getByText('This batch after saving: 45 pieces (now 40)'),
+    ).toBeInTheDocument()
     await selectOption(user, within(dialog).getByLabelText(/^reason/i), 'Miscount correction')
     await user.click(within(dialog).getByRole('button', { name: 'Save Adjustment' }))
     expect((await getInventoryItem('item-0011')).currentStock).toBe(45)
@@ -114,12 +182,18 @@ describe('one main row action and a Manage menu (IV-1), Add or Remove (IV-7)', (
   it('refuses a minus sign or zero: the quantity is always positive', async () => {
     const user = userEvent.setup()
     renderWithRouter(<InventoryListPage />)
-    await selectOption(user, await screen.findByRole('button', { name: /^Manage Gauze Pads/ }), 'Adjust Stock')
+    await selectOption(
+      user,
+      await screen.findByRole('button', { name: /^Manage Gauze Pads/ }),
+      'Adjust Stock',
+    )
     const dialog = screen.getByRole('dialog', { name: 'Adjust Stock: Gauze Pads' })
     await user.type(within(dialog).getByLabelText(/quantity to remove/i), '0')
     await selectOption(user, within(dialog).getByLabelText(/^reason/i), 'Miscount correction')
     await user.click(within(dialog).getByRole('button', { name: 'Save Adjustment' }))
-    expect(within(dialog).getByText('Enter how many to remove, a whole number of 1 or more.')).toBeInTheDocument()
+    expect(
+      within(dialog).getByText('Enter how many to remove, a whole number of 1 or more.'),
+    ).toBeInTheDocument()
     expect((await getInventoryItem('item-0011')).currentStock).toBe(40)
   })
 })

@@ -13,7 +13,9 @@ describe('Visit Log List: first-load skeleton', () => {
     const { container } = renderWithRouter(<VisitLogListPage />)
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading visit log...')
-    expect(container.querySelectorAll('[aria-hidden="true"] .animate-pulse').length).toBeGreaterThan(8)
+    expect(
+      container.querySelectorAll('[aria-hidden="true"] .animate-pulse').length,
+    ).toBeGreaterThan(8)
     expect(container.querySelector('.animate-spin')).toBeNull()
   })
 })

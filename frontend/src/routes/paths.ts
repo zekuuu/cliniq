@@ -41,7 +41,8 @@ export const paths = {
   visitDetail: (visitId: string) => `/visits/${seg(visitId)}`,
   excuseLetter: (visitId: string) => `/visits/${seg(visitId)}/excuse-letter`,
   /** One stored letter, e.g. a superseded one, opened from the student's record. */
-  excuseLetterVersion: (visitId: string, letterId: string) => `/visits/${seg(visitId)}/excuse-letter?letter=${seg(letterId)}`,
+  excuseLetterVersion: (visitId: string, letterId: string) =>
+    `/visits/${seg(visitId)}/excuse-letter?letter=${seg(letterId)}`,
   incidents: '/incidents',
   incidentsInRange: (from: string, to: string) => `/incidents?from=${seg(from)}&to=${seg(to)}`,
   incidentNew: '/incidents/new',
@@ -78,4 +79,3 @@ export const paths = {
   archive: '/archive',
   settings: '/settings',
 } as const
-

@@ -88,12 +88,7 @@ describe('Cancel with unsaved changes asks first', () => {
 
   it.each([
     ['New Visit', <NewVisitEntryPage />, '/visits', /treatment/i],
-    [
-      'Incident Stage 1',
-      <IncidentEntryPage />,
-      '/incidents',
-      /additional notes/i,
-    ],
+    ['Incident Stage 1', <IncidentEntryPage />, '/incidents', /additional notes/i],
     ['Add Student', <StudentFormPage />, '/students', /^first name/i],
     [
       'Edit Student',
@@ -101,12 +96,7 @@ describe('Cancel with unsaved changes asks first', () => {
       `/students/${STUDENT}`,
       /^first name/i,
     ],
-    [
-      'PE/Sports Referral',
-      <PeSportsReferralPage />,
-      '/visits',
-      /activity/i,
-    ],
+    ['PE/Sports Referral', <PeSportsReferralPage />, '/visits', /activity/i],
     ['Add Inventory Item', <InventoryFormPage />, '/inventory', /item name/i],
     ['User form', <UserFormPage />, '/users', /full name/i],
   ])(

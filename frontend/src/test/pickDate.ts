@@ -11,9 +11,13 @@ async function openToYear(user: UserEvent, trigger: HTMLElement, year: number) {
     if (zoom) await user.click(zoom)
   }
   for (let i = 0; i < 50 && !within(dialog).queryByRole('button', { name: String(year) }); i++) {
-    const firstYear = Number(within(dialog).getByRole('group').getAttribute('aria-label')!.slice(0, 4))
+    const firstYear = Number(
+      within(dialog).getByRole('group').getAttribute('aria-label')!.slice(0, 4),
+    )
     await user.click(
-      within(dialog).getByRole('button', { name: year < firstYear ? 'Previous years' : 'Next years' }),
+      within(dialog).getByRole('button', {
+        name: year < firstYear ? 'Previous years' : 'Next years',
+      }),
     )
   }
   await user.click(within(dialog).getByRole('button', { name: String(year) }))

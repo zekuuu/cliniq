@@ -39,7 +39,9 @@ describe('DataTable sortable headers', () => {
         caption="Wide fixed records"
         fixedLayout
         minTableWidth="calc(20ch + 3 * 8rem)"
-        columns={[{ key: 'name', header: 'Name', width: '20ch', cell: (row: { name: string }) => row.name }]}
+        columns={[
+          { key: 'name', header: 'Name', width: '20ch', cell: (row: { name: string }) => row.name },
+        ]}
         rows={[{ name: 'Amina' }]}
         rowKey={(row) => row.name}
       />,
@@ -99,6 +101,10 @@ describe('DataTable sortable headers', () => {
 
     // 4px padding cancelled by a -4px margin (layout unchanged), and scroll-padding so focus
     // scrolling stops 6px short of the edge: the 2px ring with its 2px offset fits, with slack.
-    expect(screen.getByRole('link', { name: 'View' }).closest('.overflow-x-auto')).toHaveClass('-mx-1', 'px-1', 'scroll-px-1.5')
+    expect(screen.getByRole('link', { name: 'View' }).closest('.overflow-x-auto')).toHaveClass(
+      '-mx-1',
+      'px-1',
+      'scroll-px-1.5',
+    )
   })
 })

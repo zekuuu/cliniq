@@ -15,9 +15,13 @@ export function focusTopMessage(element: HTMLElement | null, reducedMotion: bool
 
 /** Focuses the field whose inline error reads `message`, inside `root`; else the message itself. */
 function focusField(root: HTMLElement | null, message: string) {
-  const error = [...(root?.querySelectorAll<HTMLElement>('[role="alert"]') ?? [])].find((node) => node.textContent?.trim() === message)
+  const error = [...(root?.querySelectorAll<HTMLElement>('[role="alert"]') ?? [])].find(
+    (node) => node.textContent?.trim() === message,
+  )
   if (!error) return
-  const field = error.id ? root?.querySelector<HTMLElement>(`[aria-describedby~="${CSS.escape(error.id)}"]`) : null
+  const field = error.id
+    ? root?.querySelector<HTMLElement>(`[aria-describedby~="${CSS.escape(error.id)}"]`)
+    : null
   const target = field ?? error
   if (!field) target.tabIndex = -1
   target.scrollIntoView?.({ block: 'center' })
@@ -29,7 +33,15 @@ function focusField(root: HTMLElement | null, message: string) {
  * Complete the user should see what happened without scrolling). Lists each problem as a link to its
  * field. It takes focus each time `attempt` changes while it has messages.
  */
-export function ErrorSummary({ messages, formRef, attempt }: { messages: string[]; formRef: RefObject<HTMLElement | null>; attempt: number }) {
+export function ErrorSummary({
+  messages,
+  formRef,
+  attempt,
+}: {
+  messages: string[]
+  formRef: RefObject<HTMLElement | null>
+  attempt: number
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const reducedMotion = usePrefersReducedMotion()
   const shown = messages.length > 0
@@ -40,10 +52,18 @@ export function ErrorSummary({ messages, formRef, attempt }: { messages: string[
   }, [attempt])
   if (!shown) return null
   return (
-    <div ref={ref} role="alert" tabIndex={-1} aria-labelledby="error-summary-title" className="scroll-mt-20 rounded-md border border-error bg-error/10 px-4 py-3 text-sm text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green">
+    <div
+      ref={ref}
+      role="alert"
+      tabIndex={-1}
+      aria-labelledby="error-summary-title"
+      className="scroll-mt-20 rounded-md border border-error bg-error/10 px-4 py-3 text-sm text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green"
+    >
       <p id="error-summary-title" className="flex items-center gap-2 font-semibold">
         <Icon name="alertTriangle" size={16} className="shrink-0 text-error" />
-        {messages.length === 1 ? 'Fix 1 thing before saving:' : `Fix ${messages.length} things before saving:`}
+        {messages.length === 1
+          ? 'Fix 1 thing before saving:'
+          : `Fix ${messages.length} things before saving:`}
       </p>
       <ul className={`mt-2 ${BULLET_LIST}`}>
         {messages.map((message) => (

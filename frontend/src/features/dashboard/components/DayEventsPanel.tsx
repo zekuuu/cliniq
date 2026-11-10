@@ -251,7 +251,9 @@ export function DayEventsPanel({
                       <span className={holidayChipClass} title={`Holiday: ${holidayName(h)}`}>
                         Holiday: {holidayName(h)}
                       </span>
-                      <span className="text-xs text-text-secondary">{HOLIDAY_KIND_LABEL[h.kind]}</span>
+                      <span className="text-xs text-text-secondary">
+                        {HOLIDAY_KIND_LABEL[h.kind]}
+                      </span>
                     </li>
                   ))}
                 </ul>

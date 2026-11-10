@@ -53,7 +53,12 @@ function QueueSkeleton({ back }: { back: ReactNode }) {
 }
 
 function formatResolvedAt(value: string): string {
-  return new Date(value).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+  return new Date(value).toLocaleString('en-PH', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
 }
 
 /**
@@ -61,11 +66,21 @@ function formatResolvedAt(value: string): string {
  * contact (or no sex, on old records). A record is resolved when Edit Staff saves it complete; the data
  * layer records who and when. No Imported column: staff aren't imported.
  */
-export function StaffIncompleteRecordsPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser }) {
-  const { data, status, isRefetching, reload } = useAsyncData('staff-incomplete-records', fetchStaffIncompleteRecords)
+export function StaffIncompleteRecordsPage({
+  viewer = getMockSessionUser(),
+}: {
+  viewer?: SessionUser
+}) {
+  const { data, status, isRefetching, reload } = useAsyncData(
+    'staff-incomplete-records',
+    fetchStaffIncompleteRecords,
+  )
   const [filter, setFilter] = useState<QueueFilter>('open')
   const [search, setSearch] = useState('')
-  const [sort, setSort] = useState<TableSortState<StaffQueueSortKey>>({ key: 'staff', direction: 'ascending' })
+  const [sort, setSort] = useState<TableSortState<StaffQueueSortKey>>({
+    key: 'staff',
+    direction: 'ascending',
+  })
 
   const isResolved = (record: StaffIncompleteRecord) => record.status === 'resolved'
 
@@ -73,7 +88,9 @@ export function StaffIncompleteRecordsPage({ viewer = getMockSessionUser() }: { 
     if (!data) return []
     const term = search.trim().toLowerCase()
     return data
-      .filter((record) => (filter === 'open' ? !isResolved(record) : filter === 'resolved' ? isResolved(record) : true))
+      .filter((record) =>
+        filter === 'open' ? !isResolved(record) : filter === 'resolved' ? isResolved(record) : true,
+      )
       .filter(
         (record) =>
           !term ||
@@ -83,7 +100,10 @@ export function StaffIncompleteRecordsPage({ viewer = getMockSessionUser() }: { 
       )
   }, [data, filter, search])
 
-  const nameOrder = useMemo(() => new Map((data ?? []).map((record, index) => [record.person.id, index])), [data])
+  const nameOrder = useMemo(
+    () => new Map((data ?? []).map((record, index) => [record.person.id, index])),
+    [data],
+  )
   const sortedRows = useMemo(
     () =>
       sortTableRows(visibleRows, sort, (record, key) => {
@@ -104,7 +124,14 @@ export function StaffIncompleteRecordsPage({ viewer = getMockSessionUser() }: { 
   })
 
   const columns: Array<DataTableColumn<StaffIncompleteRecord>> = [
-    { key: 'staff', header: 'Staff', width: '20%', rowHeader: true, sort: sortColumn('staff', 'Staff'), cell: (record) => record.person.fullName },
+    {
+      key: 'staff',
+      header: 'Staff',
+      width: '20%',
+      rowHeader: true,
+      sort: sortColumn('staff', 'Staff'),
+      cell: (record) => record.person.fullName,
+    },
     {
       key: 'number',
       header: 'Staff No.',
@@ -112,7 +139,13 @@ export function StaffIncompleteRecordsPage({ viewer = getMockSessionUser() }: { 
       sort: sortColumn('number', 'Staff No.'),
       cell: (record) => <span className="tabular-nums">{record.person.staffNumber}</span>,
     },
-    { key: 'type', header: 'Type', width: '15%', sort: sortColumn('type', 'Type'), cell: (record) => record.person.type },
+    {
+      key: 'type',
+      header: 'Type',
+      width: '15%',
+      sort: sortColumn('type', 'Type'),
+      cell: (record) => record.person.type,
+    },
     {
       key: 'missing',
       header: 'Missing fields',
@@ -140,7 +173,8 @@ export function StaffIncompleteRecordsPage({ viewer = getMockSessionUser() }: { 
               Resolved
             </Badge>
             <p className="mt-1 text-xs text-text-secondary">
-              {record.resolvedByName ?? 'Unknown user'} · {formatResolvedAt(record.review.resolvedAt)}
+              {record.resolvedByName ?? 'Unknown user'} ·{' '}
+              {formatResolvedAt(record.review.resolvedAt)}
             </p>
           </div>
         ) : (
@@ -207,7 +241,9 @@ export function StaffIncompleteRecordsPage({ viewer = getMockSessionUser() }: { 
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-text-primary">Incomplete Staff Records</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-text-primary">
+              Incomplete Staff Records
+            </h1>
             <p className="mt-1 text-sm text-text-secondary">
               Staff records that still need an emergency contact or the sex recorded.
             </p>
@@ -263,7 +299,11 @@ export function StaffIncompleteRecordsPage({ viewer = getMockSessionUser() }: { 
                 minTableWidth="56rem"
               />
             ) : (
-              <EmptyState icon="inbox" title="No records in this view" description="Try another queue filter or search term." />
+              <EmptyState
+                icon="inbox"
+                title="No records in this view"
+                description="Try another queue filter or search term."
+              />
             )}
           </div>
         </CardBody>

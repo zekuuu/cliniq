@@ -80,7 +80,12 @@ function valuesFromStudent(student: Student | null): StudentFormValues {
     sex: student.sex,
     birthDate: student.birthDate ?? '',
     emergencyContacts: student.emergencyContacts.length
-      ? student.emergencyContacts.map(({ name, relationship, phone, verified }) => ({ name, relationship, phone, verified }))
+      ? student.emergencyContacts.map(({ name, relationship, phone, verified }) => ({
+          name,
+          relationship,
+          phone,
+          verified,
+        }))
       : [{ name: '', relationship: '', phone: '', verified: false }],
     allergies: student.allergies.length ? student.allergies.join(', ') : NONE_RECORDED,
     medicalConditions: student.medicalConditions.length
@@ -124,33 +129,33 @@ function DuplicateDialog({
 }) {
   return (
     <Modal open title="Possible duplicate record" onClose={onCancel}>
-        <div className="flex items-start gap-3">
-          <Icon name="alertTriangle" className="mt-1 shrink-0 text-warning-text" />
-          <div>
-            <p className="text-sm text-text-secondary">
-              A student with the same full name and grade level already exists. Confirm only if
-              this is a different student.
+      <div className="flex items-start gap-3">
+        <Icon name="alertTriangle" className="mt-1 shrink-0 text-warning-text" />
+        <div>
+          <p className="text-sm text-text-secondary">
+            A student with the same full name and grade level already exists. Confirm only if this
+            is a different student.
+          </p>
+        </div>
+      </div>
+      <ul className="mt-4 flex flex-col gap-2">
+        {matches.map((match) => (
+          <li key={match.id} className="rounded-md border border-border bg-surface px-3 py-2">
+            <p className="text-sm font-semibold text-text-primary">{match.fullName}</p>
+            <p className="text-xs text-text-secondary">
+              <MaskedLrn lrn={match.lrn} /> · {match.gradeLevel}
             </p>
-          </div>
-        </div>
-        <ul className="mt-4 flex flex-col gap-2">
-          {matches.map((match) => (
-            <li key={match.id} className="rounded-md border border-border bg-surface px-3 py-2">
-              <p className="text-sm font-semibold text-text-primary">{match.fullName}</p>
-              <p className="text-xs text-text-secondary">
-                <MaskedLrn lrn={match.lrn} /> · {match.gradeLevel}
-              </p>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-5 flex flex-wrap justify-end gap-2">
-          <Button variant="neutral" data-autofocus onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button variant="primary" icon="checkCircle" loading={saving} onClick={onConfirm}>
-            Confirm Create
-          </Button>
-        </div>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-5 flex flex-wrap justify-end gap-2">
+        <Button variant="neutral" data-autofocus onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button variant="primary" icon="checkCircle" loading={saving} onClick={onConfirm}>
+          Confirm Create
+        </Button>
+      </div>
     </Modal>
   )
 }
@@ -177,10 +182,14 @@ function validate(values: StudentFormValues, today: ISODate): StudentFormErrors 
   if (values.birthDate > today) errors.birthDate = "The birthdate can't be in the future."
   values.emergencyContacts.forEach((contact, index) => {
     if (!contactStarted(contact)) return
-    if (!contact.name.trim()) errors[contactErrorKey(index, 'name')] = 'Enter the emergency contact name.'
-    if (!contact.relationship.trim()) errors[contactErrorKey(index, 'relationship')] = 'Enter the contact relationship.'
-    if (!contact.phone.trim()) errors[contactErrorKey(index, 'phone')] = 'Enter the emergency contact phone.'
-    else if (!isPhilippinePhone(contact.phone)) errors[contactErrorKey(index, 'phone')] = PHONE_ERROR
+    if (!contact.name.trim())
+      errors[contactErrorKey(index, 'name')] = 'Enter the emergency contact name.'
+    if (!contact.relationship.trim())
+      errors[contactErrorKey(index, 'relationship')] = 'Enter the contact relationship.'
+    if (!contact.phone.trim())
+      errors[contactErrorKey(index, 'phone')] = 'Enter the emergency contact phone.'
+    else if (!isPhilippinePhone(contact.phone))
+      errors[contactErrorKey(index, 'phone')] = PHONE_ERROR
   })
   // Allergies and conditions may be left empty: an empty field reads "None recorded" (ADR-051).
   return errors
@@ -221,7 +230,10 @@ function StudentFormEditor({
   const [isSaving, setIsSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const successRef = useRef<HTMLParagraphElement>(null)
-  const [liveDuplicates, setLiveDuplicates] = useState<StudentDuplicateCheck>({ lrnTaken: false, nameMatches: [] })
+  const [liveDuplicates, setLiveDuplicates] = useState<StudentDuplicateCheck>({
+    lrnTaken: false,
+    nameMatches: [],
+  })
   // Sir Rey (October 25, 2026): the LRN is locked after creation; a name correction asks why.
   const [nameReason, setNameReason] = useState('')
   const typedName = formatPersonName(values)
@@ -241,7 +253,12 @@ function StudentFormEditor({
     data.student ? paths.studentProfile(data.student.id) : paths.students,
     JSON.stringify(values) !== JSON.stringify(baseline),
   )
-  const ageNote = unusualAgeNote(values.birthDate, values.gradeLevel, data.today, data.unusualAgeYears)
+  const ageNote = unusualAgeNote(
+    values.birthDate,
+    values.gradeLevel,
+    data.today,
+    data.unusualAgeYears,
+  )
   const title = mode === 'edit' ? 'Edit Student' : 'Add Student'
   const description =
     mode === 'edit'
@@ -290,7 +307,11 @@ function StudentFormEditor({
     setSuccessMessage('')
   }
 
-  function setEmergencyContact(index: number, field: 'name' | 'relationship' | 'phone', value: string) {
+  function setEmergencyContact(
+    index: number,
+    field: 'name' | 'relationship' | 'phone',
+    value: string,
+  ) {
     setValues((current) => ({
       ...current,
       emergencyContacts: current.emergencyContacts.map((contact, contactIndex) =>
@@ -304,7 +325,10 @@ function StudentFormEditor({
   function addEmergencyContact() {
     setValues((current) => ({
       ...current,
-      emergencyContacts: [...current.emergencyContacts, { name: '', relationship: '', phone: '', verified: false }],
+      emergencyContacts: [
+        ...current.emergencyContacts,
+        { name: '', relationship: '', phone: '', verified: false },
+      ],
     }))
     setSuccessMessage('')
   }
@@ -312,7 +336,9 @@ function StudentFormEditor({
   function removeEmergencyContact(index: number) {
     setValues((current) => ({
       ...current,
-      emergencyContacts: current.emergencyContacts.filter((_, contactIndex) => contactIndex !== index),
+      emergencyContacts: current.emergencyContacts.filter(
+        (_, contactIndex) => contactIndex !== index,
+      ),
     }))
     setErrors({})
     setSuccessMessage('')
@@ -371,7 +397,8 @@ function StudentFormEditor({
         // Back through history, so the next Back leaves the profile instead of showing it again.
         setSavedMessage(`Student record updated for ${result.student.fullName}.`)
         allowLeave()
-        if (location.key === 'default') void navigate(paths.studentProfile(result.student.id), { replace: true })
+        if (location.key === 'default')
+          void navigate(paths.studentProfile(result.student.id), { replace: true })
         else void navigate(-1)
         return
       }
@@ -416,127 +443,164 @@ function StudentFormEditor({
             description={`${requiredCount} required field${requiredCount === 1 ? '' : 's'} remaining`}
             icon={<Icon name="userCog" />}
             actions={
-              isRefetching ? <Badge tone="warning" variant="soft">Refreshing</Badge> : undefined
+              isRefetching ? (
+                <Badge tone="warning" variant="soft">
+                  Refreshing
+                </Badge>
+              ) : undefined
             }
           />
           <CardBody className="flex flex-col gap-5">
             <p
               ref={successRef}
               role="status"
-              className={successMessage ? 'rounded-md border border-success/40 bg-success/10 px-3 py-2 text-sm font-semibold text-success' : 'sr-only'}
+              className={
+                successMessage
+                  ? 'rounded-md border border-success/40 bg-success/10 px-3 py-2 text-sm font-semibold text-success'
+                  : 'sr-only'
+              }
             >
               {successMessage}
             </p>
 
-            <FormSection id="identity-title" title="Identity" description="Who the student is, as written in the school records.">
+            <FormSection
+              id="identity-title"
+              title="Identity"
+              description="Who the student is, as written in the school records."
+            >
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              {mode === 'edit' ? (
-                <Input
-                  label="LRN"
-                  readOnly
-                  value={values.lrn}
-                  hint="The LRN is the student's identifier and can't be changed."
-                  inputClassName="cursor-default bg-surface hover:border-border"
-                />
-              ) : (
-                <Input
-                  label="LRN"
-                  required
-                  inputMode="numeric"
-                  autoComplete="off"
-                  value={values.lrn}
-                  error={shown.lrn ?? (liveDuplicates.lrnTaken ? DUPLICATE_LRN_MESSAGE : undefined)}
-                  hint="12 digits. Spaces and dashes are removed."
-                  onChange={(event) => setField('lrn', normalizeLrn(event.target.value))}
-                />
-              )}
-              {/* R12: one answer of two, as radio buttons (the Staff form's SexRadios, ADR-063). */}
-              <SexRadios value={values.sex} error={shown.sex} onChange={(value) => setField('sex', value)} />
-              <div className="flex flex-col gap-2">
-                <DatePicker
-                  label="Birthdate"
-                  placeholder="Optional"
-                  value={values.birthDate}
-                  max={data.today}
-                  error={shown.birthDate}
-                  onChange={(value) => setField('birthDate', value)}
-                />
-                {ageNote && !shown.birthDate && (
-                  <p
-                    role="status"
-                    className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-xs text-text-primary"
-                  >
-                    <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning-text" />
-                    {ageNote}
-                  </p>
+                {mode === 'edit' ? (
+                  <Input
+                    label="LRN"
+                    readOnly
+                    value={values.lrn}
+                    hint="The LRN is the student's identifier and can't be changed."
+                    inputClassName="cursor-default bg-surface hover:border-border"
+                  />
+                ) : (
+                  <Input
+                    label="LRN"
+                    required
+                    inputMode="numeric"
+                    autoComplete="off"
+                    value={values.lrn}
+                    error={
+                      shown.lrn ?? (liveDuplicates.lrnTaken ? DUPLICATE_LRN_MESSAGE : undefined)
+                    }
+                    hint="12 digits. Spaces and dashes are removed."
+                    onChange={(event) => setField('lrn', normalizeLrn(event.target.value))}
+                  />
                 )}
-              </div>
-              <div className="flex flex-col gap-2 md:col-span-3">
-                <NameFields
-                  values={values}
-                  errors={shown}
-                  hint="Write the name as it appears on the school's list."
-                  onChange={(field, value) => setField(field, value)}
+                {/* R12: one answer of two, as radio buttons (the Staff form's SexRadios, ADR-063). */}
+                <SexRadios
+                  value={values.sex}
+                  error={shown.sex}
+                  onChange={(value) => setField('sex', value)}
                 />
-                {mode === 'add' && liveDuplicates.nameMatches.length > 0 && (
-                  <div
-                    role="status"
-                    className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-xs text-text-primary"
-                  >
-                    <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning-text" />
-                    <div>
-                      <p className="font-semibold">Already in the Student List:</p>
-                      <ul>
-                        {liveDuplicates.nameMatches.map((match) => (
-                          <li key={match.id}>
-                            {match.gradeLevel} · <MaskedLrn lrn={match.lrn} />
-                          </li>
-                        ))}
-                      </ul>
-                      <p>Check it isn't the same student. You can still save.</p>
+                <div className="flex flex-col gap-2">
+                  <DatePicker
+                    label="Birthdate"
+                    placeholder="Optional"
+                    value={values.birthDate}
+                    max={data.today}
+                    error={shown.birthDate}
+                    onChange={(value) => setField('birthDate', value)}
+                  />
+                  {ageNote && !shown.birthDate && (
+                    <p
+                      role="status"
+                      className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-xs text-text-primary"
+                    >
+                      <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning-text" />
+                      {ageNote}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2 md:col-span-3">
+                  <NameFields
+                    values={values}
+                    errors={shown}
+                    hint="Write the name as it appears on the school's list."
+                    onChange={(field, value) => setField(field, value)}
+                  />
+                  {mode === 'add' && liveDuplicates.nameMatches.length > 0 && (
+                    <div
+                      role="status"
+                      className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-xs text-text-primary"
+                    >
+                      <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning-text" />
+                      <div>
+                        <p className="font-semibold">Already in the Student List:</p>
+                        <ul>
+                          {liveDuplicates.nameMatches.map((match) => (
+                            <li key={match.id}>
+                              {match.gradeLevel} · <MaskedLrn lrn={match.lrn} />
+                            </li>
+                          ))}
+                        </ul>
+                        <p>Check it isn't the same student. You can still save.</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
+                </div>
+                {nameChanged && (
+                  <Input
+                    className="md:col-span-3"
+                    label="Reason for the name correction"
+                    required
+                    value={nameReason}
+                    error={shown.nameCorrectionReason}
+                    hint="For example, a misspelling corrected against the school records. Saved in the audit log."
+                    onChange={(event) => {
+                      setNameReason(event.target.value)
+                      setErrors((current) => ({ ...current, nameCorrectionReason: undefined }))
+                    }}
+                  />
                 )}
               </div>
-              {nameChanged && (
-                <Input
-                  className="md:col-span-3"
-                  label="Reason for the name correction"
-                  required
-                  value={nameReason}
-                  error={shown.nameCorrectionReason}
-                  hint="For example, a misspelling corrected against the school records. Saved in the audit log."
-                  onChange={(event) => {
-                    setNameReason(event.target.value)
-                    setErrors((current) => ({ ...current, nameCorrectionReason: undefined }))
-                  }}
-                />
-              )}
-              </div>
             </FormSection>
 
-            <FormSection id="school-title" title="School details" description="Where the student is enrolled this school year.">
+            <FormSection
+              id="school-title"
+              title="School details"
+              description="Where the student is enrolled this school year."
+            >
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <Select
-                label="Grade level"
-                required
-                value={values.gradeLevel}
-                placeholder="Select grade level"
-                options={data.gradeLevels.map((grade) => ({ value: grade, label: grade }))}
-                error={shown.gradeLevel}
-                onChange={(value) => setField('gradeLevel', value)}
-              />
-              <Input label="Section" placeholder="Optional" value={values.section} onChange={(event) => setField('section', event.target.value)} />
+                <Select
+                  label="Grade level"
+                  required
+                  value={values.gradeLevel}
+                  placeholder="Select grade level"
+                  options={data.gradeLevels.map((grade) => ({ value: grade, label: grade }))}
+                  error={shown.gradeLevel}
+                  onChange={(value) => setField('gradeLevel', value)}
+                />
+                <Input
+                  label="Section"
+                  placeholder="Optional"
+                  value={values.section}
+                  onChange={(event) => setField('section', event.target.value)}
+                />
               </div>
             </FormSection>
 
-            <FormSection id="emergency-contact-title" title="Emergency contacts" description="Who the clinic calls first. The first contact is primary.">
+            <FormSection
+              id="emergency-contact-title"
+              title="Emergency contacts"
+              description="Who the clinic calls first. The first contact is primary."
+            >
               <div className="flex flex-col gap-3">
                 {values.emergencyContacts.map((contact, index) => {
-                  const label = index === 0 ? 'Primary emergency contact' : `Emergency contact ${index + 1}`
+                  const label =
+                    index === 0 ? 'Primary emergency contact' : `Emergency contact ${index + 1}`
                   return (
-                    <fieldset key={index} className="rounded-md border border-border bg-surface p-3">
-                      <legend className="px-1 text-sm font-semibold text-text-primary">{label}</legend>
+                    <fieldset
+                      key={index}
+                      className="rounded-md border border-border bg-surface p-3"
+                    >
+                      <legend className="px-1 text-sm font-semibold text-text-primary">
+                        {label}
+                      </legend>
                       <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-3">
                         <Input
                           label="Name"
@@ -545,7 +609,9 @@ function StudentFormEditor({
                           required={contactStarted(contact)}
                           value={contact.name}
                           error={shown[contactErrorKey(index, 'name')]}
-                          onChange={(event) => setEmergencyContact(index, 'name', event.target.value)}
+                          onChange={(event) =>
+                            setEmergencyContact(index, 'name', event.target.value)
+                          }
                         />
                         <ComboboxWithOther
                           label="Relationship"
@@ -557,7 +623,9 @@ function StudentFormEditor({
                           value={contact.relationship}
                           options={RELATIONSHIP_SUGGESTIONS}
                           error={shown[contactErrorKey(index, 'relationship')]}
-                          onValueChange={(value) => setEmergencyContact(index, 'relationship', value)}
+                          onValueChange={(value) =>
+                            setEmergencyContact(index, 'relationship', value)
+                          }
                         />
                         <Input
                           label="Phone"
@@ -567,26 +635,66 @@ function StudentFormEditor({
                           required={contactStarted(contact)}
                           value={contact.phone}
                           error={shown[contactErrorKey(index, 'phone')]}
-                          onChange={(event) => setEmergencyContact(index, 'phone', event.target.value)}
+                          onChange={(event) =>
+                            setEmergencyContact(index, 'phone', event.target.value)
+                          }
                         />
                       </div>
                       {values.emergencyContacts.length > 1 && (
                         <div className="mt-3 flex flex-wrap gap-2">
-                          {index > 0 && <Button variant="secondary" size="sm" onClick={() => makePrimaryEmergencyContact(index)}>Make primary</Button>}
-                          <Button variant="neutral" size="sm" onClick={() => removeEmergencyContact(index)}>Remove contact</Button>
+                          {index > 0 && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => makePrimaryEmergencyContact(index)}
+                            >
+                              Make primary
+                            </Button>
+                          )}
+                          <Button
+                            variant="neutral"
+                            size="sm"
+                            onClick={() => removeEmergencyContact(index)}
+                          >
+                            Remove contact
+                          </Button>
                         </div>
                       )}
                     </fieldset>
                   )
                 })}
               </div>
-              <Button variant="secondary" size="sm" icon="plus" className="self-start" onClick={addEmergencyContact}>Add another contact</Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon="plus"
+                className="self-start"
+                onClick={addEmergencyContact}
+              >
+                Add another contact
+              </Button>
             </FormSection>
 
-            <FormSection id="medical-title" title="Medical history" description="Allergies and conditions the clinic should know before treating.">
+            <FormSection
+              id="medical-title"
+              title="Medical history"
+              description="Allergies and conditions the clinic should know before treating."
+            >
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <HealthListField label="Allergies" list={STARTER_ALLERGIES} value={values.allergies} error={shown.allergies} onValueChange={(value) => setField('allergies', value)} />
-                <HealthListField label="Medical conditions" list={STARTER_CONDITIONS} value={values.medicalConditions} error={shown.medicalConditions} onValueChange={(value) => setField('medicalConditions', value)} />
+                <HealthListField
+                  label="Allergies"
+                  list={STARTER_ALLERGIES}
+                  value={values.allergies}
+                  error={shown.allergies}
+                  onValueChange={(value) => setField('allergies', value)}
+                />
+                <HealthListField
+                  label="Medical conditions"
+                  list={STARTER_CONDITIONS}
+                  value={values.medicalConditions}
+                  error={shown.medicalConditions}
+                  onValueChange={(value) => setField('medicalConditions', value)}
+                />
               </div>
             </FormSection>
 
@@ -594,7 +702,13 @@ function StudentFormEditor({
               <Button variant="neutral" onClick={cancel}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" icon="checkCircle" loading={isSaving} done={Boolean(successMessage)}>
+              <Button
+                type="submit"
+                variant="primary"
+                icon="checkCircle"
+                loading={isSaving}
+                done={Boolean(successMessage)}
+              >
                 {mode === 'edit' ? 'Save Changes' : 'Save Student'}
               </Button>
             </div>

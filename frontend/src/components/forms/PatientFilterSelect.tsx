@@ -19,5 +19,14 @@ export function PatientFilterSelect({
   /** Label beside the field, to line up with an inline Select in the same header. */
   inline?: boolean
 }) {
-  return <Select label="Patient" value={value} options={OPTIONS} onChange={(next) => onChange(next as PatientFilter)} className={className} inline={inline} />
+  return (
+    <Select
+      label="Patient"
+      value={value}
+      options={OPTIONS}
+      onChange={(next) => onChange(next as PatientFilter)}
+      className={className}
+      inline={inline}
+    />
+  )
 }

@@ -1,5 +1,13 @@
 import { symptom } from '../../lib/labels'
-import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ReactNode,
+} from 'react'
 import { cleanComplaint, COMPLAINT_MAX_LENGTH } from '../../lib/complaints'
 import { useLocation, useSearchParams } from 'react-router'
 import {
@@ -39,14 +47,26 @@ import { paths } from '../../routes/paths'
 import { CHOOSE_STUDENT_MESSAGE, useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { addDays, formatTime, todayISO } from '../../lib/dates'
 import { draftsFrom, formatItemGiven } from '../../lib/itemsGiven'
-import { ageGroupOf, readingText, takenReadings, type ReadingKey, type ReadingValues } from '../../lib/vitals'
-import { type AgeGroup,
+import {
+  ageGroupOf,
+  readingText,
+  takenReadings,
+  type ReadingKey,
+  type ReadingValues,
+} from '../../lib/vitals'
+import {
+  type AgeGroup,
   getMockSessionUser,
   StockRuleError,
   type SessionUser,
   type VitalsWarningRanges,
 } from '../../lib/mock-db'
-import type { CalledContact, HospitalReferral, Incident, ParentNotificationOutcome } from '../../types/entities'
+import type {
+  CalledContact,
+  HospitalReferral,
+  Incident,
+  ParentNotificationOutcome,
+} from '../../types/entities'
 import {
   completeStageTwoIncident,
   fetchIncidentEntryContext,
@@ -86,7 +106,18 @@ const incidentStatusMap = {
 } satisfies StatusMap<IncidentStatus>
 
 /** Suggestions only; any text is accepted (D11). */
-const BODY_PART_SUGGESTIONS = ['Head', 'Face', 'Neck', 'Chest', 'Abdomen', 'Back', 'Arm', 'Hand', 'Leg', 'Foot']
+const BODY_PART_SUGGESTIONS = [
+  'Head',
+  'Face',
+  'Neck',
+  'Chest',
+  'Abdomen',
+  'Back',
+  'Arm',
+  'Hand',
+  'Leg',
+  'Foot',
+]
 
 interface Errors extends CalledContactErrors {
   complaint?: string
@@ -183,7 +214,9 @@ function validateStageOne(complaint: string, readings: ReadingValues): Errors {
 /** The readings saved on a record, for the Stage 2 summary: "37.2 °C · 98%", or none taken. */
 function readingSummary(vitals: Incident['vitals']): string {
   const taken = takenReadings(vitals)
-  return taken.length ? taken.map(([key, value]) => readingText(key, value)).join(' · ') : 'No readings taken'
+  return taken.length
+    ? taken.map(([key, value]) => readingText(key, value)).join(' · ')
+    : 'No readings taken'
 }
 
 /**
@@ -208,7 +241,10 @@ function ReadingsFields({
   return (
     <fieldset className="flex flex-col gap-3">
       <legend className="mb-1 text-sm font-semibold text-text-primary">
-        Readings <span className="font-normal text-text-secondary">(optional; take what the case needs)</span>
+        Readings{' '}
+        <span className="font-normal text-text-secondary">
+          (optional; take what the case needs)
+        </span>
       </legend>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Input
@@ -269,7 +305,11 @@ export function IncidentEntryPage({
   const prefill = (useLocation().state as { escalate?: EscalationPrefill } | null)?.escalate
   const { data, status, reload } = useAsyncData(
     `incident-entry|${incidentId ?? ''}|${fromVisit ?? ''}|${staffId ?? ''}|${studentId ?? ''}|${prefill ? JSON.stringify(prefill) : ''}`,
-    () => fetchIncidentEntryContext(incidentId, incidentId ? undefined : { visitId: fromVisit, prefill, staffId, studentId }),
+    () =>
+      fetchIncidentEntryContext(
+        incidentId,
+        incidentId ? undefined : { visitId: fromVisit, prefill, staffId, studentId },
+      ),
   )
 
   const back = <BackButton fallback={paths.incidents} />
@@ -345,7 +385,9 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const incidentDate = (incident?.time ?? data.escalation?.time)?.slice(0, 10) ?? today
   const [complaint, setComplaint] = useState(existing?.complaint ?? start.complaint)
   const [readings, setReadings] = useState<ReadingValues>(() =>
-    existing ? savedReadings(existing) : { ...savedReadings(null), temperatureC: start.temperatureC },
+    existing
+      ? savedReadings(existing)
+      : { ...savedReadings(null), temperatureC: start.temperatureC },
   )
   const [generalNotes, setGeneralNotes] = useState(existing?.generalNotes ?? start.notes)
   const [treatmentNotes, setTreatmentNotes] = useState(vital(existing, 'treatmentNotes'))
@@ -353,15 +395,25 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const [referToHospital, setReferToHospital] = useState(Boolean(savedReferral))
   const [referralDestination, setReferralDestination] = useState(savedReferral?.destination ?? '')
   const [transportMode, setTransportMode] = useState(savedReferral?.transportMode ?? '')
-  const [departureDate, setDepartureDate] = useState(savedReferral?.departureTime.slice(0, 10) ?? '')
-  const [departureClock, setDepartureClock] = useState(savedReferral?.departureTime.slice(11, 16) ?? '')
-  const [notificationOutcome, setNotificationOutcome] = useState<ParentNotificationOutcome>('reached')
+  const [departureDate, setDepartureDate] = useState(
+    savedReferral?.departureTime.slice(0, 10) ?? '',
+  )
+  const [departureClock, setDepartureClock] = useState(
+    savedReferral?.departureTime.slice(11, 16) ?? '',
+  )
+  const [notificationOutcome, setNotificationOutcome] =
+    useState<ParentNotificationOutcome>('reached')
   const [notificationDetail, setNotificationDetail] = useState('')
   // null means the default: the primary contact of the student picked so far, or "Other" when none.
   const [calledDraftEdit, setCalledDraft] = useState<CalledContactDraft | null>(null)
   const calledDraft = calledDraftEdit ?? initialCalledDraft(student?.emergencyContacts ?? [])
   const [notifications, setNotifications] = useState<
-    Array<{ outcome: ParentNotificationOutcome; timestamp: string; detail: string; calledContact: CalledContact }>
+    Array<{
+      outcome: ParentNotificationOutcome
+      timestamp: string
+      detail: string
+      calledContact: CalledContact
+    }>
   >([])
   const [bodyPart, setBodyPart] = useState(existing?.bodyPart ?? '')
   const [needsFollowUp, setNeedsFollowUp] = useState(false)
@@ -388,15 +440,25 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedAttempt])
   const reportErrors = (messages: Array<string | undefined>) =>
-    setSummary((current) => ({ messages: messages.filter((m): m is string => Boolean(m)), attempt: current.attempt + 1 }))
+    setSummary((current) => ({
+      messages: messages.filter((m): m is string => Boolean(m)),
+      attempt: current.attempt + 1,
+    }))
   const reportSaved = () => {
     setSummary((current) => ({ ...current, messages: [] }))
     setSavedAttempt((current) => current + 1)
   }
   const readingsChanged = (from: Incident | null) =>
-    Object.entries(savedReadings(from)).some(([key, value]) => readings[key as ReadingKey] !== value)
+    Object.entries(savedReadings(from)).some(
+      ([key, value]) => readings[key as ReadingKey] !== value,
+    )
   // Stage 1 typed but not saved, or Stage 2 changed from the saved incident but not completed.
-  const stageOneDirty = !incident && (complaint !== '' || readingsChanged(null) || generalNotes.trim() !== '' || Boolean(data.escalation))
+  const stageOneDirty =
+    !incident &&
+    (complaint !== '' ||
+      readingsChanged(null) ||
+      generalNotes.trim() !== '' ||
+      Boolean(data.escalation))
   const stageTwoDirty =
     incident !== null &&
     !completed &&
@@ -409,17 +471,25 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       generalNotes !== (incident.generalNotes ?? '') ||
       needsFollowUp ||
       lines.length !== incident.itemsGiven.length)
-  const { cancel, discardDialog } = useCancelNavigation(paths.incidents, stageOneDirty || stageTwoDirty)
+  const { cancel, discardDialog } = useCancelNavigation(
+    paths.incidents,
+    stageOneDirty || stageTwoDirty,
+  )
 
   function setReading(key: ReadingKey, value: string) {
     setReadings((current) => ({ ...current, [key]: value }))
-    if (key === 'oxygenSaturationPct') setErrors((current) => ({ ...current, oxygenSaturationPct: undefined }))
+    if (key === 'oxygenSaturationPct')
+      setErrors((current) => ({ ...current, oxygenSaturationPct: undefined }))
   }
 
   // Stage 2's care, call and referral are all optional (Zean, November 5, 2026; ADR-065 reverses panel
   // review IN-3 and its "Nothing further was needed or done" tick).
 
-  const statusValue: IncidentStatus = completed ? 'complete' : incident ? 'in_progress' : 'needs_completion'
+  const statusValue: IncidentStatus = completed
+    ? 'complete'
+    : incident
+      ? 'in_progress'
+      : 'needs_completion'
 
   async function onStageOneSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -428,7 +498,11 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
     const nextErrors = validateStageOne(complaint, readings)
     const studentOk = identified.validate()
     setErrors(nextErrors)
-    if (Object.keys(nextErrors).length || !studentOk) return reportErrors([studentOk ? undefined : CHOOSE_STUDENT_MESSAGE, ...Object.values(nextErrors)])
+    if (Object.keys(nextErrors).length || !studentOk)
+      return reportErrors([
+        studentOk ? undefined : CHOOSE_STUDENT_MESSAGE,
+        ...Object.values(nextErrors),
+      ])
     setSavingStageOne(true)
     try {
       const target = await identified.resolve()
@@ -442,7 +516,10 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
           time: data.escalation?.time,
           // Linked only to a saved visit of the same patient (the data layer checks).
           sourceVisitId:
-            data.escalation?.visitId && (data.escalation.studentId ?? data.escalation.personnelId) === target.id ? data.escalation.visitId : undefined,
+            data.escalation?.visitId &&
+            (data.escalation.studentId ?? data.escalation.personnelId) === target.id
+              ? data.escalation.visitId
+              : undefined,
         },
         viewer,
       )
@@ -494,7 +571,8 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       next.departureClock = 'Enter the full departure time, including AM or PM.'
     }
     if (needsFollowUp && !followUpReason.trim()) next.followUpReason = 'Enter the follow-up reason.'
-    if (lines.some((line) => line.quantity < 1)) next.itemsGiven = 'Each quantity must be at least 1.'
+    if (lines.some((line) => line.quantity < 1))
+      next.itemsGiven = 'Each quantity must be at least 1.'
     return next
   }
 
@@ -538,16 +616,24 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                 followUpDate,
                 reason: followUpReason.trim(),
                 notes: followUpNotes.trim() || null,
-                ...(followUpStayHome.checked && { stayHomeUntilCleared: true, stayHomeNote: followUpStayHome.note.trim() || null }),
+                ...(followUpStayHome.checked && {
+                  stayHomeUntilCleared: true,
+                  stayHomeNote: followUpStayHome.note.trim() || null,
+                }),
               }
             : null,
-          itemsGiven: lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity, instructions: line.instructions })),
+          itemsGiven: lines.map((line) => ({
+            itemId: line.itemId,
+            quantity: line.quantity,
+            instructions: line.instructions,
+          })),
         },
         viewer,
       )
       setIncident(result.incident)
       setCompleted(true)
-      if (result.belowZero.length) setStockMessage(`Now below zero: ${result.belowZero.join(', ')}. Recount and restock.`)
+      if (result.belowZero.length)
+        setStockMessage(`Now below zero: ${result.belowZero.join(', ')}. Recount and restock.`)
       reportSaved()
     } catch (caught) {
       // The data layer rejected a medicine line; nothing was saved and stock is unchanged.
@@ -575,7 +661,10 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                 : 'Student or staff member not identified yet. Search by LRN, Staff No. or name in Stage 1.'}
             </p>
             {/* ADR-051: which form to use; the nurse is to confirm the wording. */}
-            <p className="mt-2 text-xs text-text-secondary">Incident: a worse case that needs fast two-stage capture. A common, routine case is a Visit.</p>
+            <p className="mt-2 text-xs text-text-secondary">
+              Incident: a worse case that needs fast two-stage capture. A common, routine case is a
+              Visit.
+            </p>
           </div>
           <StatusBadge status={statusValue} map={incidentStatusMap} />
         </div>
@@ -583,24 +672,31 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
 
       <ErrorSummary messages={summary.messages} formRef={invalidRef} attempt={summary.attempt} />
       {/* Focused after a save; scroll-mt keeps it clear of the sticky top bar. */}
-      <div ref={topRef} tabIndex={-1} className="flex scroll-mt-20 flex-col gap-4 outline-none empty:hidden">
-      {incident && (!existing || completed) && (
-        <div
-          role="status"
-          // Completed is saved and done: green, like every saved message. Stage 1 still needs work: amber.
-          className={`rounded-md border px-4 py-3 text-sm font-semibold text-text-primary ${completed ? 'border-success bg-success/10' : 'border-warning bg-warning-fill'}`}
-        >
-          {completed
-            ? 'Incident completed. Stage 2 details are now saved.'
-            : 'Stage 1 saved. This incident still needs completion.'}
-        </div>
-      )}
+      <div
+        ref={topRef}
+        tabIndex={-1}
+        className="flex scroll-mt-20 flex-col gap-4 outline-none empty:hidden"
+      >
+        {incident && (!existing || completed) && (
+          <div
+            role="status"
+            // Completed is saved and done: green, like every saved message. Stage 1 still needs work: amber.
+            className={`rounded-md border px-4 py-3 text-sm font-semibold text-text-primary ${completed ? 'border-success bg-success/10' : 'border-warning bg-warning-fill'}`}
+          >
+            {completed
+              ? 'Incident completed. Stage 2 details are now saved.'
+              : 'Stage 1 saved. This incident still needs completion.'}
+          </div>
+        )}
 
-      {stockMessage && (
-        <div role="alert" className="rounded-md border border-error bg-error/10 px-4 py-3 text-sm font-semibold text-text-primary">
-          {stockMessage}
-        </div>
-      )}
+        {stockMessage && (
+          <div
+            role="alert"
+            className="rounded-md border border-error bg-error/10 px-4 py-3 text-sm font-semibold text-text-primary"
+          >
+            {stockMessage}
+          </div>
+        )}
       </div>
 
       <SegmentedControl
@@ -625,23 +721,28 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
             />
             <CardBody className="flex flex-col gap-4">
               {data.escalation && (
-                <p role="status" className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary">
-                  Escalated from {data.escalation.visitId ? 'a saved visit' : 'the New Visit form'}: the patient, complaint, time and
-                  temperature are carried over. Medicines given at the visit stay on the visit.
+                <p
+                  role="status"
+                  className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary"
+                >
+                  Escalated from {data.escalation.visitId ? 'a saved visit' : 'the New Visit form'}:
+                  the patient, complaint, time and temperature are carried over. Medicines given at
+                  the visit stay on the visit.
                 </p>
               )}
               {!data.student && (
                 <div className={identified.student ? undefined : FIELD_HALF}>
-                <PatientPicker
-                  search={searchIncidentPatients}
-                  selected={identified.student}
-                  onClear={identified.reset}
-                  onSelect={(picked) => void identified.select(patientRefOf(picked))}
-                  error={identified.error}
-                  hint="No one was identified before this emergency. Type an LRN, a Staff No. or a name, then pick the student or staff member."
-                  addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
-                  addStaffHref={viewer.role === 'staff' ? paths.staffNew : undefined}
-                /></div>
+                  <PatientPicker
+                    search={searchIncidentPatients}
+                    selected={identified.student}
+                    onClear={identified.reset}
+                    onSelect={(picked) => void identified.select(patientRefOf(picked))}
+                    error={identified.error}
+                    hint="No one was identified before this emergency. Type an LRN, a Staff No. or a name, then pick the student or staff member."
+                    addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
+                    addStaffHref={viewer.role === 'staff' ? paths.staffNew : undefined}
+                  />
+                </div>
               )}
               {student && <StudentAlertCard student={student} />}
               <SelectWithOther
@@ -664,11 +765,21 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                 onChange={setReading}
                 error={errors.oxygenSaturationPct}
                 ranges={data.vitalsRanges}
-                ageGroup={student ? ageGroupOf(student, incidentDate, data.vitalsRanges.usual) : null}
+                ageGroup={
+                  student ? ageGroupOf(student, incidentDate, data.vitalsRanges.usual) : null
+                }
               />
-              <TextareaField label="Additional notes" placeholder="Optional" value={generalNotes} onChange={setGeneralNotes} rows={3} />
+              <TextareaField
+                label="Additional notes"
+                placeholder="Optional"
+                value={generalNotes}
+                onChange={setGeneralNotes}
+                rows={3}
+              />
               <div className="flex flex-wrap justify-end gap-2 pt-2">
-                <Button type="button" variant="neutral" className="h-11" onClick={cancel}>Cancel</Button>
+                <Button type="button" variant="neutral" className="h-11" onClick={cancel}>
+                  Cancel
+                </Button>
                 <Button
                   type="submit"
                   variant="primary"
@@ -702,84 +813,128 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
               ) : (
                 <>
                   {/* Titled sections like the other forms (cliniq-form-section-patterns, Zean, November 5, 2026). */}
-                  <FormSection id="stage-two-record-title" title="Stage 1 record" description="What was captured first. The notes stay editable until the report is approved.">
-                  <div className="rounded-md border border-border bg-surface p-3">
-                    <p className="text-xs font-semibold text-text-secondary">Stage 1 summary</p>
-                    <p className="mt-1 text-sm font-semibold text-text-primary">{complaint}</p>
-                    <p className="text-xs text-text-secondary">{readingSummary(incident.vitals)}</p>
-                    {data.approved && incident.generalNotes && (
-                      <p className="mt-2 text-sm whitespace-pre-line text-text-primary">
-                        <span className="text-xs font-semibold text-text-secondary">Additional notes: </span>
-                        {incident.generalNotes}
+                  <FormSection
+                    id="stage-two-record-title"
+                    title="Stage 1 record"
+                    description="What was captured first. The notes stay editable until the report is approved."
+                  >
+                    <div className="rounded-md border border-border bg-surface p-3">
+                      <p className="text-xs font-semibold text-text-secondary">Stage 1 summary</p>
+                      <p className="mt-1 text-sm font-semibold text-text-primary">{complaint}</p>
+                      <p className="text-xs text-text-secondary">
+                        {readingSummary(incident.vitals)}
                       </p>
-                    )}
-                  </div>
-                  {/* ADR-049: correctable until the report is approved; each change is an audited edit. */}
-                  {!data.approved && (
-                    <TextareaField label="Additional notes" placeholder="Optional" value={generalNotes} onChange={setGeneralNotes} rows={3} />
-                  )}
-                  {incident.sourceVisitId && <FromVisit visitId={incident.sourceVisitId} given={data.sourceVisit?.itemsGiven ?? []} />}
-                  </FormSection>
-
-                  <FormSection id="stage-two-care-title" title="Readings and care" description="Any further readings, what was done, and medicines or supplies used.">
-                  <ReadingsFields
-                    values={readings}
-                    onChange={setReading}
-                    error={errors.oxygenSaturationPct}
-                    ranges={data.vitalsRanges}
-                    ageGroup={student ? ageGroupOf(student, incidentDate, data.vitalsRanges.usual) : null}
-                  />
-                  <TextareaField
-                    label="Treatment notes"
-                    value={treatmentNotes}
-                    onChange={(value) => {
-                      setTreatmentNotes(value)
-                    }}
-                  />
-                  <Combobox
-                    label="Body part affected"
-                    placeholder="Optional"
-                    value={bodyPart}
-                    onValueChange={setBodyPart}
-                    options={BODY_PART_SUGGESTIONS}
-                    optionKey={(option) => option}
-                    optionLabel={(option) => option}
-                    allowFreeText
-                    openOnFocus
-                    noMatchesText={null}
-                    maxLength={60}
-                    className={FIELD_HALF}
-                  />
-                  {completed && incident && !treatmentNotes.trim() && !incident.itemsGiven.length && (
-                    <p className="text-sm text-text-secondary">No treatment recorded</p>
-                  )}
-                  {completed && incident ? (
-                    <section aria-labelledby="incident-items-title" className="rounded-md border border-border p-4">
-                      <h2 id="incident-items-title" className="text-sm font-semibold text-text-primary">Medicines &amp; supplies given</h2>
-                      {incident.itemsGiven.length ? (
-                        <ul className="mt-1 flex flex-col gap-1 text-sm text-text-primary">
-                          {incident.itemsGiven.map((line) => <li key={line.itemId}>{formatItemGiven(line)}</li>)}
-                        </ul>
-                      ) : (
-                        <p className="mt-1 text-sm text-text-secondary">None recorded.</p>
+                      {data.approved && incident.generalNotes && (
+                        <p className="mt-2 text-sm whitespace-pre-line text-text-primary">
+                          <span className="text-xs font-semibold text-text-secondary">
+                            Additional notes:{' '}
+                          </span>
+                          {incident.generalNotes}
+                        </p>
                       )}
-                      <p className="mt-2 text-xs text-text-secondary">Recorded when Stage 2 was completed; these can't be changed here.</p>
-                    </section>
-                  ) : (
-                    <ItemsGivenField
-                      items={data.items}
-                      lines={lines}
-                      onChange={(next) => {
-                        setLines(next)
-                        setErrors((current) => ({ ...current, itemsGiven: undefined }))
-                      }}
-                      allergies={student?.allergies ?? null}
-                      error={errors.itemsGiven}
-                    />
-                  )}
+                    </div>
+                    {/* ADR-049: correctable until the report is approved; each change is an audited edit. */}
+                    {!data.approved && (
+                      <TextareaField
+                        label="Additional notes"
+                        placeholder="Optional"
+                        value={generalNotes}
+                        onChange={setGeneralNotes}
+                        rows={3}
+                      />
+                    )}
+                    {incident.sourceVisitId && (
+                      <FromVisit
+                        visitId={incident.sourceVisitId}
+                        given={data.sourceVisit?.itemsGiven ?? []}
+                      />
+                    )}
                   </FormSection>
 
-                  <FormSection id="stage-two-referral-title" title="Hospital referral" description="Only when the patient was taken to a hospital or another clinic.">
+                  <FormSection
+                    id="stage-two-care-title"
+                    title="Readings and care"
+                    description="Any further readings, what was done, and medicines or supplies used."
+                  >
+                    <ReadingsFields
+                      values={readings}
+                      onChange={setReading}
+                      error={errors.oxygenSaturationPct}
+                      ranges={data.vitalsRanges}
+                      ageGroup={
+                        student ? ageGroupOf(student, incidentDate, data.vitalsRanges.usual) : null
+                      }
+                    />
+                    <TextareaField
+                      label="Treatment notes"
+                      value={treatmentNotes}
+                      onChange={(value) => {
+                        setTreatmentNotes(value)
+                      }}
+                    />
+                    <Combobox
+                      label="Body part affected"
+                      placeholder="Optional"
+                      value={bodyPart}
+                      onValueChange={setBodyPart}
+                      options={BODY_PART_SUGGESTIONS}
+                      optionKey={(option) => option}
+                      optionLabel={(option) => option}
+                      allowFreeText
+                      openOnFocus
+                      noMatchesText={null}
+                      maxLength={60}
+                      className={FIELD_HALF}
+                    />
+                    {completed &&
+                      incident &&
+                      !treatmentNotes.trim() &&
+                      !incident.itemsGiven.length && (
+                        <p className="text-sm text-text-secondary">No treatment recorded</p>
+                      )}
+                    {completed && incident ? (
+                      <section
+                        aria-labelledby="incident-items-title"
+                        className="rounded-md border border-border p-4"
+                      >
+                        <h2
+                          id="incident-items-title"
+                          className="text-sm font-semibold text-text-primary"
+                        >
+                          Medicines &amp; supplies given
+                        </h2>
+                        {incident.itemsGiven.length ? (
+                          <ul className="mt-1 flex flex-col gap-1 text-sm text-text-primary">
+                            {incident.itemsGiven.map((line) => (
+                              <li key={line.itemId}>{formatItemGiven(line)}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="mt-1 text-sm text-text-secondary">None recorded.</p>
+                        )}
+                        <p className="mt-2 text-xs text-text-secondary">
+                          Recorded when Stage 2 was completed; these can't be changed here.
+                        </p>
+                      </section>
+                    ) : (
+                      <ItemsGivenField
+                        items={data.items}
+                        lines={lines}
+                        onChange={(next) => {
+                          setLines(next)
+                          setErrors((current) => ({ ...current, itemsGiven: undefined }))
+                        }}
+                        allergies={student?.allergies ?? null}
+                        error={errors.itemsGiven}
+                      />
+                    )}
+                  </FormSection>
+
+                  <FormSection
+                    id="stage-two-referral-title"
+                    title="Hospital referral"
+                    description="Only when the patient was taken to a hospital or another clinic."
+                  >
                     <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
                       <input
                         type="checkbox"
@@ -833,85 +988,118 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
 
                   <FormSection
                     id="stage-two-notification-title"
-                    title={student?.kind === 'personnel' ? 'Emergency contact notification log' : 'Parent notification log'}
+                    title={
+                      student?.kind === 'personnel'
+                        ? 'Emergency contact notification log'
+                        : 'Parent notification log'
+                    }
                     description="Each call attempt, added as it happens. Nothing is saved until Complete Incident."
                   >
-                  <div
-                    onKeyDown={(event) => {
-                      // Escape that closes an open list stays with that list.
-                      if (event.key === 'Escape' && !(event.target as HTMLElement).closest('[role="listbox"], [aria-expanded="true"]')) cancelNotification()
-                    }}
-                  >
-                    {/* Outcome and Who was called share a row (Zean, November 5, 2026); "Other" opens the name and
+                    <div
+                      onKeyDown={(event) => {
+                        // Escape that closes an open list stays with that list.
+                        if (
+                          event.key === 'Escape' &&
+                          !(event.target as HTMLElement).closest(
+                            '[role="listbox"], [aria-expanded="true"]',
+                          )
+                        )
+                          cancelNotification()
+                      }}
+                    >
+                      {/* Outcome and Who was called share a row (Zean, November 5, 2026); "Other" opens the name and
                         number on the row below. A select, as on the Parent Notification page: the four labels don't
                         fit side by side on a phone. */}
-                    <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <Select
-                        label="Outcome"
-                        value={notificationOutcome}
-                        onChange={(value) => setNotificationOutcome(value as ParentNotificationOutcome)}
-                        options={PARENT_NOTIFICATION_OUTCOMES}
-                      />
-                      <CalledContactField
-                        className="contents"
-                        contacts={student?.emergencyContacts ?? []}
-                        draft={calledDraft}
-                        onChange={(next) => {
-                          setCalledDraft(next)
-                          setErrors((current) => ({ ...current, calledName: undefined, calledPhone: undefined }))
-                        }}
-                        errors={errors}
-                      />
+                      <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <Select
+                          label="Outcome"
+                          value={notificationOutcome}
+                          onChange={(value) =>
+                            setNotificationOutcome(value as ParentNotificationOutcome)
+                          }
+                          options={PARENT_NOTIFICATION_OUTCOMES}
+                        />
+                        <CalledContactField
+                          className="contents"
+                          contacts={student?.emergencyContacts ?? []}
+                          draft={calledDraft}
+                          onChange={(next) => {
+                            setCalledDraft(next)
+                            setErrors((current) => ({
+                              ...current,
+                              calledName: undefined,
+                              calledPhone: undefined,
+                            }))
+                          }}
+                          errors={errors}
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+                        <Input
+                          label="Attempt note"
+                          value={notificationDetail}
+                          onChange={(event) => setNotificationDetail(event.target.value)}
+                        />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          className="self-end"
+                          onClick={addNotification}
+                        >
+                          Add Attempt
+                        </Button>
+                      </div>
+                      {notifications.length ? (
+                        <RowList className="mt-3 rounded-md border border-border">
+                          {notifications.map((item, index) => {
+                            // 12-hour Philippine time; the slice of the ISO string read as UTC (Zean, November 5, 2026).
+                            const time = formatTime(item.timestamp)
+                            return (
+                              <ListRow
+                                key={`${item.timestamp}-${index}`}
+                                primary={OUTCOME_LABELS[item.outcome]}
+                                secondary={[calledContactText(item.calledContact), item.detail]
+                                  .filter(Boolean)
+                                  .join(' · ')}
+                                // An attempt added by mistake is removed here; nothing is saved until Complete Incident
+                                // (Zean, November 5, 2026; this replaces R23's Cancel beside Add Attempt). The time and the
+                                // delete button sit on one line, time left and icon right; the button is the Sports Report's.
+                                trailing={
+                                  <span className="flex items-center gap-3">
+                                    <span className="text-xs text-text-secondary tabular-nums">
+                                      {time}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      aria-label={`Remove attempt: ${OUTCOME_LABELS[item.outcome]} at ${time}`}
+                                      onClick={() =>
+                                        setNotifications((current) =>
+                                          current.filter((_, i) => i !== index),
+                                        )
+                                      }
+                                      className="inline-flex cursor-pointer rounded-sm text-error transition-[filter] hover:brightness-75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
+                                    >
+                                      <Icon name="trash" size={18} />
+                                    </button>
+                                  </span>
+                                }
+                              />
+                            )
+                          })}
+                        </RowList>
+                      ) : (
+                        <p className="mt-3 text-xs text-text-secondary">
+                          No notification attempts added yet.
+                        </p>
+                      )}
                     </div>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-                      <Input
-                        label="Attempt note"
-                        value={notificationDetail}
-                        onChange={(event) => setNotificationDetail(event.target.value)}
-                      />
-                      <Button type="button" variant="secondary" className="self-end" onClick={addNotification}>
-                        Add Attempt
-                      </Button>
-                    </div>
-                    {notifications.length ? (
-                      <RowList className="mt-3 rounded-md border border-border">
-                        {notifications.map((item, index) => {
-                          // 12-hour Philippine time; the slice of the ISO string read as UTC (Zean, November 5, 2026).
-                          const time = formatTime(item.timestamp)
-                          return (
-                            <ListRow
-                              key={`${item.timestamp}-${index}`}
-                              primary={OUTCOME_LABELS[item.outcome]}
-                              secondary={[calledContactText(item.calledContact), item.detail].filter(Boolean).join(' · ')}
-                              // An attempt added by mistake is removed here; nothing is saved until Complete Incident
-                              // (Zean, November 5, 2026; this replaces R23's Cancel beside Add Attempt). The time and the
-                              // delete button sit on one line, time left and icon right; the button is the Sports Report's.
-                              trailing={
-                                <span className="flex items-center gap-3">
-                                  <span className="text-xs text-text-secondary tabular-nums">{time}</span>
-                                  <button
-                                    type="button"
-                                    aria-label={`Remove attempt: ${OUTCOME_LABELS[item.outcome]} at ${time}`}
-                                    onClick={() => setNotifications((current) => current.filter((_, i) => i !== index))}
-                                    className="inline-flex cursor-pointer rounded-sm text-error transition-[filter] hover:brightness-75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
-                                  >
-                                    <Icon name="trash" size={18} />
-                                  </button>
-                                </span>
-                              }
-                            />
-                          )
-                        })}
-                      </RowList>
-                    ) : (
-                      <p className="mt-3 text-xs text-text-secondary">
-                        No notification attempts added yet.
-                      </p>
-                    )}
-                  </div>
                   </FormSection>
 
-                  <FormSection id="stage-two-follow-up-title" title="Follow-up prompt" description="Plan a recheck after the incident.">
+                  <FormSection
+                    id="stage-two-follow-up-title"
+                    title="Follow-up prompt"
+                    description="Plan a recheck after the incident."
+                  >
                     <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
                       <input
                         type="checkbox"
@@ -945,22 +1133,31 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                           error={errors.followUpReason}
                         />
                         <div className="sm:col-span-2">
-                          <TextareaField label="Notes" value={followUpNotes} onChange={setFollowUpNotes} rows={3} />
+                          <TextareaField
+                            label="Notes"
+                            value={followUpNotes}
+                            onChange={setFollowUpNotes}
+                            rows={3}
+                          />
                         </div>
                         <div className="sm:col-span-2">
-                          <StayHomeField checked={followUpStayHome.checked} note={followUpStayHome.note} onChange={setFollowUpStayHome} />
+                          <StayHomeField
+                            checked={followUpStayHome.checked}
+                            note={followUpStayHome.note}
+                            onChange={setFollowUpStayHome}
+                          />
                         </div>
                       </div>
                     )}
                   </FormSection>
 
-                  <div className={`flex flex-wrap items-center justify-end gap-2 pt-4 ${FORM_DIVIDER}`}>
-                    <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      loading={savingStageTwo}
-                    >
+                  <div
+                    className={`flex flex-wrap items-center justify-end gap-2 pt-4 ${FORM_DIVIDER}`}
+                  >
+                    <Button type="button" variant="neutral" onClick={cancel}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" loading={savingStageTwo}>
                       Complete Incident
                     </Button>
                   </div>

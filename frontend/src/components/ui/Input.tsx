@@ -1,4 +1,12 @@
-import { forwardRef, useEffect, useId, useRef, useState, type ChangeEvent, type InputHTMLAttributes } from 'react'
+import {
+  forwardRef,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type InputHTMLAttributes,
+} from 'react'
 import { cn } from '../../lib/cn'
 import { Icon, type IconName } from '../icons/Icon'
 
@@ -17,20 +25,23 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   clearable?: boolean
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
-  label,
-  hint,
-  error,
-  icon,
-  id,
-  type,
-  required,
-  disabled,
-  className,
-  inputClassName,
-  clearable: clearableProp = true,
-  ...rest
-}: InputProps, ref) {
+export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+  {
+    label,
+    hint,
+    error,
+    icon,
+    id,
+    type,
+    required,
+    disabled,
+    className,
+    inputClassName,
+    clearable: clearableProp = true,
+    ...rest
+  }: InputProps,
+  ref,
+) {
   const autoId = useId()
   const inputId = id ?? autoId
   const hintId = hint ? `${inputId}-hint` : undefined
@@ -62,13 +73,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
   // Every editable text field has a clear button while it holds text (Zean, November 5, 2026): not
   // passwords (the reveal eye sits there), dates and times (their own pickers), read-only or disabled fields.
   const clearable =
-    clearableProp && (isSearch || (['text', 'tel', 'email', 'url', 'number', undefined].includes(type) && !fieldProps.readOnly))
+    clearableProp &&
+    (isSearch ||
+      (['text', 'tel', 'email', 'url', 'number', undefined].includes(type) && !fieldProps.readOnly))
   const shown = isSearch ? draft : String(value ?? '')
   const showClear = clearable && shown !== '' && !disabled
   function clearSearch() {
     window.clearTimeout(timer.current)
     setDraft('')
-    onChange?.({ target: { value: '' }, currentTarget: { value: '' } } as ChangeEvent<HTMLInputElement>)
+    onChange?.({
+      target: { value: '' },
+      currentTarget: { value: '' },
+    } as ChangeEvent<HTMLInputElement>)
     document.getElementById(inputId)?.focus()
   }
   const field = (
@@ -109,7 +125,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({
       {icon || isPassword || clearable ? (
         <div className="relative flex flex-col">
           {icon && (
-            <Icon name={icon} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-text-secondary" />
+            <Icon
+              name={icon}
+              className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-text-secondary"
+            />
           )}
           {field}
           {showClear && (

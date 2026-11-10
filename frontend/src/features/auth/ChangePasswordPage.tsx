@@ -40,13 +40,49 @@ export function ChangePasswordPage({ viewer }: { viewer: SessionUser }) {
       <Card className="p-6">
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">Change Password</h1>
         <form className="mt-6 flex flex-col gap-4" onSubmit={submit} noValidate>
-          <Input label="Current password" type="password" autoComplete="current-password" hint={capsLock.hint} {...capsLock.handlers} value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} />
-          <Input label="New password" type="password" autoComplete="new-password" hint={capsLock.hint ?? 'Use at least 8 characters. Your last 5 passwords cannot be reused.'} {...capsLock.handlers} value={nextPassword} onChange={(event) => setNextPassword(event.target.value)} />
-          <Input label="Confirm new password" type="password" autoComplete="new-password" hint={capsLock.hint} {...capsLock.handlers} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} />
-          {error && <p role="alert" className="text-sm font-semibold text-error">{error}</p>}
-          {saved && <p role="status" className="text-sm font-semibold text-brand-green-dark">Password changed.</p>}
+          <Input
+            label="Current password"
+            type="password"
+            autoComplete="current-password"
+            hint={capsLock.hint}
+            {...capsLock.handlers}
+            value={currentPassword}
+            onChange={(event) => setCurrentPassword(event.target.value)}
+          />
+          <Input
+            label="New password"
+            type="password"
+            autoComplete="new-password"
+            hint={
+              capsLock.hint ?? 'Use at least 8 characters. Your last 5 passwords cannot be reused.'
+            }
+            {...capsLock.handlers}
+            value={nextPassword}
+            onChange={(event) => setNextPassword(event.target.value)}
+          />
+          <Input
+            label="Confirm new password"
+            type="password"
+            autoComplete="new-password"
+            hint={capsLock.hint}
+            {...capsLock.handlers}
+            value={confirmation}
+            onChange={(event) => setConfirmation(event.target.value)}
+          />
+          {error && (
+            <p role="alert" className="text-sm font-semibold text-error">
+              {error}
+            </p>
+          )}
+          {saved && (
+            <p role="status" className="text-sm font-semibold text-brand-green-dark">
+              Password changed.
+            </p>
+          )}
           <div className="mt-2 flex justify-end">
-            <Button type="submit" variant="primary" loading={saving} done={Boolean(saved)}>Save Password</Button>
+            <Button type="submit" variant="primary" loading={saving} done={Boolean(saved)}>
+              Save Password
+            </Button>
           </div>
         </form>
       </Card>

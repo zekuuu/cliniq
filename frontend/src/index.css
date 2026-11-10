@@ -271,19 +271,19 @@
     visibility: hidden;
   }
   @media print {
-  /* Ctrl+P before a screen has loaded: a short note, never a printed skeleton. */
-  body:has([data-skeleton]):not(:has([data-print-document])) > #root {
-    display: none;
+    /* Ctrl+P before a screen has loaded: a short note, never a printed skeleton. */
+    body:has([data-skeleton]):not(:has([data-print-document])) > #root {
+      display: none;
+    }
+    body:has([data-skeleton]):not(:has([data-print-document]))::before {
+      content: 'Still loading. Close this window and print again.';
+      display: block;
+      padding: 14mm;
+      font-size: 12pt;
+    }
   }
-  body:has([data-skeleton]):not(:has([data-print-document]))::before {
-    content: 'Still loading. Close this window and print again.';
-    display: block;
-    padding: 14mm;
-    font-size: 12pt;
-  }
-}
 
-@media print {
+  @media print {
     [role='tabpanel'][data-print-all][hidden] {
       display: block !important;
       position: static;

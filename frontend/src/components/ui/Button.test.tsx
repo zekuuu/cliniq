@@ -9,7 +9,11 @@ describe('Button done state (Zean, November 8, 2026)', () => {
   it('reads the past form with a check icon for DONE_MS when done turns true, then its label again', () => {
     vi.useFakeTimers()
     const { rerender } = render(<Button icon="checkCircle">Save Changes</Button>)
-    rerender(<Button icon="checkCircle" done>Save Changes</Button>)
+    rerender(
+      <Button icon="checkCircle" done>
+        Save Changes
+      </Button>,
+    )
     expect(screen.getByRole('button')).toHaveTextContent('Saved')
     act(() => vi.advanceTimersByTime(DONE_MS))
     expect(screen.getByRole('button')).toHaveTextContent('Save Changes')
@@ -23,7 +27,11 @@ describe('Button done state (Zean, November 8, 2026)', () => {
     rerender(<Button>Copy</Button>)
     rerender(<Button done>Copy</Button>)
     expect(screen.getByRole('button')).toHaveTextContent('Copied')
-    rerender(<Button done loading>Save</Button>)
+    rerender(
+      <Button done loading>
+        Save
+      </Button>,
+    )
     expect(screen.getByRole('button')).toHaveTextContent('Saving…')
   })
 
@@ -31,7 +39,11 @@ describe('Button done state (Zean, November 8, 2026)', () => {
     vi.useFakeTimers()
     const onClick = vi.fn()
     const { rerender } = render(<Button onClick={onClick}>Add Attempt</Button>)
-    rerender(<Button onClick={onClick} done>Add Attempt</Button>)
+    rerender(
+      <Button onClick={onClick} done>
+        Add Attempt
+      </Button>,
+    )
     const button = screen.getByRole('button', { name: 'Added' })
     expect(button).toBeEnabled()
     act(() => button.click())

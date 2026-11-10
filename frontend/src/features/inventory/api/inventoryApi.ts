@@ -17,7 +17,14 @@ import {
   type SessionUser,
   type StockAdjustmentInput,
 } from '../../../lib/mock-db'
-import type { InventoryCategory, InventoryItem, ItemBrand, PatientRef, PatientSearchResult, Visit } from '../../../types/entities'
+import type {
+  InventoryCategory,
+  InventoryItem,
+  ItemBrand,
+  PatientRef,
+  PatientSearchResult,
+  Visit,
+} from '../../../types/entities'
 import type { Patient } from '../../../lib/patients'
 
 /**
@@ -74,14 +81,20 @@ function sameText(a: string, b: string) {
 }
 
 /** An existing item with the same name and unit, if any (never the item being edited). A warning only. */
-export function findDuplicateItem(items: InventoryItemView[], name: string, exceptId?: string): InventoryItemView | null {
+export function findDuplicateItem(
+  items: InventoryItemView[],
+  name: string,
+  exceptId?: string,
+): InventoryItemView | null {
   if (!name.trim()) return null
   return items.find((item) => item.id !== exceptId && sameText(item.name, name)) ?? null
 }
 
 /** The units already in use, for the free-text unit field's suggestions (D9). */
 export function unitSuggestions(items: InventoryItemView[]): string[] {
-  return [...new Set(items.map((item) => item.unit.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
+  return [...new Set(items.map((item) => item.unit.trim()).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b),
+  )
 }
 
 export interface RestockValues {
@@ -99,7 +112,11 @@ export function fetchInventoryHistory(itemId: string): Promise<InventoryHistoryR
 }
 
 export async function fetchInventoryForm(itemId?: string): Promise<InventoryFormContext> {
-  const [item, items, types] = await Promise.all([itemId ? getInventoryItem(itemId) : null, listInventory(), getVisitComplaintTypes()])
+  const [item, items, types] = await Promise.all([
+    itemId ? getInventoryItem(itemId) : null,
+    listInventory(),
+    getVisitComplaintTypes(),
+  ])
   return { item, items, symptomOptions: types.map((type) => type.label) }
 }
 
@@ -132,16 +149,30 @@ export function dispenseInventoryItem(
   patient?: PatientRef,
   actor?: SessionUser,
 ): Promise<DispenseResult> {
-  return dispenseInLayer(itemId, quantity, { studentId: patient?.studentId ?? undefined, personnelId: patient?.personnelId ?? undefined }, actor)
+  return dispenseInLayer(
+    itemId,
+    quantity,
+    { studentId: patient?.studentId ?? undefined, personnelId: patient?.personnelId ?? undefined },
+    actor,
+  )
 }
 
 /** Adjust Stock (ADR-018): a signed change or a counted quantity, with a required reason. */
-export function adjustStock(itemId: string, input: StockAdjustmentInput, actor?: SessionUser): Promise<InventoryItemView> {
+export function adjustStock(
+  itemId: string,
+  input: StockAdjustmentInput,
+  actor?: SessionUser,
+): Promise<InventoryItemView> {
   return adjustInLayer(itemId, input, actor)
 }
 
 /** Restock: adds the quantity received and requires either its expiry date or an explicit no-expiry confirmation. */
-export function restockItem(itemId: string, quantity: number, values: RestockValues, actor?: SessionUser): Promise<InventoryItemView> {
+export function restockItem(
+  itemId: string,
+  quantity: number,
+  values: RestockValues,
+  actor?: SessionUser,
+): Promise<InventoryItemView> {
   return restockInLayer(itemId, quantity, values.expirationDate || null, {
     noExpirationConfirmed: values.noExpirationConfirmed,
     actor,
@@ -149,11 +180,14 @@ export function restockItem(itemId: string, quantity: number, values: RestockVal
 }
 
 /** The student or staff member a standalone dispense is for, plus any visit they already have today. */
-export async function findDispensePatient(ref: PatientRef): Promise<{ patient: Patient; todaysVisit: Visit | null }> {
+export async function findDispensePatient(
+  ref: PatientRef,
+): Promise<{ patient: Patient; todaysVisit: Visit | null }> {
   const patient = await getPatient(ref)
   const today = getMockToday()
   const visits = await listVisits({ from: today, to: today })
-  const mine = (visit: Visit) => (patient.kind === 'student' ? visit.studentId : visit.personnelId) === patient.id
+  const mine = (visit: Visit) =>
+    (patient.kind === 'student' ? visit.studentId : visit.personnelId) === patient.id
   return { patient, todaysVisit: visits.find(mine) ?? null }
 }
 

@@ -40,11 +40,7 @@ export { MultiSelect, type MultiSelectOption } from './ui/MultiSelect'
 export { Combobox, type ComboboxProps } from './ui/Combobox'
 export { Pagination } from './ui/Pagination'
 export { Textarea } from './ui/Textarea'
-export {
-  FollowUpPrompt,
-  type FollowUpDraft,
-  type FollowUpErrors,
-} from './forms/FollowUpPrompt'
+export { FollowUpPrompt, type FollowUpDraft, type FollowUpErrors } from './forms/FollowUpPrompt'
 export { StudentPicker } from './forms/StudentPicker'
 export { PatientPicker } from './forms/PatientPicker'
 export { SelectWithOther } from './forms/SelectWithOther'

@@ -20,13 +20,18 @@ export interface LetterPeriod {
  * The letter's wording names the dates it excuses (panel review EX-4) and stays non-diagnostic. It
  * follows the excused period until Staff edit the text.
  */
-export function excuseLetterBody(fullName: string, visitDate: ISODate, period: LetterPeriod): string {
+export function excuseLetterBody(
+  fullName: string,
+  visitDate: ISODate,
+  period: LetterPeriod,
+): string {
   const { excusedFrom, excusedUntil } = period
-  const dates = !excusedFrom || !excusedUntil
-    ? 'for the dates shown above'
-    : excusedFrom === excusedUntil
-      ? `on ${formatDate(excusedFrom)}`
-      : `from ${formatDate(excusedFrom)} to ${formatDate(excusedUntil)}`
+  const dates =
+    !excusedFrom || !excusedUntil
+      ? 'for the dates shown above'
+      : excusedFrom === excusedUntil
+        ? `on ${formatDate(excusedFrom)}`
+        : `from ${formatDate(excusedFrom)} to ${formatDate(excusedUntil)}`
   return [
     `This is to confirm that ${fullName} visited the school clinic on ${formatDate(visitDate)}.`,
     `The student was assessed by the clinic staff and is excused ${dates}.`,
@@ -42,5 +47,7 @@ export function excusedDays({ excusedFrom, excusedUntil }: LetterPeriod): number
 
 /** The warning text when a period is longer than `afterDays` (ADR-049, D2); null otherwise. Warns, never blocks. */
 export function medicalCertificateWarning(period: LetterPeriod, afterDays: number): string | null {
-  return excusedDays(period) > afterDays ? `More than ${afterDays} days: a medical certificate is usually needed.` : null
+  return excusedDays(period) > afterDays
+    ? `More than ${afterDays} days: a medical certificate is usually needed.`
+    : null
 }

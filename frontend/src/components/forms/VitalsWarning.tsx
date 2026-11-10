@@ -7,7 +7,15 @@ import { Icon } from '../icons/Icon'
  * typing slip, and "outside the usual range for this age" (ADR-051) once the patient's age group is
  * known. Renders nothing when there is none; never blocks a save.
  */
-export function VitalsWarning({ readings, ranges, ageGroup = null }: { readings: TypedReadings; ranges: VitalsWarningRanges; ageGroup?: AgeGroup | null }) {
+export function VitalsWarning({
+  readings,
+  ranges,
+  ageGroup = null,
+}: {
+  readings: TypedReadings
+  ranges: VitalsWarningRanges
+  ageGroup?: AgeGroup | null
+}) {
   const fever = feverNote(readings.temperatureC, ranges)
   const unusual = unusualReadings(readings, ranges)
   const usual = usualRangeNotes(readings, ranges, ageGroup)
@@ -22,7 +30,9 @@ export function VitalsWarning({ readings, ranges, ageGroup = null }: { readings:
         {[
           fever,
           unusual.length ? `${unusual.join(' ')} Please check the reading.` : null,
-          usual.length ? `Outside the usual range for this age (starting range, nurse to confirm): ${usual.join('; ')}.` : null,
+          usual.length
+            ? `Outside the usual range for this age (starting range, nurse to confirm): ${usual.join('; ')}.`
+            : null,
         ]
           .filter(Boolean)
           .join(' ')}{' '}

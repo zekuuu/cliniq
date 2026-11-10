@@ -6,7 +6,11 @@ import { stockQuantityText, type InventoryFlag } from '../status/inventory'
 import { ITEM_BRAND_LABELS, type ItemBrand } from '../../types/entities'
 import { Badge } from '../ui/Badge'
 import { Input } from '../ui/Input'
-import { DROPDOWN_PANEL, dropdownOptionClassName, placeDropdownPanel } from '../ui/dropdownClassName'
+import {
+  DROPDOWN_PANEL,
+  dropdownOptionClassName,
+  placeDropdownPanel,
+} from '../ui/dropdownClassName'
 
 /** What the picker needs from an item. The data layer's `InventoryItemView` already fits. */
 export type PickableItem = {
@@ -76,16 +80,27 @@ export function InventoryItemPicker({
 
   const search = query.trim().toLowerCase()
   const wanted = new Set((symptoms ?? []).map(complaintGroupKey).filter(Boolean))
-  const isSuggested = (item: PickableItem) => (item.usedFor ?? []).some((tag) => wanted.has(complaintGroupKey(tag)))
-  const matching = items.filter((item) => item.name.toLowerCase().includes(search)).sort((a, b) => a.name.localeCompare(b.name))
+  const isSuggested = (item: PickableItem) =>
+    (item.usedFor ?? []).some((tag) => wanted.has(complaintGroupKey(tag)))
+  const matching = items
+    .filter((item) => item.name.toLowerCase().includes(search))
+    .sort((a, b) => a.name.localeCompare(b.name))
   const suggested = wanted.size ? matching.filter(isSuggested) : []
   const rest = matching.filter((item) => !suggested.includes(item))
   // The toggle row shows only for the unfiltered list; a search always shows every match.
   const hasToggle = suggested.length > 0 && !search && rest.length > 0
   const collapsed = hasToggle && !showAll
   const groups: Group[] = [
-    ...(suggested.length ? [{ key: 'suggested', label: `Suggested for these ${symptomsWord}`, items: suggested }] : []),
-    ...(collapsed ? [] : GROUPS.map((group) => ({ key: group.category, label: group.label, items: rest.filter((item) => item.category === group.category) }))),
+    ...(suggested.length
+      ? [{ key: 'suggested', label: `Suggested for these ${symptomsWord}`, items: suggested }]
+      : []),
+    ...(collapsed
+      ? []
+      : GROUPS.map((group) => ({
+          key: group.category,
+          label: group.label,
+          items: rest.filter((item) => item.category === group.category),
+        }))),
   ].filter((group) => group.items.length)
   const flat = groups.flatMap((group) => group.items)
   /** The "Show all medicines" row is the last option, after every item. */
@@ -116,7 +131,8 @@ export function InventoryItemPicker({
   }, [open, optionCount])
 
   useEffect(() => {
-    if (open && active >= 0) document.getElementById(optionId(active))?.scrollIntoView?.({ block: 'nearest' })
+    if (open && active >= 0)
+      document.getElementById(optionId(active))?.scrollIntoView?.({ block: 'nearest' })
     // optionId is derived from the stable useId value.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, active])
@@ -136,7 +152,9 @@ export function InventoryItemPicker({
       if (!optionCount) return setOpen(true)
       const step = event.key === 'ArrowDown' ? 1 : -1
       setOpen(true)
-      setActive((current) => (current < 0 && step < 0 ? optionCount - 1 : (current + step + optionCount) % optionCount))
+      setActive((current) =>
+        current < 0 && step < 0 ? optionCount - 1 : (current + step + optionCount) % optionCount,
+      )
     } else if (event.key === 'Enter') {
       // Never submit the surrounding form from the search field.
       event.preventDefault()
@@ -187,15 +205,22 @@ export function InventoryItemPicker({
           className={cn(DROPDOWN_PANEL, 'fixed overflow-y-auto scrollbar-thin')}
         >
           {groups.length === 0 && (
-            <p className="px-2.5 py-1.5 text-sm text-text-secondary">No items match “{query.trim()}”.</p>
+            <p className="px-2.5 py-1.5 text-sm text-text-secondary">
+              No items match “{query.trim()}”.
+            </p>
           )}
           {groups.map((group) => (
             <div key={group.key} role="group" aria-labelledby={`${id}-${group.key}`}>
-              <p id={`${id}-${group.key}`} className="px-2.5 pt-2 pb-1 text-xs font-semibold text-text-secondary">
+              <p
+                id={`${id}-${group.key}`}
+                className="px-2.5 pt-2 pb-1 text-xs font-semibold text-text-secondary"
+              >
                 {group.label}
               </p>
               {group.key === 'suggested' && (
-                <p className="px-2.5 pb-1 text-xs text-text-secondary">Suggestions come from the tags set on each item. The clinician decides.</p>
+                <p className="px-2.5 pb-1 text-xs text-text-secondary">
+                  Suggestions come from the tags set on each item. The clinician decides.
+                </p>
               )}
               {group.items.map((item) => {
                 const optionIndex = flat.indexOf(item)
@@ -221,15 +246,30 @@ export function InventoryItemPicker({
                   >
                     <span className="flex items-center gap-2">
                       {item.name}
-                      {item.brand && <span className="text-xs text-text-secondary">{ITEM_BRAND_LABELS[item.brand]}</span>}
-                      {disabled && <Badge tone="error" variant="soft">Expired</Badge>}
+                      {item.brand && (
+                        <span className="text-xs text-text-secondary">
+                          {ITEM_BRAND_LABELS[item.brand]}
+                        </span>
+                      )}
+                      {disabled && (
+                        <Badge tone="error" variant="soft">
+                          Expired
+                        </Badge>
+                      )}
                       {nearing && (
                         <Badge tone="warning" variant="soft">
-                          {item.daysUntilExpiry === 0 ? 'Expires today' : `Expires in ${item.daysUntilExpiry}d`}
+                          {item.daysUntilExpiry === 0
+                            ? 'Expires today'
+                            : `Expires in ${item.daysUntilExpiry}d`}
                         </Badge>
                       )}
                     </span>
-                    <span className={cn('text-xs tabular-nums', item.currentStock <= 0 ? 'font-semibold text-error' : 'text-text-secondary')}>
+                    <span
+                      className={cn(
+                        'text-xs tabular-nums',
+                        item.currentStock <= 0 ? 'font-semibold text-error' : 'text-text-secondary',
+                      )}
+                    >
                       {stockQuantityText(item.currentStock, item.unit, item.flags)}
                     </span>
                   </div>
@@ -246,7 +286,11 @@ export function InventoryItemPicker({
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => setShowAll((current) => !current)}
               onMouseMove={() => setActive(toggleIndex)}
-              className={cn(dropdownOptionClassName(false), 'mt-1 border-t border-border font-semibold text-brand-green-dark', active === toggleIndex && 'bg-surface')}
+              className={cn(
+                dropdownOptionClassName(false),
+                'mt-1 border-t border-border font-semibold text-brand-green-dark',
+                active === toggleIndex && 'bg-surface',
+              )}
             >
               {showAll ? 'Show suggested only' : `Show all medicines (${rest.length} more)`}
             </div>

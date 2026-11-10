@@ -20,10 +20,15 @@ export function ClusterAlerts({ alerts }: { alerts: ClusterAlert[] }) {
           <span className="flex items-start gap-2">
             <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning-text" />
             <span>
-              <span className="font-semibold">Possible cluster:</span> {alert.students} {alert.gradeLevel} students with {alert.complaint} ({formatDateRange(alert.from, alert.to)}).
+              <span className="font-semibold">Possible cluster:</span> {alert.students}{' '}
+              {alert.gradeLevel} students with {alert.complaint} (
+              {formatDateRange(alert.from, alert.to)}).
             </span>
           </span>
-          <Link to={paths.visitsInRange(alert.from, alert.to)} className="font-semibold text-brand-green-dark underline underline-offset-2 hover:brightness-75">
+          <Link
+            to={paths.visitsInRange(alert.from, alert.to)}
+            className="font-semibold text-brand-green-dark underline underline-offset-2 hover:brightness-75"
+          >
             View visits
           </Link>
         </p>

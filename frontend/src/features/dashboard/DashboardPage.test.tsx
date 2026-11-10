@@ -6,7 +6,9 @@ import { DashboardPage } from './DashboardPage'
 import { db } from '../../lib/mock-db/store'
 
 vi.mock('react-chartjs-2', () => {
-  const Stub = (props: { 'aria-label'?: string }) => <div role="img" aria-label={props['aria-label']} />
+  const Stub = (props: { 'aria-label'?: string }) => (
+    <div role="img" aria-label={props['aria-label']} />
+  )
   return { Bar: Stub, Doughnut: Stub, Line: Stub }
 })
 
@@ -22,9 +24,25 @@ describe('Clinic Overview Dashboard', () => {
     renderWithRouter(<DashboardPage />)
     const summary = await screen.findByRole('region', { name: 'Summary counts' })
     // Action cards first, then the totals (R2).
-    const order = ['Pending excuse letters', 'Unfinished incident records', 'Follow-ups to review', 'Active students', 'Clinic visits', 'Incidents']
-    const label = (text: string) => within(summary).getByText((_, element) => element?.tagName === 'P' && element.textContent === text)
-    expect(within(summary).getAllByText((_, element) => element?.tagName === 'P' && order.includes(element.textContent ?? '')).map((p) => p.textContent)).toEqual(order)
+    const order = [
+      'Pending excuse letters',
+      'Unfinished incident records',
+      'Follow-ups to review',
+      'Active students',
+      'Clinic visits',
+      'Incidents',
+    ]
+    const label = (text: string) =>
+      within(summary).getByText(
+        (_, element) => element?.tagName === 'P' && element.textContent === text,
+      )
+    expect(
+      within(summary)
+        .getAllByText(
+          (_, element) => element?.tagName === 'P' && order.includes(element.textContent ?? ''),
+        )
+        .map((p) => p.textContent),
+    ).toEqual(order)
     // One colour per meaning (ADR-062).
     expect(label('Active students')).toHaveClass('text-active-text')
     expect(label('Pending excuse letters')).toHaveClass('text-letter-text')
@@ -53,28 +71,53 @@ describe('Clinic Overview Dashboard', () => {
     expect(list()).toHaveLength(5)
   })
 
-  it.each([false, true])('shows the Frequent-visitor section only with the switch on (%s)', async (on) => {
-    db().config.showFrequentVisitors = on
-    renderWithRouter(<DashboardPage />)
-    await screen.findByRole('region', { name: 'Summary counts' })
-    expect(Boolean(screen.queryByRole('heading', { name: /frequent-visitor warnings/i }))).toBe(on)
-  })
+  it.each([false, true])(
+    'shows the Frequent-visitor section only with the switch on (%s)',
+    async (on) => {
+      db().config.showFrequentVisitors = on
+      renderWithRouter(<DashboardPage />)
+      await screen.findByRole('region', { name: 'Summary counts' })
+      expect(Boolean(screen.queryByRole('heading', { name: /frequent-visitor warnings/i }))).toBe(
+        on,
+      )
+    },
+  )
 
   it('drills Staff into range-aware logs and attention filters', async () => {
     renderWithRouter(<DashboardPage />)
     await screen.findByRole('region', { name: 'Summary counts' })
-    expect(screen.getByRole('link', { name: 'Clinic visits' })).toHaveAttribute('href', expect.stringMatching(/^\/visits\?from=\d{4}-\d{2}-\d{2}&to=/))
-    expect(screen.getByRole('link', { name: 'Incidents' })).toHaveAttribute('href', expect.stringMatching(/^\/incidents\?from=\d{4}-\d{2}-\d{2}&to=/))
-    expect(screen.getByRole('link', { name: /low stock/i })).toHaveAttribute('href', '/inventory?attention=low_stock')
-    expect(screen.getByRole('link', { name: /expired or expiring/i })).toHaveAttribute('href', '/inventory?attention=expiry')
-    expect(screen.getByRole('link', { name: /incomplete student records/i })).toHaveAttribute('href', '/students/incomplete')
+    expect(screen.getByRole('link', { name: 'Clinic visits' })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/visits\?from=\d{4}-\d{2}-\d{2}&to=/),
+    )
+    expect(screen.getByRole('link', { name: 'Incidents' })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/incidents\?from=\d{4}-\d{2}-\d{2}&to=/),
+    )
+    expect(screen.getByRole('link', { name: /low stock/i })).toHaveAttribute(
+      'href',
+      '/inventory?attention=low_stock',
+    )
+    expect(screen.getByRole('link', { name: /expired or expiring/i })).toHaveAttribute(
+      'href',
+      '/inventory?attention=expiry',
+    )
+    expect(screen.getByRole('link', { name: /incomplete student records/i })).toHaveAttribute(
+      'href',
+      '/students/incomplete',
+    )
   })
 
   it('sends Staff from the Pending excuse letters card to the filtered Visit Log, with no duplicate list', async () => {
     renderWithRouter(<DashboardPage />)
     await screen.findByRole('region', { name: 'Summary counts' })
-    expect(screen.getByRole('link', { name: 'Pending excuse letters' })).toHaveAttribute('href', '/visits?letter=pending')
-    expect(screen.queryByRole('heading', { name: /excuse letters awaiting approval/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Pending excuse letters' })).toHaveAttribute(
+      'href',
+      '/visits?letter=pending',
+    )
+    expect(
+      screen.queryByRole('heading', { name: /excuse letters awaiting approval/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('keeps the Dashboard focused on Overview and Trends', async () => {
@@ -90,8 +133,14 @@ describe('Clinic Overview Dashboard', () => {
     renderWithRouter(<DashboardPage viewer={{ id: 'admin', name: 'Principal', role: 'admin' }} />)
     const summary = await screen.findByRole('region', { name: 'Summary counts' })
     // The count cards only; the Monthly Report link sits on the Activity summary heading row.
-    expect(within(summary).getAllByRole('link').filter((link) => !link.textContent?.includes('View full report'))).toHaveLength(2)
-    expect(within(summary).queryByRole('link', { name: /visits|follow-ups|letters/i })).not.toBeInTheDocument()
+    expect(
+      within(summary)
+        .getAllByRole('link')
+        .filter((link) => !link.textContent?.includes('View full report')),
+    ).toHaveLength(2)
+    expect(
+      within(summary).queryByRole('link', { name: /visits|follow-ups|letters/i }),
+    ).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /low stock/i })).not.toBeInTheDocument()
     // No print on the Dashboard for anyone (ADR-070); the Admin's Reports Print stays disabled (ADR-038).
     expect(screen.queryByRole('button', { name: /print/i })).not.toBeInTheDocument()

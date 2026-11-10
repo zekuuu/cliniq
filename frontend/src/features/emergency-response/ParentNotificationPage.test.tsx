@@ -8,7 +8,9 @@ describe('Parent Notification Log', () => {
   it('shows the selected student emergency contact context', async () => {
     renderWithRouter(<ParentNotificationPage incidentId="incident-0023" />)
 
-    expect(await screen.findByRole('heading', { name: 'Parent Notification Log' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Parent Notification Log' }),
+    ).toBeInTheDocument()
     expect(screen.getByLabelText('Emergency contact details')).toBeInTheDocument()
     expect(screen.getByText('Guardian')).toBeInTheDocument()
     expect(screen.getByText('Verified')).toBeInTheDocument()

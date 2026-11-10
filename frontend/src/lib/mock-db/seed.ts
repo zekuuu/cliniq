@@ -2,7 +2,12 @@ import rawSeed from './mock-db.json'
 import type { ISODate, ISODateTime } from '../../types/entities'
 import { EXCUSE_LETTER_RECIPIENT, excuseLetterBody } from '../excuseLetter'
 import { formatPersonName } from '../personName'
-import { resolveDate, resolveDateTime, resolveSchoolDate, resolveSchoolDateTime } from './relativeDates'
+import {
+  resolveDate,
+  resolveDateTime,
+  resolveSchoolDate,
+  resolveSchoolDateTime,
+} from './relativeDates'
 import type { DbState, MockDbSeed } from './types'
 
 /**
@@ -64,112 +69,138 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
   delete config._note
   const fo = source.frontendOnly
 
-  return fillGradeAtTime(fillApprovedLetterWording(structuredClone({
-    today,
-    config,
-    users: source.users.map((u) => ({
-      ...u,
-      lastLogin: u.lastLogin ? resolveSchoolDateTime(u.lastLogin, today) : null,
-    })),
-    // Seed records written before Part 3B have no Sex value. This deterministic alternating value
-    // is explicitly synthetic and keeps every loaded mock record valid until real master-list data
-    // replaces it; new/edit forms always require the explicit field.
-    students: source.students.map((student, index) => ({
-      ...student,
-      sex: student.sex ?? (index % 2 === 0 ? 'female' : 'male'),
-    })),
-    personnel: source.personnel,
-    visits: source.visits.map((v) => ({
-      ...v,
-      personnelId: v.personnelId ?? null,
-      dateTime: uniqueMinute(resolveSchoolDateTime(v.dateTime, today)),
-      excuseLetterDraft: v.excuseLetterDraft
-        ? {
-            ...v.excuseLetterDraft,
-            excusedFrom: resolveSchoolDate(v.excuseLetterDraft.excusedFrom, today),
-            excusedUntil: resolveSchoolDate(v.excuseLetterDraft.excusedUntil, today),
-          }
-        : null,
-    })),
-    incidents: source.incidents.map((i) => ({
-      ...i,
-      personnelId: i.personnelId ?? null,
-      time: resolveSchoolDateTime(i.time, today),
-      hospitalReferral: i.hospitalReferral
-        ? {
-            ...i.hospitalReferral,
-            departureTime: resolveSchoolDateTime(i.hospitalReferral.departureTime, today),
-          }
-        : null,
-      parentNotifications: i.parentNotifications.map((n) => ({
-        ...n,
-        timestamp: resolveSchoolDateTime(n.timestamp, today),
-      })),
-    })),
-    followUps: source.followUps.map((f) => ({
-      ...f,
-      personnelId: f.personnelId ?? null,
-      followUpDate: resolveSchoolDate(f.followUpDate, today),
-    })),
-    // The seed-only `_note` comment is dropped on load.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    inventoryItems: source.inventoryItems.map(({ currentStock, expirationDate, _note: _seedNote, ...item }) => ({
-      ...item,
-      batches: [{
-        id: `${item.id}-batch-0001`,
-        quantity: currentStock,
-        expirationDate: expirationDate ? resolveDate(expirationDate, today) : null,
-        receivedDate: today,
-      }],
-    })),
-    reports: source.reports.map((r) => ({
-      ...r,
-      dateRange: { from: resolveDate(r.dateRange.from, today), to: resolveDate(r.dateRange.to, today) },
-    })),
-    backupLogs: source.backupLogs.map((b) => ({ ...b, lastRun: resolveDateTime(b.lastRun, today) })),
-    auditLog: source.auditLog.map((a) => ({ ...a, timestamp: resolveSchoolDateTime(a.timestamp, today) })),
-    frontendOnly: {
-      devAccounts: fo.devAccounts,
-      visitComplaintTypes: fo.visitComplaintTypes,
-      incidentComplaintTypes: fo.incidentComplaintTypes,
-      inventoryTransactions: fo.inventoryTransactions.map((t) => ({
-        ...t,
-        personnelId: t.personnelId ?? null,
-        timestamp: resolveSchoolDateTime(t.timestamp, today),
-      })),
-      recordReviews: fo.recordReviews.map((r) => ({
-        ...r,
-        importedAt: resolveSchoolDate(r.importedAt, today),
-        resolvedAt: r.resolvedAt ? resolveSchoolDateTime(r.resolvedAt, today) : null,
-      })),
-      personnelReviews: fo.personnelReviews.map((r) => ({
-        ...r,
-        resolvedAt: r.resolvedAt ? resolveSchoolDateTime(r.resolvedAt, today) : null,
-      })),
-      excuseLetterApprovals: fo.excuseLetterApprovals.map((a) => ({
-        ...a,
-        approvedAt: resolveSchoolDateTime(a.approvedAt, today),
-        excusedFrom: resolveSchoolDate(a.excusedFrom, today),
-        excusedUntil: resolveSchoolDate(a.excusedUntil, today),
-      })),
-      peReferrals: fo.peReferrals.map((p) => ({ ...p, createdAt: resolveSchoolDateTime(p.createdAt, today) })),
-      issueReports: fo.issueReports.map((r) => ({ ...r, createdAt: resolveDateTime(r.createdAt, today) })),
-      calendarEvents: fo.calendarEvents.map((e) => ({
-        ...e,
-        startDate: resolveDate(e.startDate, today),
-        endDate: e.endDate ? resolveDate(e.endDate, today) : null,
-        createdAt: resolveDateTime(e.createdAt, today),
-        updatedAt: resolveDateTime(e.updatedAt, today),
-      })),
-      studentImportBatches: [],
-      sportsReports: fo.sportsReports.map((r) => ({
-        ...r,
-        createdAt: resolveDateTime(r.createdAt, today),
-        updatedAt: resolveDateTime(r.updatedAt, today),
-      })),
-      backupLocations: fo.backupLocations.map((l) => ({ ...l, lastBackupAt: l.lastBackupAt ? resolveDateTime(l.lastBackupAt, today) : null })),
-    },
-  })))
+  return fillGradeAtTime(
+    fillApprovedLetterWording(
+      structuredClone({
+        today,
+        config,
+        users: source.users.map((u) => ({
+          ...u,
+          lastLogin: u.lastLogin ? resolveSchoolDateTime(u.lastLogin, today) : null,
+        })),
+        // Seed records written before Part 3B have no Sex value. This deterministic alternating value
+        // is explicitly synthetic and keeps every loaded mock record valid until real master-list data
+        // replaces it; new/edit forms always require the explicit field.
+        students: source.students.map((student, index) => ({
+          ...student,
+          sex: student.sex ?? (index % 2 === 0 ? 'female' : 'male'),
+        })),
+        personnel: source.personnel,
+        visits: source.visits.map((v) => ({
+          ...v,
+          personnelId: v.personnelId ?? null,
+          dateTime: uniqueMinute(resolveSchoolDateTime(v.dateTime, today)),
+          excuseLetterDraft: v.excuseLetterDraft
+            ? {
+                ...v.excuseLetterDraft,
+                excusedFrom: resolveSchoolDate(v.excuseLetterDraft.excusedFrom, today),
+                excusedUntil: resolveSchoolDate(v.excuseLetterDraft.excusedUntil, today),
+              }
+            : null,
+        })),
+        incidents: source.incidents.map((i) => ({
+          ...i,
+          personnelId: i.personnelId ?? null,
+          time: resolveSchoolDateTime(i.time, today),
+          hospitalReferral: i.hospitalReferral
+            ? {
+                ...i.hospitalReferral,
+                departureTime: resolveSchoolDateTime(i.hospitalReferral.departureTime, today),
+              }
+            : null,
+          parentNotifications: i.parentNotifications.map((n) => ({
+            ...n,
+            timestamp: resolveSchoolDateTime(n.timestamp, today),
+          })),
+        })),
+        followUps: source.followUps.map((f) => ({
+          ...f,
+          personnelId: f.personnelId ?? null,
+          followUpDate: resolveSchoolDate(f.followUpDate, today),
+        })),
+        // The seed-only `_note` comment is dropped on load.
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        inventoryItems: source.inventoryItems.map(
+          ({ currentStock, expirationDate, _note: _seedNote, ...item }) => ({
+            ...item,
+            batches: [
+              {
+                id: `${item.id}-batch-0001`,
+                quantity: currentStock,
+                expirationDate: expirationDate ? resolveDate(expirationDate, today) : null,
+                receivedDate: today,
+              },
+            ],
+          }),
+        ),
+        reports: source.reports.map((r) => ({
+          ...r,
+          dateRange: {
+            from: resolveDate(r.dateRange.from, today),
+            to: resolveDate(r.dateRange.to, today),
+          },
+        })),
+        backupLogs: source.backupLogs.map((b) => ({
+          ...b,
+          lastRun: resolveDateTime(b.lastRun, today),
+        })),
+        auditLog: source.auditLog.map((a) => ({
+          ...a,
+          timestamp: resolveSchoolDateTime(a.timestamp, today),
+        })),
+        frontendOnly: {
+          devAccounts: fo.devAccounts,
+          visitComplaintTypes: fo.visitComplaintTypes,
+          incidentComplaintTypes: fo.incidentComplaintTypes,
+          inventoryTransactions: fo.inventoryTransactions.map((t) => ({
+            ...t,
+            personnelId: t.personnelId ?? null,
+            timestamp: resolveSchoolDateTime(t.timestamp, today),
+          })),
+          recordReviews: fo.recordReviews.map((r) => ({
+            ...r,
+            importedAt: resolveSchoolDate(r.importedAt, today),
+            resolvedAt: r.resolvedAt ? resolveSchoolDateTime(r.resolvedAt, today) : null,
+          })),
+          personnelReviews: fo.personnelReviews.map((r) => ({
+            ...r,
+            resolvedAt: r.resolvedAt ? resolveSchoolDateTime(r.resolvedAt, today) : null,
+          })),
+          excuseLetterApprovals: fo.excuseLetterApprovals.map((a) => ({
+            ...a,
+            approvedAt: resolveSchoolDateTime(a.approvedAt, today),
+            excusedFrom: resolveSchoolDate(a.excusedFrom, today),
+            excusedUntil: resolveSchoolDate(a.excusedUntil, today),
+          })),
+          peReferrals: fo.peReferrals.map((p) => ({
+            ...p,
+            createdAt: resolveSchoolDateTime(p.createdAt, today),
+          })),
+          issueReports: fo.issueReports.map((r) => ({
+            ...r,
+            createdAt: resolveDateTime(r.createdAt, today),
+          })),
+          calendarEvents: fo.calendarEvents.map((e) => ({
+            ...e,
+            startDate: resolveDate(e.startDate, today),
+            endDate: e.endDate ? resolveDate(e.endDate, today) : null,
+            createdAt: resolveDateTime(e.createdAt, today),
+            updatedAt: resolveDateTime(e.updatedAt, today),
+          })),
+          studentImportBatches: [],
+          sportsReports: fo.sportsReports.map((r) => ({
+            ...r,
+            createdAt: resolveDateTime(r.createdAt, today),
+            updatedAt: resolveDateTime(r.updatedAt, today),
+          })),
+          backupLocations: fo.backupLocations.map((l) => ({
+            ...l,
+            lastBackupAt: l.lastBackupAt ? resolveDateTime(l.lastBackupAt, today) : null,
+          })),
+        },
+      }),
+    ),
+  )
 }
 
 /**
@@ -179,7 +210,8 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
 export function fillGradeAtTime(state: DbState): DbState {
   const grades = new Map(state.students.map((student) => [student.id, student.gradeLevel]))
   for (const record of [...state.visits, ...state.incidents])
-    if (record.gradeLevelAtTime === undefined && record.studentId) record.gradeLevelAtTime = grades.get(record.studentId) ?? null
+    if (record.gradeLevelAtTime === undefined && record.studentId)
+      record.gradeLevelAtTime = grades.get(record.studentId) ?? null
   return state
 }
 
@@ -194,7 +226,11 @@ export function fillApprovedLetterWording(state: DbState): DbState {
     const visit = state.visits.find((v) => v.id === approval.visitId)
     const student = state.students.find((st) => st.id === visit?.studentId)
     approval.recipient ??= EXCUSE_LETTER_RECIPIENT
-    approval.body ??= excuseLetterBody(student ? formatPersonName(student) : 'The student', (visit?.dateTime ?? approval.approvedAt).slice(0, 10), approval)
+    approval.body ??= excuseLetterBody(
+      student ? formatPersonName(student) : 'The student',
+      (visit?.dateTime ?? approval.approvedAt).slice(0, 10),
+      approval,
+    )
   }
   return state
 }

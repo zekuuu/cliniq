@@ -38,7 +38,12 @@ export function TitleLink({
         {children.slice(split)}
         {/* Underline skips an SVG, so a spaced-out no-break space in ::after carries it beneath the icon. */}
         <span className="relative after:tracking-[13px] after:content-['\00a0']">
-          <Icon name="externalLink" size={12} strokeWidth={3} className="absolute right-0 top-1/2 -translate-y-1/2" />
+          <Icon
+            name="externalLink"
+            size={12}
+            strokeWidth={3}
+            className="absolute right-0 top-1/2 -translate-y-1/2"
+          />
         </span>
       </span>
     </Link>

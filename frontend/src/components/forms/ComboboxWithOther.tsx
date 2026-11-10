@@ -79,10 +79,17 @@ export function ComboboxWithOther({
           setOther(false)
           setQuery(next)
           if (!pickOnly) onValueChange(next)
-          else onValueChange(options.find((option) => option.toLowerCase() === next.trim().toLowerCase()) ?? '')
+          else
+            onValueChange(
+              options.find((option) => option.toLowerCase() === next.trim().toLowerCase()) ?? '',
+            )
         }}
       />
-      {unmatched && <p className="text-xs text-text-secondary">Not saved until picked: choose one from the list, or {otherOption} for a new one.</p>}
+      {unmatched && (
+        <p className="text-xs text-text-secondary">
+          Not saved until picked: choose one from the list, or {otherOption} for a new one.
+        </p>
+      )}
       {other && (
         <Input
           label={otherLabel}

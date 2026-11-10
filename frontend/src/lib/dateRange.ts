@@ -1,7 +1,8 @@
 import type { ISODate } from '../types/entities'
 import { addDays, diffDays, formatDateRange, startOfMonth, startOfYear } from './dates'
 
-export type DateRangePreset = 'today' | 'last7' | 'last30' | 'thisMonth' | 'thisYear' | 'all' | 'custom'
+export type DateRangePreset =
+  'today' | 'last7' | 'last30' | 'thisMonth' | 'thisYear' | 'all' | 'custom'
 
 export interface DateRange {
   preset: DateRangePreset

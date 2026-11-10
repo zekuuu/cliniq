@@ -28,18 +28,24 @@ describe('Student List', () => {
       '15%',
     ])
     expect(screen.queryByRole('columnheader', { name: /allergies/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('columnheader', { name: /medical conditions/i })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('columnheader', { name: /medical conditions/i }),
+    ).not.toBeInTheDocument()
     expect(screen.queryByText('Peanuts')).not.toBeInTheDocument()
     expect(screen.queryByText('Asthma')).not.toBeInTheDocument()
   })
 
   it('searches by LRN', async () => {
     const user = userEvent.setup()
-    const student = await getStudent((await fetchStudentList({
-      search: '',
-      gradeLevel: '',
-      includeArchived: false,
-    }))[0].id)
+    const student = await getStudent(
+      (
+        await fetchStudentList({
+          search: '',
+          gradeLevel: '',
+          includeArchived: false,
+        })
+      )[0].id,
+    )
 
     renderWithRouter(<StudentListPage />)
     await screen.findByRole('heading', { name: 'Student List' })
@@ -92,7 +98,11 @@ describe('Student List', () => {
     expect(incomplete.length).toBeGreaterThan(0)
     renderWithRouter(<StudentListPage />, { route: '/students?record=incomplete' })
 
-    expect(await screen.findByText(`${incomplete.length} result${incomplete.length === 1 ? '' : 's'} shown`)).toBeInTheDocument()
+    expect(
+      await screen.findByText(
+        `${incomplete.length} result${incomplete.length === 1 ? '' : 's'} shown`,
+      ),
+    ).toBeInTheDocument()
     const table = within(screen.getByRole('table', { name: 'Student masterlist' }))
     expect(table.queryByText('Complete')).not.toBeInTheDocument()
     expect(table.getAllByText('Incomplete').length).toBeGreaterThan(0)

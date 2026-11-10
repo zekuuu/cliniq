@@ -83,7 +83,13 @@ export function FollowUpsAlert({
         <ListRow
           key={row.followUp.id}
           primary={
-            <ListItemLink to={row.patient.kind === 'student' ? paths.studentProfile(row.patient.id) : paths.staffProfile(row.patient.id)}>
+            <ListItemLink
+              to={
+                row.patient.kind === 'student'
+                  ? paths.studentProfile(row.patient.id)
+                  : paths.staffProfile(row.patient.id)
+              }
+            >
               <PatientNumber patient={row.patient} />
             </ListItemLink>
           }
@@ -109,7 +115,9 @@ export function FrequentVisitorsAlert({
   // Zean (October 25, 2026): the panel is back, but shows only the students with the most visits
   // until "Show all" (the list is already sorted most visits first). The count badge keeps the total.
   const [showAll, setShowAll] = useState(false)
-  const rows = showAll ? summary.frequentVisitors : summary.frequentVisitors.slice(0, FREQUENT_VISITORS_SHOWN)
+  const rows = showAll
+    ? summary.frequentVisitors
+    : summary.frequentVisitors.slice(0, FREQUENT_VISITORS_SHOWN)
   const hidden = summary.frequentVisitors.length - FREQUENT_VISITORS_SHOWN
   const scope = describeRange(range).toLowerCase()
   return (
@@ -121,8 +129,15 @@ export function FrequentVisitorsAlert({
       className="[&>div:first-child>div:first-child]:basis-56"
       actions={
         hidden > 0 && (
-          <Button variant="secondary" size="sm" aria-expanded={showAll} onClick={() => setShowAll((current) => !current)}>
-            {showAll ? `Show top ${FREQUENT_VISITORS_SHOWN}` : `Show all ${summary.frequentVisitors.length}`}
+          <Button
+            variant="secondary"
+            size="sm"
+            aria-expanded={showAll}
+            onClick={() => setShowAll((current) => !current)}
+          >
+            {showAll
+              ? `Show top ${FREQUENT_VISITORS_SHOWN}`
+              : `Show all ${summary.frequentVisitors.length}`}
           </Button>
         )
       }
@@ -136,7 +151,11 @@ export function FrequentVisitorsAlert({
       {rows.map((row) => (
         <ListRow
           key={row.student.id}
-          primary={<ListItemLink to={paths.studentProfile(row.student.id)}><MaskedLrn lrn={row.student.lrn} /></ListItemLink>}
+          primary={
+            <ListItemLink to={paths.studentProfile(row.student.id)}>
+              <MaskedLrn lrn={row.student.lrn} />
+            </ListItemLink>
+          }
           secondary={`${row.visitCount} visits`}
         />
       ))}
@@ -169,7 +188,13 @@ export function InventoryAlert({
       {rows.map((row) => (
         <ListRow
           key={row.item.id}
-          primary={canNavigate ? <ListItemLink to={paths.inventory}>{row.item.name}</ListItemLink> : row.item.name}
+          primary={
+            canNavigate ? (
+              <ListItemLink to={paths.inventory}>{row.item.name}</ListItemLink>
+            ) : (
+              row.item.name
+            )
+          }
           secondary={`${stockQuantityText(row.item.currentStock, row.item.unit, row.flags)}${row.flags.includes('expired') ? '' : ' in stock'} · threshold ${row.item.lowStockThreshold}`}
           trailing={
             <div className="flex flex-wrap justify-end gap-1 @max-[28rem]:flex-col @max-[28rem]:flex-nowrap @max-[28rem]:items-end">

@@ -51,8 +51,9 @@ export function StudentPicker({
   const [focusSearch, setFocusSearch] = useState(false)
   const trimmed = query.trim()
   const ready = trimmed.length >= STUDENT_SEARCH_MIN_LENGTH
-  const { data, status, isRefetching } = useAsyncData(`student-search|${ready ? trimmed.toLowerCase() : ''}`, () =>
-    ready ? search(trimmed) : Promise.resolve([]),
+  const { data, status, isRefetching } = useAsyncData(
+    `student-search|${ready ? trimmed.toLowerCase() : ''}`,
+    () => (ready ? search(trimmed) : Promise.resolve([])),
   )
   const loading = ready && (status === 'loading' || isRefetching)
   const failed = ready && status === 'error'
@@ -69,7 +70,9 @@ export function StudentPicker({
             <span className="font-semibold">{selected.fullName}</span>
             <span className="text-text-secondary">
               {' · '}
-              <span className="tabular-nums"><MaskedLrn lrn={selected.lrn} /></span>
+              <span className="tabular-nums">
+                <MaskedLrn lrn={selected.lrn} />
+              </span>
               {' · '}
               {selected.gradeLevel}
             </span>
@@ -104,7 +107,9 @@ export function StudentPicker({
         renderOption={(student) => (
           <span className="flex w-full items-baseline gap-3">
             {/* The spaces between the parts are what a screen reader pauses on; flex hides them visually. */}
-            <span className="tabular-nums text-text-secondary"><MaskedLrn lrn={student.lrn} /></span>{' '}
+            <span className="tabular-nums text-text-secondary">
+              <MaskedLrn lrn={student.lrn} />
+            </span>{' '}
             <span className="font-semibold">{student.fullName}</span>{' '}
             <span className="ml-auto pl-3 text-xs text-text-secondary">{student.gradeLevel}</span>
           </span>

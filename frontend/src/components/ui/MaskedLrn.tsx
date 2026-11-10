@@ -7,7 +7,12 @@ import { lrnLabel, maskLrn } from '../../lib/lrn'
  * wrapped. `lrn-render.test.ts` fails if a screen renders an LRN any other way.
  */
 export function Lrn({ lrn, full = false }: { lrn: string; full?: boolean }) {
-  if (full) return <span data-lrn="full" className="whitespace-nowrap tabular-nums">{lrn}</span>
+  if (full)
+    return (
+      <span data-lrn="full" className="whitespace-nowrap tabular-nums">
+        {lrn}
+      </span>
+    )
   return (
     // `relative` holds the screen-reader text (absolute) inside a scrolling list; without it, rows hidden in
     // the list stretched the page below the footer.
@@ -17,8 +22,16 @@ export function Lrn({ lrn, full = false }: { lrn: string; full?: boolean }) {
       <span aria-hidden="true" className="whitespace-nowrap tabular-nums">
         <span className="hidden">{maskLrn(lrn)}</span>
         {/* One SVG for all eight dots, so they share one pixel offset and render alike. */}
-        <svg data-lrn-dots width="61" height="5" viewBox="0 0 61 5" className="mr-[3px] inline-block align-[3px]">
-          {Array.from({ length: 8 }, (_, index) => (<circle key={index} cx={2.5 + index * 8} cy={2.5} r={2.5} fill="currentColor" />))}
+        <svg
+          data-lrn-dots
+          width="61"
+          height="5"
+          viewBox="0 0 61 5"
+          className="mr-[3px] inline-block align-[3px]"
+        >
+          {Array.from({ length: 8 }, (_, index) => (
+            <circle key={index} cx={2.5 + index * 8} cy={2.5} r={2.5} fill="currentColor" />
+          ))}
         </svg>
         {lrn.slice(-4)}
       </span>

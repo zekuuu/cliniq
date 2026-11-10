@@ -221,9 +221,14 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
               PE/Sports Injury Referral
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
-              {identified.student
-                ? <>{identified.student.fullName} · LRN <Lrn lrn={identified.student.lrn} full /> · {identified.student.gradeLevel}</>
-                : 'Student not identified yet. Search by LRN or name below.'}
+              {identified.student ? (
+                <>
+                  {identified.student.fullName} · LRN <Lrn lrn={identified.student.lrn} full /> ·{' '}
+                  {identified.student.gradeLevel}
+                </>
+              ) : (
+                'Student not identified yet. Search by LRN or name below.'
+              )}
             </p>
           </div>
         </div>
@@ -256,89 +261,111 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
             }
           />
           <CardBody className="flex flex-col gap-5">
-            <FormSection id="pe-source-title" title="Referral source" description="The student, who referred them, and the activity.">
-            <div className={identified.student ? undefined : 'md:w-[calc(50%-0.5rem)]'}>
-            <StudentPicker
-              search={searchReferralStudents}
-              selected={identified.student}
-              onClear={identified.reset}
-              onSelect={(picked) => void identified.select(picked.id)}
-              error={identified.error}
-              addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
-            /></div>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Input
-                label="Referred by"
-                required
-                value={values.referredBy}
-                error={errors.referredBy}
-                onChange={(event) => setField('referredBy', event.target.value)}
-              />
-              <Input
-                label="Activity or setting"
-                required
-                value={values.activity}
-                error={errors.activity}
-                onChange={(event) => setField('activity', event.target.value)}
-              />
-            </div>
-            </FormSection>
-
-            <FormSection id="pe-findings-title" title="Findings" description="What happened and what the clinic did.">
-            {/* ADR-053: on screen only, never on paper. */}
-            <p className="text-xs font-semibold text-text-secondary print:hidden">Starting wording, to be confirmed: the three fields below start with suggested phrases you can edit.</p>
-            <TextareaField
-              label="Injury summary"
-              value={values.injurySummary}
-              error={errors.injurySummary}
-              onChange={(value) => setField('injurySummary', value)}
-            />
-            <TextareaField
-              label="Clinical assessment"
-              value={values.clinicalAssessment}
-              error={errors.clinicalAssessment}
-              onChange={(value) => setField('clinicalAssessment', value)}
-            />
-            <TextareaField
-              label="Treatment or action taken"
-              value={values.treatment}
-              error={errors.treatment}
-              onChange={(value) => setField('treatment', value)}
-            />
-            </FormSection>
-
-            <FormSection id="pe-outcome-title" title="Outcome" description="Where the student goes next.">
-            <div>
-              <p className="mb-1 text-sm font-semibold text-text-primary">Disposition</p>
-              <SegmentedControl
-                label="Disposition"
-                value={values.disposition}
-                onChange={(value) => setField('disposition', value)}
-                options={dispositionOptions}
-                size="md"
-              />
-            </div>
-
-            {needsEmergency ? (
-              <div className="rounded-md border border-error bg-error/10 px-3 py-3 text-sm text-text-primary">
-                Hospital referral selected. Continue in Emergency Response to complete referral
-                destination, transport, departure time, and parent-notification details.
+            <FormSection
+              id="pe-source-title"
+              title="Referral source"
+              description="The student, who referred them, and the activity."
+            >
+              <div className={identified.student ? undefined : 'md:w-[calc(50%-0.5rem)]'}>
+                <StudentPicker
+                  search={searchReferralStudents}
+                  selected={identified.student}
+                  onClear={identified.reset}
+                  onSelect={(picked) => void identified.select(picked.id)}
+                  error={identified.error}
+                  addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
+                />
               </div>
-            ) : (
-              <EmptyState
-                icon="activity"
-                title="Emergency escalation not selected"
-                description="Choose Hospital referral only when the case needs Emergency Response completion."
-                className="rounded-md border border-border bg-surface"
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <Input
+                  label="Referred by"
+                  required
+                  value={values.referredBy}
+                  error={errors.referredBy}
+                  onChange={(event) => setField('referredBy', event.target.value)}
+                />
+                <Input
+                  label="Activity or setting"
+                  required
+                  value={values.activity}
+                  error={errors.activity}
+                  onChange={(event) => setField('activity', event.target.value)}
+                />
+              </div>
+            </FormSection>
+
+            <FormSection
+              id="pe-findings-title"
+              title="Findings"
+              description="What happened and what the clinic did."
+            >
+              {/* ADR-053: on screen only, never on paper. */}
+              <p className="text-xs font-semibold text-text-secondary print:hidden">
+                Starting wording, to be confirmed: the three fields below start with suggested
+                phrases you can edit.
+              </p>
+              <TextareaField
+                label="Injury summary"
+                value={values.injurySummary}
+                error={errors.injurySummary}
+                onChange={(value) => setField('injurySummary', value)}
               />
-            )}
+              <TextareaField
+                label="Clinical assessment"
+                value={values.clinicalAssessment}
+                error={errors.clinicalAssessment}
+                onChange={(value) => setField('clinicalAssessment', value)}
+              />
+              <TextareaField
+                label="Treatment or action taken"
+                value={values.treatment}
+                error={errors.treatment}
+                onChange={(value) => setField('treatment', value)}
+              />
+            </FormSection>
+
+            <FormSection
+              id="pe-outcome-title"
+              title="Outcome"
+              description="Where the student goes next."
+            >
+              <div>
+                <p className="mb-1 text-sm font-semibold text-text-primary">Disposition</p>
+                <SegmentedControl
+                  label="Disposition"
+                  value={values.disposition}
+                  onChange={(value) => setField('disposition', value)}
+                  options={dispositionOptions}
+                  size="md"
+                />
+              </div>
+
+              {needsEmergency ? (
+                <div className="rounded-md border border-error bg-error/10 px-3 py-3 text-sm text-text-primary">
+                  Hospital referral selected. Continue in Emergency Response to complete referral
+                  destination, transport, departure time, and parent-notification details.
+                </div>
+              ) : (
+                <EmptyState
+                  icon="activity"
+                  title="Emergency escalation not selected"
+                  description="Choose Hospital referral only when the case needs Emergency Response completion."
+                  className="rounded-md border border-border bg-surface"
+                />
+              )}
             </FormSection>
 
             <div className={`flex flex-wrap justify-end gap-2 pt-4 ${FORM_DIVIDER}`}>
               <Button type="button" variant="neutral" onClick={cancel}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" icon="checkCircle" loading={saving} done={Boolean(saved)}>
+              <Button
+                type="submit"
+                variant="primary"
+                icon="checkCircle"
+                loading={saving}
+                done={Boolean(saved)}
+              >
                 Save Referral
               </Button>
             </div>

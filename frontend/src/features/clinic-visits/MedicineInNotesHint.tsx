@@ -29,10 +29,14 @@ export function MedicineInNotesHint({
           <span className="flex min-w-0 items-start gap-2">
             <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning-text" />
             <span>
-              This looks like {item.name}. Add it under Medicines &amp; supplies given so stock stays correct.
+              This looks like {item.name}. Add it under Medicines &amp; supplies given so stock
+              stays correct.
             </span>
           </span>
-          <Button size="sm" onClick={() => onAdd({ itemId: item.id, quantity: 1, instructions: '' })}>
+          <Button
+            size="sm"
+            onClick={() => onAdd({ itemId: item.id, quantity: 1, instructions: '' })}
+          >
             Add {item.name}
           </Button>
         </li>

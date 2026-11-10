@@ -32,7 +32,10 @@ export function defaultIncidentLogRange(today = todayISO()): { from: ISODate; to
 }
 
 /** The Admin's log leaves out staff patients' incidents (D15); the data layer enforces it. */
-export async function fetchIncidentLog(query: IncidentLogQuery, viewer?: SessionUser): Promise<IncidentLogRow[]> {
+export async function fetchIncidentLog(
+  query: IncidentLogQuery,
+  viewer?: SessionUser,
+): Promise<IncidentLogRow[]> {
   const [incidents, students, personnel] = await Promise.all([
     listIncidents({ from: query.from, to: query.to }, viewer),
     listStudents({ includeArchived: true, fullLrn: true }),

@@ -21,11 +21,17 @@ export function normalizeComplaint(text: string, known: ReadonlyArray<string>): 
  * "head ache", "Headache." and "headache" fall together.
  */
 export function complaintGroupKey(text: string): string {
-  return cleanComplaint(text).toLowerCase().replace(/[.,;:!?]+$/, '').replace(/\s+/g, '')
+  return cleanComplaint(text)
+    .toLowerCase()
+    .replace(/[.,;:!?]+$/, '')
+    .replace(/\s+/g, '')
 }
 
 /** The group a complaint is counted under: the matching complaint type's spelling, else its own cleaned text. */
 export function reportComplaint(text: string, known: ReadonlyArray<string>): string {
   const key = complaintGroupKey(text)
-  return known.find((label) => complaintGroupKey(label) === key) ?? cleanComplaint(text).replace(/[.,;:!?]+$/, '')
+  return (
+    known.find((label) => complaintGroupKey(label) === key) ??
+    cleanComplaint(text).replace(/[.,;:!?]+$/, '')
+  )
 }

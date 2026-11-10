@@ -14,7 +14,9 @@ describe('Student List: first-load skeleton', () => {
     const { container } = renderWithRouter(<StudentListPage />)
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading student list...')
-    expect(container.querySelectorAll('[aria-hidden="true"] .animate-pulse').length).toBeGreaterThan(8)
+    expect(
+      container.querySelectorAll('[aria-hidden="true"] .animate-pulse').length,
+    ).toBeGreaterThan(8)
     expect(container.querySelector('.animate-spin')).toBeNull()
   })
 })

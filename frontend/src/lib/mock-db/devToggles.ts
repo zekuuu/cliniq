@@ -85,7 +85,9 @@ export function resetParam(): boolean {
 /** `?mockToday=YYYY-MM-DD`, for testing date-driven behaviour such as the school-year reminders. */
 export function todayParam(): string | null {
   const value = param('mockToday')
-  return value && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) ? value : null
+  return value && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value))
+    ? value
+    : null
 }
 
 /** Reads one query-string value, for in-screen state and preview switches (ADR-012). */

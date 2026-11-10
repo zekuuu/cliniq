@@ -12,9 +12,19 @@ function Form() {
   return (
     <>
       {discardDialog}
-      <label>Name<input value={text} onChange={(event) => setText(event.target.value)} /></label>
+      <label>
+        Name
+        <input value={text} onChange={(event) => setText(event.target.value)} />
+      </label>
       <button onClick={cancel}>Cancel</button>
-      <button onClick={() => { allowLeave(); void navigate('/saved') }}>Save</button>
+      <button
+        onClick={() => {
+          allowLeave()
+          void navigate('/saved')
+        }}
+      >
+        Save
+      </button>
       <button onClick={() => void navigate('/form?step=2')}>Same screen</button>
       <Link to="/list">Sidebar link</Link>
     </>
@@ -23,7 +33,11 @@ function Form() {
 
 function renderForm() {
   const router = createMemoryRouter(
-    [{ path: '/list', element: <h1>List</h1> }, { path: '/saved', element: <h1>Saved</h1> }, { path: '/form', element: <Form /> }],
+    [
+      { path: '/list', element: <h1>List</h1> },
+      { path: '/saved', element: <h1>Saved</h1> },
+      { path: '/form', element: <Form /> },
+    ],
     { initialEntries: ['/list', '/form'], initialIndex: 1 },
   )
   render(<RouterProvider router={router} />)
@@ -40,7 +54,9 @@ describe('Unsaved-input guard', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Keep Editing' }))
     expect(screen.getByLabelText('Name')).toHaveValue('a')
     await user.click(screen.getByRole('link', { name: 'Sidebar link' }))
-    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Discard Changes' }))
+    await user.click(
+      within(await screen.findByRole('dialog')).getByRole('button', { name: 'Discard Changes' }),
+    )
     expect(await screen.findByRole('heading', { name: 'List' })).toBeInTheDocument()
   })
 
@@ -48,14 +64,18 @@ describe('Unsaved-input guard', () => {
     const { user, router } = renderForm()
     await user.type(screen.getByLabelText('Name'), 'a')
     await router.navigate(-1)
-    expect(await screen.findByRole('dialog', { name: 'Discard unsaved changes?' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('dialog', { name: 'Discard unsaved changes?' }),
+    ).toBeInTheDocument()
   })
 
   it('asks once on Cancel, not twice', async () => {
     const { user } = renderForm()
     await user.type(screen.getByLabelText('Name'), 'a')
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
-    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Discard Changes' }))
+    await user.click(
+      within(await screen.findByRole('dialog')).getByRole('button', { name: 'Discard Changes' }),
+    )
     expect(await screen.findByRole('heading', { name: 'List' })).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })

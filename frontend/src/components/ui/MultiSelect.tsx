@@ -66,7 +66,8 @@ export function MultiSelect({
       ref={rootRef}
       onBlur={(event) => {
         // Tab out closes the panel, as an outside click does; otherwise it covers what gets focus.
-        if (event.relatedTarget && !rootRef.current?.contains(event.relatedTarget as Node)) setOpen(false)
+        if (event.relatedTarget && !rootRef.current?.contains(event.relatedTarget as Node))
+          setOpen(false)
       }}
       className={cn('relative flex flex-col gap-1', className)}
     >

@@ -56,12 +56,18 @@ export function ItemsGivenField({
   const [announcement, setAnnouncement] = useState('')
   const byId = new Map(items.map((item) => [item.id, item]))
   const savedById = new Map(saved.map((line) => [line.itemId, line]))
-  const nameOf = (itemId: string) => savedById.get(itemId)?.itemName ?? byId.get(itemId)?.name ?? 'Unknown item'
+  const nameOf = (itemId: string) =>
+    savedById.get(itemId)?.itemName ?? byId.get(itemId)?.name ?? 'Unknown item'
   const unitOf = (itemId: string) => savedById.get(itemId)?.unit ?? byId.get(itemId)?.unit ?? ''
   const expired = (itemId: string) => Boolean(byId.get(itemId)?.flags.includes('expired'))
   /** Raising past what's already saved takes new stock, which an expired item can't give. */
-  const canRaise = (line: ItemLineDraft) => !expired(line.itemId) || line.quantity < (savedById.get(line.itemId)?.quantity ?? 0)
-  const allergyWarnings = [...new Set(lines.flatMap((line) => allergyMatches(byId.get(line.itemId) ?? {}, allergies ?? [])))]
+  const canRaise = (line: ItemLineDraft) =>
+    !expired(line.itemId) || line.quantity < (savedById.get(line.itemId)?.quantity ?? 0)
+  const allergyWarnings = [
+    ...new Set(
+      lines.flatMap((line) => allergyMatches(byId.get(line.itemId) ?? {}, allergies ?? [])),
+    ),
+  ]
 
   function update(itemId: string, patch: Partial<ItemLineDraft>) {
     onChange(lines.map((line) => (line.itemId === itemId ? { ...line, ...patch } : line)))
@@ -86,12 +92,20 @@ export function ItemsGivenField({
 
   return (
     <fieldset className="rounded-md border border-border p-4">
-      <legend className="px-1 text-sm font-semibold text-text-primary">Medicines &amp; supplies given</legend>
-      <p className="text-xs text-text-secondary">Optional. Each line is taken from inventory when the visit is saved.</p>
+      <legend className="px-1 text-sm font-semibold text-text-primary">
+        Medicines &amp; supplies given
+      </legend>
+      <p className="text-xs text-text-secondary">
+        Optional. Each line is taken from inventory when the visit is saved.
+      </p>
 
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,14rem)] sm:items-start">
         <InventoryItemPicker items={items} onPick={pick} symptoms={symptoms} />
-        <div role="note" aria-label="Allergies" className="rounded-md border border-border px-3 py-2 text-xs text-text-secondary sm:mt-5">
+        <div
+          role="note"
+          aria-label="Allergies"
+          className="rounded-md border border-border px-3 py-2 text-xs text-text-secondary sm:mt-5"
+        >
           {allergies === null ? (
             'Allergies appear here once the student is identified.'
           ) : allergies.length ? (
@@ -118,36 +132,57 @@ export function ItemsGivenField({
         <>
           {/* Compact like the Sports Report list (Zean, November 3, 2026): one divided row per item. From sm the
               columns are named once here; below sm each field shows its own label. */}
-          <div aria-hidden="true" className={`mt-3 hidden gap-x-3 text-xs font-semibold text-text-secondary sm:grid ${ROW_COLUMNS}`}>
+          <div
+            aria-hidden="true"
+            className={`mt-3 hidden gap-x-3 text-xs font-semibold text-text-secondary sm:grid ${ROW_COLUMNS}`}
+          >
             <span>Item</span>
             <span>Quantity</span>
             <span>Unit</span>
             <span>Instructions</span>
             <span />
           </div>
-          <ul aria-label="Medicines and supplies given" className="mt-1 flex flex-col divide-y divide-border">
+          <ul
+            aria-label="Medicines and supplies given"
+            className="mt-1 flex flex-col divide-y divide-border"
+          >
             {lines.map((line) => {
               const name = nameOf(line.itemId)
               const unit = unitOf(line.itemId)
               const item = byId.get(line.itemId)
               const isExpired = expired(line.itemId)
-              const available = item ? item.currentStock + (savedById.get(line.itemId)?.quantity ?? 0) : null
+              const available = item
+                ? item.currentStock + (savedById.get(line.itemId)?.quantity ?? 0)
+                : null
               const overStock = available !== null && line.quantity > available
               return (
-                <li key={line.itemId} className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-2 ${ROW_COLUMNS}`}>
+                <li
+                  key={line.itemId}
+                  className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-2 ${ROW_COLUMNS}`}
+                >
                   {/* Expiry on its own small line under the name: a badge beside a wrapping name overlapped it. */}
                   <p className="order-1 min-w-0 text-sm font-semibold text-text-primary sm:order-none">
                     {name}
-                    {isExpired && <span className="block text-xs font-semibold text-error-text">Expired</span>}
+                    {isExpired && (
+                      <span className="block text-xs font-semibold text-error-text">Expired</span>
+                    )}
                     {item?.flags.includes('nearing_expiration') && (
                       <span className="block text-xs font-semibold text-warning-text">
-                        {item.daysUntilExpiry === 0 ? 'Expires today' : `Expires in ${item.daysUntilExpiry} ${item.daysUntilExpiry === 1 ? 'day' : 'days'}`}
+                        {item.daysUntilExpiry === 0
+                          ? 'Expires today'
+                          : `Expires in ${item.daysUntilExpiry} ${item.daysUntilExpiry === 1 ? 'day' : 'days'}`}
                       </span>
                     )}
                   </p>
                   <div className="order-3 col-span-2 flex items-center gap-3 sm:order-none sm:contents">
                     <div className="inline-flex h-10 items-center gap-1 rounded-md border border-border bg-background px-2 shadow-card">
-                      <button type="button" aria-label={`Decrease ${name}`} disabled={line.quantity <= 1} onClick={() => update(line.itemId, { quantity: line.quantity - 1 })} className={iconButton}>
+                      <button
+                        type="button"
+                        aria-label={`Decrease ${name}`}
+                        disabled={line.quantity <= 1}
+                        onClick={() => update(line.itemId, { quantity: line.quantity - 1 })}
+                        className={iconButton}
+                      >
                         <Icon name="minus" />
                       </button>
                       <input
@@ -164,7 +199,13 @@ export function ItemsGivenField({
                         }}
                         className="w-8 bg-transparent text-center text-sm font-semibold text-text-primary tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green"
                       />
-                      <button type="button" aria-label={`Increase ${name}`} disabled={!canRaise(line)} onClick={() => update(line.itemId, { quantity: line.quantity + 1 })} className={iconButton}>
+                      <button
+                        type="button"
+                        aria-label={`Increase ${name}`}
+                        disabled={!canRaise(line)}
+                        onClick={() => update(line.itemId, { quantity: line.quantity + 1 })}
+                        className={iconButton}
+                      >
                         <Icon name="plus" />
                       </button>
                     </div>
@@ -179,17 +220,25 @@ export function ItemsGivenField({
                     placeholder="e.g. 1 tablet every 6 hours (optional)"
                     onChange={(event) => update(line.itemId, { instructions: event.target.value })}
                   />
-                  <button type="button" aria-label={`Remove ${name}`} onClick={() => remove(line.itemId)} className={`order-2 sm:order-none ${iconButton}`}>
+                  <button
+                    type="button"
+                    aria-label={`Remove ${name}`}
+                    onClick={() => remove(line.itemId)}
+                    className={`order-2 sm:order-none ${iconButton}`}
+                  >
                     <Icon name="xCircle" />
                   </button>
                   {overStock && (
                     <p className="order-5 col-span-full flex items-start gap-1 text-xs font-semibold text-warning-text sm:order-none">
                       <Icon name="alertTriangle" size={14} className="mt-px shrink-0" />
-                      Only {available} {unit} in stock. Saving takes stock below zero; recount and restock.
+                      Only {available} {unit} in stock. Saving takes stock below zero; recount and
+                      restock.
                     </p>
                   )}
                   {isExpired && (
-                    <p className="order-6 col-span-full text-xs text-text-secondary sm:order-none">This item has expired. Keep or lower the quantity given; it can’t be raised.</p>
+                    <p className="order-6 col-span-full text-xs text-text-secondary sm:order-none">
+                      This item has expired. Keep or lower the quantity given; it can’t be raised.
+                    </p>
                   )}
                 </li>
               )
@@ -208,4 +257,3 @@ export function ItemsGivenField({
     </fieldset>
   )
 }
-

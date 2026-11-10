@@ -37,14 +37,24 @@ export interface StaffProfileData extends PersonnelHistory {
   personnel: Personnel
 }
 
-export async function fetchStaffProfile(personnelId: string, viewer?: SessionUser): Promise<StaffProfileData> {
-  const [personnel, history] = await Promise.all([getPersonnel(personnelId), getPersonnelHistory(personnelId, Infinity)])
+export async function fetchStaffProfile(
+  personnelId: string,
+  viewer?: SessionUser,
+): Promise<StaffProfileData> {
+  const [personnel, history] = await Promise.all([
+    getPersonnel(personnelId),
+    getPersonnelHistory(personnelId, Infinity),
+  ])
   // ADR-048: opening a staff profile is audit-logged once per session.
   if (viewer) await recordView({ type: 'staff', id: personnel.id }, viewer)
   return { personnel, ...history }
 }
 
-export function archiveStaffRecord(personnelId: string, actor: SessionUser, reason: string): Promise<Personnel> {
+export function archiveStaffRecord(
+  personnelId: string,
+  actor: SessionUser,
+  reason: string,
+): Promise<Personnel> {
   return archivePersonnel(personnelId, actor, reason)
 }
 
@@ -88,7 +98,10 @@ function parseList(value: string): string[] {
     .filter((item) => !isNoneRecorded(item))
 }
 
-export function submitStaffForm(values: StaffFormValues, options: { personnelId?: string; actor: SessionUser }) {
+export function submitStaffForm(
+  values: StaffFormValues,
+  options: { personnelId?: string; actor: SessionUser },
+) {
   return savePersonnel(
     {
       firstName: values.firstName,
@@ -101,8 +114,15 @@ export function submitStaffForm(values: StaffFormValues, options: { personnelId?
       allergies: parseList(values.allergies),
       medicalConditions: parseList(values.medicalConditions),
       emergencyContacts: values.emergencyContacts
-        .filter((contact) => [contact.name, contact.relationship, contact.phone].some((value) => value.trim()))
-        .map((contact) => ({ name: contact.name.trim(), relationship: contact.relationship.trim(), phone: contact.phone.trim(), verified: contact.verified })),
+        .filter((contact) =>
+          [contact.name, contact.relationship, contact.phone].some((value) => value.trim()),
+        )
+        .map((contact) => ({
+          name: contact.name.trim(),
+          relationship: contact.relationship.trim(),
+          phone: contact.phone.trim(),
+          verified: contact.verified,
+        })),
     },
     options,
   )

@@ -13,7 +13,9 @@ describe('Incident Report', () => {
     expect(await screen.findByRole('heading', { name: 'Incident summary' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Treatment' })).toBeInTheDocument()
     expect(screen.getByText('No treatment recorded')).toBeInTheDocument()
-    expect(screen.getByText('No treatment recorded. Check this is correct before approving.')).toBeInTheDocument()
+    expect(
+      screen.getByText('No treatment recorded. Check this is correct before approving.'),
+    ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Approve Report' })).toBeEnabled()
   })
 })

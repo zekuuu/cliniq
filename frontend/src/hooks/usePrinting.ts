@@ -19,7 +19,11 @@ let printListeners = 0
  * count) instead of the title. Print-only trees therefore cost nothing on screen and never render twice in tests.
  * For the Admin nothing mounts and nothing is recorded (`canPrint`), so the browser's own Print gets no document.
  */
-export function usePrinting(documentTitle?: string, viewer?: SessionUser, record?: PrintAuditRecord): string | null {
+export function usePrinting(
+  documentTitle?: string,
+  viewer?: SessionUser,
+  record?: PrintAuditRecord,
+): string | null {
   const [printedAt, setPrintedAt] = useState<string | null>(null)
   const recordType = record?.type
   const recordId = record?.id
@@ -33,7 +37,13 @@ export function usePrinting(documentTitle?: string, viewer?: SessionUser, record
       flushSync(() => setPrintedAt(new Date().toISOString()))
       if (!activePrintAudit && documentTitle) {
         activePrintAudit = true
-        void recordPrint(documentTitle, viewer, recordType && recordId ? { type: recordType, id: recordId, summary: recordSummary } : undefined)
+        void recordPrint(
+          documentTitle,
+          viewer,
+          recordType && recordId
+            ? { type: recordType, id: recordId, summary: recordSummary }
+            : undefined,
+        )
       }
     }
     const after = () => {

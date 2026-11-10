@@ -33,10 +33,20 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
  * emergency contacts in their saved order. It adds no input, so fast
  * capture stays fast. A single-student screen, so the full name is shown elsewhere on the form (ADR-004).
  */
-export function StudentAlertCard({ student }: { student: Pick<Student, 'allergies' | 'medicalConditions' | 'emergencyContacts'> }) {
+export function StudentAlertCard({
+  student,
+}: {
+  student: Pick<Student, 'allergies' | 'medicalConditions' | 'emergencyContacts'>
+}) {
   return (
-    <section aria-labelledby="student-alert-title" className="rounded-md border border-warning bg-warning-fill p-3">
-      <h2 id="student-alert-title" className="flex items-center gap-1.5 text-sm font-semibold text-text-primary">
+    <section
+      aria-labelledby="student-alert-title"
+      className="rounded-md border border-warning bg-warning-fill p-3"
+    >
+      <h2
+        id="student-alert-title"
+        className="flex items-center gap-1.5 text-sm font-semibold text-text-primary"
+      >
         <Icon name="alertTriangle" size={16} className="text-warning-text" />
         Check before treating
       </h2>

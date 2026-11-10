@@ -17,7 +17,9 @@ const base = {
   birthDate: '2018-06-01',
   allergies: [],
   medicalConditions: [],
-  emergencyContacts: [{ name: 'Maria Pupil', relationship: 'Mother', phone: '0917-000-0000', verified: true }],
+  emergencyContacts: [
+    { name: 'Maria Pupil', relationship: 'Mother', phone: '0917-000-0000', verified: true },
+  ],
   archived: false,
 }
 
@@ -28,7 +30,9 @@ describe('student contact information', () => {
   })
 
   it('keeps the emergency contacts required', () => {
-    expect(missingRequiredFields({ ...base, gradeLevel: 'Kinder', emergencyContacts: [] })).toEqual(['Emergency contact'])
+    expect(missingRequiredFields({ ...base, gradeLevel: 'Kinder', emergencyContacts: [] })).toEqual(
+      ['Emergency contact'],
+    )
   })
 })
 
@@ -46,6 +50,8 @@ describe('allergy and condition banner (ST-9)', () => {
     expect((await getStudent('student-0001')).allergies).toEqual([])
     renderWithRouter(<StudentProfilePage studentId="student-0001" />)
     await screen.findByRole('heading', { name: 'Medical History' })
-    expect(screen.queryByRole('region', { name: 'Allergies and medical conditions' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('region', { name: 'Allergies and medical conditions' }),
+    ).not.toBeInTheDocument()
   })
 })

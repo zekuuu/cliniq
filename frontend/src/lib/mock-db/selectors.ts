@@ -95,8 +95,10 @@ function auditTargetType(target: NonNullable<AuditLogEntry['targetRecord']>): Au
   if (target.type.startsWith('inventory')) return 'inventory'
   if (target.type === 'followup') return 'follow-up'
   // Incident stage saves and sign-offs are recorded against the incident itself.
-  if (target.type.startsWith('incident-stage') || target.type === 'incident-report') return 'incident'
-  if (auditTargetTypes.includes(target.type as AuditTargetType)) return target.type as AuditTargetType
+  if (target.type.startsWith('incident-stage') || target.type === 'incident-report')
+    return 'incident'
+  if (auditTargetTypes.includes(target.type as AuditTargetType))
+    return target.type as AuditTargetType
   return 'report'
 }
 
@@ -147,7 +149,8 @@ const REPORT_NAMES: Record<string, string> = {
  * a per-entry `find` over visits made the screen take seconds.
  */
 function auditLookups(state: DbState) {
-  const patientOf = (records: ReadonlyArray<PatientRef & { id: string }>) => new Map<string, PatientRef>(records.map((record) => [record.id, record]))
+  const patientOf = (records: ReadonlyArray<PatientRef & { id: string }>) =>
+    new Map<string, PatientRef>(records.map((record) => [record.id, record]))
   return {
     state,
     students: studentsById(state),
@@ -158,7 +161,11 @@ function auditLookups(state: DbState) {
   }
 }
 
-function auditTargetIdentifier(lookups: ReturnType<typeof auditLookups>, target: NonNullable<AuditLogEntry['targetRecord']>, type: AuditTargetType): { label: string; studentId?: string } {
+function auditTargetIdentifier(
+  lookups: ReturnType<typeof auditLookups>,
+  target: NonNullable<AuditLogEntry['targetRecord']>,
+  type: AuditTargetType,
+): { label: string; studentId?: string } {
   const { state, students } = lookups
   const patient: PatientRef | undefined =
     type === 'student'
@@ -177,23 +184,48 @@ function auditTargetIdentifier(lookups: ReturnType<typeof auditLookups>, target:
     return student ? { label: student.lrn, studentId: patient.studentId } : { label: '' }
   }
   // A staff patient appears by Staff No., never by name (ADR-043 item 6).
-  if (patient?.personnelId) return { label: lookups.personnel.get(patient.personnelId)?.staffNumber ?? '' }
+  if (patient?.personnelId)
+    return { label: lookups.personnel.get(patient.personnelId)?.staffNumber ?? '' }
   if (patient) return { label: '' }
-  if (type === 'inventory') return { label: state.inventoryItems.find((item) => item.id === target.id)?.name ?? '' }
-  if (type === 'user') return { label: state.users.find((user) => user.id === target.id)?.name ?? '' }
-  if (type === 'sports-report') return { label: state.frontendOnly.sportsReports.find((report) => report.id === target.id)?.title ?? '' }
-  if (type === 'calendar-event') return { label: state.frontendOnly.calendarEvents.find((event) => event.id === target.id)?.title ?? '' }
+  if (type === 'inventory')
+    return { label: state.inventoryItems.find((item) => item.id === target.id)?.name ?? '' }
+  if (type === 'user')
+    return { label: state.users.find((user) => user.id === target.id)?.name ?? '' }
+  if (type === 'sports-report')
+    return {
+      label:
+        state.frontendOnly.sportsReports.find((report) => report.id === target.id)?.title ?? '',
+    }
+  if (type === 'calendar-event')
+    return {
+      label: state.frontendOnly.calendarEvents.find((event) => event.id === target.id)?.title ?? '',
+    }
   if (type === 'school-year') return { label: 'School year dates' }
-  if (type === 'backup-location') return { label: state.frontendOnly.backupLocations.find((location) => location.id === target.id)?.label ?? '' }
+  if (type === 'backup-location')
+    return {
+      label:
+        state.frontendOnly.backupLocations.find((location) => location.id === target.id)?.label ??
+        '',
+    }
   if (target.type === 'report') return { label: REPORT_NAMES[target.id] ?? '' }
   if (target.type === 'print-document') return { label: target.id }
-  if (target.type === 'backup') return { label: /^\d{4}-\d{2}-\d{2}T/.test(target.id) ? formatDateTime(target.id) : '' }
+  if (target.type === 'backup')
+    return { label: /^\d{4}-\d{2}-\d{2}T/.test(target.id) ? formatDateTime(target.id) : '' }
   return { label: '' }
 }
 
-function auditTarget(lookups: ReturnType<typeof auditLookups>, target: NonNullable<AuditLogEntry['targetRecord']>): NonNullable<AuditLogRow['target']> {
+function auditTarget(
+  lookups: ReturnType<typeof auditLookups>,
+  target: NonNullable<AuditLogEntry['targetRecord']>,
+): NonNullable<AuditLogRow['target']> {
   const type = auditTargetType(target)
-  return { type, recordType: target.type, kind: AUDIT_RECORD_KINDS[target.type] ?? 'Record', id: target.id, ...auditTargetIdentifier(lookups, target, type) }
+  return {
+    type,
+    recordType: target.type,
+    kind: AUDIT_RECORD_KINDS[target.type] ?? 'Record',
+    id: target.id,
+    ...auditTargetIdentifier(lookups, target, type),
+  }
 }
 
 /** Resolves audit actors and privacy-safe targets before a screen can render them. */
@@ -215,9 +247,18 @@ export function auditLogList(state: DbState, query: AuditLogQuery): AuditLogList
     .filter((row) => row.timestamp >= query.from && row.timestamp <= query.to)
     .filter((row) => !query.userId || row.userId === query.userId)
     .filter((row) => query.actionTypes.length === 0 || query.actionTypes.includes(row.actionType))
-    .filter((row) => query.targetTypes.length === 0 || (row.target && query.targetTypes.includes(row.target.type)))
+    .filter(
+      (row) =>
+        query.targetTypes.length === 0 ||
+        (row.target && query.targetTypes.includes(row.target.type)),
+    )
     .sort((a, b) => b.dateTime.localeCompare(a.dateTime))
-  return { rows, users: state.users.map((user) => ({ id: user.id, name: user.name })).sort((a, b) => a.name.localeCompare(b.name)) }
+  return {
+    rows,
+    users: state.users
+      .map((user) => ({ id: user.id, name: user.name }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  }
 }
 
 // ---- Students ------------------------------------------------------------------------------
@@ -238,7 +279,10 @@ export function missingRequiredFields(student: SeedStudent): string[] {
   if (!student.birthDate) missing.push('Birthdate')
   if (!student.emergencyContacts.length) missing.push('Emergency contact')
   student.emergencyContacts.forEach((contact, index) => {
-    const prefix = student.emergencyContacts.length === 1 ? 'Emergency contact' : `Emergency contact ${index + 1}`
+    const prefix =
+      student.emergencyContacts.length === 1
+        ? 'Emergency contact'
+        : `Emergency contact ${index + 1}`
     if (!contact.name.trim()) missing.push(`${prefix} name`)
     if (!contact.relationship.trim()) missing.push(`${prefix} relationship`)
     if (!contact.phone.trim()) missing.push(`${prefix} phone`)
@@ -248,7 +292,12 @@ export function missingRequiredFields(student: SeedStudent): string[] {
 
 /** The §5 `Student` shape, with `recordComplete` and `fullName` derived rather than stored. */
 export function toStudent(student: SeedStudent): Student {
-  return { ...student, fullName: formatPersonName(student), sex: student.sex ?? 'female', recordComplete: missingRequiredFields(student).length === 0 }
+  return {
+    ...student,
+    fullName: formatPersonName(student),
+    sex: student.sex ?? 'female',
+    recordComplete: missingRequiredFields(student).length === 0,
+  }
 }
 
 /** A stored staff record with its derived `fullName` (ADR-064). */
@@ -291,7 +340,12 @@ export function searchStudents(state: DbState, query: string, limit = 8): Studen
     .filter(({ s, byLrn }) => byLrn || nameMatches(formatPersonName(s), q))
     .sort((a, b) => Number(b.byLrn) - Number(a.byLrn) || compareByLastName(a.s, b.s))
     .slice(0, limit)
-    .map(({ s }) => ({ id: s.id, lrn: s.lrn, fullName: formatPersonName(s), gradeLevel: s.gradeLevel }))
+    .map(({ s }) => ({
+      id: s.id,
+      lrn: s.lrn,
+      fullName: formatPersonName(s),
+      gradeLevel: s.gradeLevel,
+    }))
 }
 
 // ---- Personnel: staff patients (ADR-043) ----------------------------------------------------
@@ -316,7 +370,9 @@ export interface StaffIncompleteRow {
 
 /** The staff Incomplete Records page (ADR-067): as the student queue, open until Edit Staff saves the record complete. */
 export function staffIncompleteQueue(state: DbState): StaffIncompleteRow[] {
-  const reviews = new Map((state.frontendOnly.personnelReviews ?? []).map((r) => [r.personnelId, r]))
+  const reviews = new Map(
+    (state.frontendOnly.personnelReviews ?? []).map((r) => [r.personnelId, r]),
+  )
   return [...activePersonnel(state)].sort(compareByLastName).flatMap((person) => {
     const missingFields = missingStaffFields(person)
     const review = reviews.get(person.id) ?? null
@@ -340,7 +396,12 @@ export function searchPersonnel(state: DbState, query: string, limit = 8): Perso
   // Only a query with a digit can be a Staff No., so "st" stays a name search.
   const number = /\d/.test(q) ? q.toUpperCase().replace(/\s/g, '') : null
   return activePersonnel(state)
-    .map((p) => ({ p, byNumber: number !== null && (p.staffNumber.startsWith(number) || p.staffNumber.slice(4).startsWith(number)) }))
+    .map((p) => ({
+      p,
+      byNumber:
+        number !== null &&
+        (p.staffNumber.startsWith(number) || p.staffNumber.slice(4).startsWith(number)),
+    }))
     .filter(({ p, byNumber }) => byNumber || nameMatches(p.fullName, q))
     .sort((a, b) => Number(b.byNumber) - Number(a.byNumber) || compareByLastName(a.p, b.p))
     .slice(0, limit)
@@ -349,7 +410,9 @@ export function searchPersonnel(state: DbState, query: string, limit = 8): Perso
 
 /** One box for students and staff (ADR-043 item 5): both searches, labelled, by last name, capped at `limit`. */
 export function searchPatients(state: DbState, query: string, limit = 8): PatientSearchResult[] {
-  const names = new Map<string, NameParts>([...state.students, ...state.personnel].map((record) => [record.id, record]))
+  const names = new Map<string, NameParts>(
+    [...state.students, ...state.personnel].map((record) => [record.id, record]),
+  )
   return [
     ...searchStudents(state, query, limit).map((s) => ({ kind: 'student' as const, ...s })),
     ...searchPersonnel(state, query, limit).map((p) => ({ kind: 'personnel' as const, ...p })),
@@ -362,12 +425,21 @@ export function searchPatients(state: DbState, query: string, limit = 8): Patien
 /** Departments or roles in use, by staff type, so the form suggests only the chosen type's (Zean, November 5, 2026). */
 export function personnelDepartments(state: DbState): Record<string, string[]> {
   const byType: Record<string, Set<string>> = {}
-  for (const p of state.personnel) if (p.department) (byType[p.type] ??= new Set()).add(p.department)
-  return Object.fromEntries(Object.entries(byType).map(([type, set]) => [type, [...set].sort((a, b) => a.localeCompare(b))]))
+  for (const p of state.personnel)
+    if (p.department) (byType[p.type] ??= new Set()).add(p.department)
+  return Object.fromEntries(
+    Object.entries(byType).map(([type, set]) => [
+      type,
+      [...set].sort((a, b) => a.localeCompare(b)),
+    ]),
+  )
 }
 
 /** The Students / Staff split of any set of clinical records (ADR-043 item 8). */
-export function patientSplit(records: ReadonlyArray<PatientRef>): { students: number; staff: number } {
+export function patientSplit(records: ReadonlyArray<PatientRef>): {
+  students: number
+  staff: number
+} {
   const staff = records.filter((r) => r.personnelId !== null).length
   return { students: records.length - staff, staff }
 }
@@ -379,7 +451,10 @@ export function patientSplit(records: ReadonlyArray<PatientRef>): { students: nu
  * never-used predefined types come last, alphabetically.
  */
 export function complaintSuggestions(state: DbState): string[] {
-  const pool = new Map<string, { label: string; count: number; last: string; predefined: boolean }>()
+  const pool = new Map<
+    string,
+    { label: string; count: number; last: string; predefined: boolean }
+  >()
   for (const { label } of state.frontendOnly.visitComplaintTypes)
     pool.set(label.toLowerCase(), { label, count: 0, last: '', predefined: true })
   for (const v of state.visits) {
@@ -395,7 +470,9 @@ export function complaintSuggestions(state: DbState): string[] {
     pool.set(key, entry)
   }
   return [...pool.values()]
-    .sort((a, b) => b.count - a.count || b.last.localeCompare(a.last) || a.label.localeCompare(b.label))
+    .sort(
+      (a, b) => b.count - a.count || b.last.localeCompare(a.last) || a.label.localeCompare(b.label),
+    )
     .map((entry) => entry.label)
 }
 
@@ -431,7 +508,14 @@ export function incompleteRecordQueue(state: DbState, fullLrn = false): Incomple
     const review = reviews.get(student.id) ?? null
     const resolved = Boolean(review?.resolvedAt)
     if (!missingFields.length && !resolved) return []
-    return [{ student: toStudentRow(student, fullLrn), missingFields, review, status: resolved ? 'resolved' : 'open' }]
+    return [
+      {
+        student: toStudentRow(student, fullLrn),
+        missingFields,
+        review,
+        status: resolved ? 'resolved' : 'open',
+      },
+    ]
   })
 }
 
@@ -450,7 +534,10 @@ export interface FrequentVisitor {
  * Students at or over `frequentVisitorMinVisits` in the range. Without a range, the default window
  * is the last `frequentVisitorWindowDays` days. A warning only, never a diagnosis (Module 9).
  */
-export function frequentVisitors(state: DbState, range?: { from: ISODate; to: ISODate }): FrequentVisitor[] {
+export function frequentVisitors(
+  state: DbState,
+  range?: { from: ISODate; to: ISODate },
+): FrequentVisitor[] {
   const { from, to } = range ?? {
     from: addDays(state.today, -(state.config.frequentVisitorWindowDays - 1)),
     to: state.today,
@@ -459,7 +546,8 @@ export function frequentVisitors(state: DbState, range?: { from: ISODate; to: IS
   const counts = new Map<string, number>()
   for (const v of countedVisits(state))
     // Students only (ADR-043 item 8): a staff visit has no student.
-    if (v.studentId && isWithin(dateOf(v.dateTime), from, to)) counts.set(v.studentId, (counts.get(v.studentId) ?? 0) + 1)
+    if (v.studentId && isWithin(dateOf(v.dateTime), from, to))
+      counts.set(v.studentId, (counts.get(v.studentId) ?? 0) + 1)
   return [...counts.entries()]
     .filter(([, n]) => n >= state.config.frequentVisitorMinVisits)
     .flatMap(([id, visitCount]) => {
@@ -475,13 +563,24 @@ export function frequentVisitors(state: DbState, range?: { from: ISODate; to: IS
  * How close a *pending* follow-up is to its date (ADR-051): Upcoming before it, Due today on it, Due
  * for the next `overdueAfterDays` days, then Overdue. Null once it's resolved.
  */
-export function followUpDueState(followUp: FollowUp, today: ISODate, overdueAfterDays: number): FollowUpDueState | null {
+export function followUpDueState(
+  followUp: FollowUp,
+  today: ISODate,
+  overdueAfterDays: number,
+): FollowUpDueState | null {
   if (followUp.status !== 'pending') return null
   const passed = diffDays(followUp.followUpDate, today)
-  return passed < 0 ? 'upcoming' : passed === 0 ? 'due_today' : passed <= overdueAfterDays ? 'due' : 'overdue'
+  return passed < 0
+    ? 'upcoming'
+    : passed === 0
+      ? 'due_today'
+      : passed <= overdueAfterDays
+        ? 'due'
+        : 'overdue'
 }
 
-export const AUTO_CLOSED_REASON = (days: number) => `No response (closed automatically after ${days} days)`
+export const AUTO_CLOSED_REASON = (days: number) =>
+  `No response (closed automatically after ${days} days)`
 
 /**
  * ADR-051: a pending follow-up more than `followUpAutoCloseDays` past its date reads as Missed with a
@@ -504,7 +603,11 @@ export function hasLaterFollowUp(followUps: FollowUp[], followUp: FollowUp): boo
   )
 }
 
-export function withAutoClosedFollowUps(followUps: FollowUp[], today: ISODate, autoCloseDays: number): FollowUp[] {
+export function withAutoClosedFollowUps(
+  followUps: FollowUp[],
+  today: ISODate,
+  autoCloseDays: number,
+): FollowUp[] {
   return followUps.map((f) =>
     f.status === 'pending' && diffDays(f.followUpDate, today) > autoCloseDays
       ? { ...f, status: 'missed', statusReason: AUTO_CLOSED_REASON(autoCloseDays) }
@@ -540,9 +643,17 @@ export interface InventoryStatus {
  * Low stock = at or below the threshold (ADR-051: stock exactly at it counts as low).
  * Low-stock and expiry flags are independent and can both apply (Module 8, stock flow step 5).
  */
-export function inventoryStatus(item: InventoryItem, today: ISODate, expiryWarningDays: number): InventoryStatus {
-  const expired = item.batches.filter((batch) => batch.quantity > 0 && batch.expirationDate !== null && batch.expirationDate < today)
-  const usable = item.batches.filter((batch) => !(batch.expirationDate !== null && batch.expirationDate < today))
+export function inventoryStatus(
+  item: InventoryItem,
+  today: ISODate,
+  expiryWarningDays: number,
+): InventoryStatus {
+  const expired = item.batches.filter(
+    (batch) => batch.quantity > 0 && batch.expirationDate !== null && batch.expirationDate < today,
+  )
+  const usable = item.batches.filter(
+    (batch) => !(batch.expirationDate !== null && batch.expirationDate < today),
+  )
   const datedUsable = usable.filter((batch) => batch.quantity > 0 && batch.expirationDate !== null)
   const expirationDate = datedUsable.map((batch) => batch.expirationDate!).sort()[0] ?? null
   const oldestExpiredDate = expired.map((batch) => batch.expirationDate!).sort()[0] ?? null
@@ -552,7 +663,8 @@ export function inventoryStatus(item: InventoryItem, today: ISODate, expiryWarni
   const flags: InventoryFlag[] = []
   if (currentStock <= item.lowStockThreshold) flags.push('low_stock')
   if (expiredStock > 0) flags.push('expired')
-  else if (daysUntilExpiry !== null && daysUntilExpiry <= expiryWarningDays) flags.push('nearing_expiration')
+  else if (daysUntilExpiry !== null && daysUntilExpiry <= expiryWarningDays)
+    flags.push('nearing_expiration')
   return {
     flags,
     currentStock,
@@ -570,7 +682,9 @@ export function inventoryStatusFor(state: DbState, item: InventoryItem): Invento
 }
 
 export function lowStockCount(state: DbState): number {
-  return state.inventoryItems.filter((i) => inventoryStatusFor(state, i).flags.includes('low_stock')).length
+  return state.inventoryItems.filter((i) =>
+    inventoryStatusFor(state, i).flags.includes('low_stock'),
+  ).length
 }
 
 // ---- Backups -------------------------------------------------------------------------------
@@ -611,7 +725,10 @@ export function countedVisits(state: DbState) {
  * Only today's, so a visit left without a Time out yesterday doesn't keep a student "in the clinic".
  */
 export function inClinicNow(state: DbState) {
-  return state.visits.filter((v) => v.disposition === 'resting_in_clinic' && !v.timeOut && dateOf(v.dateTime) === state.today)
+  return state.visits.filter(
+    (v) =>
+      v.disposition === 'resting_in_clinic' && !v.timeOut && dateOf(v.dateTime) === state.today,
+  )
 }
 
 /** One possible cluster: how many students with the same complaint and grade in the window (ADR-050). */
@@ -635,21 +752,46 @@ export function clusterAlerts(state: DbState): ClusterAlert[] {
   const grades = new Map(state.students.map((student) => [student.id, student.gradeLevel]))
   const groups = new Map<string, { complaint: string; gradeLevel: string; students: Set<string> }>()
   const records = [
-    ...countedVisits(state).map((v) => ({ studentId: v.studentId, date: dateOf(v.dateTime), complaint: v.complaint, grade: v.gradeLevelAtTime })),
-    ...state.incidents.map((i) => ({ studentId: i.studentId, date: dateOf(i.time), complaint: i.complaint, grade: i.gradeLevelAtTime })),
+    ...countedVisits(state).map((v) => ({
+      studentId: v.studentId,
+      date: dateOf(v.dateTime),
+      complaint: v.complaint,
+      grade: v.gradeLevelAtTime,
+    })),
+    ...state.incidents.map((i) => ({
+      studentId: i.studentId,
+      date: dateOf(i.time),
+      complaint: i.complaint,
+      grade: i.gradeLevelAtTime,
+    })),
   ]
   for (const record of records) {
     if (!record.studentId || !isWithin(record.date, from, to)) continue
     const gradeLevel = record.grade ?? grades.get(record.studentId) ?? ''
     const key = `${record.complaint.trim().toLowerCase()}|${gradeLevel}`
-    const group = groups.get(key) ?? { complaint: record.complaint.trim(), gradeLevel, students: new Set<string>() }
+    const group = groups.get(key) ?? {
+      complaint: record.complaint.trim(),
+      gradeLevel,
+      students: new Set<string>(),
+    }
     group.students.add(record.studentId)
     groups.set(key, group)
   }
   return [...groups.values()]
     .filter((group) => group.students.size >= clusterMinStudents)
-    .map((group) => ({ complaint: group.complaint, gradeLevel: group.gradeLevel, students: group.students.size, from, to }))
-    .sort((a, b) => b.students - a.students || compareGradeLevels(a.gradeLevel, b.gradeLevel) || a.complaint.localeCompare(b.complaint))
+    .map((group) => ({
+      complaint: group.complaint,
+      gradeLevel: group.gradeLevel,
+      students: group.students.size,
+      from,
+      to,
+    }))
+    .sort(
+      (a, b) =>
+        b.students - a.students ||
+        compareGradeLevels(a.gradeLevel, b.gradeLevel) ||
+        a.complaint.localeCompare(b.complaint),
+    )
 }
 
 /** `month` is "YYYY-MM". */

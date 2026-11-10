@@ -83,7 +83,9 @@ export function Select({
   const typeahead = useRef({ query: '', timer: 0 })
   const [open, setOpen] = useState(false)
   const items =
-    placeholder !== undefined && clearable ? [{ value: '', label: placeholder }, ...options] : options
+    placeholder !== undefined && clearable
+      ? [{ value: '', label: placeholder }, ...options]
+      : options
   const selectedIndex = items.findIndex((item) => item.value === value)
   const focusIndex = Math.max(0, selectedIndex)
 
@@ -184,7 +186,11 @@ export function Select({
       <label
         id={labelId}
         htmlFor={selectId}
-        className={cn('text-sm font-semibold text-text-primary', inline && 'sm:shrink-0', hideLabel && 'sr-only')}
+        className={cn(
+          'text-sm font-semibold text-text-primary',
+          inline && 'sm:shrink-0',
+          hideLabel && 'sr-only',
+        )}
       >
         {label}
         {required && (
@@ -210,7 +216,11 @@ export function Select({
           aria-describedby={cn(hintId, errorId) || undefined}
           onClick={() => setOpen((next) => !next)}
           onKeyDown={onTriggerKeyDown}
-          className={dropdownTriggerClassName({ size, invalid: Boolean(error), className: 'w-full' })}
+          className={dropdownTriggerClassName({
+            size,
+            invalid: Boolean(error),
+            className: 'w-full',
+          })}
         >
           {/* Every label shares one grid cell, so the trigger is as wide as its longest option and
               doesn't resize when the selection changes. */}
@@ -218,7 +228,12 @@ export function Select({
             <span id={valueId} className="col-start-1 row-start-1 truncate">
               {items[selectedIndex]?.label ?? placeholder}
             </span>
-            {[...items, ...(placeholder !== undefined && !clearable ? [{ value: '', label: placeholder }] : [])].map((item) => (
+            {[
+              ...items,
+              ...(placeholder !== undefined && !clearable
+                ? [{ value: '', label: placeholder }]
+                : []),
+            ].map((item) => (
               <span
                 key={item.value}
                 aria-hidden="true"

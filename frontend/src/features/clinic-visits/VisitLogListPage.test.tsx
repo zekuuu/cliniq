@@ -12,7 +12,10 @@ import { rangeForPreset } from '../../lib/dateRange'
 describe('Visit Log', () => {
   it('links to New Visit from the page header', async () => {
     renderWithRouter(<VisitLogListPage />)
-    expect(await screen.findByRole('link', { name: 'New Visit' })).toHaveAttribute('href', '/visits/new')
+    expect(await screen.findByRole('link', { name: 'New Visit' })).toHaveAttribute(
+      'href',
+      '/visits/new',
+    )
   })
 
   it('keeps the all-visits scope in the filter instead of repeating it in the page header', async () => {
@@ -23,12 +26,14 @@ describe('Visit Log', () => {
     expect(screen.getByRole('button', { name: 'Visit status All visits' })).toBeInTheDocument()
   })
 
-  it('opens on the day given by ?from=&to= (the Dashboard calendar\'s View visits)', async () => {
+  it("opens on the day given by ?from=&to= (the Dashboard calendar's View visits)", async () => {
     const range = rangeForPreset('all', defaultVisitLogRange().to)
     const [visit] = await fetchVisitLog({ ...range, search: '', disposition: 'all' })
     const day = visit.dateTime.slice(0, 10)
     renderWithRouter(<VisitLogListPage />, { route: `/visits?from=${day}&to=${day}` })
-    expect(await screen.findByRole('button', { name: 'Date range' })).toHaveTextContent('Custom range')
+    expect(await screen.findByRole('button', { name: 'Date range' })).toHaveTextContent(
+      'Custom range',
+    )
     const onDay = await fetchVisitLog({ from: day, to: day, search: '', disposition: 'all' })
     // Only that day's visits are listed (one header row plus up to a page of rows).
     await waitFor(() =>
@@ -39,21 +44,34 @@ describe('Visit Log', () => {
   it('opens with ?letter=pending showing only visits whose letter awaits approval, each with Review Letter', async () => {
     const user = userEvent.setup()
     const range = rangeForPreset('all', defaultVisitLogRange().to)
-    const pending = await fetchVisitLog({ ...range, search: '', disposition: 'all', letter: 'pending' })
+    const pending = await fetchVisitLog({
+      ...range,
+      search: '',
+      disposition: 'all',
+      letter: 'pending',
+    })
     expect(pending.length).toBeGreaterThan(0)
     renderWithRouter(<VisitLogListPage />, { route: '/visits?letter=pending' })
 
-    expect(await screen.findByRole('button', { name: /Excuse letter/ })).toHaveTextContent('Pending approval')
+    expect(await screen.findByRole('button', { name: /Excuse letter/ })).toHaveTextContent(
+      'Pending approval',
+    )
     expect(screen.getByRole('button', { name: 'Date range' })).toHaveTextContent('All')
-    await waitFor(() => expect(screen.getAllByRole('row')).toHaveLength(Math.min(pending.length, 10) + 1))
+    await waitFor(() =>
+      expect(screen.getAllByRole('row')).toHaveLength(Math.min(pending.length, 10) + 1),
+    )
     for (const row of pending.slice(0, 10)) {
-      expect(screen.getByRole('link', { name: `Review Letter for ${lrnLabel(row.patient.number)}` })).toHaveAttribute('href', `/visits/${row.id}/excuse-letter`)
+      expect(
+        screen.getByRole('link', { name: `Review Letter for ${lrnLabel(row.patient.number)}` }),
+      ).toHaveAttribute('href', `/visits/${row.id}/excuse-letter`)
     }
 
     await user.click(screen.getByRole('button', { name: /Excuse letter/ }))
     await user.click(screen.getByRole('option', { name: 'All visits' }))
     const all = await fetchVisitLog({ ...range, search: '', disposition: 'all' })
-    await waitFor(() => expect(screen.getAllByRole('row')).toHaveLength(Math.min(all.length, 10) + 1))
+    await waitFor(() =>
+      expect(screen.getAllByRole('row')).toHaveLength(Math.min(all.length, 10) + 1),
+    )
   })
 
   it.each([
@@ -67,13 +85,13 @@ describe('Visit Log', () => {
 
   it('clears entry date params with replace navigation while preserving other parameters', async () => {
     const user = userEvent.setup()
-    const router = createMemoryRouter(
-      [{ path: '*', element: <VisitLogListPage /> }],
-      {
-        initialEntries: ['/dashboard', '/visits?from=2026-03-01&to=2026-03-02&mock=slow&source=calendar'],
-        initialIndex: 1,
-      },
-    )
+    const router = createMemoryRouter([{ path: '*', element: <VisitLogListPage /> }], {
+      initialEntries: [
+        '/dashboard',
+        '/visits?from=2026-03-01&to=2026-03-02&mock=slow&source=calendar',
+      ],
+      initialIndex: 1,
+    })
     render(<RouterProvider router={router} />)
 
     await screen.findByRole('heading', { name: 'Visit Log' })
@@ -95,10 +113,9 @@ describe('Visit Log', () => {
 
   it('uses the default range when remounted at the cleared URL', async () => {
     const user = userEvent.setup()
-    const router = createMemoryRouter(
-      [{ path: '*', element: <VisitLogListPage /> }],
-      { initialEntries: ['/visits?from=2026-03-01&to=2026-03-02'] },
-    )
+    const router = createMemoryRouter([{ path: '*', element: <VisitLogListPage /> }], {
+      initialEntries: ['/visits?from=2026-03-01&to=2026-03-02'],
+    })
     const view = render(<RouterProvider router={router} />)
 
     await screen.findByRole('heading', { name: 'Visit Log' })
@@ -120,7 +137,11 @@ describe('Visit Log', () => {
     expect(screen.queryByRole('columnheader', { name: /full name/i })).not.toBeInTheDocument()
     // ADR-010 (Option A): the complaint stays visible beside the LRN; names never do.
     expect(screen.getByRole('columnheader', { name: /^Symptom/ })).toBeInTheDocument()
-    const [newest] = await fetchVisitLog({ ...defaultVisitLogRange(), search: '', disposition: 'all' })
+    const [newest] = await fetchVisitLog({
+      ...defaultVisitLogRange(),
+      search: '',
+      disposition: 'all',
+    })
     expect(screen.getAllByText(newest.complaint).length).toBeGreaterThan(0)
     expect(screen.queryByText('Visit recorded')).not.toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: /treatment/i })).not.toBeInTheDocument()

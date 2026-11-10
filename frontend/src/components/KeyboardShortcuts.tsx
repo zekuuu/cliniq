@@ -14,7 +14,11 @@ const SHORTCUTS = [
 
 function isTypingTarget(target: EventTarget | null): boolean {
   const element = target as HTMLElement | null
-  return element?.tagName === 'INPUT' || element?.tagName === 'TEXTAREA' || element?.isContentEditable === true
+  return (
+    element?.tagName === 'INPUT' ||
+    element?.tagName === 'TEXTAREA' ||
+    element?.isContentEditable === true
+  )
 }
 
 export function KeyboardShortcuts() {
@@ -40,7 +44,12 @@ export function KeyboardShortcuts() {
       }
       if (event.altKey && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
         const key = event.key.toLowerCase()
-        const destination = { n: '/visits/new', i: '/incidents/new', k: '/students?focus=search', d: '/' }[key]
+        const destination = {
+          n: '/visits/new',
+          i: '/incidents/new',
+          k: '/students?focus=search',
+          d: '/',
+        }[key]
         if (destination) {
           event.preventDefault()
           navigate(destination)
@@ -61,17 +70,25 @@ export function KeyboardShortcuts() {
   return (
     <>
       <Modal open={open} title="Keyboard shortcuts" onClose={() => setOpen(false)}>
-        <p className="text-sm text-text-secondary">Shortcuts work anywhere in the desktop app. They never replace the visible navigation.</p>
+        <p className="text-sm text-text-secondary">
+          Shortcuts work anywhere in the desktop app. They never replace the visible navigation.
+        </p>
         <dl className="mt-4 divide-y divide-border rounded-md border border-border">
           {SHORTCUTS.map(([keys, description]) => (
             <div key={keys} className="flex items-center justify-between gap-4 px-3 py-2.5 text-sm">
               <dt className="text-text-secondary">{description}</dt>
-              <dd><kbd className="rounded border border-border bg-surface px-2 py-1 font-mono text-xs font-semibold text-text-primary">{keys}</kbd></dd>
+              <dd>
+                <kbd className="rounded border border-border bg-surface px-2 py-1 font-mono text-xs font-semibold text-text-primary">
+                  {keys}
+                </kbd>
+              </dd>
             </div>
           ))}
         </dl>
         <div className="mt-4 flex justify-end">
-          <Button variant="neutral" onClick={() => setOpen(false)}>Close</Button>
+          <Button variant="neutral" onClick={() => setOpen(false)}>
+            Close
+          </Button>
         </div>
       </Modal>
     </>

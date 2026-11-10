@@ -1,5 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { checkStudentDuplicates, getVisitComplaintSuggestions, listPersonnel, listStudents, recordVisit, searchPersonnel, searchStudents } from './api'
+import {
+  checkStudentDuplicates,
+  getVisitComplaintSuggestions,
+  listPersonnel,
+  listStudents,
+  recordVisit,
+  searchPersonnel,
+  searchStudents,
+} from './api'
 import { getMockSessionUser } from './session'
 import { db, migratePersistedState, resetMockDb } from './store'
 
@@ -36,14 +44,21 @@ describe('names stored as parts', () => {
   beforeEach(() => resetMockDb())
 
   it('finds a student or staff member by any part, both parts in either order, or the full name', async () => {
-    for (const query of ['gian', 'quizon', 'quizon gian', 'Gian Quizon']) expect((await searchStudents(query)).map((s) => s.fullName)).toContain('Gian Quizon')
+    for (const query of ['gian', 'quizon', 'quizon gian', 'Gian Quizon'])
+      expect((await searchStudents(query)).map((s) => s.fullName)).toContain('Gian Quizon')
     const staff = (await listPersonnel())[0]
     expect((await searchPersonnel(staff.lastName)).map((p) => p.id)).toContain(staff.id)
-    expect((await searchPersonnel(`${staff.lastName} ${staff.firstName}`)).map((p) => p.id)).toContain(staff.id)
+    expect(
+      (await searchPersonnel(`${staff.lastName} ${staff.firstName}`)).map((p) => p.id),
+    ).toContain(staff.id)
   })
 
   it('sorts the Student List and the Staff List by last name, then first name', async () => {
-    const parts = (rows: Array<{ id: string }>) => rows.map((row) => { const r = [...db().students, ...db().personnel].find((x) => x.id === row.id)!; return `${r.lastName}, ${r.firstName}` })
+    const parts = (rows: Array<{ id: string }>) =>
+      rows.map((row) => {
+        const r = [...db().students, ...db().personnel].find((x) => x.id === row.id)!
+        return `${r.lastName}, ${r.firstName}`
+      })
     const students = parts(await listStudents({}))
     expect(students).toEqual([...students].sort((a, b) => a.localeCompare(b)))
     const staff = parts(await listPersonnel())
@@ -54,7 +69,9 @@ describe('names stored as parts', () => {
     const [first] = await listStudents({})
     const record = db().students.find((s) => s.id === first.id)!
     const typed = `  ${record.firstName.toUpperCase()}   ${record.lastName.replace(/a/g, 'á')} `
-    expect((await checkStudentDuplicates('', typed)).nameMatches.map((m) => m.id)).toEqual([record.id])
+    expect((await checkStudentDuplicates('', typed)).nameMatches.map((m) => m.id)).toEqual([
+      record.id,
+    ])
   })
 
   it('migrates a browser-saved full name into parts', () => {
@@ -63,7 +80,11 @@ describe('names stored as parts', () => {
     for (const key of ['firstName', 'lastName', 'middleName']) delete raw[key]
     raw.fullName = 'Maria Angela Reyes'
     const migrated = migratePersistedState(saved).state.students[0]
-    expect(migrated).toMatchObject({ firstName: 'Maria Angela', lastName: 'Reyes', middleName: null })
+    expect(migrated).toMatchObject({
+      firstName: 'Maria Angela',
+      lastName: 'Reyes',
+      middleName: null,
+    })
     expect(migrated).not.toHaveProperty('fullName')
   })
 })
@@ -81,7 +102,12 @@ describe('complaint suggestions', () => {
   it('adds a saved free-text complaint and never splits a known one by case', async () => {
     const actor = getMockSessionUser()
     const [student] = await searchStudents('000000260001')
-    const base = { studentId: student.id, treatment: 'Rested', disposition: 'returned_to_class' as const, followUp: null }
+    const base = {
+      studentId: student.id,
+      treatment: 'Rested',
+      disposition: 'returned_to_class' as const,
+      followUp: null,
+    }
     const saved = await recordVisit({ ...base, complaint: '  headache ' }, actor)
     expect(saved.visit.complaint).toBe('Headache')
     await recordVisit({ ...base, complaint: 'Nose  bleed' }, actor)

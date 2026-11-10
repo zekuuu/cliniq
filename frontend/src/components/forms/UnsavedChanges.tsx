@@ -5,7 +5,15 @@ import { Button } from '../ui/Button'
 import { Modal } from '../ui/Modal'
 
 /** The shared "Discard unsaved changes?" dialog (ADR-021, `cliniq-modal-patterns`). */
-export function DiscardChangesDialog({ open, onKeep, onDiscard }: { open: boolean; onKeep: () => void; onDiscard: () => void }) {
+export function DiscardChangesDialog({
+  open,
+  onKeep,
+  onDiscard,
+}: {
+  open: boolean
+  onKeep: () => void
+  onDiscard: () => void
+}) {
   return (
     <Modal open={open} title="Discard unsaved changes?" onClose={onKeep}>
       <p className="text-sm text-text-secondary">
@@ -24,16 +32,33 @@ export function DiscardChangesDialog({ open, onKeep, onDiscard }: { open: boolea
 }
 
 function RouteLeaveGuard({ dirty, allowed }: { dirty: boolean; allowed?: RefObject<boolean> }) {
-  const blocker = useBlocker(({ currentLocation, nextLocation }) => dirty && !allowed?.current && currentLocation.pathname !== nextLocation.pathname)
-  return <DiscardChangesDialog open={blocker.state === 'blocked'} onKeep={() => blocker.reset?.()} onDiscard={() => blocker.proceed?.()} />
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      dirty && !allowed?.current && currentLocation.pathname !== nextLocation.pathname,
+  )
+  return (
+    <DiscardChangesDialog
+      open={blocker.state === 'blocked'}
+      onKeep={() => blocker.reset?.()}
+      onDiscard={() => blocker.proceed?.()}
+    />
+  )
 }
 
 /**
  * Asks before browser Back, a sidebar link or an Alt shortcut leaves a dirty form (ADR-021).
  * `useBlocker` needs the data router `App` uses; under a plain test router there is nothing to guard.
  */
-export function UnsavedChangesGuard({ dirty, allowed }: { dirty: boolean; allowed?: RefObject<boolean> }) {
+export function UnsavedChangesGuard({
+  dirty,
+  allowed,
+}: {
+  dirty: boolean
+  allowed?: RefObject<boolean>
+}) {
   // The idle sign-out warns that unsaved changes will be lost (ADR-078).
   useEffect(() => (dirty ? markFormDirty() : undefined), [dirty])
-  return useContext(UNSAFE_DataRouterContext) ? <RouteLeaveGuard dirty={dirty} allowed={allowed} /> : null
+  return useContext(UNSAFE_DataRouterContext) ? (
+    <RouteLeaveGuard dirty={dirty} allowed={allowed} />
+  ) : null
 }

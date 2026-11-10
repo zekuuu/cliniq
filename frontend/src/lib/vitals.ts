@@ -27,9 +27,12 @@ export function unusualReadings(readings: TypedReadings, ranges: VitalsWarningRa
   const notes: string[] = []
   if (outside(readings.temperatureC, ranges.temperatureC))
     notes.push(`Temperature ${formatDecimal(readings.temperatureC ?? '')} °C looks unusual.`)
-  if (outside(readings.pulseBpm, ranges.pulseBpm)) notes.push(`Pulse ${formatDecimal(readings.pulseBpm ?? '')} bpm looks unusual.`)
+  if (outside(readings.pulseBpm, ranges.pulseBpm))
+    notes.push(`Pulse ${formatDecimal(readings.pulseBpm ?? '')} bpm looks unusual.`)
   if (outside(readings.oxygenSaturationPct, ranges.oxygenSaturationPct))
-    notes.push(`Oxygen saturation ${formatDecimal(readings.oxygenSaturationPct ?? '')}% looks unusual.`)
+    notes.push(
+      `Oxygen saturation ${formatDecimal(readings.oxygenSaturationPct ?? '')}% looks unusual.`,
+    )
   return notes
 }
 
@@ -38,7 +41,10 @@ export function unusualReadings(readings: TypedReadings, ranges: VitalsWarningRa
  * Tuesday, October 20, 2026; the clinician to confirm). A reading the sanity check already calls
  * unusual (a typing slip such as 370) gets that note instead, never both.
  */
-export function feverNote(temperatureC: string | undefined, ranges: VitalsWarningRanges): string | null {
+export function feverNote(
+  temperatureC: string | undefined,
+  ranges: VitalsWarningRanges,
+): string | null {
   const value = temperatureC?.trim() ?? ''
   const reading = Number(value)
   if (value === '' || !Number.isFinite(reading) || reading < ranges.feverFromC) return null
@@ -47,7 +53,12 @@ export function feverNote(temperatureC: string | undefined, ranges: VitalsWarnin
 }
 
 /** The incident's four optional readings, in form and display order ("take what the case needs"). */
-export const READING_KEYS = ['temperatureC', 'pulseBpm', 'bloodPressure', 'oxygenSaturationPct'] as const
+export const READING_KEYS = [
+  'temperatureC',
+  'pulseBpm',
+  'bloodPressure',
+  'oxygenSaturationPct',
+] as const
 export type ReadingKey = (typeof READING_KEYS)[number]
 export type ReadingValues = Record<ReadingKey, string>
 
@@ -72,7 +83,9 @@ export function storedReadings(values: ReadingValues): Record<string, string | n
 }
 
 /** The readings a record holds, in display order; Stage 2's treatment notes live in `vitals` but aren't one. */
-export function takenReadings(vitals: Record<string, string | number>): Array<[string, string | number]> {
+export function takenReadings(
+  vitals: Record<string, string | number>,
+): Array<[string, string | number]> {
   const order = (key: string) => {
     const index = (READING_KEYS as readonly string[]).indexOf(key)
     return index === -1 ? READING_KEYS.length : index
@@ -95,13 +108,19 @@ export function readingText(key: string, value: string | number): string {
  * Null when neither gives a group, so no usual-range note is shown.
  */
 export function ageGroupOf(
-  patient: { kind: 'student'; gradeLevel: string; birthDate?: ISODate | null } | { kind: 'personnel' },
+  patient:
+    { kind: 'student'; gradeLevel: string; birthDate?: ISODate | null } | { kind: 'personnel' },
   onDate: ISODate,
   usual?: VitalsUsualRanges,
 ): AgeGroup | null {
   if (patient.kind === 'personnel') return 'adult'
   const age = ageOn(patient.birthDate, onDate)
-  if (usual && age !== null) return age < usual.grades1to6FromAge ? 'kinder' : age < usual.grades7to12FromAge ? 'grades1to6' : 'grades7to12'
+  if (usual && age !== null)
+    return age < usual.grades1to6FromAge
+      ? 'kinder'
+      : age < usual.grades7to12FromAge
+        ? 'grades1to6'
+        : 'grades7to12'
   if (patient.gradeLevel === 'Kinder') return 'kinder'
   const grade = Number(patient.gradeLevel.match(/\d+/)?.[0])
   return grade >= 1 && grade <= 6 ? 'grades1to6' : grade >= 7 && grade <= 12 ? 'grades7to12' : null
@@ -111,23 +130,35 @@ export function ageGroupOf(
  * Readings outside the usual range for the age group (ADR-051): a soft note, never a block. A reading
  * the sanity check already calls unusual (a likely typing slip) gets only that stronger note.
  */
-export function usualRangeNotes(readings: TypedReadings, ranges: VitalsWarningRanges, group: AgeGroup | null): string[] {
+export function usualRangeNotes(
+  readings: TypedReadings,
+  ranges: VitalsWarningRanges,
+  group: AgeGroup | null,
+): string[] {
   const usual = ranges.usual
   if (!usual || !group) return []
   const slips = unusualReadings(readings, ranges).join(' ')
-  const value = (text: string | undefined) => (text !== undefined && text.trim() !== '' && Number.isFinite(Number(text)) ? Number(text) : null)
+  const value = (text: string | undefined) =>
+    text !== undefined && text.trim() !== '' && Number.isFinite(Number(text)) ? Number(text) : null
   const outside = (reading: number, range: VitalRange) => reading < range.min || reading > range.max
   const notes: string[] = []
   const age = usual.byAgeGroup[group]
   const temperature = value(readings.temperatureC)
   if (temperature !== null && !slips.includes('Temperature') && temperature < usual.temperatureMinC)
-    notes.push(`temperature ${formatDecimal(temperature)} °C (usual from ${formatDecimal(usual.temperatureMinC)} °C)`)
+    notes.push(
+      `temperature ${formatDecimal(temperature)} °C (usual from ${formatDecimal(usual.temperatureMinC)} °C)`,
+    )
   const pulse = value(readings.pulseBpm)
   if (pulse !== null && !slips.includes('Pulse') && outside(pulse, age.pulseBpm))
     notes.push(`pulse ${pulse} bpm (usual ${age.pulseBpm.min} to ${age.pulseBpm.max})`)
   const pressure = readings.bloodPressure?.trim().match(/^(\d{2,3})\s*\/\s*(\d{2,3})$/)
-  if (pressure && (outside(Number(pressure[1]), age.systolic) || outside(Number(pressure[2]), age.diastolic)))
-    notes.push(`blood pressure ${pressure[1]}/${pressure[2]} mmHg (usual ${age.systolic.min} to ${age.systolic.max} over ${age.diastolic.min} to ${age.diastolic.max})`)
+  if (
+    pressure &&
+    (outside(Number(pressure[1]), age.systolic) || outside(Number(pressure[2]), age.diastolic))
+  )
+    notes.push(
+      `blood pressure ${pressure[1]}/${pressure[2]} mmHg (usual ${age.systolic.min} to ${age.systolic.max} over ${age.diastolic.min} to ${age.diastolic.max})`,
+    )
   const oxygen = value(readings.oxygenSaturationPct)
   if (oxygen !== null && !slips.includes('Oxygen') && oxygen < usual.oxygenSaturationMinPct)
     notes.push(`oxygen saturation ${oxygen}% (usual from ${usual.oxygenSaturationMinPct}%)`)

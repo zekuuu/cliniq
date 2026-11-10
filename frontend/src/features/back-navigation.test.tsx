@@ -71,7 +71,9 @@ describe('Back after a save never returns to the submitted form', () => {
   it('Edit Student: Save Changes, then Back from the profile skips the edit form', async () => {
     const user = userEvent.setup({ delay: null })
     // Edit opens from the profile, so the save returns through that same history entry.
-    renderAfterPrevious(`/students/${STUDENT}/edit`, <StudentFormPage studentId={STUDENT} />, [`/students/${STUDENT}`])
+    renderAfterPrevious(`/students/${STUDENT}/edit`, <StudentFormPage studentId={STUDENT} />, [
+      `/students/${STUDENT}`,
+    ])
     await screen.findByRole('heading', { name: 'Edit Student' })
     await user.type(screen.getByLabelText(/contact name/i), 'x')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))

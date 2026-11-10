@@ -1,11 +1,4 @@
-import {
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { cn } from '../../lib/cn'
 import {
   addDays,
@@ -172,7 +165,11 @@ export function DatePicker({
   // Keeps the cursor on an enabled value, so it can always take focus (a disabled cell can't, and the
   // grid then never receives arrow keys).
   const clamp = (day: ISODate): ISODate =>
-    minDay !== undefined && day < minDay ? minDay : maxDay !== undefined && day > maxDay ? maxDay : day
+    minDay !== undefined && day < minDay
+      ? minDay
+      : maxDay !== undefined && day > maxDay
+        ? maxDay
+        : day
 
   useEffect(() => {
     function onPointerDown(event: PointerEvent) {
@@ -323,16 +320,40 @@ export function DatePicker({
         : `${yearPageStart} – ${yearPageStart + YEARS_PER_PAGE - 1}`
   const previous =
     view === 'days'
-      ? { label: 'Previous month', to: addMonths(cursor, -1), disabled: monthDisabled(addMonths(startOfMonth(cursor), -1)) }
+      ? {
+          label: 'Previous month',
+          to: addMonths(cursor, -1),
+          disabled: monthDisabled(addMonths(startOfMonth(cursor), -1)),
+        }
       : view === 'months'
-        ? { label: 'Previous year', to: withYear(cursor, yearOf(cursor) - 1), disabled: yearDisabled(yearOf(cursor) - 1) }
-        : { label: 'Previous years', to: withYear(cursor, yearOf(cursor) - YEARS_PER_PAGE), disabled: yearDisabled(yearPageStart - 1) }
+        ? {
+            label: 'Previous year',
+            to: withYear(cursor, yearOf(cursor) - 1),
+            disabled: yearDisabled(yearOf(cursor) - 1),
+          }
+        : {
+            label: 'Previous years',
+            to: withYear(cursor, yearOf(cursor) - YEARS_PER_PAGE),
+            disabled: yearDisabled(yearPageStart - 1),
+          }
   const next =
     view === 'days'
-      ? { label: 'Next month', to: addMonths(cursor, 1), disabled: monthDisabled(addMonths(startOfMonth(cursor), 1)) }
+      ? {
+          label: 'Next month',
+          to: addMonths(cursor, 1),
+          disabled: monthDisabled(addMonths(startOfMonth(cursor), 1)),
+        }
       : view === 'months'
-        ? { label: 'Next year', to: withYear(cursor, yearOf(cursor) + 1), disabled: yearDisabled(yearOf(cursor) + 1) }
-        : { label: 'Next years', to: withYear(cursor, yearOf(cursor) + YEARS_PER_PAGE), disabled: yearDisabled(yearPageStart + YEARS_PER_PAGE) }
+        ? {
+            label: 'Next year',
+            to: withYear(cursor, yearOf(cursor) + 1),
+            disabled: yearDisabled(yearOf(cursor) + 1),
+          }
+        : {
+            label: 'Next years',
+            to: withYear(cursor, yearOf(cursor) + YEARS_PER_PAGE),
+            disabled: yearDisabled(yearPageStart + YEARS_PER_PAGE),
+          }
 
   const display = selected
     ? isMonth
@@ -346,7 +367,8 @@ export function DatePicker({
       ref={rootRef}
       onBlur={(event) => {
         // Tab out closes the calendar, as an outside click does; otherwise it covers what gets focus.
-        if (event.relatedTarget && !rootRef.current?.contains(event.relatedTarget as Node)) setOpen(false)
+        if (event.relatedTarget && !rootRef.current?.contains(event.relatedTarget as Node))
+          setOpen(false)
       }}
       className={cn('flex flex-col gap-1', className)}
     >
@@ -375,10 +397,17 @@ export function DatePicker({
           onKeyDown={onTriggerKeyDown}
           className={dropdownTriggerClassName({
             invalid: Boolean(error),
-            className: 'w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green',
+            className:
+              'w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green',
           })}
         >
-          <span id={valueId} className={cn('min-w-0 flex-1 truncate text-left', !selected && 'font-normal text-text-secondary')}>
+          <span
+            id={valueId}
+            className={cn(
+              'min-w-0 flex-1 truncate text-left',
+              !selected && 'font-normal text-text-secondary',
+            )}
+          >
             {display}
           </span>
         </button>
@@ -409,13 +438,19 @@ export function DatePicker({
               <button
                 type="button"
                 aria-live="polite"
-                aria-label={view === 'years' ? heading : `${heading}, choose ${view === 'days' ? 'month' : 'year'}`}
+                aria-label={
+                  view === 'years'
+                    ? heading
+                    : `${heading}, choose ${view === 'days' ? 'month' : 'year'}`
+                }
                 disabled={view === 'years'}
                 onClick={zoomOut}
                 className="inline-flex h-8 cursor-pointer items-center gap-1 rounded-md px-2 text-sm font-semibold text-text-primary transition-colors duration-150 hover:bg-surface hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-brand-green disabled:cursor-default disabled:hover:bg-transparent disabled:hover:text-text-primary motion-reduce:transition-none"
               >
                 {heading}
-                {view !== 'years' && <Icon name="chevronDown" size={12} className="text-brand-green-dark" />}
+                {view !== 'years' && (
+                  <Icon name="chevronDown" size={12} className="text-brand-green-dark" />
+                )}
               </button>
               <button
                 type="button"
@@ -439,7 +474,12 @@ export function DatePicker({
               />
             )}
             {view === 'months' && (
-              <div role="group" aria-label={`Months of ${yearOf(cursor)}`} onKeyDown={onGridKeyDown} className="grid grid-cols-4 gap-1">
+              <div
+                role="group"
+                aria-label={`Months of ${yearOf(cursor)}`}
+                onKeyDown={onGridKeyDown}
+                className="grid grid-cols-4 gap-1"
+              >
                 {Array.from({ length: 12 }, (_, index) => {
                   const day = `${yearOf(cursor)}-${String(index + 1).padStart(2, '0')}-01`
                   const isCursor = monthKey(day) === monthKey(cursor)
@@ -468,7 +508,12 @@ export function DatePicker({
               </div>
             )}
             {view === 'years' && (
-              <div role="group" aria-label={heading} onKeyDown={onGridKeyDown} className="grid grid-cols-4 gap-1">
+              <div
+                role="group"
+                aria-label={heading}
+                onKeyDown={onGridKeyDown}
+                className="grid grid-cols-4 gap-1"
+              >
                 {Array.from({ length: YEARS_PER_PAGE }, (_, index) => {
                   const year = yearPageStart + index
                   const isCursor = year === yearOf(cursor)

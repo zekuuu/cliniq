@@ -4,7 +4,15 @@ import { DRILL_THROUGH_STATE } from '../../hooks/useGoBack'
 import { cn } from '../../lib/cn'
 import { Icon } from '../icons/Icon'
 
-export function ListItemLink({ to, children, className }: { to: To; children: ReactNode; className?: string }) {
+export function ListItemLink({
+  to,
+  children,
+  className,
+}: {
+  to: To
+  children: ReactNode
+  className?: string
+}) {
   return (
     <Link
       to={to}

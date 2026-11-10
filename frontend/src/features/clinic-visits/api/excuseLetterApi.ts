@@ -45,18 +45,28 @@ export function defaultBody(student: Student, visit: Visit, period: ExcusedPerio
 }
 
 /** `visitId` comes from `/visits/:visitId/excuse-letter`; omitted, the latest active visit is used. */
-export async function fetchExcuseLetterContext(visitId?: string, letterId?: string): Promise<ExcuseLetterContext> {
+export async function fetchExcuseLetterContext(
+  visitId?: string,
+  letterId?: string,
+): Promise<ExcuseLetterContext> {
   const visit = visitId ? await getVisit(visitId) : await getLatestVisit()
   const [student, approval] = await Promise.all([
     getStudent(visit.studentId ?? ''),
     // `letterId` opens one stored letter (a superseded one, say); otherwise the visit's current letter.
-    letterId ? getExcuseLetterById(letterId).then((letter) => (letter.visitId === visit.id ? letter : null)) : getExcuseLetterApproval(visit.id),
+    letterId
+      ? getExcuseLetterById(letterId).then((letter) =>
+          letter.visitId === visit.id ? letter : null,
+        )
+      : getExcuseLetterApproval(visit.id),
   ])
   const visitDate = visit.dateTime.slice(0, 10)
   const period: ExcusedPeriod = approval
     ? { excusedFrom: approval.excusedFrom, excusedUntil: approval.excusedUntil }
     : visit.excuseLetterDraft
-      ? { excusedFrom: visit.excuseLetterDraft.excusedFrom, excusedUntil: visit.excuseLetterDraft.excusedUntil }
+      ? {
+          excusedFrom: visit.excuseLetterDraft.excusedFrom,
+          excusedUntil: visit.excuseLetterDraft.excusedUntil,
+        }
       : { excusedFrom: visitDate, excusedUntil: visitDate }
   const checkedBy = approval
     ? await getUser(approval.approvedByUserId).then(
@@ -92,7 +102,11 @@ export interface LetterApproval {
 }
 
 /** Stores the letter with its final wording (ADR-049, D6); the data layer writes the approval's audit entry. */
-export async function approveExcuseLetter(context: ExcuseLetterContext, letter: LetterApproval, actor?: SessionUser): Promise<void> {
+export async function approveExcuseLetter(
+  context: ExcuseLetterContext,
+  letter: LetterApproval,
+  actor?: SessionUser,
+): Promise<void> {
   await approveInLayer(
     context.visit.id,
     {
@@ -108,6 +122,10 @@ export async function approveExcuseLetter(context: ExcuseLetterContext, letter: 
 }
 
 /** Marks the approved letter Superseded (kept) and opens a new draft with its period and note. */
-export async function issueReplacement(visitId: string, reason: string, actor?: SessionUser): Promise<void> {
+export async function issueReplacement(
+  visitId: string,
+  reason: string,
+  actor?: SessionUser,
+): Promise<void> {
   await issueReplacementExcuseLetter(visitId, reason, actor)
 }

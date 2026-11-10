@@ -2,9 +2,24 @@ import { useState } from 'react'
 import { Button, Icon, Modal } from '../../components'
 
 const DEMO_ACCOUNTS = [
-  { role: 'School Clinician', username: 'demo.nurse', password: 'demo-nurse', note: 'Standard Staff access' },
-  { role: 'Admin / Principal', username: 'demo.principal', password: 'demo-admin', note: 'Reports and Dashboard access' },
-  { role: 'School Clinician', username: 'demo.new', password: 'demo-change', note: 'Force Password Change scenario' },
+  {
+    role: 'School Clinician',
+    username: 'demo.nurse',
+    password: 'demo-nurse',
+    note: 'Standard Staff access',
+  },
+  {
+    role: 'Admin / Principal',
+    username: 'demo.principal',
+    password: 'demo-admin',
+    note: 'Reports and Dashboard access',
+  },
+  {
+    role: 'School Clinician',
+    username: 'demo.new',
+    password: 'demo-change',
+    note: 'Force Password Change scenario',
+  },
 ]
 
 /**
@@ -29,11 +44,19 @@ export function DemoAccounts() {
       {/* Capped and scrollable: on a phone the four accounts are taller than the screen, and the
           shared Modal's overlay doesn't scroll, so its Close controls would otherwise be unreachable. */}
       <Modal open={open} title="Demo accounts" onClose={() => setOpen(false)}>
-        <p className="text-sm text-text-secondary">Frontend demo only: authentication is simulated until the Laravel Sanctum API is connected.</p>
-        <p className="mt-1 text-xs text-text-secondary">Synthetic credentials only. These are not real clinic accounts or production passwords.</p>
+        <p className="text-sm text-text-secondary">
+          Frontend demo only: authentication is simulated until the Laravel Sanctum API is
+          connected.
+        </p>
+        <p className="mt-1 text-xs text-text-secondary">
+          Synthetic credentials only. These are not real clinic accounts or production passwords.
+        </p>
         <div className="mt-4 grid gap-2">
           {DEMO_ACCOUNTS.map((account) => (
-            <div key={account.username} className="rounded-md border border-border bg-surface px-3 py-2 text-xs">
+            <div
+              key={account.username}
+              className="rounded-md border border-border bg-surface px-3 py-2 text-xs"
+            >
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                 <span className="font-semibold text-text-primary">{account.role}</span>
                 <span className="text-text-secondary">{account.note}</span>
@@ -48,7 +71,9 @@ export function DemoAccounts() {
           ))}
         </div>
         <div className="mt-4 flex justify-end">
-          <Button variant="neutral" data-autofocus onClick={() => setOpen(false)}>Close</Button>
+          <Button variant="neutral" data-autofocus onClick={() => setOpen(false)}>
+            Close
+          </Button>
         </div>
       </Modal>
     </>

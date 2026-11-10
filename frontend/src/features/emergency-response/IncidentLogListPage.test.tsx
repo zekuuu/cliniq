@@ -9,7 +9,10 @@ import { maskLrn } from '../../lib/lrn'
 describe('Incident Log', () => {
   it('links to New Incident from the page header', async () => {
     renderWithRouter(<IncidentLogListPage />)
-    expect(await screen.findByRole('link', { name: 'New Incident' })).toHaveAttribute('href', '/incidents/new')
+    expect(await screen.findByRole('link', { name: 'New Incident' })).toHaveAttribute(
+      'href',
+      '/incidents/new',
+    )
   })
 
   it('does not repeat the all-incidents scope in the page header', async () => {
@@ -37,13 +40,20 @@ describe('Incident Log', () => {
 
   it('searches incidents by actual LRN', async () => {
     const user = userEvent.setup()
-    const all = await fetchIncidentLog({ ...defaultIncidentLogRange(), search: '', completion: 'all', patient: 'students' })
+    const all = await fetchIncidentLog({
+      ...defaultIncidentLogRange(),
+      search: '',
+      completion: 'all',
+      patient: 'students',
+    })
     const [incident] = all
     const expected = all.filter((row) => row.patient.number === incident.patient.number).length
     renderWithRouter(<IncidentLogListPage />)
     await screen.findByRole('heading', { name: 'Incident Log' })
     await user.type(screen.getByLabelText('Search'), incident.patient.number)
-    expect(await screen.findByText(`${expected} record${expected === 1 ? '' : 's'} shown`)).toBeInTheDocument()
+    expect(
+      await screen.findByText(`${expected} record${expected === 1 ? '' : 's'} shown`),
+    ).toBeInTheDocument()
     expect(screen.getAllByText(maskLrn(incident.patient.number))).toHaveLength(expected)
   })
 

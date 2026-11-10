@@ -28,7 +28,10 @@ function page<K extends string, P>(load: () => Promise<Record<K, ComponentType<P
 
 const DashboardPage = page(() => import('../features/dashboard/DashboardPage'), 'DashboardPage')
 const CalendarPage = page(() => import('../features/dashboard/CalendarPage'), 'CalendarPage')
-const StudentImportPage = page(() => import('../features/student-records/StudentImportPage'), 'StudentImportPage')
+const StudentImportPage = page(
+  () => import('../features/student-records/StudentImportPage'),
+  'StudentImportPage',
+)
 const StudentListPage = page(
   () => import('../features/student-records/StudentListPage'),
   'StudentListPage',
@@ -46,10 +49,19 @@ const StudentProfilePage = page(
   'StudentProfilePage',
 )
 const StaffListPage = page(() => import('../features/staff-records/StaffListPage'), 'StaffListPage')
-const StaffProfilePage = page(() => import('../features/staff-records/StaffProfilePage'), 'StaffProfilePage')
+const StaffProfilePage = page(
+  () => import('../features/staff-records/StaffProfilePage'),
+  'StaffProfilePage',
+)
 const StaffFormPage = page(() => import('../features/staff-records/StaffFormPage'), 'StaffFormPage')
-const StaffImportPage = page(() => import('../features/staff-records/StaffImportPage'), 'StaffImportPage')
-const StaffIncompleteRecordsPage = page(() => import('../features/staff-records/StaffIncompleteRecordsPage'), 'StaffIncompleteRecordsPage')
+const StaffImportPage = page(
+  () => import('../features/staff-records/StaffImportPage'),
+  'StaffImportPage',
+)
+const StaffIncompleteRecordsPage = page(
+  () => import('../features/staff-records/StaffIncompleteRecordsPage'),
+  'StaffIncompleteRecordsPage',
+)
 const VisitLogListPage = page(
   () => import('../features/clinic-visits/VisitLogListPage'),
   'VisitLogListPage',
@@ -82,7 +94,10 @@ const InventoryListPage = page(
   () => import('../features/inventory/InventoryListPage'),
   'InventoryListPage',
 )
-const InventoryHistoryPage = page(() => import('../features/inventory/InventoryHistoryPage'), 'InventoryHistoryPage')
+const InventoryHistoryPage = page(
+  () => import('../features/inventory/InventoryHistoryPage'),
+  'InventoryHistoryPage',
+)
 const InventoryFormPage = page(
   () => import('../features/inventory/InventoryFormPage'),
   'InventoryFormPage',
@@ -96,11 +111,23 @@ const FollowUpListPage = page(
   'FollowUpListPage',
 )
 const ReportsPage = page(() => import('../features/reports/ReportsPage'), 'ReportsPage')
-const AdminReportsPage = page(() => import('../features/reports/AdminReportsPage'), 'AdminReportsPage')
+const AdminReportsPage = page(
+  () => import('../features/reports/AdminReportsPage'),
+  'AdminReportsPage',
+)
 const SettingsPage = page(() => import('../features/settings/SettingsPage'), 'SettingsPage')
-const SportsReportListPage = page(() => import('../features/reports/SportsReportListPage'), 'SportsReportListPage')
-const SportsReportPage = page(() => import('../features/reports/SportsReportPage'), 'SportsReportPage')
-const SportsReportFormPage = page(() => import('../features/reports/SportsReportFormPage'), 'SportsReportFormPage')
+const SportsReportListPage = page(
+  () => import('../features/reports/SportsReportListPage'),
+  'SportsReportListPage',
+)
+const SportsReportPage = page(
+  () => import('../features/reports/SportsReportPage'),
+  'SportsReportPage',
+)
+const SportsReportFormPage = page(
+  () => import('../features/reports/SportsReportFormPage'),
+  'SportsReportFormPage',
+)
 const ParentNotificationPage = page(
   () => import('../features/emergency-response/ParentNotificationPage'),
   'ParentNotificationPage',
@@ -117,7 +144,10 @@ const BackupStatusPage = page(
 )
 const AuditLogPage = page(() => import('../features/audit-log/AuditLogPage'), 'AuditLogPage')
 const ArchivePage = page(() => import('../features/archive/ArchivePage'), 'ArchivePage')
-const ChangePasswordPage = page(() => import('../features/auth/ChangePasswordPage'), 'ChangePasswordPage')
+const ChangePasswordPage = page(
+  () => import('../features/auth/ChangePasswordPage'),
+  'ChangePasswordPage',
+)
 const PrivacyPolicyPage = page(
   () => import('../features/legal/PrivacyPolicyPage'),
   'PrivacyPolicyPage',
@@ -434,7 +464,12 @@ const APP_ROUTES: AppRoute[] = [
     roles: ['staff', 'admin'],
     nav: 'reports',
     // ADR-077: the Admin gets the month drop-down and the view-only monthly reports, nothing else.
-    render: (viewer) => (viewer.role === 'admin' ? <AdminReportsPage viewer={viewer} /> : <ReportsPage viewer={viewer} />),
+    render: (viewer) =>
+      viewer.role === 'admin' ? (
+        <AdminReportsPage viewer={viewer} />
+      ) : (
+        <ReportsPage viewer={viewer} />
+      ),
   },
   // Sports Reports (ADR-034): the clinician's only; the Admin/Principal can't open them.
   {
@@ -554,7 +589,12 @@ function RouteLoading() {
   )
 }
 
-function withShell(user: SessionUser, nav: NavKey | null, content: ReactNode, onLogout: (idleMinutes?: number) => void) {
+function withShell(
+  user: SessionUser,
+  nav: NavKey | null,
+  content: ReactNode,
+  onLogout: (idleMinutes?: number) => void,
+) {
   return (
     <AppShell user={user} active={nav} onLogout={onLogout}>
       {content}
@@ -624,7 +664,10 @@ export function AppRoutes({
             element={
               !allowed ? (
                 // ADR-077: a Staff-only report route (the Sports Report) sends the Admin to the Admin's Reports page.
-                <Navigate to={route.path.startsWith(`${paths.reports}/`) ? paths.reports : paths.dashboard} replace />
+                <Navigate
+                  to={route.path.startsWith(`${paths.reports}/`) ? paths.reports : paths.dashboard}
+                  replace
+                />
               ) : (
                 withShell(user, route.nav, content, onLogout)
               )

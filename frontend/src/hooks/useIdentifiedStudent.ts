@@ -11,7 +11,8 @@ import type { Student } from '../types/entities'
  * `K` is what a pick hands it: a student id, or a patient search result.
  */
 /** The inline message when no student is chosen. */
-export const CHOOSE_STUDENT_MESSAGE = 'Choose the student: type the LRN or name, then pick from the list.'
+export const CHOOSE_STUDENT_MESSAGE =
+  'Choose the student: type the LRN or name, then pick from the list.'
 
 export function useIdentifiedStudent<T = Student, K = string>(
   /** A reopened incident's patient; may arrive once the form's data has loaded. */

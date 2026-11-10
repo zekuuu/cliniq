@@ -49,10 +49,30 @@ export function buttonClassName({
 
 /** Each action verb's "-ing" form, for the busy label ("Save Visit" reads "Saving…"). */
 const BUSY_VERBS: Record<string, string> = {
-  add: 'Adding', apply: 'Applying', approve: 'Approving', back: 'Backing up', change: 'Changing', complete: 'Completing',
-  confirm: 'Confirming', create: 'Creating', disable: 'Disabling', dispense: 'Dispensing', enable: 'Enabling', import: 'Importing',
-  mark: 'Marking', record: 'Recording', report: 'Reporting', reset: 'Resetting', restock: 'Restocking', save: 'Saving',
-  send: 'Sending', set: 'Setting', sign: 'Signing in', submit: 'Submitting', turn: 'Turning', update: 'Updating',
+  add: 'Adding',
+  apply: 'Applying',
+  approve: 'Approving',
+  back: 'Backing up',
+  change: 'Changing',
+  complete: 'Completing',
+  confirm: 'Confirming',
+  create: 'Creating',
+  disable: 'Disabling',
+  dispense: 'Dispensing',
+  enable: 'Enabling',
+  import: 'Importing',
+  mark: 'Marking',
+  record: 'Recording',
+  report: 'Reporting',
+  reset: 'Resetting',
+  restock: 'Restocking',
+  save: 'Saving',
+  send: 'Sending',
+  set: 'Setting',
+  sign: 'Signing in',
+  submit: 'Submitting',
+  turn: 'Turning',
+  update: 'Updating',
 }
 
 /**
@@ -66,10 +86,30 @@ export function busyLabel(label: string): string | null {
 
 /** Each action verb's past form, for the done label ("Save Changes" reads "Saved"). */
 const DONE_VERBS: Record<string, string> = {
-  add: 'Added', apply: 'Applied', approve: 'Approved', back: 'Backed up', change: 'Changed', complete: 'Completed',
-  confirm: 'Confirmed', copy: 'Copied', create: 'Created', disable: 'Disabled', dispense: 'Dispensed', enable: 'Enabled',
-  import: 'Imported', mark: 'Marked', record: 'Recorded', report: 'Reported', reset: 'Reset', restock: 'Restocked',
-  save: 'Saved', send: 'Sent', set: 'Set', submit: 'Submitted', update: 'Updated', verify: 'Verified',
+  add: 'Added',
+  apply: 'Applied',
+  approve: 'Approved',
+  back: 'Backed up',
+  change: 'Changed',
+  complete: 'Completed',
+  confirm: 'Confirmed',
+  copy: 'Copied',
+  create: 'Created',
+  disable: 'Disabled',
+  dispense: 'Dispensed',
+  enable: 'Enabled',
+  import: 'Imported',
+  mark: 'Marked',
+  record: 'Recorded',
+  report: 'Reported',
+  reset: 'Reset',
+  restock: 'Restocked',
+  save: 'Saved',
+  send: 'Sent',
+  set: 'Set',
+  submit: 'Submitted',
+  update: 'Updated',
+  verify: 'Verified',
 }
 
 /**

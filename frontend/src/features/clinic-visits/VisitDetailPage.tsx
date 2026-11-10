@@ -33,16 +33,33 @@ import { formatDate, formatDateRange, formatDateTime, todayISO } from '../../lib
 import { draftsFrom, formatItemGiven } from '../../lib/itemsGiven'
 import { formatDecimal } from '../../lib/numbers'
 import { ageGroupOf } from '../../lib/vitals'
-import { getMockSessionUser, outcomeChangedSinceApproval, StockRuleError, type SessionUser } from '../../lib/mock-db'
+import {
+  getMockSessionUser,
+  outcomeChangedSinceApproval,
+  StockRuleError,
+  type SessionUser,
+} from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
 import type { Disposition } from '../../types/entities'
 import { ComplaintField } from './ComplaintField'
 import { ExtraComplaintsField } from './ExtraComplaintsField'
 import { MedicineInNotesHint } from './MedicineInNotesHint'
 import { DispositionFields } from './DispositionFields'
-import { dispositionErrors, emptyDispositionValues, hasExcuseLetter, type DispositionErrors } from './dispositionValues'
+import {
+  dispositionErrors,
+  emptyDispositionValues,
+  hasExcuseLetter,
+  type DispositionErrors,
+} from './dispositionValues'
 import { LogbookFields } from './LogbookFields'
-import { currentClock, filledLogbookCount, formatClock, logbookErrors, type LogbookErrors, type LogbookValues } from './logbookValues'
+import {
+  currentClock,
+  filledLogbookCount,
+  formatClock,
+  logbookErrors,
+  type LogbookErrors,
+  type LogbookValues,
+} from './logbookValues'
 import {
   fetchVisitDetail,
   markEnteredInError,
@@ -51,7 +68,11 @@ import {
   type VisitDetail,
   type VisitDetailValues,
 } from './api/visitDetailApi'
-import { dispositionLabel, dispositionOptionsFor, DISPOSITION_TONES as dispositionTone } from '../../lib/dispositions'
+import {
+  dispositionLabel,
+  dispositionOptionsFor,
+  DISPOSITION_TONES as dispositionTone,
+} from '../../lib/dispositions'
 import { RELEASED_TO, SYMPTOM, symptom, symptoms } from '../../lib/labels'
 
 interface Errors extends DispositionErrors, LogbookErrors {
@@ -146,8 +167,18 @@ function TextareaField({
 function VisitPrint({ visit, viewer }: { visit: VisitDetail; viewer: SessionUser }) {
   const { student } = visit
   const letter = visit.approval ?? visit.excuseLetterDraft
-  const stayHome = letter?.stayHomeUntilCleared ? ['Stay home until cleared.', letter.stayHomeNote?.trim()].filter(Boolean).join(' ') : null
-  const collected = visit.collectedBy && [visit.collectedBy.name, visit.collectedBy.relationship && `(${visit.collectedBy.relationship})`, visit.collectedBy.time && formatClock(visit.collectedBy.time)].filter(Boolean).join(' ')
+  const stayHome = letter?.stayHomeUntilCleared
+    ? ['Stay home until cleared.', letter.stayHomeNote?.trim()].filter(Boolean).join(' ')
+    : null
+  const collected =
+    visit.collectedBy &&
+    [
+      visit.collectedBy.name,
+      visit.collectedBy.relationship && `(${visit.collectedBy.relationship})`,
+      visit.collectedBy.time && formatClock(visit.collectedBy.time),
+    ]
+      .filter(Boolean)
+      .join(' ')
   return (
     <PrintDocument
       title="Visit Details"
@@ -156,64 +187,88 @@ function VisitPrint({ visit, viewer }: { visit: VisitDetail; viewer: SessionUser
     >
       {/* A voided visit says so on paper, like the void excuse letter and the Stage 1 incident notice. */}
       {visit.enteredInError && (
-        <p data-print-void className="mb-[4mm] border-2 border-text-primary px-[3mm] py-[2mm] text-[11pt] font-bold">
-          Entered in error. This visit is not valid. Reason: {visit.enteredInError.reason}. Marked by {visit.enteredInErrorBy ?? 'Unknown user'}, {formatDateTime(visit.enteredInError.at)}.
+        <p
+          data-print-void
+          className="mb-[4mm] border-2 border-text-primary px-[3mm] py-[2mm] text-[11pt] font-bold"
+        >
+          Entered in error. This visit is not valid. Reason: {visit.enteredInError.reason}. Marked
+          by {visit.enteredInErrorBy ?? 'Unknown user'}, {formatDateTime(visit.enteredInError.at)}.
         </p>
       )}
       <div className="text-[11pt]">
-      <PrintSection title={PATIENT_KIND_LABELS[student.kind]}>
-        <PrintFields
-          fields={[
-            { label: 'Full name', value: student.fullName },
-            { label: student.kind === 'student' ? 'LRN' : 'Staff No.', value: patientIdText(student).replace(/^LRN /, '') },
-            patientGroup(student),
-            { label: 'Logged by', value: visit.loggedBy },
-          ]}
-        />
-      </PrintSection>
-      <PrintSection title="Visit">
-        <PrintFields
-          fields={[
-            { label: 'Date and time', value: formatDateTime(visit.dateTime) },
-            ...(visit.timeOut ? [{ label: 'Time out', value: formatClock(visit.timeOut) }] : []),
-            { label: SYMPTOM, value: visit.complaint },
-            ...(visit.extraComplaints.length ? [{ label: `Other ${symptoms}`, value: visit.extraComplaints.join(', ') }] : []),
-            ...(visit.temperatureC !== null ? [{ label: 'Body temperature', value: `${formatDecimal(visit.temperatureC)} °C` }] : []),
-            { label: 'Disposition', value: dispositionLabel(visit.disposition, student.kind) },
-            ...(visit.referredTo ? [{ label: 'Referred to', value: visit.referredTo }] : []),
-            ...(collected ? [{ label: RELEASED_TO, value: collected }] : []),
-            ...(stayHome ? [{ label: 'Stay home', value: stayHome, wide: true }] : []),
-          ]}
-        />
-      </PrintSection>
-      <PrintSection title="Treatment">
-        <p className="whitespace-pre-line">{visit.treatment.trim() || (visit.itemsGiven.length ? 'No treatment notes.' : 'No treatment recorded.')}</p>
-        {visit.itemsGiven.length > 0 && (
-          <>
-            <p className="mt-[2mm] font-semibold">Medicines and supplies given</p>
-            <ul className="list-disc pl-[5mm]">
-              {visit.itemsGiven.map((line) => <li key={line.itemId}>{formatItemGiven(line)}</li>)}
-            </ul>
-          </>
-        )}
-      </PrintSection>
-      {(visit.assistedBy || visit.parentGuardian || visit.remarks) && (
-        <PrintSection title="Other details">
+        <PrintSection title={PATIENT_KIND_LABELS[student.kind]}>
           <PrintFields
             fields={[
-              ...(visit.assistedBy ? [{ label: 'Assisted by', value: visit.assistedBy }] : []),
-              ...(visit.parentGuardian ? [{ label: 'Parent or guardian', value: visit.parentGuardian }] : []),
-              ...(visit.remarks ? [{ label: 'Remarks', value: visit.remarks, wide: true }] : []),
+              { label: 'Full name', value: student.fullName },
+              {
+                label: student.kind === 'student' ? 'LRN' : 'Staff No.',
+                value: patientIdText(student).replace(/^LRN /, ''),
+              },
+              patientGroup(student),
+              { label: 'Logged by', value: visit.loggedBy },
             ]}
           />
         </PrintSection>
-      )}
+        <PrintSection title="Visit">
+          <PrintFields
+            fields={[
+              { label: 'Date and time', value: formatDateTime(visit.dateTime) },
+              ...(visit.timeOut ? [{ label: 'Time out', value: formatClock(visit.timeOut) }] : []),
+              { label: SYMPTOM, value: visit.complaint },
+              ...(visit.extraComplaints.length
+                ? [{ label: `Other ${symptoms}`, value: visit.extraComplaints.join(', ') }]
+                : []),
+              ...(visit.temperatureC !== null
+                ? [{ label: 'Body temperature', value: `${formatDecimal(visit.temperatureC)} °C` }]
+                : []),
+              { label: 'Disposition', value: dispositionLabel(visit.disposition, student.kind) },
+              ...(visit.referredTo ? [{ label: 'Referred to', value: visit.referredTo }] : []),
+              ...(collected ? [{ label: RELEASED_TO, value: collected }] : []),
+              ...(stayHome ? [{ label: 'Stay home', value: stayHome, wide: true }] : []),
+            ]}
+          />
+        </PrintSection>
+        <PrintSection title="Treatment">
+          <p className="whitespace-pre-line">
+            {visit.treatment.trim() ||
+              (visit.itemsGiven.length ? 'No treatment notes.' : 'No treatment recorded.')}
+          </p>
+          {visit.itemsGiven.length > 0 && (
+            <>
+              <p className="mt-[2mm] font-semibold">Medicines and supplies given</p>
+              <ul className="list-disc pl-[5mm]">
+                {visit.itemsGiven.map((line) => (
+                  <li key={line.itemId}>{formatItemGiven(line)}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </PrintSection>
+        {(visit.assistedBy || visit.parentGuardian || visit.remarks) && (
+          <PrintSection title="Other details">
+            <PrintFields
+              fields={[
+                ...(visit.assistedBy ? [{ label: 'Assisted by', value: visit.assistedBy }] : []),
+                ...(visit.parentGuardian
+                  ? [{ label: 'Parent or guardian', value: visit.parentGuardian }]
+                  : []),
+                ...(visit.remarks ? [{ label: 'Remarks', value: visit.remarks, wide: true }] : []),
+              ]}
+            />
+          </PrintSection>
+        )}
       </div>
     </PrintDocument>
   )
 }
 
-function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail; viewer: SessionUser }) {
+function VisitDetailEditor({
+  initialVisit,
+  viewer,
+}: {
+  initialVisit: VisitDetail
+  viewer: SessionUser
+}) {
   const [visit, setVisit] = useState(initialVisit)
   const [editing, setEditing] = useState(false)
   const [askingDiscard, setAskingDiscard] = useState(false)
@@ -238,7 +293,11 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
   const locked = Boolean(visit.enteredInError)
   /** Set by "Save and approve now" (ADR-049, D3) for the submit it starts. */
   const approveNowRef = useRef(false)
-  const preparingLetter = !visit.approval && visit.student.kind === 'student' && hasExcuseLetter(values.disposition) && values.prepareLetter
+  const preparingLetter =
+    !visit.approval &&
+    visit.student.kind === 'student' &&
+    hasExcuseLetter(values.disposition) &&
+    values.prepareLetter
 
   async function confirmEnteredInError() {
     if (!errorReason.trim()) {
@@ -268,7 +327,11 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
 
   function setDisposition(disposition: Disposition) {
     // Disposition-specific fields start fresh whenever the disposition changes.
-    setValues((current) => ({ ...current, ...emptyDispositionValues(visit.dateTime.slice(0, 10)), disposition }))
+    setValues((current) => ({
+      ...current,
+      ...emptyDispositionValues(visit.dateTime.slice(0, 10)),
+      disposition,
+    }))
     setErrors((current) => ({ ...current, excusedUntil: undefined }))
     setSaved(null)
   }
@@ -277,12 +340,23 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
     const next: Errors = {}
     if (!cleanComplaint(values.complaint)) next.complaint = `Choose the ${symptom} for this visit.`
     if (!values.visitDate || !values.visitClock) next.visitTime = 'Enter the visit date and time.'
-    else if (`${values.visitDate}T${values.visitClock}` > `${todayISO()}T${currentClock()}`) next.visitTime = "The visit date and time can't be in the future."
-    if (lines.some((line) => line.quantity < 1)) next.itemsGiven = 'Each quantity must be at least 1.'
+    else if (`${values.visitDate}T${values.visitClock}` > `${todayISO()}T${currentClock()}`)
+      next.visitTime = "The visit date and time can't be in the future."
+    if (lines.some((line) => line.quantity < 1))
+      next.itemsGiven = 'Each quantity must be at least 1.'
     return {
       ...next,
-      ...dispositionErrors(values.disposition, values, Boolean(visit.approval) || visit.student.kind === 'personnel', values.visitDate),
-      ...logbookErrors(values, values.visitClock || visit.dateTime.slice(11, 16), timeOutRef.current?.validity.badInput),
+      ...dispositionErrors(
+        values.disposition,
+        values,
+        Boolean(visit.approval) || visit.student.kind === 'personnel',
+        values.visitDate,
+      ),
+      ...logbookErrors(
+        values,
+        values.visitClock || visit.dateTime.slice(11, 16),
+        timeOutRef.current?.validity.badInput,
+      ),
     }
   }
 
@@ -302,7 +376,11 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
       const { visit: updated, belowZero } = await updateVisitDetail(
         visit,
         values,
-        lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity, instructions: line.instructions })),
+        lines.map((line) => ({
+          itemId: line.itemId,
+          quantity: line.quantity,
+          instructions: line.instructions,
+        })),
         undefined,
         approveNow,
       )
@@ -320,7 +398,10 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
     }
   }
 
-  const unsaved = editing && (JSON.stringify(values) !== JSON.stringify(valuesFromVisit(visit)) || JSON.stringify(lines) !== JSON.stringify(draftsFrom(visit.itemsGiven)))
+  const unsaved =
+    editing &&
+    (JSON.stringify(values) !== JSON.stringify(valuesFromVisit(visit)) ||
+      JSON.stringify(lines) !== JSON.stringify(draftsFrom(visit.itemsGiven)))
 
   function discardEdit() {
     setAskingDiscard(false)
@@ -345,9 +426,7 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
             buttons wraps among themselves instead of pushing the date below the title. */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-text-primary">
-              Visit Details
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight text-text-primary">Visit Details</h1>
             <p className="mt-1 text-sm text-text-secondary">
               {visit.student.fullName} · {patientLine(visit.student)}
             </p>
@@ -359,35 +438,65 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
         {!editing && (
           <div className="mt-4 flex flex-wrap gap-2">
             <PrintButton viewer={viewer} />
-            {!locked && <Button variant="secondary" icon="fileText" onClick={startEdit}>
-              Edit
-            </Button>}
+            {!locked && (
+              <Button variant="secondary" icon="fileText" onClick={startEdit}>
+                Edit
+              </Button>
+            )}
             {!locked && !visit.escalatedIncidentId && (
-              <Button variant="secondary" icon="alertTriangle" onClick={() => navigate(`${paths.incidentNew}?fromVisit=${encodeURIComponent(visit.id)}`)}>
+              <Button
+                variant="secondary"
+                icon="alertTriangle"
+                onClick={() =>
+                  navigate(`${paths.incidentNew}?fromVisit=${encodeURIComponent(visit.id)}`)
+                }
+              >
                 Escalate to incident
               </Button>
             )}
-            {!locked && <Button variant="neutral" onClick={() => { setErrorReason(''); setErrorReasonMessage(''); setMarkingError(true) }}>
-              Entered in error
-            </Button>}
+            {!locked && (
+              <Button
+                variant="neutral"
+                onClick={() => {
+                  setErrorReason('')
+                  setErrorReasonMessage('')
+                  setMarkingError(true)
+                }}
+              >
+                Entered in error
+              </Button>
+            )}
           </div>
         )}
       </Card>
 
       {visit.enteredInError && (
-        <div role="status" className="rounded-md border border-error bg-error/10 px-4 py-3 text-sm text-text-primary">
-          <p className="font-semibold">Entered in error. This visit is kept but left out of lists, counts and reports.</p>
+        <div
+          role="status"
+          className="rounded-md border border-error bg-error/10 px-4 py-3 text-sm text-text-primary"
+        >
+          <p className="font-semibold">
+            Entered in error. This visit is kept but left out of lists, counts and reports.
+          </p>
           <p className="mt-1">
-            Reason: {visit.enteredInError.reason}. Marked by {visit.enteredInErrorBy ?? 'Unknown user'}, {formatDateTime(visit.enteredInError.at)}.
-            Its medicines went back to stock and its excuse letter is void. It can no longer be edited.
+            Reason: {visit.enteredInError.reason}. Marked by{' '}
+            {visit.enteredInErrorBy ?? 'Unknown user'}, {formatDateTime(visit.enteredInError.at)}.
+            Its medicines went back to stock and its excuse letter is void. It can no longer be
+            edited.
           </p>
         </div>
       )}
 
       {visit.escalatedIncidentId && (
-        <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning bg-warning-fill px-4 py-3 text-sm font-semibold text-text-primary">
+        <div
+          role="status"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning bg-warning-fill px-4 py-3 text-sm font-semibold text-text-primary"
+        >
           Escalated to incident. The event counts once, as the incident.
-          <Link to={paths.incidentReport(visit.escalatedIncidentId)} className={buttonClassName({ size: 'sm' })}>
+          <Link
+            to={paths.incidentReport(visit.escalatedIncidentId)}
+            className={buttonClassName({ size: 'sm' })}
+          >
             Open the incident
           </Link>
         </div>
@@ -408,7 +517,10 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
       )}
 
       {saveError && (
-        <div role="alert" className="rounded-md border border-error bg-error/10 px-4 py-3 text-sm font-semibold text-text-primary">
+        <div
+          role="alert"
+          className="rounded-md border border-error bg-error/10 px-4 py-3 text-sm font-semibold text-text-primary"
+        >
           {saveError}
         </div>
       )}
@@ -422,12 +534,18 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
           />
           <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <p className="text-xs font-semibold text-text-secondary">{PATIENT_KIND_LABELS[visit.student.kind]}</p>
+              <p className="text-xs font-semibold text-text-secondary">
+                {PATIENT_KIND_LABELS[visit.student.kind]}
+              </p>
               <p className="text-sm font-semibold text-text-primary">{visit.student.fullName}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold text-text-secondary">{visit.student.kind === 'student' ? 'LRN' : 'Staff No.'}</p>
-              <p className="text-sm font-semibold text-text-primary tabular-nums">{visit.student.kind === 'student' ? visit.student.lrn : visit.student.staffNumber}</p>
+              <p className="text-xs font-semibold text-text-secondary">
+                {visit.student.kind === 'student' ? 'LRN' : 'Staff No.'}
+              </p>
+              <p className="text-sm font-semibold text-text-primary tabular-nums">
+                {visit.student.kind === 'student' ? visit.student.lrn : visit.student.staffNumber}
+              </p>
             </div>
             <div>
               <p className="text-xs font-semibold text-text-secondary">Logged by</p>
@@ -443,7 +561,10 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
               <div className="sm:col-span-2">
                 <p className="text-xs font-semibold text-text-secondary">Entered late</p>
                 <p className="text-sm font-semibold text-text-primary">
-                  Recorded more than 30 minutes after the visit time.{visit.lateEntryReason ? ` Reason: ${visit.lateEntryReason}` : ' No reason given.'}
+                  Recorded more than 30 minutes after the visit time.
+                  {visit.lateEntryReason
+                    ? ` Reason: ${visit.lateEntryReason}`
+                    : ' No reason given.'}
                 </p>
               </div>
             )}
@@ -548,7 +669,11 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                   values={values}
                   onChange={(next) => {
                     setValues((current) => ({ ...current, ...next }))
-                    setErrors((current) => ({ ...current, excusedUntil: undefined, collectedRelationshipOther: undefined }))
+                    setErrors((current) => ({
+                      ...current,
+                      excusedUntil: undefined,
+                      collectedRelationshipOther: undefined,
+                    }))
                     setSaved(null)
                   }}
                   errors={errors}
@@ -573,11 +698,17 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                   onOpenChange={setMoreOpen}
                   ranges={visit.vitalsRanges}
                   timeOutRef={timeOutRef}
-                  ageGroup={ageGroupOf(visit.student, values.visitDate || visit.dateTime.slice(0, 10), visit.vitalsRanges.usual)}
+                  ageGroup={ageGroupOf(
+                    visit.student,
+                    values.visitDate || visit.dateTime.slice(0, 10),
+                    visit.vitalsRanges.usual,
+                  )}
                 />
                 <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
                   {!values.treatment.trim() && !lines.length && (
-                    <p className="mr-auto text-xs text-text-secondary">No treatment recorded. You can still save.</p>
+                    <p className="mr-auto text-xs text-text-secondary">
+                      No treatment recorded. You can still save.
+                    </p>
                   )}
                   <Button variant="neutral" onClick={cancelEdit}>
                     Cancel
@@ -595,7 +726,13 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                       Save and approve now
                     </Button>
                   )}
-                  <Button type="submit" variant="primary" icon="checkCircle" loading={saving} done={Boolean(saved)}>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    icon="checkCircle"
+                    loading={saving}
+                    done={Boolean(saved)}
+                  >
                     Save Changes
                   </Button>
                 </div>
@@ -609,7 +746,9 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                 {visit.extraComplaints.length > 0 && (
                   <section>
                     <h2 className="text-sm font-bold text-text-primary">Other {symptoms}</h2>
-                    <p className="mt-1 text-sm text-text-primary">{visit.extraComplaints.join(', ')}</p>
+                    <p className="mt-1 text-sm text-text-primary">
+                      {visit.extraComplaints.join(', ')}
+                    </p>
                   </section>
                 )}
                 <section>
@@ -623,7 +762,9 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                   )}
                 </section>
                 <section>
-                  <h2 className="text-sm font-bold text-text-primary">Medicines &amp; supplies given</h2>
+                  <h2 className="text-sm font-bold text-text-primary">
+                    Medicines &amp; supplies given
+                  </h2>
                   {visit.itemsGiven.length ? (
                     <ul className="mt-1 flex flex-col gap-1 text-sm text-text-primary">
                       {visit.itemsGiven.map((line) => (
@@ -650,7 +791,12 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                   <section>
                     <h2 className="text-sm font-bold text-text-primary">{RELEASED_TO}</h2>
                     <p className="mt-1 text-sm text-text-primary">
-                      {[visit.collectedBy.name, visit.collectedBy.relationship && `(${visit.collectedBy.relationship})`].filter(Boolean).join(' ')}
+                      {[
+                        visit.collectedBy.name,
+                        visit.collectedBy.relationship && `(${visit.collectedBy.relationship})`,
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
                       {visit.collectedBy.time && ` · ${formatClock(visit.collectedBy.time)}`}
                     </p>
                   </section>
@@ -659,14 +805,18 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                 {visit.temperatureC !== null && (
                   <section>
                     <h2 className="text-sm font-bold text-text-primary">Body temperature</h2>
-                    <p className="mt-1 text-sm text-text-primary">{formatDecimal(visit.temperatureC)} °C</p>
+                    <p className="mt-1 text-sm text-text-primary">
+                      {formatDecimal(visit.temperatureC)} °C
+                    </p>
                   </section>
                 )}
                 {visit.timeOut && (
                   <section>
                     <h2 className="text-sm font-bold text-text-primary">Time out</h2>
                     {/* The input is time only (a same-day visit); the date shows with it (Sir Rey, October 25, 2026). */}
-                    <p className="mt-1 text-sm text-text-primary">{formatDate(visit.dateTime.slice(0, 10))} · {formatClock(visit.timeOut)}</p>
+                    <p className="mt-1 text-sm text-text-primary">
+                      {formatDate(visit.dateTime.slice(0, 10))} · {formatClock(visit.timeOut)}
+                    </p>
                   </section>
                 )}
                 {visit.assistedBy && (
@@ -684,7 +834,9 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
                 {visit.remarks && (
                   <section>
                     <h2 className="text-sm font-bold text-text-primary">Remarks</h2>
-                    <p className="mt-1 text-sm whitespace-pre-line text-text-primary">{visit.remarks}</p>
+                    <p className="mt-1 text-sm whitespace-pre-line text-text-primary">
+                      {visit.remarks}
+                    </p>
                   </section>
                 )}
               </div>
@@ -696,10 +848,15 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
         {visit.student.kind === 'student' && <ExcuseLetterCard visit={visit} />}
       </div>
 
-      <Modal open={markingError} title="Mark this visit as entered in error?" onClose={() => setMarkingError(false)}>
+      <Modal
+        open={markingError}
+        title="Mark this visit as entered in error?"
+        onClose={() => setMarkingError(false)}
+      >
         <p className="text-sm text-text-secondary">
-          Nothing is deleted. The visit leaves every list and count, its medicines go back to stock, and its
-          excuse letter is voided. It can't be edited afterwards, and this can't be undone from this screen.
+          Nothing is deleted. The visit leaves every list and count, its medicines go back to stock,
+          and its excuse letter is voided. It can't be edited afterwards, and this can't be undone
+          from this screen.
         </p>
         <Textarea
           className="mt-4"
@@ -723,7 +880,11 @@ function VisitDetailEditor({ initialVisit, viewer }: { initialVisit: VisitDetail
           </Button>
         </div>
       </Modal>
-      <DiscardChangesDialog open={askingDiscard} onKeep={() => setAskingDiscard(false)} onDiscard={discardEdit} />
+      <DiscardChangesDialog
+        open={askingDiscard}
+        onKeep={() => setAskingDiscard(false)}
+        onDiscard={discardEdit}
+      />
       <UnsavedChangesGuard dirty={unsaved} />
       <VisitPrint visit={visit} viewer={viewer} />
     </div>
@@ -739,7 +900,13 @@ function ExcuseLetterCard({ visit }: { visit: VisitDetail }) {
   const letter = visit.approval ?? visit.excuseLetterDraft
   // A letter whose visit was entered in error is void, draft or approved (D2).
   const voided = Boolean(visit.enteredInError && letter)
-  const status = voided ? 'Voided' : visit.approval ? 'Approved' : visit.excuseLetterDraft ? 'Pending approval' : 'Not prepared'
+  const status = voided
+    ? 'Voided'
+    : visit.approval
+      ? 'Approved'
+      : visit.excuseLetterDraft
+        ? 'Pending approval'
+        : 'Not prepared'
   // ADR-049 (D7): the letter stands, but the visit no longer sends the student out.
   const outcomeChanged = Boolean(visit.approval && !voided && outcomeChangedSinceApproval(visit))
   return (
@@ -755,7 +922,18 @@ function ExcuseLetterCard({ visit }: { visit: VisitDetail }) {
                 Outcome changed since approval
               </Badge>
             )}
-            <Badge tone={voided ? 'error' : visit.approval ? 'success' : visit.excuseLetterDraft ? 'warning' : 'neutral'} variant="soft">
+            <Badge
+              tone={
+                voided
+                  ? 'error'
+                  : visit.approval
+                    ? 'success'
+                    : visit.excuseLetterDraft
+                      ? 'warning'
+                      : 'neutral'
+              }
+              variant="soft"
+            >
               {status}
             </Badge>
           </div>
@@ -772,22 +950,34 @@ function ExcuseLetterCard({ visit }: { visit: VisitDetail }) {
             </div>
             <div>
               <p className="text-xs font-semibold text-text-secondary">Note for the teacher</p>
-              <p className={cn('text-sm', letter.note ? 'text-text-primary' : 'text-text-secondary')}>
+              <p
+                className={cn('text-sm', letter.note ? 'text-text-primary' : 'text-text-secondary')}
+              >
                 {letter.note || 'No note.'}
               </p>
             </div>
           </div>
         ) : (
-          <p className="text-sm text-text-secondary">No excuse letter has been prepared for this visit.</p>
+          <p className="text-sm text-text-secondary">
+            No excuse letter has been prepared for this visit.
+          </p>
         )}
         {voided ? (
-          <p className="text-sm text-text-secondary">Voided because the visit was entered in error. It is not a valid excuse letter.</p>
-        ) : !visit.enteredInError && (
-          <div>
-            <Link to={paths.excuseLetter(visit.id)} className={buttonClassName({ size: 'sm' })}>
-              {visit.approval ? 'View excuse letter' : visit.excuseLetterDraft ? 'Review excuse letter' : 'Prepare excuse letter'}
-            </Link>
-          </div>
+          <p className="text-sm text-text-secondary">
+            Voided because the visit was entered in error. It is not a valid excuse letter.
+          </p>
+        ) : (
+          !visit.enteredInError && (
+            <div>
+              <Link to={paths.excuseLetter(visit.id)} className={buttonClassName({ size: 'sm' })}>
+                {visit.approval
+                  ? 'View excuse letter'
+                  : visit.excuseLetterDraft
+                    ? 'Review excuse letter'
+                    : 'Prepare excuse letter'}
+              </Link>
+            </div>
+          )
         )}
       </CardBody>
     </Card>

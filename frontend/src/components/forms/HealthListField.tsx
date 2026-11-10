@@ -39,17 +39,38 @@ export function HealthListField({
   const current = value.slice(cut).trim().toLowerCase()
   const suggestions: Suggestion[] = []
   // An empty field offers None recorded (ADR-051).
-  if (!before.trim() && NONE_RECORDED.toLowerCase().startsWith(current) && current !== NONE_RECORDED.toLowerCase())
+  if (
+    !before.trim() &&
+    NONE_RECORDED.toLowerCase().startsWith(current) &&
+    current !== NONE_RECORDED.toLowerCase()
+  )
     suggestions.push({ key: NONE_RECORDED, full: NONE_RECORDED, name: NONE_RECORDED, aliases: [] })
   if (current)
     for (const entry of list)
-      if ([entry.name, ...entry.aliases].some((word) => word.toLowerCase().startsWith(current)) && entry.name.toLowerCase() !== current)
-        suggestions.push({ key: entry.name, full: before ? `${before} ${entry.name}, ` : `${entry.name}, `, name: entry.name, aliases: entry.aliases })
+      if (
+        [entry.name, ...entry.aliases].some((word) => word.toLowerCase().startsWith(current)) &&
+        entry.name.toLowerCase() !== current
+      )
+        suggestions.push({
+          key: entry.name,
+          full: before ? `${before} ${entry.name}, ` : `${entry.name}, `,
+          name: entry.name,
+          aliases: entry.aliases,
+        })
 
-  const entries = value.split(',').map((entry) => entry.trim()).filter((entry) => entry && !isNoneRecorded(entry))
+  const entries = value
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry && !isNoneRecorded(entry))
   // The entry still being typed is not flagged while it could become a starter entry.
   const stillTyping = (entry: string, index: number) =>
-    index === entries.length - 1 && !value.trimEnd().endsWith(',') && list.some((item) => [item.name, ...item.aliases].some((word) => word.toLowerCase().startsWith(entry.toLowerCase())))
+    index === entries.length - 1 &&
+    !value.trimEnd().endsWith(',') &&
+    list.some((item) =>
+      [item.name, ...item.aliases].some((word) =>
+        word.toLowerCase().startsWith(entry.toLowerCase()),
+      ),
+    )
   const byHand = entries.filter((entry, index) => !known(list, entry) && !stillTyping(entry, index))
 
   return (
@@ -65,7 +86,9 @@ export function HealthListField({
         renderOption={(option) => (
           <span>
             {option.name}
-            {option.aliases.length > 0 && <span className="ml-2 text-text-secondary">{option.aliases.join(', ')}</span>}
+            {option.aliases.length > 0 && (
+              <span className="ml-2 text-text-secondary">{option.aliases.join(', ')}</span>
+            )}
           </span>
         )}
         allowFreeText
@@ -73,7 +96,11 @@ export function HealthListField({
         error={error}
         onValueChange={onValueChange}
       />
-      {byHand.length > 0 && <p className="text-xs text-text-secondary">Typed by hand, not on the starter list: {byHand.join(', ')}</p>}
+      {byHand.length > 0 && (
+        <p className="text-xs text-text-secondary">
+          Typed by hand, not on the starter list: {byHand.join(', ')}
+        </p>
+      )}
     </div>
   )
 }

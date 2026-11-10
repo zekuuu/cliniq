@@ -47,7 +47,12 @@ describe('PE/Sports Injury Referral', () => {
     expect(screen.getByLabelText(/referred by/i)).toHaveValue('')
     await user.type(screen.getByLabelText(/referred by/i), 'Coach Reyes')
     // All five fields get starter text, not just the first two.
-    for (const label of [/activity or setting/i, /injury summary/i, /clinical assessment/i, /treatment or action taken/i]) {
+    for (const label of [
+      /activity or setting/i,
+      /injury summary/i,
+      /clinical assessment/i,
+      /treatment or action taken/i,
+    ]) {
       expect(screen.getByLabelText(label)).not.toHaveValue('')
     }
 
@@ -71,7 +76,10 @@ describe('PE/Sports Injury Referral', () => {
     await user.type(screen.getByLabelText(/referred by/i), 'Coach Reyes')
     await user.type(screen.getByLabelText(/injury summary/i), 'Head impact during basketball.')
     await user.type(screen.getByLabelText(/clinical assessment/i), 'Dizzy and needs referral.')
-    await user.type(screen.getByLabelText(/treatment or action taken/i), 'Observed and called guardian.')
+    await user.type(
+      screen.getByLabelText(/treatment or action taken/i),
+      'Observed and called guardian.',
+    )
     await user.click(screen.getByRole('radio', { name: 'Hospital referral' }))
 
     expect(screen.getByText(/Continue in Emergency Response/)).toBeInTheDocument()
@@ -90,7 +98,9 @@ describe('PE/Sports Injury Referral', () => {
     await user.click(screen.getByRole('button', { name: 'Use PE Defaults' }))
     await user.type(screen.getByLabelText(/referred by/i), 'Coach Reyes')
     await user.click(screen.getByRole('button', { name: 'Save Referral' }))
-    expect(screen.getByText('Choose the student: type the LRN or name, then pick from the list.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Choose the student: type the LRN or name, then pick from the list.'),
+    ).toBeInTheDocument()
     expect(getRecordedAuditEntries()).toEqual([])
 
     await user.type(screen.getByRole('combobox', { name: /student/i }), '000000260001')

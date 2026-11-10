@@ -27,24 +27,156 @@ export const CALENDAR_EVENT_TITLE_MAX = 60
 const ARCHIVE_FIELDS = ['archivedAt', 'archiveReason', 'archivedSchoolYear']
 
 const FIELDS = {
-  top: ['meta', 'config', 'users', 'students', 'personnel', 'visits', 'incidents', 'followUps', 'inventoryItems', 'reports', 'backupLogs', 'auditLog', 'frontendOnly'],
-  config: ['_note', 'showFrequentVisitors', 'frequentVisitorMinVisits', 'frequentVisitorWindowDays', 'personnelTypes', 'upcomingFollowUpDays', 'expiryWarningDays', 'clusterMinCount', 'clusterRatio', 'topComplaints', 'percentMinPriorCount', 'staleBackupHours', 'vitalsWarningRanges', 'medicalCertificateAfterDays', 'idleSignoutMinutesStaff', 'idleSignoutMinutesAdmin', 'clusterMinStudents', 'clusterWindowDays', 'followUpOverdueAfterDays', 'followUpAutoCloseDays', 'vitalsUsualRanges', 'backupKeepLast', 'unusualAgeYears', 'largeWriteOffPercent', 'schoolYearStartMonth', 'schoolYearStartDay', 'schoolYearEndMonth', 'schoolYearEndDay', 'schoolYearStarts'],
+  top: [
+    'meta',
+    'config',
+    'users',
+    'students',
+    'personnel',
+    'visits',
+    'incidents',
+    'followUps',
+    'inventoryItems',
+    'reports',
+    'backupLogs',
+    'auditLog',
+    'frontendOnly',
+  ],
+  config: [
+    '_note',
+    'showFrequentVisitors',
+    'frequentVisitorMinVisits',
+    'frequentVisitorWindowDays',
+    'personnelTypes',
+    'upcomingFollowUpDays',
+    'expiryWarningDays',
+    'clusterMinCount',
+    'clusterRatio',
+    'topComplaints',
+    'percentMinPriorCount',
+    'staleBackupHours',
+    'vitalsWarningRanges',
+    'medicalCertificateAfterDays',
+    'idleSignoutMinutesStaff',
+    'idleSignoutMinutesAdmin',
+    'clusterMinStudents',
+    'clusterWindowDays',
+    'followUpOverdueAfterDays',
+    'followUpAutoCloseDays',
+    'vitalsUsualRanges',
+    'backupKeepLast',
+    'unusualAgeYears',
+    'largeWriteOffPercent',
+    'schoolYearStartMonth',
+    'schoolYearStartDay',
+    'schoolYearEndMonth',
+    'schoolYearEndDay',
+    'schoolYearStarts',
+  ],
   users: ['id', 'name', 'username', 'role', 'lastLogin', 'profilePicture', 'deactivatedAt'],
-  students: ['id', 'lrn', 'firstName', 'lastName', 'middleName', 'gradeLevel', 'birthDate', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived', 'sex'],
-  personnel: ['id', 'staffNumber', 'firstName', 'lastName', 'middleName', 'sex', 'type', 'department', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts', 'archived'],
+  students: [
+    'id',
+    'lrn',
+    'firstName',
+    'lastName',
+    'middleName',
+    'gradeLevel',
+    'birthDate',
+    'allergies',
+    'medicalConditions',
+    'emergencyContacts',
+    'archived',
+    'sex',
+  ],
+  personnel: [
+    'id',
+    'staffNumber',
+    'firstName',
+    'lastName',
+    'middleName',
+    'sex',
+    'type',
+    'department',
+    'contactInfo',
+    'allergies',
+    'medicalConditions',
+    'emergencyContacts',
+    'archived',
+  ],
   emergencyContact: ['name', 'relationship', 'phone', 'verified'],
-  visits: ['id', 'studentId', 'dateTime', 'complaint', 'treatment', 'disposition', 'loggedByUserId', 'eventTag', 'itemsGiven', 'excuseLetterDraft', 'referredTo', 'temperatureC', 'timeOut', 'assistedBy', 'parentGuardian', 'remarks'],
+  visits: [
+    'id',
+    'studentId',
+    'dateTime',
+    'complaint',
+    'treatment',
+    'disposition',
+    'loggedByUserId',
+    'eventTag',
+    'itemsGiven',
+    'excuseLetterDraft',
+    'referredTo',
+    'temperatureC',
+    'timeOut',
+    'assistedBy',
+    'parentGuardian',
+    'remarks',
+  ],
   excuseLetterDraft: ['excusedFrom', 'excusedUntil', 'note'],
   itemGivenLine: ['itemId', 'itemName', 'unit', 'quantity', 'instructions'],
-  incidents: ['id', 'studentId', 'time', 'complaint', 'vitals', 'hospitalReferral', 'parentNotifications', 'stage', 'eventTag', 'itemsGiven'],
+  incidents: [
+    'id',
+    'studentId',
+    'time',
+    'complaint',
+    'vitals',
+    'hospitalReferral',
+    'parentNotifications',
+    'stage',
+    'eventTag',
+    'itemsGiven',
+  ],
   hospitalReferral: ['destination', 'transportMode', 'departureTime'],
   parentNotification: ['outcome', 'timestamp'],
-  followUps: ['id', 'studentId', 'relatedRecord', 'followUpDate', 'reason', 'status', 'notes', 'createdByUserId'],
-  inventoryItems: ['_note', 'id', 'name', 'category', 'currentStock', 'unit', 'expirationDate', 'lowStockThreshold', 'brand'],
+  followUps: [
+    'id',
+    'studentId',
+    'relatedRecord',
+    'followUpDate',
+    'reason',
+    'status',
+    'notes',
+    'createdByUserId',
+  ],
+  inventoryItems: [
+    '_note',
+    'id',
+    'name',
+    'category',
+    'currentStock',
+    'unit',
+    'expirationDate',
+    'lowStockThreshold',
+    'brand',
+  ],
   reports: ['type', 'dateRange'],
   backupLogs: ['lastRun', 'fileSizeBytes', 'status', 'verifiedByUserId'],
   auditLog: ['userId', 'actionType', 'targetRecord', 'timestamp'],
-  frontendOnly: ['_note', 'devAccounts', 'visitComplaintTypes', 'incidentComplaintTypes', 'inventoryTransactions', 'recordReviews', 'personnelReviews', 'excuseLetterApprovals', 'peReferrals', 'issueReports', 'calendarEvents', 'sportsReports', 'backupLocations'],
+  frontendOnly: [
+    '_note',
+    'devAccounts',
+    'visitComplaintTypes',
+    'incidentComplaintTypes',
+    'inventoryTransactions',
+    'recordReviews',
+    'personnelReviews',
+    'excuseLetterApprovals',
+    'peReferrals',
+    'issueReports',
+    'calendarEvents',
+    'sportsReports',
+    'backupLocations',
+  ],
 } as const
 
 /**
@@ -54,11 +186,35 @@ const FIELDS = {
 const DERIVED_FIELDS = new Set([
   // The name is stored as parts; the full name is built on read (ADR-064).
   'fullName',
-  'recordComplete', 'missingFields', 'incomplete', 'isIncomplete',
-  'visitCount', 'visitsCount', 'isFrequentVisitor', 'frequentVisitor',
-  'dueState', 'isOverdue', 'overdue', 'isDueToday', 'isUpcoming', 'daysFromToday',
-  'flags', 'isLowStock', 'lowStock', 'nearingExpiration', 'isExpired', 'expired', 'daysUntilExpiry', 'belowZero',
-  'total', 'totals', 'count', 'counts', 'data', 'needsVerification', 'backupStatus',
+  'recordComplete',
+  'missingFields',
+  'incomplete',
+  'isIncomplete',
+  'visitCount',
+  'visitsCount',
+  'isFrequentVisitor',
+  'frequentVisitor',
+  'dueState',
+  'isOverdue',
+  'overdue',
+  'isDueToday',
+  'isUpcoming',
+  'daysFromToday',
+  'flags',
+  'isLowStock',
+  'lowStock',
+  'nearingExpiration',
+  'isExpired',
+  'expired',
+  'daysUntilExpiry',
+  'belowZero',
+  'total',
+  'totals',
+  'count',
+  'counts',
+  'data',
+  'needsVerification',
+  'backupStatus',
 ])
 
 const ENUMS = {
@@ -70,11 +226,28 @@ const ENUMS = {
   category: ['medicine', 'supply'],
   reportType: ['monthly', 'incident', 'health_summary'],
   backupStatus: ['ok', 'failed'],
-  actionType: ['login', 'logout', 'submit', 'approve', 'create', 'update', 'delete', 'archive', 'print', 'view'],
+  actionType: [
+    'login',
+    'logout',
+    'submit',
+    'approve',
+    'create',
+    'update',
+    'delete',
+    'archive',
+    'print',
+    'view',
+  ],
   outcome: ['reached', 'no_answer', 'left_message_or_voicemail', 'wrong_number'],
   sex: ['male', 'female'],
   transactionType: ['dispense', 'restock', 'adjustment'],
-  adjustmentReason: ['visit_edited', 'expired_disposed', 'damaged_spilled', 'miscount_correction', 'other'],
+  adjustmentReason: [
+    'visit_edited',
+    'expired_disposed',
+    'damaged_spilled',
+    'miscount_correction',
+    'other',
+  ],
 } as const
 
 const ID_PATTERNS: Record<string, RegExp> = {
@@ -99,17 +272,32 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     for (const key of ['firstName', 'lastName', 'middleName'] as const) {
       const value = record[key]
       if (key === 'middleName' && value === null) continue
-      if (typeof value !== 'string' || !value || cleanNamePart(value) !== value || value.length > NAME_PART_MAX[key])
-        fail(`${where}.${key}: must be ${key === 'middleName' ? 'null or ' : ''}trimmed text of at most ${NAME_PART_MAX[key]} characters`)
+      if (
+        typeof value !== 'string' ||
+        !value ||
+        cleanNamePart(value) !== value ||
+        value.length > NAME_PART_MAX[key]
+      )
+        fail(
+          `${where}.${key}: must be ${key === 'middleName' ? 'null or ' : ''}trimmed text of at most ${NAME_PART_MAX[key]} characters`,
+        )
     }
   }
-  const checkFields = (where: string, record: unknown, allowed: readonly string[], optional: readonly string[] = []) => {
+  const checkFields = (
+    where: string,
+    record: unknown,
+    allowed: readonly string[],
+    optional: readonly string[] = [],
+  ) => {
     if (!record || typeof record !== 'object') return fail(`${where}: expected an object`)
     const keys = Object.keys(record)
     for (const key of keys) {
       if (DERIVED_FIELDS.has(key))
-        fail(`${where}: "${key}" is a derived value. Selectors compute it; don't store it in the JSON.`)
-      else if (!allowed.includes(key) && !optional.includes(key)) fail(`${where}: unexpected field "${key}"`)
+        fail(
+          `${where}: "${key}" is a derived value. Selectors compute it; don't store it in the JSON.`,
+        )
+      else if (!allowed.includes(key) && !optional.includes(key))
+        fail(`${where}: unexpected field "${key}"`)
     }
     for (const key of allowed)
       if (!key.startsWith('_') && !optional.includes(key) && !keys.includes(key))
@@ -118,13 +306,20 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   // An archived record says when, why and in which school year ("2026–2027"); an active one says none.
   const checkArchive = (where: string, record: Rec) => {
     if (record.archived) {
-      if (typeof record.archivedAt !== 'string' || Number.isNaN(Date.parse(record.archivedAt))) fail(`${where}.archivedAt: an archived record needs the date and time it was archived`)
-      if (typeof record.archiveReason !== 'string' || !record.archiveReason.trim()) fail(`${where}.archiveReason: an archived record needs a reason`)
-      if (!/^\d{4}–\d{4}$/.test(String(record.archivedSchoolYear))) fail(`${where}.archivedSchoolYear: "${String(record.archivedSchoolYear)}" isn't a school year like "2026–2027"`)
-    } else if (ARCHIVE_FIELDS.some((key) => record[key] != null)) fail(`${where}: an active record has archive details`)
+      if (typeof record.archivedAt !== 'string' || Number.isNaN(Date.parse(record.archivedAt)))
+        fail(`${where}.archivedAt: an archived record needs the date and time it was archived`)
+      if (typeof record.archiveReason !== 'string' || !record.archiveReason.trim())
+        fail(`${where}.archiveReason: an archived record needs a reason`)
+      if (!/^\d{4}–\d{4}$/.test(String(record.archivedSchoolYear)))
+        fail(
+          `${where}.archivedSchoolYear: "${String(record.archivedSchoolYear)}" isn't a school year like "2026–2027"`,
+        )
+    } else if (ARCHIVE_FIELDS.some((key) => record[key] != null))
+      fail(`${where}: an active record has archive details`)
   }
   const oneOf = (where: string, value: unknown, allowed: readonly unknown[]) => {
-    if (!allowed.includes(value)) fail(`${where}: "${String(value)}" is not one of ${allowed.join(', ')}`)
+    if (!allowed.includes(value))
+      fail(`${where}: "${String(value)}" is not one of ${allowed.join(', ')}`)
   }
   const relDate = (where: string, value: unknown, nullable = false) => {
     if (nullable && value === null) return
@@ -133,7 +328,8 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   }
   const relDateTime = (where: string, value: unknown, nullable = false) => {
     if (nullable && value === null) return
-    if (!isRelativeDateTime(value)) fail(`${where}: expected {"daysAgo"|"daysFromNow": n, "time": "HH:MM"}`)
+    if (!isRelativeDateTime(value))
+      fail(`${where}: expected {"daysAgo"|"daysFromNow": n, "time": "HH:MM"}`)
   }
   // Signed day offset of a relative date (NaN when malformed, so comparisons simply fail to match).
   const relDays = (value: unknown) => {
@@ -148,21 +344,51 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   const starts = ((s.config as Rec | undefined)?.schoolYearStarts ?? []) as Array<Rec>
   if (!Array.isArray(starts)) fail('config.schoolYearStarts: must be a list')
   starts.forEach((start, index) => {
-    checkFields(`config.schoolYearStarts[${index}]`, start, ['label', 'startedOn', 'startedBy', 'endedOn', 'endedBy'], ['endedOn', 'endedBy'])
-    if (start.endedOn !== undefined && !(String(start.endedOn) >= String(start.startedOn))) fail(`config.schoolYearStarts[${index}].endedOn: must be on or after its start`)
-    if ((start.endedOn === undefined) !== (start.endedBy === undefined)) fail(`config.schoolYearStarts[${index}]: endedOn and endedBy go together`)
-    if (!/^\d{4}–\d{4}$/.test(String(start.label)) || Number(String(start.label).slice(5)) !== Number(String(start.label).slice(0, 4)) + 1) fail(`config.schoolYearStarts[${index}].label: must be "YYYY–YYYY", one year apart`)
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(start.startedOn))) fail(`config.schoolYearStarts[${index}].startedOn: must be a date`)
+    checkFields(
+      `config.schoolYearStarts[${index}]`,
+      start,
+      ['label', 'startedOn', 'startedBy', 'endedOn', 'endedBy'],
+      ['endedOn', 'endedBy'],
+    )
+    if (start.endedOn !== undefined && !(String(start.endedOn) >= String(start.startedOn)))
+      fail(`config.schoolYearStarts[${index}].endedOn: must be on or after its start`)
+    if ((start.endedOn === undefined) !== (start.endedBy === undefined))
+      fail(`config.schoolYearStarts[${index}]: endedOn and endedBy go together`)
+    if (
+      !/^\d{4}–\d{4}$/.test(String(start.label)) ||
+      Number(String(start.label).slice(5)) !== Number(String(start.label).slice(0, 4)) + 1
+    )
+      fail(`config.schoolYearStarts[${index}].label: must be "YYYY–YYYY", one year apart`)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(start.startedOn)))
+      fail(`config.schoolYearStarts[${index}].startedOn: must be a date`)
     const before = starts[index - 1]
-    if (before && !(String(before.startedOn) < String(start.startedOn) && String(before.label) < String(start.label))) fail(`config.schoolYearStarts[${index}]: must come after the one before it`)
+    if (
+      before &&
+      !(
+        String(before.startedOn) < String(start.startedOn) &&
+        String(before.label) < String(start.label)
+      )
+    )
+      fail(`config.schoolYearStarts[${index}]: must come after the one before it`)
     // A year is ended before the next starts, so the break sits between them.
-    if (before && !(before.endedOn !== undefined && String(before.endedOn) < String(start.startedOn))) fail(`config.schoolYearStarts[${index - 1}]: must be ended before the next year starts`)
+    if (
+      before &&
+      !(before.endedOn !== undefined && String(before.endedOn) < String(start.startedOn))
+    )
+      fail(`config.schoolYearStarts[${index - 1}]: must be ended before the next year starts`)
   })
   for (const [key, value] of Object.entries((s.config ?? {}) as Rec)) {
     if (key === 'vitalsWarningRanges') {
-      checkFields('config.vitalsWarningRanges', value, ['_note', 'temperatureC', 'pulseBpm', 'oxygenSaturationPct', 'feverFromC'])
+      checkFields('config.vitalsWarningRanges', value, [
+        '_note',
+        'temperatureC',
+        'pulseBpm',
+        'oxygenSaturationPct',
+        'feverFromC',
+      ])
       const fever = ((value ?? {}) as Rec).feverFromC
-      if (!(typeof fever === 'number' && fever > 0)) fail('config.vitalsWarningRanges.feverFromC: must be a positive number')
+      if (!(typeof fever === 'number' && fever > 0))
+        fail('config.vitalsWarningRanges.feverFromC: must be a positive number')
       for (const vital of ['temperatureC', 'pulseBpm', 'oxygenSaturationPct']) {
         const range = ((value ?? {}) as Rec)[vital] as Rec | null | undefined
         // The oximeter has no range until the clinician gives one.
@@ -173,23 +399,43 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
       }
     } else if (key === 'vitalsUsualRanges') {
       const usual = (value ?? {}) as Rec
-      checkFields('config.vitalsUsualRanges', usual, ['_note', 'temperatureMinC', 'oxygenSaturationMinPct', 'grades1to6FromAge', 'grades7to12FromAge', 'byAgeGroup'])
+      checkFields('config.vitalsUsualRanges', usual, [
+        '_note',
+        'temperatureMinC',
+        'oxygenSaturationMinPct',
+        'grades1to6FromAge',
+        'grades7to12FromAge',
+        'byAgeGroup',
+      ])
       const groups = (usual.byAgeGroup ?? {}) as Rec
-      checkFields('config.vitalsUsualRanges.byAgeGroup', groups, ['kinder', 'grades1to6', 'grades7to12', 'adult'])
+      checkFields('config.vitalsUsualRanges.byAgeGroup', groups, [
+        'kinder',
+        'grades1to6',
+        'grades7to12',
+        'adult',
+      ])
       for (const [group, ranges] of Object.entries(groups))
         for (const vital of ['pulseBpm', 'systolic', 'diastolic']) {
           const { min, max } = (((ranges ?? {}) as Rec)[vital] ?? {}) as Rec
           if (!(typeof min === 'number' && typeof max === 'number' && min > 0 && min < max))
-            fail(`config.vitalsUsualRanges.byAgeGroup.${group}.${vital}: needs positive numbers with min < max`)
+            fail(
+              `config.vitalsUsualRanges.byAgeGroup.${group}.${vital}: needs positive numbers with min < max`,
+            )
         }
     } else if (key === 'personnelTypes') {
-      if (!Array.isArray(value) || !value.length || value.some((v) => typeof v !== 'string' || !v.trim()) || new Set(value).size !== value.length)
+      if (
+        !Array.isArray(value) ||
+        !value.length ||
+        value.some((v) => typeof v !== 'string' || !v.trim()) ||
+        new Set(value).size !== value.length
+      )
         fail('config.personnelTypes: must be a non-empty list of distinct names')
     } else if (key === 'schoolYearStarts') {
       // Checked above.
     } else if (key === 'showFrequentVisitors') {
       if (typeof value !== 'boolean') fail('config.showFrequentVisitors: must be true or false')
-    } else if (!key.startsWith('_') && !(typeof value === 'number' && value > 0)) fail(`config.${key}: must be a positive number`)
+    } else if (!key.startsWith('_') && !(typeof value === 'number' && value > 0))
+      fail(`config.${key}: must be a positive number`)
   }
   if (!/synthetic/i.test(String((s.meta as Rec | undefined)?.notice ?? '')))
     fail('meta.notice: must state that the data is synthetic (RA 10173; public repository)')
@@ -240,11 +486,15 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     if (!Array.isArray(st.allergies) || !Array.isArray(st.medicalConditions))
       fail(`${w}: allergies and medicalConditions must be arrays`)
     if (!Array.isArray(st.emergencyContacts)) fail(`${w}.emergencyContacts: must be an array`)
-    else st.emergencyContacts.forEach((contact, contactIndex) => checkFields(`${w}.emergencyContacts[${contactIndex}]`, contact, FIELDS.emergencyContact))
+    else
+      st.emergencyContacts.forEach((contact, contactIndex) =>
+        checkFields(`${w}.emergencyContacts[${contactIndex}]`, contact, FIELDS.emergencyContact),
+      )
     if (typeof st.archived !== 'boolean') fail(`${w}.archived: must be true or false`)
     if (st.sex !== undefined) oneOf(`${w}.sex`, st.sex, ENUMS.sex)
     if (st.birthDate !== null) {
-      if (typeof st.birthDate !== 'string' || !isRealDate(st.birthDate)) fail(`${w}.birthDate: expected a real "YYYY-MM-DD" date or null`)
+      if (typeof st.birthDate !== 'string' || !isRealDate(st.birthDate))
+        fail(`${w}.birthDate: expected a real "YYYY-MM-DD" date or null`)
       else if (st.birthDate > todayISO()) fail(`${w}.birthDate: can't be in the future`)
     }
   })
@@ -263,18 +513,29 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     checkArchive(w, pe)
     personnelIds.add(String(pe.id))
     const number = String(pe.staffNumber)
-    if (!STAFF_NUMBER_PATTERN.test(number)) fail(`${w}.staffNumber: "${number}" doesn't look like STF-0001`)
+    if (!STAFF_NUMBER_PATTERN.test(number))
+      fail(`${w}.staffNumber: "${number}" doesn't look like STF-0001`)
     if (staffNumbers.has(number)) fail(`${w}.staffNumber: duplicate "${number}"`)
     staffNumbers.add(number)
     checkName(w, pe)
     oneOf(`${w}.type`, pe.type, personnelTypes)
     if (pe.sex !== null) oneOf(`${w}.sex`, pe.sex, ENUMS.sex)
-    if (pe.department !== null && (typeof pe.department !== 'string' || !pe.department.trim() || pe.department.length > PERSONNEL_DEPARTMENT_MAX))
-      fail(`${w}.department: must be null or text of at most ${PERSONNEL_DEPARTMENT_MAX} characters`)
+    if (
+      pe.department !== null &&
+      (typeof pe.department !== 'string' ||
+        !pe.department.trim() ||
+        pe.department.length > PERSONNEL_DEPARTMENT_MAX)
+    )
+      fail(
+        `${w}.department: must be null or text of at most ${PERSONNEL_DEPARTMENT_MAX} characters`,
+      )
     if (!Array.isArray(pe.allergies) || !Array.isArray(pe.medicalConditions))
       fail(`${w}: allergies and medicalConditions must be arrays`)
     if (!Array.isArray(pe.emergencyContacts)) fail(`${w}.emergencyContacts: must be an array`)
-    else pe.emergencyContacts.forEach((contact, contactIndex) => checkFields(`${w}.emergencyContacts[${contactIndex}]`, contact, FIELDS.emergencyContact))
+    else
+      pe.emergencyContacts.forEach((contact, contactIndex) =>
+        checkFields(`${w}.emergencyContacts[${contactIndex}]`, contact, FIELDS.emergencyContact),
+      )
     if (typeof pe.archived !== 'boolean') fail(`${w}.archived: must be true or false`)
   })
   /**
@@ -285,25 +546,33 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     const studentId = record.studentId ?? null
     const personnelId = record.personnelId ?? null
     if (studentId !== null && personnelId !== null) {
-      fail(`${where}: sets both studentId and personnelId; exactly one patient is allowed (ADR-043)`)
+      fail(
+        `${where}: sets both studentId and personnelId; exactly one patient is allowed (ADR-043)`,
+      )
       return null
     }
     if (studentId === null && personnelId === null) {
-      if (!optional) fail(`${where}: sets neither studentId nor personnelId; exactly one patient is required (ADR-043)`)
+      if (!optional)
+        fail(
+          `${where}: sets neither studentId nor personnelId; exactly one patient is required (ADR-043)`,
+        )
       return null
     }
     if (studentId !== null) {
       studentRef(`${where}.studentId`, studentId)
       return `student:${String(studentId)}`
     }
-    if (!personnelIds.has(String(personnelId))) fail(`${where}.personnelId: staff member "${String(personnelId)}" doesn't exist`)
+    if (!personnelIds.has(String(personnelId)))
+      fail(`${where}.personnelId: staff member "${String(personnelId)}" doesn't exist`)
     return `personnel:${String(personnelId)}`
   }
   const patientName = (key: string | null) => (key === null ? 'no patient' : key.replace(':', ' '))
 
   // Complaint vocabularies (frontendOnly) that visit/incident complaints must come from.
   const fo = (s.frontendOnly ?? {}) as Rec
-  const visitComplaints = new Set(((fo.visitComplaintTypes ?? []) as Rec[]).map((c) => String(c.label)))
+  const visitComplaints = new Set(
+    ((fo.visitComplaintTypes ?? []) as Rec[]).map((c) => String(c.label)),
+  )
   const incidentComplaints = new Set((fo.incidentComplaintTypes ?? []) as string[])
 
   /** "recordId|itemId" -> quantity on a visit's or incident's line; checked against the transactions below. */
@@ -319,12 +588,19 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     lines.forEach((line, k) => {
       const lw = `${w}.itemsGiven[${k}]`
       checkFields(lw, line, FIELDS.itemGivenLine)
-      if (!ids.inventoryItems?.has(String(line.itemId))) fail(`${lw}.itemId: "${String(line.itemId)}" doesn't exist`)
-      if (lineItems.has(String(line.itemId))) fail(`${lw}.itemId: "${String(line.itemId)}" is already on another line`)
+      if (!ids.inventoryItems?.has(String(line.itemId)))
+        fail(`${lw}.itemId: "${String(line.itemId)}" doesn't exist`)
+      if (lineItems.has(String(line.itemId)))
+        fail(`${lw}.itemId: "${String(line.itemId)}" is already on another line`)
       lineItems.add(String(line.itemId))
-      if (!Number.isInteger(line.quantity) || (line.quantity as number) < 1) fail(`${lw}.quantity: must be a whole number ≥ 1`)
-      if (!String(line.itemName ?? '').trim() || !String(line.unit ?? '').trim()) fail(`${lw}: itemName and unit snapshots must not be empty`)
-      if (line.instructions !== null && (typeof line.instructions !== 'string' || line.instructions.length > 120))
+      if (!Number.isInteger(line.quantity) || (line.quantity as number) < 1)
+        fail(`${lw}.quantity: must be a whole number ≥ 1`)
+      if (!String(line.itemName ?? '').trim() || !String(line.unit ?? '').trim())
+        fail(`${lw}: itemName and unit snapshots must not be empty`)
+      if (
+        line.instructions !== null &&
+        (typeof line.instructions !== 'string' || line.instructions.length > 120)
+      )
         fail(`${lw}.instructions: must be null or text of at most 120 characters`)
       givenOnRecord.set(`${String(record.id)}|${String(line.itemId)}`, Number(line.quantity))
     })
@@ -342,9 +618,13 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     relDateTime(`${w}.dateTime`, v.dateTime)
     oneOf(`${w}.disposition`, v.disposition, ENUMS.disposition)
     userRef(`${w}.loggedByUserId`, v.loggedByUserId)
-    if (userRole.has(String(v.loggedByUserId)) && userRole.get(String(v.loggedByUserId)) !== 'staff')
+    if (
+      userRole.has(String(v.loggedByUserId)) &&
+      userRole.get(String(v.loggedByUserId)) !== 'staff'
+    )
       fail(`${w}.loggedByUserId: only Staff log visits`)
-    if (!visitComplaints.has(String(v.complaint))) fail(`${w}.complaint: "${String(v.complaint)}" isn't in frontendOnly.visitComplaintTypes`)
+    if (!visitComplaints.has(String(v.complaint)))
+      fail(`${w}.complaint: "${String(v.complaint)}" isn't in frontendOnly.visitComplaintTypes`)
     if (patient) visitPatient.set(String(v.id), patient)
     if (v.excuseLetterDraft !== null) draftVisits.add(String(v.id))
     // Treatment notes and items given are both optional (a visit may record no treatment).
@@ -352,24 +632,41 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     if (typeof v.treatment !== 'string') fail(`${w}.treatment: must be text (empty is allowed)`)
     const draft = v.excuseLetterDraft as Rec | null
     if (draft !== null) {
-      if (v.disposition === 'returned_to_class') fail(`${w}.excuseLetterDraft: only a Sent home or Referred visit has an excuse-letter draft`)
-      if (v.personnelId != null) fail(`${w}.excuseLetterDraft: an excuse letter is only for a student (ADR-043)`)
+      if (v.disposition === 'returned_to_class')
+        fail(
+          `${w}.excuseLetterDraft: only a Sent home or Referred visit has an excuse-letter draft`,
+        )
+      if (v.personnelId != null)
+        fail(`${w}.excuseLetterDraft: an excuse letter is only for a student (ADR-043)`)
       checkFields(`${w}.excuseLetterDraft`, draft, FIELDS.excuseLetterDraft)
       relDate(`${w}.excuseLetterDraft.excusedFrom`, draft?.excusedFrom)
       relDate(`${w}.excuseLetterDraft.excusedUntil`, draft?.excusedUntil)
-      if (relDays(draft?.excusedUntil) < relDays(draft?.excusedFrom)) fail(`${w}.excuseLetterDraft.excusedUntil: can't be before excusedFrom`)
-      if (draft?.note !== null && typeof draft?.note !== 'string') fail(`${w}.excuseLetterDraft.note: must be null or text`)
+      if (relDays(draft?.excusedUntil) < relDays(draft?.excusedFrom))
+        fail(`${w}.excuseLetterDraft.excusedUntil: can't be before excusedFrom`)
+      if (draft?.note !== null && typeof draft?.note !== 'string')
+        fail(`${w}.excuseLetterDraft.note: must be null or text`)
     }
     if (v.referredTo !== null) {
-      if (v.disposition !== 'referred_to_hospital') fail(`${w}.referredTo: only a Referred to hospital visit has one`)
-      if (typeof v.referredTo !== 'string' || !v.referredTo.trim()) fail(`${w}.referredTo: must be null or non-empty text`)
+      if (v.disposition !== 'referred_to_hospital')
+        fail(`${w}.referredTo: only a Referred to hospital visit has one`)
+      if (typeof v.referredTo !== 'string' || !v.referredTo.trim())
+        fail(`${w}.referredTo: must be null or non-empty text`)
     }
     // The optional logbook fields.
-    if (v.temperatureC !== null && typeof v.temperatureC !== 'number') fail(`${w}.temperatureC: must be null or a number`)
-    if (v.timeOut !== null && !(typeof v.timeOut === 'string' && /^\d{2}:\d{2}$/.test(v.timeOut) && v.timeOut >= String((v.dateTime as Rec | null)?.time)))
+    if (v.temperatureC !== null && typeof v.temperatureC !== 'number')
+      fail(`${w}.temperatureC: must be null or a number`)
+    if (
+      v.timeOut !== null &&
+      !(
+        typeof v.timeOut === 'string' &&
+        /^\d{2}:\d{2}$/.test(v.timeOut) &&
+        v.timeOut >= String((v.dateTime as Rec | null)?.time)
+      )
+    )
       fail(`${w}.timeOut: must be null or "HH:MM", not earlier than the visit's time`)
     for (const key of ['assistedBy', 'parentGuardian', 'remarks'])
-      if (v[key] !== null && (typeof v[key] !== 'string' || !String(v[key]).trim())) fail(`${w}.${key}: must be null or non-empty text`)
+      if (v[key] !== null && (typeof v[key] !== 'string' || !String(v[key]).trim()))
+        fail(`${w}.${key}: must be null or non-empty text`)
   })
 
   // Incidents.
@@ -380,16 +677,23 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     const patient = patientRef(w, inc)
     relDateTime(`${w}.time`, inc.time)
     oneOf(`${w}.stage`, inc.stage, ENUMS.stage)
-    if (!incidentComplaints.has(String(inc.complaint))) fail(`${w}.complaint: "${String(inc.complaint)}" isn't in frontendOnly.incidentComplaintTypes`)
+    if (!incidentComplaints.has(String(inc.complaint)))
+      fail(
+        `${w}.complaint: "${String(inc.complaint)}" isn't in frontendOnly.incidentComplaintTypes`,
+      )
     if (!inc.vitals || typeof inc.vitals !== 'object') fail(`${w}.vitals: must be an object`)
     else
       for (const [key, value] of Object.entries(inc.vitals as Rec)) {
         if (DERIVED_FIELDS.has(key)) fail(`${w}.vitals.${key}: "${key}" is a derived value`)
-        if (typeof value !== 'string' && typeof value !== 'number') fail(`${w}.vitals.${key}: must be text or a number`)
+        if (typeof value !== 'string' && typeof value !== 'number')
+          fail(`${w}.vitals.${key}: must be text or a number`)
       }
     if (inc.hospitalReferral !== null) {
       checkFields(`${w}.hospitalReferral`, inc.hospitalReferral, FIELDS.hospitalReferral)
-      relDateTime(`${w}.hospitalReferral.departureTime`, (inc.hospitalReferral as Rec)?.departureTime)
+      relDateTime(
+        `${w}.hospitalReferral.departureTime`,
+        (inc.hospitalReferral as Rec)?.departureTime,
+      )
     }
     ;((inc.parentNotifications ?? []) as Rec[]).forEach((n, k) => {
       checkFields(`${w}.parentNotifications[${k}]`, n, FIELDS.parentNotification)
@@ -397,7 +701,8 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
       relDateTime(`${w}.parentNotifications[${k}].timestamp`, n.timestamp)
     })
     if (patient) incidentPatient.set(String(inc.id), patient)
-    if (checkLines(w, inc) && inc.stage === 1) fail(`${w}.itemsGiven: Stage 1 stays fast; medicines are recorded at Stage 2`)
+    if (checkLines(w, inc) && inc.stage === 1)
+      fail(`${w}.itemsGiven: Stage 1 stays fast; medicines are recorded at Stage 2`)
   })
 
   // Follow-ups: must point at a real visit/incident belonging to the same patient.
@@ -413,9 +718,12 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     oneOf(`${w}.relatedRecord.type`, related.type, ENUMS.relatedType)
     const owners = related.type === 'incident' ? incidentPatient : visitPatient
     const owner = owners.get(String(related.id))
-    if (!owner) fail(`${w}.relatedRecord: ${String(related.type)} "${String(related.id)}" doesn't exist`)
+    if (!owner)
+      fail(`${w}.relatedRecord: ${String(related.type)} "${String(related.id)}" doesn't exist`)
     else if (patient && owner !== patient)
-      fail(`${w}: ${patientName(patient)} doesn't match its ${String(related.type)}'s ${patientName(owner)}`)
+      fail(
+        `${w}: ${patientName(patient)} doesn't match its ${String(related.type)}'s ${patientName(owner)}`,
+      )
   })
 
   // Inventory.
@@ -428,21 +736,32 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
       if (!Array.isArray(item.usedFor)) fail(`${w}.usedFor: must be a list of symptom options`)
       else {
         item.usedFor.forEach((tag) => {
-          if (typeof tag !== 'string' || !tag.trim()) fail(`${w}.usedFor: "${String(tag)}" must be a symptom option or a typed word`)
+          if (typeof tag !== 'string' || !tag.trim())
+            fail(`${w}.usedFor: "${String(tag)}" must be a symptom option or a typed word`)
         })
-        if (new Set(item.usedFor).size !== item.usedFor.length) fail(`${w}.usedFor: lists a symptom twice`)
+        if (new Set(item.usedFor).size !== item.usedFor.length)
+          fail(`${w}.usedFor: lists a symptom twice`)
         // The save stores tags in the list's order, so a seed in another order would audit as an edit.
         const tags = item.usedFor.map(String)
         // Options first, in list order; typed "Other" words after them.
         const options = tags.filter((tag) => visitComplaints.has(tag))
-        if ([...options, ...tags.filter((tag) => !visitComplaints.has(tag))].join('|') !== tags.join('|') || options.join('|') !== [...visitComplaints].filter((label) => tags.includes(label)).join('|'))
-          fail(`${w}.usedFor: list the symptom options in frontendOnly.visitComplaintTypes order, then any other words`)
+        if (
+          [...options, ...tags.filter((tag) => !visitComplaints.has(tag))].join('|') !==
+            tags.join('|') ||
+          options.join('|') !==
+            [...visitComplaints].filter((label) => tags.includes(label)).join('|')
+        )
+          fail(
+            `${w}.usedFor: list the symptom options in frontendOnly.visitComplaintTypes order, then any other words`,
+          )
       }
     }
-    if (item.brand !== undefined && item.brand !== null) oneOf(`${w}.brand`, item.brand, ['generic', 'branded'])
+    if (item.brand !== undefined && item.brand !== null)
+      oneOf(`${w}.brand`, item.brand, ['generic', 'branded'])
     if (!Number.isInteger(item.currentStock)) fail(`${w}.currentStock: must be a whole number`)
     // Below zero happens only at runtime, through the warn-only dispense path (Module 8).
-    else if ((item.currentStock as number) < 0) fail(`${w}.currentStock: the seed can't start below 0`)
+    else if ((item.currentStock as number) < 0)
+      fail(`${w}.currentStock: the seed can't start below 0`)
     if (!Number.isInteger(item.lowStockThreshold) || (item.lowStockThreshold as number) < 0)
       fail(`${w}.lowStockThreshold: must be a whole number ≥ 0`)
     relDate(`${w}.expirationDate`, item.expirationDate, true)
@@ -466,7 +785,8 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   list('auditLog').forEach((a, i) => {
     const w = `auditLog[${i}]`
     checkFields(w, a, FIELDS.auditLog, ['summary'])
-    if (a.summary !== undefined && (typeof a.summary !== 'string' || !a.summary.trim())) fail(`${w}.summary: expected a non-empty string when present`)
+    if (a.summary !== undefined && (typeof a.summary !== 'string' || !a.summary.trim()))
+      fail(`${w}.summary: expected a non-empty string when present`)
     userRef(`${w}.userId`, a.userId)
     oneOf(`${w}.actionType`, a.actionType, ENUMS.actionType)
     relDateTime(`${w}.timestamp`, a.timestamp)
@@ -477,9 +797,13 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   const accounts = (fo.devAccounts ?? []) as Rec[]
   accounts.forEach((d, i) => userRef(`frontendOnly.devAccounts[${i}].userId`, d.userId))
   if (!accounts.some((d) => d.mustChangePassword === true))
-    fail('frontendOnly.devAccounts: need one account with mustChangePassword: true (Force Password Change, #2)')
+    fail(
+      'frontendOnly.devAccounts: need one account with mustChangePassword: true (Force Password Change, #2)',
+    )
   if (accounts.some((d) => !/^(?:dev-only-|demo-)/i.test(String(d.password))))
-    fail('frontendOnly.devAccounts: passwords must be obviously fake (start with "dev-only-" or "demo-")')
+    fail(
+      'frontendOnly.devAccounts: passwords must be obviously fake (start with "dev-only-" or "demo-")',
+    )
   /** Net amount given per "visitId|itemId": dispensed minus returned by `visit_edited` adjustments. */
   const netGiven = new Map<string, number>()
   const txnIds = new Set<string>()
@@ -488,7 +812,8 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
     if (!/^txn-\d{4}$/.test(String(t.id))) fail(`${w}.id: doesn't match /^txn-\\d{4}$/`)
     if (txnIds.has(String(t.id))) fail(`${w}.id: duplicate`)
     txnIds.add(String(t.id))
-    if (!ids.inventoryItems?.has(String(t.itemId))) fail(`${w}.itemId: "${String(t.itemId)}" doesn't exist`)
+    if (!ids.inventoryItems?.has(String(t.itemId)))
+      fail(`${w}.itemId: "${String(t.itemId)}" doesn't exist`)
     oneOf(`${w}.type`, t.type, ENUMS.transactionType)
     userRef(`${w}.userId`, t.userId)
     const patient = patientRef(w, t, true)
@@ -500,19 +825,44 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
       if (id === null) continue
       const owner = owners.get(String(id))
       if (!owner) fail(`${w}.${kind}Id: "${String(id)}" doesn't exist`)
-      else if (patient !== owner) fail(`${w}: patient must match ${kind} ${String(id)}'s ${patientName(owner)}`)
+      else if (patient !== owner)
+        fail(`${w}: patient must match ${kind} ${String(id)}'s ${patientName(owner)}`)
     }
     if (t.visitId !== null && t.incidentId != null) fail(`${w}: links both a visit and an incident`)
     relDateTime(`${w}.timestamp`, t.timestamp)
     const quantity = t.quantity as number
     if (t.type === 'adjustment') {
-      checkFields(w, t, ['id', 'itemId', 'type', 'quantity', 'timestamp', 'userId', 'studentId', 'visitId', 'reason', 'note'], ['personnelId'])
+      checkFields(
+        w,
+        t,
+        [
+          'id',
+          'itemId',
+          'type',
+          'quantity',
+          'timestamp',
+          'userId',
+          'studentId',
+          'visitId',
+          'reason',
+          'note',
+        ],
+        ['personnelId'],
+      )
       oneOf(`${w}.reason`, t.reason, ENUMS.adjustmentReason)
-      if (!Number.isInteger(quantity) || quantity === 0) fail(`${w}.quantity: an adjustment is a whole number other than 0`)
-      if ((t.reason === 'visit_edited') !== (t.visitId !== null)) fail(`${w}: a "visit_edited" adjustment, and only that, links a visit`)
+      if (!Number.isInteger(quantity) || quantity === 0)
+        fail(`${w}.quantity: an adjustment is a whole number other than 0`)
+      if ((t.reason === 'visit_edited') !== (t.visitId !== null))
+        fail(`${w}: a "visit_edited" adjustment, and only that, links a visit`)
     } else {
-      checkFields(w, t, ['id', 'itemId', 'type', 'quantity', 'timestamp', 'userId', 'studentId', 'visitId'], ['incidentId', 'personnelId'])
-      if (!Number.isInteger(quantity) || quantity < 1) fail(`${w}.quantity: must be a whole number ≥ 1`)
+      checkFields(
+        w,
+        t,
+        ['id', 'itemId', 'type', 'quantity', 'timestamp', 'userId', 'studentId', 'visitId'],
+        ['incidentId', 'personnelId'],
+      )
+      if (!Number.isInteger(quantity) || quantity < 1)
+        fail(`${w}.quantity: must be a whole number ≥ 1`)
       if (t.type === 'restock' && (patient !== null || t.visitId !== null || t.incidentId != null))
         fail(`${w}: a restock links no patient, visit, or incident`)
     }
@@ -540,33 +890,49 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   })
   ;((fo.personnelReviews ?? []) as Rec[]).forEach((r, i) => {
     const w = `frontendOnly.personnelReviews[${i}]`
-    if (!personnelIds.has(String(r.personnelId))) fail(`${w}.personnelId: "${String(r.personnelId)}" doesn't exist`)
+    if (!personnelIds.has(String(r.personnelId)))
+      fail(`${w}.personnelId: "${String(r.personnelId)}" doesn't exist`)
     userRef(`${w}.resolvedByUserId`, r.resolvedByUserId, true)
     relDateTime(`${w}.resolvedAt`, r.resolvedAt, true)
   })
   ;((fo.excuseLetterApprovals ?? []) as Rec[]).forEach((a, i) => {
     const w = `frontendOnly.excuseLetterApprovals[${i}]`
-    if (!visitPatient.has(String(a.visitId))) fail(`${w}.visitId: "${String(a.visitId)}" doesn't exist`)
-    else if (!visitPatient.get(String(a.visitId))!.startsWith('student:')) fail(`${w}.visitId: an excuse letter is only for a student (ADR-043)`)
+    if (!visitPatient.has(String(a.visitId)))
+      fail(`${w}.visitId: "${String(a.visitId)}" doesn't exist`)
+    else if (!visitPatient.get(String(a.visitId))!.startsWith('student:'))
+      fail(`${w}.visitId: an excuse letter is only for a student (ADR-043)`)
     userRef(`${w}.approvedByUserId`, a.approvedByUserId)
     relDateTime(`${w}.approvedAt`, a.approvedAt)
     relDate(`${w}.excusedFrom`, a.excusedFrom)
     relDate(`${w}.excusedUntil`, a.excusedUntil)
-    if (relDays(a.excusedUntil) < relDays(a.excusedFrom)) fail(`${w}.excusedUntil: can't be before excusedFrom`)
+    if (relDays(a.excusedUntil) < relDays(a.excusedFrom))
+      fail(`${w}.excusedUntil: can't be before excusedFrom`)
     if (a.note !== null && typeof a.note !== 'string') fail(`${w}.note: must be null or text`)
     // One source of truth: approval moves the draft onto the letter, so both never exist at once.
-    if (draftVisits.has(String(a.visitId))) fail(`${w}: visit "${String(a.visitId)}" still has an excuse-letter draft; approval clears it`)
+    if (draftVisits.has(String(a.visitId)))
+      fail(
+        `${w}: visit "${String(a.visitId)}" still has an excuse-letter draft; approval clears it`,
+      )
   })
   ;((fo.peReferrals ?? []) as Rec[]).forEach((p, i) => {
     const w = `frontendOnly.peReferrals[${i}]`
     studentRef(`${w}.studentId`, p.studentId)
-    if (typeof p.referredBy !== 'string' || !p.referredBy.trim()) fail(`${w}.referredBy: must be the referrer's name`)
+    if (typeof p.referredBy !== 'string' || !p.referredBy.trim())
+      fail(`${w}.referredBy: must be the referrer's name`)
     oneOf(`${w}.disposition`, p.disposition, ENUMS.disposition)
     relDateTime(`${w}.createdAt`, p.createdAt)
   })
   ;((fo.issueReports ?? []) as Rec[]).forEach((r, i) => {
     const w = `frontendOnly.issueReports[${i}]`
-    checkFields(w, r, ['id', 'description', 'route', 'pageName', 'role', 'reportedByUserId', 'createdAt'])
+    checkFields(w, r, [
+      'id',
+      'description',
+      'route',
+      'pageName',
+      'role',
+      'reportedByUserId',
+      'createdAt',
+    ])
     if (!String(r.description).trim()) fail(`${w}.description: must not be empty`)
     if (!String(r.route).trim()) fail(`${w}.route: must not be empty`)
     if (!String(r.pageName).trim()) fail(`${w}.pageName: must not be empty`)
@@ -577,13 +943,23 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   const eventIds = new Set<string>()
   ;((fo.calendarEvents ?? []) as Rec[]).forEach((e, i) => {
     const w = `frontendOnly.calendarEvents[${i}]`
-    checkFields(w, e, ['id', 'title', 'startDate', 'endDate', 'createdByUserId', 'createdAt', 'updatedAt'])
-    if (!/^calendar-event-\d{4}$/.test(String(e.id))) fail(`${w}.id: "${String(e.id)}" should look like calendar-event-0001`)
+    checkFields(w, e, [
+      'id',
+      'title',
+      'startDate',
+      'endDate',
+      'createdByUserId',
+      'createdAt',
+      'updatedAt',
+    ])
+    if (!/^calendar-event-\d{4}$/.test(String(e.id)))
+      fail(`${w}.id: "${String(e.id)}" should look like calendar-event-0001`)
     if (eventIds.has(String(e.id))) fail(`${w}.id: duplicate "${String(e.id)}"`)
     eventIds.add(String(e.id))
     const title = String(e.title ?? '').trim()
     if (!title) fail(`${w}.title: must not be empty`)
-    if (title.length > CALENDAR_EVENT_TITLE_MAX) fail(`${w}.title: longer than ${CALENDAR_EVENT_TITLE_MAX} characters`)
+    if (title.length > CALENDAR_EVENT_TITLE_MAX)
+      fail(`${w}.title: longer than ${CALENDAR_EVENT_TITLE_MAX} characters`)
     relDate(`${w}.startDate`, e.startDate)
     if (e.endDate !== null) {
       relDate(`${w}.endDate`, e.endDate)
@@ -597,8 +973,21 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   const sportsReportIds = new Set<string>()
   ;((fo.sportsReports ?? []) as Rec[]).forEach((r, i) => {
     const w = `frontendOnly.sportsReports[${i}]`
-    checkFields(w, r, ['id', 'title', 'activity', 'requestedBy', 'window', 'includeConditions', 'students', 'archived', 'createdByUserId', 'createdAt', 'updatedAt'])
-    if (!/^sports-report-\d{4}$/.test(String(r.id))) fail(`${w}.id: "${String(r.id)}" should look like sports-report-0001`)
+    checkFields(w, r, [
+      'id',
+      'title',
+      'activity',
+      'requestedBy',
+      'window',
+      'includeConditions',
+      'students',
+      'archived',
+      'createdByUserId',
+      'createdAt',
+      'updatedAt',
+    ])
+    if (!/^sports-report-\d{4}$/.test(String(r.id)))
+      fail(`${w}.id: "${String(r.id)}" should look like sports-report-0001`)
     if (sportsReportIds.has(String(r.id))) fail(`${w}.id: duplicate "${String(r.id)}"`)
     sportsReportIds.add(String(r.id))
     if (!String(r.title ?? '').trim()) fail(`${w}.title: must not be empty`)
@@ -621,10 +1010,12 @@ export function checkSeedIntegrity(seed: MockDbSeed): string[] {
   ;((fo.backupLocations ?? []) as Rec[]).forEach((l, i) => {
     const w = `frontendOnly.backupLocations[${i}]`
     checkFields(w, l, ['id', 'label', 'path', 'enabled', 'status', 'lastBackupAt', 'lastResult'])
-    if (!/^backup-location-\d{4}$/.test(String(l.id))) fail(`${w}.id: "${String(l.id)}" should look like backup-location-0001`)
+    if (!/^backup-location-\d{4}$/.test(String(l.id)))
+      fail(`${w}.id: "${String(l.id)}" should look like backup-location-0001`)
     if (locationIds.has(String(l.id))) fail(`${w}.id: duplicate "${String(l.id)}"`)
     locationIds.add(String(l.id))
-    if (!String(l.label ?? '').trim() || !String(l.path ?? '').trim()) fail(`${w}: label and path must not be empty`)
+    if (!String(l.label ?? '').trim() || !String(l.path ?? '').trim())
+      fail(`${w}: label and path must not be empty`)
     if (typeof l.enabled !== 'boolean') fail(`${w}.enabled: must be true or false`)
     oneOf(`${w}.status`, l.status, ['found', 'not_found', 'not_writable'])
     relDateTime(`${w}.lastBackupAt`, l.lastBackupAt, true)

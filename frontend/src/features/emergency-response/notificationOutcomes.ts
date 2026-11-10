@@ -1,4 +1,8 @@
-import type { CalledContact, EmergencyContact, ParentNotificationOutcome } from '../../types/entities'
+import type {
+  CalledContact,
+  EmergencyContact,
+  ParentNotificationOutcome,
+} from '../../types/entities'
 
 /** The one list of parent-notification outcomes (panel review IN-6, D6), for every incident screen. */
 export const PARENT_NOTIFICATION_OUTCOMES = [
@@ -44,11 +48,28 @@ export function resolveCalledContact(
 ): { contact: CalledContact; errors: null } | { contact: null; errors: CalledContactErrors } {
   if (draft.choice !== OTHER_CONTACT) {
     const picked = contacts[Number(draft.choice)]
-    if (picked) return { contact: { name: picked.name, relationship: picked.relationship, phone: picked.phone, source: 'emergency_contact' }, errors: null }
+    if (picked)
+      return {
+        contact: {
+          name: picked.name,
+          relationship: picked.relationship,
+          phone: picked.phone,
+          source: 'emergency_contact',
+        },
+        errors: null,
+      }
   }
   const errors: CalledContactErrors = {}
   if (!draft.name.trim()) errors.calledName = 'Enter the name of the person called.'
   if (!draft.phone.trim()) errors.calledPhone = 'Enter the number called.'
   if (errors.calledName || errors.calledPhone) return { contact: null, errors }
-  return { contact: { name: draft.name.trim(), relationship: null, phone: draft.phone.trim(), source: 'other' }, errors: null }
+  return {
+    contact: {
+      name: draft.name.trim(),
+      relationship: null,
+      phone: draft.phone.trim(),
+      source: 'other',
+    },
+    errors: null,
+  }
 }

@@ -10,8 +10,17 @@ function Pager({ start = 3, total = 120 }: { start?: number; total?: number }) {
   const pageCount = Math.max(1, Math.ceil(total / 10))
   return (
     <>
-      <Pagination page={page} pageCount={pageCount} total={total} pageSize={10} itemLabel="visits" onPageChange={setPage} />
-      <button type="button" onClick={() => setPage(1)}>Reset filter</button>
+      <Pagination
+        page={page}
+        pageCount={pageCount}
+        total={total}
+        pageSize={10}
+        itemLabel="visits"
+        onPageChange={setPage}
+      />
+      <button type="button" onClick={() => setPage(1)}>
+        Reset filter
+      </button>
     </>
   )
 }
@@ -116,6 +125,8 @@ describe('Pagination page number field (S1)', () => {
 
   it('is left out of the printout', () => {
     render(<Pager />)
-    expect(screen.getByRole('navigation', { name: 'visits pagination' })).toHaveClass('print:hidden')
+    expect(screen.getByRole('navigation', { name: 'visits pagination' })).toHaveClass(
+      'print:hidden',
+    )
   })
 })

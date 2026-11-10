@@ -24,7 +24,12 @@ import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { paths } from '../../routes/paths'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { Personnel } from '../../types/entities'
-import { getArchive, getMockSessionUser, missingStaffFields, type SessionUser } from '../../lib/mock-db'
+import {
+  getArchive,
+  getMockSessionUser,
+  missingStaffFields,
+  type SessionUser,
+} from '../../lib/mock-db'
 import { fetchStaffIncompleteRecords, fetchStaffList, fetchStaffTypes } from './api/staffApi'
 
 function StaffListSkeleton({ back }: { back: ReactNode }) {
@@ -94,9 +99,19 @@ const baseColumns: Array<DataTableColumn<Personnel>> = [
       </span>
     ),
   },
-  { key: 'number', header: 'Staff No.', width: '12%', cell: (person) => <span className="tabular-nums">{person.staffNumber}</span> },
+  {
+    key: 'number',
+    header: 'Staff No.',
+    width: '12%',
+    cell: (person) => <span className="tabular-nums">{person.staffNumber}</span>,
+  },
   { key: 'type', header: 'Type', width: '16%', cell: (person) => person.type },
-  { key: 'department', header: 'Department or role', width: '20%', cell: (person) => person.department ?? '—' },
+  {
+    key: 'department',
+    header: 'Department or role',
+    width: '20%',
+    cell: (person) => person.department ?? '—',
+  },
   {
     key: 'status',
     header: 'Record status',
@@ -131,15 +146,19 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   // ADR-067: Complete / Incomplete; the Incomplete records button opens the staff queue page instead.
   const [recordStatus, setRecordStatus] = useState<RecordStatusFilter>('')
   const incompleteOnly = recordStatus === 'incomplete'
-  const [sort, setSort] = useState<TableSortState<StaffSortKey>>({ key: 'name', direction: 'ascending' })
+  const [sort, setSort] = useState<TableSortState<StaffSortKey>>({
+    key: 'name',
+    direction: 'ascending',
+  })
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = usePageSize()
   const changePageSize = (size: PageSize) => {
     setPageSize(size)
     setPage(1)
   }
-  const { data, status, isRefetching, reload } = useAsyncData(`staff-list|${search}|${type}|${includeArchived}`, () =>
-    fetchStaffList({ search, type, includeArchived }),
+  const { data, status, isRefetching, reload } = useAsyncData(
+    `staff-list|${search}|${type}|${includeArchived}`,
+    () => fetchStaffList({ search, type, includeArchived }),
   )
   // The button counts the open rows on the staff Incomplete Records page.
   const queue = useAsyncData('staff-incomplete-records', fetchStaffIncompleteRecords)
@@ -179,9 +198,20 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
     direction: sort.key === key ? sort.direction : undefined,
     onSort: () => setSort((current) => toggleTableSort(current, key)),
   })
-  const labels: Record<StaffSortKey, string> = { name: 'Full name', number: 'Staff No.', type: 'Type', department: 'Department or role', status: 'Record status' }
+  const labels: Record<StaffSortKey, string> = {
+    name: 'Full name',
+    number: 'Staff No.',
+    type: 'Type',
+    department: 'Department or role',
+    status: 'Record status',
+  }
   const sortable = baseColumns.map((column) =>
-    column.key in labels ? { ...column, sort: sortColumn(column.key as StaffSortKey, labels[column.key as StaffSortKey]) } : column,
+    column.key in labels
+      ? {
+          ...column,
+          sort: sortColumn(column.key as StaffSortKey, labels[column.key as StaffSortKey]),
+        }
+      : column,
   )
   // Filtered to incomplete records: what's missing, and Edit Record straight to the form, as on the student queue.
   const columns: Array<DataTableColumn<Personnel>> = incompleteOnly
@@ -208,7 +238,11 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           width: '15%',
           align: 'right',
           cell: (person) => (
-            <Link to={paths.staffEdit(person.id)} aria-label={`Edit Record for ${person.fullName}`} className={buttonClassName({ size: 'sm' })}>
+            <Link
+              to={paths.staffEdit(person.id)}
+              aria-label={`Edit Record for ${person.fullName}`}
+              className={buttonClassName({ size: 'sm' })}
+            >
               <Icon name="pencil" />
               Edit Record
             </Link>
@@ -216,11 +250,23 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
         },
       ]
     : sortable
-  const listed = recordStatus ? data.filter((person) => isIncomplete(person) === incompleteOnly) : data
+  const listed = recordStatus
+    ? data.filter((person) => isIncomplete(person) === incompleteOnly)
+    : data
   // By last name, then first name (ADR-064): the order the list arrives in.
   const nameOrder = new Map(data.map((person, index) => [person.id, index]))
   const rows = sortTableRows(listed, sort, (person, key) =>
-    key === 'name' ? nameOrder.get(person.id) : key === 'number' ? person.staffNumber : key === 'type' ? person.type : key === 'status' ? (isIncomplete(person) ? 'Incomplete' : 'Complete') : (person.department ?? ''),
+    key === 'name'
+      ? nameOrder.get(person.id)
+      : key === 'number'
+        ? person.staffNumber
+        : key === 'type'
+          ? person.type
+          : key === 'status'
+            ? isIncomplete(person)
+              ? 'Incomplete'
+              : 'Complete'
+            : (person.department ?? ''),
   )
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize))
   const currentPage = Math.min(page, pageCount)
@@ -234,13 +280,17 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">Staff List</h1>
             <p className="mt-1 text-sm text-text-secondary">
-              Teachers, non-teaching staff and utility workers seen at the clinic. Medical details stay inside the
-              individual profile.
+              Teachers, non-teaching staff and utility workers seen at the clinic. Medical details
+              stay inside the individual profile.
             </p>
           </div>
           {/* ml-auto: when the actions wrap under the description they stay right-aligned, as on the Student List. */}
           <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
-            <Link className={buttonClassName({ variant: 'secondary' })} to={paths.archive} state={{ ...DRILL_THROUGH_STATE, section: 'staff' }}>
+            <Link
+              className={buttonClassName({ variant: 'secondary' })}
+              to={paths.archive}
+              state={{ ...DRILL_THROUGH_STATE, section: 'staff' }}
+            >
               <Icon name="archive" />
               Archive{archive.data ? ` (${rowsInNewestYear(archive.data.staff).length})` : ''}
             </Link>
@@ -271,8 +321,23 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
         />
         <CardBody className="flex flex-col gap-4">
           <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1fr)_16rem_12rem_auto]">
-            <Input label="Search" type="search" value={search} placeholder="Name or Staff No." onChange={(event) => { setSearch(event.target.value); setPage(1) }} />
-            <TypeSelect value={type} onChange={(value) => { setType(value); setPage(1) }} />
+            <Input
+              label="Search"
+              type="search"
+              value={search}
+              placeholder="Name or Staff No."
+              onChange={(event) => {
+                setSearch(event.target.value)
+                setPage(1)
+              }}
+            />
+            <TypeSelect
+              value={type}
+              onChange={(value) => {
+                setType(value)
+                setPage(1)
+              }}
+            />
             <Select
               label="Record status"
               value={recordStatus}
@@ -288,7 +353,10 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
               <input
                 type="checkbox"
                 checked={includeArchived}
-                onChange={(event) => { setIncludeArchived(event.target.checked); setPage(1) }}
+                onChange={(event) => {
+                  setIncludeArchived(event.target.checked)
+                  setPage(1)
+                }}
                 className="size-4 cursor-pointer accent-brand-green-dark"
               />
               Show archived
@@ -320,7 +388,11 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
               <EmptyState
                 icon="user"
                 title={incompleteOnly ? 'No incomplete staff records' : 'No staff found'}
-                description={incompleteOnly ? 'Every staff record shown has a sex and an emergency contact.' : 'Try a different search, type, or record-status filter, or add a staff record.'}
+                description={
+                  incompleteOnly
+                    ? 'Every staff record shown has a sex and an emergency contact.'
+                    : 'Try a different search, type, or record-status filter, or add a staff record.'
+                }
               />
             )}
           </div>

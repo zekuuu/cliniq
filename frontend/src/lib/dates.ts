@@ -18,7 +18,8 @@ export function toISODate(date: Date): ISODate {
   return `${y}-${m}-${d}`
 }
 
-export const isRealDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && toISODate(parseISODate(value)) === value
+export const isRealDate = (value: string) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(value) && toISODate(parseISODate(value)) === value
 
 export function todayISO(now: Date = new Date()): ISODate {
   return toISODate(now)
@@ -170,6 +171,10 @@ export function monthWeeks(month: string): MonthWeek[] {
   return chunks.map((chunk) => {
     const first = Number(chunk[0].slice(8))
     const last = Number(chunk[chunk.length - 1].slice(8))
-    return { from: chunk[0], to: chunk[chunk.length - 1], label: first === last ? String(first) : `${first}-${last}` }
+    return {
+      from: chunk[0],
+      to: chunk[chunk.length - 1],
+      label: first === last ? String(first) : `${first}-${last}`,
+    }
   })
 }

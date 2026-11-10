@@ -9,7 +9,10 @@ export function CertificateWarning({ period }: { period: LetterPeriod }) {
   const warning = limit.data === undefined ? null : medicalCertificateWarning(period, limit.data)
   if (!warning) return null
   return (
-    <p role="note" className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary">
+    <p
+      role="note"
+      className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary"
+    >
       <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning-text" />
       {warning}
     </p>

@@ -34,11 +34,7 @@ import { rangeForPreset, type DateRange } from '../../lib/dateRange'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import { paths } from '../../routes/paths'
 import type { Disposition } from '../../types/entities'
-import {
-  defaultVisitLogRange,
-  fetchVisitLog,
-  type VisitLogRow,
-} from './api/visitLogApi'
+import { defaultVisitLogRange, fetchVisitLog, type VisitLogRow } from './api/visitLogApi'
 import { patientNumberLabel, type PatientFilter } from '../../lib/patients'
 import { dispositionLabel, DISPOSITION_TONES } from '../../lib/dispositions'
 
@@ -56,7 +52,10 @@ const dispositionOptions = [
 ] satisfies Array<{ value: DispositionFilter; label: string }>
 
 // ADR-053: a staff visit's "Returned to class" reads "Returned to work".
-const dispositionMeta = (disposition: Disposition, kind: 'student' | 'personnel' = 'student') => ({ label: dispositionLabel(disposition, kind), tone: DISPOSITION_TONES[disposition] })
+const dispositionMeta = (disposition: Disposition, kind: 'student' | 'personnel' = 'student') => ({
+  label: dispositionLabel(disposition, kind),
+  tone: DISPOSITION_TONES[disposition],
+})
 
 function VisitLogSkeleton({ back }: { back: ReactNode }) {
   return (
@@ -90,16 +89,17 @@ export function VisitLogListPage() {
   // `?letter=pending` comes from the Dashboard count and must include outstanding letters from
   // earlier days; date deep links still take precedence in useDateRangeEntryParams.
   const [searchParams] = useSearchParams()
-  const defaultRange = searchParams.get('letter') === 'pending'
-    ? rangeForPreset('all', todayRange.to)
-    : todayRange
+  const defaultRange =
+    searchParams.get('letter') === 'pending' ? rangeForPreset('all', todayRange.to) : todayRange
   const { initialRange, clearDateParams } = useDateRangeEntryParams(defaultRange)
   // `?from=&to=` (e.g. the Dashboard calendar's "View visits") applies only on arrival.
   const [range, setRange] = useState<DateRange>(initialRange)
   const [search, setSearch] = useState('')
   const [disposition, setDisposition] = useState<DispositionFilter>('all')
   // `?letter=pending` (the Dashboard's "Pending excuse letters" card) applies only on arrival.
-  const [letter, setLetter] = useState<LetterFilter>(searchParams.get('letter') === 'pending' ? 'pending' : '')
+  const [letter, setLetter] = useState<LetterFilter>(
+    searchParams.get('letter') === 'pending' ? 'pending' : '',
+  )
   // `?inClinic=1` applies only on arrival; no screen links to it (Zean removed the Dashboard chip).
   const [inClinicNow, setInClinicNow] = useState(searchParams.get('inClinic') === '1')
   const [includeEnteredInError, setIncludeEnteredInError] = useState(false)
@@ -108,7 +108,10 @@ export function VisitLogListPage() {
     ...(inClinicNow ? ['in-clinic-now'] : []),
     ...(includeEnteredInError ? ['include-entered-in-error'] : []),
   ]
-  const [sort, setSort] = useState<TableSortState<VisitLogSortKey>>({ key: 'dateTime', direction: 'descending' })
+  const [sort, setSort] = useState<TableSortState<VisitLogSortKey>>({
+    key: 'dateTime',
+    direction: 'descending',
+  })
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = usePageSize()
   // A new page size starts again at page 1 (cliniq-pagination-patterns).
@@ -119,7 +122,17 @@ export function VisitLogListPage() {
 
   const { data, status, isRefetching, reload } = useAsyncData(
     `${range.from}|${range.to}|${search}|${disposition}|${letter}|${inClinicNow}|${includeEnteredInError}|${patient}`,
-    () => fetchVisitLog({ from: range.from, to: range.to, search, disposition, letter, inClinicNow, includeEnteredInError, patient }),
+    () =>
+      fetchVisitLog({
+        from: range.from,
+        to: range.to,
+        search,
+        disposition,
+        letter,
+        inClinicNow,
+        includeEnteredInError,
+        patient,
+      }),
   )
 
   // Filters reset to the first page in the same event, so a narrower result never lands on an
@@ -216,7 +229,9 @@ export function VisitLogListPage() {
       sort: sortColumn('lrn', 'LRN or Staff No.'),
       cell: (row) => (
         <div>
-          <p><PatientNumber patient={row.patient} /></p>
+          <p>
+            <PatientNumber patient={row.patient} />
+          </p>
           <p className="text-xs text-text-secondary">{row.gradeLevel}</p>
         </div>
       ),
@@ -232,8 +247,16 @@ export function VisitLogListPage() {
           {/* No "In clinic now" badge: it repeated the disposition "Resting in clinic" (review round 2, R20). */}
           {(row.escalated || row.enteredInError) && (
             <div className="mt-1 flex flex-wrap gap-1">
-              {row.escalated && <Badge tone="warning" variant="soft">Escalated</Badge>}
-              {row.enteredInError && <Badge tone="error" variant="soft">Entered in error</Badge>}
+              {row.escalated && (
+                <Badge tone="warning" variant="soft">
+                  Escalated
+                </Badge>
+              )}
+              {row.enteredInError && (
+                <Badge tone="error" variant="soft">
+                  Entered in error
+                </Badge>
+              )}
             </div>
           )}
         </div>
@@ -278,16 +301,18 @@ export function VisitLogListPage() {
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-text-primary">
-              Visit Log
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight text-text-primary">Visit Log</h1>
             <p className="mt-1 text-sm text-text-secondary">
               Review daily clinic visits by LRN or Staff No. and complaint. Treatment details open
               from the individual record.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Link className={buttonClassName({ variant: 'primary' })} to={paths.visitNew} aria-keyshortcuts={SHORTCUT_KEYS.newVisit}>
+            <Link
+              className={buttonClassName({ variant: 'primary' })}
+              to={paths.visitNew}
+              aria-keyshortcuts={SHORTCUT_KEYS.newVisit}
+            >
               <Icon name="stethoscope" />
               New Visit
               <ShortcutHint keys={SHORTCUT_KEYS.newVisit} />
@@ -314,7 +339,8 @@ export function VisitLogListPage() {
         <CardBody className="flex flex-col gap-4">
           <div className="flex flex-wrap items-end gap-3">
             <Input
-              label="Search" type="search"
+              label="Search"
+              type="search"
               value={search}
               placeholder={`LRN, Staff No., ${symptom} or event`}
               onChange={(event) => changeSearch(event.target.value)}

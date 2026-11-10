@@ -40,11 +40,16 @@ export function useSaveFeedback() {
     setResult(null)
     try {
       const value = await action()
-      setResult({ kind: 'saved', message: typeof messages.saved === 'function' ? messages.saved(value) : messages.saved })
+      setResult({
+        kind: 'saved',
+        message: typeof messages.saved === 'function' ? messages.saved(value) : messages.saved,
+      })
       return { ok: true, value }
     } catch (cause) {
       const message = messages.failed?.(cause)
-      setResult(message === null ? null : { kind: 'failed', message: message ?? SAVE_FAILED_MESSAGE })
+      setResult(
+        message === null ? null : { kind: 'failed', message: message ?? SAVE_FAILED_MESSAGE },
+      )
       return { ok: false }
     } finally {
       busy.current = false

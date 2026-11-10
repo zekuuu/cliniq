@@ -11,7 +11,11 @@ describe('Activity calendar', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Activity calendar' })).toBeInTheDocument()
     expect(await screen.findByRole('radiogroup', { name: 'Calendar period' })).toBeInTheDocument()
     await user.click(screen.getByRole('radio', { name: 'Weekly' }))
-    expect(within(screen.getByRole('radiogroup', { name: 'Calendar period' })).getByRole('radio', { name: 'Weekly' })).toHaveAttribute('aria-checked', 'true')
+    expect(
+      within(screen.getByRole('radiogroup', { name: 'Calendar period' })).getByRole('radio', {
+        name: 'Weekly',
+      }),
+    ).toHaveAttribute('aria-checked', 'true')
   })
 
   it('lets the Admin open a day to manage its events, without the Staff-only View visits link (ADR-042)', async () => {
@@ -52,5 +56,4 @@ describe('Activity calendar', () => {
       'justify-center',
     )
   })
-
 })

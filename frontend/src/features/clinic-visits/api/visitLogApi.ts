@@ -1,4 +1,10 @@
-import { getMockToday, listPersonnel, listStudents, listUsers, listVisits } from '../../../lib/mock-db'
+import {
+  getMockToday,
+  listPersonnel,
+  listStudents,
+  listUsers,
+  listVisits,
+} from '../../../lib/mock-db'
 import { matchesPatientFilter, type PatientFilter, type PatientNumber } from '../../../lib/patients'
 import { todayISO } from '../../../lib/dates'
 import { rangeForPreset } from '../../../lib/dateRange'
@@ -45,7 +51,10 @@ export function defaultVisitLogRange(today = todayISO()): { from: ISODate; to: I
 
 export async function fetchVisitLog(query: VisitLogQuery): Promise<VisitLogRow[]> {
   const [visits, students, personnel, users] = await Promise.all([
-    listVisits({ from: query.from, to: query.to }, { includeEnteredInError: query.includeEnteredInError }),
+    listVisits(
+      { from: query.from, to: query.to },
+      { includeEnteredInError: query.includeEnteredInError },
+    ),
     listStudents({ includeArchived: true, fullLrn: true }),
     listPersonnel({ includeArchived: true }),
     listUsers(),
@@ -78,9 +87,15 @@ export async function fetchVisitLog(query: VisitLogQuery): Promise<VisitLogRow[]
               disposition: visit.disposition,
               eventTag: visit.eventTag,
               loggedBy: userNames.get(visit.loggedByUserId) ?? 'Unknown user',
-              letterPending: Boolean(visit.excuseLetterDraft) && Boolean(student && !student.archived) && !visit.enteredInError,
+              letterPending:
+                Boolean(visit.excuseLetterDraft) &&
+                Boolean(student && !student.archived) &&
+                !visit.enteredInError,
               inClinicNow:
-                visit.disposition === 'resting_in_clinic' && !visit.timeOut && visit.dateTime.slice(0, 10) === today && !visit.enteredInError,
+                visit.disposition === 'resting_in_clinic' &&
+                !visit.timeOut &&
+                visit.dateTime.slice(0, 10) === today &&
+                !visit.enteredInError,
               escalated: Boolean(visit.escalatedIncidentId),
               enteredInError: Boolean(visit.enteredInError),
             },

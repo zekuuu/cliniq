@@ -30,14 +30,23 @@ const STAFF = { id: 'usr-nurse', name: 'Nurse', role: 'staff' } as const
 const thisMonth = () => getMonthlyReport(todayISO().slice(0, 7))
 
 function renderReports(viewer = STAFF, reportView?: 'monthly' | 'health') {
-  return render(<MemoryRouter initialEntries={[{ pathname: '/reports', state: reportView ? { reportView } : null }]}><ReportsPage viewer={viewer} /></MemoryRouter>)
+  return render(
+    <MemoryRouter
+      initialEntries={[{ pathname: '/reports', state: reportView ? { reportView } : null }]}
+    >
+      <ReportsPage viewer={viewer} />
+    </MemoryRouter>,
+  )
 }
 
 describe('Reports', () => {
   it('colours the month totals like the same figures on the Dashboard', async () => {
     const { container } = renderReports()
     await screen.findByRole('heading', { name: 'Clinic visits by sex' })
-    const card = (label: string) => [...container.querySelectorAll('[data-stat-card]')].find((el) => el.textContent?.startsWith(label))
+    const card = (label: string) =>
+      [...container.querySelectorAll('[data-stat-card]')].find((el) =>
+        el.textContent?.startsWith(label),
+      )
     expect(card('Clinic visits')).toHaveClass('bg-brand-green-fill')
     expect(card('Incidents')).toHaveClass('bg-error-fill')
     expect(card('Follow-ups')).toHaveClass('bg-follow-up-fill')
@@ -50,7 +59,9 @@ describe('Reports', () => {
     vi.spyOn(window, 'print').mockImplementation(() => {})
     renderReports({ id: 'usr-nurse', name: 'Nurse', role: 'staff' })
     expect(await screen.findByRole('heading', { name: 'Monthly Report' })).toBeInTheDocument()
-    expect((await screen.findAllByRole('columnheader')).map((header) => header.textContent)).toContainEqual(expect.stringMatching(/^[A-Z][a-z]{2} \d+–\d+$/))
+    expect(
+      (await screen.findAllByRole('columnheader')).map((header) => header.textContent),
+    ).toContainEqual(expect.stringMatching(/^[A-Z][a-z]{2} \d+–\d+$/))
     await user.click(screen.getByRole('tab', { name: 'Incident register' }))
     expect(screen.getByRole('heading', { name: 'Incident register' })).toBeInTheDocument()
     await user.click(screen.getByRole('tab', { name: 'Symptom summary' }))
@@ -78,7 +89,9 @@ describe('Reports', () => {
       act(() => {
         window.dispatchEvent(new Event('beforeprint'))
       })
-      expect(document.body.querySelector('[data-print-document]')?.textContent).toContain(incident.patient.number)
+      expect(document.body.querySelector('[data-print-document]')?.textContent).toContain(
+        incident.patient.number,
+      )
     })
     act(() => {
       window.dispatchEvent(new Event('afterprint'))
@@ -124,13 +137,15 @@ describe('Reports', () => {
     await user.click(screen.getByRole('tab', { name: 'Symptom summary' }))
     await screen.findByRole('img', { name: /clinic visits by symptom/i })
 
-    const options = (barMock.props as {
-      options?: {
-        animation?: { duration?: number; easing?: string } | false
-        transitions?: { active?: { animation?: { duration?: number; easing?: string } } }
-        plugins?: { tooltip?: { enabled?: boolean; external?: unknown } }
+    const options = (
+      barMock.props as {
+        options?: {
+          animation?: { duration?: number; easing?: string } | false
+          transitions?: { active?: { animation?: { duration?: number; easing?: string } } }
+          plugins?: { tooltip?: { enabled?: boolean; external?: unknown } }
+        }
       }
-    }).options
+    ).options
     expect(options?.animation).toMatchObject({ duration: 280, easing: 'easeOutCubic' })
     expect(options?.transitions?.active?.animation).toMatchObject({
       duration: 160,
@@ -147,7 +162,10 @@ describe('Reports', () => {
     await screen.findByRole('img', { name: /clinic visits by symptom/i })
 
     // Chart view: the table is hidden on screen but printed.
-    expect(container.querySelector('[data-table="health-summary"]')).toHaveClass('hidden', 'print:block')
+    expect(container.querySelector('[data-table="health-summary"]')).toHaveClass(
+      'hidden',
+      'print:block',
+    )
 
     // Table view: the chart stays mounted off-screen and hidden from assistive tech, for print.
     await user.click(screen.getByRole('radio', { name: 'Table' }))

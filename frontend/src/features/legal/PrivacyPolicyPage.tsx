@@ -10,7 +10,11 @@ const listClass = `mt-3 leading-7 ${BULLET_LIST}`
  * Static legal copy for Screen #36. Keep this content synchronized with the reference draft.
  * `viewer={null}` is the signed-out copy linked from Login: no shell, and Back returns to Sign In.
  */
-export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser | null }) {
+export function PrivacyPolicyPage({
+  viewer = getMockSessionUser(),
+}: {
+  viewer?: SessionUser | null
+}) {
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-6 pb-6 sm:px-8">
       {/* Every role opens this page; signed out, Back returns to Sign In. */}
@@ -41,8 +45,8 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             qualified to confirm it against the Data Privacy Act of 2012 (Republic Act No. 10173)
             and any policy Mendez Christian Academy already has.{' '}
             <strong>
-              The contact section below is not final: MCA has not yet designated who handles
-              privacy inquiries, and this document should not go live with that section unresolved.
+              The contact section below is not final: MCA has not yet designated who handles privacy
+              inquiries, and this document should not go live with that section unresolved.
             </strong>
           </p>
 
@@ -69,14 +73,14 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             </h2>
             <ul className={listClass}>
               <li>
-                <strong>Student information:</strong> name, LRN (Learner Reference Number), grade level, section,
-                date of birth (when the school provides it), gender, emergency contact details, allergies,
-                and medical conditions.
+                <strong>Student information:</strong> name, LRN (Learner Reference Number), grade
+                level, section, date of birth (when the school provides it), gender, emergency
+                contact details, allergies, and medical conditions.
               </li>
               <li>
-                <strong>Clinic records:</strong> visit records (date, symptoms, treatment,
-                outcome), incident/emergency records (including hospital referral and
-                parent-notification details where applicable), and follow-up records.
+                <strong>Clinic records:</strong> visit records (date, symptoms, treatment, outcome),
+                incident/emergency records (including hospital referral and parent-notification
+                details where applicable), and follow-up records.
               </li>
               <li>
                 <strong>Inventory records:</strong> medicine and supply stock levels and usage
@@ -155,8 +159,9 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
                       <strong>Admin/Principal</strong>
                     </th>
                     <td className="px-3 py-3">
-                      View-only access to reports, the Clinic Overview Dashboard, the audit log, the student
-                      list and profiles, and incident reports. Opening a profile or report is logged.
+                      View-only access to reports, the Clinic Overview Dashboard, the audit log, the
+                      student list and profiles, and incident reports. Opening a profile or report
+                      is logged.
                     </td>
                   </tr>
                   <tr className="align-top">
@@ -175,8 +180,8 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             <p className={paragraphClass}>
               No role can view information for a student they have not specifically looked up or
               that isn&apos;t relevant to their role. Multi-student list views (such as the visit
-              log) show only the last digits of the LRN rather than a name, so that information isn&apos;t
-              identifiable to someone glancing at a shared screen.
+              log) show only the last digits of the LRN rather than a name, so that information
+              isn&apos;t identifiable to someone glancing at a shared screen.
             </p>
           </section>
 
@@ -200,8 +205,8 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
                 necessary.
               </li>
               <li>
-                Audit log records are kept separately from clinic records, for accountability, for 10
-                years.
+                Audit log records are kept separately from clinic records, for accountability, for
+                10 years.
               </li>
             </ul>
           </section>
@@ -213,8 +218,8 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             <ul className={listClass}>
               <li>
                 Accounts are protected by individual logins. A person is signed out after a period
-                without activity (60 minutes for clinic staff and 30 for the Admin, by default) and at
-                the latest one week after signing in.
+                without activity (60 minutes for clinic staff and 30 for the Admin, by default) and
+                at the latest one week after signing in.
               </li>
               <li>Repeated failed login attempts lock the account for 5 minutes.</li>
               <li>
@@ -240,12 +245,13 @@ export function PrivacyPolicyPage({ viewer = getMockSessionUser() }: { viewer?: 
             </p>
             {/* ADR-043 (D18): wording pending the school's privacy officer (open DECIDE in Frontend-Issues-and-TODOs). */}
             <p className={paragraphClass}>
-              <strong>Teachers and school staff (PROVISIONAL).</strong> The clinic may also record visits,
-              incidents and medicines given for teachers, non-teaching staff and utility workers, with their sex,
-              and their allergies and medical conditions if they choose to give them. This health information is kept
-              only with the staff member&apos;s knowledge and consent. Details are seen only by the School
-              Clinician; the Principal sees counts, never names or details. It is protected in the same way as students&apos; records. This wording is provisional until
-              the school&apos;s privacy officer approves it.
+              <strong>Teachers and school staff (PROVISIONAL).</strong> The clinic may also record
+              visits, incidents and medicines given for teachers, non-teaching staff and utility
+              workers, with their sex, and their allergies and medical conditions if they choose to
+              give them. This health information is kept only with the staff member&apos;s knowledge
+              and consent. Details are seen only by the School Clinician; the Principal sees counts,
+              never names or details. It is protected in the same way as students&apos; records.
+              This wording is provisional until the school&apos;s privacy officer approves it.
             </p>
           </section>
 

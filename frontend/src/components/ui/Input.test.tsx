@@ -39,7 +39,9 @@ describe('Input', () => {
     const user = userEvent.setup()
     function Field() {
       const [value, setValue] = useState('')
-      return <Input label="Section" value={value} onChange={(event) => setValue(event.target.value)} />
+      return (
+        <Input label="Section" value={value} onChange={(event) => setValue(event.target.value)} />
+      )
     }
     render(<Field />)
     const field = screen.getByLabelText('Section')

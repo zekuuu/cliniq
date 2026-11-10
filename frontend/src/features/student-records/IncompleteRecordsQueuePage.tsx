@@ -74,11 +74,16 @@ export function IncompleteRecordsQueuePage({
   )
   const [filter, setFilter] = useState<QueueFilter>('open') // Resolved rows stay one click away (Zean, November 5, 2026).
   const [search, setSearch] = useState('')
-  const [sort, setSort] = useState<TableSortState<IncompleteSortKey>>({ key: 'imported', direction: 'descending' })
+  const [sort, setSort] = useState<TableSortState<IncompleteSortKey>>({
+    key: 'imported',
+    direction: 'descending',
+  })
 
   // A record is resolved when Edit Student saves it complete; the data layer records who and when.
   const resolutionOf = (record: IncompleteRecord) =>
-    record.resolvedAt ? { resolvedBy: record.resolvedBy ?? 'Unknown user', resolvedAt: record.resolvedAt } : undefined
+    record.resolvedAt
+      ? { resolvedBy: record.resolvedBy ?? 'Unknown user', resolvedAt: record.resolvedAt }
+      : undefined
 
   const visibleRows = useMemo(() => {
     if (!data) return []
@@ -100,16 +105,20 @@ export function IncompleteRecordsQueuePage({
       })
   }, [data, filter, search])
 
-  const nameOrder = useMemo(() => new Map((data ?? []).map((record, index) => [record.id, index])), [data])
+  const nameOrder = useMemo(
+    () => new Map((data ?? []).map((record, index) => [record.id, index])),
+    [data],
+  )
   const sortedRows = useMemo(
-    () => sortTableRows(visibleRows, sort, (record, key) => {
-      // The queue arrives by last name, then first name (ADR-064); the Student column sorts by that order.
-      if (key === 'student') return nameOrder.get(record.id)
-      if (key === 'grade') return record.gradeLevel
-      if (key === 'missing') return record.missingFields.join(', ')
-      if (key === 'imported') return record.importedAt
-      return resolutionOf(record) ? 'Resolved' : 'Open'
-    }),
+    () =>
+      sortTableRows(visibleRows, sort, (record, key) => {
+        // The queue arrives by last name, then first name (ADR-064); the Student column sorts by that order.
+        if (key === 'student') return nameOrder.get(record.id)
+        if (key === 'grade') return record.gradeLevel
+        if (key === 'missing') return record.missingFields.join(', ')
+        if (key === 'imported') return record.importedAt
+        return resolutionOf(record) ? 'Resolved' : 'Open'
+      }),
     [visibleRows, sort, nameOrder],
   )
 
@@ -129,7 +138,9 @@ export function IncompleteRecordsQueuePage({
       cell: (record) => (
         <div>
           <p>{record.fullName}</p>
-          <p className="text-xs font-normal text-text-secondary"><MaskedLrn lrn={record.lrn} /></p>
+          <p className="text-xs font-normal text-text-secondary">
+            <MaskedLrn lrn={record.lrn} />
+          </p>
         </div>
       ),
     },
@@ -292,7 +303,8 @@ export function IncompleteRecordsQueuePage({
         />
         <CardBody className="flex flex-col gap-4">
           <Input
-            label="Search" type="search"
+            label="Search"
+            type="search"
             value={search}
             placeholder="Name, LRN, or grade"
             onChange={(event) => setSearch(event.target.value)}

@@ -32,7 +32,11 @@ export function FormSection({
   return (
     <section
       aria-labelledby={id}
-      className={cn('flex flex-col gap-4 pt-5 first-of-type:border-t-0 first-of-type:pt-0', FORM_DIVIDER, className)}
+      className={cn(
+        'flex flex-col gap-4 pt-5 first-of-type:border-t-0 first-of-type:pt-0',
+        FORM_DIVIDER,
+        className,
+      )}
     >
       <div>
         <h2 id={id} className="text-sm font-bold text-text-primary">
