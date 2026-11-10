@@ -12,4 +12,9 @@ final class AuditServiceProvider extends ServiceProvider
     {
         $this->app->singleton(AuditLogger::class, InMemoryAuditLogger::class);
     }
+
+    public function boot(): void
+    {
+        $this->loadMigrationsFrom(__DIR__.'/Database/Migrations');
+    }
 }
