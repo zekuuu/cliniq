@@ -50,8 +50,8 @@ is the file that becomes HTTP calls. Nothing above it has to change.
    two is set (a restock or stock adjustment has neither); a row without `personnelId` reads it as null.
    Staff have a unique `staffNumber` (`STF-0001`) and a `type` from `config.personnelTypes`, and no LRN,
    grade, sex or excuse letter. Each student has a unique 12-digit `lrn`, clearly synthetic
-   (`000000` + enrolment year + sequence; ADR-028). Follow-ups point at an existing visit or incident *of
-   the same patient*. Users are referenced by `id`. Complaints must come from
+   (`000000` + enrolment year + sequence; ADR-028). Follow-ups point at an existing visit or incident _of
+   the same patient_. Users are referenced by `id`. Complaints must come from
    `frontendOnly.visitComplaintTypes` / `incidentComplaintTypes`.
 4. **Keep ids readable and unique:** `student-0053`, `personnel-0004`, `visit-0160`, `item-0015`, `user-staff-02`.
 5. **Shapes follow Frontend Context Brief §5** (`src/types/entities.ts`). This isn't a database
@@ -78,15 +78,15 @@ several far-apart "todays".
 
 Add to any URL (see `devToggles.ts`):
 
-| Query | Effect |
-|---|---|
-| `?mock=slow` | every call waits 2.5 s, so skeletons stay on screen |
-| `?mock=error` | every call fails (error states) |
-| `?mock=empty` | every read returns empty collections (empty states) |
+| Query                         | Effect                                                       |
+| ----------------------------- | ------------------------------------------------------------ |
+| `?mock=slow`                  | every call waits 2.5 s, so skeletons stay on screen          |
+| `?mock=error`                 | every call fails (error states)                              |
+| `?mock=empty`                 | every read returns empty collections (empty states)          |
 | `?mockEmpty=visits,incidents` | empty only those collections, e.g. a profile with no history |
-| `?mockLatency=1200` | explicit latency in ms (default 450) |
-| `?mockPersist=on` / `off` | keep writes across reloads in localStorage (off clears them) |
-| `?mockReset=1` | throw away every write and reload from the JSON |
+| `?mockLatency=1200`           | explicit latency in ms (default 450)                         |
+| `?mockPersist=on` / `off`     | keep writes across reloads in localStorage (off clears them) |
+| `?mockReset=1`                | throw away every write and reload from the JSON              |
 
 In the browser console (dev builds): `cliniqMockDb.reset()`, `cliniqMockDb.setToday('2026-12-01')`,
 `cliniqMockDb.setPersistence(true)`, `cliniqMockDb.snapshot()`, `cliniqMockDb.load(state)`.
@@ -110,11 +110,11 @@ Change screen (#2). Passwords are in `frontendOnly.devAccounts` and are delibera
 (`demo-…` / `dev-only-…`). The mock session (`session.ts`) exists only after a successful Login with one of
 these accounts. It lasts one week, like the planned Sanctum session (ADR-015, ADR-056), and Log out ends it.
 
-| Role | Username | Password | Password change required |
-|---|---|---|---|
-| School Clinician | `demo.nurse` | `demo-nurse` | No |
-| Admin / Principal | `demo.principal` | `demo-admin` | No |
-| School Clinician (password-change scenario) | `demo.new` | `demo-change` | Yes |
+| Role                                        | Username         | Password      | Password change required |
+| ------------------------------------------- | ---------------- | ------------- | ------------------------ |
+| School Clinician                            | `demo.nurse`     | `demo-nurse`  | No                       |
+| Admin / Principal                           | `demo.principal` | `demo-admin`  | No                       |
+| School Clinician (password-change scenario) | `demo.new`       | `demo-change` | Yes                      |
 
 These are synthetic development fixtures only, not production credentials. The Login screen displays
 these accounts for local demo purposes. There is no URL role override and no default account: every
