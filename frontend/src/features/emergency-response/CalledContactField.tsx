@@ -1,6 +1,10 @@
 import { Input, Select } from '../../components'
 import type { EmergencyContact } from '../../types/entities'
-import { OTHER_CONTACT, type CalledContactDraft, type CalledContactErrors } from './notificationOutcomes'
+import {
+  OTHER_CONTACT,
+  type CalledContactDraft,
+  type CalledContactErrors,
+} from './notificationOutcomes'
 
 /** "Who was called" for one notification attempt (panel review IN-6): a saved emergency contact, or Other. */
 export function CalledContactField({

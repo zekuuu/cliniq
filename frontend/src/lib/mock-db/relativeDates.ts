@@ -28,7 +28,11 @@ function notAfterNow(date: ISODate, time: string, now: Date): string {
 }
 
 /** Seed times are Philippine time (UTC+8), the clinic's only timezone. */
-export function resolveDateTime(value: RelativeDateTime, today: ISODate, now = new Date()): ISODateTime {
+export function resolveDateTime(
+  value: RelativeDateTime,
+  today: ISODate,
+  now = new Date(),
+): ISODateTime {
   const date = resolveDate(value, today)
   return `${date}T${notAfterNow(date, value.time, now)}:00+08:00`
 }
@@ -49,7 +53,11 @@ export function resolveSchoolDate(value: RelativeDate, today: ISODate): ISODate 
   return toSchoolDay(resolveDate(value, today), today)
 }
 
-export function resolveSchoolDateTime(value: RelativeDateTime, today: ISODate, now = new Date()): ISODateTime {
+export function resolveSchoolDateTime(
+  value: RelativeDateTime,
+  today: ISODate,
+  now = new Date(),
+): ISODateTime {
   const date = resolveSchoolDate(value, today)
   return `${date}T${notAfterNow(date, value.time, now)}:00+08:00`
 }
@@ -59,7 +67,11 @@ export function isRelativeDate(value: unknown): value is RelativeDate {
   const keys = Object.keys(value).filter((key) => key !== 'time')
   if (keys.length !== 1) return false
   const n = (value as Record<string, unknown>)[keys[0]]
-  return (keys[0] === 'daysAgo' || keys[0] === 'daysFromNow') && Number.isInteger(n) && (n as number) >= 0
+  return (
+    (keys[0] === 'daysAgo' || keys[0] === 'daysFromNow') &&
+    Number.isInteger(n) &&
+    (n as number) >= 0
+  )
 }
 
 export function isRelativeDateTime(value: unknown): value is RelativeDateTime {

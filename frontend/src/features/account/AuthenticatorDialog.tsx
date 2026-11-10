@@ -1,11 +1,30 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Badge, Button, DONE_MS, CodeInput, CodeOrRecoveryField, Modal, NUMBERED_LIST } from '../../components'
+import {
+  Badge,
+  Button,
+  DONE_MS,
+  CodeInput,
+  CodeOrRecoveryField,
+  Modal,
+  NUMBERED_LIST,
+} from '../../components'
 import { Icon } from '../../components/icons/Icon'
 import { PrintDocument, PrintSection } from '../../components/print/Print'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { confirmAuthenticatorSetup, getAuthenticatorStatus, RecoveryError, startAuthenticatorSetup, turnOffAuthenticator, type SessionUser } from '../../lib/mock-db'
+import {
+  confirmAuthenticatorSetup,
+  getAuthenticatorStatus,
+  RecoveryError,
+  startAuthenticatorSetup,
+  turnOffAuthenticator,
+  type SessionUser,
+} from '../../lib/mock-db'
 
-type Step = { kind: 'status' } | { kind: 'prove'; then: 'replace' | 'off' } | { kind: 'scan'; secret: string; uri: string } | { kind: 'codes'; codes: string[] }
+type Step =
+  | { kind: 'status' }
+  | { kind: 'prove'; then: 'replace' | 'off' }
+  | { kind: 'scan'; secret: string; uri: string }
+  | { kind: 'codes'; codes: string[] }
 
 /** The setup key in groups of four, easier to type by hand. */
 const grouped = (secret: string) => secret.match(/.{1,4}/g)?.join(' ') ?? secret
@@ -15,14 +34,29 @@ function QrCode({ uri }: { uri: string }) {
   const [src, setSrc] = useState('')
   useEffect(() => {
     let stale = false
-    void import('qrcode').then(({ toDataURL }) => toDataURL(uri, { margin: 1, width: 192 })).then((url) => {
-      if (!stale) setSrc(url)
-    })
+    void import('qrcode')
+      .then(({ toDataURL }) => toDataURL(uri, { margin: 1, width: 192 }))
+      .then((url) => {
+        if (!stale) setSrc(url)
+      })
     return () => {
       stale = true
     }
   }, [uri])
-  return src ? <img src={src} width={192} height={192} alt="QR code to scan with the authenticator app" className="rounded-md border border-border" /> : <div aria-hidden="true" className="size-48 animate-pulse rounded-md bg-surface motion-reduce:animate-none" />
+  return src ? (
+    <img
+      src={src}
+      width={192}
+      height={192}
+      alt="QR code to scan with the authenticator app"
+      className="rounded-md border border-border"
+    />
+  ) : (
+    <div
+      aria-hidden="true"
+      className="size-48 animate-pulse rounded-md bg-surface motion-reduce:animate-none"
+    />
+  )
 }
 
 /**
@@ -30,10 +64,22 @@ function QrCode({ uri }: { uri: string }) {
  * a first code to confirm, then 8 one-time recovery codes shown once. When enabled: Replace or Disable,
  * each after the current 6-digit code or a recovery code. The secret is never shown again after setup.
  */
-export function AuthenticatorDialog({ open, viewer, onClose, onChanged }: { open: boolean; viewer: SessionUser; onClose: () => void; onChanged: () => void }) {
+export function AuthenticatorDialog({
+  open,
+  viewer,
+  onClose,
+  onChanged,
+}: {
+  open: boolean
+  viewer: SessionUser
+  onClose: () => void
+  onChanged: () => void
+}) {
   const [step, setStep] = useState<Step>({ kind: 'status' })
   const [version, setVersion] = useState(0)
-  const status = useAsyncData(`authenticator|${viewer.id}|${version}|${open}`, () => (open ? getAuthenticatorStatus() : Promise.resolve(null)))
+  const status = useAsyncData(`authenticator|${viewer.id}|${version}|${open}`, () =>
+    open ? getAuthenticatorStatus() : Promise.resolve(null),
+  )
   const [code, setCode] = useState('')
   const [useRecoveryCode, setUseRecoveryCode] = useState(false)
   const [error, setError] = useState('')
@@ -59,7 +105,8 @@ export function AuthenticatorDialog({ open, viewer, onClose, onChanged }: { open
 
   function requestClose() {
     // The codes are shown once: closing first needs "I have saved the codes".
-    if (step.kind === 'codes' && !saved) return setError('Tick "I have saved the codes" before closing.')
+    if (step.kind === 'codes' && !saved)
+      return setError('Tick "I have saved the codes" before closing.')
     reset()
     setNotice('')
     onClose()
@@ -77,15 +124,17 @@ export function AuthenticatorDialog({ open, viewer, onClose, onChanged }: { open
     }
   }
 
-  const begin = (proof?: string) => run(async () => {
-    const started = await startAuthenticatorSetup(proof)
-    setCode('')
-    setStep({ kind: 'scan', ...started })
-  })
+  const begin = (proof?: string) =>
+    run(async () => {
+      const started = await startAuthenticatorSetup(proof)
+      setCode('')
+      setStep({ kind: 'scan', ...started })
+    })
 
   function submitProof(event: FormEvent, then: 'replace' | 'off') {
     event.preventDefault()
-    if (useRecoveryCode ? !code.trim() : code.length !== 6) return setError(useRecoveryCode ? 'Enter a recovery code.' : 'Enter the 6-digit code.')
+    if (useRecoveryCode ? !code.trim() : code.length !== 6)
+      return setError(useRecoveryCode ? 'Enter a recovery code.' : 'Enter the 6-digit code.')
     if (then === 'replace') return void begin(code)
     void run(async () => {
       await turnOffAuthenticator(code)
@@ -110,61 +159,135 @@ export function AuthenticatorDialog({ open, viewer, onClose, onChanged }: { open
   const enabled = status.data?.enabled ?? false
   const adminNote = viewer.role === 'admin' && (
     <p className="rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary">
-      As the Administrator, set this up and keep the recovery codes safe: nobody else can reset your password.
+      As the Administrator, set this up and keep the recovery codes safe: nobody else can reset your
+      password.
     </p>
   )
-  const errorLine = error && <p role="alert" className="text-sm font-semibold text-error">{error}</p>
+  const errorLine = error && (
+    <p role="alert" className="text-sm font-semibold text-error">
+      {error}
+    </p>
+  )
 
   let body
   if (step.kind === 'status')
     body = (
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-text-secondary">Use an authenticator app on your phone (such as Google Authenticator). It lets you reset your password here without internet. Signing in still uses your username and password.</p>
+        <p className="text-sm text-text-secondary">
+          Use an authenticator app on your phone (such as Google Authenticator). It lets you reset
+          your password here without internet. Signing in still uses your username and password.
+        </p>
         {adminNote}
-        {notice && <p role="status" className="text-sm font-semibold text-success">{notice}</p>}
+        {notice && (
+          <p role="status" className="text-sm font-semibold text-success">
+            {notice}
+          </p>
+        )}
         {status.data && (
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-md border border-border bg-surface px-3 py-2">
             <p className="flex items-center gap-2 text-sm font-semibold text-text-primary">
               Status
-              {enabled ? <Badge tone="success" variant="soft">Enabled</Badge> : <Badge tone="neutral" icon={null}>Not set up</Badge>}
+              {enabled ? (
+                <Badge tone="success" variant="soft">
+                  Enabled
+                </Badge>
+              ) : (
+                <Badge tone="neutral" icon={null}>
+                  Not set up
+                </Badge>
+              )}
             </p>
-            {enabled && <p className="text-sm text-text-secondary">{status.data.recoveryCodesLeft} of 8 recovery codes left</p>}
+            {enabled && (
+              <p className="text-sm text-text-secondary">
+                {status.data.recoveryCodesLeft} of 8 recovery codes left
+              </p>
+            )}
           </div>
         )}
         {errorLine}
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="neutral" onClick={requestClose}>Close</Button>
+          <Button variant="neutral" onClick={requestClose}>
+            Close
+          </Button>
           {enabled ? (
             <>
-              <Button variant="secondary" onClick={() => { reset(); setStep({ kind: 'prove', then: 'off' }) }}>Disable</Button>
-              <Button variant="primary" onClick={() => { reset(); setStep({ kind: 'prove', then: 'replace' }) }}>Replace</Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  reset()
+                  setStep({ kind: 'prove', then: 'off' })
+                }}
+              >
+                Disable
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  reset()
+                  setStep({ kind: 'prove', then: 'replace' })
+                }}
+              >
+                Replace
+              </Button>
             </>
           ) : (
-            <Button variant="primary" loading={working} loadingText="Starting…" disabled={!status.data} onClick={() => void begin()}>Set up</Button>
+            <Button
+              variant="primary"
+              loading={working}
+              loadingText="Starting…"
+              disabled={!status.data}
+              onClick={() => void begin()}
+            >
+              Set up
+            </Button>
           )}
         </div>
       </div>
     )
   else if (step.kind === 'prove')
     body = (
-      <form noValidate onSubmit={(event) => submitProof(event, step.then)} className="flex flex-col gap-5">
+      <form
+        noValidate
+        onSubmit={(event) => submitProof(event, step.then)}
+        className="flex flex-col gap-5"
+      >
         <div className="flex flex-col gap-1 text-center">
           <p className="text-base font-semibold text-text-primary">Confirm it is you</p>
           <p className="text-sm text-text-secondary">
-            {useRecoveryCode ? 'Enter one of your recovery codes. Each works once.' : 'Enter the 6-digit code the authenticator app shows for CLINIQ.'}{' '}
-            {step.then === 'replace' ? 'You then get a new setup key and new recovery codes.' : 'After this, only the Administrator can reset your password.'}
+            {useRecoveryCode
+              ? 'Enter one of your recovery codes. Each works once.'
+              : 'Enter the 6-digit code the authenticator app shows for CLINIQ.'}{' '}
+            {step.then === 'replace'
+              ? 'You then get a new setup key and new recovery codes.'
+              : 'After this, only the Administrator can reset your password.'}
           </p>
         </div>
         <CodeOrRecoveryField
           recovery={useRecoveryCode}
-          onRecoveryChange={(value) => { setUseRecoveryCode(value); setCode(''); setError('') }}
+          onRecoveryChange={(value) => {
+            setUseRecoveryCode(value)
+            setCode('')
+            setError('')
+          }}
           value={code}
-          onChange={(value) => { setCode(value); setError('') }}
+          onChange={(value) => {
+            setCode(value)
+            setError('')
+          }}
         />
         {error && <div className="text-center">{errorLine}</div>}
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="neutral" onClick={reset}>Back</Button>
-          <Button type="submit" variant={step.then === 'off' ? 'destructive' : 'primary'} loading={working} loadingText="Checking…">{step.then === 'replace' ? 'Continue' : 'Disable'}</Button>
+          <Button variant="neutral" onClick={reset}>
+            Back
+          </Button>
+          <Button
+            type="submit"
+            variant={step.then === 'off' ? 'destructive' : 'primary'}
+            loading={working}
+            loadingText="Checking…"
+          >
+            {step.then === 'replace' ? 'Continue' : 'Disable'}
+          </Button>
         </div>
       </form>
     )
@@ -184,50 +307,112 @@ export function AuthenticatorDialog({ open, viewer, onClose, onChanged }: { open
           </div>
         </div>
         {/* The same code boxes as Forgot password (Zean, November 7, 2026). */}
-        <CodeInput label="6-digit code" value={code} autoFocus onChange={setCode} hint="If codes do not work, check that the phone's date and time are set automatically." />
+        <CodeInput
+          label="6-digit code"
+          value={code}
+          autoFocus
+          onChange={setCode}
+          hint="If codes do not work, check that the phone's date and time are set automatically."
+        />
         {error && <div className="text-center">{errorLine}</div>}
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="neutral" onClick={reset}>Cancel</Button>
-          <Button type="submit" variant="primary" loading={working} disabled={code.length !== 6}>Confirm</Button>
+          <Button variant="neutral" onClick={reset}>
+            Cancel
+          </Button>
+          <Button type="submit" variant="primary" loading={working} disabled={code.length !== 6}>
+            Confirm
+          </Button>
         </div>
       </form>
     )
   else
     body = (
       <div className="flex flex-col gap-4">
-        <div role="alert" className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary">
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary"
+        >
           <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning-text" />
-          <p><strong>Save these codes now.</strong> Keep them in a safe place. Each works once if you lose your phone.</p>
+          <p>
+            <strong>Save these codes now.</strong> Keep them in a safe place. Each works once if you
+            lose your phone.
+          </p>
         </div>
-        <ul aria-label="Recovery codes" className="grid grid-cols-2 gap-2 rounded-md border border-border bg-surface p-3 font-mono text-sm text-text-primary">
-          {step.codes.map((recovery) => <li key={recovery}>{recovery}</li>)}
+        <ul
+          aria-label="Recovery codes"
+          className="grid grid-cols-2 gap-2 rounded-md border border-border bg-surface p-3 font-mono text-sm text-text-primary"
+        >
+          {step.codes.map((recovery) => (
+            <li key={recovery}>{recovery}</li>
+          ))}
         </ul>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" icon="fileText" done={copied} onClick={() => void navigator.clipboard?.writeText(step.codes.join('\n')).then(() => setCopied(true))}>
+          <Button
+            variant="secondary"
+            icon="fileText"
+            done={copied}
+            onClick={() =>
+              void navigator.clipboard?.writeText(step.codes.join('\n')).then(() => setCopied(true))
+            }
+          >
             Copy
           </Button>
-          <Button variant="secondary" icon="printer" onClick={() => window.print()}>Print</Button>
+          <Button variant="secondary" icon="printer" onClick={() => window.print()}>
+            Print
+          </Button>
         </div>
-        <span role="status" className="sr-only">{copied ? 'Codes copied.' : ''}</span>
+        <span role="status" className="sr-only">
+          {copied ? 'Codes copied.' : ''}
+        </span>
         <label className="flex cursor-pointer items-start gap-2 text-sm text-text-primary">
-          <input type="checkbox" checked={saved} onChange={(event) => { setSaved(event.target.checked); setError('') }} className="mt-0.5 size-4 cursor-pointer accent-brand-green-dark" />
+          <input
+            type="checkbox"
+            checked={saved}
+            onChange={(event) => {
+              setSaved(event.target.checked)
+              setError('')
+            }}
+            className="mt-0.5 size-4 cursor-pointer accent-brand-green-dark"
+          />
           I have saved the codes
         </label>
         {errorLine}
         <div className="flex justify-end">
-          <Button variant="primary" disabled={!saved} onClick={requestClose}>Done</Button>
+          <Button variant="primary" disabled={!saved} onClick={requestClose}>
+            Done
+          </Button>
         </div>
         {/* Only the codes print; never the key (cliniq-print-patterns: a purpose-built page). */}
-        <PrintDocument title="CLINIQ recovery codes" viewer={viewer} scope={`For ${viewer.name}. Each code works once. Keep this page in a safe place.`}>
+        <PrintDocument
+          title="CLINIQ recovery codes"
+          viewer={viewer}
+          scope={`For ${viewer.name}. Each code works once. Keep this page in a safe place.`}
+        >
           <PrintSection title="Recovery codes">
-            <ul className="grid grid-cols-2 gap-[2mm] font-mono text-[12pt]">{step.codes.map((recovery) => <li key={recovery}>{recovery}</li>)}</ul>
+            <ul className="grid grid-cols-2 gap-[2mm] font-mono text-[12pt]">
+              {step.codes.map((recovery) => (
+                <li key={recovery}>{recovery}</li>
+              ))}
+            </ul>
           </PrintSection>
         </PrintDocument>
       </div>
     )
 
   return (
-    <Modal open={open} title={step.kind === 'codes' ? 'Save your recovery codes' : step.kind === 'prove' ? (step.then === 'replace' ? 'Replace authenticator app' : 'Disable authenticator app') : 'Authenticator app'} onClose={requestClose}>
+    <Modal
+      open={open}
+      title={
+        step.kind === 'codes'
+          ? 'Save your recovery codes'
+          : step.kind === 'prove'
+            ? step.then === 'replace'
+              ? 'Replace authenticator app'
+              : 'Disable authenticator app'
+            : 'Authenticator app'
+      }
+      onClose={requestClose}
+    >
       {body}
     </Modal>
   )

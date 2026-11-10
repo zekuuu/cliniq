@@ -9,7 +9,7 @@ import { AppRoutes } from '../routes/AppRoutes'
 
 /** Counts, Audit Log and Privacy Policy with staff patients (ADR-043 part 4). */
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
 const ALL = rangeForPreset('all', db().today)
 
 afterEach(() => {

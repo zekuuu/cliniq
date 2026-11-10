@@ -2,7 +2,11 @@ import { useRef, useState, type FormEvent } from 'react'
 import { Button, Input, Modal } from '../../components'
 import { formatDateTime } from '../../lib/dates'
 import { ROLE_LABELS, updateOwnProfile, USER_NAME_MAX, type OwnAccount } from '../../lib/mock-db'
-import { PROFILE_PICTURE_ACCEPT, profilePictureError, resizeProfilePicture } from '../user-management/profilePicture'
+import {
+  PROFILE_PICTURE_ACCEPT,
+  profilePictureError,
+  resizeProfilePicture,
+} from '../user-management/profilePicture'
 import { UserAvatar } from '../user-management/UserAvatar'
 
 /**
@@ -27,7 +31,15 @@ export function EditProfileDialog({
   return <EditProfileBody account={account} onClose={onClose} onSaved={onSaved} />
 }
 
-function EditProfileBody({ account, onClose, onSaved }: { account: OwnAccount; onClose: () => void; onSaved: () => void }) {
+function EditProfileBody({
+  account,
+  onClose,
+  onSaved,
+}: {
+  account: OwnAccount
+  onClose: () => void
+  onSaved: () => void
+}) {
   const [name, setName] = useState(account.name)
   const [picture, setPicture] = useState<string | null>(account.profilePicture)
   const [nameError, setNameError] = useState('')
@@ -52,7 +64,11 @@ function EditProfileBody({ account, onClose, onSaved }: { account: OwnAccount; o
       setPicture(await resizeProfilePicture(file))
       setPictureError('')
     } catch (cause) {
-      setPictureError(cause instanceof Error ? cause.message : 'The image could not be read. Choose another file.')
+      setPictureError(
+        cause instanceof Error
+          ? cause.message
+          : 'The image could not be read. Choose another file.',
+      )
     }
   }
 
@@ -65,7 +81,9 @@ function EditProfileBody({ account, onClose, onSaved }: { account: OwnAccount; o
       await updateOwnProfile({ name, profilePicture: picture })
       onSaved()
     } catch (cause) {
-      setSaveError(cause instanceof Error ? cause.message : 'Your profile could not be saved. Try again.')
+      setSaveError(
+        cause instanceof Error ? cause.message : 'Your profile could not be saved. Try again.',
+      )
     } finally {
       setSaving(false)
     }
@@ -80,7 +98,9 @@ function EditProfileBody({ account, onClose, onSaved }: { account: OwnAccount; o
     >
       {asking ? (
         <>
-          <p className="text-sm text-text-secondary">What you entered on this form hasn&apos;t been saved. If you leave now, it will be lost.</p>
+          <p className="text-sm text-text-secondary">
+            What you entered on this form hasn&apos;t been saved. If you leave now, it will be lost.
+          </p>
           <div className="mt-5 flex flex-wrap justify-end gap-2">
             <Button variant="neutral" data-autofocus onClick={() => setAsking(false)}>
               Keep Editing
@@ -98,9 +118,13 @@ function EditProfileBody({ account, onClose, onSaved }: { account: OwnAccount; o
             <dt className="text-text-secondary">Role</dt>
             <dd className="font-semibold text-text-primary">{ROLE_LABELS[account.role]}</dd>
             <dt className="text-text-secondary">Last sign-in</dt>
-            <dd className="text-text-primary">{account.lastLogin ? formatDateTime(account.lastLogin) : 'Not recorded'}</dd>
+            <dd className="text-text-primary">
+              {account.lastLogin ? formatDateTime(account.lastLogin) : 'Not recorded'}
+            </dd>
           </dl>
-          <p className="-mt-2 text-xs text-text-secondary">The username and role are managed by the Admin.</p>
+          <p className="-mt-2 text-xs text-text-secondary">
+            The username and role are managed by the Admin.
+          </p>
           <Input
             label="Full name"
             required
@@ -114,7 +138,9 @@ function EditProfileBody({ account, onClose, onSaved }: { account: OwnAccount; o
             }}
           />
           <section aria-labelledby="edit-profile-picture-title" className="flex flex-col gap-2">
-            <h3 id="edit-profile-picture-title" className="text-sm font-semibold text-text-primary">Profile picture</h3>
+            <h3 id="edit-profile-picture-title" className="text-sm font-semibold text-text-primary">
+              Profile picture
+            </h3>
             <div className="flex flex-wrap items-center gap-3">
               <UserAvatar name={name || account.name} picture={picture} className="size-14" />
               <input
@@ -138,11 +164,23 @@ function EditProfileBody({ account, onClose, onSaved }: { account: OwnAccount; o
                 </Button>
               )}
             </div>
-            <p className="text-xs text-text-secondary">A square photo works best. JPEG, PNG or WebP, up to 2 MB.</p>
-            {pictureError && <p role="alert" className="text-xs font-semibold text-error">{pictureError}</p>}
+            <p className="text-xs text-text-secondary">
+              A square photo works best. JPEG, PNG or WebP, up to 2 MB.
+            </p>
+            {pictureError && (
+              <p role="alert" className="text-xs font-semibold text-error">
+                {pictureError}
+              </p>
+            )}
           </section>
-          <p className="text-sm text-text-secondary">To change your password, use Change password in the menu.</p>
-          {saveError && <p role="alert" className="text-sm font-semibold text-error">{saveError}</p>}
+          <p className="text-sm text-text-secondary">
+            To change your password, use Change password in the menu.
+          </p>
+          {saveError && (
+            <p role="alert" className="text-sm font-semibold text-error">
+              {saveError}
+            </p>
+          )}
           <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
             <Button variant="neutral" onClick={requestClose}>
               Cancel

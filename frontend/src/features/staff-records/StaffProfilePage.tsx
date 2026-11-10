@@ -84,7 +84,15 @@ function Skeletons({ back }: { back: ReactNode }) {
 /** Why a staff record is archived (professor's consultation, November 6, 2026); "Other" asks which. */
 const REASONS = ['Resigned', 'Retired', 'End of contract', 'Transferred']
 
-function Header({ person, viewer, onArchived }: { person: Personnel; viewer: SessionUser; onArchived: () => void }) {
+function Header({
+  person,
+  viewer,
+  onArchived,
+}: {
+  person: Personnel
+  viewer: SessionUser
+  onArchived: () => void
+}) {
   const [confirming, setConfirming] = useState(false)
   const [archiving, setArchiving] = useState(false)
   const [reason, setReason] = useState('')
@@ -107,7 +115,9 @@ function Header({ person, viewer, onArchived }: { person: Personnel; viewer: Ses
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-text-primary">{person.fullName}</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-text-primary">
+              {person.fullName}
+            </h1>
             {person.archived && (
               <Badge tone="neutral" variant="outline" icon="archive">
                 Archived
@@ -122,7 +132,10 @@ function Header({ person, viewer, onArchived }: { person: Personnel; viewer: Ses
         <div className="flex flex-wrap items-start justify-end gap-2">
           {!person.archived && (
             <>
-              <Link to={paths.visitNewForStaff(person.id)} className={buttonClassName({ variant: 'primary' })}>
+              <Link
+                to={paths.visitNewForStaff(person.id)}
+                className={buttonClassName({ variant: 'primary' })}
+              >
                 Record a visit
               </Link>
               <Link to={paths.incidentNewForStaff(person.id)} className={buttonClassName()}>
@@ -140,34 +153,37 @@ function Header({ person, viewer, onArchived }: { person: Personnel; viewer: Ses
           )}
         </div>
       </div>
-      <Modal open={confirming} title="Archive this staff record?" onClose={() => setConfirming(false)}>
+      <Modal
+        open={confirming}
+        title="Archive this staff record?"
+        onClose={() => setConfirming(false)}
+      >
         <p className="text-sm text-text-secondary">
-          {person.fullName} ({person.staffNumber}) will be hidden from the Staff List and the patient search. Nothing
-          is deleted: the record, visits and incidents stay available under "Show archived" and on the Archive page.
+          {person.fullName} ({person.staffNumber}) will be hidden from the Staff List and the
+          patient search. Nothing is deleted: the record, visits and incidents stay available under
+          "Show archived" and on the Archive page.
         </p>
-        <div className="mt-4"><SelectWithOther
-          label="Reason"
-          otherLabel="Specify the reason"
-          required
-          value={reason}
-          onChange={(value) => {
-            setReason(value)
-            setReasonError('')
-          }}
-          options={REASONS}
-          placeholder="Select reason"
-          maxLength={80}
-          error={reasonError}
-        /></div>
+        <div className="mt-4">
+          <SelectWithOther
+            label="Reason"
+            otherLabel="Specify the reason"
+            required
+            value={reason}
+            onChange={(value) => {
+              setReason(value)
+              setReasonError('')
+            }}
+            options={REASONS}
+            placeholder="Select reason"
+            maxLength={80}
+            error={reasonError}
+          />
+        </div>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <Button variant="neutral" data-autofocus onClick={() => setConfirming(false)}>
             Cancel
           </Button>
-          <Button
-            variant="secondary"
-            loading={archiving}
-            onClick={() => void archive()}
-          >
+          <Button variant="secondary" loading={archiving} onClick={() => void archive()}>
             Archive Record
           </Button>
         </div>
@@ -180,7 +196,10 @@ function Header({ person, viewer, onArchived }: { person: Personnel; viewer: Ses
 function AllergyBanner({ person }: { person: Personnel }) {
   if (!person.allergies.length && !person.medicalConditions.length) return null
   return (
-    <section aria-label="Allergies and medical conditions" className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-4 py-3 text-sm text-text-primary">
+    <section
+      aria-label="Allergies and medical conditions"
+      className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-4 py-3 text-sm text-text-primary"
+    >
       <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-warning-text" />
       <div className="flex flex-col gap-0.5">
         {person.allergies.length > 0 && (
@@ -217,7 +236,9 @@ function Overview({ person }: { person: Personnel }) {
         <Field label="Staff No.">
           <span className="tabular-nums">{person.staffNumber}</span>
         </Field>
-        <Field label="Sex">{person.sex === 'female' ? 'Female' : person.sex === 'male' ? 'Male' : 'Sex not recorded'}</Field>
+        <Field label="Sex">
+          {person.sex === 'female' ? 'Female' : person.sex === 'male' ? 'Male' : 'Sex not recorded'}
+        </Field>
         <Field label="Type">{person.type}</Field>
         <Field label="Department or role">{person.department ?? 'Not recorded'}</Field>
         <Field label="Contact number">{person.contactInfo || 'Not recorded'}</Field>
@@ -237,7 +258,11 @@ function Overview({ person }: { person: Personnel }) {
 function Medical({ person }: { person: Personnel }) {
   return (
     <Card aria-labelledby="staff-medical">
-      <CardHeader titleId="staff-medical" title="Allergies and conditions" icon={<Icon name="stethoscope" />} />
+      <CardHeader
+        titleId="staff-medical"
+        title="Allergies and conditions"
+        icon={<Icon name="stethoscope" />}
+      />
       <CardBody className="flex flex-col gap-4">
         <section aria-labelledby="staff-allergies">
           <h3 id="staff-allergies" className="text-sm font-semibold text-text-primary">
@@ -259,7 +284,12 @@ function Medical({ person }: { person: Personnel }) {
 function Visits({ visits }: { visits: Visit[] }) {
   return (
     <Card aria-labelledby="staff-visits" className="flex flex-col">
-      <CardHeader titleId="staff-visits" title="Visit History" icon={<Icon name="stethoscope" />} description="Most recent clinic visits." />
+      <CardHeader
+        titleId="staff-visits"
+        title="Visit History"
+        icon={<Icon name="stethoscope" />}
+        description="Most recent clinic visits."
+      />
       {visits.length ? (
         <RowList labelledBy="staff-visits">
           {visits.slice(0, HISTORY_ON_SCREEN).map((visit) => (
@@ -277,7 +307,10 @@ function Visits({ visits }: { visits: Visit[] }) {
           ))}
         </RowList>
       ) : (
-        <EmptyState title="No visit history yet" description="No clinic visits are recorded for this staff member." />
+        <EmptyState
+          title="No visit history yet"
+          description="No clinic visits are recorded for this staff member."
+        />
       )}
     </Card>
   )
@@ -286,7 +319,12 @@ function Visits({ visits }: { visits: Visit[] }) {
 function Incidents({ incidents }: { incidents: Incident[] }) {
   return (
     <Card aria-labelledby="staff-incidents" className="flex flex-col">
-      <CardHeader titleId="staff-incidents" title="Incident History" icon={<Icon name="alertTriangle" />} description="Emergency incidents, including records that still need completion." />
+      <CardHeader
+        titleId="staff-incidents"
+        title="Incident History"
+        icon={<Icon name="alertTriangle" />}
+        description="Emergency incidents, including records that still need completion."
+      />
       {incidents.length ? (
         <RowList labelledBy="staff-incidents">
           {incidents.slice(0, HISTORY_ON_SCREEN).map((incident) => (
@@ -295,12 +333,17 @@ function Incidents({ incidents }: { incidents: Incident[] }) {
               primary={incident.complaint}
               secondary={incidentCareSummary(incident)}
               meta={formatDateTime(incident.time)}
-              trailing={<StatusBadge status={String(incident.stage) as '1' | '2'} map={incidentStageMap} />}
+              trailing={
+                <StatusBadge status={String(incident.stage) as '1' | '2'} map={incidentStageMap} />
+              }
             />
           ))}
         </RowList>
       ) : (
-        <EmptyState title="No incident history yet" description="No emergency incidents are recorded for this staff member." />
+        <EmptyState
+          title="No incident history yet"
+          description="No emergency incidents are recorded for this staff member."
+        />
       )}
     </Card>
   )
@@ -309,7 +352,12 @@ function Incidents({ incidents }: { incidents: Incident[] }) {
 function FollowUps({ followUps }: { followUps: FollowUp[] }) {
   return (
     <Card aria-labelledby="staff-follow-ups" className="flex flex-col">
-      <CardHeader titleId="staff-follow-ups" title="Follow-Ups" icon={<Icon name="calendarClock" />} description="Follow-ups from this staff member's visits and incidents." />
+      <CardHeader
+        titleId="staff-follow-ups"
+        title="Follow-Ups"
+        icon={<Icon name="calendarClock" />}
+        description="Follow-ups from this staff member's visits and incidents."
+      />
       {followUps.length ? (
         <RowList labelledBy="staff-follow-ups">
           {followUps.slice(0, HISTORY_ON_SCREEN).map((followUp) => (
@@ -326,7 +374,10 @@ function FollowUps({ followUps }: { followUps: FollowUp[] }) {
           ))}
         </RowList>
       ) : (
-        <EmptyState title="No follow-ups yet" description="No follow-ups are recorded for this staff member." />
+        <EmptyState
+          title="No follow-ups yet"
+          description="No follow-ups are recorded for this staff member."
+        />
       )}
     </Card>
   )
@@ -336,8 +387,16 @@ function FollowUps({ followUps }: { followUps: FollowUp[] }) {
  * Staff Profile (ADR-043, D8). One staff member, deliberately opened, so the name is shown (ADR-004).
  * School Clinician only; the Admin never reaches it (route guard).
  */
-export function StaffProfilePage({ viewer = getMockSessionUser(), personnelId }: { viewer?: SessionUser; personnelId: string }) {
-  const { data, status, reload } = useAsyncData(`staff-profile|${personnelId}`, () => fetchStaffProfile(personnelId, viewer))
+export function StaffProfilePage({
+  viewer = getMockSessionUser(),
+  personnelId,
+}: {
+  viewer?: SessionUser
+  personnelId: string
+}) {
+  const { data, status, reload } = useAsyncData(`staff-profile|${personnelId}`, () =>
+    fetchStaffProfile(personnelId, viewer),
+  )
   const [savedMessage] = useState(peekSavedMessage)
   useEffect(clearSavedMessage, [])
   const back = <BackButton fallback={paths.staff} />
@@ -374,7 +433,10 @@ export function StaffProfilePage({ viewer = getMockSessionUser(), personnelId }:
       <Header person={data.personnel} viewer={viewer} onArchived={reload} />
       <AllergyBanner person={data.personnel} />
       {savedMessage && (
-        <div role="status" className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary">
+        <div
+          role="status"
+          className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary"
+        >
           {savedMessage}
         </div>
       )}

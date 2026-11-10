@@ -51,7 +51,10 @@ export function CodeInput({
                   index === split ? 'ml-3' : ''
                 } ${current ? 'border-brand-green ring-2 ring-brand-green/30' : char ? 'border-text-muted' : 'border-border'} ${disabled ? 'opacity-50' : ''}`}
               >
-                {char || (current && value.length < length ? <span className="h-7 w-px animate-pulse bg-text-primary motion-reduce:animate-none" /> : null)}
+                {char ||
+                  (current && value.length < length ? (
+                    <span className="h-7 w-px animate-pulse bg-text-primary motion-reduce:animate-none" />
+                  ) : null)}
               </div>
             )
           })}

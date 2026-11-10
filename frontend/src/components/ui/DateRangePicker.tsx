@@ -84,7 +84,8 @@ export function DateRangePicker({
     0,
     presets.findIndex((preset) => preset === value.preset),
   )
-  const labelForPreset = (preset: DateRangePreset) => presetLabels?.[preset] ?? PRESET_LABELS[preset]
+  const labelForPreset = (preset: DateRangePreset) =>
+    presetLabels?.[preset] ?? PRESET_LABELS[preset]
 
   useEffect(() => {
     function onPointerDown(event: PointerEvent) {
@@ -133,7 +134,9 @@ export function DateRangePicker({
     if (preset === 'custom') {
       setError(undefined)
       // "All" uses a 1900 sentinel start date, which is no useful starting point for a custom draft.
-      setDraft(value.preset === 'all' ? { from: today, to: today } : { from: value.from, to: value.to })
+      setDraft(
+        value.preset === 'all' ? { from: today, to: today } : { from: value.from, to: value.to },
+      )
       // Floating: the popover holds the draft, and the preset only switches once Apply succeeds.
       if (!floating) onChange({ ...value, preset: 'custom' })
     } else {
@@ -196,7 +199,11 @@ export function DateRangePicker({
       )}
     >
       <div
-        className={cn('flex', compact ? 'items-center gap-2' : 'flex-col gap-1', fullWidth && 'w-full')}
+        className={cn(
+          'flex',
+          compact ? 'items-center gap-2' : 'flex-col gap-1',
+          fullWidth && 'w-full',
+        )}
       >
         <label
           htmlFor={selectId}
@@ -235,7 +242,10 @@ export function DateRangePicker({
               id={listboxId}
               role="listbox"
               aria-label="Date range presets"
-              className={cn(DROPDOWN_PANEL, 'absolute top-full right-0 mt-1.5 min-w-full overflow-hidden')}
+              className={cn(
+                DROPDOWN_PANEL,
+                'absolute top-full right-0 mt-1.5 min-w-full overflow-hidden',
+              )}
             >
               {presets.map((preset, index) => {
                 const selected = preset === value.preset

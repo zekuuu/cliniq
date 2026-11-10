@@ -26,17 +26,28 @@ export function fetchSportsReports(viewer: SessionUser): Promise<SportsReportSum
   return listSportsReports(viewer)
 }
 
-export function fetchSportsReport(reportId: string, viewer: SessionUser): Promise<SportsReportDetail> {
+export function fetchSportsReport(
+  reportId: string,
+  viewer: SessionUser,
+): Promise<SportsReportDetail> {
   return getSportsReport(reportId, viewer)
 }
 
 /** Computed now from the visits and incidents, for the preview and again for each print. */
-export function fetchSportsReportContent(reportId: string, viewer: SessionUser): Promise<SportsReportContent> {
+export function fetchSportsReportContent(
+  reportId: string,
+  viewer: SessionUser,
+): Promise<SportsReportContent> {
   return getSportsReportContent(reportId, viewer)
 }
 
-export function saveSportsReport(input: SportsReportInput, options: { reportId?: string; viewer: SessionUser }) {
-  return options.reportId ? updateSportsReport(options.reportId, input, options.viewer) : createSportsReport(input, options.viewer)
+export function saveSportsReport(
+  input: SportsReportInput,
+  options: { reportId?: string; viewer: SessionUser },
+) {
+  return options.reportId
+    ? updateSportsReport(options.reportId, input, options.viewer)
+    : createSportsReport(input, options.viewer)
 }
 
 export function copySportsReport(reportId: string, viewer: SessionUser) {
@@ -58,5 +69,10 @@ export function fetchGradeLevels(): Promise<string[]> {
 /** Active students of one grade level, for "add a whole grade". Names and grade only. */
 export async function fetchGradeStudents(gradeLevel: string): Promise<StudentSearchResult[]> {
   const students = await listStudents({ gradeLevel, fullLrn: true })
-  return students.map(({ id, lrn, fullName, gradeLevel: grade }) => ({ id, lrn, fullName, gradeLevel: grade }))
+  return students.map(({ id, lrn, fullName, gradeLevel: grade }) => ({
+    id,
+    lrn,
+    fullName,
+    gradeLevel: grade,
+  }))
 }

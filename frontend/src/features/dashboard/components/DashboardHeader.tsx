@@ -53,7 +53,9 @@ export function DashboardHeader({
             <time dateTime={today}>{formatLongDate(today)}</time>
             <span aria-hidden="true"> · </span>
           </span>
-          <span>{isRefetching ? 'Updating…' : `Showing ${describeRangeDates(range, oldestRecordDate)}`}</span>
+          <span>
+            {isRefetching ? 'Updating…' : `Showing ${describeRangeDates(range, oldestRecordDate)}`}
+          </span>
           <span aria-hidden="true"> · </span>
           View only
         </p>

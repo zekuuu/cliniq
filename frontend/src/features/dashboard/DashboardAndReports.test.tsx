@@ -11,7 +11,7 @@ import { trendFor } from './lib/statTrend'
 /** Panel review part 4: small-number trends, the urgent badge, renames and register links. */
 
 const range = { preset: 'custom' as const, from: '2026-10-01', to: '2026-10-22' }
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
 const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Principal', role: 'admin' }
 
 describe('stat card trends (DB-2, D4)', () => {

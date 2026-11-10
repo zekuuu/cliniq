@@ -4,7 +4,10 @@ import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { Select } from './Select'
 
-const grades = ['Kinder', 'Grade 1', 'Grade 2', 'Grade 10'].map((grade) => ({ value: grade, label: grade }))
+const grades = ['Kinder', 'Grade 1', 'Grade 2', 'Grade 10'].map((grade) => ({
+  value: grade,
+  label: grade,
+}))
 
 function GradeFilter({ onChange = () => {} }: { onChange?: (value: string) => void }) {
   const [value, setValue] = useState('')
@@ -26,12 +29,22 @@ function GradeFilter({ onChange = () => {} }: { onChange?: (value: string) => vo
 describe('Select', () => {
   it('keeps a prompt placeholder on the trigger only, out of the option list', async () => {
     const user = userEvent.setup()
-    render(<Select label="Complaint" value="" placeholder="Select complaint" options={grades} onChange={() => {}} />)
+    render(
+      <Select
+        label="Complaint"
+        value=""
+        placeholder="Select complaint"
+        options={grades}
+        onChange={() => {}}
+      />,
+    )
     const trigger = screen.getByRole('button', { name: 'Complaint Select complaint' })
 
     await user.click(trigger)
     expect(screen.queryByRole('option', { name: 'Select complaint' })).not.toBeInTheDocument()
-    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(grades.map((g) => g.label))
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(
+      grades.map((g) => g.label),
+    )
     expect(screen.getByRole('option', { name: 'Kinder' })).toHaveFocus()
   })
 
@@ -107,7 +120,12 @@ describe('Select', () => {
     const user = userEvent.setup()
     const { rerender } = render(
       <>
-        <Select label="Category" value="medicine" options={[{ value: 'medicine', label: 'Medicine' }]} onChange={() => {}} />
+        <Select
+          label="Category"
+          value="medicine"
+          options={[{ value: 'medicine', label: 'Medicine' }]}
+          onChange={() => {}}
+        />
         <p>Elsewhere</p>
       </>,
     )
@@ -116,13 +134,31 @@ describe('Select', () => {
     await user.click(screen.getByText('Elsewhere'))
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
 
-    rerender(<Select label="Category" value="medicine" disabled options={[{ value: 'medicine', label: 'Medicine' }]} onChange={() => {}} />)
+    rerender(
+      <Select
+        label="Category"
+        value="medicine"
+        disabled
+        options={[{ value: 'medicine', label: 'Medicine' }]}
+        onChange={() => {}}
+      />,
+    )
     await user.click(screen.getByLabelText('Category'))
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
   })
 
   it('names a required field and ties its error to the trigger', () => {
-    render(<Select label="Complaint" required value="" placeholder="Select complaint" options={[]} error="Select the complaint for this visit." onChange={() => {}} />)
+    render(
+      <Select
+        label="Complaint"
+        required
+        value=""
+        placeholder="Select complaint"
+        options={[]}
+        error="Select the complaint for this visit."
+        onChange={() => {}}
+      />,
+    )
     const trigger = screen.getByLabelText(/complaint/i)
     expect(trigger).toHaveAccessibleName(/^Complaint\s*\(required\) Select complaint$/)
     expect(trigger).toHaveAttribute('aria-invalid', 'true')

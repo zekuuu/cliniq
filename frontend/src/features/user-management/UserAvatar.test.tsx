@@ -11,7 +11,9 @@ describe('UserAvatar', () => {
   })
 
   it('renders a decorative stored picture when present', () => {
-    const { container } = render(<UserAvatar name="Maria Santos" picture="data:image/webp;base64,picture" />)
+    const { container } = render(
+      <UserAvatar name="Maria Santos" picture="data:image/webp;base64,picture" />,
+    )
 
     expect(container.querySelector('img')).toHaveAttribute('alt', '')
   })

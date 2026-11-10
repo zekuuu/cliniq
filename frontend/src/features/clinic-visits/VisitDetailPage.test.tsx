@@ -139,7 +139,7 @@ describe('Visit Details: excuse letter and disposition fields', () => {
   })
 
   it('is Staff only: other roles see neither the visit nor its letter', async () => {
-    renderWithRouter(<VisitDetailPage visitId="visit-0139" viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }} />)
+    renderWithRouter(<VisitDetailPage visitId="visit-0139" viewer={{ id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }} />)
     expect(screen.getByText('Staff access required.')).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Excuse letter' })).not.toBeInTheDocument()
   })

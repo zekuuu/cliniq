@@ -29,8 +29,8 @@ import { StudentFormPage } from './StudentFormPage'
 import { StudentProfilePage } from './StudentProfilePage'
 
 const SLOW = 20_000
-const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
-const ADMIN = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' } as const
+const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' } as const
+const ADMIN = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' } as const
 
 /** Sets a birthdate on the store directly, for states the form itself refuses. */
 function storeBirthDate(studentId: string, birthDate: string | null) {
@@ -56,57 +56,77 @@ afterEach(() => {
 })
 
 describe('Add/Edit Student', () => {
-  it('saves a student without a birthdate, and has no mobile number field', async () => {
-    const user = userEvent.setup({ delay: null })
-    renderWithRouter(<StudentFormPage />)
-    await screen.findByRole('heading', { name: 'Add Student' })
-    expect(screen.queryByLabelText(/mobile number/i)).not.toBeInTheDocument()
+  it(
+    'saves a student without a birthdate, and has no mobile number field',
+    async () => {
+      const user = userEvent.setup({ delay: null })
+      renderWithRouter(<StudentFormPage />)
+      await screen.findByRole('heading', { name: 'Add Student' })
+      expect(screen.queryByLabelText(/mobile number/i)).not.toBeInTheDocument()
 
-    await user.type(screen.getByLabelText(/^LRN/), '123456789012')
-    await user.type(screen.getByLabelText(/^first name/i), 'Lara')
-    await user.type(screen.getByLabelText(/^last name/i), 'Santos')
-    await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
-    await user.click(screen.getByRole('radio', { name: 'Female' }))
-    await user.type(screen.getByLabelText(/contact name/i), 'Marisol Santos')
-    await user.type(screen.getByLabelText(/relationship/i), 'Mother')
-    await user.type(screen.getByLabelText(/contact phone/i), '0917-333-4444')
-    await user.click(screen.getByRole('button', { name: 'Save Student' }))
+      await user.type(screen.getByLabelText(/^LRN/), '123456789012')
+      await user.type(screen.getByLabelText(/^first name/i), 'Lara')
+      await user.type(screen.getByLabelText(/^last name/i), 'Santos')
+      await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
+      await user.click(screen.getByRole('radio', { name: 'Female' }))
+      await user.type(screen.getByLabelText(/contact name/i), 'Marisol Santos')
+      await user.type(screen.getByLabelText(/relationship/i), 'Mother')
+      await user.type(screen.getByLabelText(/contact phone/i), '0917-333-4444')
+      await user.click(screen.getByRole('button', { name: 'Save Student' }))
 
-    expect(await screen.findByText('Student record created for Lara Santos.')).toBeInTheDocument()
-    const created = (await listStudents({ search: 'Lara Santos' }))[0]
-    expect((await getStudent(created.id)).birthDate).toBeNull()
-  }, SLOW)
+      expect(await screen.findByText('Student record created for Lara Santos.')).toBeInTheDocument()
+      const created = (await listStudents({ search: 'Lara Santos' }))[0]
+      expect((await getStudent(created.id)).birthDate).toBeNull()
+    },
+    SLOW,
+  )
 
-  it('refuses a future birthdate on the form', async () => {
-    const user = userEvent.setup({ delay: null })
-    storeBirthDate('student-0002', '2999-01-01')
-    renderWithRouter(<StudentFormPage studentId="student-0002" />)
-    await screen.findByRole('heading', { name: 'Edit Student' })
-    await user.click(screen.getByRole('button', { name: 'Save Changes' }))
+  it(
+    'refuses a future birthdate on the form',
+    async () => {
+      const user = userEvent.setup({ delay: null })
+      storeBirthDate('student-0002', '2999-01-01')
+      renderWithRouter(<StudentFormPage studentId="student-0002" />)
+      await screen.findByRole('heading', { name: 'Edit Student' })
+      await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
-    expect(await screen.findByText("The birthdate can't be in the future.")).toBeInTheDocument()
-    expect(getRecordedAuditEntries().filter((entry) => entry.actionType === 'update')).toEqual([])
-  }, SLOW)
+      expect(await screen.findByText("The birthdate can't be in the future.")).toBeInTheDocument()
+      expect(getRecordedAuditEntries().filter((entry) => entry.actionType === 'update')).toEqual([])
+    },
+    SLOW,
+  )
 
   it('refuses a future or impossible birthdate in the data layer too', async () => {
     const student = await getStudent('student-0002')
-    await expect(saveStudent({ ...student, birthDate: '2999-01-01' }, { studentId: student.id })).rejects.toThrow("can't be in the future")
-    await expect(saveStudent({ ...student, birthDate: '2015-02-30' }, { studentId: student.id })).rejects.toThrow('real birthdate')
+    await expect(
+      saveStudent({ ...student, birthDate: '2999-01-01' }, { studentId: student.id }),
+    ).rejects.toThrow("can't be in the future")
+    await expect(
+      saveStudent({ ...student, birthDate: '2015-02-30' }, { studentId: student.id }),
+    ).rejects.toThrow('real birthdate')
   })
 
-  it('shows the unusual-age note and still saves', async () => {
-    const user = userEvent.setup({ delay: null })
-    const year = Number(getMockToday().slice(0, 4)) - 16
-    const birthDate = `${year}-01-15`
-    renderWithRouter(<StudentFormPage studentId="student-0002" />)
-    await screen.findByRole('heading', { name: 'Edit Student' })
+  it(
+    'shows the unusual-age note and still saves',
+    async () => {
+      const user = userEvent.setup({ delay: null })
+      const year = Number(getMockToday().slice(0, 4)) - 16
+      const birthDate = `${year}-01-15`
+      renderWithRouter(<StudentFormPage studentId="student-0002" />)
+      await screen.findByRole('heading', { name: 'Edit Student' })
 
-    await pickDate(user, screen.getByLabelText(/birthdate/i), birthDate)
-    expect(await screen.findByText('Age 16 is unusual for Grade 1. Check the birthdate.')).toBeInTheDocument()
+      await pickDate(user, screen.getByLabelText(/birthdate/i), birthDate)
+      expect(
+        await screen.findByText('Age 16 is unusual for Grade 1. Check the birthdate.'),
+      ).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Save Changes' }))
-    await waitFor(async () => expect((await getStudent('student-0002')).birthDate).toBe(birthDate))
-  }, SLOW)
+      await user.click(screen.getByRole('button', { name: 'Save Changes' }))
+      await waitFor(async () =>
+        expect((await getStudent('student-0002')).birthDate).toBe(birthDate),
+      )
+    },
+    SLOW,
+  )
 
   it('audits a birthdate change by field name, never the value', async () => {
     const student = await getStudent('student-0002')
@@ -123,20 +143,25 @@ describe('Student Profile', () => {
   it.each([
     ['Staff', STAFF],
     ['Admin', ADMIN],
-  ])('shows %s the age in the header, and the date in the details and the printout', async (_role, viewer) => {
-    storeBirthDate('student-0002', '2019-03-04')
-    const age = Number(getMockToday().slice(0, 4)) - 2019 - (getMockToday().slice(5) < '03-04' ? 1 : 0)
-    renderWithRouter(<StudentProfilePage viewer={viewer} studentId="student-0002" />)
-    await screen.findByRole('heading', { name: 'Overview' })
+  ])(
+    'shows %s the age in the header, and the date in the details and the printout',
+    async (_role, viewer) => {
+      storeBirthDate('student-0002', '2019-03-04')
+      const age =
+        Number(getMockToday().slice(0, 4)) - 2019 - (getMockToday().slice(5) < '03-04' ? 1 : 0)
+      renderWithRouter(<StudentProfilePage viewer={viewer} studentId="student-0002" />)
+      await screen.findByRole('heading', { name: 'Overview' })
 
-    expect(header()).toHaveTextContent(`· ${age} years old`)
-    expect(header()).not.toHaveTextContent(formatDate('2019-03-04'))
-    const overview = screen.getByRole('region', { name: 'Overview' })
-    expect(within(overview).getByText('Birthdate')).toBeInTheDocument()
-    expect(within(overview).getByText(formatDate('2019-03-04'))).toBeInTheDocument()
-    // The Admin's Print stays disabled (ADR-038), so only Staff get the printout.
-    if (viewer.role === 'staff') expect(printed()).toHaveTextContent(`Birthdate${formatDate('2019-03-04')}`)
-  })
+      expect(header()).toHaveTextContent(`· ${age} years old`)
+      expect(header()).not.toHaveTextContent(formatDate('2019-03-04'))
+      const overview = screen.getByRole('region', { name: 'Overview' })
+      expect(within(overview).getByText('Birthdate')).toBeInTheDocument()
+      expect(within(overview).getByText(formatDate('2019-03-04'))).toBeInTheDocument()
+      // The Admin's Print stays disabled (ADR-038), so only Staff get the printout.
+      if (viewer.role === 'staff')
+        expect(printed()).toHaveTextContent(`Birthdate${formatDate('2019-03-04')}`)
+    },
+  )
 
   it('shows neither with no birthdate, and no mobile number', async () => {
     storeBirthDate('student-0002', null)
@@ -162,11 +187,23 @@ describe('display privacy (ADR-004, ADR-040, ADR-054)', () => {
       queue: await getIncompleteRecordQueue(),
       search: await searchStudents('a'),
       patients: await searchPatients('a'),
-      dashboard: await getDashboardSummary({ range: { preset: 'custom', from: addDays(today, -60), to: today } } as never),
+      dashboard: await getDashboardSummary({
+        range: { preset: 'custom', from: addDays(today, -60), to: today },
+      } as never),
       report: await getMonthlyReport(today.slice(0, 7)),
       followUps: await listFollowUps(),
-      visits: await fetchVisitLog({ from: addDays(today, -60), to: today, search: '', disposition: 'all' }),
-      incidents: await fetchIncidentLog({ from: addDays(today, -60), to: today, search: '', completion: 'all' }),
+      visits: await fetchVisitLog({
+        from: addDays(today, -60),
+        to: today,
+        search: '',
+        disposition: 'all',
+      }),
+      incidents: await fetchIncidentLog({
+        from: addDays(today, -60),
+        to: today,
+        search: '',
+        completion: 'all',
+      }),
     }
     for (const [name, value] of Object.entries(everything)) {
       const text = JSON.stringify(value)
@@ -210,11 +247,14 @@ describe('saved mock state and the seed', () => {
     const problems = checkSeedIntegrity(edited)
     expect(problems.join('\n')).toContain('unexpected field "contactInfo"')
     expect(problems.join('\n')).toContain("birthDate: can't be in the future")
-    expect(problems.filter((problem) => problem.includes('expected a real "YYYY-MM-DD" date'))).toHaveLength(2)
+    expect(
+      problems.filter((problem) => problem.includes('expected a real "YYYY-MM-DD" date')),
+    ).toHaveLength(2)
   })
 
   it('stores every seeded birthdate as a calendar date', () => {
-    for (const student of seed.students) expect(student.birthDate === null || /^\d{4}-\d{2}-\d{2}$/.test(student.birthDate)).toBe(true)
+    for (const student of seed.students)
+      expect(student.birthDate === null || /^\d{4}-\d{2}-\d{2}$/.test(student.birthDate)).toBe(true)
   })
 
   it('gives most students a birthdate that fits their grade, and leaves a few without', () => {

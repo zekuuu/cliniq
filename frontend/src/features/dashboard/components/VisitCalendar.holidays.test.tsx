@@ -13,7 +13,9 @@ function renderCalendar({
 }: { today?: string; anchor?: string; canNavigate?: boolean } = {}) {
   setMockToday(today)
   resetMockDb()
-  renderWithRouter(<VisitCalendar today={today} initialAnchor={anchor} canNavigate={canNavigate} showVisitsLink />)
+  renderWithRouter(
+    <VisitCalendar today={today} initialAnchor={anchor} canNavigate={canNavigate} showVisitsLink />,
+  )
   return userEvent.setup()
 }
 
@@ -33,7 +35,9 @@ describe('Dashboard calendar holiday layer (ADR-020)', () => {
     const chip = await screen.findByText('Holiday: Christmas Day')
     expect(chip).toHaveClass('bg-border', 'truncate')
     expect(chip).toHaveAttribute('title', 'Holiday: Christmas Day')
-    const day = screen.getByRole('button', { name: /December 25: holiday: Christmas Day \(Regular holiday\)/ })
+    const day = screen.getByRole('button', {
+      name: /December 25: holiday: Christmas Day \(Regular holiday\)/,
+    })
     expect(day.closest('td')).toHaveClass(noClassDayClass)
     expect(screen.getByText(/Holidays updated Nov 1, 2026/)).toHaveTextContent(
       'Source Official Gazette (bundled list)',
@@ -50,7 +54,9 @@ describe('Dashboard calendar holiday layer (ADR-020)', () => {
 
   it('lists the day’s holidays in the day panel with no edit or delete controls', async () => {
     const user = renderCalendar()
-    await user.click(await screen.findByRole('button', { name: /December 25: holiday: Christmas Day/ }))
+    await user.click(
+      await screen.findByRole('button', { name: /December 25: holiday: Christmas Day/ }),
+    )
     const dialog = await screen.findByRole('dialog')
     const section = within(dialog).getByRole('region', { name: 'Holidays' })
     expect(within(section).getByText('Holiday: Christmas Day')).toBeInTheDocument()
@@ -67,7 +73,9 @@ describe('Dashboard calendar holiday layer (ADR-020)', () => {
     await user.click(screen.getByRole('radio', { name: 'Table' }))
     const table = await screen.findByRole('table')
     expect(within(table).getByRole('columnheader', { name: /Holidays/ })).toBeInTheDocument()
-    expect(within(table).getByText(/Christmas Eve, Christmas Day, Rizal Day, Last Day of the Year/)).toBeInTheDocument()
+    expect(
+      within(table).getByText(/Christmas Eve, Christmas Day, Rizal Day, Last Day of the Year/),
+    ).toBeInTheDocument()
   })
 
   it('shows Admin the same chips and source line, read-only', async () => {
@@ -79,7 +87,7 @@ describe('Dashboard calendar holiday layer (ADR-020)', () => {
 
   it('has no missing-year warning in 2027', async () => {
     renderCalendar({ today: '2027-01-15' })
-    expect(await screen.findByText('Holiday: New Year\'s Day')).toBeInTheDocument()
+    expect(await screen.findByText("Holiday: New Year's Day")).toBeInTheDocument()
     expect(screen.queryByText(/No holidays loaded/)).not.toBeInTheDocument()
   })
 

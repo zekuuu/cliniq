@@ -10,10 +10,74 @@
  * then move between screens without reloading (a reload returns to the normal seed).
  */
 
-const FIRST = ['Aira', 'Ben', 'Carla', 'Dante', 'Ella', 'Felix', 'Gwen', 'Hugo', 'Ivy', 'Jomar', 'Kyla', 'Leo', 'Mika', 'Nico', 'Olga', 'Paolo', 'Rina', 'Sean', 'Tess', 'Vince']
-const LAST = ['Abad', 'Bautista', 'Castro', 'Dizon', 'Estrada', 'Flores', 'Garcia', 'Herrera', 'Ibarra', 'Jimenez', 'Lopez', 'Mendoza', 'Navarro', 'Ocampo', 'Perez', 'Ramos', 'Santos', 'Torres', 'Uy', 'Villanueva']
-const GRADES = ['Kinder', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
-const DISPOSITIONS = ['returned_to_class', 'returned_to_class', 'returned_to_class', 'returned_to_class', 'sent_home', 'resting_in_clinic', 'referred_to_hospital']
+const FIRST = [
+  'Aira',
+  'Ben',
+  'Carla',
+  'Dante',
+  'Ella',
+  'Felix',
+  'Gwen',
+  'Hugo',
+  'Ivy',
+  'Jomar',
+  'Kyla',
+  'Leo',
+  'Mika',
+  'Nico',
+  'Olga',
+  'Paolo',
+  'Rina',
+  'Sean',
+  'Tess',
+  'Vince',
+]
+const LAST = [
+  'Abad',
+  'Bautista',
+  'Castro',
+  'Dizon',
+  'Estrada',
+  'Flores',
+  'Garcia',
+  'Herrera',
+  'Ibarra',
+  'Jimenez',
+  'Lopez',
+  'Mendoza',
+  'Navarro',
+  'Ocampo',
+  'Perez',
+  'Ramos',
+  'Santos',
+  'Torres',
+  'Uy',
+  'Villanueva',
+]
+const GRADES = [
+  'Kinder',
+  'Grade 1',
+  'Grade 2',
+  'Grade 3',
+  'Grade 4',
+  'Grade 5',
+  'Grade 6',
+  'Grade 7',
+  'Grade 8',
+  'Grade 9',
+  'Grade 10',
+  'Grade 11',
+  'Grade 12',
+]
+const DISPOSITIONS = [
+  'returned_to_class',
+  'returned_to_class',
+  'returned_to_class',
+  'returned_to_class',
+  'sent_home',
+  'resting_in_clinic',
+  'referred_to_hospital',
+]
 
 /** Deterministic, so two runs measure the same data. */
 function random(seed) {
@@ -33,11 +97,15 @@ function schoolDays(today, years) {
   const day = new Date(end)
   day.setFullYear(day.getFullYear() - years)
   const days = []
-  for (; day < end; day.setDate(day.getDate() + 1)) if (day.getDay() !== 0 && day.getDay() !== 6) days.push(isoDate(day))
+  for (; day < end; day.setDate(day.getDate() + 1))
+    if (day.getDay() !== 0 && day.getDay() !== 6) days.push(isoDate(day))
   return days
 }
 
-export function expandState(saved, { students = 600, years = 5, visitsPerDay = 9, incidentsPerWeek = 1, seed = 42 } = {}) {
+export function expandState(
+  saved,
+  { students = 600, years = 5, visitsPerDay = 9, incidentsPerWeek = 1, seed = 42 } = {},
+) {
   const next = structuredClone(saved)
   const s = next.state
   const rand = random(seed)
@@ -54,7 +122,14 @@ export function expandState(saved, { students = 600, years = 5, visitsPerDay = 9
       birthDate: null,
       allergies: rand() < 0.08 ? ['Peanuts'] : [],
       medicalConditions: rand() < 0.06 ? ['Asthma'] : [],
-      emergencyContacts: [{ name: `${pick(FIRST)} ${last}`, relationship: 'Mother', phone: `0918-${pad(i % 1000, 3)}-${pad(i, 4)}`, verified: true }],
+      emergencyContacts: [
+        {
+          name: `${pick(FIRST)} ${last}`,
+          relationship: 'Mother',
+          phone: `0918-${pad(i % 1000, 3)}-${pad(i, 4)}`,
+          verified: true,
+        },
+      ],
       archived: false,
     })
   }
@@ -75,24 +150,73 @@ export function expandState(saved, { students = 600, years = 5, visitsPerDay = 9
       const id = `visit-load-${pad((visitN += 1), 6)}`
       const item = rand() < 0.3 ? pick(items) : null
       s.visits.push({
-        id, studentId: student.id, dateTime, complaint: pick(complaints), treatment: '', disposition: pick(DISPOSITIONS),
-        loggedByUserId: 'user-staff-01', eventTag: null,
-        itemsGiven: item ? [{ itemId: item.id, itemName: item.name, unit: item.unit, quantity: 1, instructions: null }] : [],
-        excuseLetterDraft: null, referredTo: null, temperatureC: null, timeOut: null, assistedBy: null, parentGuardian: null, remarks: null,
+        id,
+        studentId: student.id,
+        dateTime,
+        complaint: pick(complaints),
+        treatment: '',
+        disposition: pick(DISPOSITIONS),
+        loggedByUserId: 'user-staff-01',
+        eventTag: null,
+        itemsGiven: item
+          ? [
+              {
+                itemId: item.id,
+                itemName: item.name,
+                unit: item.unit,
+                quantity: 1,
+                instructions: null,
+              },
+            ]
+          : [],
+        excuseLetterDraft: null,
+        referredTo: null,
+        temperatureC: null,
+        timeOut: null,
+        assistedBy: null,
+        parentGuardian: null,
+        remarks: null,
       })
-      s.auditLog.push({ userId: 'user-staff-01', actionType: 'submit', targetRecord: { type: 'visit', id }, timestamp: dateTime })
+      s.auditLog.push({
+        userId: 'user-staff-01',
+        actionType: 'submit',
+        targetRecord: { type: 'visit', id },
+        timestamp: dateTime,
+      })
       if (item)
-        s.frontendOnly.inventoryTransactions.push({ id: `txn-load-${pad((txnN += 1), 6)}`, itemId: item.id, type: 'dispense', quantity: -1, timestamp: dateTime, userId: 'user-staff-01', studentId: student.id, visitId: id })
+        s.frontendOnly.inventoryTransactions.push({
+          id: `txn-load-${pad((txnN += 1), 6)}`,
+          itemId: item.id,
+          type: 'dispense',
+          quantity: -1,
+          timestamp: dateTime,
+          userId: 'user-staff-01',
+          studentId: student.id,
+          visitId: id,
+        })
     }
     if (index % 5 === 0 && rand() < incidentsPerWeek) {
       const student = pick(s.students)
       const time = `${date}T${pad(9 + Math.floor(rand() * 7))}:${pad(Math.floor(rand() * 60))}:00+08:00`
       const id = `incident-load-${pad((incidentN += 1), 5)}`
       s.incidents.push({
-        id, studentId: student.id, time, complaint: pick(incidentTypes), vitals: { treatmentNotes: 'Observed in clinic' }, hospitalReferral: null,
-        parentNotifications: [{ outcome: 'reached', timestamp: time }], stage: 2, eventTag: null, itemsGiven: [],
+        id,
+        studentId: student.id,
+        time,
+        complaint: pick(incidentTypes),
+        vitals: { treatmentNotes: 'Observed in clinic' },
+        hospitalReferral: null,
+        parentNotifications: [{ outcome: 'reached', timestamp: time }],
+        stage: 2,
+        eventTag: null,
+        itemsGiven: [],
       })
-      s.auditLog.push({ userId: 'user-staff-01', actionType: 'submit', targetRecord: { type: 'incident-stage-1', id }, timestamp: time })
+      s.auditLog.push({
+        userId: 'user-staff-01',
+        actionType: 'submit',
+        targetRecord: { type: 'incident-stage-1', id },
+        timestamp: time,
+      })
     }
   }
   return next

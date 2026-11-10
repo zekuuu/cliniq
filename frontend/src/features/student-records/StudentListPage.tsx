@@ -54,13 +54,7 @@ function StudentListSkeleton({ back }: { back: ReactNode }) {
   )
 }
 
-function GradeSelect({
-  value,
-  onChange,
-}: {
-  value: string
-  onChange: (value: string) => void
-}) {
+function GradeSelect({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const { data: gradeLevels = [] } = useAsyncData('grade-levels', fetchGradeLevels)
   return (
     <Select
@@ -151,7 +145,10 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
     const value = searchParams.get('record')
     return value === 'complete' || value === 'incomplete' ? value : ''
   })
-  const [sort, setSort] = useState<TableSortState<StudentSortKey>>({ key: 'name', direction: 'ascending' })
+  const [sort, setSort] = useState<TableSortState<StudentSortKey>>({
+    key: 'name',
+    direction: 'ascending',
+  })
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = usePageSize()
   const changePageSize = (size: PageSize) => {
@@ -171,7 +168,8 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
   const listReady = Boolean(data)
   const { search: urlSearch } = useLocation()
   useEffect(() => {
-    if (listReady && new URLSearchParams(urlSearch).get('focus') === 'search') searchInputRef.current?.focus()
+    if (listReady && new URLSearchParams(urlSearch).get('focus') === 'search')
+      searchInputRef.current?.focus()
   }, [listReady, urlSearch])
 
   // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
@@ -214,7 +212,11 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
     if (key === 'name') return nameOrder.get(student.id)
     if (key === 'number') return student.lrn
     if (key === 'grade') return student.gradeLevel
-    return student.recordComplete ? (student.archived ? 'Complete Archived' : 'Complete') : 'Incomplete'
+    return student.recordComplete
+      ? student.archived
+        ? 'Complete Archived'
+        : 'Complete'
+      : 'Incomplete'
   })
   const pageCount = Math.max(1, Math.ceil(sortedData.length / pageSize))
   const currentPage = Math.min(page, pageCount)
@@ -228,33 +230,43 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">Student List</h1>
             <p className="mt-1 text-sm text-text-secondary">
-              Search the masterlist by full name or LRN. Medical details stay inside the
-              individual profile.
+              Search the masterlist by full name or LRN. Medical details stay inside the individual
+              profile.
             </p>
           </div>
           <div className="ml-auto flex flex-wrap justify-end gap-2">
-              <Link className={buttonClassName({ variant: 'secondary' })} to={paths.archive} state={{ ...DRILL_THROUGH_STATE, section: 'students' }}>
-                <Icon name="archive" />
-                Archive{archive ? ` (${rowsInNewestYear(archive.students).length})` : ''}
-              </Link>
-          {viewer.role === 'staff' && (
-            <>
-              {incompleteCount !== undefined && (
-                <Link className={buttonClassName({ variant: 'secondary' })} to={paths.incompleteRecords}>
-                  <Icon name="alertTriangle" />
-                  Incomplete records ({incompleteCount})
+            <Link
+              className={buttonClassName({ variant: 'secondary' })}
+              to={paths.archive}
+              state={{ ...DRILL_THROUGH_STATE, section: 'students' }}
+            >
+              <Icon name="archive" />
+              Archive{archive ? ` (${rowsInNewestYear(archive.students).length})` : ''}
+            </Link>
+            {viewer.role === 'staff' && (
+              <>
+                {incompleteCount !== undefined && (
+                  <Link
+                    className={buttonClassName({ variant: 'secondary' })}
+                    to={paths.incompleteRecords}
+                  >
+                    <Icon name="alertTriangle" />
+                    Incomplete records ({incompleteCount})
+                  </Link>
+                )}
+                <Link
+                  className={buttonClassName({ variant: 'secondary' })}
+                  to={paths.studentImport}
+                >
+                  <Icon name="fileText" />
+                  Import List
                 </Link>
-              )}
-              <Link className={buttonClassName({ variant: 'secondary' })} to={paths.studentImport}>
-                <Icon name="fileText" />
-                Import List
-              </Link>
-              <Link className={buttonClassName({ variant: 'primary' })} to={paths.studentNew}>
-                <Icon name="plus" />
-                Add Student
-              </Link>
-            </>
-          )}
+                <Link className={buttonClassName({ variant: 'primary' })} to={paths.studentNew}>
+                  <Icon name="plus" />
+                  Add Student
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </Card>
@@ -270,7 +282,8 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
           <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1fr)_16rem_12rem_auto]">
             <Input
               ref={searchInputRef}
-              label="Search" type="search"
+              label="Search"
+              type="search"
               value={search}
               placeholder="Name or LRN"
               onChange={(event) => {

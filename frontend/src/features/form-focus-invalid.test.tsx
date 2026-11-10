@@ -54,7 +54,11 @@ describe('A failed submit focuses the first invalid field', () => {
   // The long incident form puts an error summary at the top instead (professor's consultation, November 6, 2026).
   it('Incident Stage 1: focuses the error summary at the top, whose links reach each field', async () => {
     const user = userEvent.setup()
-    render(<MemoryRouter><IncidentEntryPage /></MemoryRouter>)
+    render(
+      <MemoryRouter>
+        <IncidentEntryPage />
+      </MemoryRouter>,
+    )
     await screen.findAllByRole('button')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
     const summary = await screen.findByRole('alert', { name: /^Fix \d+ things? before saving:$/ })

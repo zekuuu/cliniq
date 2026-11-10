@@ -34,7 +34,7 @@ Our existing display-privacy rule (ADR-004) only covers **names**: multi-student
 But the mockup also puts the **complaint/reason directly in those same list rows** — "Headache," "Stomachache," "Arm injury," and, more pointedly, incident descriptions like "Allergic reaction" and "Fainted during assembly" sitting right in a glanceable table. Our rule never actually addressed this, because it wasn't the question at the time — but the underlying concern (a bystander glancing at a screen and inferring something about a specific, identifiable student) applies just as much to "2024-0067 — Fainted during assembly" as it does to a name. A Student Number is still a specific individual to anyone who can connect it to a person — a classmate, a sibling, someone who saw it on a printed ID.
 
 This needs an actual decision, not a guess on my part:
-- **Option A:** keep reasons/descriptions visible in list views as shown — accept that Student Number already provides meaningful de-identification for a casual glance.
+- **Option A:** keep reasons/descriptions visible in list views as shown — accept that the identifier already provides meaningful de-identification for a casual glance. (This audit predates ADR-027 and ADR-028: the Student Number was replaced by the masked LRN.)
 - **Option B:** truncate or genericize the reason column in ambient list views (e.g., "Visit" instead of the specific complaint), full detail only on the opened record — extending the existing rule's logic rather than introducing a new one.
 - **Option C:** something in between (show reason only for Incidents, not routine Visits, since incidents are the more sensitive category).
 

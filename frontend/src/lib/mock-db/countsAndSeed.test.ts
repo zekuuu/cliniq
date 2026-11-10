@@ -32,7 +32,7 @@ const lastDay = (month: string) => addDays(`${monthOf(addDays(`${month}-28`, 7))
 beforeEach(() => resetMockDb())
 
 describe('the same count on every screen (DB-3, FU-5)', () => {
-  it('this month\'s visits and incidents agree on the Dashboard, the calendar, the Monthly Report and the Incident register', async () => {
+  it("this month's visits and incidents agree on the Dashboard, the calendar, the Monthly Report and the Incident register", async () => {
     const today = getMockToday()
     const month = monthOf(today)
     const range = { preset: 'thisMonth' as const, from: `${month}-01`, to: today }
@@ -55,16 +55,22 @@ describe('the same count on every screen (DB-3, FU-5)', () => {
 
   it('incidents still at Stage 1 agree between the Dashboard and the incident list', async () => {
     const today = getMockToday()
-    const dashboard = await getDashboardSummary({ range: { preset: 'today', from: today, to: today } })
+    const dashboard = await getDashboardSummary({
+      range: { preset: 'today', from: today, to: today },
+    })
     const all = await listIncidents()
     expect(dashboard.counts.incidentsAwaitingStage2).toBe(all.filter((i) => i.stage === 1).length)
   })
 
   it('overdue follow-ups agree between the Dashboard and the Follow-ups list', async () => {
     const today = getMockToday()
-    const dashboard = await getDashboardSummary({ range: { preset: 'today', from: today, to: today } })
+    const dashboard = await getDashboardSummary({
+      range: { preset: 'today', from: today, to: today },
+    })
     const list = await listFollowUps({ status: 'pending' })
-    expect(dashboard.dueFollowUps.filter((row) => row.dueState === 'overdue').length).toBe(list.filter((f) => f.dueState === 'overdue').length)
+    expect(dashboard.dueFollowUps.filter((row) => row.dueState === 'overdue').length).toBe(
+      list.filter((f) => f.dueState === 'overdue').length,
+    )
   })
 })
 
@@ -74,33 +80,52 @@ describe('a believable seed (5.3)', () => {
       const state = resolveSeed(seed, today)
       const stamps = [
         ...state.visits.map((v) => v.dateTime),
-        ...state.incidents.flatMap((i) => [i.time, ...i.parentNotifications.map((n) => n.timestamp)]),
+        ...state.incidents.flatMap((i) => [
+          i.time,
+          ...i.parentNotifications.map((n) => n.timestamp),
+        ]),
       ].filter((stamp) => stamp.slice(0, 10) < today)
-      const weekend = stamps.filter((stamp) => [0, 6].includes(parseISODate(stamp.slice(0, 10)).getDay()))
+      const weekend = stamps.filter((stamp) =>
+        [0, 6].includes(parseISODate(stamp.slice(0, 10)).getDay()),
+      )
       expect(weekend, `today ${today}`).toEqual([])
     }
   })
 
-  it.each(['2026-10-19', '2026-10-20', '2026-10-21', '2026-10-22', '2026-10-23', '2026-10-24', '2026-10-25'])(
-    'has no two visits at the same minute with today %s',
-    (today) => {
-      for (const clock of [`${today}T00:30:00+08:00`, `${today}T08:00:00+08:00`, `${today}T23:30:00+08:00`]) {
-        vi.setSystemTime(new Date(clock))
-        const visits = resolveSeed(seed, today).visits
-        const minutes = visits.map((v) => v.dateTime.slice(0, 16))
-        expect(new Set(minutes).size, clock).toBe(minutes.length)
-        expect(minutes.filter((m) => m.slice(0, 10) === today && m > clock.slice(0, 16)), clock).toEqual([])
-      }
-      vi.useRealTimers()
-    },
-  )
+  it.each([
+    '2026-10-19',
+    '2026-10-20',
+    '2026-10-21',
+    '2026-10-22',
+    '2026-10-23',
+    '2026-10-24',
+    '2026-10-25',
+  ])('has no two visits at the same minute with today %s', (today) => {
+    for (const clock of [
+      `${today}T00:30:00+08:00`,
+      `${today}T08:00:00+08:00`,
+      `${today}T23:30:00+08:00`,
+    ]) {
+      vi.setSystemTime(new Date(clock))
+      const visits = resolveSeed(seed, today).visits
+      const minutes = visits.map((v) => v.dateTime.slice(0, 16))
+      expect(new Set(minutes).size, clock).toBe(minutes.length)
+      expect(
+        minutes.filter((m) => m.slice(0, 10) === today && m > clock.slice(0, 16)),
+        clock,
+      ).toEqual([])
+    }
+    vi.useRealTimers()
+  })
 
   it('moves a colliding seed visit by minutes only, on the same day', () => {
     const today = '2026-10-23'
     vi.setSystemTime(new Date(`${today}T23:30:00+08:00`))
     const resolved = resolveSeed(seed, today).visits
     seed.visits.forEach((visit, i) => {
-      expect(resolved[i].dateTime.slice(0, 10)).toBe(resolveSchoolDateTime(visit.dateTime, today).slice(0, 10))
+      expect(resolved[i].dateTime.slice(0, 10)).toBe(
+        resolveSchoolDateTime(visit.dateTime, today).slice(0, 10),
+      )
     })
     vi.useRealTimers()
   })
@@ -109,6 +134,10 @@ describe('a believable seed (5.3)', () => {
     const [visits, items] = await Promise.all([listVisits(), listInventory()])
     // Stock and expiry don't matter for this check: any stocked name counts.
     const all = items.map((item) => ({ ...item, currentStock: 1, flags: [] }))
-    expect(visits.filter((v) => itemsNamedInNotes(v.treatment, all, v.itemsGiven).length).map((v) => v.id)).toEqual([])
+    expect(
+      visits
+        .filter((v) => itemsNamedInNotes(v.treatment, all, v.itemsGiven).length)
+        .map((v) => v.id),
+    ).toEqual([])
   })
 })

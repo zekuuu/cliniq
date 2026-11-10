@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest'
 import { smoothTooltip } from './smoothTooltip'
 
 function call(parent: HTMLElement, tooltip: Partial<TooltipModel<'bar'>>) {
-  const canvas = parent.querySelector('canvas') ?? parent.appendChild(document.createElement('canvas'))
+  const canvas =
+    parent.querySelector('canvas') ?? parent.appendChild(document.createElement('canvas'))
   smoothTooltip(
     {
       chart: { canvas } as unknown as Chart<'bar'>,

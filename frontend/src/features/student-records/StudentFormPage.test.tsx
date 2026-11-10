@@ -2,7 +2,14 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { getRecordedAuditEntries, getStudent, LrnLockedError, NameCorrectionReasonError, resetMockDb, saveStudent } from '../../lib/mock-db'
+import {
+  getRecordedAuditEntries,
+  getStudent,
+  LrnLockedError,
+  NameCorrectionReasonError,
+  resetMockDb,
+  saveStudent,
+} from '../../lib/mock-db'
 import { selectOption } from '../../test/selectOption'
 import { paths } from '../../routes/paths'
 import { StudentFormPage } from './StudentFormPage'
@@ -12,7 +19,12 @@ import { fetchIncompleteRecords } from './api/incompleteRecordsApi'
 import { renderWithRouter } from '../../test/renderWithRouter'
 
 /** Types a first and last name (and a middle name, when given) into the split name fields (ADR-064). */
-async function typeName(user: ReturnType<typeof userEvent.setup>, firstName: string, lastName: string, middleName = '') {
+async function typeName(
+  user: ReturnType<typeof userEvent.setup>,
+  firstName: string,
+  lastName: string,
+  middleName = '',
+) {
   await user.type(screen.getByLabelText(/^First name/), firstName)
   await user.type(screen.getByLabelText(/^Last name/), lastName)
   if (middleName) await user.type(screen.getByLabelText(/^Middle name/), middleName)
@@ -78,7 +90,9 @@ describe('Student Form', () => {
   })
 
   it('refuses an LRN another student already has, without naming that student', async () => {
-    const existing = await getStudent((await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id)
+    const existing = await getStudent(
+      (await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id,
+    )
     renderWithRouter(<StudentFormPage />)
     await screen.findByRole('heading', { name: 'Add Student' })
     const user = await fillRequiredStudentFields()
@@ -86,19 +100,25 @@ describe('Student Form', () => {
     await user.type(screen.getByLabelText(/^LRN/), existing.lrn)
     await user.click(screen.getByRole('button', { name: 'Save Student' }))
 
-    expect(await screen.findByText('This LRN is already used by another student record.')).toBeInTheDocument()
+    expect(
+      await screen.findByText('This LRN is already used by another student record.'),
+    ).toBeInTheDocument()
     expect(document.body.textContent).not.toContain(existing.fullName)
     expect(getRecordedAuditEntries()).toEqual([])
   })
 
   it('says while typing that an LRN is taken or a name is already listed, before any save', async () => {
     const user = userEvent.setup({ delay: null })
-    const existing = await getStudent((await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id)
+    const existing = await getStudent(
+      (await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id,
+    )
     renderWithRouter(<StudentFormPage />)
     await screen.findByRole('heading', { name: 'Add Student' })
 
     await user.type(screen.getByLabelText(/^LRN/), existing.lrn)
-    expect(await screen.findByText('This LRN is already used by another student record.')).toBeInTheDocument()
+    expect(
+      await screen.findByText('This LRN is already used by another student record.'),
+    ).toBeInTheDocument()
     expect(document.body.textContent).not.toContain(existing.fullName)
 
     await typeName(user, existing.firstName, existing.lastName)
@@ -121,24 +141,32 @@ describe('Student Form', () => {
   })
 
   it('locks the LRN on Edit Student, in the form and in the data layer (ADR-028, Sir Rey)', async () => {
-    const existing = await getStudent((await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id)
+    const existing = await getStudent(
+      (await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id,
+    )
     renderWithRouter(<StudentFormPage studentId={existing.id} />)
 
     await screen.findByRole('heading', { name: 'Edit Student' })
     const lrn = screen.getByLabelText(/^LRN/)
     expect(lrn).toHaveValue(existing.lrn)
     expect(lrn).toHaveAttribute('readonly')
-    expect(lrn).toHaveAccessibleDescription("The LRN is the student's identifier and can't be changed.")
+    expect(lrn).toHaveAccessibleDescription(
+      "The LRN is the student's identifier and can't be changed.",
+    )
 
     const full = await getStudent(existing.id)
-    await expect(saveStudent({ ...full, lrn: '987654321098' }, { studentId: existing.id })).rejects.toBeInstanceOf(LrnLockedError)
+    await expect(
+      saveStudent({ ...full, lrn: '987654321098' }, { studentId: existing.id }),
+    ).rejects.toBeInstanceOf(LrnLockedError)
     expect((await getStudent(existing.id)).lrn).toBe(existing.lrn)
     expect(getRecordedAuditEntries()).toHaveLength(0)
   })
 
   it('asks for a reason before saving a name correction, and audits the reason without the names (ADR-058)', async () => {
     const user = userEvent.setup({ delay: null })
-    const existing = await getStudent((await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id)
+    const existing = await getStudent(
+      (await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id,
+    )
     renderWithRouter(<StudentFormPage studentId={existing.id} />)
 
     await screen.findByRole('heading', { name: 'Edit Student' })
@@ -147,12 +175,19 @@ describe('Student Form', () => {
     await user.type(screen.getByLabelText(/^Last name/), 'Correctedsurname')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     const reason = screen.getByLabelText(/^Reason for the name correction/)
-    expect(reason).toHaveAccessibleDescription(expect.stringMatching(/Enter why the name is being corrected/))
+    expect(reason).toHaveAccessibleDescription(
+      expect.stringMatching(/Enter why the name is being corrected/),
+    )
     expect(reason).toHaveFocus()
     expect(getRecordedAuditEntries()).toHaveLength(0)
 
     const full = await getStudent(existing.id)
-    await expect(saveStudent({ ...full, lastName: 'Surname' }, { studentId: existing.id, nameCorrectionReason: 'ok' })).rejects.toBeInstanceOf(NameCorrectionReasonError)
+    await expect(
+      saveStudent(
+        { ...full, lastName: 'Surname' },
+        { studentId: existing.id, nameCorrectionReason: 'ok' },
+      ),
+    ).rejects.toBeInstanceOf(NameCorrectionReasonError)
 
     await user.type(reason, 'Misspelled on the enrolment form')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
@@ -162,7 +197,9 @@ describe('Student Form', () => {
       // The changed field is named, never its old or new value (ADR-058, ADR-064).
       summary: 'Updated last name. Name corrected; reason: Misspelled on the enrolment form',
     })
-    expect(JSON.stringify(getRecordedAuditEntries())).not.toMatch(new RegExp(`Correctedsurname|${existing.lastName}|${existing.fullName}`))
+    expect(JSON.stringify(getRecordedAuditEntries())).not.toMatch(
+      new RegExp(`Correctedsurname|${existing.lastName}|${existing.fullName}`),
+    )
     expect((await getStudent(existing.id)).fullName).toBe(`${existing.firstName} Correctedsurname`)
   })
 
@@ -200,11 +237,15 @@ describe('Student Form', () => {
 
   it('warns before creating a possible duplicate and records the confirmed create', async () => {
     const user = userEvent.setup({ delay: null })
-    const existing = await getStudent((await fetchStudentList({
-      search: '',
-      gradeLevel: '',
-      includeArchived: false,
-    }))[0].id)
+    const existing = await getStudent(
+      (
+        await fetchStudentList({
+          search: '',
+          gradeLevel: '',
+          includeArchived: false,
+        })
+      )[0].id,
+    )
     renderWithRouter(<StudentFormPage />)
 
     await screen.findByRole('heading', { name: 'Add Student' })
@@ -263,20 +304,27 @@ describe('Student Form', () => {
   it('marks what an incomplete record still lacks and lands on it, until it is filled in', async () => {
     const user = userEvent.setup({ delay: null })
     const record = (await fetchIncompleteRecords()).find(
-      (row) => !row.resolvedAt && row.missingFields.length > 0 && row.missingFields.every((field) => field.startsWith('Emergency contact')),
+      (row) =>
+        !row.resolvedAt &&
+        row.missingFields.length > 0 &&
+        row.missingFields.every((field) => field.startsWith('Emergency contact')),
     )!
     renderWithRouter(<StudentFormPage studentId={record.studentId} />)
     const name = await screen.findByLabelText(/contact name/i)
     await waitFor(() => expect(name).toHaveFocus())
     expect(name).toHaveAttribute('aria-invalid', 'true')
-    expect(screen.getAllByText('Missing. Fill this in to complete the record.').length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByText('Missing. Fill this in to complete the record.').length,
+    ).toBeGreaterThan(0)
     await user.type(name, 'Marisol Santos')
     expect(name).not.toHaveAttribute('aria-invalid', 'true')
   })
 
   it('supports edit mode, records an update audit entry, and returns to the profile', async () => {
     const user = userEvent.setup({ delay: null })
-    const existing = await getStudent((await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id)
+    const existing = await getStudent(
+      (await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id,
+    )
     render(
       <MemoryRouter initialEntries={[paths.studentEdit(existing.id)]}>
         <Routes>
@@ -296,7 +344,9 @@ describe('Student Form', () => {
     await user.type(screen.getByLabelText(/contact name/i), ' Jr')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
-    expect(await screen.findByText(`Student record updated for ${existing.fullName}.`)).toBeInTheDocument()
+    expect(
+      await screen.findByText(`Student record updated for ${existing.fullName}.`),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Edit Student' })).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: existing.fullName })).toBeInTheDocument()
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toContain('update')
@@ -304,7 +354,9 @@ describe('Student Form', () => {
 
   it('rejects an emergency contact phone with letters, in plain words', async () => {
     const user = userEvent.setup({ delay: null })
-    const existing = await getStudent((await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id)
+    const existing = await getStudent(
+      (await fetchStudentList({ search: '', gradeLevel: '', includeArchived: false }))[0].id,
+    )
     renderWithRouter(<StudentFormPage studentId={existing.id} />)
 
     await screen.findByRole('heading', { name: 'Edit Student' })
@@ -337,11 +389,17 @@ describe('Student Form', () => {
     renderWithRouter(<StudentFormPage studentId={existing.id} />)
 
     await screen.findByRole('heading', { name: 'Edit Student' })
-    await user.click(screen.getByRole('radio', { name: existing.sex === 'female' ? 'Male' : 'Female' }))
+    await user.click(
+      screen.getByRole('radio', { name: existing.sex === 'female' ? 'Male' : 'Female' }),
+    )
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
     const entry = getRecordedAuditEntries().at(-1)
-    expect(entry).toMatchObject({ actionType: 'update', targetRecord: { type: 'student', id: existing.id }, summary: 'Updated sex' })
+    expect(entry).toMatchObject({
+      actionType: 'update',
+      targetRecord: { type: 'student', id: existing.id },
+      summary: 'Updated sex',
+    })
     expect(entry?.summary).not.toContain(existing.sex)
   })
 })
@@ -391,9 +449,20 @@ describe('Student Form: First name, Last name and Middle name (S4, ADR-064)', ()
     await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
     await user.click(screen.getByRole('radio', { name: 'Female' }))
     await user.click(screen.getByRole('button', { name: 'Save Student' }))
-    expect(await screen.findByText('Student record created for Maria Angela Santos Dela Cruz.')).toBeInTheDocument()
-    const [saved] = await fetchStudentList({ search: 'dela cruz', gradeLevel: '', includeArchived: false })
-    expect(await getStudent(saved.id)).toMatchObject({ firstName: 'Maria Angela', lastName: 'Dela Cruz', middleName: 'Santos', fullName: 'Maria Angela Santos Dela Cruz' })
+    expect(
+      await screen.findByText('Student record created for Maria Angela Santos Dela Cruz.'),
+    ).toBeInTheDocument()
+    const [saved] = await fetchStudentList({
+      search: 'dela cruz',
+      gradeLevel: '',
+      includeArchived: false,
+    })
+    expect(await getStudent(saved.id)).toMatchObject({
+      firstName: 'Maria Angela',
+      lastName: 'Dela Cruz',
+      middleName: 'Santos',
+      fullName: 'Maria Angela Santos Dela Cruz',
+    })
   })
 
   it('treats spaces alone as empty, and stores no middle name when it is left blank', async () => {
@@ -421,8 +490,13 @@ describe('Student Form: First name, Last name and Middle name (S4, ADR-064)', ()
 
   it('names a corrected middle name by field only in the audit log', async () => {
     const existing = await getStudent('student-0001')
-    await saveStudent({ ...existing, middleName: 'Zamora' }, { studentId: existing.id, nameCorrectionReason: 'Missing on the first encoding' })
-    expect(getRecordedAuditEntries().at(-1)?.summary).toBe('Updated middle name. Name corrected; reason: Missing on the first encoding')
+    await saveStudent(
+      { ...existing, middleName: 'Zamora' },
+      { studentId: existing.id, nameCorrectionReason: 'Missing on the first encoding' },
+    )
+    expect(getRecordedAuditEntries().at(-1)?.summary).toBe(
+      'Updated middle name. Name corrected; reason: Missing on the first encoding',
+    )
     expect(JSON.stringify(getRecordedAuditEntries())).not.toContain('Zamora')
   })
 })

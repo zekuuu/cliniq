@@ -30,7 +30,7 @@ describe('App Shell / Navigation', () => {
   it('shows Staff navigation groups across modules', () => {
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -54,7 +54,10 @@ describe('App Shell / Navigation', () => {
     expect(privacyPolicyLink).toHaveClass('inline')
     expect(privacyPolicyLink).not.toHaveClass('min-h-10')
     expect(privacyPolicyLink).not.toHaveClass('hover:text-text-primary', 'hover:underline')
-    expect(screen.getByText('Privacy Policy')).toHaveClass('hover:text-text-primary', 'hover:underline')
+    expect(screen.getByText('Privacy Policy')).toHaveClass(
+      'hover:text-text-primary',
+      'hover:underline',
+    )
     expect(screen.getByRole('button', { name: 'Report an Issue' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Report an Issue' })).not.toHaveClass(
       'hover:text-text-primary',
@@ -62,7 +65,10 @@ describe('App Shell / Navigation', () => {
     )
     expect(screen.getByRole('button', { name: 'Report an Issue' })).toHaveClass('inline')
     expect(screen.getByRole('button', { name: 'Report an Issue' })).not.toHaveClass('min-h-10')
-    expect(screen.getByText('Report an Issue')).toHaveClass('hover:text-text-primary', 'hover:underline')
+    expect(screen.getByText('Report an Issue')).toHaveClass(
+      'hover:text-text-primary',
+      'hover:underline',
+    )
     expect(screen.getAllByText('·')).toHaveLength(2)
     expect(screen.getByText('v0.1.0')).toBeInTheDocument()
     expect(screen.getByText('Powered by HealWare™')).toBeInTheDocument()
@@ -76,7 +82,7 @@ describe('App Shell / Navigation', () => {
   it('puts a red Sign out action in the account menu (ADR-066)', async () => {
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -90,7 +96,11 @@ describe('App Shell / Navigation', () => {
 
   it('marks the Archive item when ending the school year is due today, and not before (Zean, November 8, 2026)', async () => {
     const shell = () => (
-      <AppShell user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} active="dashboard" onLogout={() => {}}>
+      <AppShell
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        active="dashboard"
+        onLogout={() => {}}
+      >
         <div>Screen</div>
       </AppShell>
     )
@@ -101,14 +111,19 @@ describe('App Shell / Navigation', () => {
     unmount()
     db().today = '2027-04-14'
     renderWithRouter(shell())
-    expect(await screen.findByRole('img', { name: 'School year 2026–2027 ends today' })).toHaveClass('bg-warning-fill')
-    expect(screen.getByRole('link', { name: /archive.*ends today/i })).toHaveAttribute('href', '/archive')
+    expect(
+      await screen.findByRole('img', { name: 'School year 2026–2027 ends today' }),
+    ).toHaveClass('bg-warning-fill')
+    expect(screen.getByRole('link', { name: /archive.*ends today/i })).toHaveAttribute(
+      'href',
+      '/archive',
+    )
   })
 
   it('marks the Backup navigation item when it needs attention', async () => {
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -135,7 +150,7 @@ describe('App Shell / Navigation', () => {
   it('clears the Backup warning once the latest backup is verified', async () => {
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
         active="backup"
         onLogout={() => {}}
       >
@@ -144,7 +159,7 @@ describe('App Shell / Navigation', () => {
     )
 
     await screen.findByRole('img', { name: 'Backup needs attention' })
-    await verifyBackup({ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' })
+    await verifyBackup({ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' })
     await waitFor(() =>
       expect(screen.queryByRole('img', { name: 'Backup needs attention' })).not.toBeInTheDocument(),
     )
@@ -153,7 +168,7 @@ describe('App Shell / Navigation', () => {
   it('keeps the Backup warning distinct while Backup is selected', async () => {
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
         active="backup"
         onLogout={() => {}}
       >
@@ -170,7 +185,7 @@ describe('App Shell / Navigation', () => {
   it('shows a Keyboard shortcuts item with its ? tip in the account menu', async () => {
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -180,7 +195,9 @@ describe('App Shell / Navigation', () => {
 
     // ADR-066: the header's Shortcuts button moved into the account menu as a plain-language item.
     await openAccountMenu(userEvent.setup())
-    expect(screen.getByRole('menuitem', { name: 'Keyboard shortcuts' })).toHaveTextContent('Keyboard shortcuts')
+    expect(screen.getByRole('menuitem', { name: 'Keyboard shortcuts' })).toHaveTextContent(
+      'Keyboard shortcuts',
+    )
     // Its shortcut shows as a tip, hidden from the accessible name (Zean, November 5, 2026).
     const item = screen.getByRole('menuitem', { name: 'Keyboard shortcuts' })
     expect(item).toHaveAttribute('aria-keyshortcuts', '?')
@@ -191,7 +208,11 @@ describe('App Shell / Navigation', () => {
     const scrollTo = vi.fn()
     vi.stubGlobal('scrollTo', scrollTo)
     renderWithRouter(
-      <AppShell user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} active="dashboard" onLogout={() => {}}>
+      <AppShell
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        active="dashboard"
+        onLogout={() => {}}
+      >
         <div>Screen</div>
       </AppShell>,
     )
@@ -210,7 +231,7 @@ describe('App Shell / Navigation', () => {
   it('uses a readable monospaced treatment for the live workstation clock', () => {
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -220,19 +241,14 @@ describe('App Shell / Navigation', () => {
 
     const clock = screen.getByText(/\d{1,2}:\d{2}:\d{2}/).closest('time')
     expect(clock).toHaveTextContent('|')
-    expect(clock).toHaveClass(
-      'font-mono',
-      'text-base',
-      'lg:text-lg',
-      'tabular-nums',
-    )
+    expect(clock).toHaveClass('font-mono', 'text-base', 'lg:text-lg', 'tabular-nums')
   })
 
   it('opens the Report an Issue modal from the footer', async () => {
     const user = userEvent.setup()
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -249,7 +265,7 @@ describe('App Shell / Navigation', () => {
     const user = userEvent.setup()
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -273,7 +289,7 @@ describe('App Shell / Navigation', () => {
     const user = userEvent.setup()
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -299,7 +315,7 @@ describe('App Shell / Navigation', () => {
     const user = userEvent.setup()
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
         active="dashboard"
         onLogout={onLogout}
       >
@@ -325,7 +341,7 @@ describe('App Shell / Navigation', () => {
     const user = userEvent.setup()
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -338,9 +354,9 @@ describe('App Shell / Navigation', () => {
     await user.click(await screen.findByRole('button', { name: 'Sign Out' }))
 
     await openAccountMenu(user)
-    expect(screen.getByRole('menuitem', { name: 'Signing out' }).querySelector('svg')).not.toHaveClass(
-      'animate-spin',
-    )
+    expect(
+      screen.getByRole('menuitem', { name: 'Signing out' }).querySelector('svg'),
+    ).not.toHaveClass('animate-spin')
   })
 
   it('limits Admin/Principal navigation to Dashboard, Calendar, Students, Incidents, Reports, Audit Log, Accounts, Backup, Archive and Settings (ADR-033, ADR-037, ADR-038, ADR-078)', () => {
@@ -378,21 +394,27 @@ describe('App Shell / Navigation', () => {
       'settings',
     ])
   })
-
 })
 
 describe('App Shell / Mobile navigation', () => {
   it('reaches Privacy Policy and Report an Issue from the mobile menu', async () => {
     const user = userEvent.setup()
     renderWithRouter(
-      <AppShell user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} active="dashboard" onLogout={() => {}}>
+      <AppShell
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        active="dashboard"
+        onLogout={() => {}}
+      >
         <div>Screen</div>
       </AppShell>,
     )
 
     await user.click(screen.getByRole('button', { name: 'Open navigation' }))
     const menu = screen.getByRole('navigation', { name: 'Mobile navigation' })
-    expect(within(menu).getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute('href', '/privacy-policy')
+    expect(within(menu).getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute(
+      'href',
+      '/privacy-policy',
+    )
     await user.click(within(menu).getByRole('button', { name: 'Report an Issue' }))
     expect(screen.queryByRole('navigation', { name: 'Mobile navigation' })).not.toBeInTheDocument()
     expect(await screen.findByRole('dialog', { name: /report an issue/i })).toBeInTheDocument()
@@ -401,12 +423,18 @@ describe('App Shell / Mobile navigation', () => {
   it('leaves room for the focus ring inside the scrolling sidebar and phone navigation', async () => {
     const user = userEvent.setup()
     renderWithRouter(
-      <AppShell user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} active="auditLog" onLogout={() => {}}>
+      <AppShell
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        active="auditLog"
+        onLogout={() => {}}
+      >
         <div>Screen</div>
       </AppShell>,
     )
 
-    const sidebarLinks = within(screen.getByRole('navigation', { name: 'Main' })).getAllByRole('link')
+    const sidebarLinks = within(screen.getByRole('navigation', { name: 'Main' })).getAllByRole(
+      'link',
+    )
     expect(sidebarLinks.length).toBeGreaterThan(5)
     sidebarLinks[0].focus()
     for (const link of sidebarLinks) {
@@ -416,7 +444,9 @@ describe('App Shell / Mobile navigation', () => {
     }
 
     await user.click(screen.getByRole('button', { name: 'Open navigation' }))
-    const phoneLinks = within(await screen.findByRole('navigation', { name: 'Mobile navigation' })).getAllByRole('link')
+    const phoneLinks = within(
+      await screen.findByRole('navigation', { name: 'Mobile navigation' }),
+    ).getAllByRole('link')
     for (const link of phoneLinks) expect(clippingAncestorsWithoutRingRoom(link)).toEqual([])
   })
 })

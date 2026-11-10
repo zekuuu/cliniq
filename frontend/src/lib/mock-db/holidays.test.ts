@@ -58,7 +58,10 @@ describe('holidays (read-only reference data)', () => {
   afterEach(() => window.history.replaceState(null, '', '/'))
 
   it('matches the 2026 proclamations exactly, with references in the metadata', () => {
-    expect(holidayData.holidays.map((h) => [h.date, h.name, h.kind])).toEqual([...PROCLAIMED_2026, ...PROCLAIMED_2027])
+    expect(holidayData.holidays.map((h) => [h.date, h.name, h.kind])).toEqual([
+      ...PROCLAIMED_2026,
+      ...PROCLAIMED_2027,
+    ])
     expect(holidayData.holidays.every((h) => h.confirmed)).toBe(true)
     expect(holidayData.meta.proclamations.map((p) => p.ref)).toEqual([
       'Proclamation No. 1006, s. 2025',
@@ -88,7 +91,11 @@ describe('holidays (read-only reference data)', () => {
 
   it('covers 2027, so the Calendar stops warning that the year is missing', async () => {
     const feed = await getHolidays('2027-03-25', '2027-03-27')
-    expect(feed.holidays.map((h) => h.name)).toEqual(['Maundy Thursday', 'Good Friday', 'Black Saturday'])
+    expect(feed.holidays.map((h) => h.name)).toEqual([
+      'Maundy Thursday',
+      'Good Friday',
+      'Black Saturday',
+    ])
     expect(feed.years).toContain(2027)
   })
 

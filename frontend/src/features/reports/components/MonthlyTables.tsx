@@ -33,14 +33,38 @@ function weekHeader(week: Weekly['weeks'][number]) {
 }
 
 export function WeeklyComplaintsTable({ weekly }: { weekly: Weekly }) {
-  if (!weekly.rows.length) return <EmptyState title="No clinic visits this month" description="Weekly counts appear once visits are recorded." />
+  if (!weekly.rows.length)
+    return (
+      <EmptyState
+        title="No clinic visits this month"
+        description="Weekly counts appear once visits are recorded."
+      />
+    )
   return (
     <DataTable
       caption={`Clinic visits by ${symptom} and week`}
       columns={[
-        { key: 'complaint', header: SYMPTOM, rowHeader: true, width: '12rem', cell: (row: WeeklyRow) => row.complaint },
-        ...weekly.weeks.map((week, index) => ({ key: week.from, header: weekHeader(week), align: 'right' as const, width: '6rem', cell: (row: WeeklyRow) => weekCell(row, row.counts[index]) })),
-        { key: 'total', header: 'Total', align: 'right', width: '5rem', cell: (row: WeeklyRow) => <span className="font-semibold">{row.total}</span> },
+        {
+          key: 'complaint',
+          header: SYMPTOM,
+          rowHeader: true,
+          width: '12rem',
+          cell: (row: WeeklyRow) => row.complaint,
+        },
+        ...weekly.weeks.map((week, index) => ({
+          key: week.from,
+          header: weekHeader(week),
+          align: 'right' as const,
+          width: '6rem',
+          cell: (row: WeeklyRow) => weekCell(row, row.counts[index]),
+        })),
+        {
+          key: 'total',
+          header: 'Total',
+          align: 'right',
+          width: '5rem',
+          cell: (row: WeeklyRow) => <span className="font-semibold">{row.total}</span>,
+        },
       ]}
       rows={weeklyRows(weekly)}
       rowKey={(row) => row.complaint}
@@ -60,7 +84,12 @@ export function WeeklyComplaintsPrint({ weekly }: { weekly: Weekly }) {
       empty="No clinic visits were recorded this month."
       columns={[
         { header: SYMPTOM, cell: (row) => row.complaint },
-        ...weekly.weeks.map((week, index) => ({ header: week.label, width: '9%', align: 'right' as const, cell: (row: WeeklyRow) => row.counts[index] })),
+        ...weekly.weeks.map((week, index) => ({
+          header: week.label,
+          width: '9%',
+          align: 'right' as const,
+          cell: (row: WeeklyRow) => row.counts[index],
+        })),
         { header: 'Total', width: '9%', align: 'right', cell: (row) => row.total },
       ]}
     />
@@ -70,18 +99,48 @@ export function WeeklyComplaintsPrint({ weekly }: { weekly: Weekly }) {
 const INVENTORY_COLUMNS = [
   { key: 'item', header: 'Item', cell: (row: MonthlyInventoryRow) => row.itemName },
   { key: 'unit', header: 'Unit', width: '7rem', cell: (row: MonthlyInventoryRow) => row.unit },
-  { key: 'purchase', header: 'New Purchase', align: 'right' as const, width: '8rem', cell: (row: MonthlyInventoryRow) => row.newPurchase },
-  { key: 'available', header: 'Total Available', align: 'right' as const, width: '8rem', cell: (row: MonthlyInventoryRow) => row.totalAvailable },
-  { key: 'ending', header: 'Ending Inventory', align: 'right' as const, width: '8rem', cell: (row: MonthlyInventoryRow) => row.endingInventory },
+  {
+    key: 'purchase',
+    header: 'New Purchase',
+    align: 'right' as const,
+    width: '8rem',
+    cell: (row: MonthlyInventoryRow) => row.newPurchase,
+  },
+  {
+    key: 'available',
+    header: 'Total Available',
+    align: 'right' as const,
+    width: '8rem',
+    cell: (row: MonthlyInventoryRow) => row.totalAvailable,
+  },
+  {
+    key: 'ending',
+    header: 'Ending Inventory',
+    align: 'right' as const,
+    width: '8rem',
+    cell: (row: MonthlyInventoryRow) => row.endingInventory,
+  },
 ]
 
 export function InventorySheetTable({ rows }: { rows: MonthlyInventoryRow[] }) {
-  if (!rows.length) return <EmptyState title="No inventory items" description="Add items on the Inventory screen." />
+  if (!rows.length)
+    return (
+      <EmptyState title="No inventory items" description="Add items on the Inventory screen." />
+    )
   return (
     <div className="flex flex-col gap-3">
-      <DataTable caption="Monthly inventory sheet" columns={INVENTORY_COLUMNS} rows={rows} rowKey={(row) => row.itemId} fixedLayout minTableWidth="44rem" />
+      <DataTable
+        caption="Monthly inventory sheet"
+        columns={INVENTORY_COLUMNS}
+        rows={rows}
+        rowKey={(row) => row.itemId}
+        fixedLayout
+        minTableWidth="44rem"
+      />
       <p className="text-xs text-text-secondary">
-        Computed from the stock movements: New Purchase is what was restocked in the month, Total Available is the stock at its start plus New Purchase, and Ending Inventory is what was left after dispensing, adjustments and expiry write-offs.
+        Computed from the stock movements: New Purchase is what was restocked in the month, Total
+        Available is the stock at its start plus New Purchase, and Ending Inventory is what was left
+        after dispensing, adjustments and expiry write-offs.
       </p>
     </div>
   )
@@ -109,9 +168,23 @@ type BySex = MonthlyReportData['visitsBySex']
 /** Visits by sex, as the Dashboard's Trends tables word it (ADR-045, ADR-051), students and staff as the two parts (ADR-063). */
 function sexRows({ female, male, noSexRecorded }: BySex) {
   return [
-    { label: 'Female', count: female.students + female.staff, parts: female, accent: 'border-l-sex-female' },
+    {
+      label: 'Female',
+      count: female.students + female.staff,
+      parts: female,
+      accent: 'border-l-sex-female',
+    },
     { label: 'Male', count: male.students + male.staff, parts: male, accent: 'border-l-sex-male' },
-    ...(noSexRecorded ? [{ label: 'No sex recorded', count: noSexRecorded, parts: { students: 0, staff: noSexRecorded }, accent: '' }] : []),
+    ...(noSexRecorded
+      ? [
+          {
+            label: 'No sex recorded',
+            count: noSexRecorded,
+            parts: { students: 0, staff: noSexRecorded },
+            accent: '',
+          },
+        ]
+      : []),
   ]
 }
 
@@ -120,7 +193,10 @@ export function VisitsBySexSummary({ bySex }: { bySex: BySex }) {
   return (
     <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {sexRows(bySex).map((row) => (
-        <div key={row.label} className={`rounded-md border border-l-4 border-border bg-surface px-4 py-3 ${row.accent}`}>
+        <div
+          key={row.label}
+          className={`rounded-md border border-l-4 border-border bg-surface px-4 py-3 ${row.accent}`}
+        >
           <dt className="text-xs font-semibold text-text-secondary">{row.label}</dt>
           <dd className="mt-1 text-xl font-bold text-text-primary tabular-nums">{row.count}</dd>
           <dd className="text-xs text-text-secondary">{splitText(row.parts)}</dd>

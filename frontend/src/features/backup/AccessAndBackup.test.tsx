@@ -20,8 +20,8 @@ import { UserListPage } from '../user-management/UserListPage'
 
 /** Panel review part 6: Backup for both roles, Back up now, the stale alert, password re-entry, no default role. */
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
-const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
+const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }
 const today = () => getMockToday()
 const summary = () => getDashboardSummary({ range: { preset: 'today', from: today(), to: today() } })
 
@@ -83,8 +83,8 @@ describe('no password re-entry (Zean, Sunday, October 25, 2026)', () => {
   it('disables an account at once, with no password dialog', async () => {
     const user = userEvent.setup()
     renderWithRouter(<UserListPage viewer={ADMIN} />)
-    await user.click(await screen.findByRole('button', { name: 'Disable Jennesse Baas' }))
-    expect(await screen.findByText("Jennesse Baas's account is disabled.")).toBeInTheDocument()
+    await user.click(await screen.findByRole('button', { name: 'Disable Demo Clinician' }))
+    expect(await screen.findByText("Demo Clinician's account is disabled.")).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: "Confirm it's you" })).not.toBeInTheDocument()
     expect(getRecordedAuditEntries().map((e) => e.actionType)).toEqual(['update'])
   })

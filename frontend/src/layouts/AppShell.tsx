@@ -7,8 +7,17 @@ import { Button, Modal } from '../components'
 import { cn } from '../lib/cn'
 import { ADMIN_PRINT_NOTE } from '../components'
 import { canPrint } from '../hooks/usePrinting'
-import { getIdleSignoutMinutes, getOwnAccount, logoutMockSession, type SessionUser } from '../lib/mock-db'
-import { anyFormDirty, IDLE_SETTINGS_CHANGED_EVENT, subscribeDirtyForms } from '../lib/sessionActivity'
+import {
+  getIdleSignoutMinutes,
+  getOwnAccount,
+  logoutMockSession,
+  type SessionUser,
+} from '../lib/mock-db'
+import {
+  anyFormDirty,
+  IDLE_SETTINGS_CHANGED_EVENT,
+  subscribeDirtyForms,
+} from '../lib/sessionActivity'
 import { showKeyboardShortcuts } from '../lib/shortcuts'
 import { ACCOUNT_CHANGED_EVENT } from '../lib/accountEvents'
 import { BrandLogo, Sidebar } from './Sidebar'
@@ -50,7 +59,12 @@ function LiveClock() {
       dateTime={now.toISOString()}
       className="hidden whitespace-nowrap font-mono text-base font-medium tracking-[0.015em] text-text-secondary tabular-nums sm:block lg:text-lg"
     >
-      {now.toLocaleDateString('en-PH', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
+      {now.toLocaleDateString('en-PH', {
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })}
       {' | '}
       {now.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
     </time>
@@ -77,10 +91,15 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [isAuthenticatorOpen, setIsAuthenticatorOpen] = useState(false)
   const [authenticatorVersion, setAuthenticatorVersion] = useState(0)
-  const authenticator = useAsyncData(`authenticator-status|${user.id}|${authenticatorVersion}`, getAuthenticatorStatus)
+  const authenticator = useAsyncData(
+    `authenticator-status|${user.id}|${authenticatorVersion}`,
+    getAuthenticatorStatus,
+  )
   // Bumped after Edit profile saves, so the menu reads the account again (ADR-066).
   const [accountVersion, setAccountVersion] = useState(0)
-  const { data: account } = useAsyncData(`own-account|${user.id}|${accountVersion}`, () => getOwnAccount())
+  const { data: account } = useAsyncData(`own-account|${user.id}|${accountVersion}`, () =>
+    getOwnAccount(),
+  )
   const navGroups = navGroupsFor(user.role)
   const printBlocked = !canPrint(user)
   // ADR-078: each role is signed out after its own idle setting (Staff 60, Admin 30 by default).
@@ -91,7 +110,9 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
     window.addEventListener(IDLE_SETTINGS_CHANGED_EVENT, changed)
     return () => window.removeEventListener(IDLE_SETTINGS_CHANGED_EVENT, changed)
   }, [])
-  const { data: idleMinutes } = useAsyncData(`idle-minutes|${user.role}|${idleVersion}`, () => getIdleSignoutMinutes(user.role))
+  const { data: idleMinutes } = useAsyncData(`idle-minutes|${user.role}|${idleVersion}`, () =>
+    getIdleSignoutMinutes(user.role),
+  )
   const idle = useIdleSignOut(idleMinutes ?? null, () => {
     // User and action only; Login says how many minutes (ADR-078).
     void logoutMockSession(user, 'Signed out (idle)').then(() => onLogout(idleMinutes ?? undefined))
@@ -103,7 +124,8 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
   useEffect(() => {
     if (!printBlocked) return
     const block = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'p') event.preventDefault()
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'p')
+        event.preventDefault()
     }
     window.addEventListener('keydown', block)
     return () => window.removeEventListener('keydown', block)
@@ -141,7 +163,11 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
       >
         Skip to main content
       </a>
-      {printBlocked && <p data-print-note className="hidden p-8 text-base text-text-primary print:block">{ADMIN_PRINT_NOTE}</p>}
+      {printBlocked && (
+        <p data-print-note className="hidden p-8 text-base text-text-primary print:block">
+          {ADMIN_PRINT_NOTE}
+        </p>
+      )}
 
       <Sidebar
         active={active}
@@ -191,10 +217,15 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
       </div>
       <ScrollToTopButton />
       <Modal open={isMobileNavOpen} title="Navigation" onClose={() => setIsMobileNavOpen(false)}>
-        <nav aria-label="Mobile navigation" className="-m-1 flex max-h-[70dvh] scroll-py-1 flex-col gap-4 overflow-y-auto p-1">
+        <nav
+          aria-label="Mobile navigation"
+          className="-m-1 flex max-h-[70dvh] scroll-py-1 flex-col gap-4 overflow-y-auto p-1"
+        >
           {navGroups.map((group) => (
             <div key={group.label} role="group" aria-label={group.label}>
-              <p className="px-1 text-xs font-medium uppercase text-text-secondary">{group.label}</p>
+              <p className="px-1 text-xs font-medium uppercase text-text-secondary">
+                {group.label}
+              </p>
               <ul className="mt-1 flex flex-col gap-1">
                 {group.items.map((item) => (
                   <li key={item.key}>
@@ -205,14 +236,18 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
                         aria-current={item.key === active ? 'page' : undefined}
                         className={cn(
                           'flex min-h-11 cursor-pointer items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none',
-                          item.key === active && 'bg-brand-green-dark font-semibold text-white hover:brightness-125',
+                          item.key === active &&
+                            'bg-brand-green-dark font-semibold text-white hover:brightness-125',
                         )}
                       >
                         <Icon name={item.icon} />
                         {item.label}
                       </Link>
                     ) : (
-                      <span className="flex min-h-11 cursor-not-allowed items-center gap-3 rounded-md px-3 text-sm font-medium text-text-secondary" aria-disabled="true">
+                      <span
+                        className="flex min-h-11 cursor-not-allowed items-center gap-3 rounded-md px-3 text-sm font-medium text-text-secondary"
+                        aria-disabled="true"
+                      >
                         <Icon name={item.icon} />
                         {item.label} <span className="text-xs">(coming soon)</span>
                       </span>
@@ -245,8 +280,14 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
           </div>
         </nav>
       </Modal>
-      <Modal open={isConfirmingSignOut} title="Sign out of CLINIQ?" onClose={() => setIsConfirmingSignOut(false)}>
-        <p className="text-sm text-text-secondary">Anything not yet saved on this screen will be lost.</p>
+      <Modal
+        open={isConfirmingSignOut}
+        title="Sign out of CLINIQ?"
+        onClose={() => setIsConfirmingSignOut(false)}
+      >
+        <p className="text-sm text-text-secondary">
+          Anything not yet saved on this screen will be lost.
+        </p>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <Button variant="neutral" data-autofocus onClick={() => setIsConfirmingSignOut(false)}>
             Cancel
@@ -259,15 +300,20 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
       {/* ADR-078: Escape, the backdrop and the X all mean Stay signed in. */}
       <Modal open={idle.secondsLeft !== null} title="Still there?" onClose={idle.stay}>
         <p className="text-sm text-text-primary">
-          You will be signed out in <span className="font-semibold tabular-nums">{countdown(idle.secondsLeft ?? 0)}</span> because of inactivity.
+          You will be signed out in{' '}
+          <span className="font-semibold tabular-nums">{countdown(idle.secondsLeft ?? 0)}</span>{' '}
+          because of inactivity.
           {formDirty && <span className="font-semibold"> Unsaved changes will be lost.</span>}
         </p>
         <p className="mt-2 text-sm text-text-secondary">
-          For privacy on a shared computer, CLINIQ signs out after {idleMinutes} minutes without activity.
+          For privacy on a shared computer, CLINIQ signs out after {idleMinutes} minutes without
+          activity.
         </p>
         {/* Announced politely, every 30 seconds and in the last 10, not every second. */}
         <p role="status" className="sr-only">
-          {idle.secondsLeft !== null ? `You will be signed out in ${countdown(announced(idle.secondsLeft))} because of inactivity.` : null}
+          {idle.secondsLeft !== null
+            ? `You will be signed out in ${countdown(announced(idle.secondsLeft))} because of inactivity.`
+            : null}
         </p>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <Button variant="neutral" onClick={() => void handleLogout()}>

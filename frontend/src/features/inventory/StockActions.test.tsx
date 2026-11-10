@@ -171,7 +171,7 @@ describe('Standalone Dispense', () => {
 })
 
 describe('Large write-off rule (panel review IV-7)', () => {
-  const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
+  const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' } as const
   const ADMIN = { id: 'user-admin-01', name: 'Principal', role: 'admin' } as const
   beforeEach(() => resetMockDb())
 

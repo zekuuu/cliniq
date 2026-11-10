@@ -2,7 +2,13 @@ import { renderWithRouter } from '../../test/renderWithRouter'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { getMockToday, getRecordedAuditEntries, listFollowUps, recordVisit, resetMockDb } from '../../lib/mock-db'
+import {
+  getMockToday,
+  getRecordedAuditEntries,
+  listFollowUps,
+  recordVisit,
+  resetMockDb,
+} from '../../lib/mock-db'
 import { addDays } from '../../lib/dates'
 import { selectOption } from '../../test/selectOption'
 import { FollowUpListPage } from './FollowUpListPage'
@@ -19,16 +25,25 @@ describe('FollowUpListPage', () => {
   async function renderList() {
     const user = userEvent.setup()
     renderWithRouter(<FollowUpListPage />)
-    const [firstOnPage] = (await listFollowUps({ status: 'pending' })).filter((f) => f.patient.kind === 'student')
-    expect((await screen.findAllByText(maskLrn(firstOnPage.patient.number))).length).toBeGreaterThan(0)
+    const [firstOnPage] = (await listFollowUps({ status: 'pending' })).filter(
+      (f) => f.patient.kind === 'student',
+    )
+    expect(
+      (await screen.findAllByText(maskLrn(firstOnPage.patient.number))).length,
+    ).toBeGreaterThan(0)
     return user
   }
 
   it('sorts follow-ups by status descending by default', async () => {
     await renderList()
 
-    expect(screen.getByRole('button', { name: 'Sort by Status, currently descending' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'Status' })).toHaveAttribute('aria-sort', 'descending')
+    expect(
+      screen.getByRole('button', { name: 'Sort by Status, currently descending' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Status' })).toHaveAttribute(
+      'aria-sort',
+      'descending',
+    )
 
     const statuses = screen
       .getAllByRole('row')
@@ -41,10 +56,16 @@ describe('FollowUpListPage', () => {
     const user = await renderList()
     const pendingBefore = screen.getAllByRole('button', { name: /update status for/i }).length
 
-    await selectOption(user, screen.getAllByRole('button', { name: /update status for/i })[0], 'Completed')
+    await selectOption(
+      user,
+      screen.getAllByRole('button', { name: /update status for/i })[0],
+      'Completed',
+    )
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: /update status for/i })).toHaveLength(pendingBefore - 1)
+    expect(screen.getAllByRole('button', { name: /update status for/i })).toHaveLength(
+      pendingBefore - 1,
+    )
     expect(getRecordedAuditEntries()).toEqual([followUpUpdate])
   })
 
@@ -65,7 +86,11 @@ describe('FollowUpListPage', () => {
     expect(getRecordedAuditEntries()).toEqual([])
     expect(await listFollowUps({ status: 'pending' })).toHaveLength(pendingBefore)
 
-    await selectOption(user, screen.getAllByRole('button', { name: /update status for/i })[0], option)
+    await selectOption(
+      user,
+      screen.getAllByRole('button', { name: /update status for/i })[0],
+      option,
+    )
     const confirm = screen.getByRole('dialog', { name: title })
     // Panel review FU-4: Cancelled needs a reason; Missed's is optional (Zean, November 8, 2026).
     if (status === 'cancelled') {
@@ -73,14 +98,24 @@ describe('FollowUpListPage', () => {
       expect(within(confirm).getByText('Give the reason.')).toBeInTheDocument()
       expect(getRecordedAuditEntries()).toEqual([])
     }
-    await user.type(within(confirm).getByRole('textbox', { name: /reason/i }), 'Parent asked to reschedule')
+    await user.type(
+      within(confirm).getByRole('textbox', { name: /reason/i }),
+      'Parent asked to reschedule',
+    )
     await user.click(within(confirm).getByRole('button', { name: confirmLabel }))
     // Missed then offers "Set a new date"; declining it creates nothing. Cancelled closes for good.
-    if (status === 'missed') await user.click(within(await screen.findByRole('dialog', { name: 'Set a new date?' })).getByRole('button', { name: 'Not now' }))
+    if (status === 'missed')
+      await user.click(
+        within(await screen.findByRole('dialog', { name: 'Set a new date?' })).getByRole('button', {
+          name: 'Not now',
+        }),
+      )
     else await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(getRecordedAuditEntries()).toEqual([followUpUpdate])
     expect(await listFollowUps({ status: status as 'missed' | 'cancelled' })).toEqual(
-      expect.arrayContaining([expect.objectContaining({ status, statusReason: 'Parent asked to reschedule' })]),
+      expect.arrayContaining([
+        expect.objectContaining({ status, statusReason: 'Parent asked to reschedule' }),
+      ]),
     )
     expect(await listFollowUps({ status: 'pending' })).toHaveLength(pendingBefore - 1)
   })
@@ -93,13 +128,25 @@ describe('FollowUpListPage', () => {
 
   it('offers "Set a new date" on a row that reads as Missed', async () => {
     const reason = 'Recheck after the auto-close'
-    await recordVisit({ studentId: 'student-0001', complaint: 'Fever', treatment: '', disposition: 'returned_to_class', followUp: { followUpDate: addDays(getMockToday(), -8), reason, notes: null } })
+    await recordVisit({
+      studentId: 'student-0001',
+      complaint: 'Fever',
+      treatment: '',
+      disposition: 'returned_to_class',
+      followUp: { followUpDate: addDays(getMockToday(), -8), reason, notes: null },
+    })
     const pendingBefore = (await listFollowUps({ status: 'pending' })).length
     const user = await renderList()
     await selectOption(user, screen.getByRole('button', { name: /^Status/ }), 'Missed')
-    const row = (await screen.findByText(/No response \(closed automatically/, { exact: false })).closest('tr')!
+    const row = (
+      await screen.findByText(/No response \(closed automatically/, { exact: false })
+    ).closest('tr')!
     await user.click(within(row).getByRole('button', { name: 'Set a new date' }))
-    await user.click(within(await screen.findByRole('dialog', { name: 'Set a new date?' })).getByRole('button', { name: 'Set new date' }))
+    await user.click(
+      within(await screen.findByRole('dialog', { name: 'Set a new date?' })).getByRole('button', {
+        name: 'Set new date',
+      }),
+    )
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(await listFollowUps({ status: 'pending' })).toHaveLength(pendingBefore + 1)
     await waitFor(() => expect(row).not.toBeInTheDocument())

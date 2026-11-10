@@ -58,7 +58,10 @@ export function SelectWithOther({
           setOtherSelected(next === OTHER_VALUE)
           onChange(next === OTHER_VALUE ? '' : next)
         }}
-        options={[{ value: OTHER_VALUE, label: 'Other (type your own)' }, ...options.map((option) => ({ value: option, label: option }))]}
+        options={[
+          { value: OTHER_VALUE, label: 'Other (type your own)' },
+          ...options.map((option) => ({ value: option, label: option })),
+        ]}
         placeholder={placeholder}
         hint={hint}
         error={usingOther ? undefined : error}

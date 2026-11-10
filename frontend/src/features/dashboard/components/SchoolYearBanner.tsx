@@ -8,7 +8,11 @@ import type { DashboardSummary } from '../../../types/dashboard'
  * Staff's school-year reminder (Zean, November 7, 2026): under the Dashboard header, where it is seen
  * first, short, with one action. Coming up within a week: info. Past the day and not done: warning.
  */
-export function SchoolYearBanner({ reminder }: { reminder: NonNullable<DashboardSummary['schoolYearReminder']> }) {
+export function SchoolYearBanner({
+  reminder,
+}: {
+  reminder: NonNullable<DashboardSummary['schoolYearReminder']>
+}) {
   const ending = reminder.kind === 'end'
   const date = formatDate(reminder.dueOn)
   const text = reminder.overdue
@@ -20,13 +24,24 @@ export function SchoolYearBanner({ reminder }: { reminder: NonNullable<Dashboard
   const warn = reminder.overdue || reminder.dueToday
   const tone = warn ? 'border-warning bg-warning-fill' : 'border-info bg-info-fill'
   return (
-    <div role="status" className={`flex flex-wrap items-center justify-between gap-3 rounded-md border px-4 py-3 print:hidden ${tone}`}>
+    <div
+      role="status"
+      className={`flex flex-wrap items-center justify-between gap-3 rounded-md border px-4 py-3 print:hidden ${tone}`}
+    >
       <p className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-        <Icon name={warn ? 'alertTriangle' : 'calendarClock'} size={16} className={warn ? 'text-warning-text' : 'text-info-text'} />
+        <Icon
+          name={warn ? 'alertTriangle' : 'calendarClock'}
+          size={16}
+          className={warn ? 'text-warning-text' : 'text-info-text'}
+        />
         {text}
       </p>
       {/* The Archive page highlights its End or Start button when opened from here. */}
-      <Link to={paths.archive} state={{ highlightSchoolYearStep: true }} className={buttonClassName({ size: 'sm', variant: warn ? 'primary' : 'secondary' })}>
+      <Link
+        to={paths.archive}
+        state={{ highlightSchoolYearStep: true }}
+        className={buttonClassName({ size: 'sm', variant: warn ? 'primary' : 'secondary' })}
+      >
         Go to Archive
       </Link>
     </div>

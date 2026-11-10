@@ -50,7 +50,9 @@ const OPTION_ROW =
 export function dropdownOptionClassName(selected: boolean): string {
   return cn(
     OPTION_ROW,
-    selected ? 'bg-surface font-semibold text-brand-green-dark' : 'text-text-primary hover:bg-surface',
+    selected
+      ? 'bg-surface font-semibold text-brand-green-dark'
+      : 'text-text-primary hover:bg-surface',
   )
 }
 
@@ -80,4 +82,7 @@ export function placeDropdownPanel(trigger: HTMLElement, panel: HTMLElement) {
 }
 
 /** One checkbox row of a multi-select panel; the checkbox itself carries the selected state. */
-export const DROPDOWN_CHECK_ROW = cn(OPTION_ROW, 'items-center gap-2 text-text-primary hover:bg-surface')
+export const DROPDOWN_CHECK_ROW = cn(
+  OPTION_ROW,
+  'items-center gap-2 text-text-primary hover:bg-surface',
+)

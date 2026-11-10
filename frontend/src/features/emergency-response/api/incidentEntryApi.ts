@@ -79,7 +79,10 @@ export interface StageTwoIncidentInput {
   hospitalReferral: HospitalReferral | null
   /** Attempts logged on this form; appended to the incident's notification log. */
   parentNotifications: ParentNotificationAttempt[]
-  followUp: null | (Pick<FollowUp, 'followUpDate' | 'reason' | 'notes'> & Partial<Pick<FollowUp, 'stayHomeUntilCleared' | 'stayHomeNote'>>)
+  followUp:
+    | null
+    | (Pick<FollowUp, 'followUpDate' | 'reason' | 'notes'> &
+        Partial<Pick<FollowUp, 'stayHomeUntilCleared' | 'stayHomeNote'>>)
   /** Dispensed with the Stage 2 save; each dispense references the incident (ADR-018). */
   itemsGiven?: ItemLineInput[]
   /** Optional, Stage 2 only (D11). */
@@ -96,7 +99,12 @@ export interface StageTwoIncidentInput {
  */
 export async function fetchIncidentEntryContext(
   incidentId?: string,
-  escalate?: { visitId?: string; prefill?: EscalationPrefill; staffId?: string; studentId?: string },
+  escalate?: {
+    visitId?: string
+    prefill?: EscalationPrefill
+    staffId?: string
+    studentId?: string
+  },
 ): Promise<IncidentEntryContext> {
   const complaintTypes = getIncidentComplaintTypes()
   const items = listInventory()
@@ -110,13 +118,29 @@ export async function fetchIncidentEntryContext(
       listApprovedIncidentReportIds(),
     ])
     const sourceVisit = source && { id: source.id, itemsGiven: source.itemsGiven }
-    return { student, complaintTypes: types, incident, items: await items, vitalsRanges, escalation: null, sourceVisit, approved: approvedIds.includes(incident.id) }
+    return {
+      student,
+      complaintTypes: types,
+      incident,
+      items: await items,
+      vitalsRanges,
+      escalation: null,
+      sourceVisit,
+      approved: approvedIds.includes(incident.id),
+    }
   }
   let escalation = escalate?.prefill ?? null
   let sourceVisit: IncidentEntryContext['sourceVisit'] = null
   if (escalate?.visitId) {
     const visit = await getVisit(escalate.visitId)
-    escalation = { visitId: visit.id, studentId: visit.studentId, personnelId: visit.personnelId, complaint: visit.complaint, time: visit.dateTime, temperatureC: visit.temperatureC }
+    escalation = {
+      visitId: visit.id,
+      studentId: visit.studentId,
+      personnelId: visit.personnelId,
+      complaint: visit.complaint,
+      time: visit.dateTime,
+      temperatureC: visit.temperatureC,
+    }
     sourceVisit = { id: visit.id, itemsGiven: visit.itemsGiven }
   }
   // The Staff and Student Profiles' "Record an incident" opens with the patient chosen (`?staff=`, D8; `?student=`, R13).
@@ -125,8 +149,20 @@ export async function fetchIncidentEntryContext(
     : escalate?.studentId
       ? { studentId: escalate.studentId, personnelId: null }
       : escalation
-  const student = ref?.studentId || ref?.personnelId ? await getPatient({ studentId: ref.studentId ?? null, personnelId: ref.personnelId ?? null }) : null
-  return { student, complaintTypes: await complaintTypes, incident: null, items: await items, vitalsRanges, escalation, sourceVisit, approved: false }
+  const student =
+    ref?.studentId || ref?.personnelId
+      ? await getPatient({ studentId: ref.studentId ?? null, personnelId: ref.personnelId ?? null })
+      : null
+  return {
+    student,
+    complaintTypes: await complaintTypes,
+    incident: null,
+    items: await items,
+    vitalsRanges,
+    escalation,
+    sourceVisit,
+    approved: false,
+  }
 }
 
 /** Loads the picked patient in full. */
@@ -135,7 +171,10 @@ export function findIncidentPatient(ref: PatientRef): Promise<Patient> {
 }
 
 /** Stage 1 needs only the complaint, plus whichever readings were taken; the layer logs it as its own event. */
-export function saveStageOneIncident(input: StageOneIncidentInput, user: SessionUser): Promise<Incident> {
+export function saveStageOneIncident(
+  input: StageOneIncidentInput,
+  user: SessionUser,
+): Promise<Incident> {
   return saveIncidentStageOne(
     {
       studentId: input.studentId,

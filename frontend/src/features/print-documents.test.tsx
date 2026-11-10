@@ -23,8 +23,8 @@ vi.mock('react-chartjs-2', () => ({ Bar: () => null, Line: () => null, Doughnut:
  * session log cover layout.
  */
 
-const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
-const ADMIN = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' } as const
+const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' } as const
+const ADMIN = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' } as const
 
 /** Fires the browser's beforeprint, as Print or Ctrl+P does, and returns the mounted printout. */
 function print(): HTMLElement {

@@ -25,8 +25,8 @@ import { StudentListPage } from './student-records/StudentListPage'
 
 /* Frontend review, round 2 (groupmate's review, Monday, November 2, 2026), Parts 2 and 3. */
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
-const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
+const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }
 
 describe('R11: the Student List links to the incomplete records', () => {
   it('shows Staff the queue count as a link to the queue', async () => {

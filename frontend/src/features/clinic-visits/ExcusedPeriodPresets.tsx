@@ -23,7 +23,13 @@ export function ExcusedPeriodPresets({
   return (
     <div role="group" aria-label="Quick excused periods" className="flex flex-wrap gap-2">
       {PRESETS.map((preset) => (
-        <Button key={preset.label} size="sm" variant="neutral" disabled={disabled || !from} onClick={() => onPick(addDays(from, preset.days))}>
+        <Button
+          key={preset.label}
+          size="sm"
+          variant="neutral"
+          disabled={disabled || !from}
+          onClick={() => onPick(addDays(from, preset.days))}
+        >
           {preset.label}
         </Button>
       ))}

@@ -17,7 +17,7 @@
 
 ## Open work at a glance
 
-Open: FIX 4 · AUDIT 0 · DOC 31 · DECIDE 1 · LATER 13 | Notes: NOTE 77 · VERIFY 30 | Done: 491 (all in `Issues-Done-Archive.md`) (recounted Monday, November 09, 2026 — 18:08 PHT)
+Open: FIX 4 · AUDIT 0 · DOC 31 · DECIDE 1 · LATER 13 | Notes: NOTE 77 · VERIFY 30 | Done: 492 (all in `Issues-Done-Archive.md`) (recounted Tuesday, November 10, 2026 — 18:38 PHT: the demo accounts' real names, added and resolved the same day)
 
 **Open `FIX` items:** Import page empty steps fail colour contrast (Pager field, history scroll, report link and name split); keyboard-shortcut tips fail colour contrast (Professor's consultation, November 6: Parts 2 to 4); close "Backend: email password reset" on `main`, and the three old failing frontend tests (Moved from Backend-Issues-and-TODOs).
 
@@ -562,3 +562,7 @@ Frontend entries that were logged in the backend file, moved here unchanged, exc
 - [ ] **[DOC]** **Say that the Admin's Audit Log lists staff-record entries by Staff No.** (logged Saturday, November 07, 2026 — 13:35 PHT). `User-Roles-and-Permissions.md` and the contract are silent; it fits ADR-043 (no name, no health detail, no link). Report: [`Backend-Counter-Check-Nov7.md`](../04-Development/Backend-Counter-Check-Nov7.md) C-8. Session: [2026-11-07-backend-counter-check](Agent-Sessions/2026-11-07-backend-counter-check.md) *Contract part done Saturday, November 07, 2026 — 16:15 PHT (`GET /api/audit-log`); `User-Roles-and-Permissions.md` stays for `main`.*
 - [ ] **[FIX]** **Close "Backend: email password reset" on `main`** (logged Saturday, November 07, 2026 — 13:35 PHT). Still open in the main `Frontend-Issues-and-TODOs.md`; ADR-073 replaced it. For Zean to decide on `main`. Report: [`Backend-Counter-Check-Nov7.md`](../04-Development/Backend-Counter-Check-Nov7.md) C-15. Session: [2026-11-07-backend-counter-check](Agent-Sessions/2026-11-07-backend-counter-check.md)
 - [ ] **[FIX]** **The three old failing frontend tests** (logged Saturday, November 07, 2026 — 13:35 PHT). Calendar legend and table months (`review-round-2.test.tsx`), Student Health Record visit count (`print-documents.test.tsx`), failing since `1b50a113`; 1137 of 1140 pass. For Zean to decide on `main`. Report: [`Backend-Counter-Check-Nov7.md`](../04-Development/Backend-Counter-Check-Nov7.md) C-19. Session: [2026-11-07-backend-counter-check](Agent-Sessions/2026-11-07-backend-counter-check.md)
+
+## Docs sync for the SRS and Project Plan — Tuesday, November 10, 2026 — 16:55 PHT
+
+All entries in this section are resolved. They are in [Issues-Done-Archive.md](Issues-Done-Archive.md).

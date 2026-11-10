@@ -11,6 +11,9 @@ describe('UserFormPage profile picture chooser', () => {
     expect(screen.getByText('No picture selected.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Choose picture' })).toBeInTheDocument()
 
-    expect(screen.getByLabelText('Choose profile picture')).toHaveAttribute('accept', 'image/jpeg,image/png,image/webp')
+    expect(screen.getByLabelText('Choose profile picture')).toHaveAttribute(
+      'accept',
+      'image/jpeg,image/png,image/webp',
+    )
   })
 })

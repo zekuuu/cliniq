@@ -108,8 +108,15 @@ export function Combobox<T>({
   const optionId = (index: number) => `${inputId}-option-${index}`
 
   // The highlight is whatever the user arrowed to, or the first option when auto-highlighting.
-  const active = moved >= 0 && moved < options.length ? moved : autoHighlight && options.length ? 0 : -1
-  const message = loading ? 'Searching…' : loadError ? loadError : options.length ? null : noMatchesText
+  const active =
+    moved >= 0 && moved < options.length ? moved : autoHighlight && options.length ? 0 : -1
+  const message = loading
+    ? 'Searching…'
+    : loadError
+      ? loadError
+      : options.length
+        ? null
+        : noMatchesText
   const showPanel = open && (options.length > 0 || message !== null)
 
   useEffect(() => {
@@ -136,7 +143,8 @@ export function Combobox<T>({
   }, [showPanel, options.length, message])
 
   useEffect(() => {
-    if (showPanel && active >= 0) document.getElementById(optionId(active))?.scrollIntoView?.({ block: 'nearest' })
+    if (showPanel && active >= 0)
+      document.getElementById(optionId(active))?.scrollIntoView?.({ block: 'nearest' })
     // optionId is derived from the stable useId value.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPanel, active])
@@ -156,7 +164,13 @@ export function Combobox<T>({
       const step = event.key === 'ArrowDown' ? 1 : -1
       // Opening with Down lands on the first option; Up from nothing wraps to the last.
       if (!open && active >= 0) return setMoved(active)
-      setMoved(active < 0 ? (step > 0 ? 0 : options.length - 1) : (active + step + options.length) % options.length)
+      setMoved(
+        active < 0
+          ? step > 0
+            ? 0
+            : options.length - 1
+          : (active + step + options.length) % options.length,
+      )
     } else if (event.key === 'Enter') {
       // Never submit the surrounding form from this field.
       event.preventDefault()
@@ -189,7 +203,10 @@ export function Combobox<T>({
       </label>
       <div ref={rootRef} className="relative">
         {icon && (
-          <Icon name={icon} className="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2 text-text-secondary" />
+          <Icon
+            name={icon}
+            className="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2 text-text-secondary"
+          />
         )}
         <input
           ref={inputRef}
@@ -221,7 +238,10 @@ export function Combobox<T>({
             invalid: Boolean(error),
             className:
               // No chevron: it would promise a list the field may not have yet (StudentPicker lists nothing on focus).
-              cn('w-full cursor-text pr-9 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green', icon && 'pl-9!'),
+              cn(
+                'w-full cursor-text pr-9 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green',
+                icon && 'pl-9!',
+              ),
           })}
         />
         {/* Clears the text, like every text field (Zean, November 5, 2026). */}
@@ -242,7 +262,10 @@ export function Combobox<T>({
           </button>
         )}
         {showPanel && (
-          <div ref={panelRef} className={cn(DROPDOWN_PANEL, 'fixed overflow-y-auto scrollbar-thin')}>
+          <div
+            ref={panelRef}
+            className={cn(DROPDOWN_PANEL, 'fixed overflow-y-auto scrollbar-thin')}
+          >
             <div id={listboxId} role="listbox" aria-label={ariaLabel ?? label}>
               {options.map((option, index) => (
                 <div

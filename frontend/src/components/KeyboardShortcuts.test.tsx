@@ -6,7 +6,12 @@ import { KeyboardShortcuts } from './KeyboardShortcuts'
 
 function LocationProbe() {
   const location = useLocation()
-  return <output data-testid="location">{location.pathname}{location.search}</output>
+  return (
+    <output data-testid="location">
+      {location.pathname}
+      {location.search}
+    </output>
+  )
 }
 
 function renderShortcuts(initialEntry = '/') {
@@ -14,7 +19,9 @@ function renderShortcuts(initialEntry = '/') {
     <MemoryRouter initialEntries={[initialEntry]}>
       <KeyboardShortcuts />
       <LocationProbe />
-      <Routes><Route path="*" element={null} /></Routes>
+      <Routes>
+        <Route path="*" element={null} />
+      </Routes>
     </MemoryRouter>,
   )
 }

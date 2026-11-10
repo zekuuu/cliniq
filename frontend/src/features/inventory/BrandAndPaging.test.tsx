@@ -21,7 +21,10 @@ describe('Generic or branded (optional)', () => {
     await selectOption(user, field, 'branded')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     await waitFor(async () => expect((await getInventoryItem(item.id)).brand).toBe('branded'))
-    expect(getRecordedAuditEntries().at(-1)).toMatchObject({ actionType: 'update', summary: 'Updated generic or branded' })
+    expect(getRecordedAuditEntries().at(-1)).toMatchObject({
+      actionType: 'update',
+      summary: 'Updated generic or branded',
+    })
 
     const saved = await getInventoryItem(item.id)
     const details = render(<BatchDetailsModal item={saved} onClose={() => {}} />)
@@ -44,7 +47,9 @@ describe('Generic or branded (optional)', () => {
 describe('Rows per page', () => {
   it('offers 10, 20, 50 or 100 rows, returns to page 1 on a change, and keeps the choice for the session', async () => {
     const user = userEvent.setup()
-    const view = renderWithRouter(<VisitLogListPage />, { route: '/visits?from=2000-01-01&to=2100-12-31' })
+    const view = renderWithRouter(<VisitLogListPage />, {
+      route: '/visits?from=2000-01-01&to=2100-12-31',
+    })
     const table = await screen.findByRole('table')
     const rows = () => within(table).getAllByRole('row').length - 1
     expect(rows()).toBe(10)
@@ -58,7 +63,12 @@ describe('Rows per page', () => {
     expect(screen.getByText(/^Showing 1–20 of/)).toBeInTheDocument()
 
     await user.click(size)
-    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['10', '20', '50', '100'])
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      '10',
+      '20',
+      '50',
+      '100',
+    ])
     await user.keyboard('{Escape}')
 
     view.unmount()

@@ -1,4 +1,4 @@
-This is the longer overview of CLINIQ. The root [README.md](./README.md) is the short, current one, with the full status list (built, decided, not started). Last checked against the code on Thursday, October 29, 2026 (commit dde64408).
+This is the longer overview of CLINIQ. The root [README.md](./README.md) is the short, current one, with the full status list (built, decided, not started). Last checked against the code on Tuesday, November 10, 2026 (`main` at 8f70297; backend on the `backend` branch at b51166a). Numbers come from the [Facts sheet](./CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
 
 <div align="center">
 
@@ -20,8 +20,8 @@ Built for **Mendez Christian Academy** — Asis III, Mendez, Cavite, Philippines
 ![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
 
-![Status](https://img.shields.io/badge/status-frontend%20on%20mock%20data%20%C2%B7%20backend%20not%20started-yellow?style=flat-square)
-![Deployment](https://img.shields.io/badge/deployment-local%20LAN-blue?style=flat-square)
+![Status](https://img.shields.io/badge/status-frontend%20on%20mock%20data%20%C2%B7%20backend%20foundation-yellow?style=flat-square)
+![Deployment](https://img.shields.io/badge/deployment-clinic%20PC%20only-blue?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
 </div>
@@ -30,7 +30,7 @@ Built for **Mendez Christian Academy** — Asis III, Mendez, Cavite, Philippines
 
 ## 📖 About
 
-**CLINIQ** replaces a Philippine private school clinic's manual, paper-and-Excel workflow with a locally hosted, LAN-deployed system built around one hard constraint: **one nurse, one shared workstation, ~900 students, and effectively no budget for new hardware.**
+**CLINIQ** replaces a Philippine private school clinic's manual, paper-and-Excel workflow with a system hosted on the clinic's own computer and used only there (`http://localhost`, ADR-079), built around one hard constraint: **one nurse, one shared workstation, ~900 students, and effectively no budget for new hardware.**
 
 It exists to solve four problems identified in a weighted SWOT analysis — in order of priority:
 
@@ -58,21 +58,36 @@ Every feature in this project — down to individual UI decisions like *which sc
 - Excuse letter generation, review, and print (every printout is a proper A4 document)
 - Follow-Up Handling with built-in reminders (no SMS/push required)
 - Teachers and other school staff as clinic patients, with their own Staff List (ADR-043)
+- Yearly student list import and staff list import (ADR-047, ADR-069)
+- Archive by school year; school years ended and started by hand (ADR-072, ADR-075)
 
 </td>
 <td width="50%" valign="top">
 
 **📊 Operational Tools**
 - Medicine & supply inventory with auto-decrementing stock and expiry tracking
-- Clinic Overview Dashboard — Overview and Trends views: alerts and complaint trends
-- Calendar — a separate screen for school events, national holidays and visit activity (ADR-032)
+- Clinic Overview Dashboard — Overview and Trends views: alerts and symptom trends
+- Activity calendar — a separate screen for school events, national holidays and visit activity (ADR-032, ADR-050)
+- Four monthly reports to print or save as PDF for the Principal; the Admin reads them on screen (ADR-077, ADR-079)
 - Automated backup verification with a guided recovery checklist
+- Password recovery with an authenticator app, idle sign-out per role, and an audit log of every change (ADR-073, ADR-078)
 
 </td>
 </tr>
 </table>
 
-> Every feature above is built and runs on sample (mock) data; the backend is not built. Features decided but not built yet are listed in [README.md](./README.md#decided-not-built).
+> Every feature above is built in the frontend and runs on sample (mock) data. The backend has its foundation and its database migrations, but no module endpoints yet, so nothing is saved to a database. What is decided but not built is listed in [README.md](./README.md#decided-not-built).
+
+<br/>
+
+## 🖼️ Screenshots
+
+Taken from the running app on sample data (no real names). More, and both roles: [`03-Design/assets/screens/`](./CLINIQ-Knowledge-Base/03-Design/assets/screens/).
+
+| | |
+|---|---|
+| ![Sign-in screen with the username and password fields](./CLINIQ-Knowledge-Base/03-Design/assets/screens/login.png) | ![School Clinician's Dashboard, Overview view, with the activity summary](./CLINIQ-Knowledge-Base/03-Design/assets/screens/dashboard-staff.png) |
+| ![New Visit form with the symptom field and the first-aid checklist](./CLINIQ-Knowledge-Base/03-Design/assets/screens/new-visit.png) | ![Inventory list with stock and expiry flags](./CLINIQ-Knowledge-Base/03-Design/assets/screens/inventory.png) |
 
 > 📋 Full breakdown of every module, every operation, and exactly who can access what: [`CLINIQ-Knowledge-Base/01-Requirements/Features/Module-Overview.md`](./CLINIQ-Knowledge-Base/01-Requirements/Features/Module-Overview.md)
 
@@ -84,13 +99,13 @@ Every feature in this project — down to individual UI decisions like *which sc
 |---|---|---|
 | 🎨 Frontend | React + TypeScript, built with **Vite** | Modern SPA tooling, static build output — no Node runtime needed in production |
 | 💅 Styling | Tailwind CSS | Utility-first, fast to build a consistent design system on |
-| ⚙️ Backend | Laravel (PHP), planned | Batteries-included framework, small-team-friendly |
-| 🔐 Auth | Laravel Sanctum (planned) | SPA-specific token/cookie auth, not generic session auth |
-| 🗄️ Database | MariaDB (XAMPP), MySQL-compatible, planned | XAMPP ships MariaDB; Laravel reaches it through its MySQL driver |
+| ⚙️ Backend | Laravel 13 (PHP), foundation built | Batteries-included framework, small-team-friendly |
+| 🔐 Auth | Laravel Sanctum, SPA cookie mode (ADR-056) | Cookie sessions for the browser app; no API tokens |
+| 🗄️ Database | MariaDB (XAMPP), MySQL-compatible; 48 tables approved, migrations written | XAMPP ships MariaDB; Laravel reaches it through its MySQL driver |
 | 📈 Charts | Chart.js + `react-chartjs-2` | Smaller bundle, Canvas rendering — matters on a 4GB RAM workstation |
-| 🧪 Testing | Vitest + RTL (frontend) · Pest (backend, planned) | |
+| 🧪 Testing | Vitest + RTL (frontend) · Pest (backend) | |
 | 🏠 Local Dev | XAMPP, standardized across every machine | Matches the client's actual production environment |
-| ☁️ Deployment | Local LAN today → remote/cloud is a documented future phase | API-driven architecture supports the move without a rewrite |
+| ☁️ Deployment | The clinic PC only, at `http://localhost`; no LAN, no HTTPS (ADR-079) | Another network or remote hosting would be a new decision |
 
 Every choice above was researched, not assumed — see [`ADR-007`](./CLINIQ-Knowledge-Base/06-Decisions/ADR-007-Stack-Finalization.md) for the full reasoning.
 
@@ -110,8 +125,11 @@ CLINIQ/
 ├── 🎨 frontend/                 → React + TypeScript + Vite
 │   └── src/features/            → one folder per module, feature-based structure
 │
-├── ⚙️ backend/                  → Laravel API (not scaffolded yet)
-│   └── app/Modules/             → planned: one folder per module, mirroring the frontend directly
+├── 📦 package.json              → docs:facts and docs:check (documentation checks)
+│
+├── ⚙️ backend/                  → Laravel API (code on the `backend` branch; README only on main)
+│   ├── app/Modules/             → one folder per module, mirroring the frontend
+│   └── app/Shared/              → audit log, auth, settings and other shared services
 │
 ├── 🧠 .claude/skills/           → bespoke, CLINIQ-specific agent skills (full list: 04-Development/Skills-Setup.md)
 │
@@ -134,9 +152,9 @@ One repository, not three — frontend, backend, and the knowledge base travel t
 
 ## 🚀 Getting Started
 
-> ⚠️ **Only the frontend exists so far.** It is built and runs on sample (mock) data. The backend is not scaffolded yet, and the database design is a [proposed draft](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md) awaiting team approval. The backend steps are what *will* run, not what already has.
+> ⚠️ **The frontend runs on its own, on sample (mock) data.** The backend has its foundation and tests but no module endpoints yet, and the two are not connected (ADR-056). The [database design](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md) is approved; its migrations have not been run yet.
 
-**Prerequisites:** Node.js 22.22.2 or a later 22.x, 24.15 or a later 24.x, or 26 or later · Git (the backend will also need XAMPP and Composer)
+**Prerequisites:** Node.js 22.22.2 or a later 22.x, 24.15 or a later 24.x, or 26 or later · Git · for the backend, XAMPP (PHP 8.3 or later, MariaDB) and Composer
 
 ```bash
 # 1. Clone the repo
@@ -148,11 +166,18 @@ npm ci
 npm run dev        # http://localhost:5173
 npm test           # Vitest + React Testing Library
 npm run build      # type-check and production build
+
+# 3. Backend tests (backend code is on the backend branch; no database needed)
+cd ..
+git switch backend
+cd backend
+composer install
+composer test      # Pest
 ```
 
 First-time Windows setup, step by step: [`setup-step.md`](./setup-step.md). Sign-in accounts for the mock data: [`frontend/src/lib/mock-db/README.md`](./frontend/src/lib/mock-db/README.md).
 
-The backend (Laravel, Sanctum, MariaDB from XAMPP) is not set up yet; its planned steps, including *why* each choice was made: [`CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md`](./CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md)
+Creating the database and its accounts, `.env`, and serving the backend from XAMPP's Apache, including *why* each choice was made: [`CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md`](./CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md) and [`backend/README.md`](./backend/README.md)
 
 <br/>
 
@@ -163,7 +188,7 @@ Frontend and backend are built as two coordinated tracks — frontend leads (per
 | Track | Phases |
 |---|---|
 | 🎨 **Frontend** | `F0` Setup & design tokens → `F1` 5 reference screens → `F2` every remaining screen, module by module → `F3` polish & accessibility *(screens built on mock data; the F3 demo-ready exit check is still open)* |
-| ⚙️ **Backend** | `B0` Scaffold → `B1` Database schema *(a [proposed draft](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md), not final or approved — awaiting team approval)* → `B2` Auth/RBAC → `B3` Audit trail → `B4`–`B10` one phase per module |
+| ⚙️ **Backend** | `B0` Scaffold *(done, tested)* → `B1` Database schema *(48 migrations written from the [approved ERD](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md), not yet run on MariaDB)* → `B2` Auth/RBAC → `B3` Audit trail → `B4`–`B10` one phase per module |
 
 Full phase-by-phase detail, dependencies, and the two Phase F0 decisions (now resolved in ADR-012 and ADR-013): [`CLINIQ-Knowledge-Base/04-Development/Development-Phases.md`](./CLINIQ-Knowledge-Base/04-Development/Development-Phases.md)
 
@@ -195,7 +220,10 @@ This project takes documentation seriously — every real decision has a paper t
 - 🗂️ **[Decision Log (ADRs)](./CLINIQ-Knowledge-Base/06-Decisions/)** — why, not just what
 - 📝 **[Changelog](./CLINIQ-Knowledge-Base/08-Logs/Frontend-Changelog.md)** — everything that's happened, in order
 - 🔒 **[Privacy Policy](./CLINIQ-Knowledge-Base/09-References/Privacy-Policy.md)** — how the system handles student health data
-- 🗄️ **[Database design (proposed draft)](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md)** — ERD, [data dictionary](./CLINIQ-Knowledge-Base/02-Architecture/Database/Data-Dictionary.md), and [reference schema](./CLINIQ-Knowledge-Base/02-Architecture/Database/Reference-Schema.sql); not final or approved
+- 🗄️ **[Database design (approved, ADR-057)](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md)** — ERD, [data dictionary](./CLINIQ-Knowledge-Base/02-Architecture/Database/Data-Dictionary.md), and [reference schema](./CLINIQ-Knowledge-Base/02-Architecture/Database/Reference-Schema.sql)
+- 🧭 **[Start Here for the SRS and Project Plan](./CLINIQ-Knowledge-Base/00-Project-Core/Start-Here-For-SRS-And-Project-Plan.md)** — which file to read for each section of the paper
+- 🔢 **[Facts sheet](./CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md)** — every number, computed from the repository
+- 🗺️ **[Diagrams](./CLINIQ-Knowledge-Base/02-Architecture/Database/Diagrams/README.md)** — architecture, use cases, activities, data flow, ERDs, sequences and states
 - 🔗 **[URL Parameters](./URL-Parameters.md)** — active query parameters, examples, and retired `?screen` history
 
 <br/>

@@ -17,7 +17,7 @@ import { fetchStaffProfile } from './staff-records/api/staffApi'
 import { fetchStudentProfile } from './student-records/api/studentProfileApi'
 import { fetchIncidentRecord } from './emergency-response/api/incidentRecordApi'
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
 const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Principal', role: 'admin' }
 
 /** Decisions sheet, Part 3: Admin, audit and Dashboard (ADR-048, ADR-050). */

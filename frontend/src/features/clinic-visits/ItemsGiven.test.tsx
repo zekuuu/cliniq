@@ -36,15 +36,22 @@ describe('New Visit: medicines and supplies given', () => {
     await openNewVisit(user)
     await pick(user, 'para', /Paracetamol 500mg/)
     await user.click(screen.getByRole('button', { name: 'Increase Paracetamol 500mg' }))
-    await user.type(screen.getByRole('textbox', { name: 'Instructions for Paracetamol 500mg' }), '1 tablet every 6 hours')
+    await user.type(
+      screen.getByRole('textbox', { name: 'Instructions for Paracetamol 500mg' }),
+      '1 tablet every 6 hours',
+    )
     await pick(user, 'gauze', /Gauze Pads/)
     // Compact like the Sports Report list (Zean, November 3, 2026): one divided row per item, no box, no counter.
     const list = screen.getByRole('list', { name: 'Medicines and supplies given' })
     expect(list).toHaveClass('divide-y')
-    for (const row of within(list).getAllByRole('listitem')) expect(row.className.split(' ')).not.toContain('border')
+    for (const row of within(list).getAllByRole('listitem'))
+      expect(row.className.split(' ')).not.toContain('border')
     expect(screen.queryByText(/characters$/)).not.toBeInTheDocument()
     // The column names line up with the values: fixed widths, never `auto`, which would size the two grids apart.
-    const columns = within(list).getAllByRole('listitem')[0].className.split(' ').find((name) => name.startsWith('sm:grid-cols-'))
+    const columns = within(list)
+      .getAllByRole('listitem')[0]
+      .className.split(' ')
+      .find((name) => name.startsWith('sm:grid-cols-'))
     expect(columns).not.toMatch(/auto/)
     expect(list.previousElementSibling).toHaveClass(columns!, 'gap-x-3')
     expect(within(list).getAllByRole('listitem')[0]).toHaveClass('gap-x-3')
@@ -52,7 +59,9 @@ describe('New Visit: medicines and supplies given', () => {
     expect(columns).toContain('_6rem_')
     // Expiry sits on its own small line under the name, in words, so it never overlaps the name.
     await pick(user, 'ceti', /Cetirizine/)
-    const expiry = within(screen.getByRole('list', { name: 'Medicines and supplies given' })).getByText(/^Expires in \d+ days?$|^Expires today$/)
+    const expiry = within(
+      screen.getByRole('list', { name: 'Medicines and supplies given' }),
+    ).getByText(/^Expires in \d+ days?$|^Expires today$/)
     expect(expiry).toHaveClass('block', 'text-warning-text')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
@@ -71,7 +80,9 @@ describe('New Visit: medicines and supplies given', () => {
     expect(within(expired).getByText('Expired')).toBeInTheDocument()
     await user.click(expired)
     await user.keyboard('{ArrowDown}{Enter}')
-    expect(screen.queryByRole('list', { name: 'Medicines and supplies given' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('list', { name: 'Medicines and supplies given' }),
+    ).not.toBeInTheDocument()
   })
 
   it('adds to the existing line when the same item is picked again, and works by keyboard', async () => {
@@ -82,7 +93,11 @@ describe('New Visit: medicines and supplies given', () => {
       await user.type(picker, 'adhesive')
       await user.keyboard('{ArrowDown}{Enter}')
     }
-    expect(within(screen.getByRole('list', { name: 'Medicines and supplies given' })).getAllByRole('listitem')).toHaveLength(1)
+    expect(
+      within(screen.getByRole('list', { name: 'Medicines and supplies given' })).getAllByRole(
+        'listitem',
+      ),
+    ).toHaveLength(1)
     expect(screen.getByLabelText('Quantity of Adhesive Bandages')).toHaveValue('2')
   })
 
@@ -115,7 +130,9 @@ describe('Visit Detail: medicines and supplies given', () => {
   it('shows the lines, and lowering a quantity returns stock', async () => {
     const user = userEvent.setup({ delay: null })
     renderWithRouter(<VisitDetailPage visitId="visit-0159" />)
-    expect(await screen.findByText('Adhesive Bandages × 1 pieces (Change the bandage tomorrow)')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Adhesive Bandages × 1 pieces (Change the bandage tomorrow)'),
+    ).toBeInTheDocument()
     expect(screen.getByText('Gauze Pads × 2 pieces')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Edit' }))
@@ -133,7 +150,9 @@ describe('Student Profile visit history', () => {
 
   it('shows medicines given on each visit', async () => {
     renderWithRouter(<StudentProfilePage studentId="student-0020" />)
-    expect(await screen.findByText(/Given: Paracetamol 500mg × 2 tablets \(1 tablet every 6 hours\)/)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/Given: Paracetamol 500mg × 2 tablets \(1 tablet every 6 hours\)/),
+    ).toBeInTheDocument()
   })
 })
 
@@ -145,7 +164,9 @@ describe('Incident: medicines and supplies given', () => {
     renderWithRouter(<IncidentEntryPage />)
     await pickStudent(user, '000000260001')
     await screen.findByRole('heading', { name: 'Report Incident' })
-    expect(screen.queryByRole('combobox', { name: 'Add medicine or supply' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('combobox', { name: 'Add medicine or supply' }),
+    ).not.toBeInTheDocument()
   })
 
   it('records lines at Stage 2 and takes them from stock', async () => {

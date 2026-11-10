@@ -16,7 +16,9 @@ describe('Incident Entry: first-load skeleton', () => {
     // Back is there while loading, so a slow screen can be left and nothing jumps when it loads.
 
     expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
-    expect(container.querySelectorAll('[aria-hidden="true"] .animate-pulse').length).toBeGreaterThanOrEqual(5)
+    expect(
+      container.querySelectorAll('[aria-hidden="true"] .animate-pulse').length,
+    ).toBeGreaterThanOrEqual(5)
     expect(container.querySelector('.animate-spin')).toBeNull()
   })
 })

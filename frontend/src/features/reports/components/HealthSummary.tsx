@@ -62,9 +62,7 @@ function ComplaintBarChart({ rows }: { rows: ComplaintCount[] }) {
     devicePixelRatio: Math.max(2, typeof window === 'undefined' ? 1 : window.devicePixelRatio),
     layout: { padding: { right: 8 } },
     animation: prefersReducedMotion ? false : { duration: 280, easing: 'easeOutCubic' },
-    animations: prefersReducedMotion
-      ? undefined
-      : { x: { duration: 280, easing: 'easeOutCubic' } },
+    animations: prefersReducedMotion ? undefined : { x: { duration: 280, easing: 'easeOutCubic' } },
     transitions: {
       active: { animation: { duration: prefersReducedMotion ? 0 : 160, easing: 'easeOutCubic' } },
     },
@@ -112,7 +110,10 @@ function ComplaintBarChart({ rows }: { rows: ComplaintCount[] }) {
 /** `rows` arrive computed (visits per complaint, most frequent first) from the data layer. */
 export function HealthSummary({ rows }: { rows: ComplaintCount[] }) {
   const [view, setView] = useState<ViewMode>('chart')
-  const [sort, setSort] = useState<TableSortState<HealthSortKey>>({ key: 'visits', direction: 'descending' })
+  const [sort, setSort] = useState<TableSortState<HealthSortKey>>({
+    key: 'visits',
+    direction: 'descending',
+  })
   const totalVisits = rows.reduce((sum, row) => sum + row.count, 0)
 
   if (rows.length === 0) {
@@ -131,10 +132,24 @@ export function HealthSummary({ rows }: { rows: ComplaintCount[] }) {
     onSort: () => setSort((current) => toggleTableSort(current, key)),
   })
   const columns: Array<DataTableColumn<ComplaintCount>> = [
-    { key: 'complaint', header: SYMPTOM, rowHeader: true, sort: sortColumn('complaint', SYMPTOM), cell: (r) => r.complaint },
-    { key: 'visits', header: 'Visits', align: 'right', sort: sortColumn('visits', 'Visits'), cell: (r) => r.count },
+    {
+      key: 'complaint',
+      header: SYMPTOM,
+      rowHeader: true,
+      sort: sortColumn('complaint', SYMPTOM),
+      cell: (r) => r.complaint,
+    },
+    {
+      key: 'visits',
+      header: 'Visits',
+      align: 'right',
+      sort: sortColumn('visits', 'Visits'),
+      cell: (r) => r.count,
+    },
   ]
-  const sortedRows = sortTableRows(rows, sort, (row, key) => key === 'complaint' ? row.complaint : row.count)
+  const sortedRows = sortTableRows(rows, sort, (row, key) =>
+    key === 'complaint' ? row.complaint : row.count,
+  )
 
   return (
     <div className="flex flex-col gap-4">

@@ -46,10 +46,20 @@ export function NameFields({
       <legend className="sr-only">Name</legend>
       {/* Three columns, in line with the other fields on the form; the placeholders stay short so none is cut off. */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Input label="First name" required placeholder="e.g. Maria Angela" {...field('firstName')} />
+        <Input
+          label="First name"
+          required
+          placeholder="e.g. Maria Angela"
+          {...field('firstName')}
+        />
         <Input label="Last name" required placeholder="e.g. Dela Cruz" {...field('lastName')} />
         <div className="flex flex-col gap-2">
-          <Input label="Middle name" placeholder={noMiddle ? 'None' : 'e.g. Santos (optional)'} disabled={noMiddle} {...field('middleName')} />
+          <Input
+            label="Middle name"
+            placeholder={noMiddle ? 'None' : 'e.g. Santos (optional)'}
+            disabled={noMiddle}
+            {...field('middleName')}
+          />
           <label className="inline-flex cursor-pointer items-center gap-2 self-start text-sm text-text-primary">
             <input
               type="checkbox"
@@ -64,7 +74,9 @@ export function NameFields({
           </label>
         </div>
       </div>
-      <p id={hintId} className="text-xs text-text-secondary">{hint}</p>
+      <p id={hintId} className="text-xs text-text-secondary">
+        {hint}
+      </p>
     </fieldset>
   )
 }

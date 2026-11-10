@@ -35,7 +35,9 @@ export function logbookValuesFrom(visit: VisitLogbookFields): LogbookValues {
 
 /** How many of the five hold something; the closed "Show more fields" button shows it. */
 export function filledLogbookCount(values: LogbookValues): number {
-  return (Object.keys(emptyLogbookValues()) as Array<keyof LogbookValues>).filter((key) => values[key].trim() !== '').length
+  return (Object.keys(emptyLogbookValues()) as Array<keyof LogbookValues>).filter(
+    (key) => values[key].trim() !== '',
+  ).length
 }
 
 /** "9:05 AM" for a stored "HH:MM" on the clinic's clock. */
@@ -52,7 +54,11 @@ export function currentClock(now = new Date()): string {
  * `timeIn` is the visit's "HH:MM" time in (on New Visit, the time it is saved). `badTimeOut` is the
  * time input's `validity.badInput`: a half-typed time leaves its value empty, so only that can tell.
  */
-export function logbookErrors(values: LogbookValues, timeIn: string, badTimeOut = false): LogbookErrors {
+export function logbookErrors(
+  values: LogbookValues,
+  timeIn: string,
+  badTimeOut = false,
+): LogbookErrors {
   if (badTimeOut) return { timeOut: 'Enter the full time out, including AM or PM.' }
   if (values.timeOut && values.timeOut < timeIn)
     return { timeOut: `Time out can't be earlier than the time in (${formatClock(timeIn)}).` }

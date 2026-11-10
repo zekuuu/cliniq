@@ -32,7 +32,14 @@ export function StatCardRowSkeleton() {
 export function AttentionCards({ pendingLetterCount }: { pendingLetterCount: number }) {
   return (
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
-      <li className="flex"><StatCard {...CARDS.letters} value={pendingLetterCount} scope="Current · awaiting approval" to={paths.visitsWithPendingLetter} /></li>
+      <li className="flex">
+        <StatCard
+          {...CARDS.letters}
+          value={pendingLetterCount}
+          scope="Current · awaiting approval"
+          to={paths.visitsWithPendingLetter}
+        />
+      </li>
     </ul>
   )
 }
@@ -43,21 +50,86 @@ export function ToDoCards({ summary }: { summary: DashboardSummary }) {
   const overdue = summary.dueFollowUps.filter((row) => row.daysFromToday < 0).length
   return (
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <li className="flex"><StatCard {...CARDS.unfinished} value={incidentsAwaitingStage2} scope="Current · Stage 2 not done" to={`${paths.incidents}?completion=needs_completion`} /></li>
-      <li className="flex"><StatCard {...CARDS.followUps} value={summary.dueFollowUps.length} scope={overdue ? `${overdue} overdue` : 'None overdue'} to={paths.followUps} /></li>
+      <li className="flex">
+        <StatCard
+          {...CARDS.unfinished}
+          value={incidentsAwaitingStage2}
+          scope="Current · Stage 2 not done"
+          to={`${paths.incidents}?completion=needs_completion`}
+        />
+      </li>
+      <li className="flex">
+        <StatCard
+          {...CARDS.followUps}
+          value={summary.dueFollowUps.length}
+          scope={overdue ? `${overdue} overdue` : 'None overdue'}
+          to={paths.followUps}
+        />
+      </li>
     </ul>
   )
 }
 
 /** The period's totals. Students and Incidents link for both roles (ADR-038); Visits only for Staff. */
-export function ActivityCards({ summary, range, canNavigate }: { summary: DashboardSummary; range: DateRange; canNavigate: boolean }) {
+export function ActivityCards({
+  summary,
+  range,
+  canNavigate,
+}: {
+  summary: DashboardSummary
+  range: DateRange
+  canNavigate: boolean
+}) {
   const { counts, previousCounts } = summary
   const noComparison = range.preset === 'all' ? 'All records' : 'No earlier records to compare'
   return (
     <ul className={GRID}>
-      <li className="flex"><StatCard {...CARDS.students} value={counts.activeStudents} scope="Current · excludes archived" to={paths.students} /></li>
-      <li className="flex"><StatCard {...CARDS.visits} value={counts.visits} trend={previousCounts ? trendFor(counts.visits, previousCounts.visits, range, summary.percentMinPriorCount) : undefined} scope={previousCounts ? undefined : noComparison} footnote={`${splitText(counts.split.visits)}. Incidents are counted separately.`} to={canNavigate ? paths.visitsInRange(range.from, range.to) : undefined} /></li>
-      <li className="flex"><StatCard {...CARDS.incidents} value={counts.incidents} trend={previousCounts ? trendFor(counts.incidents, previousCounts.incidents, range, summary.percentMinPriorCount) : undefined} scope={previousCounts ? undefined : noComparison} footnote={[splitText(counts.split.incidents), counts.incidentsAtStage1 > 0 && `${counts.incidentsAtStage1} still at Stage 1`].filter(Boolean).join(' · ')} to={paths.incidentsInRange(range.from, range.to)} /></li>
+      <li className="flex">
+        <StatCard
+          {...CARDS.students}
+          value={counts.activeStudents}
+          scope="Current · excludes archived"
+          to={paths.students}
+        />
+      </li>
+      <li className="flex">
+        <StatCard
+          {...CARDS.visits}
+          value={counts.visits}
+          trend={
+            previousCounts
+              ? trendFor(counts.visits, previousCounts.visits, range, summary.percentMinPriorCount)
+              : undefined
+          }
+          scope={previousCounts ? undefined : noComparison}
+          footnote={`${splitText(counts.split.visits)}. Incidents are counted separately.`}
+          to={canNavigate ? paths.visitsInRange(range.from, range.to) : undefined}
+        />
+      </li>
+      <li className="flex">
+        <StatCard
+          {...CARDS.incidents}
+          value={counts.incidents}
+          trend={
+            previousCounts
+              ? trendFor(
+                  counts.incidents,
+                  previousCounts.incidents,
+                  range,
+                  summary.percentMinPriorCount,
+                )
+              : undefined
+          }
+          scope={previousCounts ? undefined : noComparison}
+          footnote={[
+            splitText(counts.split.incidents),
+            counts.incidentsAtStage1 > 0 && `${counts.incidentsAtStage1} still at Stage 1`,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+          to={paths.incidentsInRange(range.from, range.to)}
+        />
+      </li>
     </ul>
   )
 }

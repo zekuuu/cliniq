@@ -74,7 +74,10 @@ const baseColumns: Array<DataTableColumn<User>> = [
 ]
 function UserListSkeleton() {
   return (
-    <div aria-hidden="true" className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+    <div
+      aria-hidden="true"
+      className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8"
+    >
       <Card className="p-5">
         <Skeleton className="h-7 w-56" />
         <Skeleton className="mt-2 h-4 w-80 max-w-full" />
@@ -90,7 +93,10 @@ function UserListSkeleton() {
 
 export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser }) {
   const { data: users, status, reload } = useAsyncData('users', fetchUsers)
-  const [sort, setSort] = useState<TableSortState<UserSortKey>>({ key: 'lastLogin', direction: 'descending' })
+  const [sort, setSort] = useState<TableSortState<UserSortKey>>({
+    key: 'lastLogin',
+    direction: 'descending',
+  })
   const [notice, setNotice] = useState<{ tone: 'success' | 'error'; text: string } | null>(null)
   const [resetFor, setResetFor] = useState<User | null>(null)
   // Panel review AC-7: enabling, disabling and resetting a password ask for the Admin's password first.
@@ -99,7 +105,10 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
     const enable = Boolean(user.deactivatedAt)
     try {
       await changeUserStatus(user.id, enable, viewer)
-      setNotice({ tone: 'success', text: `${user.name}'s account is ${enable ? 'enabled' : 'disabled'}.` })
+      setNotice({
+        tone: 'success',
+        text: `${user.name}'s account is ${enable ? 'enabled' : 'disabled'}.`,
+      })
       reload()
     } catch (cause) {
       if (!(cause instanceof LastAdminError)) throw cause
@@ -131,7 +140,8 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
     if (column.key === 'username') return { ...column, sort: sortColumn('username', 'Username') }
     if (column.key === 'role') return { ...column, sort: sortColumn('role', 'Role') }
     if (column.key === 'status') return { ...column, sort: sortColumn('status', 'Status') }
-    if (column.key === 'lastLogin') return { ...column, sort: sortColumn('lastLogin', 'Last login') }
+    if (column.key === 'lastLogin')
+      return { ...column, sort: sortColumn('lastLogin', 'Last login') }
     return column
   })
   columns.push({
@@ -139,13 +149,26 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
     header: 'Actions',
     cell: (user) => (
       <span className="flex flex-wrap gap-2">
-        <Link className={buttonClassName({ variant: 'secondary', size: 'sm' })} to={paths.userEdit(user.id)}>
+        <Link
+          className={buttonClassName({ variant: 'secondary', size: 'sm' })}
+          to={paths.userEdit(user.id)}
+        >
           Edit
         </Link>
-        <Button size="sm" variant="neutral" onClick={() => void toggleStatus(user)} aria-label={`${user.deactivatedAt ? 'Enable' : 'Disable'} ${user.name}`}>
+        <Button
+          size="sm"
+          variant="neutral"
+          onClick={() => void toggleStatus(user)}
+          aria-label={`${user.deactivatedAt ? 'Enable' : 'Disable'} ${user.name}`}
+        >
           {user.deactivatedAt ? 'Enable' : 'Disable'}
         </Button>
-        <Button size="sm" variant="neutral" onClick={() => setResetFor(user)} aria-label={`Reset password for ${user.name}`}>
+        <Button
+          size="sm"
+          variant="neutral"
+          onClick={() => setResetFor(user)}
+          aria-label={`Reset password for ${user.name}`}
+        >
           Reset Password
         </Button>
       </span>
@@ -165,7 +188,8 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">User Management</h1>
             <p className="mt-1 text-sm text-text-secondary">
-              Add, disable and reset the accounts of the clinic team. Disabled accounts stay listed and can't sign in.
+              Add, disable and reset the accounts of the clinic team. Disabled accounts stay listed
+              and can't sign in.
             </p>
           </div>
           <Link className={buttonClassName({ variant: 'primary' })} to={paths.userNew}>
@@ -188,7 +212,10 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
         onClose={() => setResetFor(null)}
         onDone={(user) => {
           setResetFor(null)
-          setNotice({ tone: 'success', text: `${user.name} must change the temporary password at the next sign-in.` })
+          setNotice({
+            tone: 'success',
+            text: `${user.name} must change the temporary password at the next sign-in.`,
+          })
           reload()
         }}
       />
@@ -210,7 +237,11 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
               minTableWidth="60rem"
             />
           ) : (
-            <EmptyState icon="userCog" title="No user accounts" description="Add the first account." />
+            <EmptyState
+              icon="userCog"
+              title="No user accounts"
+              description="Add the first account."
+            />
           )}
         </CardBody>
       </Card>
@@ -257,8 +288,8 @@ function ResetPasswordDialog({
     <Modal open={Boolean(user)} title={`Reset password for ${user?.name ?? ''}`} onClose={close}>
       <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
         <p className="text-sm text-text-secondary">
-          Set a temporary password and tell {user?.name} in private. They must change it at the next sign-in.
-          It is not shown again.
+          Set a temporary password and tell {user?.name} in private. They must change it at the next
+          sign-in. It is not shown again.
         </p>
         <Input
           label="Temporary password"

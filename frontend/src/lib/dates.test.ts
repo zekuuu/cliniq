@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { addDays, addMonths, diffDays, endOfMonth, formatDate, formatDateTime, formatTime, startOfWeek } from './dates'
+import {
+  addDays,
+  addMonths,
+  diffDays,
+  endOfMonth,
+  formatDate,
+  formatDateTime,
+  formatTime,
+  startOfWeek,
+} from './dates'
 
 describe('dates', () => {
   it('does calendar-day arithmetic without timezone drift', () => {

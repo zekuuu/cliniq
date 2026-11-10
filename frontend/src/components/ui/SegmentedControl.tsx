@@ -83,12 +83,12 @@ export function SegmentedControl<V extends string>({
               selected && option.selectedClassName
                 ? cn('font-semibold shadow-card ring-2 ring-offset-1', option.selectedClassName)
                 : option.className && !selected
-                ? cn('font-medium text-text-primary hover:brightness-95', option.className)
-                : selected
-                ? // Raised white chip. The brand-green ring (3.43:1 on surface) is the non-color-alone
-                  // state indicator, backed by weight and the dark-green label.
-                  'bg-background font-semibold text-brand-green-dark shadow-card ring-1 ring-brand-green hover:bg-surface'
-                : 'font-medium text-text-secondary hover:bg-background hover:text-text-primary',
+                  ? cn('font-medium text-text-primary hover:brightness-95', option.className)
+                  : selected
+                    ? // Raised white chip. The brand-green ring (3.43:1 on surface) is the non-color-alone
+                      // state indicator, backed by weight and the dark-green label.
+                      'bg-background font-semibold text-brand-green-dark shadow-card ring-1 ring-brand-green hover:bg-surface'
+                    : 'font-medium text-text-secondary hover:bg-background hover:text-text-primary',
             )}
           >
             {option.icon && <Icon name={option.icon} size={14} />}

@@ -16,7 +16,14 @@ describe('Clinic Overview Dashboard: first-load skeletons', () => {
   it('shows summary-shaped placeholders while its shared request loads', () => {
     const { container } = renderWithRouter(<DashboardPage />)
     expect(container.querySelectorAll('[data-skeleton="stat-card"]')).toHaveLength(6)
-    for (const label of ['Clinic visits', 'Incidents', 'Active students', 'Pending excuse letters', 'Follow-ups to review', 'Unfinished incident records']) {
+    for (const label of [
+      'Clinic visits',
+      'Incidents',
+      'Active students',
+      'Pending excuse letters',
+      'Follow-ups to review',
+      'Unfinished incident records',
+    ]) {
       expect(container.textContent).toContain(label)
     }
     expect(screen.getAllByRole('tab')).toHaveLength(2)

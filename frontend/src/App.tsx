@@ -38,7 +38,10 @@ function AppContent() {
     // "signed out after N minutes" message was lost (ADR-078).
     setIdleSignedOut(idleMinutes ?? null)
     setUser(null)
-    navigate(paths.login, { replace: true, state: idleMinutes ? { signedOutAfterMinutes: idleMinutes } : null })
+    navigate(paths.login, {
+      replace: true,
+      state: idleMinutes ? { signedOutAfterMinutes: idleMinutes } : null,
+    })
   }
 
   return (

@@ -6,13 +6,25 @@ import type { ComplaintTrends as ComplaintTrendsData, TrendBucket } from '../../
 
 interface LineProps {
   'aria-label'?: string
-  data?: { datasets?: Array<{ pointHoverRadius?: number | number[]; backgroundColor?: string | string[] }> }
+  data?: {
+    datasets?: Array<{ pointHoverRadius?: number | number[]; backgroundColor?: string | string[] }>
+  }
   options?: {
     animation?: false | { duration?: number; easing?: string }
     animations?: false | { radius?: { duration?: number; easing?: string } }
     transitions?: { active?: { animation?: { duration?: number; easing?: string } } }
     interaction?: { mode?: string; axis?: string; intersect?: boolean }
-    scales?: { x?: { grid?: { drawTicks?: boolean } }; y?: { ticks?: { stepSize?: number; maxTicksLimit?: number } }; yRight?: { display?: boolean; position?: string; grid?: { drawOnChartArea?: boolean; drawTicks?: boolean }; border?: { display?: boolean; color?: string }; ticks?: { display?: boolean } } }
+    scales?: {
+      x?: { grid?: { drawTicks?: boolean } }
+      y?: { ticks?: { stepSize?: number; maxTicksLimit?: number } }
+      yRight?: {
+        display?: boolean
+        position?: string
+        grid?: { drawOnChartArea?: boolean; drawTicks?: boolean }
+        border?: { display?: boolean; color?: string }
+        ticks?: { display?: boolean }
+      }
+    }
     plugins?: {
       tooltip?: {
         enabled?: boolean
@@ -91,11 +103,22 @@ describe('TrendTable', () => {
           weekdayComparison: {
             currentLabel: 'October 2026',
             previousLabel: 'September 2026',
-            rows: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((label, index) => ({
+            rows: [
+              'Monday',
+              'Tuesday',
+              'Wednesday',
+              'Thursday',
+              'Friday',
+              'Saturday',
+              'Sunday',
+            ].map((label, index) => ({
               label,
               current: index + 1,
               previous: index,
-              currentPeak: index === 4 ? { date: '2026-10-30', count: 5, annotations: ['Foundation Day'] } : null,
+              currentPeak:
+                index === 4
+                  ? { date: '2026-10-30', count: 5, annotations: ['Foundation Day'] }
+                  : null,
               previousPeak: null,
             })),
           },
@@ -103,13 +126,20 @@ describe('TrendTable', () => {
       />,
     )
 
-    expect(screen.getByRole('img', { name: /by weekday.*October 2026 compared with September 2026/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('img', { name: /by weekday.*October 2026 compared with September 2026/i }),
+    ).toBeInTheDocument()
     await user.click(screen.getByRole('radio', { name: 'Table' }))
     const table = screen.getByRole('table', { name: /weekday comparison/i })
-    expect(within(table).getByRole('row', { name: /Friday.*Foundation Day/i })).toHaveAttribute('tabindex', '0')
+    expect(within(table).getByRole('row', { name: /Friday.*Foundation Day/i })).toHaveAttribute(
+      'tabindex',
+      '0',
+    )
     expect(table).toHaveClass('table-fixed')
     expect(within(table).getByRole('columnheader', { name: 'October 2026' })).toBeInTheDocument()
-    expect(within(table).getAllByRole('columnheader', { name: 'Busiest date & context' })).toHaveLength(2)
+    expect(
+      within(table).getAllByRole('columnheader', { name: 'Busiest date & context' }),
+    ).toHaveLength(2)
     expect(within(table).getByText(/Oct 30.*5 cases/i)).toBeInTheDocument()
   })
 
@@ -121,13 +151,31 @@ describe('TrendTable', () => {
           weekdayComparison: {
             currentLabel: 'October 2026',
             previousLabel: 'September 2026',
-            rows: [{ label: 'Saturday', current: 11, previous: 1, currentPeak: { date: '2026-10-17', count: 6, annotations: ['Intramurals'] }, previousPeak: { date: '2026-09-05', count: 1, annotations: [] } }],
+            rows: [
+              {
+                label: 'Saturday',
+                current: 11,
+                previous: 1,
+                currentPeak: { date: '2026-10-17', count: 6, annotations: ['Intramurals'] },
+                previousPeak: { date: '2026-09-05', count: 1, annotations: [] },
+              },
+            ],
           },
         }}
       />,
     )
-    const callbacks = (barMock.props as { options: { plugins: { tooltip: { callbacks: { afterBody: (items: Array<{ dataIndex: number }>) => string[] } } } } }).options.plugins.tooltip.callbacks
-    expect(callbacks.afterBody([{ dataIndex: 0 }])).toEqual(['Busiest day: Oct 17 (6 cases) · Intramurals'])
+    const callbacks = (
+      barMock.props as {
+        options: {
+          plugins: {
+            tooltip: { callbacks: { afterBody: (items: Array<{ dataIndex: number }>) => string[] } }
+          }
+        }
+      }
+    ).options.plugins.tooltip.callbacks
+    expect(callbacks.afterBody([{ dataIndex: 0 }])).toEqual([
+      'Busiest day: Oct 17 (6 cases) · Intramurals',
+    ])
   })
 
   it('keeps the cluster note and every complaint type reachable on a month comparison', async () => {
@@ -142,7 +190,9 @@ describe('TrendTable', () => {
       },
     }
     render(<ComplaintTrends trends={clustered} />)
-    expect(screen.getByRole('note')).toHaveTextContent(/Possible symptom cluster: Headache, 1 cases/)
+    expect(screen.getByRole('note')).toHaveTextContent(
+      /Possible symptom cluster: Headache, 1 cases/,
+    )
     await user.click(screen.getByRole('radio', { name: 'Table' }))
     expect(screen.getByRole('table', { name: /weekday comparison/i })).toBeInTheDocument()
     expect(screen.getByRole('table', { name: /Symptom counts per period/i })).toBeInTheDocument()
@@ -153,23 +203,59 @@ describe('TrendTable', () => {
     render(
       <ComplaintTrends
         trends={trends}
-        demographics={{ sex: [{ key: 'female', label: 'Female', count: 2, visits: 2, incidents: 0, share: 0.5, students: 2, staff: 0 }, { key: 'male', label: 'Male', count: 2, visits: 2, incidents: 0, share: 0.5, students: 2, staff: 0 }], gradeLevel: [] }}
+        demographics={{
+          sex: [
+            {
+              key: 'female',
+              label: 'Female',
+              count: 2,
+              visits: 2,
+              incidents: 0,
+              share: 0.5,
+              students: 2,
+              staff: 0,
+            },
+            {
+              key: 'male',
+              label: 'Male',
+              count: 2,
+              visits: 2,
+              incidents: 0,
+              share: 0.5,
+              students: 2,
+              staff: 0,
+            },
+          ],
+          gradeLevel: [],
+        }}
         filters={{ sex: 'female', gradeLevel: null }}
         onFiltersChange={() => {}}
       />,
     )
     expect(screen.getByRole('button', { name: /^Female/ })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: /^Female/ }).className).toContain('aria-pressed:ring-brand-green')
+    expect(screen.getByRole('button', { name: /^Female/ }).className).toContain(
+      'aria-pressed:ring-brand-green',
+    )
     // One split bar in place of the two-column chart; the buttons carry the students and staff (ADR-063).
-    const bar = screen.getByRole('img', { name: /by Sex: Female 2 \(50%\): 2 students, 0 staff; Male 2 \(50%\): 2 students, 0 staff/ })
+    const bar = screen.getByRole('img', {
+      name: /by Sex: Female 2 \(50%\): 2 students, 0 staff; Male 2 \(50%\): 2 students, 0 staff/,
+    })
     expect(bar).toHaveTextContent('Female 50%')
     expect(bar.querySelector<HTMLElement>('[data-sex-part]')?.style.width).toBe('50%')
     // Each sex has its own colour, repeated as a swatch on its button.
-    expect([...bar.querySelectorAll('[data-sex-part]')].map((part) => part.className.match(/bg-sex-\w+/)?.[0])).toEqual(['bg-sex-female', 'bg-sex-male'])
-    expect(screen.getByRole('button', { name: /^Male/ }).querySelector('.bg-sex-male')).not.toBeNull()
+    expect(
+      [...bar.querySelectorAll('[data-sex-part]')].map(
+        (part) => part.className.match(/bg-sex-\w+/)?.[0],
+      ),
+    ).toEqual(['bg-sex-female', 'bg-sex-male'])
+    expect(
+      screen.getByRole('button', { name: /^Male/ }).querySelector('.bg-sex-male'),
+    ).not.toBeNull()
     // The same gliding tooltip as the grade tiles, from the bar or the button.
     fireEvent.pointerEnter(bar.querySelector('[data-sex-part="male"]')!)
-    expect(document.querySelector('[data-glide-tooltip]')).toHaveTextContent('Male2 cases · 50%2 students · 0 staff2 visits · 0 incidents')
+    expect(document.querySelector('[data-glide-tooltip]')).toHaveTextContent(
+      'Male2 cases · 50%2 students · 0 staff2 visits · 0 incidents',
+    )
     fireEvent.focus(screen.getByRole('button', { name: /^Female/ }))
     expect(document.querySelectorAll('[data-glide-tooltip]')).toHaveLength(1)
     expect(document.querySelector('[data-glide-tooltip]')).toHaveTextContent(/^Female/)
@@ -181,8 +267,26 @@ describe('TrendTable', () => {
         trends={trends}
         demographics={{
           sex: [
-            { key: 'female', label: 'Female', count: 19, visits: 19, incidents: 0, share: 0.95, students: 19, staff: 0 },
-            { key: 'male', label: 'Male', count: 1, visits: 1, incidents: 0, share: 0.05, students: 1, staff: 0 },
+            {
+              key: 'female',
+              label: 'Female',
+              count: 19,
+              visits: 19,
+              incidents: 0,
+              share: 0.95,
+              students: 19,
+              staff: 0,
+            },
+            {
+              key: 'male',
+              label: 'Male',
+              count: 1,
+              visits: 1,
+              incidents: 0,
+              share: 0.05,
+              students: 1,
+              staff: 0,
+            },
           ],
           gradeLevel: [],
         }}
@@ -217,9 +321,12 @@ describe('TrendTable', () => {
 
     await user.click(screen.getByRole('radio', { name: 'Grade level' }))
     // One tile per grade: the tile is the filter, on one scale that never tops out below 4 cases.
-    const busiest = screen.getByRole('button', { name: 'Grade 1: 2 cases, 50%, 2 visits, 0 incidents' })
+    const busiest = screen.getByRole('button', {
+      name: 'Grade 1: 2 cases, 50%, 2 visits, 0 incidents',
+    })
     const half = screen.getByRole('button', { name: 'Grade 7: 1 case, 25%, 1 visit, 0 incidents' })
-    const barHeight = (button: HTMLElement) => button.querySelector<HTMLElement>('[data-grade-part]')?.style.height
+    const barHeight = (button: HTMLElement) =>
+      button.querySelector<HTMLElement>('[data-grade-part]')?.style.height
     expect(barHeight(busiest)).toBe('90px')
     expect(barHeight(half)).toBe('45px')
     // The full label on a wide screen, the bare number on a phone, so the chart fits without scrolling.
@@ -229,10 +336,14 @@ describe('TrendTable', () => {
     // Hover or keyboard focus shows the split in one gliding tooltip; red never stands alone (ADR-062).
     expect(document.querySelector('[data-glide-tooltip]')).toBeNull()
     fireEvent.pointerEnter(screen.getByRole('button', { name: /^Grade 11:/ }))
-    expect(document.querySelector('[data-glide-tooltip]')).toHaveTextContent('Grade 111 case0 visits1 incident')
+    expect(document.querySelector('[data-glide-tooltip]')).toHaveTextContent(
+      'Grade 111 case0 visits1 incident',
+    )
     fireEvent.focus(busiest)
     expect(document.querySelectorAll('[data-glide-tooltip]')).toHaveLength(1)
-    expect(document.querySelector('[data-glide-tooltip]')).toHaveTextContent('Grade 12 cases2 visits0 incidents')
+    expect(document.querySelector('[data-glide-tooltip]')).toHaveTextContent(
+      'Grade 12 cases2 visits0 incidents',
+    )
     // A grade with nothing keeps its tile, with no bar and no printed 0.
     const none = screen.getByRole('button', { name: 'Kinder: 0 cases, 0%, 0 visits, 0 incidents' })
     expect(none.querySelector('[data-grade-part]')).toBeNull()
@@ -249,7 +360,11 @@ describe('TrendTable', () => {
     // One card with a Sex / Grade level switch (Sir Rey, October 25, 2026); it opens on Sex.
     expect(demographics?.textContent).toContain('Visits and incidents by sex')
     expect(demographics?.textContent).not.toContain('Visits and incidents by grade level')
-    expect(demographics?.compareDocumentPosition(container.querySelector('[data-skeleton="complaint-trends"]')!)).toBe(Node.DOCUMENT_POSITION_PRECEDING)
+    expect(
+      demographics?.compareDocumentPosition(
+        container.querySelector('[data-skeleton="complaint-trends"]')!,
+      ),
+    ).toBe(Node.DOCUMENT_POSITION_PRECEDING)
   })
 
   it('keeps a genuinely empty multi-bucket range as a zero chart', () => {
@@ -290,7 +405,9 @@ describe('TrendTable', () => {
             { key: 'female', label: 'Female', count: 3, visits: 3, incidents: 0, share: 0.75 },
             { key: 'male', label: 'Male', count: 1, visits: 0, incidents: 1, share: 0.25 },
           ],
-          gradeLevel: [{ key: 'Grade 5', label: 'Grade 5', count: 4, visits: 3, incidents: 1, share: 1 }],
+          gradeLevel: [
+            { key: 'Grade 5', label: 'Grade 5', count: 4, visits: 3, incidents: 1, share: 1 },
+          ],
         }}
         filters={{ sex: null, gradeLevel: null }}
         onFiltersChange={onFiltersChange}
@@ -308,9 +425,13 @@ describe('TrendTable', () => {
     expect(onFiltersChange).toHaveBeenCalledWith({ sex: 'male', gradeLevel: null })
 
     await user.click(screen.getByRole('radio', { name: 'Grade level' }))
-    expect(screen.getByRole('heading', { name: 'Visits and incidents by grade level' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Visits and incidents by grade level' }),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('img', { name: /by Sex/i })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Grade 5: 4 cases, 100%, 3 visits, 1 incident' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Grade 5: 4 cases, 100%, 3 visits, 1 incident' }),
+    ).toBeInTheDocument()
     expect(document.querySelector('[data-chart-right-boundary]')).not.toBeInTheDocument()
   })
 
@@ -328,11 +449,13 @@ describe('TrendTable', () => {
     })
     expect(lineProps.options?.plugins?.tooltip).toMatchObject({ enabled: false })
     expect(lineProps.options?.plugins?.tooltip?.external).toEqual(expect.any(Function))
-    expect(lineProps.options?.interaction).toMatchObject({ mode: 'index', axis: 'x', intersect: false })
+    expect(lineProps.options?.interaction).toMatchObject({
+      mode: 'index',
+      axis: 'x',
+      intersect: false,
+    })
     expect(lineProps.options?.scales?.y?.ticks).toMatchObject({ stepSize: 1, maxTicksLimit: 13 })
-    expect(lineProps.data?.datasets?.[0].pointHoverRadius).toEqual(
-      trends.buckets.map(() => 7),
-    )
+    expect(lineProps.data?.datasets?.[0].pointHoverRadius).toEqual(trends.buckets.map(() => 7))
   })
 
   it('refreshes an existing tooltip to the white panel surface', () => {
@@ -385,7 +508,9 @@ describe('TrendTable', () => {
     expect(screen.getByRole('radio', { name: 'Chart' })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByRole('radio', { name: 'Table' })).toHaveAttribute('aria-checked', 'false')
     expect(screen.getByRole('img', { name: /visits and incidents by week/i })).toBeInTheDocument()
-    expect(screen.queryByRole('table', { name: /symptom counts per period/i })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('table', { name: /symptom counts per period/i }),
+    ).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('radio', { name: 'Table' }))
     expect(screen.getByRole('columnheader', { name: /Sep 1, 2026/i })).toBeInTheDocument()
@@ -423,7 +548,9 @@ describe('TrendTable', () => {
 
     await user.click(screen.getByRole('radio', { name: 'Chart' }))
     expect(screen.getByRole('img', { name: /visits and incidents by week/i })).toBeInTheDocument()
-    expect(screen.queryByRole('table', { name: /symptom counts per period/i })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('table', { name: /symptom counts per period/i }),
+    ).not.toBeInTheDocument()
   })
 
   it("leaves the chart's full bucket range uncapped", () => {
@@ -464,9 +591,10 @@ describe('TrendTable', () => {
     const earlierOnlyRow = screen.getByRole('row', { name: /Earlier only/ })
     expect(earlierOnlyRow).toBeInTheDocument()
     expect(within(earlierOnlyRow).getAllByRole('cell').at(-1)).toHaveTextContent('0')
-    expect(
-      screen.getByRole('button', { name: 'Hide symptoms with no activity' }),
-    ).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Hide symptoms with no activity' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
   })
 
   it('keeps the Frequent symptoms totals unchanged when table rows are revealed', async () => {

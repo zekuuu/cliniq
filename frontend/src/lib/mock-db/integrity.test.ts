@@ -33,10 +33,18 @@ describe('mock-db.json integrity', () => {
   })
 
   it('rejects a stored full name, a missing first name and an untrimmed middle name (ADR-064)', () => {
-    expect(problemsAfter((s) => Object.assign(s.students[0], { fullName: 'Gian Quizon' }))).toMatch(/students\[0\].*"fullName" is a derived value/)
-    expect(problemsAfter((s) => Object.assign(s.students[0], { firstName: '' }))).toMatch(/students\[0\].*firstName: must be trimmed text/)
-    expect(problemsAfter((s) => Object.assign(s.personnel[0], { middleName: ' Santos' }))).toMatch(/personnel\[0\].*middleName: must be null or trimmed text/)
-    expect(problemsAfter((s) => Object.assign(s.students[0], { lastName: 'x'.repeat(51) }))).toMatch(/lastName: must be trimmed text of at most 50/)
+    expect(problemsAfter((s) => Object.assign(s.students[0], { fullName: 'Gian Quizon' }))).toMatch(
+      /students\[0\].*"fullName" is a derived value/,
+    )
+    expect(problemsAfter((s) => Object.assign(s.students[0], { firstName: '' }))).toMatch(
+      /students\[0\].*firstName: must be trimmed text/,
+    )
+    expect(problemsAfter((s) => Object.assign(s.personnel[0], { middleName: ' Santos' }))).toMatch(
+      /personnel\[0\].*middleName: must be null or trimmed text/,
+    )
+    expect(
+      problemsAfter((s) => Object.assign(s.students[0], { lastName: 'x'.repeat(51) })),
+    ).toMatch(/lastName: must be trimmed text of at most 50/)
   })
 
   it('accepts a visit with neither treatment notes nor items given', () => {
@@ -61,17 +69,33 @@ describe('mock-db.json integrity', () => {
   it('rejects disposition fields on the wrong disposition, and a draft beside an approved letter', () => {
     const draft = { excusedFrom: { daysAgo: 2 }, excusedUntil: { daysAgo: 1 }, note: null }
     const visit = (s: MockDbSeed, id: string) => s.visits.find((v) => v.id === id)!
-    expect(problemsAfter((s) => (visit(s, 'visit-0158').excuseLetterDraft = draft))).toMatch(/only a Sent home or Referred visit/)
-    expect(problemsAfter((s) => (visit(s, 'visit-0151').referredTo = 'Clinic'))).toMatch(/referredTo: only a Referred/)
+    expect(problemsAfter((s) => (visit(s, 'visit-0158').excuseLetterDraft = draft))).toMatch(
+      /only a Sent home or Referred visit/,
+    )
+    expect(problemsAfter((s) => (visit(s, 'visit-0151').referredTo = 'Clinic'))).toMatch(
+      /referredTo: only a Referred/,
+    )
     expect(
-      problemsAfter((s) => (visit(s, 'visit-0151').excuseLetterDraft = { ...draft, excusedUntil: { daysAgo: 3 } })),
+      problemsAfter(
+        (s) =>
+          (visit(s, 'visit-0151').excuseLetterDraft = { ...draft, excusedUntil: { daysAgo: 3 } }),
+      ),
     ).toMatch(/excuseLetterDraft\.excusedUntil: can't be before/)
-    expect(problemsAfter((s) => (visit(s, 'visit-0139').excuseLetterDraft = draft))).toMatch(/still has an excuse-letter draft/)
+    expect(problemsAfter((s) => (visit(s, 'visit-0139').excuseLetterDraft = draft))).toMatch(
+      /still has an excuse-letter draft/,
+    )
   })
 
   it('rejects an excuse letter whose period is missing or ends before it starts', () => {
     expect(
-      problemsAfter((s) => delete (s.frontendOnly.excuseLetterApprovals[0] as Partial<(typeof s.frontendOnly.excuseLetterApprovals)[0]>).excusedUntil),
+      problemsAfter(
+        (s) =>
+          delete (
+            s.frontendOnly.excuseLetterApprovals[0] as Partial<
+              (typeof s.frontendOnly.excuseLetterApprovals)[0]
+            >
+          ).excusedUntil,
+      ),
     ).toMatch(/excuseLetterApprovals\[0\]\.excusedUntil/)
     expect(
       problemsAfter((s) => {
@@ -106,28 +130,51 @@ describe('mock-db.json integrity', () => {
   })
 
   it('rejects dangling user and inventory references', () => {
-    expect(problemsAfter((s) => (s.visits[0].loggedByUserId = 'user-staff-99'))).toMatch(/user "user-staff-99" doesn't exist/)
-    expect(problemsAfter((s) => (s.frontendOnly.inventoryTransactions[0].itemId = 'item-9999'))).toMatch(/itemId/)
+    expect(problemsAfter((s) => (s.visits[0].loggedByUserId = 'user-staff-99'))).toMatch(
+      /user "user-staff-99" doesn't exist/,
+    )
+    expect(
+      problemsAfter((s) => (s.frontendOnly.inventoryTransactions[0].itemId = 'item-9999')),
+    ).toMatch(/itemId/)
   })
 
   it('has visits carrying medicine lines, each backed by its transactions (ADR-018)', () => {
     expect(seed.visits.filter((v) => v.itemsGiven.length).length).toBeGreaterThanOrEqual(3)
     expect(seed.frontendOnly.inventoryTransactions.some((t) => t.type === 'adjustment')).toBe(true)
     const withLine = () => seed.visits.findIndex((v) => v.itemsGiven.length)
-    expect(problemsAfter((s) => (s.visits[withLine()].itemsGiven[0].itemId = 'item-9999'))).toMatch(/itemsGiven\[0\]\.itemId: "item-9999" doesn't exist/)
-    expect(problemsAfter((s) => (s.visits[withLine()].itemsGiven[0].quantity += 1))).toMatch(/transactions net to/)
-    expect(problemsAfter((s) => (s.visits[withLine()].itemsGiven[0].quantity = 0))).toMatch(/quantity: must be a whole number ≥ 1/)
+    expect(problemsAfter((s) => (s.visits[withLine()].itemsGiven[0].itemId = 'item-9999'))).toMatch(
+      /itemsGiven\[0\]\.itemId: "item-9999" doesn't exist/,
+    )
+    expect(problemsAfter((s) => (s.visits[withLine()].itemsGiven[0].quantity += 1))).toMatch(
+      /transactions net to/,
+    )
+    expect(problemsAfter((s) => (s.visits[withLine()].itemsGiven[0].quantity = 0))).toMatch(
+      /quantity: must be a whole number ≥ 1/,
+    )
   })
 
   it('rejects transactions whose student or visit link is wrong, and an adjustment without a reason', () => {
     const linked = () => seed.frontendOnly.inventoryTransactions.findIndex((t) => t.visitId)
-    expect(problemsAfter((s) => (s.frontendOnly.inventoryTransactions[linked()].visitId = 'visit-9999'))).toMatch(/visitId: "visit-9999" doesn't exist/)
-    expect(problemsAfter((s) => (s.frontendOnly.inventoryTransactions[linked()].studentId = s.students[0].id))).toMatch(/must match visit/)
-    expect(problemsAfter((s) => delete s.frontendOnly.inventoryTransactions.find((t) => t.type === 'adjustment')!.reason)).toMatch(/reason/)
+    expect(
+      problemsAfter((s) => (s.frontendOnly.inventoryTransactions[linked()].visitId = 'visit-9999')),
+    ).toMatch(/visitId: "visit-9999" doesn't exist/)
+    expect(
+      problemsAfter(
+        (s) => (s.frontendOnly.inventoryTransactions[linked()].studentId = s.students[0].id),
+      ),
+    ).toMatch(/must match visit/)
+    expect(
+      problemsAfter(
+        (s) =>
+          delete s.frontendOnly.inventoryTransactions.find((t) => t.type === 'adjustment')!.reason,
+      ),
+    ).toMatch(/reason/)
   })
 
   it('rejects a seed item that starts below zero', () => {
-    expect(problemsAfter((s) => (s.inventoryItems[0].currentStock = -1))).toMatch(/can't start below 0/)
+    expect(problemsAfter((s) => (s.inventoryItems[0].currentStock = -1))).toMatch(
+      /can't start below 0/,
+    )
   })
 
   it('rejects invalid stage, status, role, and disposition values', () => {
@@ -154,25 +201,33 @@ describe('mock-db.json integrity', () => {
       ['counts', (s) => Object.assign(s, { counts: { visits: 900 } })],
       ['needsVerification', (s) => Object.assign(s.backupLogs[0], { needsVerification: false })],
     ]
-    for (const [field, edit] of cases) expect(problemsAfter(edit)).toContain(`"${field}" is a derived value`)
+    for (const [field, edit] of cases)
+      expect(problemsAfter(edit)).toContain(`"${field}" is a derived value`)
   })
 
   it('rejects typos and missing fields', () => {
-    expect(problemsAfter((s) => Object.assign(s.visits[0], { complain: 'Headache' }))).toMatch(/unexpected field "complain"/)
-    expect(problemsAfter((s) => delete (s.students[0] as Partial<MockDbSeed['students'][0]>).gradeLevel)).toMatch(
-      /missing field "gradeLevel"/,
+    expect(problemsAfter((s) => Object.assign(s.visits[0], { complain: 'Headache' }))).toMatch(
+      /unexpected field "complain"/,
     )
+    expect(
+      problemsAfter((s) => delete (s.students[0] as Partial<MockDbSeed['students'][0]>).gradeLevel),
+    ).toMatch(/missing field "gradeLevel"/)
   })
 
   it('rejects absolute dates, which would go stale', () => {
     expect(
-      problemsAfter((s) => ((s.followUps[0] as unknown as { followUpDate: string }).followUpDate = '2026-09-28')),
+      problemsAfter(
+        (s) =>
+          ((s.followUps[0] as unknown as { followUpDate: string }).followUpDate = '2026-09-28'),
+      ),
     ).toMatch(/followUpDate: expected \{"daysAgo": n\}/)
   })
 
   it('keeps the synthetic-data notice and fake-only credentials', () => {
     expect(problemsAfter((s) => (s.meta.notice = 'Real data'))).toMatch(/synthetic/)
-    expect(problemsAfter((s) => (s.frontendOnly.devAccounts[0].password = 'hunter2'))).toMatch(/obviously fake/)
+    expect(problemsAfter((s) => (s.frontendOnly.devAccounts[0].password = 'hunter2'))).toMatch(
+      /obviously fake/,
+    )
   })
 })
 
@@ -180,26 +235,31 @@ describe('mock-db.json integrity', () => {
  * "Dates must not rot": on any day the app is opened, the seed still shows every state. Resolved
  * against several far-apart "todays", including a leap day and a year boundary.
  */
-describe.each(['2026-09-28', '2027-01-01', '2028-02-29', '2031-06-15'])('seed resolved on %s', (today) => {
-  const state = resolveSeed(seed, today)
-  const dueStates = state.followUps.map((f) => followUpDueState(f, today, state.config.followUpOverdueAfterDays))
-  const flags = state.inventoryItems.flatMap((i) => inventoryStatusFor(state, i).flags)
+describe.each(['2026-09-28', '2027-01-01', '2028-02-29', '2031-06-15'])(
+  'seed resolved on %s',
+  (today) => {
+    const state = resolveSeed(seed, today)
+    const dueStates = state.followUps.map((f) =>
+      followUpDueState(f, today, state.config.followUpOverdueAfterDays),
+    )
+    const flags = state.inventoryItems.flatMap((i) => inventoryStatusFor(state, i).flags)
 
-  it('has overdue, due-today, and upcoming follow-ups', () => {
-    expect(dueStates).toEqual(expect.arrayContaining(['overdue', 'due_today', 'upcoming']))
-  })
+    it('has overdue, due-today, and upcoming follow-ups', () => {
+      expect(dueStates).toEqual(expect.arrayContaining(['overdue', 'due_today', 'upcoming']))
+    })
 
-  it('has expired, expiring-soon, and low-stock items', () => {
-    expect(flags).toEqual(expect.arrayContaining(['expired', 'nearing_expiration', 'low_stock']))
-  })
+    it('has expired, expiring-soon, and low-stock items', () => {
+      expect(flags).toEqual(expect.arrayContaining(['expired', 'nearing_expiration', 'low_stock']))
+    })
 
-  it('has a Stage-1 incident, an incomplete record, and frequent visitors', () => {
-    expect(state.incidents.some((i) => i.stage === 1)).toBe(true)
-    expect(incompleteRecordQueue(state).some((r) => r.status === 'open')).toBe(true)
-    expect(frequentVisitors(state).length).toBeGreaterThan(0)
-  })
+    it('has a Stage-1 incident, an incomplete record, and frequent visitors', () => {
+      expect(state.incidents.some((i) => i.stage === 1)).toBe(true)
+      expect(incompleteRecordQueue(state).some((r) => r.status === 'open')).toBe(true)
+      expect(frequentVisitors(state).length).toBeGreaterThan(0)
+    })
 
-  it('has visits today, for the Staff Dashboard', () => {
-    expect(state.visits.some((v) => v.dateTime.startsWith(today))).toBe(true)
-  })
-})
+    it('has visits today, for the Staff Dashboard', () => {
+      expect(state.visits.some((v) => v.dateTime.startsWith(today))).toBe(true)
+    })
+  },
+)

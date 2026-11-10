@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { base32Decode, base32Encode, generateRecoveryCodes, generateTotpSecret, hashRecoveryCode, hotp, otpauthUri, totp, verifyTotp } from './totp'
+import {
+  base32Decode,
+  base32Encode,
+  generateRecoveryCodes,
+  generateTotpSecret,
+  hashRecoveryCode,
+  hotp,
+  otpauthUri,
+  totp,
+  verifyTotp,
+} from './totp'
 
 // RFC 6238 Appendix B: the SHA-1 key is the ASCII "12345678901234567890"; frozen clock values, no real time.
 const RFC_KEY = new TextEncoder().encode('12345678901234567890')
@@ -18,8 +28,20 @@ describe('TOTP (RFC 6238)', () => {
   })
 
   it('matches the RFC 4226 HOTP vectors', async () => {
-    const expected = ['755224', '287082', '359152', '969429', '338314', '254676', '287922', '162583', '399871', '520489']
-    for (const [counter, code] of expected.entries()) expect(await hotp(RFC_KEY, counter)).toBe(code)
+    const expected = [
+      '755224',
+      '287082',
+      '359152',
+      '969429',
+      '338314',
+      '254676',
+      '287922',
+      '162583',
+      '399871',
+      '520489',
+    ]
+    for (const [counter, code] of expected.entries())
+      expect(await hotp(RFC_KEY, counter)).toBe(code)
   })
 
   it('accepts one step of clock drift either way, and nothing further or wrong', async () => {
@@ -42,7 +64,9 @@ describe('TOTP (RFC 6238)', () => {
   })
 
   it('builds the standard otpauth link', () => {
-    expect(otpauthUri('demo.nurse', 'ABC')).toBe('otpauth://totp/CLINIQ%3Ademo.nurse?secret=ABC&issuer=CLINIQ&algorithm=SHA1&digits=6&period=30')
+    expect(otpauthUri('demo.nurse', 'ABC')).toBe(
+      'otpauth://totp/CLINIQ%3Ademo.nurse?secret=ABC&issuer=CLINIQ&algorithm=SHA1&digits=6&period=30',
+    )
   })
 
   it('makes 8 distinct recovery codes and hashes them, ignoring case and dashes', async () => {

@@ -40,7 +40,10 @@ type Replace<T, R> = Omit<T, keyof R> & R
 export type SeedUser = Replace<User, { lastLogin: RelativeDateTime | null }>
 
 /** Old mock JSON did not hold Sex; `resolveSeed` assigns a deterministic synthetic value on load. */
-export type SeedStudent = Omit<Student, 'recordComplete' | 'sex' | 'fullName'> & { sex?: StudentSex; nameCorrectionReason?: string }
+export type SeedStudent = Omit<Student, 'recordComplete' | 'sex' | 'fullName'> & {
+  sex?: StudentSex
+  nameCorrectionReason?: string
+}
 
 /** A stored staff record: the name parts only, never the derived `fullName` (ADR-064). */
 export type SeedPersonnel = Omit<Personnel, 'fullName'>
@@ -48,7 +51,13 @@ export type SeedPersonnel = Omit<Personnel, 'fullName'>
 /** Older seed rows have no `personnelId`; `resolveSeed` reads a missing one as null (ADR-043). */
 type SeedPatient = { personnelId?: string | null }
 
-export type SeedVisit = Replace<Visit, SeedPatient & { dateTime: RelativeDateTime; excuseLetterDraft: ExcuseLetterDraft<RelativeDate> | null }>
+export type SeedVisit = Replace<
+  Visit,
+  SeedPatient & {
+    dateTime: RelativeDateTime
+    excuseLetterDraft: ExcuseLetterDraft<RelativeDate> | null
+  }
+>
 
 export type SeedIncident = Replace<
   Incident,
@@ -65,7 +74,10 @@ export type SeedFollowUp = Replace<FollowUp, SeedPatient & { followUpDate: Relat
  * The JSON seed predates batch tracking. It is deliberately accepted in its old one-stock/one-date
  * shape and migrated to one batch by `resolveSeed`; persisted mock state follows the same path.
  */
-export type SeedInventoryItem = Omit<InventoryItem, 'batches' | 'currentStock' | 'expirationDate'> & {
+export type SeedInventoryItem = Omit<
+  InventoryItem,
+  'batches' | 'currentStock' | 'expirationDate'
+> & {
   currentStock: number
   expirationDate: RelativeDate | null
   /** A seed-only comment (for example "starter tags, to be confirmed"); dropped on load. */
@@ -157,7 +169,13 @@ export interface MockDbConfig {
   schoolYearEndMonth: number
   schoolYearEndDay: number
   /** The school years Staff started by hand, oldest first (Zean, November 7, 2026). */
-  schoolYearStarts?: Array<{ label: string; startedOn: string; startedBy: string; endedOn?: string; endedBy?: string }>
+  schoolYearStarts?: Array<{
+    label: string
+    startedOn: string
+    startedBy: string
+    endedOn?: string
+    endedBy?: string
+  }>
 }
 
 /**
@@ -186,7 +204,10 @@ export interface VitalsUsualRanges {
   grades1to6FromAge: number
   /** From this age a student is in the Grades 7 to 12 group (ADR-054). Nurse to confirm. */
   grades7to12FromAge: number
-  byAgeGroup: Record<AgeGroup, { pulseBpm: VitalRange; systolic: VitalRange; diastolic: VitalRange }>
+  byAgeGroup: Record<
+    AgeGroup,
+    { pulseBpm: VitalRange; systolic: VitalRange; diastolic: VitalRange }
+  >
 }
 
 export interface VitalRange {
@@ -242,7 +263,8 @@ export type InventoryTransactionType = 'dispense' | 'restock' | 'adjustment'
  * Why an adjustment changed stock. `visit_edited` is written by the data layer when a saved visit's
  * medicine lines change; the rest are the Adjust Stock reasons Staff choose. PROVISIONAL (ADR-018).
  */
-export type AdjustmentReason = 'visit_edited' | 'expired_disposed' | 'damaged_spilled' | 'miscount_correction' | 'other'
+export type AdjustmentReason =
+  'visit_edited' | 'expired_disposed' | 'damaged_spilled' | 'miscount_correction' | 'other'
 
 /**
  * Dispense/restock/adjustment history (Module 8, stock flow steps 2 and 4; ADR-018). History only:

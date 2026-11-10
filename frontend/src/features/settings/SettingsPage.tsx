@@ -130,7 +130,12 @@ function IdleSignoutForm({
       {feedback.result && <SaveFeedback result={feedback.result} />}
       {canEdit && (
         <div>
-          <Button type="submit" variant="primary" loading={feedback.saving} done={feedback.result?.kind === 'saved'}>
+          <Button
+            type="submit"
+            variant="primary"
+            loading={feedback.saving}
+            done={feedback.result?.kind === 'saved'}
+          >
             Save
           </Button>
         </div>

@@ -33,9 +33,15 @@ export function LogbookFields({
   const set = (field: keyof LogbookValues, value: string) => onChange({ ...values, [field]: value })
   const accounts = useAsyncData('assisted-by-names', fetchAssistedByNames)
   const typed = values.assistedBy.trim().toLowerCase()
-  const assistedByOptions = (accounts.data ?? []).filter((name) => name.toLowerCase().includes(typed))
+  const assistedByOptions = (accounts.data ?? []).filter((name) =>
+    name.toLowerCase().includes(typed),
+  )
   return (
-    <ExpandableSection open={open} onOpenChange={onOpenChange} filledCount={filledLogbookCount(values)}>
+    <ExpandableSection
+      open={open}
+      onOpenChange={onOpenChange}
+      filledCount={filledLogbookCount(values)}
+    >
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Input
@@ -58,7 +64,11 @@ export function LogbookFields({
             error={errors.timeOut}
           />
         </div>
-        <VitalsWarning readings={{ temperatureC: values.temperatureC }} ranges={ranges} ageGroup={ageGroup} />
+        <VitalsWarning
+          readings={{ temperatureC: values.temperatureC }}
+          ranges={ranges}
+          ageGroup={ageGroup}
+        />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Combobox
             label="Assisted by"
@@ -77,7 +87,12 @@ export function LogbookFields({
             onChange={(event) => set('parentGuardian', event.target.value)}
           />
         </div>
-        <Textarea label="Remarks" rows={3} value={values.remarks} onChange={(value) => set('remarks', value)} />
+        <Textarea
+          label="Remarks"
+          rows={3}
+          value={values.remarks}
+          onChange={(value) => set('remarks', value)}
+        />
       </div>
     </ExpandableSection>
   )

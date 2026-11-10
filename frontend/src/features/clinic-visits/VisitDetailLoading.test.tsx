@@ -18,7 +18,9 @@ describe('Visit Detail/Edit: first-load skeleton', () => {
     // Back is there while loading, so a slow screen can be left and nothing jumps when it loads.
 
     expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
-    expect(container.querySelectorAll('[aria-hidden="true"] .animate-pulse').length).toBeGreaterThan(8)
+    expect(
+      container.querySelectorAll('[aria-hidden="true"] .animate-pulse').length,
+    ).toBeGreaterThan(8)
     expect(container.querySelector('.animate-spin')).toBeNull()
   })
 })

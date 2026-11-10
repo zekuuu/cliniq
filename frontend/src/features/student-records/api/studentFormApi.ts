@@ -15,7 +15,12 @@ import {
 import type { EmergencyContact, ISODate, Student, StudentSex } from '../../../types/entities'
 import { isNoneRecorded, tidyEntry } from '../../../lib/patients'
 
-export { checkStudentDuplicates, DUPLICATE_LRN_MESSAGE, DuplicateLrnError, NAME_CORRECTION_REASON_MIN }
+export {
+  checkStudentDuplicates,
+  DUPLICATE_LRN_MESSAGE,
+  DuplicateLrnError,
+  NAME_CORRECTION_REASON_MIN,
+}
 export type { DuplicateMatch, StudentDuplicateCheck }
 export type StudentFormMode = 'add' | 'edit'
 
@@ -64,12 +69,24 @@ export async function fetchStudentFormContext(studentId?: string): Promise<Stude
     getGradeLevels(),
     getUnusualAgeYears(),
   ])
-  return { mode: studentId ? 'edit' : 'add', gradeLevels, student, today: getMockToday(), unusualAgeYears }
+  return {
+    mode: studentId ? 'edit' : 'add',
+    gradeLevels,
+    student,
+    today: getMockToday(),
+    unusualAgeYears,
+  }
 }
 
 export async function submitStudentForm(
   values: StudentFormValues,
-  options: { mode: StudentFormMode; studentId?: string; confirmDuplicate?: boolean; actor?: SessionUser; nameCorrectionReason?: string },
+  options: {
+    mode: StudentFormMode
+    studentId?: string
+    confirmDuplicate?: boolean
+    actor?: SessionUser
+    nameCorrectionReason?: string
+  },
 ): Promise<StudentFormSubmitResult> {
   return saveStudent(
     {
@@ -84,7 +101,9 @@ export async function submitStudentForm(
       allergies: parseList(values.allergies),
       medicalConditions: parseList(values.medicalConditions),
       emergencyContacts: values.emergencyContacts
-        .filter((contact) => [contact.name, contact.relationship, contact.phone].some((value) => value.trim()))
+        .filter((contact) =>
+          [contact.name, contact.relationship, contact.phone].some((value) => value.trim()),
+        )
         .map((contact) => ({
           name: contact.name.trim(),
           relationship: contact.relationship.trim(),
@@ -100,4 +119,3 @@ export async function submitStudentForm(
     },
   )
 }
-

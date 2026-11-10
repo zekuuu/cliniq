@@ -12,7 +12,7 @@ describe('issue report API', () => {
         route: '/reports',
         pageName: 'Reports',
       },
-      { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' },
+      { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' },
     )
 
     expect(report).toMatchObject({

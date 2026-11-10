@@ -1,7 +1,33 @@
 import { SYMPTOM } from '../../lib/labels'
 import { useState, type ReactNode } from 'react'
-import { capitalize, contactNoun, NOTIFIED_PARTY, PATIENT_KIND_LABELS, patientGroup, patientIdText } from '../../lib/patients'
-import { BackButton, Badge, Button, Card, CardBody, CardHeader, EmergencyContactList, ErrorState, Icon, Modal, PrintDocument, PrintFields, PrintButton, PrintSection, PrintSignatures, PrintTable, Select, Skeleton } from '../../components'
+import {
+  capitalize,
+  contactNoun,
+  NOTIFIED_PARTY,
+  PATIENT_KIND_LABELS,
+  patientGroup,
+  patientIdText,
+} from '../../lib/patients'
+import {
+  BackButton,
+  Badge,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  EmergencyContactList,
+  ErrorState,
+  Icon,
+  Modal,
+  PrintDocument,
+  PrintFields,
+  PrintButton,
+  PrintSection,
+  PrintSignatures,
+  PrintTable,
+  Select,
+  Skeleton,
+} from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
 import { formatDateTime } from '../../lib/dates'
@@ -22,7 +48,8 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
   const referral = incident.hospitalReferral
   const notes = String(incident.vitals.treatmentNotes ?? '').trim()
   const vitals = takenReadings(incident.vitals)
-  const signed = (step: { by: string; at: string } | null) => (step ? `${step.by}, ${formatDateTime(step.at)}` : 'Not recorded')
+  const signed = (step: { by: string; at: string } | null) =>
+    step ? `${step.by}, ${formatDateTime(step.at)}` : 'Not recorded'
   return (
     <PrintDocument
       title="Incident Report"
@@ -31,7 +58,8 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
     >
       {incident.stage === 1 && (
         <p className="mb-[4mm] border-2 border-text-primary px-[3mm] py-[2mm] text-[11pt] font-bold">
-          Not yet completed. Only the Stage 1 fast-capture details are recorded; Stage 2 is still due.
+          Not yet completed. Only the Stage 1 fast-capture details are recorded; Stage 2 is still
+          due.
         </p>
       )}
       <div className="text-[11pt]">
@@ -39,26 +67,46 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
           <PrintFields
             columns={3}
             fields={[
-              { label: PATIENT_KIND_LABELS[student.kind], value: `${student.fullName} · ${patientIdText(student)}` },
+              {
+                label: PATIENT_KIND_LABELS[student.kind],
+                value: `${student.fullName} · ${patientIdText(student)}`,
+              },
               patientGroup(student),
               { label: 'Date and time', value: formatDateTime(incident.time) },
               { label: SYMPTOM, value: incident.complaint },
-              { label: 'Record status', value: incident.stage === 1 ? 'Stage 1, needs completion' : 'Stage 2, complete' },
+              {
+                label: 'Record status',
+                value: incident.stage === 1 ? 'Stage 1, needs completion' : 'Stage 2, complete',
+              },
               { label: 'Sign-off', value: approved ? 'Approved' : 'Pending sign-off' },
-              ...(incident.bodyPart ? [{ label: 'Body part affected', value: incident.bodyPart }] : []),
-              ...(incident.generalNotes ? [{ label: 'Additional notes', value: incident.generalNotes, wide: true }] : []),
+              ...(incident.bodyPart
+                ? [{ label: 'Body part affected', value: incident.bodyPart }]
+                : []),
+              ...(incident.generalNotes
+                ? [{ label: 'Additional notes', value: incident.generalNotes, wide: true }]
+                : []),
             ]}
           />
         </PrintSection>
         <PrintSection title="Vitals">
           {vitals.length ? (
-            <PrintFields columns={4} fields={vitals.map(([key, value]) => ({ label: READING_LABELS[key]?.label ?? key, value: readingText(key, value) }))} />
+            <PrintFields
+              columns={4}
+              fields={vitals.map(([key, value]) => ({
+                label: READING_LABELS[key]?.label ?? key,
+                value: readingText(key, value),
+              }))}
+            />
           ) : (
             <p>No readings taken.</p>
           )}
         </PrintSection>
         <PrintSection title="Treatment">
-          {incident.noFurtherActionReason && <p className="mb-[2mm]">No treatment or notification: {incident.noFurtherActionReason}</p>}
+          {incident.noFurtherActionReason && (
+            <p className="mb-[2mm]">
+              No treatment or notification: {incident.noFurtherActionReason}
+            </p>
+          )}
           {!notes && !incident.itemsGiven.length ? (
             !incident.noFurtherActionReason && <p>No treatment recorded.</p>
           ) : (
@@ -82,7 +130,9 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
             <p>Escalated from a clinic visit. Given at the visit (not repeated here):</p>
             {sourceVisit.itemsGiven.length ? (
               <ul className="list-disc pl-[5mm]">
-                {sourceVisit.itemsGiven.map((line) => <li key={line.itemId}>{formatItemGiven(line)}</li>)}
+                {sourceVisit.itemsGiven.map((line) => (
+                  <li key={line.itemId}>{formatItemGiven(line)}</li>
+                ))}
               </ul>
             ) : (
               <p>Nothing recorded.</p>
@@ -110,9 +160,20 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
             rowKey={(attempt, index) => `${attempt.timestamp}|${index}`}
             empty={`No ${contactNoun(student.kind)} notification attempts were logged for this incident.`}
             columns={[
-              { header: 'Date and time', width: '28%', cell: (attempt) => formatDateTime(attempt.timestamp) },
-              { header: 'Outcome', width: '24%', cell: (attempt) => OUTCOME_LABELS[attempt.outcome] },
-              { header: 'Who was called', cell: (attempt) => calledContactText(attempt.calledContact) },
+              {
+                header: 'Date and time',
+                width: '28%',
+                cell: (attempt) => formatDateTime(attempt.timestamp),
+              },
+              {
+                header: 'Outcome',
+                width: '24%',
+                cell: (attempt) => OUTCOME_LABELS[attempt.outcome],
+              },
+              {
+                header: 'Who was called',
+                cell: (attempt) => calledContactText(attempt.calledContact),
+              },
             ]}
           />
         </PrintSection>
@@ -121,8 +182,14 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
             columns={3}
             fields={[
               { label: 'Recorded by', value: signed(trail.recorded) },
-              { label: 'Completed by', value: incident.stage === 1 ? 'Not yet completed' : signed(trail.completed) },
-              { label: 'Approved by', value: approved ? signed(trail.approved) : 'Not yet approved' },
+              {
+                label: 'Completed by',
+                value: incident.stage === 1 ? 'Not yet completed' : signed(trail.completed),
+              },
+              {
+                label: 'Approved by',
+                value: approved ? signed(trail.approved) : 'Not yet approved',
+              },
             ]}
           />
         </PrintSection>
@@ -130,7 +197,11 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
       <PrintSignatures
         lines={[
           // The clinician who completed Stage 2, or who recorded it while still at Stage 1.
-          { heading: 'Prepared by:', name: (trail.completed ?? trail.recorded)?.by, position: ROLE_LABELS.staff },
+          {
+            heading: 'Prepared by:',
+            name: (trail.completed ?? trail.recorded)?.by,
+            position: ROLE_LABELS.staff,
+          },
           // The latest call logged as reached; blank when nobody was reached.
           {
             heading: `${capitalize(contactNoun(student.kind))} informed:`,
@@ -138,7 +209,11 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
             position: reached?.calledContact?.relationship || capitalize(contactNoun(student.kind)),
           },
           // Staff approve the report (ADR-038), so the Principal line names the Admin/Principal account once it is approved.
-          { heading: 'Noted by (if applicable):', name: approved ? (principalName ?? undefined) : undefined, position: 'Principal' },
+          {
+            heading: 'Noted by (if applicable):',
+            name: approved ? (principalName ?? undefined) : undefined,
+            position: 'Principal',
+          },
         ]}
       />
     </PrintDocument>
@@ -146,10 +221,41 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
 }
 
 function ReportSkeleton({ back }: { back: ReactNode }) {
-  return <div className="mx-auto flex flex max-w-page-narrow flex-col gap-4 flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<div aria-hidden="true"><Card className="p-5"><Skeleton className="h-7 w-52" /><Skeleton className="mt-2 h-4 w-80 max-w-full" /></Card><Card className="p-5"><Skeleton className="h-10 w-72 max-w-full" /><div className="mt-5 grid gap-4 sm:grid-cols-2">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-10" />)}</div><div className="mt-5 grid gap-3 sm:grid-cols-3">{Array.from({ length: 3 }, (_, index) => <Skeleton key={index} className="h-16" />)}</div></Card></div></div>
+  return (
+    <div className="mx-auto flex flex max-w-page-narrow flex-col gap-4 flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+      {back}
+      <div aria-hidden="true">
+        <Card className="p-5">
+          <Skeleton className="h-7 w-52" />
+          <Skeleton className="mt-2 h-4 w-80 max-w-full" />
+        </Card>
+        <Card className="p-5">
+          <Skeleton className="h-10 w-72 max-w-full" />
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            {Array.from({ length: 4 }, (_, index) => (
+              <Skeleton key={index} className="h-10" />
+            ))}
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            {Array.from({ length: 3 }, (_, index) => (
+              <Skeleton key={index} className="h-16" />
+            ))}
+          </div>
+        </Card>
+      </div>
+    </div>
+  )
 }
 
-function Field({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
+function Field({
+  label,
+  children,
+  className,
+}: {
+  label: string
+  children: ReactNode
+  className?: string
+}) {
   return (
     <div className={className}>
       <dt className="text-xs font-semibold text-text-secondary">{label}</dt>
@@ -158,25 +264,59 @@ function Field({ label, children, className }: { label: string; children: ReactN
   )
 }
 
-export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }: { viewer?: SessionUser; incidentId?: string }) {
+export function IncidentReportPage({
+  viewer = getMockSessionUser(),
+  incidentId,
+}: {
+  viewer?: SessionUser
+  incidentId?: string
+}) {
   const [selectedId, setSelectedId] = useState(incidentId)
   const isStaff = viewer.role === 'staff'
-  const { data, status, reload } = useAsyncData(`incident-report|${selectedId ?? 'default'}`, () => fetchIncidentRecord(selectedId, viewer))
+  const { data, status, reload } = useAsyncData(`incident-report|${selectedId ?? 'default'}`, () =>
+    fetchIncidentRecord(selectedId, viewer),
+  )
   const [justApproved, setJustApproved] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [approving, setApproving] = useState(false)
 
   const back = <BackButton fallback={paths.incidents} />
-  if (status === 'error') return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<ErrorState asPageTitle title="Unable to load the incident report." onRetry={reload} /></div>
-  if (data === undefined) return <><p className="sr-only" role="status">Loading incident report...</p><ReportSkeleton back={back} /></>
-  if (data === null) return <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">{back}<Card><CardBody>No incident report is pending sign-off.</CardBody></Card></div>
+  if (status === 'error')
+    return (
+      <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+        {back}
+        <ErrorState asPageTitle title="Unable to load the incident report." onRetry={reload} />
+      </div>
+    )
+  if (data === undefined)
+    return (
+      <>
+        <p className="sr-only" role="status">
+          Loading incident report...
+        </p>
+        <ReportSkeleton back={back} />
+      </>
+    )
+  if (data === null)
+    return (
+      <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
+        {back}
+        <Card>
+          <CardBody>No incident report is pending sign-off.</CardBody>
+        </Card>
+      </div>
+    )
 
   const { incident, student, options, approved } = data
   const referral = incident.hospitalReferral
   const hasTreatment = incidentCareSummary(incident) !== 'No treatment recorded'
   // Only a completed (Stage 2) record can be signed off. An empty one can be (ADR-065); the note below
   // asks the approver to check it.
-  const approvalBlocker = approved ? null : incident.stage === 1 ? 'Complete Stage 2 before approving this report.' : null
+  const approvalBlocker = approved
+    ? null
+    : incident.stage === 1
+      ? 'Complete Stage 2 before approving this report.'
+      : null
 
   async function approve() {
     setApproving(true)
@@ -204,21 +344,45 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">Incident Report</h1>
-            <p className="mt-1 text-sm text-text-secondary">{isStaff ? 'Review, approve, and print one incident report.' : 'Read one incident report.'}</p>
+            <p className="mt-1 text-sm text-text-secondary">
+              {isStaff
+                ? 'Review, approve, and print one incident report.'
+                : 'Read one incident report.'}
+            </p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
             <PrintButton viewer={viewer} />
-            {isStaff && <Button variant="primary" onClick={() => setConfirming(true)} disabled={approved || approvalBlocker !== null} aria-describedby={approvalBlocker ? 'approve-report-blocker' : undefined}>{approved ? 'Approved' : 'Approve Report'}</Button>}
+            {isStaff && (
+              <Button
+                variant="primary"
+                onClick={() => setConfirming(true)}
+                disabled={approved || approvalBlocker !== null}
+                aria-describedby={approvalBlocker ? 'approve-report-blocker' : undefined}
+              >
+                {approved ? 'Approved' : 'Approve Report'}
+              </Button>
+            )}
           </div>
         </div>
         {!isStaff ? null : approvalBlocker ? (
-          <p id="approve-report-blocker" role="status" className="mt-4 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm font-semibold text-text-primary">
+          <p
+            id="approve-report-blocker"
+            role="status"
+            className="mt-4 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm font-semibold text-text-primary"
+          >
             Can&apos;t be approved yet. {approvalBlocker}
           </p>
-        ) : !approved && !hasTreatment && !incident.noFurtherActionReason && (
-          <p role="status" className="mt-4 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm font-semibold text-text-primary">
-            No treatment recorded. Check this is correct before approving.
-          </p>
+        ) : (
+          !approved &&
+          !hasTreatment &&
+          !incident.noFurtherActionReason && (
+            <p
+              role="status"
+              className="mt-4 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm font-semibold text-text-primary"
+            >
+              No treatment recorded. Check this is correct before approving.
+            </p>
+          )
         )}
       </Card>
 
@@ -226,7 +390,11 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
         <CardHeader
           title="Incident summary"
           icon={<Icon name="fileText" />}
-          actions={<Badge tone={incident.stage === 1 ? 'unfinished' : 'success'} variant="soft">{incident.stage === 1 ? 'Needs completion' : 'Complete'}</Badge>}
+          actions={
+            <Badge tone={incident.stage === 1 ? 'unfinished' : 'success'} variant="soft">
+              {incident.stage === 1 ? 'Needs completion' : 'Complete'}
+            </Badge>
+          }
         />
         <CardBody className="flex flex-col gap-5">
           <div className="print:hidden">
@@ -241,7 +409,11 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
           </div>
 
           <dl className="grid gap-4 sm:grid-cols-2">
-            <Field label={PATIENT_KIND_LABELS[student.kind]}><span className="font-semibold">{student.fullName} · {patientIdText(student)}</span></Field>
+            <Field label={PATIENT_KIND_LABELS[student.kind]}>
+              <span className="font-semibold">
+                {student.fullName} · {patientIdText(student)}
+              </span>
+            </Field>
             <Field label="Recorded">{formatDateTime(incident.time)}</Field>
             <Field label={SYMPTOM}>{incident.complaint}</Field>
             {incident.bodyPart && <Field label="Body part affected">{incident.bodyPart}</Field>}
@@ -259,8 +431,12 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
               <div className="mt-3 grid gap-3 sm:grid-cols-3">
                 {takenReadings(incident.vitals).map(([key, value]) => (
                   <div key={key} className="rounded-md border border-border bg-surface p-3">
-                    <p className="text-xs text-text-secondary">{READING_LABELS[key]?.label ?? key}</p>
-                    <p className="mt-1 text-sm font-semibold text-text-primary">{readingText(key, value)}</p>
+                    <p className="text-xs text-text-secondary">
+                      {READING_LABELS[key]?.label ?? key}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-text-primary">
+                      {readingText(key, value)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -269,12 +445,22 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
             )}
           </section>
 
-          {data.sourceVisit && <FromVisit visitId={data.sourceVisit.id} given={data.sourceVisit.itemsGiven} linkToVisit={isStaff} />}
+          {data.sourceVisit && (
+            <FromVisit
+              visitId={data.sourceVisit.id}
+              given={data.sourceVisit.itemsGiven}
+              linkToVisit={isStaff}
+            />
+          )}
 
           <section className="border-t border-border pt-4" aria-labelledby="report-treatment-title">
-            <h2 id="report-treatment-title" className="text-sm font-semibold text-text-primary">Treatment</h2>
+            <h2 id="report-treatment-title" className="text-sm font-semibold text-text-primary">
+              Treatment
+            </h2>
             {incident.noFurtherActionReason && (
-              <p className="mt-2 text-sm text-text-primary">No treatment or notification: {incident.noFurtherActionReason}</p>
+              <p className="mt-2 text-sm text-text-primary">
+                No treatment or notification: {incident.noFurtherActionReason}
+              </p>
             )}
             {(hasTreatment || !incident.noFurtherActionReason) && (
               <p className="mt-2 text-sm text-text-primary">{incidentCareSummary(incident)}</p>
@@ -282,7 +468,9 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
           </section>
 
           <section className="border-t border-border pt-4" aria-labelledby="report-referral-title">
-            <h2 id="report-referral-title" className="text-sm font-semibold text-text-primary">Hospital referral</h2>
+            <h2 id="report-referral-title" className="text-sm font-semibold text-text-primary">
+              Hospital referral
+            </h2>
             {referral ? (
               <dl className="mt-3 grid gap-4 sm:grid-cols-3">
                 <Field label="Destination">{referral.destination}</Field>
@@ -290,50 +478,96 @@ export function IncidentReportPage({ viewer = getMockSessionUser(), incidentId }
                 <Field label="Departure">{formatDateTime(referral.departureTime)}</Field>
               </dl>
             ) : (
-              <p className="mt-2 text-sm text-text-secondary">No hospital referral was recorded for this incident.</p>
+              <p className="mt-2 text-sm text-text-secondary">
+                No hospital referral was recorded for this incident.
+              </p>
             )}
           </section>
 
-          <section className="border-t border-border pt-4" aria-labelledby="report-notifications-title">
-            <h2 id="report-notifications-title" className="text-sm font-semibold text-text-primary">{NOTIFIED_PARTY[student.kind]} notification attempts</h2>
+          <section
+            className="border-t border-border pt-4"
+            aria-labelledby="report-notifications-title"
+          >
+            <h2 id="report-notifications-title" className="text-sm font-semibold text-text-primary">
+              {NOTIFIED_PARTY[student.kind]} notification attempts
+            </h2>
             {incident.parentNotifications.length ? (
               <ol className="mt-3 divide-y divide-border rounded-md border border-border">
                 {incident.parentNotifications.map((attempt, index) => (
-                  <li key={`${attempt.timestamp}-${index}`} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+                  <li
+                    key={`${attempt.timestamp}-${index}`}
+                    className="flex flex-wrap items-center justify-between gap-2 px-3 py-2"
+                  >
                     <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-text-primary">{OUTCOME_LABELS[attempt.outcome]}</span>
-                      <span className="block text-xs text-text-secondary">Called: {calledContactText(attempt.calledContact)}</span>
+                      <span className="block text-sm font-semibold text-text-primary">
+                        {OUTCOME_LABELS[attempt.outcome]}
+                      </span>
+                      <span className="block text-xs text-text-secondary">
+                        Called: {calledContactText(attempt.calledContact)}
+                      </span>
                     </span>
-                    <span className="text-sm text-text-secondary">{formatDateTime(attempt.timestamp)}</span>
+                    <span className="text-sm text-text-secondary">
+                      {formatDateTime(attempt.timestamp)}
+                    </span>
                   </li>
                 ))}
               </ol>
             ) : (
-              <p className="mt-2 text-sm text-text-secondary">No {contactNoun(student.kind)} notification attempts were logged for this incident.</p>
+              <p className="mt-2 text-sm text-text-secondary">
+                No {contactNoun(student.kind)} notification attempts were logged for this incident.
+              </p>
             )}
           </section>
 
-          <section className="border-t border-border pt-4" aria-labelledby="report-emergency-contacts-title">
-            <h2 id="report-emergency-contacts-title" className="text-sm font-semibold text-text-primary">Emergency contacts</h2>
+          <section
+            className="border-t border-border pt-4"
+            aria-labelledby="report-emergency-contacts-title"
+          >
+            <h2
+              id="report-emergency-contacts-title"
+              className="text-sm font-semibold text-text-primary"
+            >
+              Emergency contacts
+            </h2>
             <EmergencyContactList contacts={student.emergencyContacts} />
           </section>
 
           {justApproved && approved && (
-            <p role="status" className="rounded-md border border-success bg-success/10 px-3 py-2 text-sm font-semibold text-text-primary">
+            <p
+              role="status"
+              className="rounded-md border border-success bg-success/10 px-3 py-2 text-sm font-semibold text-text-primary"
+            >
               Report approved and logged.
             </p>
           )}
         </CardBody>
       </Card>
 
-      <Modal open={confirming} title="Approve this incident report?" onClose={() => setConfirming(false)}>
+      <Modal
+        open={confirming}
+        title="Approve this incident report?"
+        onClose={() => setConfirming(false)}
+      >
         <p className="text-sm text-text-secondary">
-          Approving signs off the report for {student.fullName}, {patientIdText(student)} ({incident.complaint}, {formatDateTime(incident.time)}) and records it in the audit log. It can't be un-approved from this screen.
+          Approving signs off the report for {student.fullName}, {patientIdText(student)} (
+          {incident.complaint}, {formatDateTime(incident.time)}) and records it in the audit log. It
+          can't be un-approved from this screen.
         </p>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
-          <Button variant="neutral" data-autofocus onClick={() => setConfirming(false)}>Cancel</Button>
+          <Button variant="neutral" data-autofocus onClick={() => setConfirming(false)}>
+            Cancel
+          </Button>
           {/* Panel review AC-7: approving asks for the password first. */}
-          <Button variant="primary" loading={approving} onClick={() => { setConfirming(false); void approve() }}>Approve Report</Button>
+          <Button
+            variant="primary"
+            loading={approving}
+            onClick={() => {
+              setConfirming(false)
+              void approve()
+            }}
+          >
+            Approve Report
+          </Button>
         </div>
       </Modal>
       <IncidentReportPrint record={data} viewer={viewer} />

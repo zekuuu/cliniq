@@ -60,7 +60,10 @@ export function ExtraComplaintsField({
           value={picked}
           placeholder={full ? `${EXTRA_COMPLAINTS_MAX} added` : `Select ${symptom} (optional)`}
           disabled={full}
-          options={[{ value: OTHER_VALUE, label: 'Other (type your own)' }, ...options.map((option) => ({ value: option, label: option }))]}
+          options={[
+            { value: OTHER_VALUE, label: 'Other (type your own)' },
+            ...options.map((option) => ({ value: option, label: option })),
+          ]}
           onChange={(next) => {
             setPicked(next)
             setMessage('')
@@ -88,13 +91,18 @@ export function ExtraComplaintsField({
               }}
             />
           )}
-          <Button variant="secondary" disabled={full || !pending.trim()} onClick={() => add(pending)}>
+          <Button
+            variant="secondary"
+            disabled={full || !pending.trim()}
+            onClick={() => add(pending)}
+          >
             Add
           </Button>
         </div>
       </div>
       <p className="-mt-1 text-xs text-text-secondary">
-        Up to {EXTRA_COMPLAINTS_MAX}.{full ? ' Remove one to add another.' : ''} Reports count only the {symptom} above.
+        Up to {EXTRA_COMPLAINTS_MAX}.{full ? ' Remove one to add another.' : ''} Reports count only
+        the {symptom} above.
       </p>
       {message && (
         <p role="alert" className="text-xs font-semibold text-error">
@@ -104,7 +112,10 @@ export function ExtraComplaintsField({
       {value.length > 0 && (
         <ul aria-label={`Other ${symptoms}`} className="flex flex-wrap gap-2">
           {value.map((complaint) => (
-            <li key={complaint} className="inline-flex items-center gap-1 rounded-md border border-border bg-surface py-1 pr-1 pl-2 text-sm text-text-primary">
+            <li
+              key={complaint}
+              className="inline-flex items-center gap-1 rounded-md border border-border bg-surface py-1 pr-1 pl-2 text-sm text-text-primary"
+            >
               {complaint}
               <button
                 type="button"

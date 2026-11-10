@@ -27,7 +27,7 @@ describe('PrintDocument', () => {
   })
 
   it('writes one print audit entry with the signed-in user and document title', async () => {
-    render(<PrintDocument title="Student profile" scope="Scope" viewer={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}>Body</PrintDocument>)
+    render(<PrintDocument title="Student profile" scope="Scope" viewer={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}>Body</PrintDocument>)
 
     act(() => {
       window.dispatchEvent(new Event('beforeprint'))
@@ -45,7 +45,7 @@ describe('PrintDocument', () => {
   })
 
   it('does not write an audit entry until printing starts', () => {
-    render(<PrintDocument title="Student profile" scope="Scope" viewer={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}>Body</PrintDocument>)
+    render(<PrintDocument title="Student profile" scope="Scope" viewer={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}>Body</PrintDocument>)
     expect(getRecordedAuditEntries()).toEqual([])
   })
 })

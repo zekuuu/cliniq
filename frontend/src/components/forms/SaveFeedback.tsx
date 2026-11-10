@@ -18,7 +18,11 @@ export function SaveFeedback({ result, className }: { result: SaveResult; classN
         className,
       )}
     >
-      <Icon name={failed ? 'alertTriangle' : 'checkCircle'} size={16} className={cn('mt-0.5 shrink-0', failed ? 'text-error' : 'text-success')} />
+      <Icon
+        name={failed ? 'alertTriangle' : 'checkCircle'}
+        size={16}
+        className={cn('mt-0.5 shrink-0', failed ? 'text-error' : 'text-success')}
+      />
       {result.message}
     </p>
   )

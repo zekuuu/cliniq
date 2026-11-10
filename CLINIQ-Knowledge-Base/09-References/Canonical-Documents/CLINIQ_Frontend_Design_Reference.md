@@ -112,7 +112,7 @@ Design these five in full detail first. Everything else in the system should be 
    - Low-stock / nearing-expiration inventory items (item name — not student-linked)
    - **Pending excuse letters (Staff):** there is no separate list; the "Pending excuse letters" stat card opens the Visit Log filtered to pending letters (ADR-011 amendment), where each pending visit has "Review Letter". Admin/Principal sees the count without a link.
 4. **Trends** — common complaints by week/month (chart with a Chart/Table switch as the low-spec fallback), the Sex / Grade level card (aggregate counts only, no names; filters change the Trends charts but never the Overview totals, ADR-031), weekday patterns, and the symptom-clustering indicator. Counts are exact, with no masking of small groups (ADR-050).
-5. **Print** prints the open tab as an A4 report: Overview prints the **Clinic Overview Report** (the stat cards, chip counts, a written summary and the lists behind them, with full LRNs and no names, ADR-044) and Trends prints the **Clinic Trends Report** (ADR-045). The Admin/Principal does not print (ADR-038).
+5. **No print** (ADR-074, which supersedes ADR-045): the Dashboard prints nothing; the monthly reports in Reports are the printouts. The Admin/Principal does not print (ADR-038).
 
 **Components this exercises:** stat card, attention chip, list row with status badge, warning badge (with icon, not color alone), bar/line chart with a table fallback, tab strip, segmented toggle control, date-range picker, icon+text button.
 
@@ -203,7 +203,7 @@ The QR Scan/Lookup Hub reference screen was removed with the QR feature (ADR-027
 | Any other detail/single-record view (Staff Profile, Inventory Item Batches, Incident Detail, Visit Detail) | **Reference 3** (Student Profile). There is no separate follow-up detail screen |
 | Any other list view (Visit Log List, Incident Log List, Follow-Up List, Inventory List, User List) | The list-row + status-badge pattern from **Reference 1**'s alerts section |
 | Login, Force Password Change | Simplest form treatment from **Reference 2**, no dynamic panels needed. Login is its own composition ("layout B"): a full-height white panel on the left holding the lockup at the top and the Sign In form centered, with a small footer line (Privacy Policy, version), beside the blurred school photo; no card, no overlap, no shadow |
-| Reports (Monthly, Incident register, Complaint summary, Sports Reports) and print layouts | **Reference 3**'s sectioned-content pattern, adapted for print (no action buttons, no interactive elements) |
+| Reports (Monthly, Incident register, Symptom summary, Inventory sheet, Sports Reports) and print layouts | **Reference 3**'s sectioned-content pattern, adapted for print (no action buttons, no interactive elements) |
 | Backup Status screen, including the Backup locations list (ADR-052) | **Reference 5**'s status-badge concept (backup status is also a lifecycle: last run → verified → needs attention); each location row uses the list-row pattern with a found / not found / not writable badge |
 | Activity calendar | **Reference 1b** |
 

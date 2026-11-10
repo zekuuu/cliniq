@@ -41,7 +41,13 @@
     "schoolYearEndMonth": 4,
     "schoolYearEndDay": 14,
     "schoolYearStarts": [
-      { "label": "2025–2026", "startedOn": "2025-06-16", "startedBy": "user-staff-01", "endedOn": "2026-04-14", "endedBy": "user-staff-01" },
+      {
+        "label": "2025–2026",
+        "startedOn": "2025-06-16",
+        "startedBy": "user-staff-01",
+        "endedOn": "2026-04-14",
+        "endedBy": "user-staff-01"
+      },
       { "label": "2026–2027", "startedOn": "2026-06-15", "startedBy": "user-staff-01" }
     ],
     "vitalsUsualRanges": {
@@ -51,17 +57,33 @@
       "grades1to6FromAge": 6,
       "grades7to12FromAge": 13,
       "byAgeGroup": {
-        "kinder": { "pulseBpm": { "min": 80, "max": 110 }, "systolic": { "min": 95, "max": 110 }, "diastolic": { "min": 60, "max": 75 } },
-        "grades1to6": { "pulseBpm": { "min": 70, "max": 100 }, "systolic": { "min": 100, "max": 120 }, "diastolic": { "min": 60, "max": 75 } },
-        "grades7to12": { "pulseBpm": { "min": 60, "max": 100 }, "systolic": { "min": 100, "max": 120 }, "diastolic": { "min": 70, "max": 80 } },
-        "adult": { "pulseBpm": { "min": 60, "max": 100 }, "systolic": { "min": 90, "max": 120 }, "diastolic": { "min": 60, "max": 80 } }
+        "kinder": {
+          "pulseBpm": { "min": 80, "max": 110 },
+          "systolic": { "min": 95, "max": 110 },
+          "diastolic": { "min": 60, "max": 75 }
+        },
+        "grades1to6": {
+          "pulseBpm": { "min": 70, "max": 100 },
+          "systolic": { "min": 100, "max": 120 },
+          "diastolic": { "min": 60, "max": 75 }
+        },
+        "grades7to12": {
+          "pulseBpm": { "min": 60, "max": 100 },
+          "systolic": { "min": 100, "max": 120 },
+          "diastolic": { "min": 70, "max": 80 }
+        },
+        "adult": {
+          "pulseBpm": { "min": 60, "max": 100 },
+          "systolic": { "min": 90, "max": 120 },
+          "diastolic": { "min": 60, "max": 80 }
+        }
       }
     }
   },
   "users": [
     {
       "id": "user-staff-01",
-      "name": "Jennesse Baas",
+      "name": "Demo Clinician",
       "username": "demo.nurse",
       "role": "staff",
       "lastLogin": { "daysAgo": 0, "time": "07:02" }
@@ -75,7 +97,7 @@
     },
     {
       "id": "user-admin-01",
-      "name": "Gilan Avelida",
+      "name": "Demo Admin",
       "username": "demo.principal",
       "role": "admin",
       "lastLogin": { "daysAgo": 2, "time": "16:12" }
@@ -1052,7 +1074,10 @@
           "verified": true
         }
       ],
-      "archived": true, "archivedAt": "2026-06-15T10:00:00+08:00", "archiveReason": "Not on the new list", "archivedSchoolYear": "2026–2027"
+      "archived": true,
+      "archivedAt": "2026-06-15T10:00:00+08:00",
+      "archiveReason": "Not on the new list",
+      "archivedSchoolYear": "2026–2027"
     },
     {
       "id": "student-0050",
@@ -1072,7 +1097,10 @@
           "verified": false
         }
       ],
-      "archived": true, "archivedAt": "2026-06-15T10:00:00+08:00", "archiveReason": "Not on the new list", "archivedSchoolYear": "2026–2027"
+      "archived": true,
+      "archivedAt": "2026-06-15T10:00:00+08:00",
+      "archiveReason": "Not on the new list",
+      "archivedSchoolYear": "2026–2027"
     },
     {
       "id": "student-0051",
@@ -1092,7 +1120,10 @@
           "verified": true
         }
       ],
-      "archived": true, "archivedAt": "2026-09-14T14:30:00+08:00", "archiveReason": "Transferred", "archivedSchoolYear": "2026–2027"
+      "archived": true,
+      "archivedAt": "2026-09-14T14:30:00+08:00",
+      "archiveReason": "Transferred",
+      "archivedSchoolYear": "2026–2027"
     },
     {
       "id": "student-0052",
@@ -1112,7 +1143,10 @@
           "verified": true
         }
       ],
-      "archived": true, "archivedAt": "2026-03-20T09:00:00+08:00", "archiveReason": "Transferred", "archivedSchoolYear": "2025–2026"
+      "archived": true,
+      "archivedAt": "2026-03-20T09:00:00+08:00",
+      "archiveReason": "Transferred",
+      "archivedSchoolYear": "2025–2026"
     }
   ],
   "personnel": [
@@ -1364,7 +1398,10 @@
           "verified": true
         }
       ],
-      "archived": true, "archivedAt": "2026-07-31T15:00:00+08:00", "archiveReason": "Resigned", "archivedSchoolYear": "2026–2027"
+      "archived": true,
+      "archivedAt": "2026-07-31T15:00:00+08:00",
+      "archiveReason": "Resigned",
+      "archivedSchoolYear": "2026–2027"
     }
   ],
   "visits": [
@@ -6453,8 +6490,24 @@
       }
     ],
     "backupLocations": [
-      { "id": "backup-location-0001", "label": "Internal drive", "path": "C:\\CLINIQ-Backups", "enabled": true, "status": "found", "lastBackupAt": { "daysAgo": 1, "time": "02:00" }, "lastResult": "ok" },
-      { "id": "backup-location-0002", "label": "External drive", "path": "E:\\", "enabled": true, "status": "found", "lastBackupAt": { "daysAgo": 1, "time": "02:00" }, "lastResult": "ok" }
+      {
+        "id": "backup-location-0001",
+        "label": "Internal drive",
+        "path": "C:\\CLINIQ-Backups",
+        "enabled": true,
+        "status": "found",
+        "lastBackupAt": { "daysAgo": 1, "time": "02:00" },
+        "lastResult": "ok"
+      },
+      {
+        "id": "backup-location-0002",
+        "label": "External drive",
+        "path": "E:\\",
+        "enabled": true,
+        "status": "found",
+        "lastBackupAt": { "daysAgo": 1, "time": "02:00" },
+        "lastResult": "ok"
+      }
     ],
     "sportsReports": [
       {

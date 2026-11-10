@@ -10,7 +10,12 @@ export const IMPORT_FIELDS = [
   { key: 'firstName', label: 'First name', required: true, guess: /first|given/i },
   { key: 'middleName', label: 'Middle name', required: false, guess: /middle/i },
   // A file with one name column instead (ADR-064): split by `splitFullName`, every split shown in the preview.
-  { key: 'fullName', label: 'Full name (one column)', required: false, guess: /^\s*(full\s*|student\s*)?name\s*$/i },
+  {
+    key: 'fullName',
+    label: 'Full name (one column)',
+    required: false,
+    guess: /^\s*(full\s*|student\s*)?name\s*$/i,
+  },
   { key: 'sex', label: 'Sex', required: true, guess: /sex|gender/i },
   { key: 'birthDate', label: 'Birth date', required: false, guess: /birth/i },
   { key: 'gradeLevel', label: 'Grade', required: true, guess: /grade|level/i },
@@ -56,17 +61,24 @@ export function parseCsv(text: string): string[][] {
 
 export function guessMapping(headers: string[]): ImportMapping {
   const mapping = {} as ImportMapping
-  for (const field of IMPORT_FIELDS) mapping[field.key] = headers.findIndex((header) => field.guess.test(header))
+  for (const field of IMPORT_FIELDS)
+    mapping[field.key] = headers.findIndex((header) => field.guess.test(header))
   return mapping
 }
 
 /** True when the name comes from one full-name column, with no First or Last name column matched. */
-export const namesFromOneColumn = (mapping: ImportMapping) => mapping.fullName >= 0 && mapping.firstName < 0 && mapping.lastName < 0
+export const namesFromOneColumn = (mapping: ImportMapping) =>
+  mapping.fullName >= 0 && mapping.firstName < 0 && mapping.lastName < 0
 
 /** Labels of the required fields still unmatched. A full-name column stands in for First and Last name. */
 export function missingImportFields(mapping: ImportMapping): string[] {
   const oneColumn = namesFromOneColumn(mapping)
-  return IMPORT_FIELDS.filter((field) => field.required && mapping[field.key] < 0 && !(oneColumn && (field.key === 'firstName' || field.key === 'lastName'))).map((field) => field.label)
+  return IMPORT_FIELDS.filter(
+    (field) =>
+      field.required &&
+      mapping[field.key] < 0 &&
+      !(oneColumn && (field.key === 'firstName' || field.key === 'lastName')),
+  ).map((field) => field.label)
 }
 
 export function mapRows(rows: string[][], mapping: ImportMapping): ImportRow[] {
@@ -76,7 +88,11 @@ export function mapRows(rows: string[][], mapping: ImportMapping): ImportRow[] {
     for (const field of IMPORT_FIELDS) row[field.key] = (cells[mapping[field.key]] ?? '').trim()
     if (oneColumn) {
       const name = splitFullName(row.fullName)
-      Object.assign(row, { firstName: name.firstName, lastName: name.lastName, middleName: name.middleName ?? '' })
+      Object.assign(row, {
+        firstName: name.firstName,
+        lastName: name.lastName,
+        middleName: name.middleName ?? '',
+      })
     }
     return row
   })

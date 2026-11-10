@@ -4,7 +4,11 @@ import { seed } from './mock-db/seed'
 import { ageGroupOf, usualRangeNotes } from './vitals'
 
 const usual = seed.config.vitalsUsualRanges
-const student = (gradeLevel: string, birthDate: string | null) => ({ kind: 'student' as const, gradeLevel, birthDate })
+const student = (gradeLevel: string, birthDate: string | null) => ({
+  kind: 'student' as const,
+  gradeLevel,
+  birthDate,
+})
 
 describe('ageOn (ADR-054)', () => {
   it('turns a year older on the birthday, not the day before', () => {
@@ -40,8 +44,12 @@ describe('the unusual-age note', () => {
   it('starts only past the limit', () => {
     // Grade 3 is usually 8: age 11 is exactly 3 away, age 12 is past it.
     expect(unusualAgeNote('2015-01-01', 'Grade 3', '2026-10-30', 3)).toBeNull()
-    expect(unusualAgeNote('2014-01-01', 'Grade 3', '2026-10-30', 3)).toBe('Age 12 is unusual for Grade 3. Check the birthdate.')
-    expect(unusualAgeNote('2011-01-01', 'Grade 3', '2026-10-30', 3)).toBe('Age 15 is unusual for Grade 3. Check the birthdate.')
+    expect(unusualAgeNote('2014-01-01', 'Grade 3', '2026-10-30', 3)).toBe(
+      'Age 12 is unusual for Grade 3. Check the birthdate.',
+    )
+    expect(unusualAgeNote('2011-01-01', 'Grade 3', '2026-10-30', 3)).toBe(
+      'Age 15 is unusual for Grade 3. Check the birthdate.',
+    )
   })
 
   it('stays quiet with no birthdate or no grade yet', () => {
@@ -80,7 +88,11 @@ describe('ageGroupOf (ADR-054)', () => {
   it('changes the note the form shows', () => {
     const ranges = { ...seed.config.vitalsWarningRanges, usual }
     const reading = { pulseBpm: '105' }
-    expect(usualRangeNotes(reading, ranges, ageGroupOf(student('Grade 1', '2021-01-01'), onDate, usual))).toEqual([])
-    expect(usualRangeNotes(reading, ranges, ageGroupOf(student('Grade 1', null), onDate, usual))).toHaveLength(1)
+    expect(
+      usualRangeNotes(reading, ranges, ageGroupOf(student('Grade 1', '2021-01-01'), onDate, usual)),
+    ).toEqual([])
+    expect(
+      usualRangeNotes(reading, ranges, ageGroupOf(student('Grade 1', null), onDate, usual)),
+    ).toHaveLength(1)
   })
 })

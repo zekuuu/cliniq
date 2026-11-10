@@ -10,7 +10,7 @@ import { StudentProfilePage } from './student-records/StudentProfilePage'
 
 /** ADR-038: the Admin reads the Student List, Student Profile, Incident Log and Incident Report, and never prints. */
 const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Principal', role: 'admin' }
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
 const WRITE_CONTROLS = /^(Add Student|Edit|Archive$|New Visit|New Incident|Complete Stage 2|Approve Report|Review letter|Log .*notification)/
 
 function expectNoWriteControls() {

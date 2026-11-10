@@ -2,7 +2,6 @@ import { symptoms } from '../../lib/labels'
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import {
- 
   BackButton,
   Badge,
   Button,
@@ -46,11 +45,23 @@ import { windowLabel } from './sportsReportContent'
  * student. Students are shown by full name and grade, a decided exception to the LRN-on-lists rule:
  * the instructor has to recognise them. Staff only.
  */
-export function SportsReportFormPage({ reportId, viewer }: { reportId?: string; viewer: SessionUser }) {
-  const { data: existing, status, reload } = useAsyncData(`sports-report|${reportId ?? 'new'}`, () =>
+export function SportsReportFormPage({
+  reportId,
+  viewer,
+}: {
+  reportId?: string
+  viewer: SessionUser
+}) {
+  const {
+    data: existing,
+    status,
+    reload,
+  } = useAsyncData(`sports-report|${reportId ?? 'new'}`, () =>
     reportId ? fetchSportsReport(reportId, viewer) : Promise.resolve(null),
   )
-  const back = <BackButton fallback={reportId ? paths.sportsReport(reportId) : paths.sportsReports} />
+  const back = (
+    <BackButton fallback={reportId ? paths.sportsReport(reportId) : paths.sportsReports} />
+  )
   if (status === 'error')
     return (
       <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
@@ -59,7 +70,14 @@ export function SportsReportFormPage({ reportId, viewer }: { reportId?: string; 
       </div>
     )
   if (existing === undefined) return <FormSkeleton back={back} />
-  return <SportsReportForm key={existing?.id ?? 'new'} reportId={reportId} initial={existing} viewer={viewer} />
+  return (
+    <SportsReportForm
+      key={existing?.id ?? 'new'}
+      reportId={reportId}
+      initial={existing}
+      viewer={viewer}
+    />
+  )
 }
 
 function FormSkeleton({ back }: { back: ReactNode }) {
@@ -79,13 +97,24 @@ function FormSkeleton({ back }: { back: ReactNode }) {
   )
 }
 
-const WINDOW_OPTIONS = SPORTS_REPORT_WINDOWS.map((window) => ({ value: String(window), label: windowLabel(window) }))
+const WINDOW_OPTIONS = SPORTS_REPORT_WINDOWS.map((window) => ({
+  value: String(window),
+  label: windowLabel(window),
+}))
 
 function studentName(student: SportsReportStudentRow) {
   return student.fullName ?? 'a student record no longer in CLINIQ'
 }
 
-function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; initial: SportsReportDetail | null; viewer: SessionUser }) {
+function SportsReportForm({
+  reportId,
+  initial,
+  viewer,
+}: {
+  reportId?: string
+  initial: SportsReportDetail | null
+  viewer: SessionUser
+}) {
   const navigate = useNavigate()
   const [title, setTitle] = useState(initial?.title ?? '')
   const [activity, setActivity] = useState(initial?.activity ?? '')
@@ -97,14 +126,25 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
   const [studentNotice, setStudentNotice] = useState('')
   const [grade, setGrade] = useState('')
   const [gradeError, setGradeError] = useState<string>()
-  const [gradeConfirm, setGradeConfirm] = useState<{ grade: string; toAdd: StudentSearchResult[]; skipped: number } | null>(null)
+  const [gradeConfirm, setGradeConfirm] = useState<{
+    grade: string
+    toAdd: StudentSearchResult[]
+    skipped: number
+  } | null>(null)
   const [saving, setSaving] = useState(false)
   const { data: grades } = useAsyncData('grade-levels', fetchGradeLevels)
   const studentsHeading = useRef<HTMLHeadingElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
   const invalid = useFocusFirstInvalid(formRef)
 
-  const values = { title, activity, requestedBy, window: lookBack, includeConditions, students: students.map(({ studentId }) => ({ studentId })) }
+  const values = {
+    title,
+    activity,
+    requestedBy,
+    window: lookBack,
+    includeConditions,
+    students: students.map(({ studentId }) => ({ studentId })),
+  }
   const initialValues = {
     title: initial?.title ?? '',
     activity: initial?.activity ?? '',
@@ -114,14 +154,22 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
     students: (initial?.students ?? []).map(({ studentId }) => ({ studentId })),
   }
   const dirty = JSON.stringify(values) !== JSON.stringify(initialValues)
-  const { cancel, discardDialog, allowLeave } = useCancelNavigation(reportId ? paths.sportsReport(reportId) : paths.sportsReports, dirty)
+  const { cancel, discardDialog, allowLeave } = useCancelNavigation(
+    reportId ? paths.sportsReport(reportId) : paths.sportsReports,
+    dirty,
+  )
 
   function addStudents(picked: StudentSearchResult[]) {
     const known = new Set(students.map((student) => student.studentId))
     const fresh = picked.filter((student) => !known.has(student.id))
     setStudents((current) => [
       ...current,
-      ...fresh.map((student) => ({ studentId: student.id, fullName: student.fullName, gradeLevel: student.gradeLevel, status: 'active' as const })),
+      ...fresh.map((student) => ({
+        studentId: student.id,
+        fullName: student.fullName,
+        gradeLevel: student.gradeLevel,
+        status: 'active' as const,
+      })),
     ])
     return fresh.length
   }
@@ -136,7 +184,12 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
     const known = new Set(students.map((student) => student.studentId))
     const toAdd = inGrade.filter((student) => !known.has(student.id))
     // Shown as the grade field's error, right under it (Zean, November 8, 2026).
-    if (!toAdd.length) return setGradeError(inGrade.length ? `Every active student in ${grade} is already on this report.` : `${grade} has no active students.`)
+    if (!toAdd.length)
+      return setGradeError(
+        inGrade.length
+          ? `Every active student in ${grade} is already on this report.`
+          : `${grade} has no active students.`,
+      )
     setGradeConfirm({ grade, toAdd, skipped: inGrade.length - toAdd.length })
   }
   function confirmAddGrade() {
@@ -146,7 +199,9 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
     setGradeConfirm(null)
   }
   function remove(student: SportsReportStudentRow) {
-    setStudents((current) => current.filter((candidate) => candidate.studentId !== student.studentId))
+    setStudents((current) =>
+      current.filter((candidate) => candidate.studentId !== student.studentId),
+    )
     setStudentNotice(`Removed ${studentName(student)}.`)
     // The removed row held focus; keep the keyboard in the student section.
     studentsHeading.current?.focus()
@@ -173,9 +228,12 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
       {discardDialog}
       <BackButton onBack={cancel} />
       <Card className="p-5">
-        <h1 className="text-2xl font-bold tracking-tight text-text-primary">{reportId ? 'Edit Sports Report' : 'New Sports Report'}</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-text-primary">
+          {reportId ? 'Edit Sports Report' : 'New Sports Report'}
+        </h1>
         <p className="mt-1 text-sm text-text-secondary">
-          List the students an instructor asked about. Their recent visits and incidents print for the instructor.
+          List the students an instructor asked about. Their recent visits and incidents print for
+          the instructor.
         </p>
       </Card>
       <form ref={formRef} className="flex flex-col gap-4" onSubmit={submit} noValidate>
@@ -187,33 +245,44 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
           <CardBody className="flex flex-col gap-4">
             {/* Two fields per row, so nothing sits alone in a half-empty row (Zean, November 5, 2026). */}
             <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-2">
-            <Input label="Title" required value={title} maxLength={SPORTS_REPORT_TEXT_MAX} error={errors.title} onChange={(event) => setTitle(event.target.value)} />
-            <Input
-              label="Activity"
-              value={activity}
-              maxLength={SPORTS_REPORT_TEXT_MAX}
-              error={errors.activity}
-              placeholder="e.g. Palaro 2026, Boys Basketball (optional)"
-              onChange={(event) => setActivity(event.target.value)}
-            />
-            <Input
-              label="Requested by"
-              required
-              value={requestedBy}
-              maxLength={SPORTS_REPORT_TEXT_MAX}
-              error={errors.requestedBy}
-              hint="The PE or sports instructor who asked for the report."
-              onChange={(event) => setRequestedBy(event.target.value)}
-            />
-            <Select
-              label="Look-back window"
-              value={String(lookBack)}
-              options={WINDOW_OPTIONS}
-              clearable={false}
-              error={errors.window}
-              hint="Visits and incidents in this period are printed."
-              onChange={(value) => setLookBack(value === 'school_year' ? 'school_year' : (Number(value) as SportsReportWindow))}
-            />
+              <Input
+                label="Title"
+                required
+                value={title}
+                maxLength={SPORTS_REPORT_TEXT_MAX}
+                error={errors.title}
+                onChange={(event) => setTitle(event.target.value)}
+              />
+              <Input
+                label="Activity"
+                value={activity}
+                maxLength={SPORTS_REPORT_TEXT_MAX}
+                error={errors.activity}
+                placeholder="e.g. Palaro 2026, Boys Basketball (optional)"
+                onChange={(event) => setActivity(event.target.value)}
+              />
+              <Input
+                label="Requested by"
+                required
+                value={requestedBy}
+                maxLength={SPORTS_REPORT_TEXT_MAX}
+                error={errors.requestedBy}
+                hint="The PE or sports instructor who asked for the report."
+                onChange={(event) => setRequestedBy(event.target.value)}
+              />
+              <Select
+                label="Look-back window"
+                value={String(lookBack)}
+                options={WINDOW_OPTIONS}
+                clearable={false}
+                error={errors.window}
+                hint="Visits and incidents in this period are printed."
+                onChange={(value) =>
+                  setLookBack(
+                    value === 'school_year' ? 'school_year' : (Number(value) as SportsReportWindow),
+                  )
+                }
+              />
             </div>
             <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
               <input
@@ -223,8 +292,13 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
                 className="mt-0.5 size-4 cursor-pointer accent-brand-green-dark"
               />
               <span>
-                <span className="block text-sm font-semibold text-text-primary">Include recorded conditions and allergies</span>
-                <span className="block text-xs text-text-secondary">Adds each student's allergies and medical conditions to the printout. Visit and incident {symptoms} always print.</span>
+                <span className="block text-sm font-semibold text-text-primary">
+                  Include recorded conditions and allergies
+                </span>
+                <span className="block text-xs text-text-secondary">
+                  Adds each student's allergies and medical conditions to the printout. Visit and
+                  incident {symptoms} always print.
+                </span>
               </span>
             </label>
           </CardBody>
@@ -238,55 +312,68 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
           />
           <CardBody className="flex flex-col gap-4">
             <div className="grid grid-cols-1 items-start gap-x-3 gap-y-4 sm:grid-cols-2">
-            <StudentPicker
-              label="Add a student"
-              hint="Type a name or LRN, then pick the student. Repeat for each student."
-              required={false}
-              search={searchSportsReportStudents}
-              onSelect={pickStudent}
-            />
-            {/* The error sits under the row, so Add Grade stays level with the drop-down. */}
-            <div className="flex flex-col gap-1">
-              <div className="flex items-end gap-2">
-                <Select
-                  className="min-w-0 flex-1"
-                  label="Or add a whole grade level"
-                  value={grade}
-                  options={(grades ?? []).map((level) => ({ value: level, label: level }))}
-                  placeholder="Choose a grade level"
-                  onChange={(value) => {
-                    setGrade(value)
-                    setGradeError(undefined)
-                  }}
-                />
-                <Button type="button" variant="secondary" onClick={() => void askAddGrade()}>
-                  Add Grade
-                </Button>
+              <StudentPicker
+                label="Add a student"
+                hint="Type a name or LRN, then pick the student. Repeat for each student."
+                required={false}
+                search={searchSportsReportStudents}
+                onSelect={pickStudent}
+              />
+              {/* The error sits under the row, so Add Grade stays level with the drop-down. */}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-end gap-2">
+                  <Select
+                    className="min-w-0 flex-1"
+                    label="Or add a whole grade level"
+                    value={grade}
+                    options={(grades ?? []).map((level) => ({ value: level, label: level }))}
+                    placeholder="Choose a grade level"
+                    onChange={(value) => {
+                      setGrade(value)
+                      setGradeError(undefined)
+                    }}
+                  />
+                  <Button type="button" variant="secondary" onClick={() => void askAddGrade()}>
+                    Add Grade
+                  </Button>
+                </div>
+                {gradeError && (
+                  <p role="alert" className="text-xs font-semibold text-error">
+                    {gradeError}
+                  </p>
+                )}
               </div>
-              {gradeError && (
-                <p role="alert" className="text-xs font-semibold text-error">
-                  {gradeError}
-                </p>
-              )}
-            </div>
             </div>
             <p role="status" className="text-sm text-text-secondary empty:hidden">
               {studentNotice}
             </p>
-            <h3 ref={studentsHeading} tabIndex={-1} className="text-sm font-semibold text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green">
+            <h3
+              ref={studentsHeading}
+              tabIndex={-1}
+              className="text-sm font-semibold text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green"
+            >
               On this report
             </h3>
             {students.length ? (
               // Compact rows, so a whole grade stays reviewable: one line each, scrolling past about ten.
               <ul className="-m-1 flex max-h-[34rem] scroll-py-1 flex-col divide-y divide-border overflow-y-auto p-1 scrollbar-thin">
                 {students.map((student) => (
-                  <li key={student.studentId} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-2">
+                  <li
+                    key={student.studentId}
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-2"
+                  >
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold wrap-break-word text-text-primary">{student.fullName ?? 'Student record not found'}</p>
-                      {student.gradeLevel && <p className="text-xs text-text-secondary">{student.gradeLevel}</p>}
+                      <p className="text-sm font-semibold wrap-break-word text-text-primary">
+                        {student.fullName ?? 'Student record not found'}
+                      </p>
+                      {student.gradeLevel && (
+                        <p className="text-xs text-text-secondary">{student.gradeLevel}</p>
+                      )}
                       {student.status !== 'active' && (
                         <Badge tone="warning" variant="soft" className="mt-1">
-                          {student.status === 'archived' ? 'Archived: left out of the printout' : 'No longer in CLINIQ: left out of the printout'}
+                          {student.status === 'archived'
+                            ? 'Archived: left out of the printout'
+                            : 'No longer in CLINIQ: left out of the printout'}
                         </Badge>
                       )}
                     </div>
@@ -302,7 +389,10 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-text-secondary">No students yet. Add them above; a report needs at least one student before it can be printed.</p>
+              <p className="text-sm text-text-secondary">
+                No students yet. Add them above; a report needs at least one student before it can
+                be printed.
+              </p>
             )}
           </CardBody>
         </Card>
@@ -315,17 +405,27 @@ function SportsReportForm({ reportId, initial, viewer }: { reportId?: string; in
           </Button>
         </div>
       </form>
-      <Modal open={Boolean(gradeConfirm)} title={`Add ${gradeConfirm?.toAdd.length ?? 0} student${gradeConfirm?.toAdd.length === 1 ? '' : 's'} from ${gradeConfirm?.grade ?? ''}?`} onClose={() => setGradeConfirm(null)}>
+      <Modal
+        open={Boolean(gradeConfirm)}
+        title={`Add ${gradeConfirm?.toAdd.length ?? 0} student${gradeConfirm?.toAdd.length === 1 ? '' : 's'} from ${gradeConfirm?.grade ?? ''}?`}
+        onClose={() => setGradeConfirm(null)}
+      >
         <p className="text-sm text-text-secondary">
-          Every active student in {gradeConfirm?.grade} is added with their full name and grade level.
-          {gradeConfirm?.skipped ? ` ${gradeConfirm.skipped} already on this report will be skipped.` : ''}
+          Every active student in {gradeConfirm?.grade} is added with their full name and grade
+          level.
+          {gradeConfirm?.skipped
+            ? ` ${gradeConfirm.skipped} already on this report will be skipped.`
+            : ''}
         </p>
         <div className="mt-4 flex flex-wrap justify-end gap-2">
           <Button variant="neutral" onClick={() => setGradeConfirm(null)} data-autofocus>
             Cancel
           </Button>
           <Button variant="primary" onClick={confirmAddGrade}>
-            Add {gradeConfirm?.toAdd.length === 1 ? '1 Student' : `${gradeConfirm?.toAdd.length ?? 0} Students`}
+            Add{' '}
+            {gradeConfirm?.toAdd.length === 1
+              ? '1 Student'
+              : `${gradeConfirm?.toAdd.length ?? 0} Students`}
           </Button>
         </div>
       </Modal>

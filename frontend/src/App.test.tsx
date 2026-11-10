@@ -31,19 +31,16 @@ describe('login gate', () => {
     resetMockDb()
   })
 
-  it.each([
-    '/students',
-    '/students?role=staff',
-    '/incidents/new',
-    '/reports',
-    '/no-such-screen',
-  ])('sends an unauthenticated visitor on %s to Login', async (path) => {
-    openAt(path)
+  it.each(['/students', '/students?role=staff', '/incidents/new', '/reports', '/no-such-screen'])(
+    'sends an unauthenticated visitor on %s to Login',
+    async (path) => {
+      openAt(path)
 
-    expect(await screen.findByRole('heading', { name: 'Sign In' })).toBeInTheDocument()
-    expect(window.location.pathname).toBe('/login')
-    expect(getAuthenticatedUser()).toBeNull()
-  })
+      expect(await screen.findByRole('heading', { name: 'Sign In' })).toBeInTheDocument()
+      expect(window.location.pathname).toBe('/login')
+      expect(getAuthenticatedUser()).toBeNull()
+    },
+  )
 
   it('returns a visitor to the address they opened after Login, then blocks it again after Log out', async () => {
     openAt('/students')
@@ -127,12 +124,14 @@ describe('idle sign-out in the running app (ADR-078)', () => {
     const { startMockSession } = await import('./lib/mock-db')
     vi.useFakeTimers()
     try {
-      startMockSession({ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' })
+      startMockSession({ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' })
       openAt('/settings')
       await act(() => vi.advanceTimersByTimeAsync(2_000))
       await act(() => vi.advanceTimersByTimeAsync(60 * 60_000 + 2_000))
       expect(window.location.pathname).toBe('/login')
-      expect(screen.getByText('You were signed out after 60 minutes of inactivity. Sign in again.')).toBeInTheDocument()
+      expect(
+        screen.getByText('You were signed out after 60 minutes of inactivity. Sign in again.'),
+      ).toBeInTheDocument()
     } finally {
       vi.useRealTimers()
     }

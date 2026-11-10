@@ -1,4 +1,12 @@
-import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ReactNode,
+} from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import {
   BackButton,
@@ -31,7 +39,14 @@ import { NONE_RECORDED, patientLine, patientRefOf, type Patient } from '../../li
 import { cleanComplaint, normalizeComplaint } from '../../lib/complaints'
 import { ageGroupOf } from '../../lib/vitals'
 import { addDays, todayISO } from '../../lib/dates'
-import { getMockSessionUser, LATE_ENTRY_MINUTES, StockRuleError, type ComplaintType, type InventoryItemView, type SessionUser } from '../../lib/mock-db'
+import {
+  getMockSessionUser,
+  LATE_ENTRY_MINUTES,
+  StockRuleError,
+  type ComplaintType,
+  type InventoryItemView,
+  type SessionUser,
+} from '../../lib/mock-db'
 import { paths } from '../../routes/paths'
 import type { Disposition, PatientRef } from '../../types/entities'
 import {
@@ -74,12 +89,13 @@ import { symptom, SYMPTOMS_QUESTION } from '../../lib/labels'
 const OPENS_MORE_FIELDS = new Set(['Fever', 'Headache', 'Chills'])
 
 /** The first-aid checklist's complaint type for what was typed: a case-insensitive match, or none. */
-function matchComplaintType(complaint: string, complaintTypes: ComplaintType[]): ComplaintType | undefined {
+function matchComplaintType(
+  complaint: string,
+  complaintTypes: ComplaintType[],
+): ComplaintType | undefined {
   const typed = cleanComplaint(complaint).toLowerCase()
   return typed ? complaintTypes.find((type) => type.label.toLowerCase() === typed) : undefined
 }
-
-
 
 interface Errors extends DispositionErrors, LogbookErrors {
   complaint?: string
@@ -239,7 +255,9 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
   const [disposition, setDisposition] = useState<Disposition>('returned_to_class')
   const [dispositionValues, setDispositionValues] = useState(() => emptyDispositionValues(today))
   // A staff patient gets no excuse letter (ADR-043, D13).
-  const letterValues = isStaffPatient ? { ...dispositionValues, prepareLetter: false } : dispositionValues
+  const letterValues = isStaffPatient
+    ? { ...dispositionValues, prepareLetter: false }
+    : dispositionValues
   const [triageSteps, setTriageSteps] = useState<string[]>([])
   const [needsFollowUp, setNeedsFollowUp] = useState(false)
   const [followUpDate, setFollowUpDate] = useState(addDays(today, 1))
@@ -294,7 +312,8 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
   const saveAndNewRef = useRef(false)
   /** Set by "Save and approve now" (ADR-049, D3) for the submit it starts. */
   const approveNowRef = useRef(false)
-  const preparingLetter = hasExcuseLetter(disposition) && letterValues.prepareLetter && !isStaffPatient
+  const preparingLetter =
+    hasExcuseLetter(disposition) && letterValues.prepareLetter && !isStaffPatient
   // The next visit in this open form starts with the last successfully saved disposition.
   const [lastSavedDisposition, setLastSavedDisposition] = useState<Disposition>('returned_to_class')
   // Anything typed or chosen beyond the defaults; a save clears the form back to them.
@@ -309,12 +328,17 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
       whenEdited ||
       filledLogbookCount(logbook) > 0,
   )
-  const minutesAgo = editedAt !== null && visitDate && visitClock ? (editedAt - new Date(`${visitDate}T${visitClock}`).getTime()) / 60_000 : 0
+  const minutesAgo =
+    editedAt !== null && visitDate && visitClock
+      ? (editedAt - new Date(`${visitDate}T${visitClock}`).getTime()) / 60_000
+      : 0
   const isLateEntry = minutesAgo > LATE_ENTRY_MINUTES
   // ADR-036: an emergency-type complaint gets a hint, never a block. The one-line Visit-versus-Incident
   // rule waits for the nurse's wording (open DECIDE "Rule for Visit versus Incident"), so none is shown yet.
   const looksLikeEmergency = Boolean(
-    data?.emergencyComplaints.some((type) => type.toLowerCase() === cleanComplaint(complaint).toLowerCase()),
+    data?.emergencyComplaints.some(
+      (type) => type.toLowerCase() === cleanComplaint(complaint).toLowerCase(),
+    ),
   )
 
   /** Opens Incident Stage 1 with what is typed so far; nothing is saved here and no medicine is carried (ADR-036). */
@@ -324,7 +348,8 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
       ...(identified.student ? patientRefOf(identified.student) : {}),
       complaint: cleanComplaint(complaint),
       time: whenEdited ? `${visitDate}T${visitClock}:00+08:00` : undefined,
-      temperatureC: logbook.temperatureC.trim() && Number.isFinite(temperature) ? temperature : null,
+      temperatureC:
+        logbook.temperatureC.trim() && Number.isFinite(temperature) ? temperature : null,
     }
     allowLeave()
     navigate(paths.incidentNew, { state: { escalate } })
@@ -342,9 +367,11 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
   function updateComplaint(value: string) {
     // Ticked steps survive typing that keeps the same complaint type ("fever" to "Fever ").
     const types = data?.complaintTypes ?? []
-    if (matchComplaintType(value, types) !== matchComplaintType(complaint, types)) setTriageSteps([])
+    if (matchComplaintType(value, types) !== matchComplaintType(complaint, types))
+      setTriageSteps([])
     // Opens once when one of these is picked; closing it again is up to the clinician.
-    const opensMore = (text: string) => OPENS_MORE_FIELDS.has(matchComplaintType(text, types)?.label ?? '')
+    const opensMore = (text: string) =>
+      OPENS_MORE_FIELDS.has(matchComplaintType(text, types)?.label ?? '')
     if (opensMore(value) && !opensMore(complaint)) setMoreOpen(true)
     setComplaint(value)
     setErrors((current) => ({ ...current, complaint: undefined }))
@@ -361,14 +388,22 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
     if (!cleanComplaint(complaint)) next.complaint = `Choose the ${symptom} for this visit.`
     if (whenEdited && (!visitDate || !visitClock)) next.visitTime = 'Enter the visit date and time.'
     else if (minutesAgo < -1) next.visitTime = "The visit date and time can't be in the future."
-    if (lines.some((line) => line.quantity < 1)) next.itemsGiven = 'Each quantity must be at least 1.'
+    if (lines.some((line) => line.quantity < 1))
+      next.itemsGiven = 'Each quantity must be at least 1.'
     if (needsFollowUp) {
       if (!followUpDate) next.followUpDate = 'Choose a follow-up date.'
       if (!followUpReason.trim()) next.followUpReason = 'Enter the follow-up reason.'
     }
     return {
       ...next,
-      ...dispositionErrors(disposition, isStaffPatient ? { ...letterValues, collectedTime: '', collectedRelationship: '' } : letterValues, false, visitDate),
+      ...dispositionErrors(
+        disposition,
+        isStaffPatient
+          ? { ...letterValues, collectedTime: '', collectedRelationship: '' }
+          : letterValues,
+        false,
+        visitDate,
+      ),
       ...logbookErrors(logbook, currentClock(), timeOutRef.current?.validity.badInput),
     }
   }
@@ -384,7 +419,9 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
     approveNowRef.current = false
     if (!data) return
     const nextErrors = validate()
-    const studentOk = identified.validate('Choose the student or staff member: type an LRN, a Staff No. or a name, then pick from the list.')
+    const studentOk = identified.validate(
+      'Choose the student or staff member: type an LRN, a Staff No. or a name, then pick from the list.',
+    )
     setErrors(nextErrors)
     if (nextErrors.timeOut) setMoreOpen(true)
     invalid.report(Object.keys(nextErrors).length + (studentOk ? 0 : 1))
@@ -407,10 +444,17 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 followUpDate,
                 reason: followUpReason.trim(),
                 notes: followUpNotes.trim() || null,
-                ...(followUpStayHome.checked && { stayHomeUntilCleared: true, stayHomeNote: followUpStayHome.note.trim() || null }),
+                ...(followUpStayHome.checked && {
+                  stayHomeUntilCleared: true,
+                  stayHomeNote: followUpStayHome.note.trim() || null,
+                }),
               }
             : null,
-          itemsGiven: lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity, instructions: line.instructions })),
+          itemsGiven: lines.map((line) => ({
+            itemId: line.itemId,
+            quantity: line.quantity,
+            instructions: line.instructions,
+          })),
           ...dispositionPayload(disposition, letterValues),
           // A staff patient leaves on their own: no "who collected" (ADR-049, D4).
           ...(isStaffPatient && { collectedBy: null }),
@@ -502,16 +546,27 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
             </p>
             {/* R21: the patient's allergies (warning style, ADR-062) and medical conditions, together. Staff only, like this page. */}
             {identified.student && (
-              <p data-testid="patient-health" className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              <p
+                data-testid="patient-health"
+                className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm"
+              >
                 <span className="inline-flex items-center gap-1 font-semibold text-warning-text">
                   <Icon name="alertTriangle" size={14} />
-                  <span className="text-warning-text">Allergies: {identified.student.allergies.join(', ') || NONE_RECORDED}</span>
+                  <span className="text-warning-text">
+                    Allergies: {identified.student.allergies.join(', ') || NONE_RECORDED}
+                  </span>
                 </span>
-                <span className="text-text-primary">Medical conditions: {identified.student.medicalConditions.join(', ') || NONE_RECORDED}</span>
+                <span className="text-text-primary">
+                  Medical conditions:{' '}
+                  {identified.student.medicalConditions.join(', ') || NONE_RECORDED}
+                </span>
               </p>
             )}
             {/* ADR-051: which form to use; the nurse is to confirm the wording. Escalate to incident stays (ADR-036). */}
-            <p className="mt-2 text-xs text-text-secondary">Visit: a common, routine case. A worse case that needs fast two-stage capture is an Incident.</p>
+            <p className="mt-2 text-xs text-text-secondary">
+              Visit: a common, routine case. A worse case that needs fast two-stage capture is an
+              Incident.
+            </p>
           </div>
         </div>
       </Card>
@@ -522,7 +577,8 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
           className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary"
         >
           Visit saved.{' '}
-          {saved.given > 0 && `${saved.given} ${saved.given === 1 ? 'item was' : 'items were'} taken from inventory. `}
+          {saved.given > 0 &&
+            `${saved.given} ${saved.given === 1 ? 'item was' : 'items were'} taken from inventory. `}
           {saved.withFollowUp ? 'A pending follow-up was created.' : 'No follow-up was created.'}
           {saved.belowZero.length > 0 && (
             <span className="mt-1 block text-warning-text">
@@ -532,7 +588,11 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
           {saved.letterApproved && (
             <span className="mt-2 flex flex-wrap items-center gap-2 font-normal">
               The excuse letter was approved and stored in the student&apos;s record.
-              <Link to={paths.excuseLetter(saved.visitId)} replace className={buttonClassName({ size: 'sm' })}>
+              <Link
+                to={paths.excuseLetter(saved.visitId)}
+                replace
+                className={buttonClassName({ size: 'sm' })}
+              >
                 Open excuse letter
               </Link>
             </span>
@@ -554,7 +614,10 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
       )}
 
       {saveError && (
-        <div role="alert" className="rounded-md border border-error bg-error/10 px-4 py-3 text-sm font-semibold text-text-primary">
+        <div
+          role="alert"
+          className="rounded-md border border-error bg-error/10 px-4 py-3 text-sm font-semibold text-text-primary"
+        >
           {saveError}
         </div>
       )}
@@ -571,249 +634,316 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
             description="Required fields are marked."
           />
           <CardBody className="flex flex-col gap-5">
-            <FormSection id="visit-patient-title" title="Patient and time" description="Who came in, and when.">
-            <div className={identified.student ? undefined : FIELD_HALF}>
-            <PatientPicker
-              search={searchVisitPatients}
-              selected={identified.student}
-              onClear={identified.reset}
-              onSelect={(result) => {
-                setSaved(null)
-                // Sir Rey (October 25, 2026): Parent or guardian starts as the primary emergency
-                // contact, only when the field is still empty; it stays editable. Students only.
-                void identified.select(patientRefOf(result)).then((full) => {
-                  const primary = full?.kind === 'student' ? full.emergencyContacts[0]?.name : undefined
-                  if (primary) setLogbook((current) => (current.parentGuardian.trim() ? current : { ...current, parentGuardian: primary }))
-                })
-              }}
-              error={identified.error}
-              addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
-              addStaffHref={viewer.role === 'staff' ? paths.staffNew : undefined}
-              autoFocus={!staffParam}
-            /></div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <DatePicker
-                label="Visit date"
-                value={visitDate}
-                max={today}
-                onChange={(next) => {
-                  setVisitDate(next)
-                  setEditedAt(Date.now())
-                  setErrors((current) => ({ ...current, visitTime: undefined }))
-                }}
-                error={errors.visitTime}
-              />
-              <Input
-                type="time"
-                label="Time"
-                value={visitClock}
-                hint="Now by default. Change it only for a visit entered afterwards."
-                onChange={(event) => {
-                  setVisitClock(event.target.value)
-                  setEditedAt(Date.now())
-                  setErrors((current) => ({ ...current, visitTime: undefined }))
-                }}
-              />
-            </div>
-            {isLateEntry && (
-              <Input
-                className={FIELD_HALF}
-                label="Reason for late entry"
-                placeholder="Optional"
-                value={lateEntryReason}
-                maxLength={200}
-                hint="For example: system was down, paper entry. Saved as a late entry either way."
-                onChange={(event) => setLateEntryReason(event.target.value)}
-              />
-            )}
-            </FormSection>
-
-            <FormSection id="visit-complaint-title" title="Presenting problem" description={`${SYMPTOMS_QUESTION} Choose all that apply. The first-aid checklist follows the ${symptom}.`}>
-            {/* Remounts on the pick, so focus moves on to the next thing to fill in (D4: fewer clicks). */}
-            <ComplaintField
-              key={identified.student?.id ?? 'none'}
-              autoFocus={Boolean(identified.student)}
-              value={complaint}
-              onChange={updateComplaint}
-              suggestions={suggestions}
-              error={errors.complaint}
-            />
-            <ExtraComplaintsField value={extraComplaints} onChange={setExtraComplaints} main={complaint} suggestions={suggestions} />
-            {looksLikeEmergency && (
-              <div role="note" className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary">
-                <span className="flex items-center gap-2">
-                  <Icon name="alertTriangle" size={16} className="shrink-0 text-warning-text" />
-                  This looks like an emergency. Escalate to an incident?
-                </span>
-                <Button size="sm" onClick={escalateToIncident}>
-                  Escalate to incident
-                </Button>
-              </div>
-            )}
-            {cleanComplaint(complaint) ? (
-              <TriagePanel
-                complaint={complaint}
-                complaintTypes={data.complaintTypes}
-                checked={triageSteps}
-                onToggle={toggleStep}
-              />
-            ) : (
-              <EmptyState
-                icon="clipboardList"
-                title={`Choose a ${symptom} to show the first-aid checklist`}
-                description={`The checklist appears when the ${symptom} matches a predefined type.`}
-                className="rounded-md border border-border bg-surface"
-              />
-            )}
-            </FormSection>
-
-            <FormSection id="visit-treatment-title" title="Care given" description="What was done for the patient, and any medicines or supplies used.">
-            <TextareaField
-              label="Treatment notes"
-              placeholder="Optional"
-              hint="Care that isn't stock: rest, cold compress, wound cleaning, advice."
-              value={treatment}
-              onChange={setTreatment}
-            />
-            <MedicineInNotesHint
-              notes={treatment}
-              items={freshItems ?? data.items}
-              lines={lines}
-              onAdd={(line) => {
-                setLines((current) => [...current, line])
-                setSaved(null)
-              }}
-            />
-            <ItemsGivenField
-              items={freshItems ?? data.items}
-              lines={lines}
-              onChange={(next) => {
-                setLines(next)
-                setSaved(null)
-                setErrors((current) => ({ ...current, itemsGiven: undefined }))
-              }}
-              allergies={allergies}
-              symptoms={[complaint, ...extraComplaints]}
-              error={errors.itemsGiven}
-            />
-            </FormSection>
-
-            <FormSection id="visit-disposition-title" title="Disposition" description="Where the patient went after the visit, and any follow-up.">
-            <div>
-              <SegmentedControl
-                label="Disposition"
-                // Four options: two by two on a phone, one row from sm up (panel review VS-1 added Resting).
-                className="gap-1.5! border border-border max-sm:grid max-sm:w-full max-sm:grid-cols-2"
-                value={disposition}
-                onChange={(next) => {
-                  // Disposition-specific fields start fresh whenever the disposition changes.
-                  setDisposition(next)
-                  setDispositionValues(emptyDispositionValues(today))
-                  setErrors((current) => ({ ...current, excusedUntil: undefined }))
-                }}
-                options={dispositionOptionsFor(isStaffPatient ? 'personnel' : 'student')}
-                size="md"
-              />
-            </div>
-            <DispositionFields
-              disposition={disposition}
-              values={dispositionValues}
-              onChange={(next) => {
-                setDispositionValues(next)
-                setErrors((current) => ({ ...current, excusedUntil: undefined, collectedRelationshipOther: undefined }))
-              }}
-              errors={errors}
-              noLetter={isStaffPatient}
-            />
-
-            <fieldset className="rounded-md border border-border p-4">
-              <legend className="px-1 text-sm font-semibold text-text-primary">Follow-up prompt</legend>
-              <label className="mt-2 flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
-                <input
-                  type="checkbox"
-                  checked={needsFollowUp}
-                  onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                    setNeedsFollowUp(event.target.checked)
-                  }
-                  className="mt-0.5 size-4 cursor-pointer accent-brand-green-dark"
+            <FormSection
+              id="visit-patient-title"
+              title="Patient and time"
+              description="Who came in, and when."
+            >
+              <div className={identified.student ? undefined : FIELD_HALF}>
+                <PatientPicker
+                  search={searchVisitPatients}
+                  selected={identified.student}
+                  onClear={identified.reset}
+                  onSelect={(result) => {
+                    setSaved(null)
+                    // Sir Rey (October 25, 2026): Parent or guardian starts as the primary emergency
+                    // contact, only when the field is still empty; it stays editable. Students only.
+                    void identified.select(patientRefOf(result)).then((full) => {
+                      const primary =
+                        full?.kind === 'student' ? full.emergencyContacts[0]?.name : undefined
+                      if (primary)
+                        setLogbook((current) =>
+                          current.parentGuardian.trim()
+                            ? current
+                            : { ...current, parentGuardian: primary },
+                        )
+                    })
+                  }}
+                  error={identified.error}
+                  addStudentHref={viewer.role === 'staff' ? paths.studentNew : undefined}
+                  addStaffHref={viewer.role === 'staff' ? paths.staffNew : undefined}
+                  autoFocus={!staffParam}
                 />
-                <span>
-                  <span className="block text-sm font-semibold text-text-primary">
-                    {isStaffPatient ? 'This staff member needs a follow-up' : 'This student needs a follow-up'}
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <DatePicker
+                  label="Visit date"
+                  value={visitDate}
+                  max={today}
+                  onChange={(next) => {
+                    setVisitDate(next)
+                    setEditedAt(Date.now())
+                    setErrors((current) => ({ ...current, visitTime: undefined }))
+                  }}
+                  error={errors.visitTime}
+                />
+                <Input
+                  type="time"
+                  label="Time"
+                  value={visitClock}
+                  hint="Now by default. Change it only for a visit entered afterwards."
+                  onChange={(event) => {
+                    setVisitClock(event.target.value)
+                    setEditedAt(Date.now())
+                    setErrors((current) => ({ ...current, visitTime: undefined }))
+                  }}
+                />
+              </div>
+              {isLateEntry && (
+                <Input
+                  className={FIELD_HALF}
+                  label="Reason for late entry"
+                  placeholder="Optional"
+                  value={lateEntryReason}
+                  maxLength={200}
+                  hint="For example: system was down, paper entry. Saved as a late entry either way."
+                  onChange={(event) => setLateEntryReason(event.target.value)}
+                />
+              )}
+            </FormSection>
+
+            <FormSection
+              id="visit-complaint-title"
+              title="Presenting problem"
+              description={`${SYMPTOMS_QUESTION} Choose all that apply. The first-aid checklist follows the ${symptom}.`}
+            >
+              {/* Remounts on the pick, so focus moves on to the next thing to fill in (D4: fewer clicks). */}
+              <ComplaintField
+                key={identified.student?.id ?? 'none'}
+                autoFocus={Boolean(identified.student)}
+                value={complaint}
+                onChange={updateComplaint}
+                suggestions={suggestions}
+                error={errors.complaint}
+              />
+              <ExtraComplaintsField
+                value={extraComplaints}
+                onChange={setExtraComplaints}
+                main={complaint}
+                suggestions={suggestions}
+              />
+              {looksLikeEmergency && (
+                <div
+                  role="note"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary"
+                >
+                  <span className="flex items-center gap-2">
+                    <Icon name="alertTriangle" size={16} className="shrink-0 text-warning-text" />
+                    This looks like an emergency. Escalate to an incident?
                   </span>
-                  <span className="block text-xs text-text-secondary">
-                    Creates a pending follow-up connected to this visit.
-                  </span>
-                </span>
-              </label>
-              {needsFollowUp && (
-                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <DatePicker
-                    label="Follow-up date"
-                    value={followUpDate}
-                    min={today}
-                    required
-                    onChange={(next) => {
-                      setFollowUpDate(next)
-                      setErrors((current) => ({ ...current, followUpDate: undefined }))
-                    }}
-                    error={errors.followUpDate}
-                  />
-                  <Input
-                    label="Reason"
-                    value={followUpReason}
-                    required
-                    onChange={(event) => {
-                      setFollowUpReason(event.target.value)
-                      setErrors((current) => ({ ...current, followUpReason: undefined }))
-                    }}
-                    error={errors.followUpReason}
-                  />
-                  <div className="sm:col-span-2">
-                    <TextareaField
-                      label="Notes"
-                      value={followUpNotes}
-                      onChange={setFollowUpNotes}
-                      rows={3}
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <StayHomeField checked={followUpStayHome.checked} note={followUpStayHome.note} onChange={setFollowUpStayHome} />
-                  </div>
+                  <Button size="sm" onClick={escalateToIncident}>
+                    Escalate to incident
+                  </Button>
                 </div>
               )}
-            </fieldset>
+              {cleanComplaint(complaint) ? (
+                <TriagePanel
+                  complaint={complaint}
+                  complaintTypes={data.complaintTypes}
+                  checked={triageSteps}
+                  onToggle={toggleStep}
+                />
+              ) : (
+                <EmptyState
+                  icon="clipboardList"
+                  title={`Choose a ${symptom} to show the first-aid checklist`}
+                  description={`The checklist appears when the ${symptom} matches a predefined type.`}
+                  className="rounded-md border border-border bg-surface"
+                />
+              )}
             </FormSection>
 
-            <FormSection id="visit-logbook-title" title="Logbook details" description="Optional. Temperature, time out, who assisted, the parent or guardian, and remarks.">
-            <LogbookFields
-              values={logbook}
-              onChange={(next) => {
-                setLogbook(next)
-                setSaved(null)
-                setErrors((current) => ({ ...current, timeOut: undefined }))
-              }}
-              errors={errors}
-              open={moreOpen}
-              onOpenChange={setMoreOpen}
-              ranges={data.vitalsRanges}
-              timeOutRef={timeOutRef}
-              ageGroup={identified.student ? ageGroupOf(identified.student, visitDate || today, data.vitalsRanges.usual) : null}
-            />
+            <FormSection
+              id="visit-treatment-title"
+              title="Care given"
+              description="What was done for the patient, and any medicines or supplies used."
+            >
+              <TextareaField
+                label="Treatment notes"
+                placeholder="Optional"
+                hint="Care that isn't stock: rest, cold compress, wound cleaning, advice."
+                value={treatment}
+                onChange={setTreatment}
+              />
+              <MedicineInNotesHint
+                notes={treatment}
+                items={freshItems ?? data.items}
+                lines={lines}
+                onAdd={(line) => {
+                  setLines((current) => [...current, line])
+                  setSaved(null)
+                }}
+              />
+              <ItemsGivenField
+                items={freshItems ?? data.items}
+                lines={lines}
+                onChange={(next) => {
+                  setLines(next)
+                  setSaved(null)
+                  setErrors((current) => ({ ...current, itemsGiven: undefined }))
+                }}
+                allergies={allergies}
+                symptoms={[complaint, ...extraComplaints]}
+                error={errors.itemsGiven}
+              />
+            </FormSection>
+
+            <FormSection
+              id="visit-disposition-title"
+              title="Disposition"
+              description="Where the patient went after the visit, and any follow-up."
+            >
+              <div>
+                <SegmentedControl
+                  label="Disposition"
+                  // Four options: two by two on a phone, one row from sm up (panel review VS-1 added Resting).
+                  className="gap-1.5! border border-border max-sm:grid max-sm:w-full max-sm:grid-cols-2"
+                  value={disposition}
+                  onChange={(next) => {
+                    // Disposition-specific fields start fresh whenever the disposition changes.
+                    setDisposition(next)
+                    setDispositionValues(emptyDispositionValues(today))
+                    setErrors((current) => ({ ...current, excusedUntil: undefined }))
+                  }}
+                  options={dispositionOptionsFor(isStaffPatient ? 'personnel' : 'student')}
+                  size="md"
+                />
+              </div>
+              <DispositionFields
+                disposition={disposition}
+                values={dispositionValues}
+                onChange={(next) => {
+                  setDispositionValues(next)
+                  setErrors((current) => ({
+                    ...current,
+                    excusedUntil: undefined,
+                    collectedRelationshipOther: undefined,
+                  }))
+                }}
+                errors={errors}
+                noLetter={isStaffPatient}
+              />
+
+              <fieldset className="rounded-md border border-border p-4">
+                <legend className="px-1 text-sm font-semibold text-text-primary">
+                  Follow-up prompt
+                </legend>
+                <label className="mt-2 flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
+                  <input
+                    type="checkbox"
+                    checked={needsFollowUp}
+                    onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                      setNeedsFollowUp(event.target.checked)
+                    }
+                    className="mt-0.5 size-4 cursor-pointer accent-brand-green-dark"
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold text-text-primary">
+                      {isStaffPatient
+                        ? 'This staff member needs a follow-up'
+                        : 'This student needs a follow-up'}
+                    </span>
+                    <span className="block text-xs text-text-secondary">
+                      Creates a pending follow-up connected to this visit.
+                    </span>
+                  </span>
+                </label>
+                {needsFollowUp && (
+                  <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <DatePicker
+                      label="Follow-up date"
+                      value={followUpDate}
+                      min={today}
+                      required
+                      onChange={(next) => {
+                        setFollowUpDate(next)
+                        setErrors((current) => ({ ...current, followUpDate: undefined }))
+                      }}
+                      error={errors.followUpDate}
+                    />
+                    <Input
+                      label="Reason"
+                      value={followUpReason}
+                      required
+                      onChange={(event) => {
+                        setFollowUpReason(event.target.value)
+                        setErrors((current) => ({ ...current, followUpReason: undefined }))
+                      }}
+                      error={errors.followUpReason}
+                    />
+                    <div className="sm:col-span-2">
+                      <TextareaField
+                        label="Notes"
+                        value={followUpNotes}
+                        onChange={setFollowUpNotes}
+                        rows={3}
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <StayHomeField
+                        checked={followUpStayHome.checked}
+                        note={followUpStayHome.note}
+                        onChange={setFollowUpStayHome}
+                      />
+                    </div>
+                  </div>
+                )}
+              </fieldset>
+            </FormSection>
+
+            <FormSection
+              id="visit-logbook-title"
+              title="Logbook details"
+              description="Optional. Temperature, time out, who assisted, the parent or guardian, and remarks."
+            >
+              <LogbookFields
+                values={logbook}
+                onChange={(next) => {
+                  setLogbook(next)
+                  setSaved(null)
+                  setErrors((current) => ({ ...current, timeOut: undefined }))
+                }}
+                errors={errors}
+                open={moreOpen}
+                onOpenChange={setMoreOpen}
+                ranges={data.vitalsRanges}
+                timeOutRef={timeOutRef}
+                ageGroup={
+                  identified.student
+                    ? ageGroupOf(identified.student, visitDate || today, data.vitalsRanges.usual)
+                    : null
+                }
+              />
             </FormSection>
 
             {/* The note gets its own line so the actions stay together instead of Save wrapping alone. */}
             <div className={`flex flex-col gap-2 pt-4 ${FORM_DIVIDER}`}>
               {!treatment.trim() && !lines.length && (
-                <p className="text-xs text-text-secondary">No treatment recorded. You can still save.</p>
+                <p className="text-xs text-text-secondary">
+                  No treatment recorded. You can still save.
+                </p>
               )}
               <div className="flex flex-wrap items-center justify-end gap-2">
-                <Button type="button" variant="secondary" icon="alertTriangle" onClick={escalateToIncident}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  icon="alertTriangle"
+                  onClick={escalateToIncident}
+                >
                   Escalate to incident
                 </Button>
-                <Button type="button" variant="neutral" onClick={cancel}>Cancel</Button>
+                <Button type="button" variant="neutral" onClick={cancel}>
+                  Cancel
+                </Button>
                 {preparingLetter && (
-                  <Button type="button" variant="secondary" icon="checkCircle" loading={saving} done={Boolean(saved)} onClick={saveAndApproveNow}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    icon="checkCircle"
+                    loading={saving}
+                    done={Boolean(saved)}
+                    onClick={saveAndApproveNow}
+                  >
                     Save and approve now
                   </Button>
                 )}

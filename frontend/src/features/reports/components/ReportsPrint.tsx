@@ -35,7 +35,15 @@ const stageText = (incident: ArchiveRow) =>
  * Complaints with count and share. The Complaint Summary prints its chart above the table, one below
  * the other; the Monthly Report prints the table only, so the figures appear once (review round 2, R29, R30).
  */
-function ComplaintBreakdown({ rows, empty, chart = false }: { rows: ComplaintCount[]; empty: string; chart?: boolean }) {
+function ComplaintBreakdown({
+  rows,
+  empty,
+  chart = false,
+}: {
+  rows: ComplaintCount[]
+  empty: string
+  chart?: boolean
+}) {
   const total = rows.reduce((sum, row) => sum + row.count, 0)
   if (!rows.length) return <PrintNote className="text-text-primary">{empty}</PrintNote>
   return (
@@ -70,7 +78,11 @@ function IncidentTable({ rows, masked = false }: { rows: ArchiveRow[]; masked?: 
       rowKey={(row) => row.id}
       empty="No incidents were recorded this month."
       columns={[
-        { header: 'LRN or Staff No.', width: '18%', cell: (row) => (masked ? maskPatientNumber(row.patient) : row.patient.number) },
+        {
+          header: 'LRN or Staff No.',
+          width: '18%',
+          cell: (row) => (masked ? maskPatientNumber(row.patient) : row.patient.number),
+        },
         { header: 'Date and time', width: '26%', cell: (row) => formatDateTime(row.time) },
         { header: SYMPTOM, cell: (row) => row.complaint },
         { header: 'Stage and status', width: '26%', cell: stageText },
@@ -131,11 +143,19 @@ export function ReportsPrint({
       >
         <InventorySheetPrint rows={data.inventory} />
         <PrintNote>
-          New Purchase: restocked in the month. Total Available: stock at the start of the month plus New
-          Purchase. Ending Inventory: stock at the end of the month, after dispensing, adjustments and expiry
-          write-offs.
+          New Purchase: restocked in the month. Total Available: stock at the start of the month
+          plus New Purchase. Ending Inventory: stock at the end of the month, after dispensing,
+          adjustments and expiry write-offs.
         </PrintNote>
-        <PrintSignatures lines={[{ heading: 'Prepared by:', name: readOnly ? undefined : viewer.name, position: ROLE_LABELS.staff }]} />
+        <PrintSignatures
+          lines={[
+            {
+              heading: 'Prepared by:',
+              name: readOnly ? undefined : viewer.name,
+              position: ROLE_LABELS.staff,
+            },
+          ]}
+        />
       </PrintDocument>
     )
 
@@ -219,7 +239,13 @@ export function ReportsPrint({
             empty=""
             columns={[
               // Students and staff together (ADR-053): "Returned to class or work".
-              { header: 'Disposition', cell: (row) => (row.disposition === 'returned_to_class' ? 'Returned to class or work' : DISPOSITION_LABELS[row.disposition]) },
+              {
+                header: 'Disposition',
+                cell: (row) =>
+                  row.disposition === 'returned_to_class'
+                    ? 'Returned to class or work'
+                    : DISPOSITION_LABELS[row.disposition],
+              },
               { header: 'Visits', width: '22%', align: 'right', cell: (row) => row.count },
               {
                 header: 'Share',
@@ -268,7 +294,11 @@ export function ReportsPrint({
 
       <PrintSignatures
         lines={[
-          { heading: 'Prepared by:', name: readOnly ? undefined : viewer.name, position: ROLE_LABELS.staff },
+          {
+            heading: 'Prepared by:',
+            name: readOnly ? undefined : viewer.name,
+            position: ROLE_LABELS.staff,
+          },
           { heading: 'Reviewed by:', name: data.principalName ?? undefined, position: 'Principal' },
         ]}
       />

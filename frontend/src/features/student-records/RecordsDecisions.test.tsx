@@ -33,7 +33,9 @@ describe('Student and incident records', () => {
     renderWithRouter(<StudentProfilePage studentId={student.id} />)
     expect(await screen.findAllByText('None recorded.')).toHaveLength(2)
     // No warning banner when nothing is recorded.
-    expect(screen.queryByRole('region', { name: /allergies and medical conditions/i })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('region', { name: /allergies and medical conditions/i }),
+    ).not.toBeInTheDocument()
 
     render(<StudentAlertCard student={{ ...student, allergies: ['Penicillin (rash)'] }} />)
     expect(screen.getByText('Penicillin (rash)')).toBeInTheDocument()
@@ -52,9 +54,19 @@ describe('Student and incident records', () => {
       birthDate: student.birthDate ?? '2015-06-01',
       emergencyContacts: student.emergencyContacts,
     }
-    for (const [allergies, medicalConditions] of [['None recorded', 'None'], ['', '']]) {
-      const result = await submitStudentForm({ ...base, allergies, medicalConditions }, { mode: 'edit', studentId: student.id })
-      expect(result.status === 'saved' && result.student).toMatchObject({ allergies: [], medicalConditions: [], recordComplete: true })
+    for (const [allergies, medicalConditions] of [
+      ['None recorded', 'None'],
+      ['', ''],
+    ]) {
+      const result = await submitStudentForm(
+        { ...base, allergies, medicalConditions },
+        { mode: 'edit', studentId: student.id },
+      )
+      expect(result.status === 'saved' && result.student).toMatchObject({
+        allergies: [],
+        medicalConditions: [],
+        recordComplete: true,
+      })
     }
   })
 
@@ -67,7 +79,9 @@ describe('Student and incident records', () => {
   })
 
   it('matches an item\'s "avoid if allergic to" word against the allergies, case-insensitively', () => {
-    expect(allergyMatches({ avoidIfAllergicTo: ['penicillin'] }, ['Penicillin (rash)'])).toEqual(['penicillin'])
+    expect(allergyMatches({ avoidIfAllergicTo: ['penicillin'] }, ['Penicillin (rash)'])).toEqual([
+      'penicillin',
+    ])
     expect(allergyMatches({ avoidIfAllergicTo: ['penicillin'] }, ['Peanuts'])).toEqual([])
     expect(allergyMatches({}, ['Penicillin'])).toEqual([])
   })
@@ -75,13 +89,37 @@ describe('Student and incident records', () => {
   it('warns beside the allergies at the medicine picker and never blocks the line', async () => {
     const [item] = await listInventory()
     const { name, category, unit, lowStockThreshold, brand, currentStock, expirationDate } = item
-    await saveInventoryItem({ name, category, unit, lowStockThreshold, brand, currentStock, expirationDate, avoidIfAllergicTo: [' penicillin ', 'Penicillin', ''] }, { itemId: item.id })
+    await saveInventoryItem(
+      {
+        name,
+        category,
+        unit,
+        lowStockThreshold,
+        brand,
+        currentStock,
+        expirationDate,
+        avoidIfAllergicTo: [' penicillin ', 'Penicillin', ''],
+      },
+      { itemId: item.id },
+    )
     const [tagged] = (await listInventory()).filter((candidate) => candidate.id === item.id)
     expect(tagged.avoidIfAllergicTo).toEqual(['penicillin'])
-    expect(getRecordedAuditEntries().at(-1)).toMatchObject({ actionType: 'update', summary: 'Updated avoid if allergic to' })
+    expect(getRecordedAuditEntries().at(-1)).toMatchObject({
+      actionType: 'update',
+      summary: 'Updated avoid if allergic to',
+    })
 
-    render(<ItemsGivenField items={[tagged]} lines={[{ itemId: item.id, quantity: 1, instructions: '' }]} onChange={() => {}} allergies={['Penicillin']} />)
-    expect(screen.getByText('Avoid if allergic to penicillin: this patient lists penicillin.')).toBeInTheDocument()
+    render(
+      <ItemsGivenField
+        items={[tagged]}
+        lines={[{ itemId: item.id, quantity: 1, instructions: '' }]}
+        onChange={() => {}}
+        allergies={['Penicillin']}
+      />,
+    )
+    expect(
+      screen.getByText('Avoid if allergic to penicillin: this patient lists penicillin.'),
+    ).toBeInTheDocument()
 
     // Recording it is still allowed (ADR-018).
     const { visit } = await recordVisit({
@@ -97,8 +135,18 @@ describe('Student and incident records', () => {
 
   it('keeps the grade a visit and an incident were saved in after the student moves up', async () => {
     const student = await getStudent('student-0001')
-    const { visit } = await recordVisit({ studentId: student.id, complaint: 'Fever', treatment: '', disposition: 'returned_to_class', followUp: null })
-    const incident = await saveIncidentStageOne({ studentId: student.id, complaint: 'Fainting', vitals: {} })
+    const { visit } = await recordVisit({
+      studentId: student.id,
+      complaint: 'Fever',
+      treatment: '',
+      disposition: 'returned_to_class',
+      followUp: null,
+    })
+    const incident = await saveIncidentStageOne({
+      studentId: student.id,
+      complaint: 'Fainting',
+      vitals: {},
+    })
     expect(visit.gradeLevelAtTime).toBe(student.gradeLevel)
     await saveStudent({ ...student, gradeLevel: 'Grade 1' }, { studentId: student.id })
     expect((await getVisit(visit.id)).gradeLevelAtTime).toBe(student.gradeLevel)
@@ -106,27 +154,54 @@ describe('Student and incident records', () => {
   })
 
   it('fills the grade on records saved before the field existed, and none for staff', async () => {
-    expect((await getVisit('visit-0001')).gradeLevelAtTime).toBe((await getStudent('student-0018')).gradeLevel)
-    const { visit } = await recordVisit({ personnelId: 'personnel-0001', complaint: 'Fever', treatment: '', disposition: 'returned_to_class', followUp: null })
+    expect((await getVisit('visit-0001')).gradeLevelAtTime).toBe(
+      (await getStudent('student-0018')).gradeLevel,
+    )
+    const { visit } = await recordVisit({
+      personnelId: 'personnel-0001',
+      complaint: 'Fever',
+      treatment: '',
+      disposition: 'returned_to_class',
+      followUp: null,
+    })
     expect(visit.gradeLevelAtTime).toBeUndefined()
   })
 
   it('lets Additional notes be corrected until the incident report is approved, audited, then fixed', async () => {
-    const incident = await saveIncidentStageOne({ studentId: 'student-0001', complaint: 'Fainting', vitals: {}, generalNotes: 'First note' })
-    const stageTwo = { incidentId: incident.id, complaint: 'Fainting', vitals: { treatmentNotes: 'Rested' }, hospitalReferral: null, newParentNotifications: [], followUp: null }
+    const incident = await saveIncidentStageOne({
+      studentId: 'student-0001',
+      complaint: 'Fainting',
+      vitals: {},
+      generalNotes: 'First note',
+    })
+    const stageTwo = {
+      incidentId: incident.id,
+      complaint: 'Fainting',
+      vitals: { treatmentNotes: 'Rested' },
+      hospitalReferral: null,
+      newParentNotifications: [],
+      followUp: null,
+    }
     await completeIncidentStageTwo({ ...stageTwo, generalNotes: 'Corrected note' })
     expect((await getIncident(incident.id)).generalNotes).toBe('Corrected note')
     expect(getRecordedAuditEntries().at(-1)?.summary).toMatch(/corrected additional notes/)
 
     await approveIncidentReport(incident.id)
-    await expect(completeIncidentStageTwo({ ...stageTwo, generalNotes: 'Too late' })).rejects.toBeInstanceOf(IncidentApprovedError)
+    await expect(
+      completeIncidentStageTwo({ ...stageTwo, generalNotes: 'Too late' }),
+    ).rejects.toBeInstanceOf(IncidentApprovedError)
     expect((await getIncident(incident.id)).generalNotes).toBe('Corrected note')
   })
 
   it('shows Additional notes as an editable field on Stage 2 until approval', async () => {
     const user = userEvent.setup()
     const { IncidentEntryPage } = await import('../emergency-response/IncidentEntryPage')
-    const incident = await saveIncidentStageOne({ studentId: 'student-0001', complaint: 'Fainting', vitals: {}, generalNotes: 'First note' })
+    const incident = await saveIncidentStageOne({
+      studentId: 'student-0001',
+      complaint: 'Fainting',
+      vitals: {},
+      generalNotes: 'First note',
+    })
     renderWithRouter(<IncidentEntryPage incidentId={incident.id} />)
     const notes = await screen.findByLabelText('Additional notes')
     expect(notes).toHaveValue('First note')

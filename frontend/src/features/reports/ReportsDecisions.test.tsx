@@ -74,7 +74,7 @@ describe('Reports and calendar', () => {
   })
 
   it.each<SessionUser>([
-    { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' },
+    { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' },
     { id: 'user-admin-01', name: 'Principal', role: 'admin' },
   ])('names the screen "Activity calendar" in the sidebar and the page title ($role)', (user) => {
     render(

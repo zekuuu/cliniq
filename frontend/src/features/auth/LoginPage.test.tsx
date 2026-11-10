@@ -26,7 +26,8 @@ describe('LoginPage', () => {
     expect(screen.queryByText(/assigned clinic account/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/clinic account/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/all rights reserved/i)).not.toBeInTheDocument()
-    for (const logo of screen.getAllByAltText('Mendez Christian Academy logo')) expect(logo).toHaveAttribute('src', '/MCA_Logo.png')
+    for (const logo of screen.getAllByAltText('Mendez Christian Academy logo'))
+      expect(logo).toHaveAttribute('src', '/MCA_Logo.png')
   })
 
   it('focuses the first invalid field after a failed submit', async () => {
@@ -67,7 +68,9 @@ describe('LoginPage', () => {
     const signIn = screen.getByRole('button', { name: 'Sign In' })
     const forgot = screen.getByRole('button', { name: 'Forgot password?' })
 
-    expect(screen.getByLabelText(/^Password/).compareDocumentPosition(signIn)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(screen.getByLabelText(/^Password/).compareDocumentPosition(signIn)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    )
     expect(signIn.compareDocumentPosition(forgot)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(forgot).toHaveClass('text-text-secondary')
     expect(forgot).not.toHaveClass('font-semibold')
@@ -101,18 +104,25 @@ describe('LoginPage', () => {
       await user.click(screen.getByRole('button', { name: 'Sign In' }))
       await screen.findByRole('alert')
     }
-    expect(await screen.findByText(/locked after repeated failed attempts\. Try again at \d{1,2}:\d{2}/)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/locked after repeated failed attempts\. Try again at \d{1,2}:\d{2}/),
+    ).toBeInTheDocument()
     expect(screen.queryByText(/^Locked until/)).not.toBeInTheDocument()
   })
 
   it('shows the privacy link, the attribution and the version', () => {
     renderLogin()
     expect(screen.queryByText(/Authorized clinic personnel/)).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute('href', '/privacy-policy')
+    expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute(
+      'href',
+      '/privacy-policy',
+    )
     const attribution = screen.getByText('Powered by HealWare™')
     expect(attribution.querySelector('img')).toHaveAttribute('src', '/Healware_Logo.png')
     // Attribution comes first, then the Privacy Policy link.
-    expect(attribution.compareDocumentPosition(screen.getByRole('link', { name: 'Privacy Policy' }))).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(
+      attribution.compareDocumentPosition(screen.getByRole('link', { name: 'Privacy Policy' })),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(screen.getByText(/^v\d/)).toBeInTheDocument()
   })
 
@@ -132,7 +142,9 @@ describe('LoginPage', () => {
     for (const username of ['demo.nurse', 'demo.principal', 'demo.new']) {
       expect(dialog).toHaveTextContent(username)
     }
-    expect(dialog).toHaveTextContent(/authentication is simulated until the Laravel Sanctum API is connected/i)
+    expect(dialog).toHaveTextContent(
+      /authentication is simulated until the Laravel Sanctum API is connected/i,
+    )
 
     await user.click(screen.getByRole('button', { name: 'Close' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

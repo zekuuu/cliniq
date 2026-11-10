@@ -1,6 +1,10 @@
 import type { PrintColumn } from '../../components'
 import { formatDate } from '../../lib/dates'
-import type { SportsReportContent, SportsReportContentRow, SportsReportWindow } from '../../lib/mock-db'
+import type {
+  SportsReportContent,
+  SportsReportContentRow,
+  SportsReportWindow,
+} from '../../lib/mock-db'
 
 /* Wording and table columns shared by the Sports Report screen and its printout (ADR-034), so the preview is the paper. */
 
@@ -25,8 +29,10 @@ export function windowRange(content: Pick<SportsReportContent, 'from' | 'to'>): 
 /** Students left out of the printout, by count only. */
 export function leftOutText({ leftOut }: Pick<SportsReportContent, 'leftOut'>): string | null {
   const parts = [
-    leftOut.archived && `${leftOut.archived} archived student record${leftOut.archived === 1 ? '' : 's'}`,
-    leftOut.missing && `${leftOut.missing} student record${leftOut.missing === 1 ? '' : 's'} no longer in CLINIQ`,
+    leftOut.archived &&
+      `${leftOut.archived} archived student record${leftOut.archived === 1 ? '' : 's'}`,
+    leftOut.missing &&
+      `${leftOut.missing} student record${leftOut.missing === 1 ? '' : 's'} no longer in CLINIQ`,
   ].filter(Boolean)
   return parts.length ? `Left out of this report: ${parts.join(' and ')}.` : null
 }
@@ -49,7 +55,14 @@ function entriesCell(row: SportsReportContentRow, select?: EntrySelection) {
       {row.entries.map((entry) => {
         const date = formatDate(entry.dateTime.slice(0, 10))
         return (
-          <li key={entry.id} className={select ? 'grid grid-cols-[1.25rem_6.5em_minmax(0,1fr)_minmax(0,0.75fr)] items-start gap-x-2' : 'grid grid-cols-[6.5em_minmax(0,1fr)_minmax(0,0.75fr)] gap-x-2'}>
+          <li
+            key={entry.id}
+            className={
+              select
+                ? 'grid grid-cols-[1.25rem_6.5em_minmax(0,1fr)_minmax(0,0.75fr)] items-start gap-x-2'
+                : 'grid grid-cols-[6.5em_minmax(0,1fr)_minmax(0,0.75fr)] gap-x-2'
+            }
+          >
             {select && (
               <input
                 type="checkbox"
@@ -60,7 +73,9 @@ function entriesCell(row: SportsReportContentRow, select?: EntrySelection) {
               />
             )}
             <span className="font-semibold tabular-nums">{date}</span>
-            <span>{entry.kind}: {entry.what}</span>
+            <span>
+              {entry.kind}: {entry.what}
+            </span>
             <span>{entry.outcome}</span>
           </li>
         )
@@ -74,23 +89,60 @@ function conditionsCell(row: SportsReportContentRow) {
   if (!conditions) return null
   return (
     <>
-      <span className="block">Conditions: {conditions.medicalConditions.length ? conditions.medicalConditions.join(', ') : 'None recorded'}</span>
-      <span className="block">Allergies: {conditions.allergies.length ? conditions.allergies.join(', ') : 'None recorded'}</span>
+      <span className="block">
+        Conditions:{' '}
+        {conditions.medicalConditions.length
+          ? conditions.medicalConditions.join(', ')
+          : 'None recorded'}
+      </span>
+      <span className="block">
+        Allergies: {conditions.allergies.length ? conditions.allergies.join(', ') : 'None recorded'}
+      </span>
     </>
   )
 }
 
 /** The columns of the report table, in the order ADR-034 sets; the conditions column only when ticked. */
-export function sportsReportColumns(includeConditions: boolean, select?: EntrySelection): Array<PrintColumn<SportsReportContentRow>> {
+export function sportsReportColumns(
+  includeConditions: boolean,
+  select?: EntrySelection,
+): Array<PrintColumn<SportsReportContentRow>> {
   const columns: Array<PrintColumn<SportsReportContentRow>> = [
-    { header: 'Student', width: includeConditions ? '24%' : '28%', cell: (row) => <><span className="block font-semibold">{row.fullName}</span>{row.gradeLevel}</> },
-    { header: 'Recent visits and incidents', width: includeConditions ? '50%' : '72%', cell: (row) => entriesCell(row, select) },
+    {
+      header: 'Student',
+      width: includeConditions ? '24%' : '28%',
+      cell: (row) => (
+        <>
+          <span className="block font-semibold">{row.fullName}</span>
+          {row.gradeLevel}
+        </>
+      ),
+    },
+    {
+      header: 'Recent visits and incidents',
+      width: includeConditions ? '50%' : '72%',
+      cell: (row) => entriesCell(row, select),
+    },
   ]
-  if (includeConditions) columns.push({ header: 'Recorded conditions and allergies', width: '26%', cell: (row) => conditionsCell(row) })
+  if (includeConditions)
+    columns.push({
+      header: 'Recorded conditions and allergies',
+      width: '26%',
+      cell: (row) => conditionsCell(row),
+    })
   return columns
 }
 
 /** The report as it prints: only the entries the clinician left ticked (ADR-051). */
-export function withChosenEntries(content: SportsReportContent, excluded: ReadonlySet<string>): SportsReportContent {
-  return { ...content, rows: content.rows.map((row) => ({ ...row, entries: row.entries.filter((entry) => !excluded.has(entry.id)) })) }
+export function withChosenEntries(
+  content: SportsReportContent,
+  excluded: ReadonlySet<string>,
+): SportsReportContent {
+  return {
+    ...content,
+    rows: content.rows.map((row) => ({
+      ...row,
+      entries: row.entries.filter((entry) => !excluded.has(entry.id)),
+    })),
+  }
 }

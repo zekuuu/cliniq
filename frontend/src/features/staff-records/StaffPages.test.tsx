@@ -9,7 +9,7 @@ import { selectOption } from '../../test/selectOption'
 
 /** Staff screens (ADR-043 part 2): list, profile, add, edit, archive. */
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
 
 function renderAt(route: string, user: SessionUser = STAFF) {
   return render(

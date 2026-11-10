@@ -8,7 +8,7 @@ import SAMPLE from '../../../sample-data/staff-list-sample.csv?raw'
 import { StaffImportPage } from './StaffImportPage'
 
 /** Staff list import (ADR-069). */
-const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
+const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' } as const
 
 const CSV = [
   'Staff No.,Last Name,First Name,Middle Name,Sex,Type,Department,Contact Number,Emergency Contact Name,Relationship,Emergency Contact Phone',

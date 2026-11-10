@@ -23,7 +23,9 @@ export function BrandLogo({ compact = false }: { compact?: boolean }) {
         className={cn('shrink-0 object-contain', compact ? 'size-9' : 'size-11')}
       />
       <span className={cn('flex flex-col leading-tight', compact && 'max-lg:hidden')}>
-        <span className="font-brand text-xl font-bold tracking-wide text-brand-green-dark">CLINIQ</span>
+        <span className="font-brand text-xl font-bold tracking-wide text-brand-green-dark">
+          CLINIQ
+        </span>
         <span className="text-xs leading-tight font-medium tracking-tight whitespace-nowrap text-text-secondary">
           Mendez Christian Academy
         </span>
@@ -58,7 +60,10 @@ export function Sidebar({
     backup && (!backup.latest || backup.latest.status === 'failed' || backup.needsVerification),
   )
   // Staff only (the Admin gets no reminder): ending or starting the school year is due today or overdue (Zean, November 8, 2026).
-  const { data: schoolYear, reload: reloadSchoolYear } = useAsyncData(`sidebar-school-year|${user.role}`, () => getSchoolYearReminder(user))
+  const { data: schoolYear, reload: reloadSchoolYear } = useAsyncData(
+    `sidebar-school-year|${user.role}`,
+    () => getSchoolYearReminder(user),
+  )
   useEffect(() => {
     window.addEventListener(SCHOOL_YEAR_CHANGED_EVENT, reloadSchoolYear)
     return () => window.removeEventListener(SCHOOL_YEAR_CHANGED_EVENT, reloadSchoolYear)
@@ -68,7 +73,11 @@ export function Sidebar({
       ? `School year ${schoolYear.label} ${schoolYear.dueToday ? `${schoolYear.kind === 'end' ? 'ends' : 'starts'} today` : `is overdue to ${schoolYear.kind}`}`
       : null
   const warningFor = (key: NavKey) =>
-    key === 'backup' && backupNeedsAttention ? 'Backup needs attention' : key === 'archive' ? schoolYearWarning : null
+    key === 'backup' && backupNeedsAttention
+      ? 'Backup needs attention'
+      : key === 'archive'
+        ? schoolYearWarning
+        : null
   const groups = navGroupsFor(user.role)
   const labelVisibility = collapsed ? 'sr-only' : ''
   const location = useLocation()
@@ -147,7 +156,9 @@ export function Sidebar({
               className={cn('w-full', collapsed ? 'flex flex-col items-center' : '')}
             >
               {/* Collapsed, the group titles are hidden, so a short rule marks where each group starts (Zean, November 5, 2026). */}
-              {collapsed && groupIndex > 0 && <div aria-hidden="true" className="mb-2 h-px w-8 bg-border" />}
+              {collapsed && groupIndex > 0 && (
+                <div aria-hidden="true" className="mb-2 h-px w-8 bg-border" />
+              )}
               <h2
                 id={groupId}
                 className={cn(
@@ -189,9 +200,13 @@ export function Sidebar({
                               title={warning}
                               className={cn(
                                 'flex shrink-0 items-center justify-center',
-                                isActive ? 'bg-[#c69214] text-brand-green-dark' : 'bg-warning-fill text-warning-text',
+                                isActive
+                                  ? 'bg-[#c69214] text-brand-green-dark'
+                                  : 'bg-warning-fill text-warning-text',
                                 // Collapsed: a small corner badge, so it marks the 40px icon button instead of covering it (Zean, November 5, 2026).
-                                collapsed ? 'absolute -top-1 -right-1 size-4 rounded-full ring-2 ring-background' : 'ml-auto size-6 rounded-md',
+                                collapsed
+                                  ? 'absolute -top-1 -right-1 size-4 rounded-full ring-2 ring-background'
+                                  : 'ml-auto size-6 rounded-md',
                               )}
                             >
                               <Icon name="alertTriangle" size={collapsed ? 11 : 16} />
@@ -261,7 +276,11 @@ export function Sidebar({
               Privacy Policy
             </span>
           </Link>
-          {!collapsed && <span aria-hidden="true" className="text-xs text-text-muted">·</span>}
+          {!collapsed && (
+            <span aria-hidden="true" className="text-xs text-text-muted">
+              ·
+            </span>
+          )}
           <button
             type="button"
             aria-label={collapsed ? 'Report an Issue' : undefined}
@@ -279,7 +298,11 @@ export function Sidebar({
               Report an Issue
             </span>
           </button>
-          {!collapsed && <span aria-hidden="true" className="text-xs text-text-muted">·</span>}
+          {!collapsed && (
+            <span aria-hidden="true" className="text-xs text-text-muted">
+              ·
+            </span>
+          )}
           <span className="whitespace-nowrap text-xs leading-4 text-text-secondary">
             v{APP_VERSION}
           </span>

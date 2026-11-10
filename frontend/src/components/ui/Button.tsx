@@ -1,6 +1,12 @@
 import { useEffect, useState, type ButtonHTMLAttributes, type Ref } from 'react'
 import { Icon, type IconName } from '../icons/Icon'
-import { busyLabel, buttonClassName, doneLabel, type ButtonSize, type ButtonVariant } from './buttonClassName'
+import {
+  busyLabel,
+  buttonClassName,
+  doneLabel,
+  type ButtonSize,
+  type ButtonVariant,
+} from './buttonClassName'
 
 export type { ButtonSize, ButtonVariant }
 

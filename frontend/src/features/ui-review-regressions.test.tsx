@@ -6,12 +6,21 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // jsdom has no canvas. Replace the chart with a stub that keeps its accessible label.
 vi.mock('react-chartjs-2', () => {
-  const Stub = (props: { 'aria-label'?: string }) => <div role="img" aria-label={props['aria-label']} />
+  const Stub = (props: { 'aria-label'?: string }) => (
+    <div role="img" aria-label={props['aria-label']} />
+  )
   return { Bar: Stub, Line: Stub, Doughnut: Stub }
 })
 import { renderWithRouter } from '../test/renderWithRouter'
 import { selectOption } from '../test/selectOption'
-import { getGradeLevels, getMockToday, getStudent, listIncidents, listVisits, resetMockDb } from '../lib/mock-db'
+import {
+  getGradeLevels,
+  getMockToday,
+  getStudent,
+  listIncidents,
+  listVisits,
+  resetMockDb,
+} from '../lib/mock-db'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
 import { IncidentReportPage } from './emergency-response/IncidentReportPage'
 import { UserFormPage } from './user-management/UserFormPage'
@@ -46,7 +55,11 @@ describe('UI/UX review regressions', () => {
     await selectOption(user, within(dialog).getByLabelText(/^Reason/), 'Transferred')
     await user.click(within(dialog).getByRole('button', { name: 'Archive Record' }))
     expect(await screen.findByText('Archived')).toBeInTheDocument()
-    expect(await getStudent('student-0001')).toMatchObject({ archived: true, archiveReason: 'Transferred', archivedSchoolYear: expect.stringMatching(/^\d{4}–\d{4}$/) })
+    expect(await getStudent('student-0001')).toMatchObject({
+      archived: true,
+      archiveReason: 'Transferred',
+      archivedSchoolYear: expect.stringMatching(/^\d{4}–\d{4}$/),
+    })
     expect(recordedWrites().map((entry) => entry.actionType)).toEqual(['archive'])
     expect(screen.queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument()
   })
@@ -63,7 +76,9 @@ describe('UI/UX review regressions', () => {
 
     // The summary carries the referral and parent-notification detail, not just a count.
     expect(screen.getByRole('heading', { name: 'Hospital referral' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Parent notification attempts' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Parent notification attempts' }),
+    ).toBeInTheDocument()
     const picker = screen.getByLabelText('Report pending sign-off')
     await user.click(picker)
     const pendingBefore = screen.getAllByRole('option').length
@@ -79,7 +94,9 @@ describe('UI/UX review regressions', () => {
     // Signed off: it can't be approved again, and only it is marked approved in the picker.
     expect(screen.getByRole('button', { name: 'Approved' })).toBeDisabled()
     await user.click(screen.getByLabelText('Report pending sign-off'))
-    await waitFor(() => expect(screen.getAllByRole('option', { name: /\(approved\)/ })).toHaveLength(1))
+    await waitFor(() =>
+      expect(screen.getAllByRole('option', { name: /\(approved\)/ })).toHaveLength(1),
+    )
     expect(screen.getAllByRole('option')).toHaveLength(pendingBefore)
   })
 
@@ -98,7 +115,9 @@ describe('UI/UX review regressions', () => {
     const user = userEvent.setup()
     const total = (await listVisits()).length
     // The log opens on today (the default range); a date deep link reaches the whole history.
-    renderWithRouter(<VisitLogListPage />, { route: `/visits?from=2000-01-01&to=${getMockToday()}` })
+    renderWithRouter(<VisitLogListPage />, {
+      route: `/visits?from=2000-01-01&to=${getMockToday()}`,
+    })
 
     expect(await screen.findByText(`${total} records shown`)).toBeInTheDocument()
     expect(screen.getByText(`Showing 1–10 of ${total} visits`)).toBeInTheDocument()
@@ -127,7 +146,9 @@ describe('UI/UX review follow-up fixes', () => {
       <>
         <Button onClick={() => setOpen(true)}>Open dialog</Button>
         <Modal open={open} title="Confirm" onClose={() => setOpen(false)}>
-          <Button data-autofocus onClick={() => setOpen(false)}>Cancel</Button>
+          <Button data-autofocus onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
           <Button variant="primary">Confirm</Button>
         </Modal>
       </>
@@ -155,7 +176,9 @@ describe('UI/UX review follow-up fixes', () => {
 
   it('rejects a username another account already uses, case-insensitively', async () => {
     const user = userEvent.setup()
-    renderWithRouter(<UserFormPage viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }} />)
+    renderWithRouter(
+      <UserFormPage viewer={{ id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }} />,
+    )
 
     await screen.findByRole('heading', { level: 1, name: 'Add User' })
     await user.type(screen.getByLabelText(/full name/i), 'Test Person')
@@ -165,7 +188,11 @@ describe('UI/UX review follow-up fixes', () => {
     await selectOption(user, screen.getByLabelText(/^role/i), 'School Clinician')
     await user.click(screen.getByRole('button', { name: 'Create User' }))
 
-    expect(await screen.findByText('Another account already uses this username. Choose a different one.')).toBeInTheDocument()
+    expect(
+      await screen.findByText(
+        'Another account already uses this username. Choose a different one.',
+      ),
+    ).toBeInTheDocument()
     expect(screen.queryByText('User saved and audit event recorded.')).not.toBeInTheDocument()
     expect(recordedWrites()).toEqual([])
   })
@@ -190,7 +217,11 @@ describe('UI/UX review follow-up fixes', () => {
 
   it('does not expose sidebar nav groups as landmark regions', () => {
     renderWithRouter(
-      <AppShell user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} active="dashboard" onLogout={() => {}}>
+      <AppShell
+        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        active="dashboard"
+        onLogout={() => {}}
+      >
         <div>Screen</div>
       </AppShell>,
     )
@@ -205,14 +236,21 @@ describe('UI/UX review Group B decisions', () => {
   beforeEach(() => resetMockDb())
 
   it('gives Staff a New Visit shortcut on the Dashboard, and Admin none; a healthy backup raises no chip', async () => {
-    const staff = renderWithRouter(<DashboardPage viewer={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} />)
-    expect(await screen.findByRole('link', { name: 'New Visit' })).toHaveAttribute('href', '/visits/new')
+    const staff = renderWithRouter(
+      <DashboardPage viewer={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }} />,
+    )
+    expect(await screen.findByRole('link', { name: 'New Visit' })).toHaveAttribute(
+      'href',
+      '/visits/new',
+    )
     // The always-on backup indicator gave way to AttentionChips, which speak up only when a backup is
     // stale, failed or missing (those cases: AccessAndBackup.test.tsx).
     expect(screen.queryByRole('link', { name: /backup/i })).not.toBeInTheDocument()
     staff.unmount()
 
-    renderWithRouter(<DashboardPage viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }} />)
+    renderWithRouter(
+      <DashboardPage viewer={{ id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }} />,
+    )
     await screen.findByRole('heading', { name: 'Clinic Overview' })
     expect(screen.queryByRole('link', { name: /backup/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'New Visit' })).not.toBeInTheDocument()
@@ -238,7 +276,11 @@ describe('UI/UX review Group B decisions', () => {
     expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
     const student = await getStudent('student-0001')
     const visits = await listVisits()
-    expect(visits.some((visit) => visit.studentId === student.id && visit.treatment === 'Rested in clinic.')).toBe(true)
+    expect(
+      visits.some(
+        (visit) => visit.studentId === student.id && visit.treatment === 'Rested in clinic.',
+      ),
+    ).toBe(true)
     // Ready for the next student: the field is back and empty.
     expect(screen.getByRole('combobox', { name: /student/i })).toHaveValue('')
   })
@@ -254,16 +296,22 @@ describe('UI/UX review Group B decisions', () => {
     expect(recordedWrites()).toEqual([])
 
     await user.click(screen.getByRole('button', { name: 'Mark as Verified' }))
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Mark as Verified' }))
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Mark as Verified' }),
+    )
     expect(await screen.findByText('Verification recorded in the audit trail.')).toBeInTheDocument()
     expect(recordedWrites().map((entry) => entry.actionType)).toEqual(['update'])
   })
 
   it('never shows an internal record id in the Audit Log', async () => {
-    renderWithRouter(<AuditLogPage viewer={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} />)
+    renderWithRouter(
+      <AuditLogPage viewer={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }} />,
+    )
 
     const table = await screen.findByRole('table', { name: 'Filtered audit log' })
-    expect(table.textContent).not.toMatch(/\b(visit|incident|item|student|user|followup)-(staff-|admin-)?\d{2,4}\b/)
+    expect(table.textContent).not.toMatch(
+      /\b(visit|incident|item|student|user|followup)-(staff-|admin-)?\d{2,4}\b/,
+    )
     // Students appear by masked LRN on screen, never the full digits (Zean, November 7, 2026; was full, R33).
     expect(table.textContent).toMatch(/(Visit|Incident)LRN ••••••••\d{4}/)
     expect(table.textContent).not.toMatch(/LRN \d{12}/)

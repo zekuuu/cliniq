@@ -7,7 +7,10 @@ import { Lrn, MaskedLrn } from '../components/ui/MaskedLrn'
  * LRN through `<Lrn>` (masked) or `<Lrn full>`; text strings (print scope lines, file names) are
  * the only exception, since a component can't sit inside a string.
  */
-const sources = import.meta.glob(['../**/*.tsx', '!../**/*.test.tsx', '!../components/ui/MaskedLrn.tsx'], { query: '?raw', import: 'default', eager: true }) as Record<string, string>
+const sources = import.meta.glob(
+  ['../**/*.tsx', '!../**/*.test.tsx', '!../components/ui/MaskedLrn.tsx'],
+  { query: '?raw', import: 'default', eager: true },
+) as Record<string, string>
 
 describe('LRN rendering', () => {
   it('renders no LRN as bare JSX text outside the shared component', () => {

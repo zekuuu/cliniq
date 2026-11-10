@@ -10,7 +10,12 @@ function Harness(props: Partial<ComboboxProps<string>> & { onSubmit?: () => void
   const [value, setValue] = useState('')
   const options = FRUITS.filter((fruit) => fruit.toLowerCase().includes(value.toLowerCase()))
   return (
-    <form onSubmit={(event) => { event.preventDefault(); props.onSubmit?.() }}>
+    <form
+      onSubmit={(event) => {
+        event.preventDefault()
+        props.onSubmit?.()
+      }}
+    >
       <Combobox
         label="Fruit"
         value={value}

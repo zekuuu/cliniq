@@ -13,11 +13,18 @@ export function EmergencyContactList({
   return (
     <ol className="mt-2 flex flex-col gap-2">
       {contacts.map((contact, index) => (
-        <li key={`${contact.name}-${contact.phone}-${index}`} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 rounded-md border border-border bg-surface p-3">
+        <li
+          key={`${contact.name}-${contact.phone}-${index}`}
+          className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 rounded-md border border-border bg-surface p-3"
+        >
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-sm font-semibold text-text-primary">{contact.name}</p>
-              {index === 0 && <Badge tone="info" variant="soft">Primary</Badge>}
+              {index === 0 && (
+                <Badge tone="info" variant="soft">
+                  Primary
+                </Badge>
+              )}
             </div>
             <p className="text-xs text-text-secondary">{contact.relationship}</p>
             <p className="mt-2 text-sm font-semibold tabular-nums text-text-primary">

@@ -19,8 +19,14 @@ describe('Inventory Usage History (Module 8)', () => {
     const dispense = all.find((row) => row.type === 'dispense' && row.patientNumber?.includes('•'))!
     expect(dispense.change).toBeLessThan(0)
     expect(dispense.patientNumber).toContain('•')
-    expect((await listInventoryMovements({ itemId: dispense.itemId })).every((row) => row.itemId === dispense.itemId)).toBe(true)
-    expect((await listInventoryMovements({ type: 'restock' })).every((row) => row.type === 'restock')).toBe(true)
+    expect(
+      (await listInventoryMovements({ itemId: dispense.itemId })).every(
+        (row) => row.itemId === dispense.itemId,
+      ),
+    ).toBe(true)
+    expect(
+      (await listInventoryMovements({ type: 'restock' })).every((row) => row.type === 'restock'),
+    ).toBe(true)
     expect(await listInventoryMovements({ from: '2099-01-01' })).toEqual([])
   })
 
@@ -29,11 +35,22 @@ describe('Inventory Usage History (Module 8)', () => {
     const table = await screen.findByRole('table', { name: 'Stock movements' })
     // 55rem fits the card at 1280px with the sidebar open; the old 72rem forced a sideways scroll.
     expect(table.style.minWidth).toBe('55rem')
-    expect([...table.querySelectorAll('col')].map((col) => col.style.width)).toEqual(['17.5%', '', '20%', '6.5rem', '6.5rem', '7.5rem', '7.5rem'])
+    expect([...table.querySelectorAll('col')].map((col) => col.style.width)).toEqual([
+      '17.5%',
+      '',
+      '20%',
+      '6.5rem',
+      '6.5rem',
+      '7.5rem',
+      '7.5rem',
+    ])
     // Every column left-aligned (Zean, November 5, 2026).
-    for (const header of within(table).getAllByRole('columnheader')) expect(header).toHaveClass('text-left')
+    for (const header of within(table).getAllByRole('columnheader'))
+      expect(header).toHaveClass('text-left')
     const firstWhen = within(table).getAllByRole('row')[1].querySelector('td')!
-    expect(firstWhen.querySelector('.whitespace-nowrap')?.textContent).toMatch(/^\d{1,2}:\d{2} [AP]M$/)
+    expect(firstWhen.querySelector('.whitespace-nowrap')?.textContent).toMatch(
+      /^\d{1,2}:\d{2} [AP]M$/,
+    )
   })
 
   it('never carries a patient name', async () => {
@@ -46,7 +63,11 @@ describe('Inventory Usage History (Module 8)', () => {
     const [first] = await listInventoryMovements()
     renderWithRouter(<InventoryHistoryPage />, { route: `/inventory/history?item=${first.itemId}` })
     const table = await screen.findByRole('table', { name: 'Stock movements' })
-    expect(within(table).getAllByRole('rowheader').every((cell) => cell.textContent === first.itemName)).toBe(true)
+    expect(
+      within(table)
+        .getAllByRole('rowheader')
+        .every((cell) => cell.textContent === first.itemName),
+    ).toBe(true)
     await selectOption(userEvent.setup(), screen.getByLabelText('Movement'), 'Restocked')
     await expect(listInventoryMovements({}, ADMIN)).rejects.toThrow('Only the School Clinician')
   })

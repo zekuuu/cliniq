@@ -9,7 +9,19 @@ import { paths } from '../../../routes/paths'
  * controls (Zean, November 4, 2026). On the Overview it sits right-aligned on the "Activity summary"
  * heading row, by the counts it reports on (Zean, November 5, 2026): pass `as="div"` there.
  */
-export function FullReportLink({ report, view, month, className, as: Wrapper = 'footer' }: { report: string; view: 'monthly' | 'health'; month: string; className?: string; as?: 'footer' | 'div' }) {
+export function FullReportLink({
+  report,
+  view,
+  month,
+  className,
+  as: Wrapper = 'footer',
+}: {
+  report: string
+  view: 'monthly' | 'health'
+  month: string
+  className?: string
+  as?: 'footer' | 'div'
+}) {
   return (
     <Wrapper className={cn('flex justify-end print:hidden', className)}>
       <Link
@@ -19,7 +31,11 @@ export function FullReportLink({ report, view, month, className, as: Wrapper = '
         className="group inline-flex min-h-8 cursor-pointer items-center gap-1 rounded-sm text-sm font-semibold text-brand-green-dark underline underline-offset-2 transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
       >
         View full report
-        <Icon name="arrowRight" size={14} className="transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />
+        <Icon
+          name="arrowRight"
+          size={14}
+          className="transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
+        />
       </Link>
     </Wrapper>
   )

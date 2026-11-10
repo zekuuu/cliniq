@@ -6,7 +6,15 @@ import { Tabs } from './Tabs'
 
 type V = 'a' | 'b' | 'c'
 
-function Harness({ printAll, actions, status }: { printAll?: boolean; actions?: ReactNode; status?: ReactNode }) {
+function Harness({
+  printAll,
+  actions,
+  status,
+}: {
+  printAll?: boolean
+  actions?: ReactNode
+  status?: ReactNode
+}) {
   const [value, setValue] = useState<V>('a')
   return (
     <>

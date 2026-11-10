@@ -8,7 +8,10 @@ import type { Disposition, Student, StudentSearchResult } from '../../../types/e
 
 export interface PeReferralContext {
   /** Starter text for "Use PE Defaults". Every field stays editable before saving. */
-  defaults: Pick<PeReferralValues, 'activity' | 'injurySummary' | 'clinicalAssessment' | 'treatment'>
+  defaults: Pick<
+    PeReferralValues,
+    'activity' | 'injurySummary' | 'clinicalAssessment' | 'treatment'
+  >
 }
 
 export interface PeReferralValues {

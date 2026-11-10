@@ -34,7 +34,8 @@ vi.mock('./mock-db.json', async (importOriginal) => {
   // The student with the most visits in the last 30 days: they appear on the most screens.
   const recent = seed.visits.filter((v) => 'daysAgo' in v.dateTime && v.dateTime.daysAgo <= 29)
   const counts = new Map<string, number>()
-  for (const v of recent) if (v.studentId) counts.set(v.studentId, (counts.get(v.studentId) ?? 0) + 1)
+  for (const v of recent)
+    if (v.studentId) counts.set(v.studentId, (counts.get(v.studentId) ?? 0) + 1)
   const [target] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]
   const student = seed.students.find((s) => s.id === target)!
   Object.assign(student, { firstName: 'Renamed Synthetic', lastName: 'Student' })
@@ -45,7 +46,9 @@ vi.mock('./mock-db.json', async (importOriginal) => {
 })
 
 async function editedStudent() {
-  const student = await getStudent((await fetchStudentList({ search: EDITED_NAME, gradeLevel: '', includeArchived: false }))[0].id)
+  const student = await getStudent(
+    (await fetchStudentList({ search: EDITED_NAME, gradeLevel: '', includeArchived: false }))[0].id,
+  )
   return student
 }
 
@@ -55,7 +58,11 @@ describe('editing mock-db.json changes every screen consistently', () => {
     expect(student).toMatchObject({ fullName: EDITED_NAME, gradeLevel: EDITED_GRADE })
 
     // Student List: found by the new name and filtered under the new grade.
-    const grade12 = await fetchStudentList({ search: '', gradeLevel: EDITED_GRADE, includeArchived: false })
+    const grade12 = await fetchStudentList({
+      search: '',
+      gradeLevel: EDITED_GRADE,
+      includeArchived: false,
+    })
     expect(grade12.map((s) => s.id)).toContain(student.id)
 
     // Student Profile + its visit history.
@@ -64,17 +71,29 @@ describe('editing mock-db.json changes every screen consistently', () => {
     expect(profile.visits.length).toBeGreaterThan(0)
 
     // Visit Log List: every row for this student carries the new grade (and never the name).
-    const visitRows = (await fetchVisitLog({ from: '2000-01-01', to: defaultVisitLogRange().to, search: student.lrn, disposition: 'all' }))
+    const visitRows = await fetchVisitLog({
+      from: '2000-01-01',
+      to: defaultVisitLogRange().to,
+      search: student.lrn,
+      disposition: 'all',
+    })
     expect(visitRows.length).toBeGreaterThan(0)
     expect(new Set(visitRows.map((r) => r.gradeLevel))).toEqual(new Set([EDITED_GRADE]))
     expect(JSON.stringify(visitRows)).not.toContain(EDITED_NAME)
 
     // Incident Log List: same rule for any incidents this student has.
-    const incidentRows = await fetchIncidentLog({ from: '2000-01-01', to: todayISO(), search: student.lrn, completion: 'all' })
+    const incidentRows = await fetchIncidentLog({
+      from: '2000-01-01',
+      to: todayISO(),
+      search: student.lrn,
+      completion: 'all',
+    })
     for (const row of incidentRows) expect(row.gradeLevel).toBe(EDITED_GRADE)
 
     // New Visit Entry: the picked student is loaded with the edited name.
-    expect((await findVisitPatient({ studentId: student.id, personnelId: null })).fullName).toBe(EDITED_NAME)
+    expect((await findVisitPatient({ studentId: student.id, personnelId: null })).fullName).toBe(
+      EDITED_NAME,
+    )
 
     // Dashboard: they're a frequent visitor, shown by LRN only (ADR-004).
     const dash = await fetchDashboardSummary({ range: rangeForPreset('last30', todayISO()) })
@@ -97,7 +116,9 @@ describe('editing mock-db.json changes every screen consistently', () => {
     const dash = await fetchDashboardSummary({ range: rangeForPreset('last30', todayISO()) })
     const alert = dash.inventoryAlerts.find((a) => a.item.name === EDITED_ITEM)
     expect(alert?.flags).toContain('low_stock')
-    const lowStockItems = (await fetchInventory({ search: '', category: '' })).filter((i) => i.flags.includes('low_stock'))
+    const lowStockItems = (await fetchInventory({ search: '', category: '' })).filter((i) =>
+      i.flags.includes('low_stock'),
+    )
     expect(dash.counts.lowStockItems).toBe(lowStockItems.length)
 
     renderWithRouter(createElement(InventoryListPage))
@@ -112,7 +133,12 @@ describe('writing through the layer updates every screen together', () => {
     const query = { range: rangeForPreset('today', todayISO()) }
     const before = await fetchDashboardSummary(query)
     const historyBefore = await fetchStudentProfile(student.id)
-    const logBefore = await fetchVisitLog({ from: todayISO(), to: todayISO(), search: '', disposition: 'all' })
+    const logBefore = await fetchVisitLog({
+      from: todayISO(),
+      to: todayISO(),
+      search: '',
+      disposition: 'all',
+    })
 
     const { visit, followUp } = await submitNewVisit(
       {
@@ -130,14 +156,24 @@ describe('writing through the layer updates every screen together', () => {
     const after = await fetchDashboardSummary(query)
     expect(after.counts.visits).toBe(before.counts.visits + 1)
     expect(after.dueFollowUps.map((row) => row.followUp.id)).toContain(followUp!.id)
-    expect(after.dueFollowUps.find((row) => row.followUp.id === followUp!.id)?.dueState).toBe('due_today')
+    expect(after.dueFollowUps.find((row) => row.followUp.id === followUp!.id)?.dueState).toBe(
+      'due_today',
+    )
 
     const historyAfter = await fetchStudentProfile(student.id)
     expect(historyAfter.visits[0].id).toBe(visit.id)
     expect(historyAfter.visits.map((v) => v.id)).not.toEqual(historyBefore.visits.map((v) => v.id))
 
-    const logAfter = await fetchVisitLog({ from: todayISO(), to: todayISO(), search: '', disposition: 'all' })
+    const logAfter = await fetchVisitLog({
+      from: todayISO(),
+      to: todayISO(),
+      search: '',
+      disposition: 'all',
+    })
     expect(logAfter.length).toBe(logBefore.length + 1)
-    expect(logAfter.find((row) => row.id === visit.id)?.patient).toEqual({ kind: 'student', number: student.lrn })
+    expect(logAfter.find((row) => row.id === visit.id)?.patient).toEqual({
+      kind: 'student',
+      number: student.lrn,
+    })
   })
 })

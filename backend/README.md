@@ -1,6 +1,6 @@
 # backend
 
-Last checked against the code on Sunday, November 1, 2026 — 02:44 PHT (uncommitted, on top of `f33fd71d`).
+Last checked against the code on Tuesday, November 10, 2026 (the `backend` branch at `b51166a`). On `main` this folder holds only this README and `.env.example`; the code lives on this `backend` branch (ADR-056). Numbers: [Facts sheet](../CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
 
 ## Purpose
 
@@ -8,7 +8,19 @@ The Laravel API for CLINIQ, with Sanctum for sign-in (ADR-007, ADR-056) and Mari
 
 ## Current state
 
-**The foundation only.** Laravel 13.39 with Sanctum in SPA cookie mode, the modular folders, configuration, CORS, middleware, one error format, the audit contract, shared helpers and tests. The only routes are `GET /api/health` and `GET /sanctum/csrf-cookie`. There are no tables, migrations, seeders, factories or models yet, so nothing can sign in. Nothing is connected to the frontend (ADR-056). The ERD is approved (ADR-057), so phase B1 builds the migrations next.
+**The foundation (B0) and the migrations (B1).** Laravel 13.39 with Sanctum in SPA cookie mode, the modular folders, configuration, CORS, middleware, one error format, the audit contract, shared helpers, the 7-day session limit, the per-role idle sign-out (Staff 60, Admin 30 minutes, ADR-078) and its keep-alive, and tests (85 pass). B1 added 48 migrations, one per table of the approved schema (ADR-057), and one service provider per module that loads them; they have **not yet been run against MariaDB**. There are no models, seeders, factories or module endpoints, so nothing can sign in. The routes are `GET /api/health`, `GET /sanctum/csrf-cookie` and `POST /api/session/keepalive`. Nothing is connected to the frontend (ADR-056). Next: verify B1 on MariaDB (see [MORNING-REPORT](../CLINIQ-Knowledge-Base/08-Logs/Overnight-Run-Nov9/MORNING-REPORT.md), "ONLY YOU CAN DO"), then B2.
+
+## Install, configure and migrate
+
+On Windows with XAMPP. The full steps, with reasons, are in [Environment Setup](../CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md).
+
+1. Set up PHP and harden MariaDB once (Environment Setup, "Set up a machine" and "MariaDB hardening"): a root password, `bind-address=127.0.0.1`, the `cliniq` database and two accounts, `cliniq_app` (data only) and a separate migration account with schema rights. `cliniq_app` keeps only `SELECT` and `INSERT` on `audit_logs`.
+2. `composer install`.
+3. Copy `.env.example` to `.env`, fill in the database account and run `php artisan key:generate` once. Never commit `.env`, and never regenerate the key on the clinic PC once accounts exist (it breaks every authenticator).
+4. `php artisan migrate` with the migration account, then switch `.env` back to `cliniq_app`.
+5. There is no seeder yet; the sample data lives only in the frontend.
+
+Settings: the session limit, lock-out and idle defaults are in `config/cliniq.php` (7 days; 5 wrong passwords lock for 5 minutes; Staff 60 and Admin 30 idle minutes, overridable with `CLINIQ_IDLE_SIGNOUT_MINUTES_STAFF` and `CLINIQ_IDLE_SIGNOUT_MINUTES_ADMIN`, then stored in `system_settings`). There are no custom console commands yet.
 
 ## Run the checks
 
@@ -27,16 +39,17 @@ php artisan route:list
 
 ```
 app/
-├── Modules/<Module>/{Controllers,Models,Requests,Services}/
+├── Modules/<Module>/{Controllers,Models,Requests,Services,Database/Migrations}/
 │     UserManagement, StudentRecords, ClinicVisits, EmergencyResponse, FirstAidChecklist,
 │     StaffPatients, InventoryTracker, Dashboard, ReportsGeneration, BackupVerification, AuditLogViewer
 └── Shared/
-    ├── AuditLog/    the logger interface, the event, its names, an in-memory logger until B3
+    ├── AuditLog/    the logger interface, the event, its names, an in-memory logger until B3, its migration
     ├── Auth/        ClinicUser, what middleware needs from a signed-in user
     ├── Http/        error envelope, BusinessRuleViolation, ApiError, middleware, health
     ├── Logging/     keeps data out of the log files
     ├── Support/     Lrn, Age, ClinicTime
-    └── Settings, Sequences, FollowUps, Feedback    empty until their phase
+    ├── Database/    shared tables (school years, grade levels)
+    └── Settings, Sequences, FollowUps, Feedback    their migrations only, until their phase
 ```
 
 The module list is ERD rule M-1, which extends ADR-009 (the QR module is gone; the first-aid checklist, staff patients and the audit viewer are added). Controllers and models go in their module, never in `app/Http` or `app/Models`. Plain PSR-4 in `composer.json`, no modules package.
@@ -56,7 +69,7 @@ Nothing here is done in the frontend yet.
 
 ## Production notes
 
-`APP_ENV=production`, `APP_DEBUG=false`, a generated `APP_KEY` that is never committed, `SESSION_SECURE_COOKIE=true` once HTTPS exists (ADR-057), and the clinic's LAN address in the two lists above and in `SESSION_DOMAIN`.
+The clinic PC only (ADR-079): `APP_ENV=production`, `APP_DEBUG=false`, a generated `APP_KEY` that is never committed, `APP_URL` and `CORS_ALLOWED_ORIGINS` set to `http://localhost`, `SANCTUM_STATEFUL_DOMAINS=localhost`, `SESSION_DOMAIN` empty and `SESSION_SECURE_COOKIE=false` (plain HTTP on `localhost`; no HTTPS). Details: Environment Setup, "Clinic PC only".
 
 ## If you are copying a zip export
 

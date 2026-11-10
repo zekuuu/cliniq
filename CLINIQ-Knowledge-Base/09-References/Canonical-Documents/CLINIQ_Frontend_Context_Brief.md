@@ -38,7 +38,7 @@ Brought up to date with ADR-001 to ADR-053 on Thursday, October 29, 2026. It say
 Give the agent this full list — it maps directly to the module groups (baseline + enhancements) in Modules & Features. The numbers are identifiers, kept stable so references stay valid; they are not a count, and removed screens leave gaps. Each screen is one route in the app.
 
 ### Auth & Shell
-1. **Login** — username/password, role-aware redirect after login; each role is signed out after its idle setting (Staff 60, Admin/Principal 30 minutes; ADR-078), and Login then says so; a "Forgot password?" link starts the email reset when the computer is online, with the Admin's reset as the fallback
+1. **Login** — username/password, role-aware redirect after login; each role is signed out after its idle setting (Staff 60, Admin/Principal 30 minutes; ADR-078), and Login then says so; a "Forgot password?" link starts the authenticator recovery (username, then a 6-digit or recovery code, then a new password; ADR-073, which replaced the email reset), with the Admin's reset as the fallback
 2. **Force Password Change** — shown on first login (backend enforces this)
 3. **App Shell/Nav** — role-aware sidebar or nav; Staff sees all modules, Admin sees Dashboard, Activity calendar, Students and Incidents (read only, ADR-038), Reports, Audit Log, Accounts and Backup. For the Admin, Ctrl+P / Cmd+P does nothing and the browser's own Print prints only "Printing is done by the clinician." (ADR-038). The desktop header shows the signed-in user's name and role with a red, icon-only Log out control carrying an accessible label.
 
@@ -81,7 +81,7 @@ Give the agent this full list — it maps directly to the module groups (baselin
 ### Reports Generation
 19. **Monthly Report View/Generate** — with a weekly breakdown and exact counts (ADR-050); the clinician can also print the **monthly inventory print** (New Purchase, Total Available, Ending Inventory per item). The Admin reads it on screen and cannot print: the Admin's Reports page is a Report month drop-down and the four monthly reports, each opened as a view-only sheet (ADR-077)
 20. **Incident register** (formerly Incident Report Archive; rows open the report, or Complete Stage 2)
-21. **Complaint summary** (formerly Health Summaries View)
+21. **Symptom summary** (formerly Complaint summary and Health Summaries View; label only, ADR-070)
 21a. **Sports Reports** (ADR-034, Staff only; entry from Reports): the saved-reports list, the builder (title, activity, requested by, look-back window, conditions option, students by name or LRN search or a whole grade; no per-student note since November 3, 2026), and the report view with its preview and A4 printout.
 (All of these need print/export-friendly layouts — this is a paper-replacement feature, so print CSS matters.)
 
@@ -98,11 +98,11 @@ The QR screens (#22–24, #26) were removed with the QR feature (ADR-027), and t
 30. **Dispense/Log Usage** — for non-visit use; must name a student or choose "Not for a student (general use)"; shows a notice linking to the student's visit today when one exists; expired items can't be picked (ADR-018)
 
 ### Clinic Overview Dashboard (enhancement, expanded from "Health Trends Dashboard"; Staff + Admin-facing)
-31. **Dashboard View** (Overview and Trends only, `?view=` state, ADR-025, 032) — Overview starts with visit, incident, active-student, pending-excuse-letter, and due/overdue-follow-up totals; Inventory and incomplete-record attention counts drill through for Staff; Frequent visitors appear lower. Overview also shows the clinician a possible-cluster alert (3 or more students, same complaint and grade, within 3 days, ADR-050). Trends keep date-derived grouping, Chart/Table fallback, and display-private frequent-visitor warnings (starting value 3 visits in 14 days, ADR-051). Counts are exact. Print prints the open tab: the Clinic Overview Report or the Clinic Trends Report (ADR-045).
+31. **Dashboard View** (Overview and Trends only, `?view=` state, ADR-025, 032) — Overview starts with visit, incident, active-student, pending-excuse-letter, and due/overdue-follow-up totals; Inventory and incomplete-record attention counts drill through for Staff; Frequent visitors appear lower. Overview also shows the clinician a possible-cluster alert (3 or more students, same complaint and grade, within 3 days, ADR-050). Trends keep date-derived grouping, Chart/Table fallback, and display-private frequent-visitor warnings (starting value 3 visits in 14 days, ADR-051). Counts are exact. No print (ADR-074).
 31a. **Activity calendar** (renamed from Clinic Calendar, ADR-050) — Staff and Admin top-level calendar with Weekly/Monthly/Yearly and Calendar/Table controls, holidays, visit/incident tags, and school-event management by Staff and the Admin (ADR-019, 042; the Admin does not get the "View visits" link) and read-only national holidays (ADR-020).
 
 ### Backup Verification Assistant (enhancement)
-32. **Backup Status Screen** — last backup date/size/status, plus a plain-language guided recovery checklist, and a **Backup locations** list where the clinician adds, edits and disables the internal and external locations, keeping at least one enabled (review round 2, R32); the system creates a `.cliniq` folder on each (ADR-052) Since panel review part 6 (ADR-037): open to Staff and Admin/Principal, with "Back up now", the five most recent runs, and a Dashboard chip for both roles when the last good backup is older than 48 hours, failed, or missing.
+32. **Backup Status Screen** — last backup date/size/status, plus a plain-language guided recovery checklist, and a **Backup locations** list where the clinician adds and disables (never edits) the internal and external locations, keeping at least one enabled (review round 2, R32); the system creates a `.cliniq` folder on each (ADR-052) Since panel review part 6 (ADR-037): open to Staff and Admin/Principal, with "Back up now", the five most recent runs, and a Dashboard chip for both roles when the last good backup is older than 48 hours, failed, or missing.
 
 ### User Management
 33. **User List** — Admin/Principal only (ADR-033); Staff and Admin/Principal accounts, with Disable/Enable and Reset Password (PE/Sports Instructors have no account, ADR-029)

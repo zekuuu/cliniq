@@ -18,7 +18,7 @@ describe('frontend-first authentication boundary', () => {
     const result = await authenticateMockUser('demo.nurse', 'demo-nurse')
 
     expect(result).toEqual({
-      user: { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' },
+      user: { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' },
       mustChangePassword: false,
     })
     expect(getRecordedAuditEntries()).toEqual([
@@ -29,13 +29,22 @@ describe('frontend-first authentication boundary', () => {
 
   it('returns a generic failure and locks the account on the fifth failed attempt', async () => {
     for (let attempt = 1; attempt <= 4; attempt += 1) {
-      await expect(authenticateMockUser('demo.nurse', 'wrong-password')).rejects.toMatchObject({ reason: 'invalid_credentials', remaining: 5 - attempt })
+      await expect(authenticateMockUser('demo.nurse', 'wrong-password')).rejects.toMatchObject({
+        reason: 'invalid_credentials',
+        remaining: 5 - attempt,
+      })
     }
     const before = Date.now()
-    const locked = await authenticateMockUser('demo.nurse', 'wrong-password').catch((cause: { reason: string; lockedUntil: number }) => cause)
+    const locked = await authenticateMockUser('demo.nurse', 'wrong-password').catch(
+      (cause: { reason: string; lockedUntil: number }) => cause,
+    )
     expect(locked).toMatchObject({ reason: 'locked' })
-    expect((locked as { lockedUntil: number }).lockedUntil - before).toBeLessThanOrEqual(5 * 60 * 1000 + 5000)
-    await expect(authenticateMockUser('demo.nurse', 'demo-nurse')).rejects.toMatchObject({ reason: 'locked' })
+    expect((locked as { lockedUntil: number }).lockedUntil - before).toBeLessThanOrEqual(
+      5 * 60 * 1000 + 5000,
+    )
+    await expect(authenticateMockUser('demo.nurse', 'demo-nurse')).rejects.toMatchObject({
+      reason: 'locked',
+    })
   })
 
   it('requires the first-login account to choose a new password', async () => {
@@ -43,7 +52,9 @@ describe('frontend-first authentication boundary', () => {
     expect(result.mustChangePassword).toBe(true)
 
     await expect(changeMockPassword(result.user.id, 'short')).rejects.toThrow('at least 8')
-    await expect(changeMockPassword(result.user.id, 'demo-change')).rejects.toThrow('not used recently')
+    await expect(changeMockPassword(result.user.id, 'demo-change')).rejects.toThrow(
+      'not used recently',
+    )
     await changeMockPassword(result.user.id, 'new-demo-password-4')
 
     const nextLogin = await authenticateMockUser('demo.new', 'new-demo-password-4')
@@ -51,6 +62,8 @@ describe('frontend-first authentication boundary', () => {
   })
 
   it('uses a generic error type for invalid credentials', async () => {
-    await expect(authenticateMockUser('unknown-user', 'anything')).rejects.toBeInstanceOf(MockAuthError)
+    await expect(authenticateMockUser('unknown-user', 'anything')).rejects.toBeInstanceOf(
+      MockAuthError,
+    )
   })
 })

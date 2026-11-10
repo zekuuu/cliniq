@@ -2,14 +2,27 @@ import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 import { Icon } from '../icons/Icon'
 
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /**
  * Dialog with keyboard support: focus moves into it on open (to a `data-autofocus` child if any), Tab and
  * Shift+Tab stay inside it, Escape or the backdrop closes it, and focus returns to the control that
  * opened it.
  */
-export function Modal({ open, title, children, onClose, className }: { open: boolean; title: string; children: ReactNode; onClose: () => void; className?: string }) {
+export function Modal({
+  open,
+  title,
+  children,
+  onClose,
+  className,
+}: {
+  open: boolean
+  title: string
+  children: ReactNode
+  onClose: () => void
+  className?: string
+}) {
   const titleId = useId()
   const dialogRef = useRef<HTMLElement>(null)
   const onCloseRef = useRef(onClose)
@@ -22,7 +35,9 @@ export function Modal({ open, title, children, onClose, className }: { open: boo
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
     const dialog = dialogRef.current
     // Mark the safest action with `data-autofocus` (React's autoFocus fires before the opener is known).
-    const initial = dialog?.querySelector<HTMLElement>('[data-autofocus]') ?? dialog?.querySelector<HTMLElement>(FOCUSABLE)
+    const initial =
+      dialog?.querySelector<HTMLElement>('[data-autofocus]') ??
+      dialog?.querySelector<HTMLElement>(FOCUSABLE)
     initial?.focus()
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -32,10 +47,16 @@ export function Modal({ open, title, children, onClose, className }: { open: boo
       if (!items.length) return
       const first = items[0]
       const last = items[items.length - 1]
-      if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+      if (
+        event.shiftKey &&
+        (document.activeElement === first || !dialog.contains(document.activeElement))
+      ) {
         event.preventDefault()
         last.focus()
-      } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+      } else if (
+        !event.shiftKey &&
+        (document.activeElement === last || !dialog.contains(document.activeElement))
+      ) {
         event.preventDefault()
         first.focus()
       }
@@ -52,5 +73,39 @@ export function Modal({ open, title, children, onClose, className }: { open: boo
   if (!open) return null
   // The overlay scrolls, and the inner wrapper is at least viewport-tall, so a dialog taller than the screen
   // starts at its top (title and ✕ reachable) instead of being centred off both edges.
-  return <div className="fixed inset-0 z-40 overflow-y-auto bg-text-primary/40" role="presentation"><div className="flex min-h-full items-center justify-center p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}><section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} className={cn('w-full max-w-lg rounded-lg bg-background shadow-overlay', className)}>{/* No rule under the title; the title, the X and the content share one 24px edge (Zean, November 7, 2026). */}<div className="flex items-center justify-between gap-4 px-6 pt-5 pb-3"><h2 id={titleId} className="text-lg leading-7 font-semibold text-text-primary">{title}</h2>{/* A plain X, coloured on hover like every other X (the fields' clear buttons). */}<button type="button" aria-label="Close dialog" onClick={onClose} className="-mr-2 inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-sm text-text-secondary transition-colors hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"><Icon name="x" /></button></div><div className="px-6 pb-6">{children}</div></section></div></div>
+  return (
+    <div className="fixed inset-0 z-40 overflow-y-auto bg-text-primary/40" role="presentation">
+      <div
+        className="flex min-h-full items-center justify-center p-4"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) onClose()
+        }}
+      >
+        <section
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          className={cn('w-full max-w-lg rounded-lg bg-background shadow-overlay', className)}
+        >
+          {/* No rule under the title; the title, the X and the content share one 24px edge (Zean, November 7, 2026). */}
+          <div className="flex items-center justify-between gap-4 px-6 pt-5 pb-3">
+            <h2 id={titleId} className="text-lg leading-7 font-semibold text-text-primary">
+              {title}
+            </h2>
+            {/* A plain X, coloured on hover like every other X (the fields' clear buttons). */}
+            <button
+              type="button"
+              aria-label="Close dialog"
+              onClick={onClose}
+              className="-mr-2 inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-sm text-text-secondary transition-colors hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
+            >
+              <Icon name="x" />
+            </button>
+          </div>
+          <div className="px-6 pb-6">{children}</div>
+        </section>
+      </div>
+    </div>
+  )
 }

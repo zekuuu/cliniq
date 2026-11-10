@@ -17,12 +17,18 @@ export function toggleTableSort<Key extends string>(
     : { key, direction: 'ascending' }
 }
 
-export function compareTableValues(left: string | number | null | undefined, right: string | number | null | undefined): number {
+export function compareTableValues(
+  left: string | number | null | undefined,
+  right: string | number | null | undefined,
+): number {
   if (left === right) return 0
   if (left == null) return 1
   if (right == null) return -1
   if (typeof left === 'number' && typeof right === 'number') return left - right
-  return String(left).localeCompare(String(right), undefined, { numeric: true, sensitivity: 'base' })
+  return String(left).localeCompare(String(right), undefined, {
+    numeric: true,
+    sensitivity: 'base',
+  })
 }
 
 export function sortTableRows<Row, Key extends string>(

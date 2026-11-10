@@ -12,7 +12,7 @@ vi.mock('react-chartjs-2', () => {
   return { Bar: Stub, Line: Stub, Doughnut: Stub }
 })
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
 
 /** ADR-079: the Principal receives the Monthly Report as a PDF the clinician prints or saves. */
 describe('Monthly Report as a PDF for the Principal (ADR-079)', () => {

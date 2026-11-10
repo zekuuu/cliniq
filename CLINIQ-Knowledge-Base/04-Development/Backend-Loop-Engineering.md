@@ -157,4 +157,4 @@ Each item has a **Build** and an **Audit** box, each with its own Resume Note. L
 
 ## Definition of done, every backend item
 
-A migration, the endpoint, a Pest test per role for its permission, a test per rejection, an audit entry, a contract entry, the box ticked with its note, a session log entry, and a row in `Backend-Changelog.md` (and any issue in `Backend-Issues-and-TODOs.md`). The frontend is not changed and not switched over.
+A migration, the endpoint, a Pest test per role for its permission, a test per rejection, an audit entry, a contract entry, the box ticked with its note, a session log entry, and a row in `Backend-Changelog.md` (and any issue in `Backend-Issues-and-TODOs.md`). The frontend is not changed and not switched over. Run the docs check (`npm run docs:check` at the repository root); fix what it flags in the READMEs you touched (added Tuesday, November 10, 2026).

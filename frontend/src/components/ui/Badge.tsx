@@ -17,7 +17,8 @@ import { Icon, type IconName } from '../icons/Icon'
  * - unfinished / letter: one meaning each (ADR-062), an unfinished incident record and a pending
  *   excuse letter.
  */
-export type BadgeTone = 'neutral' | 'info' | 'success' | 'warning' | 'error' | 'accent' | 'unfinished' | 'letter'
+export type BadgeTone =
+  'neutral' | 'info' | 'success' | 'warning' | 'error' | 'accent' | 'unfinished' | 'letter'
 export type BadgeVariant = 'solid' | 'soft' | 'outline'
 
 const defaultIcons: Partial<Record<BadgeTone, IconName>> = {

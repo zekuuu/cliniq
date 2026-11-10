@@ -14,7 +14,7 @@ vi.mock('react-chartjs-2', () => {
   return { Bar: Stub, Line: Stub, Doughnut: Stub }
 })
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
 const ADMIN: SessionUser = { id: 'usr-principal', name: 'Principal', role: 'admin' }
 
 function CurrentPath() {
@@ -104,7 +104,12 @@ describe('App routes', () => {
     expect(screen.getByTestId('path')).toHaveTextContent(/^\/$/)
   })
 
-  it.each(['/reports/sports', '/reports/sports/new', '/reports/sports/any-id', '/reports/sports/any-id/edit'])(
+  it.each([
+    '/reports/sports',
+    '/reports/sports/new',
+    '/reports/sports/any-id',
+    '/reports/sports/any-id/edit',
+  ])(
     'redirects Admin/Principal from the Staff-only report route %s to the Admin Reports page (ADR-077)',
     async (route) => {
       renderAt(route, ADMIN)
@@ -192,19 +197,27 @@ describe('App routes', () => {
     expect(getRecordedAuditEntries()).toEqual([])
   })
 
-  it.each(['/qr/scan', '/qr/print', '/emergency/mobile'])('shows Staff the not-found screen on the removed address %s', async (path) => {
-    renderAt(path)
+  it.each(['/qr/scan', '/qr/print', '/emergency/mobile'])(
+    'shows Staff the not-found screen on the removed address %s',
+    async (path) => {
+      renderAt(path)
 
-    expect(await screen.findByRole('heading', { name: 'Page Not Found' })).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /QR/ })).not.toBeInTheDocument()
-  })
+      expect(await screen.findByRole('heading', { name: 'Page Not Found' })).toBeInTheDocument()
+      expect(screen.queryByRole('link', { name: /QR/ })).not.toBeInTheDocument()
+    },
+  )
 
-  it.each(['/users', '/users/new', '/users/user-staff-01/edit'])('sends Staff from the Admin-only %s to the Dashboard (ADR-033)', async (path) => {
-    renderAt(path, STAFF)
+  it.each(['/users', '/users/new', '/users/user-staff-01/edit'])(
+    'sends Staff from the Admin-only %s to the Dashboard (ADR-033)',
+    async (path) => {
+      renderAt(path, STAFF)
 
-    await waitFor(() => expect(screen.getByTestId('path')).toHaveTextContent(/^\/$/))
-    expect(screen.queryByRole('heading', { name: /User Management|Add User|Edit User/ })).not.toBeInTheDocument()
-  })
+      await waitFor(() => expect(screen.getByTestId('path')).toHaveTextContent(/^\/$/))
+      expect(
+        screen.queryByRole('heading', { name: /User Management|Add User|Edit User/ }),
+      ).not.toBeInTheDocument()
+    },
+  )
 
   it.each([
     ['/users', 'User Management'],

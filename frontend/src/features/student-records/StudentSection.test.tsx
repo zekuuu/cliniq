@@ -19,16 +19,42 @@ import { StudentListPage } from './StudentListPage'
 import { StudentProfilePage } from './StudentProfilePage'
 import { submitStudentForm, type StudentFormValues } from './api/studentFormApi'
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
 const STUDENT = 'student-0001'
 const SECTION = 'Sampaguita'
 
 /** The student's own values as a saveStudent input, with changes on top. */
 async function input(changes: Record<string, unknown>) {
-  const { lrn, firstName, lastName, middleName, gradeLevel, section, sex, birthDate, allergies, medicalConditions, emergencyContacts } = await getStudent(STUDENT)
-  return { lrn, firstName, lastName, middleName, gradeLevel, section, sex, birthDate, allergies, medicalConditions, emergencyContacts, ...changes }
+  const {
+    lrn,
+    firstName,
+    lastName,
+    middleName,
+    gradeLevel,
+    section,
+    sex,
+    birthDate,
+    allergies,
+    medicalConditions,
+    emergencyContacts,
+  } = await getStudent(STUDENT)
+  return {
+    lrn,
+    firstName,
+    lastName,
+    middleName,
+    gradeLevel,
+    section,
+    sex,
+    birthDate,
+    allergies,
+    medicalConditions,
+    emergencyContacts,
+    ...changes,
+  }
 }
-const setSection = async (section: string) => saveStudent(await input({ section }), { studentId: STUDENT, actor: STAFF })
+const setSection = async (section: string) =>
+  saveStudent(await input({ section }), { studentId: STUDENT, actor: STAFF })
 
 const newStudent = (lrn: string, fullName: string, section: string): StudentFormValues => ({
   lrn,
@@ -39,12 +65,20 @@ const newStudent = (lrn: string, fullName: string, section: string): StudentForm
   section,
   sex: 'female',
   birthDate: '',
-  emergencyContacts: [{ name: 'A Parent', relationship: 'Mother', phone: '0900-000-0000', verified: false }],
+  emergencyContacts: [
+    { name: 'A Parent', relationship: 'Mother', phone: '0900-000-0000', verified: false },
+  ],
   allergies: '',
   medicalConditions: '',
 })
 
-const visitInput = (studentId: string) => ({ studentId, complaint: 'Headache', treatment: '', disposition: 'returned_to_class' as const, followUp: null })
+const visitInput = (studentId: string) => ({
+  studentId,
+  complaint: 'Headache',
+  treatment: '',
+  disposition: 'returned_to_class' as const,
+  followUp: null,
+})
 
 function printout(): HTMLElement {
   act(() => {
@@ -62,8 +96,14 @@ beforeEach(() => resetMockDb())
 
 describe('Optional student section (ADR-047)', () => {
   it('saves a student with a section, and stores nothing for a blank one', async () => {
-    const withSection = await submitStudentForm(newStudent('000000209901', 'Ana Sample', ` ${SECTION} `), { mode: 'add', actor: STAFF })
-    const blank = await submitStudentForm(newStudent('000000209902', 'Bea Sample', '   '), { mode: 'add', actor: STAFF })
+    const withSection = await submitStudentForm(
+      newStudent('000000209901', 'Ana Sample', ` ${SECTION} `),
+      { mode: 'add', actor: STAFF },
+    )
+    const blank = await submitStudentForm(newStudent('000000209902', 'Bea Sample', '   '), {
+      mode: 'add',
+      actor: STAFF,
+    })
     expect(withSection.status === 'saved' && withSection.student.section).toBe(SECTION)
     expect(blank.status === 'saved' && 'section' in blank.student).toBe(false)
   })
@@ -102,7 +142,10 @@ describe('Optional student section (ADR-047)', () => {
   it('keeps the section at the time on a visit and an incident, after the student changes section', async () => {
     await setSection(SECTION)
     const { visit } = await recordVisit(visitInput(STUDENT), STAFF)
-    const incident = await saveIncidentStageOne({ studentId: STUDENT, complaint: 'Fainting', vitals: {} }, STAFF)
+    const incident = await saveIncidentStageOne(
+      { studentId: STUDENT, complaint: 'Fainting', vitals: {} },
+      STAFF,
+    )
     await setSection('Rosal')
     expect((await getVisit(visit.id)).sectionAtTime).toBe(SECTION)
     expect((await getIncident(incident.id)).sectionAtTime).toBe(SECTION)
@@ -113,9 +156,15 @@ describe('Optional student section (ADR-047)', () => {
   it('gives no section at the time to a student without one or to a staff patient', async () => {
     const { visit } = await recordVisit(visitInput(STUDENT), STAFF)
     expect('sectionAtTime' in visit).toBe(false)
-    const { visit: staffVisit } = await recordVisit({ ...visitInput(''), studentId: undefined, personnelId: 'personnel-0002' }, STAFF)
+    const { visit: staffVisit } = await recordVisit(
+      { ...visitInput(''), studentId: undefined, personnelId: 'personnel-0002' },
+      STAFF,
+    )
     expect('sectionAtTime' in staffVisit).toBe(false)
-    const staffIncident = await saveIncidentStageOne({ personnelId: 'personnel-0002', complaint: 'Fainting', vitals: {} }, STAFF)
+    const staffIncident = await saveIncidentStageOne(
+      { personnelId: 'personnel-0002', complaint: 'Fainting', vitals: {} },
+      STAFF,
+    )
     expect('sectionAtTime' in staffIncident).toBe(false)
   })
 

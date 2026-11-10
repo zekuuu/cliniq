@@ -4,7 +4,12 @@ import { formatDateTime } from '../../lib/dates'
 import { useSaveFeedback } from '../../hooks/useSaveFeedback'
 import { SaveFeedback } from '../../components/forms/SaveFeedback'
 import type { BackupLocation, BackupLocationSettings, SessionUser } from '../../lib/mock-db'
-import { fetchBackupFolders, saveLocation, setLocationEnabled, type BackupDrive } from './api/backupApi'
+import {
+  fetchBackupFolders,
+  saveLocation,
+  setLocationEnabled,
+  type BackupDrive,
+} from './api/backupApi'
 
 const STATUS = {
   found: { label: 'Found', tone: 'success' },
@@ -16,8 +21,16 @@ const LABEL_SUGGESTIONS = ['Internal drive', 'External drive']
 
 /** What the backend creates on each location (ADR-052). Shown as a preview; a browser can't write to a drive. */
 const BACKUP_FOLDERS = [
-  { name: 'Backups', path: '.cliniq\\backups\\YYYY\\MM\\cliniq-YYYY-MM-DD_HHmm.zip', holds: 'Database, uploaded files, and a manifest with a checksum' },
-  { name: 'Marker file', path: '.cliniq\\cliniq.json', holds: 'App, school, structure version, and date created' },
+  {
+    name: 'Backups',
+    path: '.cliniq\\backups\\YYYY\\MM\\cliniq-YYYY-MM-DD_HHmm.zip',
+    holds: 'Database, uploaded files, and a manifest with a checksum',
+  },
+  {
+    name: 'Marker file',
+    path: '.cliniq\\cliniq.json',
+    holds: 'App, school, structure version, and date created',
+  },
   { name: 'Logs', path: '.cliniq\\logs\\backup-YYYY-MM.log', holds: 'One log for each month' },
 ]
 
@@ -56,7 +69,9 @@ export function BackupLocationsPanel({
       setError('Enter a label and choose a drive or folder.')
       return
     }
-    const result = await feedback.run(() => saveLocation({ label, path }, { actor: viewer }), { saved: `${label.trim()} added. Backups now go there too.` })
+    const result = await feedback.run(() => saveLocation({ label, path }, { actor: viewer }), {
+      saved: `${label.trim()} added. Backups now go there too.`,
+    })
     if (!result.ok) return
     setAdding(false)
     onChanged()
@@ -75,25 +90,43 @@ export function BackupLocationsPanel({
         title="Backup locations"
         description="Each backup is written to every enabled location. To change a location, add a new one and disable the old one; old backups stay where they were."
         icon={<Icon name="package" />}
-        actions={canManage && <Button variant="secondary" size="sm" onClick={open}>Add location</Button>}
+        actions={
+          canManage && (
+            <Button variant="secondary" size="sm" onClick={open}>
+              Add location
+            </Button>
+          )
+        }
       />
       <CardBody className="flex flex-col gap-4">
         {/* The modal closes on success, so the confirmation shows here; a failure shows in the modal. */}
         {!adding && <SaveFeedback result={feedback.result} />}
         {!enabled.length && (
-          <p role="alert" className="flex items-start gap-2 rounded-md border border-error bg-error/10 px-3 py-2 text-sm font-semibold text-text-primary">
+          <p
+            role="alert"
+            className="flex items-start gap-2 rounded-md border border-error bg-error/10 px-3 py-2 text-sm font-semibold text-text-primary"
+          >
             <Icon name="alertTriangle" size={16} className="mt-0.5 shrink-0 text-error" />
             No backup location is enabled, so no backup can run. Enable or add one.
           </p>
         )}
         <ul className="divide-y divide-border rounded-md border border-border">
           {settings.locations.map((location) => (
-            <li key={location.id} className="flex flex-wrap items-center justify-between gap-3 px-3 py-3">
+            <li
+              key={location.id}
+              className="flex flex-wrap items-center justify-between gap-3 px-3 py-3"
+            >
               <div className="min-w-0">
                 <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-text-primary">
                   {location.label}
-                  <Badge tone={STATUS[location.status].tone} variant="soft">{STATUS[location.status].label}</Badge>
-                  {!location.enabled && <Badge tone="neutral" variant="outline">Disabled</Badge>}
+                  <Badge tone={STATUS[location.status].tone} variant="soft">
+                    {STATUS[location.status].label}
+                  </Badge>
+                  {!location.enabled && (
+                    <Badge tone="neutral" variant="outline">
+                      Disabled
+                    </Badge>
+                  )}
                 </p>
                 <p className="text-sm break-all text-text-secondary">{location.path}</p>
                 <p className="text-xs text-text-secondary">
@@ -103,7 +136,10 @@ export function BackupLocationsPanel({
                 </p>
                 {/* Under the text, not beside the buttons, so the row keeps its layout (Zean, November 5, 2026). */}
                 {canManage && location.enabled && enabled.length === 1 && (
-                  <p id={`last-location-${location.id}`} className="mt-1 text-xs text-text-secondary">
+                  <p
+                    id={`last-location-${location.id}`}
+                    className="mt-1 text-xs text-text-secondary"
+                  >
                     The only enabled location. Enable another one first.
                   </p>
                 )}
@@ -117,7 +153,11 @@ export function BackupLocationsPanel({
                     aria-label={`${location.enabled ? 'Disable' : 'Enable'} ${location.label}`}
                     // R32: the last enabled location can't be disabled; the data layer refuses it too.
                     disabled={location.enabled && enabled.length === 1}
-                    aria-describedby={location.enabled && enabled.length === 1 ? `last-location-${location.id}` : undefined}
+                    aria-describedby={
+                      location.enabled && enabled.length === 1
+                        ? `last-location-${location.id}`
+                        : undefined
+                    }
                     onClick={() => void toggle(location)}
                   >
                     {location.enabled ? 'Disable' : 'Enable'}
@@ -127,18 +167,27 @@ export function BackupLocationsPanel({
             </li>
           ))}
         </ul>
-        <section aria-labelledby="backup-folders-title" className="rounded-md border border-border bg-surface p-4">
-          <h2 id="backup-folders-title" className="text-sm font-semibold text-text-primary">Folders created on each location</h2>
+        <section
+          aria-labelledby="backup-folders-title"
+          className="rounded-md border border-border bg-surface p-4"
+        >
+          <h2 id="backup-folders-title" className="text-sm font-semibold text-text-primary">
+            Folders created on each location
+          </h2>
           <dl className="mt-3 flex flex-col gap-3">
             {BACKUP_FOLDERS.map((folder) => (
               <div key={folder.name}>
                 <dt className="text-sm font-semibold text-text-primary">{folder.name}</dt>
                 <dd className="text-sm text-text-secondary">{folder.holds}</dd>
-                <dd className="mt-0.5 font-mono text-xs break-all text-text-secondary">{folder.path}</dd>
+                <dd className="mt-0.5 font-mono text-xs break-all text-text-secondary">
+                  {folder.path}
+                </dd>
               </div>
             ))}
           </dl>
-          <p className="mt-3 text-sm text-text-secondary">Keeps the latest {settings.keepLast} backups per location; older ones are removed.</p>
+          <p className="mt-3 text-sm text-text-secondary">
+            Keeps the latest {settings.keepLast} backups per location; older ones are removed.
+          </p>
         </section>
       </CardBody>
       <Modal open={adding} title="Add a backup location" onClose={() => setAdding(false)}>
@@ -156,11 +205,24 @@ export function BackupLocationsPanel({
             maxLength={60}
             error={error && !label.trim() ? error : undefined}
           />
-          <FolderPicker value={path} onChange={setPath} error={error && !path.trim() ? 'Choose a drive or folder.' : undefined} />
+          <FolderPicker
+            value={path}
+            onChange={setPath}
+            error={error && !path.trim() ? 'Choose a drive or folder.' : undefined}
+          />
           {feedback.result?.kind === 'failed' && <SaveFeedback result={feedback.result} />}
           <div className="flex flex-wrap justify-end gap-2">
-            <Button variant="neutral" data-autofocus onClick={() => setAdding(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={feedback.saving} done={feedback.result?.kind === 'saved'}>Save location</Button>
+            <Button variant="neutral" data-autofocus onClick={() => setAdding(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              loading={feedback.saving}
+              done={feedback.result?.kind === 'saved'}
+            >
+              Save location
+            </Button>
           </div>
         </form>
       </Modal>
@@ -179,7 +241,15 @@ function joinPath(path: string, name: string) {
  * The drives and folders come from the data layer (ADR-052: the backend lists them; the mock's list is
  * provisional). The breadcrumb goes back up.
  */
-function FolderPicker({ value, onChange, error }: { value: string; onChange: (path: string) => void; error?: string }) {
+function FolderPicker({
+  value,
+  onChange,
+  error,
+}: {
+  value: string
+  onChange: (path: string) => void
+  error?: string
+}) {
   const [drives, setDrives] = useState<BackupDrive[]>([])
   const [folders, setFolders] = useState<string[]>([])
   useEffect(() => {
@@ -200,7 +270,10 @@ function FolderPicker({ value, onChange, error }: { value: string; onChange: (pa
   return (
     <fieldset className="flex flex-col gap-3" aria-invalid={error ? true : undefined}>
       <legend className="mb-1 text-sm font-semibold text-text-primary">
-        Drive or folder <span className="text-error" aria-hidden="true">*</span>
+        Drive or folder{' '}
+        <span className="text-error" aria-hidden="true">
+          *
+        </span>
       </legend>
       <div role="radiogroup" aria-label="Drive" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {drives.map((item) => {
@@ -226,17 +299,30 @@ function FolderPicker({ value, onChange, error }: { value: string; onChange: (pa
       </div>
       {drive && (
         <div className="rounded-md border border-border">
-          <nav aria-label="Folder path" className="flex flex-wrap items-center gap-1 border-b border-border bg-surface px-3 py-2 text-sm">
-            <button type="button" onClick={() => onChange(drive.root)} className="cursor-pointer rounded-sm font-semibold text-brand-green-dark hover:underline focus-visible:outline-2 focus-visible:outline-brand-green">
+          <nav
+            aria-label="Folder path"
+            className="flex flex-wrap items-center gap-1 border-b border-border bg-surface px-3 py-2 text-sm"
+          >
+            <button
+              type="button"
+              onClick={() => onChange(drive.root)}
+              className="cursor-pointer rounded-sm font-semibold text-brand-green-dark hover:underline focus-visible:outline-2 focus-visible:outline-brand-green"
+            >
               {drive.root.slice(0, 2)}
             </button>
             {crumbs.map((name, index) => (
               <span key={index} className="flex items-center gap-1">
                 <Icon name="chevronRight" size={14} className="text-text-secondary" />
                 {index === crumbs.length - 1 ? (
-                  <span aria-current="location" className="font-semibold text-text-primary">{name}</span>
+                  <span aria-current="location" className="font-semibold text-text-primary">
+                    {name}
+                  </span>
                 ) : (
-                  <button type="button" onClick={() => onChange(crumbPath(index))} className="cursor-pointer rounded-sm font-semibold text-brand-green-dark hover:underline focus-visible:outline-2 focus-visible:outline-brand-green">
+                  <button
+                    type="button"
+                    onClick={() => onChange(crumbPath(index))}
+                    className="cursor-pointer rounded-sm font-semibold text-brand-green-dark hover:underline focus-visible:outline-2 focus-visible:outline-brand-green"
+                  >
                     {name}
                   </button>
                 )}
@@ -260,20 +346,29 @@ function FolderPicker({ value, onChange, error }: { value: string; onChange: (pa
               ))}
             </ul>
           ) : (
-            <p className="px-3 py-2 text-sm text-text-secondary">No folders inside. Backups can go here.</p>
+            <p className="px-3 py-2 text-sm text-text-secondary">
+              No folders inside. Backups can go here.
+            </p>
           )}
         </div>
       )}
       <p className="text-xs text-text-secondary" aria-live="polite">
         {value ? (
           <>
-            Backups will be saved in <span className="font-mono break-all text-text-primary">{joinPath(value, '.cliniq')}</span>
+            Backups will be saved in{' '}
+            <span className="font-mono break-all text-text-primary">
+              {joinPath(value, '.cliniq')}
+            </span>
           </>
         ) : (
           'Choose a drive, then open a folder if you want one.'
         )}
       </p>
-      {error && <p role="alert" className="text-xs font-semibold text-error">{error}</p>}
+      {error && (
+        <p role="alert" className="text-xs font-semibold text-error">
+          {error}
+        </p>
+      )}
     </fieldset>
   )
 }

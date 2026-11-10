@@ -10,7 +10,9 @@ import { ListItemLink } from '../ui/ListItemLink'
 import { PatientNumber } from '../ui/PatientNumber'
 
 const numberOf = (result: PatientSearchResult): PatientNumberValue =>
-  result.kind === 'student' ? { kind: 'student', number: result.lrn } : { kind: 'personnel', number: result.staffNumber }
+  result.kind === 'student'
+    ? { kind: 'student', number: result.lrn }
+    : { kind: 'personnel', number: result.staffNumber }
 
 /**
  * The one patient box on New Visit, New Incident and Dispense (ADR-043, D10): students by LRN or
@@ -50,8 +52,9 @@ export function PatientPicker({
   const [focusSearch, setFocusSearch] = useState(false)
   const trimmed = query.trim()
   const ready = trimmed.length >= STUDENT_SEARCH_MIN_LENGTH
-  const { data, status, isRefetching } = useAsyncData(`patient-search|${ready ? trimmed.toLowerCase() : ''}`, () =>
-    ready ? search(trimmed) : Promise.resolve([]),
+  const { data, status, isRefetching } = useAsyncData(
+    `patient-search|${ready ? trimmed.toLowerCase() : ''}`,
+    () => (ready ? search(trimmed) : Promise.resolve([])),
   )
   const loading = ready && (status === 'loading' || isRefetching)
   const failed = ready && status === 'error'
@@ -69,7 +72,14 @@ export function PatientPicker({
             {/* Masked here, as in the results; the form's header carries the full number (ADR-040). */}
             <span className="text-text-secondary">
               {' · '}
-              <PatientNumber patient={selected.kind === 'student' ? { kind: 'student', number: selected.lrn } : { kind: 'personnel', number: selected.staffNumber }} chip={false} />
+              <PatientNumber
+                patient={
+                  selected.kind === 'student'
+                    ? { kind: 'student', number: selected.lrn }
+                    : { kind: 'personnel', number: selected.staffNumber }
+                }
+                chip={false}
+              />
               {' · '}
               {selected.kind === 'student' ? selected.gradeLevel : selected.type}
             </span>
@@ -124,7 +134,10 @@ export function PatientPicker({
         }}
         allowFreeText={false}
         // A complete 12-digit LRN or a full Staff No.: Enter picks its match.
-        autoHighlight={(isLrn(normalizeLrn(trimmed)) && /^[\d\s-]+$/.test(trimmed)) || /^stf-\d{4}$/i.test(trimmed)}
+        autoHighlight={
+          (isLrn(normalizeLrn(trimmed)) && /^[\d\s-]+$/.test(trimmed)) ||
+          /^stf-\d{4}$/i.test(trimmed)
+        }
         openOnFocus={false}
         loading={loading}
         loadError={failed ? "Couldn't search patients. Keep typing to try again." : undefined}

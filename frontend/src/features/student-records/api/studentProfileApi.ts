@@ -32,7 +32,9 @@ export async function fetchStudentProfile(
   studentId?: string,
   viewer?: SessionUser,
 ): Promise<StudentProfileData> {
-  const student = studentId ? await getStudent(studentId) : await getDemoStudent({ withHistory: true })
+  const student = studentId
+    ? await getStudent(studentId)
+    : await getDemoStudent({ withHistory: true })
   const [history, excuseLetters] = await Promise.all([
     getStudentHistory(student.id, Infinity),
     viewer?.role === 'staff' ? getStudentExcuseLetters(student.id) : [],
@@ -42,6 +44,10 @@ export async function fetchStudentProfile(
 }
 
 /** Archive hides the student from active lists without deleting anything; the write is audited. */
-export function archiveStudentRecord(studentId: string, actor: SessionUser, reason: string): Promise<Student> {
+export function archiveStudentRecord(
+  studentId: string,
+  actor: SessionUser,
+  reason: string,
+): Promise<Student> {
   return archiveStudent(studentId, actor, reason)
 }

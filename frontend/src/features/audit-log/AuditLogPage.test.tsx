@@ -7,7 +7,7 @@ import { selectOption } from '../../test/selectOption'
 import { AuditLogPage } from './AuditLogPage'
 import { maskLrn } from '../../lib/lrn'
 
-const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
+const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' } as const
 
 function renderPage() {
   return render(<MemoryRouter><AuditLogPage viewer={STAFF} /></MemoryRouter>)
@@ -42,7 +42,7 @@ describe('Audit Log', () => {
 
     await screen.findByText(/7 entries shown/)
     const [table] = screen.getAllByRole('table', { name: 'Filtered audit log' })
-    expect(within(table).getAllByText('Gilan Avelida')).toHaveLength(7)
+    expect(within(table).getAllByText('Demo Admin')).toHaveLength(7)
   })
 
   it('searches the visible user, action, and target text and clears with the other filters', async () => {
@@ -50,7 +50,7 @@ describe('Audit Log', () => {
     renderPage()
     await screen.findByRole('table', { name: 'Filtered audit log' })
 
-    await user.type(screen.getByRole('searchbox', { name: 'Search' }), 'gilan')
+    await user.type(screen.getByRole('searchbox', { name: 'Search' }), 'demo admin')
     await screen.findByText(/7 entries shown/)
 
     await user.clear(screen.getByRole('searchbox', { name: 'Search' }))

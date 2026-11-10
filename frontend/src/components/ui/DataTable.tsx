@@ -71,8 +71,10 @@ export function DataTable<Row>({
               const scroller = event.currentTarget
               const head = scroller.querySelectorAll<HTMLElement>('thead th')
               const ring = 6
-              if (stickyFirstColumn) scroller.style.scrollPaddingLeft = `${(head[0]?.offsetWidth ?? 0) + ring}px`
-              if (stickyLastColumn) scroller.style.scrollPaddingRight = `${(head[head.length - 1]?.offsetWidth ?? 0) + ring}px`
+              if (stickyFirstColumn)
+                scroller.style.scrollPaddingLeft = `${(head[0]?.offsetWidth ?? 0) + ring}px`
+              if (stickyLastColumn)
+                scroller.style.scrollPaddingRight = `${(head[head.length - 1]?.offsetWidth ?? 0) + ring}px`
             }
           : undefined
       }
@@ -110,7 +112,11 @@ export function DataTable<Row>({
                 aria-sort={col.sort?.direction}
                 className={cn(
                   'px-2 py-1.5 text-xs font-semibold whitespace-nowrap text-text-secondary',
-                  col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
+                  col.align === 'right'
+                    ? 'text-right'
+                    : col.align === 'center'
+                      ? 'text-center'
+                      : 'text-left',
                   stickyFirstColumn &&
                     columnIndex === 0 &&
                     'sticky left-0 z-20 border-r border-border bg-background',
@@ -158,7 +164,11 @@ export function DataTable<Row>({
                     className={cn(
                       'px-2 py-1.5 text-text-primary tabular-nums',
                       col.rowHeader ? 'font-semibold' : 'font-normal',
-                      col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
+                      col.align === 'right'
+                        ? 'text-right'
+                        : col.align === 'center'
+                          ? 'text-center'
+                          : 'text-left',
                       stickyFirstColumn &&
                         columnIndex === 0 &&
                         'sticky left-0 z-10 border-r border-border bg-background',

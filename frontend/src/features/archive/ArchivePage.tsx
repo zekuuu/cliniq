@@ -179,7 +179,9 @@ function RecordsTable({
 
   const reasons = [...new Set(rows.map((row) => row.archiveReason ?? 'Not recorded'))].sort()
   // The grade or type when archived, so the options come from the rows ("Grade 2" before "Grade 10").
-  const groups = [...new Set(rows.map((row) => row.group))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+  const groups = [...new Set(rows.map((row) => row.group))].sort((a, b) =>
+    a.localeCompare(b, undefined, { numeric: true }),
+  )
   const groupLabel = kind === 'student' ? 'Grade level' : 'Type'
   const query = search.trim().toLowerCase()
   const listed = rows.filter(

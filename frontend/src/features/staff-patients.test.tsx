@@ -12,8 +12,8 @@ import { fetchVisitLog } from './clinic-visits/api/visitLogApi'
 
 /** Staff patients in the clinical flows (ADR-043 part 3). */
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
-const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
+const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }
 const STAFF_NAMES = () => db().personnel.map(formatPersonName)
 
 function renderAt(route: string, user: SessionUser = STAFF) {

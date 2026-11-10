@@ -28,7 +28,12 @@ import { paths } from '../../routes/paths'
 import { getMockSessionUser } from '../../lib/mock-db'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { FollowUpStatus } from '../../types/entities'
-import { fetchFollowUps, setNewFollowUpDate, updateFollowUpStatus, type FollowUpRow } from './api/followUpApi'
+import {
+  fetchFollowUps,
+  setNewFollowUpDate,
+  updateFollowUpStatus,
+  type FollowUpRow,
+} from './api/followUpApi'
 import { PatientFilterSelect, PatientNumber } from '../../components'
 import { matchesPatientFilter, patientNumberLabel } from '../../lib/patients'
 
@@ -75,14 +80,22 @@ const OUTCOME_OPTIONS = [
 type FollowUpSortKey = 'student' | 'reason' | 'due' | 'status'
 
 /** Words for the confirmation message. */
-const FOLLOW_UP_STATUS_WORDS: Record<FollowUpStatus, string> = { completed: 'completed', missed: 'missed', cancelled: 'cancelled', pending: 'pending' }
+const FOLLOW_UP_STATUS_WORDS: Record<FollowUpStatus, string> = {
+  completed: 'completed',
+  missed: 'missed',
+  cancelled: 'cancelled',
+  pending: 'pending',
+}
 
 export function FollowUpListPage() {
   const [statusFilter, setStatusFilter] = useState<'' | FollowUpStatus>('')
   const [statusOverrides, setStatusOverrides] = useState<Record<string, FollowUpStatus>>({})
   // An inline row action: the row flips at once, a message confirms it, and a failure puts it back (useSaveFeedback).
   const feedback = useSaveFeedback()
-  const [confirming, setConfirming] = useState<null | { item: FollowUpRow; status: 'missed' | 'cancelled' }>(null)
+  const [confirming, setConfirming] = useState<null | {
+    item: FollowUpRow
+    status: 'missed' | 'cancelled'
+  }>(null)
   // Panel review FU-4: Cancelled needs a reason; Missed's is optional (Zean, November 8, 2026) and then offers "Set a new date".
   const [reason, setReason] = useState('')
   const [reasonError, setReasonError] = useState('')
@@ -95,7 +108,10 @@ export function FollowUpListPage() {
     setPageSize(size)
     setPage(1)
   }
-  const [sort, setSort] = useState<TableSortState<FollowUpSortKey>>({ key: 'status', direction: 'descending' })
+  const [sort, setSort] = useState<TableSortState<FollowUpSortKey>>({
+    key: 'status',
+    direction: 'descending',
+  })
   const { data, status, reload } = useAsyncData(statusFilter, () => fetchFollowUps(statusFilter))
   const [patientFilter, setPatientFilter] = usePatientFilter()
   // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
@@ -137,11 +153,16 @@ export function FollowUpListPage() {
     // Optimistic: the row flips immediately; the data layer writes the status and its audit entry.
     setStatusOverrides((current) => ({ ...current, [item.id]: next }))
     setConfirming(null)
-    const saved = await feedback.run(() => updateFollowUpStatus(item.id, next, getMockSessionUser(), why), {
-      saved: `Follow-up marked ${FOLLOW_UP_STATUS_WORDS[next]}.`,
-    })
+    const saved = await feedback.run(
+      () => updateFollowUpStatus(item.id, next, getMockSessionUser(), why),
+      {
+        saved: `Follow-up marked ${FOLLOW_UP_STATUS_WORDS[next]}.`,
+      },
+    )
     if (!saved.ok) {
-      setStatusOverrides((current) => Object.fromEntries(Object.entries(current).filter(([id]) => id !== item.id)))
+      setStatusOverrides((current) =>
+        Object.fromEntries(Object.entries(current).filter(([id]) => id !== item.id)),
+      )
       return
     }
     if (next === 'missed' || next === 'cancelled') reload()
@@ -205,7 +226,13 @@ export function FollowUpListPage() {
         </div>
       ),
     },
-    { key: 'due', header: 'Due date', width: '8.5rem', sort: sortColumn('due', 'Due date'), cell: (item) => formatDate(item.followUpDate) },
+    {
+      key: 'due',
+      header: 'Due date',
+      width: '8.5rem',
+      sort: sortColumn('due', 'Due date'),
+      cell: (item) => formatDate(item.followUpDate),
+    },
     {
       key: 'status',
       header: 'Status',
@@ -214,7 +241,9 @@ export function FollowUpListPage() {
       cell: (item) => (
         <div>
           {statusBadge(item.status)}
-          {item.statusReason && <p className="mt-1 text-xs text-text-secondary">Reason: {item.statusReason}</p>}
+          {item.statusReason && (
+            <p className="mt-1 text-xs text-text-secondary">Reason: {item.statusReason}</p>
+          )}
         </div>
       ),
     },
@@ -261,7 +290,7 @@ export function FollowUpListPage() {
           icon={<Icon name="calendarClock" />}
           actions={
             <div className="flex flex-wrap items-center gap-3">
-            <PatientFilterSelect
+              <PatientFilterSelect
                 value={patientFilter}
                 onChange={(next) => {
                   setPatientFilter(next)
@@ -270,24 +299,24 @@ export function FollowUpListPage() {
                 className="w-full sm:w-auto"
                 inline
               />
-            <Select
-              className="w-full sm:w-auto"
-              label="Status"
-              inline
-              value={statusFilter}
-              options={[
-                { value: 'pending', label: 'Pending' },
-                { value: 'completed', label: 'Completed' },
-                { value: 'missed', label: 'Missed' },
-                { value: 'cancelled', label: 'Cancelled' },
-              ]}
-              placeholder="All statuses"
-              clearable
-              onChange={(value) => {
-                setStatusFilter(value as '' | FollowUpStatus)
-                setPage(1)
-              }}
-            />
+              <Select
+                className="w-full sm:w-auto"
+                label="Status"
+                inline
+                value={statusFilter}
+                options={[
+                  { value: 'pending', label: 'Pending' },
+                  { value: 'completed', label: 'Completed' },
+                  { value: 'missed', label: 'Missed' },
+                  { value: 'cancelled', label: 'Cancelled' },
+                ]}
+                placeholder="All statuses"
+                clearable
+                onChange={(value) => {
+                  setStatusFilter(value as '' | FollowUpStatus)
+                  setPage(1)
+                }}
+              />
             </div>
           }
         />
@@ -324,13 +353,18 @@ export function FollowUpListPage() {
       </Card>
       <Modal
         open={confirming !== null}
-        title={confirming?.status === 'missed' ? 'Mark this follow-up as Missed?' : 'Cancel this follow-up?'}
+        title={
+          confirming?.status === 'missed'
+            ? 'Mark this follow-up as Missed?'
+            : 'Cancel this follow-up?'
+        }
         onClose={() => setConfirming(null)}
       >
         {confirming && (
           <>
             <p className="text-sm text-text-secondary">
-              <PatientNumber patient={confirming.item.patient} chip={false} /> · {confirming.item.reason} · due {formatDate(confirming.item.followUpDate)}.{' '}
+              <PatientNumber patient={confirming.item.patient} chip={false} /> ·{' '}
+              {confirming.item.reason} · due {formatDate(confirming.item.followUpDate)}.{' '}
               {confirming.status === 'missed'
                 ? 'The student did not return for this follow-up.'
                 : 'This follow-up is no longer needed.'}{' '}
@@ -361,18 +395,36 @@ export function FollowUpListPage() {
           </>
         )}
       </Modal>
-      <Modal open={rescheduling !== null} title="Set a new date?" onClose={() => setRescheduling(null)}>
+      <Modal
+        open={rescheduling !== null}
+        title="Set a new date?"
+        onClose={() => setRescheduling(null)}
+      >
         {rescheduling && (
           <>
             <p className="text-sm text-text-secondary">
-              Creates a new pending follow-up for <PatientNumber patient={rescheduling.patient} chip={false} /> with the same reason ({rescheduling.reason}).
+              Creates a new pending follow-up for{' '}
+              <PatientNumber patient={rescheduling.patient} chip={false} /> with the same reason (
+              {rescheduling.reason}).
             </p>
-            <DatePicker className="mt-4" label="New follow-up date" required value={newDate} min={todayISO()} onChange={setNewDate} />
+            <DatePicker
+              className="mt-4"
+              label="New follow-up date"
+              required
+              value={newDate}
+              min={todayISO()}
+              onChange={setNewDate}
+            />
             <div className="mt-5 flex flex-wrap justify-end gap-2">
               <Button variant="neutral" data-autofocus onClick={() => setRescheduling(null)}>
                 Not now
               </Button>
-              <Button variant="primary" loading={scheduling} disabled={!newDate} onClick={() => void scheduleNewDate()}>
+              <Button
+                variant="primary"
+                loading={scheduling}
+                disabled={!newDate}
+                onClick={() => void scheduleNewDate()}
+              >
                 Set new date
               </Button>
             </div>

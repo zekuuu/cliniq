@@ -1,6 +1,6 @@
 # Data Flow Diagram
 
-**Status: first draft, built from already-documented requirements.** External entities come directly from the Project Plan's External Interfaces table (§2.1); processes map directly to the modules already fully specified in Modules & Features (Module 6 was removed, ADR-027). Not waiting on an external SRS — this is that artifact's first draft. Which module feeds which, with batches, staff patients and the Activity calendar, is in [Module-Linkage-Diagram.md](./Module-Linkage-Diagram.md). The roster import is decided, not built (ADR-047).
+**Status: first draft, built from already-documented requirements.** External entities come directly from the Project Plan's External Interfaces table (§2.1); processes map directly to the modules already fully specified in Modules & Features (Module 6 was removed, ADR-027). Not waiting on an external SRS — this is that artifact's first draft. Which module feeds which, with batches, staff patients and the Activity calendar, is in [Module-Linkage-Diagram.md](./Module-Linkage-Diagram.md). The roster import is built in the frontend (ADR-047).
 
 ## Level 0 — Context Diagram
 
@@ -16,16 +16,24 @@ flowchart TD
 
     CLINIQ(("CLINIQ<br/>System"))
 
-    REGISTRAR -->|student roster data| CLINIQ
+    PRINCIPAL["📄 Principal (paper or PDF)"]
+    DRIVE["💾 Backup drive kept away"]
+
+    REGISTRAR -->|student list file, given to Staff| STAFF
+    STAFF -->|student and staff list imports| CLINIQ
     STAFF -->|visit/incident/inventory records| CLINIQ
     CLINIQ -->|student records, dashboards, reports| STAFF
-    ADMIN -->|report requests| CLINIQ
-    CLINIQ -->|reports, dashboard summary| ADMIN
+    ADMIN -->|month chosen, on the clinic PC| CLINIQ
+    CLINIQ -->|monthly reports, view only| ADMIN
+    STAFF -->|Monthly Report PDF or printout| PRINCIPAL
     STAFF -->|phone call, outside the system| PARENT
     STAFF -->|logs notification outcome| CLINIQ
+    CLINIQ -->|backup files| DRIVE
     CLINIQ -->|backup status| IT
-    IT -->|network/hardware maintenance, outside the system| CLINIQ
+    IT -->|PC maintenance, outside the system| CLINIQ
 ```
+
+Updated Tuesday, November 10, 2026 — 17:27 PHT for ADR-073 and ADR-079: every person uses the browser on the clinic PC (no other network client, no email service); the registrar's file reaches CLINIQ through Staff's import; the Principal gets the Monthly Report as a PDF or on paper from the clinician; backups go to a drive kept away from the room.
 
 Note the two flows drawn as "outside the system": the actual parent phone call and the physical hardware maintenance both happen outside CLINIQ by design (Project Plan §1.4 — no parent portal, no automated notifications) — only their *outcomes* (a logged notification attempt, a backup status Staff can see) cross back into the system.
 
@@ -62,7 +70,8 @@ flowchart TD
     ADMIN -->|login, manage accounts| P1
     P1 <-->|account data| DS1
 
-    REGISTRAR -->|roster import| P2
+    REGISTRAR -.->|list file via Staff| STAFF
+    STAFF -->|yearly list import| P2
     STAFF -->|encode/edit student| P2
     P2 <-->|student data| DS2
 
@@ -80,8 +89,8 @@ flowchart TD
     P4 -->|medicines given| P8
     P8 <-->|stock levels| DS6
 
-    STAFF -->|generate| P5
-    ADMIN -->|view| P5
+    STAFF -->|generate, print, save PDF| P5
+    ADMIN -->|view only, by month| P5
     P5 -->|reads| DS3
     P5 -->|reads| DS4
     P5 -->|reads| DS6

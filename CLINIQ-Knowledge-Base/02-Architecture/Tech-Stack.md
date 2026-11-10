@@ -18,4 +18,4 @@ All items below are **confirmed**, as of September 25, 2026 — the previously "
 | Deployment (current) | Hosted on the clinic's existing computer and used only there (`http://localhost`); no LAN access, no internet-facing hosting | ADR-029, ADR-079 |
 | Deployment (future) | Remote Server / Cloud | Documented future phase, not current work |
 
-The frontend tools here are installed and in use (`frontend/package.json`). **The backend tools have not been installed or executed yet**: see `04-Development/Environment-Setup.md` for the (still not-yet-run) setup steps.
+Updated Tuesday, November 10, 2026 — 17:27 PHT for the code at `b51166a`: both sides' tools are installed and in use. The frontend runs on sample data (`frontend/package.json`); the backend foundation runs its Pest, Pint and Larastan checks (`composer check`), with Laravel 13.39 and Sanctum 4.3 (`backend/composer.lock`). Installed versions: [Facts sheet](../00-Project-Core/Facts-Sheet.md#stack-installed-versions). Setup: `04-Development/Environment-Setup.md`.

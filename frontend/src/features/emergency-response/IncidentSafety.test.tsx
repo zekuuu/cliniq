@@ -2,7 +2,13 @@ import { act, screen, within } from '@testing-library/react'
 import { recordedWrites } from '../../test/recordedWrites'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { addParentNotification, approveIncidentReport, getIncident, getStudent, resetMockDb } from '../../lib/mock-db'
+import {
+  addParentNotification,
+  approveIncidentReport,
+  getIncident,
+  getStudent,
+  resetMockDb,
+} from '../../lib/mock-db'
 import { db, migratePersistedState } from '../../lib/mock-db/store'
 import { pickStudent } from '../../test/pickStudent'
 import { renderWithRouter } from '../../test/renderWithRouter'
@@ -49,7 +55,9 @@ describe('Stage 1 alert card (IN-1)', () => {
     renderWithRouter(<IncidentEntryPage />)
     await pickStudent(user, '000000230012')
     const card = await screen.findByRole('region', { name: 'Check before treating' })
-    const rows = within(card).getAllByRole('listitem').filter((row) => row.textContent?.includes('0900-111-'))
+    const rows = within(card)
+      .getAllByRole('listitem')
+      .filter((row) => row.textContent?.includes('0900-111-'))
     expect(rows.map((row) => row.textContent)).toEqual([
       expect.stringMatching(/^Arnel Cabrera.*0900-111-2011$/),
       expect.stringMatching(/^Beatriz Cabrera.*0900-111-2111$/),
@@ -80,7 +88,9 @@ describe('Stage 2 care is optional (ADR-065, reversing panel review IN-3)', () =
     renderWithRouter(<IncidentReportPage incidentId="incident-0022" />)
     await screen.findByRole('heading', { name: 'Incident summary' })
     expect(screen.getByRole('button', { name: 'Approve Report' })).toBeEnabled()
-    expect(screen.getByText(/No treatment recorded\. Check this is correct before approving\./)).toBeInTheDocument()
+    expect(
+      screen.getByText(/No treatment recorded\. Check this is correct before approving\./),
+    ).toBeInTheDocument()
     await expect(approveIncidentReport('incident-0022')).resolves.toBeUndefined()
   })
 
@@ -117,9 +127,18 @@ describe('Parent notification log (IN-6, D6)', () => {
     const [attempt] = (await getIncident('incident-0022')).parentNotifications
     expect(attempt).toMatchObject({
       outcome: 'no_answer',
-      calledContact: { name: primary.name, relationship: primary.relationship, phone: primary.phone, source: 'emergency_contact' },
+      calledContact: {
+        name: primary.name,
+        relationship: primary.relationship,
+        phone: primary.phone,
+        source: 'emergency_contact',
+      },
     })
-    expect(await screen.findByText(`Called: ${primary.name} (${primary.relationship}) · ${primary.phone}`)).toBeInTheDocument()
+    expect(
+      await screen.findByText(
+        `Called: ${primary.name} (${primary.relationship}) · ${primary.phone}`,
+      ),
+    ).toBeInTheDocument()
   })
 
   it('lets Stage 2 add an attempt without a note', async () => {
@@ -141,7 +160,11 @@ describe('Parent notification log (IN-6, D6)', () => {
     const user = userEvent.setup()
     renderWithRouter(<ParentNotificationPage incidentId="incident-0022" />)
     await screen.findByRole('heading', { name: 'Parent Notification Log' })
-    await selectOption(user, screen.getByLabelText('Who was called'), 'Other (type the name and number)')
+    await selectOption(
+      user,
+      screen.getByLabelText('Who was called'),
+      'Other (type the name and number)',
+    )
     await user.click(screen.getByRole('button', { name: 'Add Attempt' }))
     expect(screen.getByText('Enter the name of the person called.')).toBeInTheDocument()
     expect(screen.getByText('Enter the number called.')).toBeInTheDocument()
@@ -161,14 +184,14 @@ describe('Parent notification log (IN-6, D6)', () => {
     resetMockDb()
     const state = structuredClone(db())
     const old = ['voicemail', 'left_message', 'not_reached', 'reached']
-    state.incidents[0].parentNotifications = old.map((outcome) => ({ outcome, timestamp: '2026-10-01T09:00' })) as never
+    state.incidents[0].parentNotifications = old.map((outcome) => ({
+      outcome,
+      timestamp: '2026-10-01T09:00',
+    })) as never
     const migrated = migratePersistedState({ state, seedAuditLength: 0 })
-    expect(migrated.state.incidents[0].parentNotifications.map((attempt) => attempt.outcome)).toEqual([
-      'left_message_or_voicemail',
-      'left_message_or_voicemail',
-      'no_answer',
-      'reached',
-    ])
+    expect(
+      migrated.state.incidents[0].parentNotifications.map((attempt) => attempt.outcome),
+    ).toEqual(['left_message_or_voicemail', 'left_message_or_voicemail', 'no_answer', 'reached'])
   })
 })
 
@@ -215,7 +238,9 @@ describe('a Stage 1 incident cannot be approved (Zean, Thursday, October 22, 202
 
   it('refuses approval until Stage 2 is complete, even with a parent call logged', async () => {
     await addParentNotification('incident-0022', 'reached')
-    await expect(approveIncidentReport('incident-0022')).rejects.toThrow('Complete Stage 2 before approving this report.')
+    await expect(approveIncidentReport('incident-0022')).rejects.toThrow(
+      'Complete Stage 2 before approving this report.',
+    )
     renderWithRouter(<IncidentReportPage incidentId="incident-0022" />)
     await screen.findByRole('heading', { name: 'Incident summary' })
     expect(screen.getByRole('button', { name: 'Approve Report' })).toBeDisabled()

@@ -74,7 +74,12 @@ export function PrintButton({
       </Button>
       {reason && (
         // `pt-1.5` instead of a margin, so the pointer can move onto the tooltip without closing it.
-        <span id={noteId} role="tooltip" hidden={!open} className="absolute top-full left-0 z-30 pt-1.5">
+        <span
+          id={noteId}
+          role="tooltip"
+          hidden={!open}
+          className="absolute top-full left-0 z-30 pt-1.5"
+        >
           <span className="block w-max max-w-56 rounded-md bg-text-primary px-2.5 py-1.5 text-xs font-semibold text-white shadow-card">
             {reason}
           </span>
@@ -169,11 +174,26 @@ export function PrintDocument({
 }
 
 /** Letterhead, title, scope line and content: the same on paper and in the on-screen sheet. */
-function DocumentBody({ title, titleId, scope, children }: { title: string; titleId?: string; scope: ReactNode; children: ReactNode }) {
+function DocumentBody({
+  title,
+  titleId,
+  scope,
+  children,
+}: {
+  title: string
+  titleId?: string
+  scope: ReactNode
+  children: ReactNode
+}) {
   return (
     <>
       <header className="flex items-center gap-[4mm] border-b-2 border-text-primary pb-[3mm]">
-        <img src={LOGO_SRC} alt="" decoding="sync" className="size-[15mm] shrink-0 object-contain" />
+        <img
+          src={LOGO_SRC}
+          alt=""
+          decoding="sync"
+          className="size-[15mm] shrink-0 object-contain"
+        />
         <div className="min-w-0">
           <p className="text-[10.5pt] font-semibold">Mendez Christian Academy — School Clinic</p>
           <h1 id={titleId} className="text-[16pt] leading-tight font-bold">
@@ -200,9 +220,7 @@ export function PrintSection({
 }) {
   return (
     <section className={cn('mt-[5mm] first:mt-0', className)}>
-      <h2 className="mb-[1.5mm] break-after-avoid text-[12pt] font-bold">
-        {title}
-      </h2>
+      <h2 className="mb-[1.5mm] break-after-avoid text-[12pt] font-bold">{title}</h2>
       {children}
     </section>
   )
@@ -332,9 +350,7 @@ export function PrintFields({
       {fields.map((field) => (
         <div key={field.label} className={cn('break-inside-avoid', field.wide && 'col-span-full')}>
           {/* Bold and black, so the titles read on paper (review round 2, R17). */}
-          <dt className="text-[8.5pt] font-bold text-text-primary uppercase">
-            {field.label}
-          </dt>
+          <dt className="text-[8.5pt] font-bold text-text-primary uppercase">{field.label}</dt>
           <dd className="whitespace-pre-line">{field.value}</dd>
         </div>
       ))}
@@ -346,7 +362,11 @@ export function PrintFields({
  * Signature blocks: "Prepared by:", room to sign, the line, then the printed name, the position and a
  * date to write in (Zean, October 26, 2026). A name CLINIQ doesn't know stays blank to be handwritten.
  */
-export function PrintSignatures({ lines }: { lines: Array<{ heading: string; name?: string; position?: string }> }) {
+export function PrintSignatures({
+  lines,
+}: {
+  lines: Array<{ heading: string; name?: string; position?: string }>
+}) {
   return (
     <div className="mt-[8mm] grid break-inside-avoid grid-cols-3 gap-[8mm]">
       {lines.map((line) => (

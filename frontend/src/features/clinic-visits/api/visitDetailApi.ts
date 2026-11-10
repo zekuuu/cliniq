@@ -17,7 +17,14 @@ import {
   type VitalsWarningRanges,
 } from '../../../lib/mock-db'
 import { normalizeComplaint } from '../../../lib/complaints'
-import type { CollectedBy, Disposition, EnteredInError, ExcuseLetterDraft, ISODateTime, ItemGivenLine } from '../../../types/entities'
+import type {
+  CollectedBy,
+  Disposition,
+  EnteredInError,
+  ExcuseLetterDraft,
+  ISODateTime,
+  ItemGivenLine,
+} from '../../../types/entities'
 import type { Patient } from '../../../lib/patients'
 import {
   collectedValuesFrom,
@@ -102,16 +109,21 @@ export function valuesFromVisit(visit: VisitDetail): VisitDetailValues {
 /** `visitId` comes from the `/visits/:visitId` route; omitted, the latest active visit is used. */
 export async function fetchVisitDetail(visitId?: string): Promise<VisitDetail> {
   const visit = visitId ? await getVisit(visitId) : await getLatestVisit()
-  const userName = (id: string) => getUser(id).then((user) => user.name, () => 'Unknown user')
-  const [student, loggedBy, items, approval, complaintSuggestions, vitalsRanges, enteredInErrorBy] = await Promise.all([
-    getPatient(visit),
-    userName(visit.loggedByUserId),
-    listInventory(),
-    getExcuseLetterApproval(visit.id),
-    getVisitComplaintSuggestions(),
-    getVitalsWarningRanges(),
-    visit.enteredInError ? userName(visit.enteredInError.byUserId) : null,
-  ])
+  const userName = (id: string) =>
+    getUser(id).then(
+      (user) => user.name,
+      () => 'Unknown user',
+    )
+  const [student, loggedBy, items, approval, complaintSuggestions, vitalsRanges, enteredInErrorBy] =
+    await Promise.all([
+      getPatient(visit),
+      userName(visit.loggedByUserId),
+      listInventory(),
+      getExcuseLetterApproval(visit.id),
+      getVisitComplaintSuggestions(),
+      getVitalsWarningRanges(),
+      visit.enteredInError ? userName(visit.enteredInError.byUserId) : null,
+    ])
   return {
     id: visit.id,
     student,
@@ -144,7 +156,11 @@ export async function fetchVisitDetail(visitId?: string): Promise<VisitDetail> {
 }
 
 /** "Entered in error" (D2): kept, hidden from lists and counts, stock returned, letter voided. Reloads the visit. */
-export async function markEnteredInError(visitId: string, reason: string, actor?: SessionUser): Promise<VisitDetail> {
+export async function markEnteredInError(
+  visitId: string,
+  reason: string,
+  actor?: SessionUser,
+): Promise<VisitDetail> {
   await markVisitEnteredInError(visitId, reason, actor)
   return fetchVisitDetail(visitId)
 }
@@ -162,7 +178,8 @@ export async function updateVisitDetail(
   approveLetterNow = false,
 ): Promise<{ visit: VisitDetail; belowZero: string[] }> {
   // A staff patient gets no excuse letter and no "who collected" (ADR-043, D13; ADR-049, D4).
-  if (visit.student.kind === 'personnel') values = { ...values, prepareLetter: false, collectedName: '', collectedRelationship: '' }
+  if (visit.student.kind === 'personnel')
+    values = { ...values, prepareLetter: false, collectedName: '', collectedRelationship: '' }
   const disposition = dispositionPayload(values.disposition, values)
   const { visit: updated, belowZero } = await updateVisit(
     visit.id,
@@ -175,17 +192,35 @@ export async function updateVisitDetail(
       eventTag: values.eventTag.trim() || null,
       itemsGiven,
       // Sent only when changed, so an unchanged visit keeps its exact saved time.
-      ...(`${values.visitDate}T${values.visitClock}` !== visit.dateTime.slice(0, 16) && { dateTime: `${values.visitDate}T${values.visitClock}` }),
+      ...(`${values.visitDate}T${values.visitClock}` !== visit.dateTime.slice(0, 16) && {
+        dateTime: `${values.visitDate}T${values.visitClock}`,
+      }),
       ...logbookPayload(values),
       // An approved letter's period is fixed: the edit sends "Referred to" and who collected, never a draft.
-      ...(visit.approval ? { referredTo: disposition.referredTo, collectedBy: disposition.collectedBy } : disposition),
-      approveExcuseLetterNow: approveLetterNow && !visit.approval && disposition.excuseLetterDraft !== null,
+      ...(visit.approval
+        ? { referredTo: disposition.referredTo, collectedBy: disposition.collectedBy }
+        : disposition),
+      approveExcuseLetterNow:
+        approveLetterNow && !visit.approval && disposition.excuseLetterDraft !== null,
     },
     actor,
   )
-  const [items, complaintSuggestions, approval] = await Promise.all([listInventory(), getVisitComplaintSuggestions(), getExcuseLetterApproval(visit.id)])
+  const [items, complaintSuggestions, approval] = await Promise.all([
+    listInventory(),
+    getVisitComplaintSuggestions(),
+    getExcuseLetterApproval(visit.id),
+  ])
   return {
-    visit: { ...visit, ...updated, collectedBy: updated.collectedBy ?? null, extraComplaints: updated.extraComplaints ?? [], eventTag: updated.eventTag ?? '', items, complaintSuggestions, approval },
+    visit: {
+      ...visit,
+      ...updated,
+      collectedBy: updated.collectedBy ?? null,
+      extraComplaints: updated.extraComplaints ?? [],
+      eventTag: updated.eventTag ?? '',
+      items,
+      complaintSuggestions,
+      approval,
+    },
     belowZero,
   }
 }

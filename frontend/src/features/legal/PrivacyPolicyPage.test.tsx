@@ -17,14 +17,18 @@ describe('PrivacyPolicyPage', () => {
       screen.getByRole('heading', { name: '11. Changes to this policy', level: 2 }),
     ).toBeInTheDocument()
     expect(screen.getByRole('table')).toBeInTheDocument()
-    expect(screen.getByRole('row', { name: /PE\/Sports Instructor.*No account and no access/ })).toBeInTheDocument()
+    expect(
+      screen.getByRole('row', { name: /PE\/Sports Instructor.*No account and no access/ }),
+    ).toBeInTheDocument()
     expect(
       screen.getByText(
         '[TBD — Mendez Christian Academy has not yet designated a contact for privacy inquiries or complaints. Do not publish this policy with this section unresolved.]',
       ),
     ).toBeInTheDocument()
     expect(screen.getByText(/for accountability, for 10\s+years\./)).toBeInTheDocument()
-    expect(screen.getByText(/the Principal sees counts, never names or details/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/the Principal sees counts, never names or details/),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(screen.queryByTestId('privacy-policy-skeleton')).not.toBeInTheDocument()
     expect(screen.queryByText('Gian Quizon')).not.toBeInTheDocument()

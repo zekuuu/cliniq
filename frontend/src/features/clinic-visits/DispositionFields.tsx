@@ -5,7 +5,12 @@ import { formatDateRange } from '../../lib/dates'
 import type { ExcusedPeriod } from '../../lib/mock-db'
 import type { Disposition } from '../../types/entities'
 import { CertificateWarning } from './CertificateWarning'
-import { hasExcuseLetter, isOtherRelationship, type DispositionErrors, type DispositionValues } from './dispositionValues'
+import {
+  hasExcuseLetter,
+  isOtherRelationship,
+  type DispositionErrors,
+  type DispositionValues,
+} from './dispositionValues'
 import { ExcusedPeriodPresets } from './ExcusedPeriodPresets'
 
 /** Suggestions only; any relationship can be typed (ADR-049, D4). */
@@ -46,20 +51,28 @@ export function DispositionFields({
     return (
       <div className="flex flex-col gap-4">
         {disposition === 'referred_to_hospital' && (
-          <ReferredToField value={values.referredTo} onChange={(value) => set('referredTo', value)} />
+          <ReferredToField
+            value={values.referredTo}
+            onChange={(value) => set('referredTo', value)}
+          />
         )}
         {collected}
-        <p role="note" className="rounded-md border border-info/40 bg-info/10 px-3 py-2 text-sm text-text-primary">
+        <p
+          role="note"
+          className="rounded-md border border-info/40 bg-info/10 px-3 py-2 text-sm text-text-primary"
+        >
           An approved excuse letter exists for this visit (
-          {formatDateRange(approvedPeriod.excusedFrom, approvedPeriod.excusedUntil)}). This edit doesn't change or
-          remove it, whatever the disposition.
+          {formatDateRange(approvedPeriod.excusedFrom, approvedPeriod.excusedUntil)}). This edit
+          doesn't change or remove it, whatever the disposition.
         </p>
       </div>
     )
   }
 
   if (noLetter)
-    return disposition === 'referred_to_hospital' ? <ReferredToField value={values.referredTo} onChange={(value) => set('referredTo', value)} /> : null
+    return disposition === 'referred_to_hospital' ? (
+      <ReferredToField value={values.referredTo} onChange={(value) => set('referredTo', value)} />
+    ) : null
 
   if (!hasExcuseLetter(disposition)) return null
 
@@ -75,13 +88,18 @@ export function DispositionFields({
           <input
             type="checkbox"
             checked={values.prepareLetter}
-            onChange={(event: ChangeEvent<HTMLInputElement>) => set('prepareLetter', event.target.checked)}
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+              set('prepareLetter', event.target.checked)
+            }
             className="mt-0.5 size-4 cursor-pointer accent-brand-green-dark"
           />
           <span>
-            <span className="block text-sm font-semibold text-text-primary">Prepare an excuse letter</span>
+            <span className="block text-sm font-semibold text-text-primary">
+              Prepare an excuse letter
+            </span>
             <span className="block text-xs text-text-secondary">
-              Saved with the visit as a draft. Staff reviews and approves it on the excuse letter page.
+              Saved with the visit as a draft. Staff reviews and approves it on the excuse letter
+              page.
             </span>
           </span>
         </label>
@@ -102,10 +120,15 @@ export function DispositionFields({
               error={errors.excusedUntil}
             />
             <div className="sm:col-span-2">
-              <ExcusedPeriodPresets from={values.excusedFrom} onPick={(until) => set('excusedUntil', until)} />
+              <ExcusedPeriodPresets
+                from={values.excusedFrom}
+                onPick={(until) => set('excusedUntil', until)}
+              />
             </div>
             <div className="sm:col-span-2">
-              <CertificateWarning period={{ excusedFrom: values.excusedFrom, excusedUntil: values.excusedUntil }} />
+              <CertificateWarning
+                period={{ excusedFrom: values.excusedFrom, excusedUntil: values.excusedUntil }}
+              />
             </div>
             <div className="sm:col-span-2">
               <Input
@@ -119,7 +142,9 @@ export function DispositionFields({
               <StayHomeField
                 checked={values.stayHome}
                 note={values.stayHomeNote}
-                onChange={(next) => onChange({ ...values, stayHome: next.checked, stayHomeNote: next.note })}
+                onChange={(next) =>
+                  onChange({ ...values, stayHome: next.checked, stayHomeNote: next.note })
+                }
               />
             </div>
           </div>
@@ -146,7 +171,9 @@ function CollectedByFields({
   const other = isOtherRelationship(values.collectedRelationship)
   return (
     <fieldset className="rounded-md border border-border p-4">
-      <legend className="px-1 text-sm font-semibold text-text-primary">Who the student was released to</legend>
+      <legend className="px-1 text-sm font-semibold text-text-primary">
+        Who the student was released to
+      </legend>
       <p className="text-xs text-text-secondary">Optional. Record the person's name.</p>
       <div className="mt-3 grid grid-cols-1 items-start gap-3 sm:grid-cols-3">
         <Input
@@ -180,7 +207,9 @@ function CollectedByFields({
             value={values.collectedRelationshipOther}
             maxLength={60}
             placeholder="Neighbour, relative, guardian"
-            onChange={(event) => onChange({ ...values, collectedRelationshipOther: event.target.value })}
+            onChange={(event) =>
+              onChange({ ...values, collectedRelationshipOther: event.target.value })
+            }
             error={errors.collectedRelationshipOther}
           />
         )}
@@ -189,7 +218,13 @@ function CollectedByFields({
   )
 }
 
-function ReferredToField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+function ReferredToField({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (value: string) => void
+}) {
   return (
     <Input
       label="Referred to (hospital or clinic)"

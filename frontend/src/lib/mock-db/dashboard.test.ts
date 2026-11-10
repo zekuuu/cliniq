@@ -30,7 +30,12 @@ const CONFIG: MockDbConfig = {
   topComplaints: 5,
   percentMinPriorCount: 5,
   staleBackupHours: 48,
-  vitalsWarningRanges: { temperatureC: { min: 30, max: 43 }, pulseBpm: { min: 30, max: 250 }, oxygenSaturationPct: null, feverFromC: 37 },
+  vitalsWarningRanges: {
+    temperatureC: { min: 30, max: 43 },
+    pulseBpm: { min: 30, max: 250 },
+    oxygenSaturationPct: null,
+    feverFromC: 37,
+  },
   medicalCertificateAfterDays: 3,
   idleSignoutMinutesStaff: 60,
   idleSignoutMinutesAdmin: 30,
@@ -48,10 +53,26 @@ const CONFIG: MockDbConfig = {
     grades1to6FromAge: 6,
     grades7to12FromAge: 13,
     byAgeGroup: {
-      kinder: { pulseBpm: { min: 80, max: 110 }, systolic: { min: 95, max: 110 }, diastolic: { min: 60, max: 75 } },
-      grades1to6: { pulseBpm: { min: 70, max: 100 }, systolic: { min: 100, max: 120 }, diastolic: { min: 60, max: 75 } },
-      grades7to12: { pulseBpm: { min: 60, max: 100 }, systolic: { min: 100, max: 120 }, diastolic: { min: 70, max: 80 } },
-      adult: { pulseBpm: { min: 60, max: 100 }, systolic: { min: 90, max: 120 }, diastolic: { min: 60, max: 80 } },
+      kinder: {
+        pulseBpm: { min: 80, max: 110 },
+        systolic: { min: 95, max: 110 },
+        diastolic: { min: 60, max: 75 },
+      },
+      grades1to6: {
+        pulseBpm: { min: 70, max: 100 },
+        systolic: { min: 100, max: 120 },
+        diastolic: { min: 60, max: 75 },
+      },
+      grades7to12: {
+        pulseBpm: { min: 60, max: 100 },
+        systolic: { min: 100, max: 120 },
+        diastolic: { min: 70, max: 80 },
+      },
+      adult: {
+        pulseBpm: { min: 60, max: 100 },
+        systolic: { min: 90, max: 120 },
+        diastolic: { min: 60, max: 80 },
+      },
     },
   },
 }
@@ -70,7 +91,9 @@ const student = (id: string, n: string, extra: Partial<SeedStudent> = {}): SeedS
   birthDate: '2015-06-01',
   allergies: [],
   medicalConditions: [],
-  emergencyContacts: [{ name: 'Guardian', relationship: 'Parent', phone: '0900-111-0000', verified: true }],
+  emergencyContacts: [
+    { name: 'Guardian', relationship: 'Parent', phone: '0900-111-0000', verified: true },
+  ],
   archived: false,
   ...extra,
 })
@@ -149,7 +172,7 @@ function dataset(partial: Partial<DbState>): DbState {
       issueReports: [],
       calendarEvents: [],
       sportsReports: [],
-    studentImportBatches: [],
+      studentImportBatches: [],
       backupLocations: [],
     },
     ...partial,
@@ -192,10 +215,31 @@ describe('inventory alerts', () => {
   it('keeps low-stock and expiry as separate flags that can both apply', () => {
     const data = dataset({
       inventoryItems: [
-        item('both', { batches: [{ id: 'both-batch', quantity: 2, expirationDate: '2026-10-06', receivedDate: TODAY }] }),
-        item('expired', { batches: [{ id: 'expired-batch', quantity: 100, expirationDate: '2026-09-20', receivedDate: TODAY }] }),
-        item('at-threshold', { batches: [{ id: 'threshold-batch', quantity: 10, expirationDate: null, receivedDate: TODAY }] }), // exactly at the threshold counts as low (ADR-051)
-        item('fine', { batches: [{ id: 'fine-batch', quantity: 100, expirationDate: '2027-09-26', receivedDate: TODAY }] }),
+        item('both', {
+          batches: [
+            { id: 'both-batch', quantity: 2, expirationDate: '2026-10-06', receivedDate: TODAY },
+          ],
+        }),
+        item('expired', {
+          batches: [
+            {
+              id: 'expired-batch',
+              quantity: 100,
+              expirationDate: '2026-09-20',
+              receivedDate: TODAY,
+            },
+          ],
+        }),
+        item('at-threshold', {
+          batches: [
+            { id: 'threshold-batch', quantity: 10, expirationDate: null, receivedDate: TODAY },
+          ],
+        }), // exactly at the threshold counts as low (ADR-051)
+        item('fine', {
+          batches: [
+            { id: 'fine-batch', quantity: 100, expirationDate: '2027-09-26', receivedDate: TODAY },
+          ],
+        }),
       ],
     })
     const rows = buildInventoryAlerts(data)
@@ -219,7 +263,11 @@ describe('complaint trends', () => {
     const events = names.flatMap((c, i) =>
       Array.from({ length: 10 - i }, () => ({ date: '2026-09-10', complaint: c })),
     )
-    const trends = buildComplaintTrends(events, { preset: 'custom', from: '2026-09-01', to: '2026-09-30' }, CONFIG)
+    const trends = buildComplaintTrends(
+      events,
+      { preset: 'custom', from: '2026-09-01', to: '2026-09-30' },
+      CONFIG,
+    )
     expect(trends.series.map((s) => s.complaint)).toEqual(names.slice(0, CONFIG.topComplaints))
     expect(trends.otherComplaints.map((s) => s.complaint)).toEqual(
       names.slice(CONFIG.topComplaints),
@@ -287,8 +335,18 @@ describe('complaint trends', () => {
     )
     expect(trends.granularity).toBe('hour')
     expect(trends.buckets.map((b) => b.label)).toEqual([
-      '7 AM', '8 AM', '9 AM', '10 AM', '11 AM', '12 PM',
-      '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM',
+      '7 AM',
+      '8 AM',
+      '9 AM',
+      '10 AM',
+      '11 AM',
+      '12 PM',
+      '1 PM',
+      '2 PM',
+      '3 PM',
+      '4 PM',
+      '5 PM',
+      '6 PM',
     ])
     const headache = trends.series.find((s) => s.complaint === 'Headache')
     expect(headache?.counts[2]).toBe(2)
@@ -328,17 +386,26 @@ describe('complaint trends', () => {
       previous: 1,
       currentPeak: { date: '2024-02-02', count: 2, annotations: ['Foundation practice'] },
     })
-    expect(trends.weekdayComparison?.rows.find((row) => row.label === 'Sunday')).toMatchObject({ current: 1, previous: 0 })
+    expect(trends.weekdayComparison?.rows.find((row) => row.label === 'Sunday')).toMatchObject({
+      current: 1,
+      previous: 0,
+    })
     expect(trends.weekdayComparison?.rows[0].label).toBe('Sunday')
   })
 
   it('uses December as the prior month for a January weekday comparison', () => {
     const trends = buildComplaintTrends(
-      [{ date: '2025-12-01', complaint: 'Headache' }, { date: '2026-01-05', complaint: 'Headache' }],
+      [
+        { date: '2025-12-01', complaint: 'Headache' },
+        { date: '2026-01-05', complaint: 'Headache' },
+      ],
       { preset: 'custom', from: '2026-01-01', to: '2026-01-31' },
       CONFIG,
     )
-    expect(trends.weekdayComparison).toMatchObject({ previousLabel: 'December 2025', currentLabel: 'January 2026' })
+    expect(trends.weekdayComparison).toMatchObject({
+      previousLabel: 'December 2025',
+      currentLabel: 'January 2026',
+    })
   })
 
   it('keeps an All range with no events to a single bucket instead of a century of months', () => {
@@ -347,12 +414,24 @@ describe('complaint trends', () => {
   })
 
   it('lists grade levels in school order, Kinder first', () => {
-    const events = ['Grade 10', 'Kinder', 'Grade 2'].map((gradeLevel) => ({ sex: 'female' as const, gradeLevel, kind: 'visit' as const }))
-    expect(buildDemographicAnalysis(events, { sex: null, gradeLevel: null }).gradeLevel.map((g) => g.key)).toEqual(['Kinder', 'Grade 2', 'Grade 10'])
+    const events = ['Grade 10', 'Kinder', 'Grade 2'].map((gradeLevel) => ({
+      sex: 'female' as const,
+      gradeLevel,
+      kind: 'visit' as const,
+    }))
+    expect(
+      buildDemographicAnalysis(events, { sex: null, gradeLevel: null }).gradeLevel.map(
+        (g) => g.key,
+      ),
+    ).toEqual(['Kinder', 'Grade 2', 'Grade 10'])
   })
 
   it('splits each grade level into visits and incidents', () => {
-    const events = (['visit', 'visit', 'incident'] as const).map((kind) => ({ sex: 'male' as const, gradeLevel: 'Grade 5', kind }))
+    const events = (['visit', 'visit', 'incident'] as const).map((kind) => ({
+      sex: 'male' as const,
+      gradeLevel: 'Grade 5',
+      kind,
+    }))
     expect(buildDemographicAnalysis(events, { sex: null, gradeLevel: null }).gradeLevel).toEqual([
       { key: 'Grade 5', label: 'Grade 5', count: 3, visits: 2, incidents: 1, share: 1 },
     ])
@@ -383,11 +462,7 @@ describe('dashboard summary', () => {
       visit('old', 's2', '2026-08-01'),
     ],
   })
-  const summary = buildDashboardSummary(
-    data,
-    { range: rangeForPreset('last7', TODAY) },
-    'now',
-  )
+  const summary = buildDashboardSummary(data, { range: rangeForPreset('last7', TODAY) }, 'now')
 
   it('scopes visits to the range and leaves current-state counts unscoped', () => {
     expect(summary.counts).toMatchObject({ visits: 4, pendingRecords: 1, activeStudents: 2 })
@@ -406,17 +481,45 @@ describe('dashboard summary', () => {
   it('keeps every enrolled grade in the demographics, in order, even at zero', () => {
     const events = [{ sex: 'female' as const, gradeLevel: 'Grade 2', kind: 'visit' as const }]
     expect(
-      buildDemographicAnalysis(events, { sex: null, gradeLevel: null }, ['Kinder', 'Grade 1', 'Grade 2']).gradeLevel.map((g) => [g.key, g.count]),
-    ).toEqual([['Kinder', 0], ['Grade 1', 0], ['Grade 2', 1]])
+      buildDemographicAnalysis(events, { sex: null, gradeLevel: null }, [
+        'Kinder',
+        'Grade 1',
+        'Grade 2',
+      ]).gradeLevel.map((g) => [g.key, g.count]),
+    ).toEqual([
+      ['Kinder', 0],
+      ['Grade 1', 0],
+      ['Grade 2', 1],
+    ])
   })
 
   it('returns aggregate demographic counts and applies those filters only to Trends', () => {
     expect(summary.demographics).toEqual({
       sex: [
-        { key: 'female', label: 'Female', count: 4, visits: 4, incidents: 0, share: 1, students: 4, staff: 0 },
-        { key: 'male', label: 'Male', count: 0, visits: 0, incidents: 0, share: 0, students: 0, staff: 0 },
+        {
+          key: 'female',
+          label: 'Female',
+          count: 4,
+          visits: 4,
+          incidents: 0,
+          share: 1,
+          students: 4,
+          staff: 0,
+        },
+        {
+          key: 'male',
+          label: 'Male',
+          count: 0,
+          visits: 0,
+          incidents: 0,
+          share: 0,
+          students: 0,
+          staff: 0,
+        },
       ],
-      gradeLevel: [{ key: 'Grade 5', label: 'Grade 5', count: 4, visits: 4, incidents: 0, share: 1 }],
+      gradeLevel: [
+        { key: 'Grade 5', label: 'Grade 5', count: 4, visits: 4, incidents: 0, share: 1 },
+      ],
     })
 
     const filtered = buildDashboardSummary(

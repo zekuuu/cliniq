@@ -14,7 +14,8 @@ export interface StatTrend {
   detail?: string
 }
 
-export type StatTone = 'brand' | 'error' | 'warning' | 'neutral' | 'letter' | 'follow-up' | 'unfinished' | 'active'
+export type StatTone =
+  'brand' | 'error' | 'warning' | 'neutral' | 'letter' | 'follow-up' | 'unfinished' | 'active'
 
 export interface StatCardProps {
   icon: IconName
@@ -71,7 +72,13 @@ const fillTone: Record<StatTone, string> = {
 
 // A drop shadow marks what can be clicked; a card that opens nothing sits flat.
 const card = (tone: StatTone, clickable = false) =>
-  cn(CARD_SURFACE.replace('bg-background', fillTone[tone]).replace('shadow-card', clickable ? 'shadow-clickable' : ''), 'flex w-full flex-col gap-2 p-5')
+  cn(
+    CARD_SURFACE.replace('bg-background', fillTone[tone]).replace(
+      'shadow-card',
+      clickable ? 'shadow-clickable' : '',
+    ),
+    'flex w-full flex-col gap-2 p-5',
+  )
 
 function Head({
   icon,
@@ -90,7 +97,10 @@ function Head({
         {to ? (
           // The link's ::after stretches over the card, so the whole card is the target and the
           // accessible name stays the label alone.
-          <TitleLink to={to} className="after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-brand-green-dark">
+          <TitleLink
+            to={to}
+            className="after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-brand-green-dark"
+          >
             {label}
           </TitleLink>
         ) : (
@@ -121,7 +131,15 @@ export function StatCard({
   className,
 }: StatCardProps) {
   return (
-    <div data-stat-card className={cn(card(tone, Boolean(to)), 'print:break-inside-avoid', to && 'relative transition-shadow hover:shadow-overlay motion-reduce:transition-none', className)}>
+    <div
+      data-stat-card
+      className={cn(
+        card(tone, Boolean(to)),
+        'print:break-inside-avoid',
+        to && 'relative transition-shadow hover:shadow-overlay motion-reduce:transition-none',
+        className,
+      )}
+    >
       <Head icon={icon} label={label} tone={tone} to={to} />
       <p className={cn('-mt-1 text-3xl font-bold tracking-tight', textTone[tone])}>
         {value.toLocaleString('en-PH')}

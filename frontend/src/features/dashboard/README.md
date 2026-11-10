@@ -1,13 +1,16 @@
 # Clinic Overview Dashboard and Activity calendar
 
 ## What it is
+
 Key operational totals, attention links, trends, and display-private frequent-visitor warnings. The Activity calendar lives in `CalendarPage.tsx` as its own sidebar screen (ADR-032).
 
 ## Screens and who can use them
+
 - Dashboard: School Clinician and Admin / Principal. Only the School Clinician gets the New Visit action on the tab row and opens pending letters from the stat card.
 - Activity calendar: both roles; both can manage school events (ADR-019, ADR-042). National holidays come from `lib/mock-db/holidays-ph.json` (ADR-020).
 
 ## Rules that matter
+
 - Two views (ADR-025): **Overview** (visits, incidents, active students, pending excuse letters, due/overdue follow-ups, compact inventory/incomplete-record attention chips, then frequent visitors, the five with the most visits first and "Show all" for the rest; `config.showFrequentVisitors`, on, hides the panel, its printout section and its sentence in the print scope when false; Sunday, October 25, 2026) and **Trends** (one "Visits and incidents by" card with a Sex / Grade level switch, then complaint trends; at most four chart hues, see `Design-System.md`; ADR-031).
 - A "Possible cluster" alert shows the School Clinician 3 students with the same complaint and grade within 3 days (ADR-050, `config.clusterMinStudents`, `config.clusterWindowDays`). A frequent visitor is 3 visits in 14 days (ADR-051). The Admin / Principal's totals leave staff incidents out (ADR-053).
 - The pending-letters stat card goes to the Visit Log at `?letter=pending`. The shared `Tabs` keeps Trends in `?view=trends` with replace navigation. Legacy `?view=calendar` links replace to `/calendar`.
@@ -15,10 +18,13 @@ Key operational totals, attention links, trends, and display-private frequent-vi
 - Trends: a one-day range (Today, or a one-day Custom range) plots hourly. A calendar-month range groups visits and incidents Sunday to Saturday beside the equivalent previous month; grouped bars use solid versus outlined datasets, and the Chart/Table control provides the full text alternative with busiest date and known event/holiday context. Other ranges keep their date-derived buckets. The complaint-trend table sorts by Complaint and Total only, not by period.
 
 ## Data and API files
+
 `api/dashboardApi.ts`; derived values in `lib/mock-db/dashboard.ts` and this folder's `lib/`.
 
 ## Printouts and tests
+
 The Dashboard has no print (ADR-074); the monthly reports in Reports are the printouts. Tests: the `*.test.tsx` files in this folder and in `components/`.
 
 ## Not built yet
+
 Nothing decided is waiting here.
