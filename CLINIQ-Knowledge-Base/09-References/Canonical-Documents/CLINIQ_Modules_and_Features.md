@@ -40,7 +40,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 - Force password change on first login
 - Prevent reuse of last 5 passwords
 - Enforce minimum 8-character password length
-- Recover a forgotten password by an email reset link when the computer is online, with the Admin's temporary-password reset as the fallback; this needs an email address on each account and a mail service (ADR-048)
+- Recover a forgotten password with an authenticator app: the username, then a 6-digit code or one of 8 recovery codes, then a new password; the Admin's temporary-password reset is the fallback; no account has an email address (ADR-073, which replaced the email reset of ADR-048)
 - Disabling an account ends its open sessions (ADR-048)
 
 **Role-Based Access** *(Admin/Principal only)*
@@ -223,10 +223,10 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 - Print incident report — *Staff* (ADR-038)
 - The month's **Incident register** (renamed from "Incident Report Archive", panel review RP-4: it holds unfinished incidents, so it isn't an archive) lists every incident of the month by masked LRN; for Staff each row opens its report, or "Complete Stage 2" for a Stage 1 record; for the Admin/Principal every row opens the report read-only (ADR-038)
 
-**Complaint summary** (renamed from "Health Summaries", panel review RP-7: it holds complaint counts only)
-- Generate aggregated complaint summary — *Staff*
-- View complaint summary — *Staff, Admin/Principal*
-- Export complaint summary — *Staff* (ADR-038)
+**Symptom summary** (renamed from "Health Summaries", panel review RP-7, then from "Complaint summary", ADR-070: it holds symptom counts only)
+- Generate aggregated symptom summary — *Staff*
+- View symptom summary — *Staff, Admin/Principal (on screen only, ADR-077)*
+- Print or save as PDF — *Staff* (ADR-038)
 
 **Sports Reports (ADR-034)** — *Staff only; the Admin/Principal cannot open them*
 - Build a saved, reusable list of students for a PE or sports activity: title, activity, requested by (the instructor's name), look-back window (30, 60 or 90 days or the school year; default 90), "Include recorded conditions and allergies" (off by default) — *Staff*
@@ -304,7 +304,7 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 - **School events, maintained by Staff and the Admin** (ADR-019, ADR-042): Staff and the Admin click any calendar day (past, today, or future) to open that day's panel: its visit and incident counts (past and today only), its events with edit and delete, Add event, and, for Staff only, a "View visits" link to the Visit Log filtered to that day. An event has a title (up to 60 characters), a start date, and an optional end date for multi-day events. Each event shows as a yellow chip on every day it covers (up to 2 chips per day, then "+N more"); a visit/incident tag with the same text on the same day shows once. Create, edit, and delete are audit-logged. Admin/Principal sees the same chips but can't open or change anything
 - **National holidays, read-only** (ADR-020): nationwide Philippine holidays (regular, special non-working, special working, Islamic) appear as gray "Holiday: <name>" chips in the Month, Week, Year, and Table views, including future days; long names truncate with the full name in a tooltip, and an unconfirmed date shows "(estimated)". A no-class holiday (anything but a special working day) with zero visits gets faint stripes, so it reads as "no class", not "no illness". Staff's day panel lists the date's holidays with no edit or delete controls. A line under the calendar shows "Holidays updated <date> · Source <name>" to Staff and Admin, with a warning if no holidays are loaded for the current year. Holidays come from a source through the data layer (a bundled 2026 list for now); no role edits them. Local town/province days and class suspensions are entered by Staff as events. Automatic yearly updating is a backend task (Phase B9); the source is still open
 - Filter any of the above by custom date range
-- **Print the open tab** (Staff only; the Admin/Principal does not print, ADR-038): Overview prints the Clinic Overview Report (the stat cards, chip counts, a written summary and the lists behind them); Trends prints the Clinic Trends Report (the sex and grade-level tables, complaints and visit activity). Every printout is an A4 document with the page number as its only footer, and the Clinic Overview Report prints full LRNs with no names (ADR-026, 044, 045, 046)
+- **No print** (ADR-074, which supersedes ADR-045): the Dashboard prints nothing; the four monthly reports in Reports are the printouts
 - The Admin's totals leave staff-patient incidents out (ADR-053)
 
 ### 10. Backup Verification Assistant — *Access: Staff and Admin/Principal (ADR-037; the same abilities for both)*
@@ -315,7 +315,7 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 - **Back up now** (panel review part 6): starts a backup from the Backup page, either role. In the frontend phase it records a successful run in the mock data; the real copy to the external drive is backend-phase work. Audit-logged
 - **Stale-backup alert** for both roles: a Dashboard chip "Last backup was more than 48 hours ago" (`config.staleBackupHours`), "The latest backup failed" or "No successful backup yet", linking to Backup; it also counts in the Overview tab's urgent number
 - View backup history/log
-- **Backup locations** (ADR-052): the clinician adds, edits and disables the internal and external backup locations on the Backup screen (a label, a path, a status of found / not found / not writable, the last backup time and result, and an enabled switch). A location is never deleted, only disabled, and the last enabled one cannot be disabled (review round 2, R32; ADR-052 note); the screen still warns if none is enabled. Every change is audit-logged
+- **Backup locations** (ADR-052): the clinician adds and disables, never edits, the internal and external backup locations on the Backup screen (a label, a path, a status of found / not found / not writable, the last backup time and result, and an enabled switch). A location is never deleted, only disabled, and the last enabled one cannot be disabled (review round 2, R32; ADR-052 note); the screen still warns if none is enabled. Every change is audit-logged
 - A backup runs to **every enabled location** and shows each result; "Back up now", the nightly backup and the backup at sign-out use the same list
 - The system **creates the folders itself**: `<location>\.cliniq\` with a marker file `cliniq.json`, `backups\YYYY\MM\cliniq-YYYY-MM-DD_HHmm.zip` and `logs\backup-YYYY-MM.log`. Each zip holds the database dump, uploaded files and a manifest with a checksum; the oldest backups beyond the latest 60 per location are removed (a setting)
 - **Decided (ADR-039, 052):** backups stay local on the clinic computer's internal drive and an external drive. There is no cloud copy (off-site health data needs the parents' consent and a provider agreement, and the school has no IT staff), and a second copy held by the Principal was suggested and withdrawn. Whether an extra layer is ever needed remains an open question
