@@ -77,7 +77,7 @@ The QR screens (#22–24, #26) were removed with the QR feature (ADR-027), and t
 31a. **Activity calendar** (renamed from Clinic Calendar, ADR-050) — Staff and Admin top-level calendar with Weekly/Monthly/Yearly and Calendar/Table controls, holidays, visit/incident tags, and school-event management by Staff and the Admin (ADR-019, 042; the Admin does not get the "View visits" link) and read-only national holidays (ADR-020).
 
 ### Backup Verification Assistant (enhancement)
-32. **Backup Status Screen** — last backup date/size/status, plus a plain-language guided recovery checklist, and a **Backup locations** list where the clinician adds, edits and disables the internal and external locations; the system creates a `.cliniq` folder on each (ADR-052) Since panel review part 6 (ADR-037): open to Staff and Admin/Principal, with "Back up now", the five most recent runs, and a Dashboard chip for both roles when the last good backup is older than 48 hours, failed, or missing.
+32. **Backup Status Screen** — last backup date/size/status, plus a plain-language guided recovery checklist, and a **Backup locations** list where the clinician adds and disables (never edits) the internal and external locations; the system creates a `.cliniq` folder on each (ADR-052) Since panel review part 6 (ADR-037): open to Staff and Admin/Principal, with "Back up now", the five most recent runs, and a Dashboard chip for both roles when the last good backup is older than 48 hours, failed, or missing.
 
 ### User Management
 33. **User List** — Admin/Principal only (ADR-033); Staff and Admin/Principal accounts, with Disable/Enable and Reset Password (PE/Sports Instructors have no account, ADR-029)

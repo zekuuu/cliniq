@@ -53,7 +53,7 @@ Every action CLINIQ writes to the audit trail, what the entry records, and the t
 | Restocks | `submit` | inventory-restock | — | — |
 | Adjusts stock (or a visit edit moves stock) | `submit` | inventory-adjustment | the reason ("Visit edited", "Damaged or spilled", …) | `lib/mock-db/stock.test.ts` |
 | Starts a backup ("Back up now") | `create` | backup | "Backup started from the Backup page (2 locations)": the number of enabled locations (ADR-052) | `features/backup/AccessAndBackup.test.tsx` |
-| Adds, edits, disables or enables a backup location (ADR-052) | `create` / `update` | backup-location | — / "Updated label" / "Disabled" / "Enabled". Disabling the last enabled location is refused and writes nothing (review round 2, R32) | `features/StaffComplaintsBackupDecisions.test.tsx`, `features/review-round-2-parts-2-3.test.tsx` |
+| Adds, disables or enables a backup location (ADR-052; editing removed, professor's consultation, November 6, 2026) | `create` / `update` | backup-location | — / "Disabled" / "Enabled". Disabling the last enabled location is refused and writes nothing (review round 2, R32) | `features/StaffComplaintsBackupDecisions.test.tsx`, `features/review-round-2-parts-2-3.test.tsx` |
 | Marks a backup verified | `update` | backup | "Verified backup" | — |
 | Adds / edits / deletes a calendar event | `create` / `update` / `delete` | calendar-event | changed field names on edit | `lib/mock-db/calendarEvents.test.ts` |
 | Creates / edits / duplicates / archives / restores a Sports Report | `create` / `update` / `create` / `archive` / `update` | sports-report | "Duplicated from another Sports Report", "Restored from the archive"; a report holds students only, no note (November 3, 2026) | `features/reports/SportsReport.test.tsx` |

@@ -48,7 +48,7 @@ Follow the mapping table already defined in `03-Design/Reference-Screens.md` (§
 3. *(Built, then removed with the QR feature, ADR-027.)* The rest of the QR Digital Health ID screens.
 4. **Emergency Response** remainder — Incident Log List (masked LRN, status badge from the Phase F1 pattern), Parent Notification Outcome Logging, Incident Report View/Print.
 5. **Medicine & Supply Inventory Tracker** — Inventory List, Add/Edit Item, Dispense/Log Usage (the stock-flow mechanics from `Modules-and-Features` §8 — threshold check, independent low-stock/nearing-expiry badges).
-6. **Reports Generation** — Monthly / Incident register / Complaint summary views, all print-layout-first.
+6. **Reports Generation** — Monthly / Incident register / Symptom summary / Inventory sheet views, all print-layout-first.
 7. **User Management** — User List, Add/Edit User & Role Assignment (Staff, Admin/Principal).
 8. **Backup Verification Assistant** — status screen, guided recovery checklist.
 
@@ -60,6 +60,8 @@ Keyboard shortcuts (`04-Development/Keyboard-Shortcuts-and-Efficiency.md`) wired
 ---
 
 ## Backend Phases
+
+**Status at `b51166a` (Tuesday, November 10, 2026 — 17:27 PHT):** B0 done and tested (85 Pest tests pass). B1 code-complete: 48 migrations, one per table, written on Monday, November 9, 2026; not yet run against MariaDB, so `b1-done` is not tagged (see `08-Logs/Overnight-Run-Nov9/MORNING-REPORT.md`). B2 to B10 not started. The frontend's F0 to F2 are built on sample data; F3's demo-ready check is open.
 
 Some backend work can't wait for frontend to finish (auth, schema, audit trail) — these start early and run alongside the frontend phases, not strictly after them. See "How These Interleave" below.
 
@@ -109,7 +111,7 @@ Per ADR-006, frontend leads and backend follows *per feature*, not "all frontend
 | Frontend phase | Matching backend phase | Notes |
 |---|---|---|
 | F0 | B0 | Can run in parallel — no dependency |
-| — | B1 (schema) | Blocked on the team's approval of the ERD (ADR-056); doesn't block the frontend, which runs on mock data |
+| — | B1 (schema) | ERD approved (ADR-057); migrations written, waiting for a MariaDB run; doesn't block the frontend, which runs on mock data |
 | — | B2, B3 (auth, audit) | Planned to land before F2 got far; F2 finished on mocks first, so these come before any module API |
 | F1 (5 reference screens) | — | Runs entirely on mock data — this is the point; client feedback happens before backend logic is finalized |
 | F2, module by module | B4–B10, matching module | Once a module's frontend is validated with the client, wire it to its real backend phase rather than leaving it on mocks indefinitely |

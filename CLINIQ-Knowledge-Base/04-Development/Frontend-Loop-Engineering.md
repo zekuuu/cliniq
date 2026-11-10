@@ -62,7 +62,7 @@ Write the screen/component.
 Go back to the same sources read in Phase 1 and verify, item by item, that every documented requirement for *this specific screen* actually made it into what got built — not "looks about right." If a source says a field is required, confirm it exists and is marked required. If it says a button routes somewhere specific, confirm the route target. Treat this like grading against a rubric.
 
 ### 2. Audit
-- **Display-privacy rule** — check against `.claude/skills/cliniq-display-privacy/`: does this screen show a name where it should show a Student Number, or vice versa?
+- **Display-privacy rule** — check against `.claude/skills/cliniq-display-privacy/`: does this screen show a name where it should show the masked LRN (or a Staff No.), or vice versa? (The Student Number was replaced by the LRN, ADR-027, ADR-028.)
 - **Audit trail** — check against `.claude/skills/cliniq-audit-trail/`: if this screen creates/edits/deletes/approves anything, is the logging call wired in?
 - **Interactive states** — check against `.claude/skills/cliniq-interactive-states/`: does every button, link, dropdown, and navigable row have a cursor state and a real hover color, not just a cursor change? Are all dropdowns/selects custom-styled, not native OS chrome?
 - **Skeleton loading state** — if this screen fetches data on load (nearly all of them do), does it show a skeleton matching its final layout, not a spinner or a blank screen?
@@ -86,6 +86,7 @@ Explicit pass/fail. If anything failed Countercheck, Audit, or Simulate, fix it 
 - Add a full `08-Logs/Agent-Sessions/` entry per the standard `AGENTS.md` format, with a real timestamp.
 - Check the screen's **Audit** box in the Checklist below.
 - Fill in its **Audit Resume Note.**
+- Run the docs check (`npm run docs:check` at the repository root); fix what it flags in the READMEs you touched (added Tuesday, November 10, 2026).
 
 ---
 
