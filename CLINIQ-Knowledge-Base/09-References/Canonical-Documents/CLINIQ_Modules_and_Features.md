@@ -58,7 +58,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 - Record the student's LRN (Learner Reference Number, ADR-028), entered by Staff from the school records: exactly 12 digits, kept as text so leading zeros survive, required and unique (a repeat shows "This LRN is already used by another student record" without naming that student); spaces and dashes are removed when typed or pasted; a wrong LRN is corrected in Edit Student and audited as "Updated LRN" with neither value. Lists, pickers, the Dashboard, Reports and the Audit Trail show it masked to the last four digits (`●●●●●●●●1234`, read as "LRN ending in 1234"); a screen about one opened student, and its printout, show it in full (ADR-040); only the Student Profile and the edit form show it in full; addresses carry the internal id, never the LRN
 - Edit student record — *Staff*. The LRN is locked once the record exists (read-only on Edit Student and refused by the data layer); a name correction stays possible but asks for a reason of at least 3 characters, which the audit entry records ("Name corrected; reason: ...") without the old or new name (Sir Rey, Sunday, October 25, 2026)
 - Admin/Principal opening a student profile is audit-logged once per record per sign-in session (ADR-038 item 4); visits on the profile show as text, not links, for the Admin
-- The student's own phone number is not recorded (ADR-054; the school's list has no such column). Parents and guardians are reached through the emergency contacts, which stay required for every grade, and no record is "incomplete" for lacking a birthdate or any other optional field
+- The student's own phone number is not recorded (ADR-054; the school's list has no such column). Parents and guardians are reached through the emergency contacts, which stay required for every grade. Since Tuesday, November 03, 2026 — 20:16 PHT a missing birthdate makes the record incomplete, though it still saves (review round 2, R14; ADR-054 note); no record is "incomplete" for lacking any other optional field
 - View student profile/detail — *Staff*. When allergies or medical conditions are recorded, a compact banner at the top of the profile lists them; otherwise nothing extra shows (panel review ST-9)
 - View list of all students (masterlist, shown with full names) — *Staff*
 - Search/filter students (name, grade level, status, or LRN) — *Staff*
@@ -67,6 +67,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 **Medical History Recording**
 - Add/update medical history entry (allergies, past illnesses, family history) — *Staff*
 - Allergies and medical conditions are one free-text field each. The suggestion and the display for an empty field read **"None recorded"**, in plain text with no warning style and no extra states (ADR-049, amended by ADR-051)
+- Typing in either field suggests entries from a short, editable starter list in English and Filipino (hipon, mani, hika); picking stores the English name, anything else stays and is marked as typed by hand. The medicine allergy warning also matches the Filipino words (review round 2, R16; ADR-049 note)
 - View medical history — *Staff*
 
 **Allergy/Food Restriction Monitoring**
@@ -229,10 +230,10 @@ Teachers, non-teaching staff and utility workers can be clinic patients. Built M
 
 **Sports Reports (ADR-034)** — *Staff only; the Admin/Principal cannot open them*
 - Build a saved, reusable list of students for a PE or sports activity: title, activity, requested by (the instructor's name), look-back window (30, 60 or 90 days or the school year; default 90), "Include recorded conditions and allergies" (off by default) — *Staff*
-- Add students by name or LRN search or a whole grade level at once, with an optional note per student; shown by full name and grade level, a decided exception to the display-privacy rule — *Staff*
+- Add students by name or LRN search or a whole grade level at once, with no per-student note (removed November 3, 2026; ADR-034 note); shown by full name and grade level, a decided exception to the display-privacy rule — *Staff*
 - Edit, duplicate and archive a saved report — *Staff*
 - The clinician chooses which entries to include (ADR-051). Archived students stay on the saved list but are left out of the printout with a count; the school year starts June 15; an incident outcome reads "Referred to hospital" or "No hospital referral recorded" (ADR-050)
-- Print the report (A4): each student's visits and incidents in the window (date, what happened, outcome), the note, and conditions only if ticked; never notes, vitals, medicines, contacts or the LRN; signature lines for the clinician and the receiving instructor; every print audited — *Staff*
+- Print the report (A4): each student's visits and incidents in the window (date, what happened, outcome) and conditions only if ticked; never notes, vitals, medicines, contacts or the LRN; signature lines for the clinician and the receiving instructor; every print audited — *Staff*
 
 ---
 
@@ -314,7 +315,7 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 - **Back up now** (panel review part 6): starts a backup from the Backup page, either role. In the frontend phase it records a successful run in the mock data; the real copy to the external drive is backend-phase work. Audit-logged
 - **Stale-backup alert** for both roles: a Dashboard chip "Last backup was more than 48 hours ago" (`config.staleBackupHours`), "The latest backup failed" or "No successful backup yet", linking to Backup; it also counts in the Overview tab's urgent number
 - View backup history/log
-- **Backup locations** (ADR-052): the clinician adds, edits and disables the internal and external backup locations on the Backup screen (a label, a path, a status of found / not found / not writable, the last backup time and result, and an enabled switch). A location is never deleted, only disabled, and the screen warns when none is enabled. Every change is audit-logged
+- **Backup locations** (ADR-052): the clinician adds, edits and disables the internal and external backup locations on the Backup screen (a label, a path, a status of found / not found / not writable, the last backup time and result, and an enabled switch). A location is never deleted, only disabled, and the last enabled one cannot be disabled (review round 2, R32; ADR-052 note); the screen still warns if none is enabled. Every change is audit-logged
 - A backup runs to **every enabled location** and shows each result; "Back up now", the nightly backup and the backup at sign-out use the same list
 - The system **creates the folders itself**: `<location>\.cliniq\` with a marker file `cliniq.json`, `backups\YYYY\MM\cliniq-YYYY-MM-DD_HHmm.zip` and `logs\backup-YYYY-MM.log`. Each zip holds the database dump, uploaded files and a manifest with a checksum; the oldest backups beyond the latest 60 per location are removed (a setting)
 - **Decided (ADR-039, 052):** backups stay local on the clinic computer's internal drive and an external drive. There is no cloud copy (off-site health data needs the parents' consent and a provider agreement, and the school has no IT staff), and a second copy held by the Principal was suggested and withdrawn. Whether an extra layer is ever needed remains an open question
@@ -326,7 +327,7 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 A dedicated screen to review the Audit Trail (below), not just write to it — added by `ADR-016` after the write side existed with no way to actually read it back.
 
 - View the audit log, filtered by date range, user, action type (login/logout/submit/approve/create/update/delete/archive/print/viewed by the Admin), and target/module type — *Staff, Admin/Principal*
-- Each entry: timestamp, who, action type, and the target record (masked LRN, not name, when the target is a student — per the display-privacy rule) — *Staff, Admin/Principal*
+- Each entry: timestamp, who, action type, and the target record (the full LRN, never the name, when the target is a student; review round 2, R33, notes on ADR-040 and ADR-044) — *Staff, Admin/Principal*
 - Export/print a filtered view, for handing to a DPO or during a compliance review — *Staff* (ADR-038). The printout states the filters in words and lists every matching entry (ADR-026)
 - The audit log is kept **10 years** (ADR-037, 051; not yet confirmed by the school or its privacy officer)
 - Operational lists (Visit Log, Incident Log, Audit Log) offer 10, 20, 50 or 100 rows per page; the choice lasts for the browser session (Sir Rey, Sunday, October 25, 2026)
