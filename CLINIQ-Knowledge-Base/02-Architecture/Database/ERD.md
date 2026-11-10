@@ -99,11 +99,13 @@ Rendered images live in `Diagrams/` (PNG to view, SVG to zoom, `ERD-Overview.dot
 | Image | What it shows |
 |---|---|
 | `Diagrams/ERD-Overview.png` / `.svg` | All 48 tables and their relationships, grouped by module. Regenerated Saturday, November 07, 2026 — 16:12 PHT from `ERD-Overview.dot` (Graphviz compiled to WebAssembly, run outside the repository). |
-| `Diagrams/ERD-3.2-Students.png` | Students, grade levels, health entries, contacts, reviews. **Not yet regenerated** after ADR-064 (Thursday, November 05, 2026 — 01:33 PHT): the PNG and SVG still show `full_name` on `students` and `personnel`; the Mermaid block in 3.2 below is current. It also lacks `staff_record_reviews` (ADR-076, Saturday, November 07, 2026 — 16:12 PHT). |
+| `Diagrams/ERD-3.2-Students.png` | Students, grade levels, health entries, contacts, reviews (with `staff_record_reviews`) |
 | `Diagrams/ERD-3.3-Visits.png` | Visits, excuse letters, triage, follow-ups, PE referrals |
 | `Diagrams/ERD-3.4-Emergency.png` | Incidents, vitals, referrals, call attempts, sign-off |
-| `Diagrams/ERD-3.5-Inventory.png` | Items, medicines given, stock ledger. **Not yet regenerated** (Saturday, November 07, 2026 — 13:24 PHT): no source file exists for it, and it lacks `inventory_item_symptom_tags`; the Mermaid block in 3.5 is current. |
-| `Diagrams/ERD-3.6-Access-and-Operations.png` | Users, settings, calendar, Sports Reports, backups, audit. **Not yet regenerated** (Saturday, November 07, 2026 — 13:24 PHT): it still shows `users.email` and lacks `school_years`, `recovery_codes` and the TOTP columns; the Mermaid block in 3.6 is current. |
+| `Diagrams/ERD-3.5-Inventory.png` | Items, symptom tags, medicines given, stock ledger |
+| `Diagrams/ERD-3.6-Access-and-Operations.png` | Users (TOTP columns, no email), recovery codes, school years, settings, calendar, Sports Reports, backups, audit |
+
+The five module images (3.2 to 3.6) were regenerated Tuesday, November 10, 2026 — 17:27 PHT from the Mermaid blocks below, which are now their source; the overview's SVG and PNG were regenerated from `ERD-Overview.dot` at the same time. Command: `npm run docs:diagrams` (see the [diagram index](Diagrams/README.md)).
 
 ### 3.1 Overview (all 48 tables)
 
