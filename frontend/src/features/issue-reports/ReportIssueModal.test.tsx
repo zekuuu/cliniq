@@ -10,7 +10,7 @@ import {
 } from '../../lib/mock-db'
 import { ReportIssueModal } from './ReportIssueModal'
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
 
 describe('ReportIssueModal', () => {
   it('captures page context, saves the report, opens mailto, and closes', async () => {

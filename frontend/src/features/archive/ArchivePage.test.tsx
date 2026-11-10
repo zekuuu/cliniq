@@ -18,8 +18,8 @@ import { ArchivePage } from './ArchivePage'
 
 /** The Archive by school year (professor's consultation, November 6, 2026; Zean, November 7, 2026 — 04:20 PHT). */
 
-const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
-const ADMIN = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' } as const
+const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' } as const
+const ADMIN = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' } as const
 
 async function openArchive(viewer: typeof STAFF | typeof ADMIN = STAFF) {
   const user = userEvent.setup()

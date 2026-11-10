@@ -50,12 +50,22 @@ import { addDays } from '../dates'
  * and, where one is written, the summary.
  */
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
-const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
+const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }
 const last = () => getRecordedAuditEntries().at(-1)!
-const entries = () => getRecordedAuditEntries().map((e) => [e.actionType, e.targetRecord?.type ?? null, e.summary ?? null])
+const entries = () =>
+  getRecordedAuditEntries().map((e) => [
+    e.actionType,
+    e.targetRecord?.type ?? null,
+    e.summary ?? null,
+  ])
 const today = () => getMockToday()
-const base = { studentId: 'student-0001', complaint: 'Headache', treatment: '', followUp: null } as const
+const base = {
+  studentId: 'student-0001',
+  complaint: 'Headache',
+  treatment: '',
+  followUp: null,
+} as const
 
 beforeEach(() => {
   resetMockDb()
@@ -75,12 +85,29 @@ describe('every audited event is written (AU-1)', () => {
   })
 
   it('accounts: create, edit, disable, enable, reset password', async () => {
-    const user = await saveUser({ name: 'New Nurse', username: 'new.nurse', role: 'staff', temporaryPassword: 'temp-pass-123' }, { actor: ADMIN })
-    await saveUser({ name: 'New Nurse B', username: 'new.nurse', role: 'staff' }, { userId: user.id, actor: ADMIN })
+    const user = await saveUser(
+      {
+        name: 'New Nurse',
+        username: 'new.nurse',
+        role: 'staff',
+        temporaryPassword: 'temp-pass-123',
+      },
+      { actor: ADMIN },
+    )
+    await saveUser(
+      { name: 'New Nurse B', username: 'new.nurse', role: 'staff' },
+      { userId: user.id, actor: ADMIN },
+    )
     await setUserActive(user.id, false, ADMIN)
     await setUserActive(user.id, true, ADMIN)
     await resetUserPassword(user.id, 'another-temp-1', ADMIN)
-    expect(entries().map(([action, type, summary]) => [action, type, summary === null ? null : String(summary).split(':')[0]])).toEqual([
+    expect(
+      entries().map(([action, type, summary]) => [
+        action,
+        type,
+        summary === null ? null : String(summary).split(':')[0],
+      ]),
+    ).toEqual([
       ['create', 'user', null],
       ['update', 'user', expect.any(String)],
       ['update', 'user', 'Disabled account'],
@@ -91,10 +118,18 @@ describe('every audited event is written (AU-1)', () => {
 
   it('students: create, edit, archive', async () => {
     const student = await getStudent('student-0001')
-    const input = { ...student, lrn: '000000269991', fullName: 'Audit Pupil', emergencyContacts: student.emergencyContacts }
+    const input = {
+      ...student,
+      lrn: '000000269991',
+      fullName: 'Audit Pupil',
+      emergencyContacts: student.emergencyContacts,
+    }
     const created = await saveStudent(input, { actor: STAFF, confirmDuplicate: true })
     if (created.status !== 'saved') throw new Error('not saved')
-    await saveStudent({ ...input, lastName: 'Pupil B' }, { studentId: created.student.id, actor: STAFF, nameCorrectionReason: 'Typo in the surname' })
+    await saveStudent(
+      { ...input, lastName: 'Pupil B' },
+      { studentId: created.student.id, actor: STAFF, nameCorrectionReason: 'Typo in the surname' },
+    )
     await archiveStudent(created.student.id, STAFF, 'Transferred')
     expect(entries().map(([action, type]) => [action, type])).toEqual([
       ['create', 'student'],
@@ -104,37 +139,105 @@ describe('every audited event is written (AU-1)', () => {
   })
 
   it('visits: submit (and late entry), edit, follow-up, entered in error, escalation', async () => {
-    const { visit } = await recordVisit({ ...base, disposition: 'sent_home', followUp: { followUpDate: addDays(today(), 1), reason: 'Recheck', notes: null }, excuseLetterDraft: { excusedFrom: today(), excusedUntil: today(), note: null } })
-    expect(entries()).toEqual([['submit', 'visit', null], ['create', 'follow-up', null]])
-    await updateVisit(visit.id, { complaint: 'Fever', treatment: '', disposition: 'sent_home', eventTag: null })
+    const { visit } = await recordVisit({
+      ...base,
+      disposition: 'sent_home',
+      followUp: { followUpDate: addDays(today(), 1), reason: 'Recheck', notes: null },
+      excuseLetterDraft: { excusedFrom: today(), excusedUntil: today(), note: null },
+    })
+    expect(entries()).toEqual([
+      ['submit', 'visit', null],
+      ['create', 'follow-up', null],
+    ])
+    await updateVisit(visit.id, {
+      complaint: 'Fever',
+      treatment: '',
+      disposition: 'sent_home',
+      eventTag: null,
+    })
     expect(last()).toMatchObject({ actionType: 'update', targetRecord: { type: 'visit' } })
-    const late = await recordVisit({ ...base, disposition: 'returned_to_class', dateTime: `${today()}T00:00` })
-    if (late.visit.lateEntry) expect(last()).toMatchObject({ actionType: 'submit', summary: 'Late entry' })
+    const late = await recordVisit({
+      ...base,
+      disposition: 'returned_to_class',
+      dateTime: `${today()}T00:00`,
+    })
+    if (late.visit.lateEntry)
+      expect(last()).toMatchObject({ actionType: 'submit', summary: 'Late entry' })
     const escalate = await recordVisit({ ...base, disposition: 'returned_to_class' })
-    await saveIncidentStageOne({ studentId: base.studentId, complaint: 'Fainting', vitals: {}, sourceVisitId: escalate.visit.id })
-    expect(getRecordedAuditEntries().at(-2)).toMatchObject({ actionType: 'update', summary: 'Escalated to incident' })
+    await saveIncidentStageOne({
+      studentId: base.studentId,
+      complaint: 'Fainting',
+      vitals: {},
+      sourceVisitId: escalate.visit.id,
+    })
+    expect(getRecordedAuditEntries().at(-2)).toMatchObject({
+      actionType: 'update',
+      summary: 'Escalated to incident',
+    })
     await markVisitEnteredInError(visit.id, 'Wrong student')
-    expect(last()).toMatchObject({ actionType: 'update', targetRecord: { type: 'follow-up' }, summary: 'Marked cancelled: visit entered in error' })
-    expect(getRecordedAuditEntries().at(-2)).toMatchObject({ actionType: 'update', summary: 'Voided: visit entered in error' })
-    expect(getRecordedAuditEntries().at(-3)).toMatchObject({ actionType: 'update', summary: 'Marked entered in error' })
+    expect(last()).toMatchObject({
+      actionType: 'update',
+      targetRecord: { type: 'follow-up' },
+      summary: 'Marked cancelled: visit entered in error',
+    })
+    expect(getRecordedAuditEntries().at(-2)).toMatchObject({
+      actionType: 'update',
+      summary: 'Voided: visit entered in error',
+    })
+    expect(getRecordedAuditEntries().at(-3)).toMatchObject({
+      actionType: 'update',
+      summary: 'Marked entered in error',
+    })
   })
 
   it('excuse letters: approve, replacement', async () => {
-    const { visit } = await recordVisit({ ...base, disposition: 'sent_home', excuseLetterDraft: { excusedFrom: today(), excusedUntil: today(), note: null } })
+    const { visit } = await recordVisit({
+      ...base,
+      disposition: 'sent_home',
+      excuseLetterDraft: { excusedFrom: today(), excusedUntil: today(), note: null },
+    })
     await approveExcuseLetter(visit.id, { excusedFrom: today(), excusedUntil: today() })
     expect(last()).toMatchObject({ actionType: 'approve', targetRecord: { type: 'excuse-letter' } })
     await issueReplacementExcuseLetter(visit.id, 'Wrong date')
-    expect(last()).toMatchObject({ actionType: 'update', summary: 'Superseded; replacement draft opened' })
+    expect(last()).toMatchObject({
+      actionType: 'update',
+      summary: 'Superseded; replacement draft opened',
+    })
   })
 
   it('PE/Sports referral, and its escalation when referred to hospital', async () => {
-    await submitPeReferral({ studentId: 'student-0001', referredBy: 'Coach', activity: 'Basketball', injurySummary: 'Twisted ankle', clinicalAssessment: 'Swelling', treatment: 'Cold compress', disposition: 'referred_to_hospital' }, STAFF)
-    expect(entries()).toEqual([['submit', 'pe-sports-referral', null], ['create', 'incident-escalation', null]])
+    await submitPeReferral(
+      {
+        studentId: 'student-0001',
+        referredBy: 'Coach',
+        activity: 'Basketball',
+        injurySummary: 'Twisted ankle',
+        clinicalAssessment: 'Swelling',
+        treatment: 'Cold compress',
+        disposition: 'referred_to_hospital',
+      },
+      STAFF,
+    )
+    expect(entries()).toEqual([
+      ['submit', 'pe-sports-referral', null],
+      ['create', 'incident-escalation', null],
+    ])
   })
 
   it('incidents: Stage 1, Stage 2 with a notification, a later notification, report approval', async () => {
-    const incident = await saveIncidentStageOne({ studentId: 'student-0001', complaint: 'Fainting', vitals: {} })
-    await completeIncidentStageTwo({ incidentId: incident.id, complaint: 'Fainting', vitals: { treatmentNotes: 'Observed' }, hospitalReferral: null, newParentNotifications: [{ outcome: 'reached', timestamp: `${today()}T09:00:00+08:00` }], followUp: null })
+    const incident = await saveIncidentStageOne({
+      studentId: 'student-0001',
+      complaint: 'Fainting',
+      vitals: {},
+    })
+    await completeIncidentStageTwo({
+      incidentId: incident.id,
+      complaint: 'Fainting',
+      vitals: { treatmentNotes: 'Observed' },
+      hospitalReferral: null,
+      newParentNotifications: [{ outcome: 'reached', timestamp: `${today()}T09:00:00+08:00` }],
+      followUp: null,
+    })
     await addParentNotification(incident.id, 'no_answer')
     await approveIncidentReport(incident.id)
     expect(entries().map(([action, type]) => [action, type])).toEqual([
@@ -149,15 +252,31 @@ describe('every audited event is written (AU-1)', () => {
   it('follow-up status changes', async () => {
     const [pending] = await listFollowUps({ status: 'pending' })
     await setFollowUpStatus(pending.id, 'completed')
-    expect(last()).toMatchObject({ actionType: 'update', targetRecord: { type: 'follow-up' }, summary: 'Marked completed' })
+    expect(last()).toMatchObject({
+      actionType: 'update',
+      targetRecord: { type: 'follow-up' },
+      summary: 'Marked completed',
+    })
   })
 
   it('inventory: add item, dispense, restock, adjust, and visit lines', async () => {
-    const item = await saveInventoryItem({ name: 'Saline', category: 'supply', currentStock: 5, unit: 'bottles', lowStockThreshold: 1, expirationDate: null, noExpirationConfirmed: true })
+    const item = await saveInventoryItem({
+      name: 'Saline',
+      category: 'supply',
+      currentStock: 5,
+      unit: 'bottles',
+      lowStockThreshold: 1,
+      expirationDate: null,
+      noExpirationConfirmed: true,
+    })
     await dispenseInventoryItem('item-0011', 1, {}, STAFF)
     await restockInventoryItem('item-0011', 5, null, { noExpirationConfirmed: true, actor: STAFF })
     await adjustInventoryStock('item-0011', { change: -1, reason: 'damaged_spilled' }, STAFF)
-    await recordVisit({ ...base, disposition: 'returned_to_class', itemsGiven: [{ itemId: 'item-0011', quantity: 1 }] })
+    await recordVisit({
+      ...base,
+      disposition: 'returned_to_class',
+      itemsGiven: [{ itemId: 'item-0011', quantity: 1 }],
+    })
     expect(entries().map(([action, type]) => [action, type])).toEqual([
       ['create', 'inventory'],
       ['submit', 'inventory-dispensation'],
@@ -172,18 +291,39 @@ describe('every audited event is written (AU-1)', () => {
   it('backup: back up now, verify', async () => {
     await recordBackupNow(ADMIN)
     await verifyLatestBackup(STAFF)
-    expect(entries()).toEqual([['create', 'backup', 'Backup started from the Backup page (2 locations)'], ['update', 'backup', 'Verified backup']])
+    expect(entries()).toEqual([
+      ['create', 'backup', 'Backup started from the Backup page (2 locations)'],
+      ['update', 'backup', 'Verified backup'],
+    ])
   })
 
   it('calendar events: create, edit, delete', async () => {
-    const event = await createCalendarEvent({ title: 'Intramurals', startDate: today(), endDate: null }, STAFF)
-    await updateCalendarEvent(event.id, { title: 'Intramurals Day 1', startDate: today(), endDate: null }, STAFF)
+    const event = await createCalendarEvent(
+      { title: 'Intramurals', startDate: today(), endDate: null },
+      STAFF,
+    )
+    await updateCalendarEvent(
+      event.id,
+      { title: 'Intramurals Day 1', startDate: today(), endDate: null },
+      STAFF,
+    )
     await deleteCalendarEvent(event.id, STAFF)
-    expect(entries().map(([action, type]) => [action, type])).toEqual([['create', 'calendar-event'], ['update', 'calendar-event'], ['delete', 'calendar-event']])
+    expect(entries().map(([action, type]) => [action, type])).toEqual([
+      ['create', 'calendar-event'],
+      ['update', 'calendar-event'],
+      ['delete', 'calendar-event'],
+    ])
   })
 
   it('Sports Reports: create, edit, duplicate, archive, restore', async () => {
-    const input = { title: 'Varsity', activity: 'Basketball', requestedBy: 'Coach', window: 90 as const, includeConditions: false, students: [{ studentId: 'student-0001' }] }
+    const input = {
+      title: 'Varsity',
+      activity: 'Basketball',
+      requestedBy: 'Coach',
+      window: 90 as const,
+      includeConditions: false,
+      students: [{ studentId: 'student-0001' }],
+    }
     const report = await createSportsReport(input, STAFF)
     await updateSportsReport(report.id, { ...input, title: 'Varsity A' }, STAFF)
     await duplicateSportsReport(report.id, STAFF)
@@ -200,7 +340,13 @@ describe('every audited event is written (AU-1)', () => {
 
   it('printing and issue reports', async () => {
     await recordPrint('Monthly Clinic Report', STAFF)
-    await createIssueReport({ description: 'Button overlaps on a phone', route: '/visits', pageName: 'Visit Log' }, STAFF)
-    expect(entries().map(([action, type]) => [action, type])).toEqual([['print', 'print-document'], ['create', 'issue-report']])
+    await createIssueReport(
+      { description: 'Button overlaps on a phone', route: '/visits', pageName: 'Visit Log' },
+      STAFF,
+    )
+    expect(entries().map(([action, type]) => [action, type])).toEqual([
+      ['print', 'print-document'],
+      ['create', 'issue-report'],
+    ])
   })
 })

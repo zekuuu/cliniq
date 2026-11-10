@@ -23,7 +23,7 @@ vi.mock('react-chartjs-2', () => {
   return { Bar: Stub, Doughnut: Stub, Line: Stub }
 })
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
 const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Principal', role: 'admin' }
 const ALL = rangeForPreset('all', db().today)
 

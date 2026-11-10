@@ -22,7 +22,7 @@ vi.mock('react-chartjs-2', () => {
   return { Bar: Stub, Line: Stub, Doughnut: Stub }
 })
 
-const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
+const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' } as const
 
 beforeEach(() => resetMockDb())
 

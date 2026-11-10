@@ -14,7 +14,7 @@ import { ReportsPage } from './reports/ReportsPage'
 
 /** Professor's consultation, Friday, November 6, 2026: Part 2 of the frontend changes. */
 
-const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
+const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' } as const
 
 describe('P2.1 save buttons give clear feedback', () => {
   it('reads the action\'s "-ing" form while busy, and is disabled', () => {

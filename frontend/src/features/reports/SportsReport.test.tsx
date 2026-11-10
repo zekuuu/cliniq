@@ -34,8 +34,8 @@ vi.mock('react-chartjs-2', () => {
   return { Bar: Stub, Line: Stub, Doughnut: Stub }
 })
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
-const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
+const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }
 const TODAY = '2026-10-07'
 
 function input(studentIds: string[], overrides: Partial<SportsReportInput> = {}): SportsReportInput {

@@ -48,16 +48,21 @@ describe('Student Profile', () => {
     expect(await screen.findByRole('heading', { name: 'Excuse Letters' })).toBeInTheDocument()
     const today = getMockToday()
     expect(
-      screen.getByText(`${formatDateRange(toSchoolDay(addDays(today, -9), today), toSchoolDay(addDays(today, -7), today))} · Sent home`),
+      screen.getByText(
+        `${formatDateRange(toSchoolDay(addDays(today, -9), today), toSchoolDay(addDays(today, -7), today))} · Sent home`,
+      ),
     ).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'View visit' })).toHaveAttribute('href', '/visits/visit-0139')
+    expect(screen.getByRole('link', { name: 'View visit' })).toHaveAttribute(
+      'href',
+      '/visits/visit-0139',
+    )
   })
 
   it('keeps excuse letters off a non-Staff view', async () => {
     renderWithRouter(
       <StudentProfilePage
         studentId="student-0022"
-        viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }}
+        viewer={{ id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }}
       />,
     )
 
@@ -70,6 +75,9 @@ describe('Student Profile', () => {
 
     expect(await screen.findByRole('heading', { name: 'Excuse Letters' })).toBeInTheDocument()
     expect(screen.getByText('Pending approval')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Review letter' })).toHaveAttribute('href', '/visits/visit-0151/excuse-letter')
+    expect(screen.getByRole('link', { name: 'Review letter' })).toHaveAttribute(
+      'href',
+      '/visits/visit-0151/excuse-letter',
+    )
   })
 })

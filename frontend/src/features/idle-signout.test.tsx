@@ -17,7 +17,7 @@ import {
 import { LoginPage } from './auth/LoginPage'
 import { SettingsPage } from './settings/SettingsPage'
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
 const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Principal', role: 'admin' }
 const MIN = 60_000
 

@@ -26,7 +26,7 @@ import { SportsReportPage } from './reports/SportsReportPage'
 import { StaffFormPage } from './staff-records/StaffFormPage'
 import { StudentFormPage } from './student-records/StudentFormPage'
 
-const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' as const }
+const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' as const }
 
 /** Decisions sheet, Part 5: clinic settings and rules (ADR-051). */
 describe('Clinic settings and rules', () => {

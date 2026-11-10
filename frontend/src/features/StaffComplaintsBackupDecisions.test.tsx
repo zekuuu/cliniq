@@ -28,7 +28,7 @@ import { BackupStatusPage } from './backup/BackupStatusPage'
 import { PeSportsReferralPage } from './clinic-visits/PeSportsReferralPage'
 import { VisitDetailPage } from './clinic-visits/VisitDetailPage'
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
 const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Principal', role: 'admin' }
 
 /** Decisions sheet, Part 6: staff wording, extra complaints and backup locations (ADR-052, ADR-053). */
