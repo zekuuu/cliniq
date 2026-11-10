@@ -4,7 +4,12 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "dev": "git pull origin main && cd frontend && npm run dev"
+        "dev": "git pull origin main && cd frontend && npm run dev",
+        "docs:facts": "node CLINIQ-Knowledge-Base/04-Development/tools/docs-facts.mjs",
+        "docs:check": "node CLINIQ-Knowledge-Base/04-Development/tools/docs-check.mjs",
+        "docs:trace": "node CLINIQ-Knowledge-Base/04-Development/tools/docs-trace.mjs",
+        "docs:diagrams": "node CLINIQ-Knowledge-Base/04-Development/tools/docs-diagrams.mjs",
+        "docs:adrs": "node CLINIQ-Knowledge-Base/04-Development/tools/docs-adr-index.mjs"
     },
     "keywords": [],
     "author": "",
