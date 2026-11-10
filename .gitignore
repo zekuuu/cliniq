@@ -26,6 +26,12 @@ _read-first
 # Design tool cache (impeccable)
 .impeccable/
 
+# Database dumps and backups (real data never goes in the repository)
+*.dump
+*.sql.gz
+*.zip
+.cliniq/
+
 # Secret files (added by Tokalator)
 .env*
 !.env.example
