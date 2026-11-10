@@ -26,11 +26,11 @@ mock_types="$(grep -cE '^export (type|interface) ' frontend/src/lib/mock-db/type
 tables="$(grep -cE '^CREATE TABLE ' CLINIQ-Knowledge-Base/02-Architecture/Database/Reference-Schema.sql)"
 checks="$(grep -cE 'CHECK \(' CLINIQ-Knowledge-Base/02-Architecture/Database/Reference-Schema.sql)"
 uniques="$(grep -cE 'UNIQUE ' CLINIQ-Knowledge-Base/02-Architecture/Database/Reference-Schema.sql)"
-migrations="$(find backend/app -path '*Database/Migrations/*.php' 2>/dev/null | wc -l | tr -d ' ')"
+migrations="$( { find backend/app -path '*Database/Migrations/*.php' 2>/dev/null || true; } | wc -l | tr -d ' ')"
 
 contract_endpoints="$(grep -ohE '(GET|POST|PATCH|PUT|DELETE) /[a-zA-Z0-9{}/_:-]+' CLINIQ-Knowledge-Base/04-Development/API-Contract.md 2>/dev/null | sort -u | wc -l | tr -d ' ')"
-backend_tests="$(find backend/tests -name '*.php' -not -name 'Pest.php' -not -name 'TestCase.php' 2>/dev/null | wc -l | tr -d ' ')"
-frontend_tests="$(find frontend/src -name '*.test.*' 2>/dev/null | wc -l | tr -d ' ')"
+backend_tests="$( { find backend/tests -name '*.php' -not -name 'Pest.php' -not -name 'TestCase.php' 2>/dev/null || true; } | wc -l | tr -d ' ')"
+frontend_tests="$( { find frontend/src -name '*.test.*' 2>/dev/null || true; } | wc -l | tr -d ' ')"
 
 cat <<EOF
 Timestamp: $ts

@@ -1,7 +1,7 @@
 # Facts sheet
 
-**Last regenerated:** Tuesday, November 10, 2026 — 06:34 PHT
-**From commit:** `5e3de24` on `docs/sync-readmes` (main tip, with the `backend` branch's additions present in the working tree pending merge; the next `backend` push already contains them as commits — see `08-Logs/Overnight-Run-Nov9/MORNING-REPORT.md`).
+**Last regenerated:** Tuesday, November 10, 2026 — 06:47 PHT
+**From commit:** `d2fefc9` on `docs/sync-readmes`. This branch carries only documentation (knowledge base, READMEs, diagrams); backend application code, migrations, config and tests live on the `backend` branch and are intentionally not merged here. The docs will flow `docs/sync-readmes` → `main` → `backend`, never `backend` → `main`.
 **Regenerate with:** `bash CLINIQ-Knowledge-Base/04-Development/tools/facts-sheet.sh`
 
 This is the one place every README, requirement document, diagram caption and future Project Plan / SRS section quotes for a number. If a document disagrees with this sheet, the sheet wins and the document is wrong. If this sheet disagrees with the repository, run the script again — it reads the repository, nothing else.
@@ -28,18 +28,18 @@ This is the one place every README, requirement document, diagram caption and fu
 - Tables in `02-Architecture/Database/Reference-Schema.sql` (the approved schema, ADR-057): **48**.
 - `CHECK` constraints in the reference schema: **92**.
 - `UNIQUE` constraints in the reference schema: **36**.
-- Backend migrations on disk under `backend/app/**/Database/Migrations/`: **48** (one per table, built in the overnight B1 run, Sunday / Monday November 8 to 9, 2026; present on the `backend` branch, not yet DB-verified against MariaDB — see `08-Logs/Overnight-Run-Nov9/MORNING-REPORT.md`).
+- Backend migrations on disk under `backend/app/**/Database/Migrations/`: **0** on this branch by design (this is the docs branch, not `backend`); the `backend` branch carries **48** migrations (one per table, built in the overnight B1 run, Sunday / Monday November 8 to 9, 2026), not yet DB-verified against MariaDB — see `08-Logs/Overnight-Run-Nov9/MORNING-REPORT.md`.
 - Constraint tests: `02-Architecture/Database/Checks/constraint-tests.sql`, run against a scratch database per `02-Architecture/Database/Checks/README.md`. MariaDB was not available to this run, so the pass count is reported by the person who runs it, not by this sheet.
 
 ## API
 
 - API contract: **131** unique method + path entries in `04-Development/API-Contract.md` (count of distinct `GET|POST|PATCH|PUT|DELETE /…` lines).
-- Live routes in `backend/routes/api.php`: **2** (`GET health`, `POST session/keepalive`); B1 is DB-only, so no module routes are wired yet. `php artisan route:list` was not available to this run (no vendor install in the worktree); re-run it after `composer install` and add the real count here.
+- Live routes in `backend/routes/api.php` (on the `backend` branch): **2** (`GET health`, `POST session/keepalive`); B1 is DB-only, so no module routes are wired yet. `php artisan route:list` was not available to this run (no vendor install, and `backend/` is not on this docs branch); re-run it after `composer install` on the `backend` branch and add the real count here.
 
 ## Tests
 
 - Frontend test files (`frontend/src/**/*.test.*`): **135**. Pass/skip/fail count not run in this session (sandboxed); refresh with `cd frontend && npm run test` and quote the summary line here.
-- Backend test files (`backend/tests/**`, excluding `Pest.php` and `TestCase.php`): **9**. Pass/skip/fail not run (no vendor install and no `.env` read); refresh with `cd backend && composer test`.
+- Backend test files (`backend/tests/**`, excluding `Pest.php` and `TestCase.php`) on this branch: **0** by design; the `backend` branch carries **9**. Pass/skip/fail not run (no vendor install and no `.env` read); refresh with `cd backend && composer test` on the `backend` branch.
 
 ## Stack
 
