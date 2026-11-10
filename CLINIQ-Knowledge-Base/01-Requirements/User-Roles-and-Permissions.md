@@ -1,4 +1,5 @@
 # User Roles and Permissions
+n> Updated Tuesday, November 10, 2026 — 17:27 PHT for ADR-056 to ADR-079 and the code at `b51166a`: checked; already current (ADR-066, 072, 073, 075, 077, 078, 079 were carried in earlier).
 
 | Role | Access |
 |---|---|
