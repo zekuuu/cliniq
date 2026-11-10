@@ -192,7 +192,7 @@ No bulk promotion: grade and section come from one yearly import of the registra
 
 ### ADR-048: Admin sign-out, Acknowledge on an incident report, email password reset, and logging who opens a record
 
-The Admin is signed out after 30 idle minutes (amends ADR-015); the Admin can Acknowledge an incident report (amends ADR-038); passwords can be reset by email when online, with the Admin reset as fallback; disabling an account ends its sessions; the clinician opening a profile or an incident report is audit-logged. Zean, decisions sheet, Thursday, October 29, 2026 — 12:33 PHT. [ADR-048](ADR-048-Admin-Sign-Out-Acknowledge-Email-Reset-And-Logging-Record-Opens.md)
+The Admin is signed out after 30 idle minutes (amends ADR-015); the Admin can Acknowledge an incident report (amends ADR-038; reversed by ADR-060); passwords can be reset by email when online, with the Admin reset as fallback; disabling an account ends its sessions; the clinician opening a profile or an incident report is audit-logged. Zean, decisions sheet, Thursday, October 29, 2026 — 12:33 PHT. [ADR-048](ADR-048-Admin-Sign-Out-Acknowledge-Email-Reset-And-Logging-Record-Opens.md)
 
 ### ADR-049: Clinical record rules: letters, allergies, notes and what the clinic does not add
 
@@ -225,6 +225,10 @@ The weekly breakdown now follows the Activity calendar: Sunday to Saturday, clip
 ### ADR-056: Backend preparation: Sanctum SPA cookie mode, a separate `backend` branch, nothing wired to the frontend, and no migrations before the ERD is approved
 
 The backend signs the browser app in with Sanctum's cookie mode (7-day session, CORS from one explicit origin with credentials). All backend work happens on a branch called `backend`, changes only `backend/`, and is not connected to the frontend yet. The first round is the foundation only (scaffold, modular folders, configuration, CORS, middleware, one error format, the audit-log service contract, a health route, tests); the ERD is reviewed first and no migration is built until the team approves it. Zean, in chat, Saturday, October 31, 2026 — 18:10 PHT. [ADR-056](ADR-056-Backend-Preparation-Sanctum-SPA-Cookie-Mode-Own-Branch-Nothing-Wired-No-Migrations-Before-ERD-Approval.md)
+
+### ADR-057: Backend answers: fixed 7-day session, new error codes, deferred HTTPS, masked LRN, retention, and the ERD approved
+
+The session ends 7 days after sign-in however active the user is. Three error codes join the envelope. Development stays on Zean's machine, and HTTPS on the LAN waits for a deployment with real data. Lists carry the masked LRN, with a Staff-only flag for the printouts of ADR-044. Staff-patient records are kept 5 years, and the audit log 10 years, settled. The ERD approval checklist is answered, and the ERD, Data Dictionary, Reference Schema and diagrams are approved, which releases migrations. The audit log stores the actor's role (amends ADR-017), list rows carry no health fields, and a reschedule keeps the stay-home flag. Zean, in chat, Sunday, November 1, 2026 — 01:23, 01:39 and 02:15 PHT. [ADR-057](ADR-057-Backend-Answers-Fixed-Session-Retention-And-ERD-Approval.md)
 
 ### ADR-058: The name-correction reason goes in the audit log
 
@@ -297,6 +301,10 @@ Reports keeps four tabs: Monthly Report, Incident register, Symptom summary, Inv
 ### ADR-075: Staff start each school year by hand
 
 Staff end a school year by hand ("End school year": today is the last class day, then the break) and start the next by hand after the break ("Start school year"); nothing changes by itself. The date settings give both due days. Staff get a short Dashboard banner 7 days before each, which turns to a warning once overdue. Records made in the break stay in the ended year. Each start is stored and audited. Amends ADR-072. [ADR-075](ADR-075-School-Year-Started-By-Hand.md)
+
+### ADR-076: Staff record reviews live in their own table
+
+The staff Incomplete Records queue (ADR-067) gets its own table, `staff_record_reviews` (`staff_id` to `personnel`, CASCADE). It mirrors the student review table without the import columns, and keeps one open review per staff record. Rows open and resolve on the staff save and import; there is no flag endpoint. A shared table and reusing the student table were rejected. Settles counter-check C-1. [ADR-076](ADR-076-Staff-Record-Reviews-In-Their-Own-Table.md)
 
 ### ADR-077: The Admin's Reports page is a month drop-down with the monthly reports, view only
 

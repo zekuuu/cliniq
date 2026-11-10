@@ -8,6 +8,8 @@
 
 **Numbering note:** this record was first written as ADR-010, which collided with the already-used ADR-010 record for reason visibility in list rows. It was renumbered ADR-015 on Monday, September 28, 2026 — 22:29 PHT. The obsolete duplicate has now been removed.
 
+**Note (Sunday, November 1, 2026 — 01:55 PHT):** [ADR-057](ADR-057-Backend-Answers-Fixed-Session-Retention-And-ERD-Approval.md) sets the build detail: the sign-in time is stored, and the session ends 7 days after sign-in however active the user is. The decision text below is not edited.
+
 ## Context
 Module 1 originally specified an automatic session timeout after 15 minutes idle, for every account. Earlier in planning, the (since-retired) QR Viewer role had a session lasting up to 1 week — changed from per-shift specifically so an emergency scan would never be blocked by a login step (Project Plan Rev 1.5, `ADR-002`). The team decided to drop the idle timeout and give every role that same 1-week lifetime.
 

@@ -5,6 +5,10 @@
 **Note (Wednesday, October 21, 2026 — 01:47):** the PE/Sports Instructor role, the phone-only screens and the `?student=` parameter this ADR may mention were removed (ADR-029, ADR-033, [2026-10-21-remove-phone-screens-and-instructor](../08-Logs/Agent-Sessions/2026-10-21-remove-phone-screens-and-instructor.md)); the rest of the decision stands.
 **Note (Wednesday, October 21, 2026 — 07:00):** the CLINIQ Student Number this ADR mentions was replaced by the LRN (ADR-028, [2026-10-21-lrn-replaces-student-number](../08-Logs/Agent-Sessions/2026-10-21-lrn-replaces-student-number.md)); lists show it masked. The rest of the decision stands.
 
+**Note (Sunday, November 1, 2026 — 02:16 PHT):** amended by [ADR-057](ADR-057-Backend-Answers-Fixed-Session-Retention-And-ERD-Approval.md) item 12: the backend stores the actor's role on each audit row (`audit_logs.actor_role`) instead of deriving it at read time. The decision text below is not edited.
+
+**Note (Sunday, November 1, 2026 — 11:48 PHT):** [ADR-058](ADR-058-Name-Correction-Reason-In-The-Audit-Log.md) makes one exception to "fields or states only": the name-correction reason. The decision text below is not edited.
+
 ## Context
 The Audit Log Viewer (ADR-016) showed timestamp, who, action, and target record. Reviewing it, the user felt information was missing but couldn't name it. Two gaps came out of that:
 1. **Which record** — briefly lost when target labels were replaced by a bare "View" link. Restored in short form ("Incident · 2022-00001 ›").
