@@ -8,7 +8,7 @@ The Laravel API for CLINIQ, with Sanctum for sign-in (ADR-007, ADR-056) and Mari
 
 ## Current state
 
-**The foundation (B0) and the migrations (B1).** Laravel 13.39 with Sanctum in SPA cookie mode, the modular folders, configuration, CORS, middleware, one error format, the audit contract, shared helpers, the 7-day session limit, the per-role idle sign-out (Staff 60, Admin 30 minutes, ADR-078) and its keep-alive, and tests (85 pass). B1 added 48 migrations, one per table of the approved schema (ADR-057), and one service provider per module that loads them; they have **not yet been run against MariaDB**. There are no models, seeders, factories or module endpoints, so nothing can sign in. The routes are `GET /api/health`, `GET /sanctum/csrf-cookie` and `POST /api/session/keepalive`. Nothing is connected to the frontend (ADR-056). Next: verify B1 on MariaDB (see [MORNING-REPORT](../CLINIQ-Knowledge-Base/08-Logs/Overnight-Run-Nov9/MORNING-REPORT.md), "ONLY YOU CAN DO"), then B2.
+**B0 foundation, B1 migrations (verified on MariaDB), B3 audit trail and B2 sign-in.** Laravel 13.39 with Sanctum in SPA cookie mode. The 48 migrations match `Reference-Schema.sql` (`php tools/db-checks.php`: parity plus the 260 constraint tests). The audit trail writes to `audit_logs` and has the Audit Log API. Sign-in has the shared 5-failure lockout, the forced and voluntary password change (history of 5), the per-role idle sign-out read from `system_settings`, password recovery with an authenticator app, and the own profile. Routes: see `routes/api.php`; `tests/Feature/HealthAndRoutesTest.php` fails on any undocumented route. Nothing is connected to the frontend (ADR-056). Next: B4 Student Records.
 
 ## Install, configure and migrate
 
@@ -73,6 +73,8 @@ Nothing here is done in the frontend yet.
 ## Production notes
 
 The clinic PC only (ADR-079): `APP_ENV=production`, `APP_DEBUG=false`, a generated `APP_KEY` that is never committed, `APP_URL` and `CORS_ALLOWED_ORIGINS` set to `http://localhost`, `SANCTUM_STATEFUL_DOMAINS=localhost`, `SESSION_DOMAIN` empty and `SESSION_SECURE_COOKIE=false` (plain HTTP on `localhost`; no HTTPS). Details: Environment Setup, "Clinic PC only".
+
+**Start-up check.** Outside the tests the app refuses to start when `SESSION_SECURE_COOKIE` does not match the scheme of `APP_URL` (true only for `https://`), or, outside `APP_ENV=local`, when `APP_DEBUG` is true or `DB_USERNAME` is `root` (`app/Shared/Support/ConfigurationCheck.php`). The idle sign-out minutes live in `system_settings` and are changed from the app; `CLINIQ_IDLE_SIGNOUT_MINUTES_STAFF` and `CLINIQ_IDLE_SIGNOUT_MINUTES_ADMIN` in `.env` are only the config defaults.
 
 ## If you are copying a zip export
 
