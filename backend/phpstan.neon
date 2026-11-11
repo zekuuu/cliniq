@@ -9,9 +9,3 @@ parameters:
         - config/cliniq.php
         - config/cors.php
         - routes
-    ignoreErrors:
-        # config/auth.php names the user model built in B1. Remove this then.
-        - identifier: class.notFound
-          paths:
-              - app/Shared/Http/Middleware
-              - app/Providers

@@ -6,6 +6,7 @@ use App\Shared\AuditLog\AuditAction;
 use App\Shared\AuditLog\AuditEvent;
 use App\Shared\AuditLog\AuditLogger;
 use App\Shared\AuditLog\AuditTarget;
+use App\Shared\AuditLog\DatabaseAuditLogger;
 use App\Shared\AuditLog\InMemoryAuditLogger;
 use App\Shared\AuditLog\InvalidAuditEvent;
 use Carbon\CarbonImmutable;
@@ -65,11 +66,14 @@ it('names every target the mock records', function () {
     expect(array_map(fn (AuditTarget $target): string => $target->value, AuditTarget::cases()))->toEqualCanonicalizing($mock);
 });
 
-it('binds the logger to the in-memory fake for now, and keeps what it is given', function () {
-    $logger = app(AuditLogger::class);
+it('binds the logger to the database implementation (B3), one instance per app', function () {
+    expect(app(AuditLogger::class))->toBeInstanceOf(DatabaseAuditLogger::class)
+        ->and(app(AuditLogger::class))->toBe(app(AuditLogger::class));
+});
+
+it('keeps what the in-memory fake is given', function () {
+    $logger = new InMemoryAuditLogger;
     $logger->record(auditEvent(['allergies']));
 
-    expect($logger)->toBeInstanceOf(InMemoryAuditLogger::class)
-        ->and(app(AuditLogger::class))->toBe($logger)
-        ->and($logger->events())->toHaveCount(1);
+    expect($logger->events())->toHaveCount(1);
 });

@@ -10,7 +10,7 @@ final class AuditServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(AuditLogger::class, InMemoryAuditLogger::class);
+        $this->app->singleton(AuditLogger::class, DatabaseAuditLogger::class);
     }
 
     public function boot(): void

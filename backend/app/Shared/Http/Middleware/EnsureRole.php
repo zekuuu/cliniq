@@ -17,7 +17,8 @@ final class EnsureRole
     /** @param Closure(Request): Response $next */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        $user = $request->user();
+        // Any Authenticatable may be signed in (tests use a GenericUser), so check the contract at runtime.
+        $user = ($request->getUserResolver())();
 
         if ($user === null) {
             throw new AuthenticationException;

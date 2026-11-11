@@ -24,6 +24,7 @@ final readonly class AuditEvent
         public array $fields = [],
         public ?string $subjectStudentId = null,
         public ?string $subjectPersonnelId = null,
+        public ?string $summary = null,
     ) {
         foreach ($fields as $field) {
             if (preg_match('/\A[a-z][a-zA-Z]{0,39}\z/', $field) !== 1) {
@@ -33,7 +34,10 @@ final readonly class AuditEvent
         if ($targetId === null && $targetLabel === null) {
             throw new InvalidAuditEvent('An audit event needs a target id or a target label.');
         }
-        foreach ([$targetId, $targetLabel, $subjectStudentId, $subjectPersonnelId] as $value) {
+        if ($summary !== null && mb_strlen($summary) > 255) {
+            throw new InvalidAuditEvent('An audit summary is at most 255 characters.');
+        }
+        foreach ([$targetId, $targetLabel, $subjectStudentId, $subjectPersonnelId, $summary] as $value) {
             if ($value !== null && preg_match('/\d{12}|@/', $value) === 1) {
                 throw new InvalidAuditEvent('An audit target must not hold an LRN or an email.');
             }
