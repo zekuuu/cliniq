@@ -9,6 +9,7 @@ use App\Shared\AuditLog\AuditEvent;
 use App\Shared\AuditLog\AuditLogger;
 use App\Shared\Auth\ClinicUser;
 use App\Shared\Http\ApiError;
+use App\Shared\Settings\SettingsService;
 use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Every authenticated call counts as activity. The session keeps the limit in force at the last
  * counted call, so a changed setting applies from the next request and a running countdown keeps the
  * limit it started with. A keep-alive within a minute of the last counted call changes nothing.
- * ponytail: limits come from config until B1's `system_settings` table and its cached settings service.
+ * Limits come from `system_settings` through the cached SettingsService.
  */
 final class IdleSignOut
 {
@@ -73,9 +74,9 @@ final class IdleSignOut
 
     public static function minutesFor(ClinicUser $user): int
     {
-        return $user->clinicRole() === ClinicUser::ADMIN
-            ? config()->integer('cliniq.idle_signout_minutes_admin')
-            : config()->integer('cliniq.idle_signout_minutes_staff');
+        return app(SettingsService::class)->int($user->clinicRole() === ClinicUser::ADMIN
+            ? 'idle_signout_minutes_admin'
+            : 'idle_signout_minutes_staff');
     }
 
     /** Seconds until this session is signed out for inactivity. */

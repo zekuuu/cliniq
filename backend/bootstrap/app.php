@@ -6,6 +6,7 @@ use App\Shared\Http\ApiError;
 use App\Shared\Http\ApiExceptionRenderer;
 use App\Shared\Http\BusinessRuleViolation;
 use App\Shared\Http\Middleware\DropForeignCorsHeaders;
+use App\Shared\Http\Middleware\EnsureActiveAccount;
 use App\Shared\Http\Middleware\EnsureRole;
 use App\Shared\Http\Middleware\FixedSessionLifetime;
 use App\Shared\Http\Middleware\ForceJson;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => EnsureRole::class,
             'session.idle' => IdleSignOut::class,
             'session.fixed' => FixedSessionLifetime::class,
+            'account.active' => EnsureActiveAccount::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

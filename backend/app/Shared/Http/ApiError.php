@@ -9,7 +9,7 @@ use RuntimeException;
 /** A failure with its own status and code in the error table of API-Contract.md. */
 final class ApiError extends RuntimeException
 {
-    /** @param array<string, string> $extra */
+    /** @param array<string, string|int> $extra */
     public function __construct(
         public readonly int $status,
         public readonly string $errorCode,
@@ -31,9 +31,9 @@ final class ApiError extends RuntimeException
         return new self(401, 'session_expired', 'Your session ended 7 days after you signed in. Sign in again.');
     }
 
-    public static function invalidCredentials(): self
+    public static function invalidCredentials(int $attemptsLeft): self
     {
-        return new self(401, 'invalid_credentials', 'Unable to sign in with those credentials.');
+        return new self(401, 'invalid_credentials', 'Unable to sign in with those credentials.', ['attempts_left' => $attemptsLeft]);
     }
 
     public static function passwordChangeRequired(): self

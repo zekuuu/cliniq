@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use App\Shared\AuditLog\AuditAction;
 use App\Shared\AuditLog\AuditLogger;
+use App\Shared\AuditLog\InMemoryAuditLogger;
+use App\Shared\Settings\SettingsService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -18,7 +21,13 @@ function spaOrigin(): string
     return 'http://'.$stateful[0].'/';
 }
 
+// The idle limits are read from `system_settings`.
+uses(RefreshDatabase::class);
+
 beforeEach(function () {
+    // Fake users have no users row, so these middleware tests keep the audit in memory.
+    app()->instance(AuditLogger::class, new InMemoryAuditLogger);
+
     Route::middleware('api')->prefix('api')->group(function () {
         Route::get('_t/any', fn () => ['data' => 'ok']);
     });
@@ -124,7 +133,7 @@ it('keeps a running countdown on its old limit; a changed setting applies from t
     $this->travelTo('2026-11-02 08:00:00');
     $this->actingAs(FakeClinicUser::admin())->getJson('/api/_t/session')->assertOk();
 
-    config(['cliniq.idle_signout_minutes_admin' => 10]);
+    app(SettingsService::class)->save(['idle_signout_minutes_admin' => 10], null);
     $this->travel(20)->minutes();
     $this->getJson('/api/_t/session')->assertOk();
 
