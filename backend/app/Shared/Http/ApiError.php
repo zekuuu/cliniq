@@ -9,7 +9,7 @@ use RuntimeException;
 /** A failure with its own status and code in the error table of API-Contract.md. */
 final class ApiError extends RuntimeException
 {
-    /** @param array<string, string|int> $extra */
+    /** @param array<string, string|int|array<string, list<string>>> $extra */
     public function __construct(
         public readonly int $status,
         public readonly string $errorCode,
@@ -44,5 +44,11 @@ final class ApiError extends RuntimeException
     public static function accountLocked(string $lockedUntil): self
     {
         return new self(423, 'account_locked', 'This account is temporarily locked after repeated failed attempts.', ['locked_until' => $lockedUntil]);
+    }
+
+    /** A failed recovery step: 422 with the field's message and the attempts left (ADR-073). */
+    public static function recoveryFailed(string $field, string $message, int $attemptsLeft): self
+    {
+        return new self(422, 'validation_failed', $message, ['errors' => [$field => [$message]], 'attempts_left' => $attemptsLeft]);
     }
 }

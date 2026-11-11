@@ -24,6 +24,11 @@ final class UserFactory extends Factory
             'failed_login_count' => 0,
             'locked_until' => null,
             'deactivated_at' => null,
+            'profile_picture' => null,
+            'last_login_at' => null,
+            'totp_secret' => null,
+            'totp_confirmed_at' => null,
+            'last_totp_step' => null,
         ];
     }
 
