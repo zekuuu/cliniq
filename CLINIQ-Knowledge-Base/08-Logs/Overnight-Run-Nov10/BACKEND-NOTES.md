@@ -1,4 +1,4 @@
-# Run notes — Tuesday, November 10, 2026
+# Backend run notes — Tuesday, November 10, 2026
 
 Branch `feat/build-backend` (Zean's choice; it was at the same commit as `backend`, 3d3f764). Nothing committed.
 
@@ -17,6 +17,8 @@ Branch `feat/build-backend` (Zean's choice; it was at the same commit as `backen
 - **16:30 PHT. Logout `reason` accepts only "Signed out (idle)"**, the one summary the frontend sends (`AppShell.tsx:118`); without it the entry reads "Signed out". Grounds: contract "one of the summaries the frontend sends".
 - **16:30 PHT. Idle settings audit entry: target label `settings/idle-signout`, no target type.** `AuditTarget` has no `settings`, and `chk_audit_*` may restrict the type; the label keeps the mock's id. Undo: add `AuditTarget::Settings` if the schema allows it.
 - **16:30 PHT. Middleware tests now use the test database**, because the idle limits come from `system_settings`.
+- **Wednesday, November 11, 2026 — 03:08 PHT. B2 group 2, decisions from the contract and the mock (no question needed).** (a) A confirm with no pending setup answers 409 with `rule` `authenticator_setup` ("Start the setup again."); the contract's rule table has no name for it, so add it there. (b) The expired reset answers 410 with `code` `bad_request`, since the error table has no 410 code. (c) A user under a forced password change cannot reach the authenticator routes; the contract allows only `me`, the password change and sign-out. (d) The profile picture must be a base64 `data:image/jpeg`, `png` or `webp` URL. This is stricter than the mock's `data:image/` prefix and matches the message's wording; it refuses SVG. (e) The recovery-code hashes use bcrypt (the "slow-hashed" of the contract), not the mock's SHA-256. (f) The start-up check skips the root and debug rules when `APP_ENV=local`, so a development machine still boots.
+- **Wednesday, November 11, 2026 — 07:26 PHT. B4 group 1, decisions from the mock and the schema (no question needed).** (a) The archive message follows the mock, "Give the reason for archiving.", not the contract's "Choose a reason."; fix the contract. (b) An unknown grade level is 422 "Choose the grade level." (my wording; the mock accepts any text). An empty grade, sex or birthdate is stored as null and makes the record incomplete, as the mock does. (c) A contact's missing relationship is stored as null and returned as "" so the `EmergencyContact` type holds. (d) The name-correction reason in the audit summary has 12-digit runs and "@" replaced with "…". The summary is cut to 255 characters. The full reason stays in `name_correction_reason`. (e) The school-year label for an archive comes from the recorded starts (ADR-075), else from the start-date settings (June 15).
 
 ## NEEDS YOUR CALL
 
@@ -33,7 +35,7 @@ Branch `feat/build-backend` (Zean's choice; it was at the same commit as `backen
    C:\xampp\mysql\bin\mysql.exe -u root -p -e "SHOW GRANTS FOR 'cliniq_app'@'localhost'"
    ```
    Expect SELECT and INSERT on `cliniq`.`audit_logs` and no UPDATE or DELETE on it.
-2. Edit `backend/.env.example` (the agent's shell edit was denied): replace `CLINIQ_ADMIN_IDLE_MINUTES=30` with two lines, `CLINIQ_IDLE_SIGNOUT_MINUTES_STAFF=60` and `CLINIQ_IDLE_SIGNOUT_MINUTES_ADMIN=30`. `config/cliniq.php` already reads those names; the live limits come from `system_settings`.
+2. ~~.env.example idle names~~ Done by Zean in d0e7026.
 
 ## FOLLOW-UPS
 
@@ -42,6 +44,8 @@ Branch `feat/build-backend` (Zean's choice; it was at the same commit as `backen
 - Development seeder from `mock-db.json`, per module as each lands its models.
 - `AuditTarget` lacks `school-year`, `report`, `incident-stage-1`, `incident-stage-2`, `parent-notification`; add each when its module writes it.
 - A changelog row dated "Tuesday, November 10, 2026 — 18:30 PHT" (docs sync) predates this session's 13:20 start; its time looks wrong. Not edited.
-- B2 remaining: recovery check/verify/reset, authenticator status/setup/confirm/turn-off (TOTP, no package), `GET`/`PUT /api/auth/profile`, the start-up configuration check, a per-username recovery limiter.
+- Add `authenticator_setup` to the `rule` table in `API-Contract.md`, and the 410 reset code (`bad_request`) to the error table.
+- Contract: the archive message is "Give the reason for archiving." (mock), and an unknown grade level is 422 "Choose the grade level.".
+- A Pest test that makes two student saves race for one LRN (needs two connections); the code already catches the unique-key error.
 - A password change does not end the user's other sessions; the contract does not ask for it. Decide at B2 Phase 2.
 - Feature tests call `forgetGuards()` after sign-out or disabling, because the test client keeps the resolved user between requests; a real request re-reads it.

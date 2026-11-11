@@ -1,0 +1,11 @@
+Date/Day/Time: Wednesday, November 11, 2026 — 07:26 PHT
+Agent: Claude Opus 5.5 (Claude Code, VS Code)
+Task: B4 Student Records API, Phase 1, first endpoint group (students)
+Status: Partial
+Prompt/Request: Zean: "Are there something I need to do ... If not proceed to next phase." Same kickoff prompt, "build the backend, B1 to B10".
+Files Modified: backend/app/Modules/StudentRecords/Services/StudentService.php (new), backend/app/Modules/StudentRecords/Services/StudentRecord.php (new), backend/app/Modules/StudentRecords/Controllers/StudentController.php (new), backend/app/Shared/Support/PersonName.php (new), backend/app/Shared/Support/SchoolYears.php (new), backend/app/Shared/Support/Row.php (new), backend/routes/api.php, backend/tests/Feature/StudentRecordsTest.php (new), backend/tests/Feature/HealthAndRoutesTest.php, backend/tests/Pest.php
+Changes Made: Eight student routes. Lists and searches carry the masked LRN and no birthdate, health field or contact; the single student carries the full LRN. Names are stored as parts and matched by every word, ignoring case and accents. On create, a name and grade match on an active record answers `duplicate` until confirmed; a taken LRN is 409 `duplicate_lrn`, also when two saves race (the unique-key error is caught). On update the LRN is locked (409 `lrn_locked`) and a changed name needs a reason of 3 or more characters, kept in `name_correction_reason` and appended to the audit summary. An archive needs a reason, and it stores the school year's label from the recorded starts or the settings. Completing an incomplete record resolves its review, crediting the saver. `signIn()` in `tests/Pest.php` now sends the SPA referer, so signed-in tests get a session.
+Reason: B4 per Backend-Loop-Engineering.md; API-Contract Module 2; mock api.ts 1160-1510 and selectors.ts.
+Testing Performed: Pest 128 passed, 1 skipped, 0 failed; Pint clean; Larastan level max 0 errors.
+Known Issues: no test makes two saves race for one LRN; the code catches the unique-key error. See the BACKEND-NOTES.md decisions of Wednesday, November 11, 2026 — 07:26 PHT.
+Next Steps: B4 group 2: staff patients and patients search; then imports, school years, the Archive page API.
