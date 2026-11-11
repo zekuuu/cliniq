@@ -12,9 +12,10 @@ abstract class TestCase extends BaseTestCase
 {
     public function createApplication(): Application
     {
-        // A fresh clone has no .env, and a developer's own .env must not steer the tests.
+        // A developer's own .env must not steer the tests: .env.testing (the test database,
+        // cliniq_testing) when it exists, else the committed .env.example.
         $app = require __DIR__.'/../bootstrap/app.php';
-        $app->loadEnvironmentFrom('.env.example');
+        $app->loadEnvironmentFrom(file_exists(__DIR__.'/../.env.testing') ? '.env.testing' : '.env.example');
         $app->make(Kernel::class)->bootstrap();
 
         // No key is committed anywhere: each test run makes its own.
