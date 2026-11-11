@@ -6,7 +6,7 @@ Everything open about the backend lives here: the Laravel API, the database buil
 
 ## Open work at a glance
 
-Open: FIX 3 · AUDIT 0 · DOC 5 · DECIDE 2 · LATER 24 · FIX-FRONTEND 0 | Notes: NOTE 9 · VERIFY 0 | Done: 11 (recounted Tuesday, November 10, 2026 — 18:30 PHT)
+Open: FIX 3 · AUDIT 0 · DOC 5 · DECIDE 2 · LATER 24 · FIX-FRONTEND 0 | Notes: NOTE 10 · VERIFY 0 | Done: 11 (recounted Tuesday, November 10, 2026 — 14:05 PHT)
 
 **Open `FIX` items:**
 
@@ -80,6 +80,10 @@ Backend entries that were logged in the frontend file, moved here unchanged. Ses
 - [ ] **[FIX]** **Rename the idle key in `backend/.env.example`** (logged Monday, November 09, 2026 — 19:12 PHT). `config/cliniq.php` now reads `CLINIQ_IDLE_SIGNOUT_MINUTES_STAFF` (60) and `CLINIQ_IDLE_SIGNOUT_MINUTES_ADMIN` (30); the example file may still name `CLINIQ_ADMIN_IDLE_MINUTES`. The agent could not read the file (a deny rule), so Zean renames it by hand or allows the read. Session: [2026-11-09-backend-per-role-idle-and-keepalive](Agent-Sessions/2026-11-09-backend-per-role-idle-and-keepalive.md)
 - [ ] **[LATER]** **B2: the `SESSION_SECURE_COOKIE` start-up check** (logged Monday, November 09, 2026 — 19:12 PHT). The backend refuses to start when the flag does not match `APP_URL`: on for `https`, off for plain `http://localhost` (ADR-079, `Environment-Setup.md`). Needs no table; can be built any time. Session: [2026-11-09-backend-per-role-idle-and-keepalive](Agent-Sessions/2026-11-09-backend-per-role-idle-and-keepalive.md)
 - [ ] **[LATER]** **B2 after B1's tables: the rest of the session rules** (logged Monday, November 09, 2026 — 19:12 PHT). Write the sign-in time at sign-in (`FixedSessionLifetime::KEY`); the users-table checks (a disabled account, `password_change_required`); read the idle minutes from `system_settings` (`idle_signout_minutes_staff`, `idle_signout_minutes_admin`) through a settings service with a 60-second cache cleared on save, instead of `config/cliniq.php`; `GET` and `PUT /api/settings/idle-signout` (Staff edit, audited by field name). Waits for B1 (migrations; the ERD is approved, ADR-057). Session: [2026-11-09-backend-per-role-idle-and-keepalive](Agent-Sessions/2026-11-09-backend-per-role-idle-and-keepalive.md)
+
+## Run of November 10 (B1 verified, B3 built) — Tuesday, November 10, 2026 — 14:05 PHT
+
+- **[NOTE]** The follow-ups of this run are listed once, in [`Overnight-Run-Nov10/NOTES.md`](Overnight-Run-Nov10/NOTES.md), under FOLLOW-UPS (Audit Log paging, the `symptom-summary` print title, the per-module dev seeder, missing `AuditTarget` values). See [Agent session](Agent-Sessions/2026-11-10-backend-b1-verify-b3-audit.md).
 
 ## Done
 
