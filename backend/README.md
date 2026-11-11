@@ -33,7 +33,10 @@ composer analyse   # Larastan at level max
 composer check     # all three
 composer audit
 php artisan route:list
+php tools/db-checks.php   # B1: schema parity with Reference-Schema.sql, then the 260 constraint tests
 ```
+
+Tests read `.env.testing` (the `cliniq_testing` database, migration account) when it exists, else `.env.example`. `db-checks.php` uses the same file and creates, then drops, the scratch databases `cliniq_check_ref` and `cliniq_check_mig`.
 
 ## Structure
 
