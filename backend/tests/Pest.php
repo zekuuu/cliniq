@@ -16,5 +16,5 @@ function asSpa(): TestCase
 /** A fresh sign-in: a new session, then the user. One session never switches user (Sanctum logs it out). */
 function signIn(Authenticatable $user): TestCase
 {
-    return test()->flushSession()->actingAs($user);
+    return asSpa()->flushSession()->actingAs($user);
 }
