@@ -100,6 +100,12 @@ try {
         printf("%-13s %s\n", $part, $missing || $extra ? 'DIFFER' : 'match ('.count($rows).')');
     }
 
+    // constraint-tests.sql inserts its own complaint types from id 1, so the shipped symptom lists
+    // (migration insert_complaint_types) are cleared from this scratch database first.
+    DB::table('triage_steps')->delete();
+    DB::table('complaint_types')->delete();
+    DB::statement('ALTER TABLE complaint_types AUTO_INCREMENT = 1');
+
     [$code, $out, $err] = mysqlRun($mysql, $opts, $mig, "$dbDir/Checks/constraint-tests.sql", ['--table']);
     echo $out;
     if ($code !== 0 || $err !== '' || str_contains($out, 'FAILED') || str_contains($out, 'UNTESTED')) {
