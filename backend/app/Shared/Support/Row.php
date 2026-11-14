@@ -20,4 +20,15 @@ final class Row
 
         return is_numeric($v) ? (int) $v : null;
     }
+
+    /** A loosely typed value (a decoded field) as text; anything not scalar is "". */
+    public static function text(mixed $v): string
+    {
+        return is_scalar($v) ? (string) $v : '';
+    }
+
+    public static function toInt(mixed $v): ?int
+    {
+        return is_numeric($v) ? (int) $v : null;
+    }
 }
