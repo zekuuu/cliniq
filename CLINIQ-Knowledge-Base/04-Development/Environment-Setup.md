@@ -154,7 +154,7 @@ Added Saturday, November 07, 2026 — 13:24 PHT for [ADR-073](../06-Decisions/AD
 
 **The key.** `users.totp_secret` is encrypted with Laravel `Crypt`, which uses `APP_KEY` in `backend/.env`. The key lives in the environment, never in the database or the repository. If it is lost, every authenticator stops working and has to be set up again. If it leaks with a database copy, the secrets can be read. So:
 
-- Keep `APP_KEY` out of the database backups. A copy goes with the clinic's sealed handover papers, and nowhere on the backup drives in plain text. Who holds it is a `DECIDE` in `Backend-Issues-and-TODOs.md`.
+- Keep `APP_KEY` out of the database backups. A copy is kept in a password-protected file, never on the backup drives in plain text; the file's password is kept apart from the file, with the handover documents (Zean, Saturday, November 14, 2026 — 23:00 PHT).
 - Never run `php artisan key:generate` on the clinic computer once accounts exist: it would break every authenticator and every session. To rotate the key, use Laravel's `APP_PREVIOUS_KEYS`.
 
 **Break-glass for the Administrator.** Nobody in the app can reset the Administrator's password (ADR-033, ADR-073). The Administrator sets up the authenticator at handover and keeps the 8 recovery codes. If the password, the phone and the codes are all lost, someone at the clinic computer with Windows access to `C:\CLINIQ\backend` runs this offline:

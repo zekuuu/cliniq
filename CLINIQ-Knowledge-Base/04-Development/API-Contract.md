@@ -56,7 +56,7 @@ Tests (Pest, frozen clock with `travelTo`):
 
 ### Filtering and pagination
 
-The mock has no pagination: it returns whole lists and the screens page them. List endpoints do the same, with their filters as query parameters. Long lists also accept `page` and `perPage` and then add `meta: { page, perPage, total }` (Q19). These are visits, incidents, the audit log and inventory history.
+The mock has no pagination: it returns whole lists and the screens page them. List endpoints do the same, with their filters as query parameters. Long lists also accept `page` and `perPage` and then add `meta: { page, perPage, total }` (Q19). These are visits, incidents, the audit log and inventory history (an item's history and the movements list). `perPage` defaults to 25 and is at most 100; without either parameter the whole list comes back (built Saturday, November 14, 2026 — 19:09 PHT).
 
 ### Display privacy
 
@@ -103,6 +103,7 @@ This is D5 adjusted to the mock. Added by ADR-057: `invalid_credentials`, `accou
 | 423 | `account_locked` | Locked; adds `locked_until` | `MockAuthError('locked', lockedUntil)` |
 | 405 | `method_not_allowed` | Wrong method on a real route | None |
 | 429 | `too_many_requests` | Throttled | None |
+| 410 | `bad_request` | An expired password-recovery reset, "This reset has expired. Start again with a new code." (backend B2, Saturday, November 14, 2026 — 19:09 PHT) | None |
 | 4xx | `bad_request` | Any other refusal by the framework, such as a body too large | None |
 | 500 | `server_error` | Anything else | None |
 
@@ -113,7 +114,8 @@ Values of `rule`, each with its mock error:
 | `rule` | Mock error | `rule` | Mock error |
 |---|---|---|---|
 | `last_admin` | `LastAdminError` | `incident_approved` | `IncidentApprovedError` |
-| `duplicate_username` | `DuplicateUsernameError` | | |
+| `duplicate_username` | `DuplicateUsernameError` | `authenticator_setup` | None: a confirm with no pending setup, "Start the setup again." (backend B2, Saturday, November 14, 2026 — 19:09 PHT) |
+| `school_year` | Plain `Error`, the school-year steps (backend B4, Saturday, November 14, 2026 — 19:09 PHT) | | |
 | `duplicate_lrn` | `DuplicateLrnError` | `stock_rule` | `StockRuleError` |
 | `lrn_locked` | `LrnLockedError` | `no_backup_location` | `NoBackupLocationError` |
 | `visit_entered_in_error` | Plain `Error`, `api.ts:1265`, `:1329`, `:1482`, `:1582` | `excuse_letter` | Plain `Error`, letter state, `api.ts:1143`, `:1381`, `:1382`, `:1486`, `:1508` |
@@ -145,7 +147,7 @@ Marked **Addition** where the mock has no such function.
 #### `POST /api/auth/logout`
 - Roles: S, A.
 - Request: optional `reason`, one of the summaries the frontend sends (idle sign-out).
-- Response: 204.
+- Response: 204. After the response, a backup runs to every enabled location (the backup at sign-out, ADR-037, ADR-052); with no enabled location nothing runs and the sign-out is unchanged. Built Saturday, November 14, 2026 — 19:09 PHT.
 - Audit: `logout`, target none, optional summary.
 - Copies: `logoutMockSession` (`api.ts:249`); tests: `auditCoverage`.
 
@@ -158,6 +160,7 @@ Marked **Addition** where the mock has no such function.
 - Request: `nextPassword`; `currentPassword`, required unless the account must change its password (Q14).
 - Response: 204.
 - Errors: 422 "Password must be at least 8 characters."; 422 "Your current password is incorrect."; 409 `password_reuse`.
+- The session that changed the password stays signed in; any other session of the account ends at its next request (401), as after an Admin's reset (Sanctum's session check; backend B2, Saturday, November 14, 2026 — 19:09 PHT).
 - Audit: `update user`, "Changed password".
 - Copies: `changeOwnPassword` (`api.ts:418`); tests: `ChangePasswordPage` and `changeMockPassword` (`api.ts:397`); tests: `auditCoverage`, `auth`. The new password is trimmed; the last 5 cannot be reused; the history holds at most 5.
 
@@ -309,7 +312,7 @@ Only the Admin manages accounts. Staff read names only, because visit and letter
 All read-only, no audit. Text-only lists, safe for both roles.
 
 #### `GET /api/reference/visit-complaint-types`
-- Roles: S. Response: `ComplaintType[]` with first-aid steps. Copies: `getVisitComplaintTypes` (`api.ts:457`); tests: none.
+- Roles: S. Response: `ComplaintType[]` with first-aid steps, each with its `id`, which `usedFor` sends (ADR-071). The lists ship with the product (migration `insert_complaint_types`, from the mock's lists). Copies: `getVisitComplaintTypes` (`api.ts:457`); tests: none.
 
 #### `GET /api/reference/visit-complaint-suggestions`
 - Roles: S. Response: `string[]`, ranked. Copies: `getVisitComplaintSuggestions` (`api.ts:462`); tests: `search`.
@@ -363,7 +366,7 @@ All read-only, no audit. Text-only lists, safe for both roles.
 - Roles: S.
 - Request: `StudentInput` (`firstName`, `lastName`, `middleName`, not `fullName`; ADR-064), `confirmDuplicate?`.
 - Response: 201 `{ status: "saved", student, action: "create" }`, `student.fullName` built on read, or **200** `{ status: "duplicate", matches }`, which is not an error: the mock returns it as a value and the form asks.
-- Errors: 422 "The LRN must be exactly 12 digits.", "Enter the student's first name.", "Enter the student's last name.", "The first name can be at most 50 characters." (middle 40, last 50), "Enter a real birthdate.", "The birthdate can't be in the future."; 409 `duplicate_lrn` (never names the other student).
+- Errors: 422 "The LRN must be exactly 12 digits.", "Enter the student's first name.", "Enter the student's last name.", "The first name can be at most 50 characters." (middle 40, last 50), "Enter a real birthdate.", "The birthdate can't be in the future.", "Choose the grade level." (an unknown grade, added Saturday, November 14, 2026 — 19:09 PHT); 409 `duplicate_lrn` (never names the other student).
 - Audit: `create student`.
 - Copies: `saveStudent` (`api.ts:765`); tests: `Birthdate`, `LettersAndVisitsDecisions`, `RecordsDecisions`, `StudentFormPage` and 2 more. A name and grade match on an active record asks once.
 
@@ -389,7 +392,7 @@ All read-only, no audit. Text-only lists, safe for both roles.
 #### `POST /api/students/{id}/archive`
 - Roles: S.
 - Request: `reason` (required, up to 80 characters; ADR-072, Saturday, November 07, 2026 — 13:24 PHT).
-- Response: `Student`. Errors: 404; 422 "Choose a reason." Stores `archived_at`, `archive_reason` and `archived_school_year` (the current year's label). Audit: `archive student`.
+- Response: `Student`. Errors: 404; 422 "Give the reason for archiving." (the mock's text; was "Choose a reason." here, corrected Saturday, November 14, 2026 — 19:09 PHT). Stores `archived_at`, `archive_reason` and `archived_school_year` (the current year's label). Audit: `archive student`.
 - Copies: `archiveStudent`; tests: `SportsReport`, `auditCoverage`, `ArchivePage`. A reason is now asked (ADR-072, replacing "no reason" of ADR-047). The yearly import stores "Not on the new list".
 
 #### `GET /api/students/{id}/history`
@@ -780,7 +783,8 @@ Added Saturday, November 07, 2026 — 13:24 PHT. A school year is started and en
 #### `POST /api/school-years/start`
 - **New.** Roles: S.
 - Response: the new current year, starting today. The year before, with its break, ends yesterday.
-- Errors: 403 "Only the clinic staff can start a school year."; 409 "End school year YYYY–YYYY first.", "A school year was already started today.", "School year YYYY–YYYY ended today. Start the next one from tomorrow."
+- Errors: 403 "Only the clinic staff can start a school year."; 409 `school_year` "End school year YYYY–YYYY first.", "A school year was already started today.", "School year YYYY–YYYY ended today. Start the next one from tomorrow."
+- First start on a new install (backend B4, Saturday, November 14, 2026 — 19:09 PHT): with no year recorded, the step names the year whose class days have begun and is due on its start day, so the reminder shows as overdue; "already started today" applies only to a recorded start. The mock named the next year and refused a start on June 15 itself.
 - Audit: `create school-year`, "Started school year YYYY–YYYY". No undo.
 - Copies: `startSchoolYear`; tests: `ArchivePage`.
 
@@ -1078,8 +1082,8 @@ Answered by Zean, Sunday, November 1, 2026 — 01:23 PHT, or by the best approac
 | **Q7b.** Rescheduling drops the "Stay home until cleared" flag, which a clinician set (ADR-049). | Keep the flag and its note on the new follow-up until the clinician clears them. Mock differs. | Zean; patient safety: a reschedule must not silently lift a stay-home instruction. |
 | **Q8.** The Admin and staff incidents. | Totals leave them out. Calendar counts, the monthly report, the trail and approved ids may include them. Detail stays Staff-only. | Zean; ADR-053, ADR-057. Counts and ids are not health detail. The Privacy Policy wording is the frontend prompt's. |
 | **Q9.** `approveIncidentReport` has no role or duplicate check. | Staff only. A second approval is 409 `incident_stage`. | ADR-038; `uq_report_approvals_incident`. |
-| **Q10.** `verifyLatestBackup` verifies a failed run. | 409 `backup_failed`. Mock differs. | `chk_backup_verify_ok`; the `needsVerification` flag covers good runs only. A failed backup marked verified is false assurance. |
-| **Q11.** Item names: unique among active items, or not? | Unique: 409 `duplicate_item_name`. Mock differs; the seed has no duplicates. | Data integrity: two items of one name split stock and confuse dispensing. |
+| **Q10.** `verifyLatestBackup` verifies a failed run. | 409 `backup_failed`. The mock follows it (`BackupFailedError`, checked Saturday, November 14, 2026 — 23:00 PHT). | `chk_backup_verify_ok`; the `needsVerification` flag covers good runs only. A failed backup marked verified is false assurance. |
+| **Q11.** Item names: unique among active items, or not? | Unique: 409 `duplicate_item_name`. The mock follows it ("An item with this name already exists.", checked Saturday, November 14, 2026 — 23:00 PHT); the seed has no duplicates. | Data integrity: two items of one name split stock and confuse dispensing. |
 | **Q12.** Who reads issue reports? | Both roles, read-only. | Both roles file them (ADR-038 lets the Admin write them). |
 | **Q13.** The mock never updates `lastLogin`. | The backend sets it at sign-in. | The User List shows it. |
 | **Q14.** `changeMockPassword` needs no current password. | `currentPassword` is required unless `mustChangePassword` is true. | Security. |
