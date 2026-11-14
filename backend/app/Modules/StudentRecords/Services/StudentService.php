@@ -12,6 +12,7 @@ use App\Shared\AuditLog\DatabaseAuditLogger;
 use App\Shared\Http\BusinessRuleViolation;
 use App\Shared\Support\ClinicTime;
 use App\Shared\Support\Lrn;
+use App\Shared\Support\PatientFields;
 use App\Shared\Support\PersonName;
 use App\Shared\Support\Row;
 use App\Shared\Support\SchoolYears;
@@ -29,10 +30,6 @@ use Illuminate\Validation\ValidationException;
  */
 final class StudentService
 {
-    private const NAME_MAX = ['firstName' => 50, 'lastName' => 50, 'middleName' => 40];
-
-    private const NAME_LABELS = ['firstName' => 'first name', 'lastName' => 'last name', 'middleName' => 'middle name'];
-
     /** Fields compared for the audit summary, by their API names (ADR-017: names, never values). */
     private const AUDITED = ['firstName', 'lastName', 'middleName', 'gradeLevel', 'section', 'sex', 'birthDate', 'allergies', 'medicalConditions', 'emergencyContacts'];
 
@@ -61,17 +58,25 @@ final class StudentService
      */
     public function search(string $query, int $limit): array
     {
+        return array_values($this->matches($query)->take($limit)->map(fn (StudentRecord $s): array => $s->match())->all());
+    }
+
+    /** @return Collection<int, StudentRecord> the search's order, uncapped */
+    public function matches(string $query): Collection
+    {
         $q = mb_strtolower(trim($query));
-        if ($q === '') {
-            return [];
-        }
         $digits = (string) preg_replace('/[\s-]/', '', $q);
         $lrnQuery = preg_match('/\A[\d\s-]+\z/', $q) === 1 && $digits !== '';
         $active = $this->records(fn (Builder $w) => $w->whereNull('s.archived_at'), withDetails: false);
         $byLrn = $active->filter(fn (StudentRecord $s): bool => $lrnQuery && str_starts_with($s->lrn, $digits));
-        $byName = $active->filter(fn (StudentRecord $s): bool => ! $byLrn->has($s->id) && PersonName::matches($s->fullName, $q));
 
-        return array_values($byLrn->merge($byName)->take($limit)->map(fn (StudentRecord $s): array => $s->match())->all());
+        return $byLrn->merge($active->filter(fn (StudentRecord $s): bool => ! $byLrn->has($s->id) && PersonName::matches($s->fullName, $q)));
+    }
+
+    /** @return Collection<int, StudentRecord> active students in name order, without health or contacts */
+    public function activeRecords(): Collection
+    {
+        return $this->records(fn (Builder $w) => $w->whereNull('s.archived_at'), withDetails: false);
     }
 
     /** @return array<string, mixed> the `Student` type, full LRN (ADR-040) */
@@ -138,7 +143,7 @@ final class StudentService
      */
     public function save(array $input, ?int $id, bool $confirmDuplicate, ?string $nameCorrectionReason, int $userId, string $role): array
     {
-        $lrn = Lrn::normalize(self::text($input, 'lrn'));
+        $lrn = Lrn::normalize(PatientFields::text($input, 'lrn'));
         if (! Lrn::isLrn($lrn)) {
             throw ValidationException::withMessages(['lrn' => 'The LRN must be exactly 12 digits.']);
         }
@@ -146,7 +151,7 @@ final class StudentService
         if ($current !== null && $current->lrn !== $lrn) {
             throw new BusinessRuleViolation('lrn_locked', "The LRN is the student's identifier and can't be changed.");
         }
-        $name = self::cleanName($input, "the student's");
+        $name = PatientFields::name($input, "the student's");
         $fullName = PersonName::format($name['firstName'], $name['middleName'], $name['lastName']);
         $nameChanged = $current !== null && $current->fullName !== $fullName;
         $reason = trim((string) $nameCorrectionReason);
@@ -156,26 +161,26 @@ final class StudentService
         if (DB::table('students')->where('lrn', $lrn)->when($id !== null, fn (Builder $q) => $q->where('id', '!=', $id))->exists()) {
             throw self::duplicateLrn();
         }
-        $grade = trim(self::text($input, 'gradeLevel'));
+        $grade = trim(PatientFields::text($input, 'gradeLevel'));
         if ($id === null && ! $confirmDuplicate) {
             $matches = $this->nameMatches(PersonName::key($fullName), $grade);
             if ($matches !== []) {
                 return ['status' => 'duplicate', 'matches' => $matches];
             }
         }
-        $birthDate = self::birthDate(self::text($input, 'birthDate'));
+        $birthDate = self::birthDate(PatientFields::text($input, 'birthDate'));
         $gradeId = $grade === '' ? null : DB::table('grade_levels')->where('name', $grade)->value('id');
         if ($grade !== '' && $gradeId === null) {
             throw ValidationException::withMessages(['gradeLevel' => 'Choose the grade level.']);
         }
-        $section = trim(self::text($input, 'section'));
-        $sex = self::text($input, 'sex');
+        $section = trim(PatientFields::text($input, 'section'));
+        $sex = PatientFields::text($input, 'sex');
         $row = [
             'lrn' => $lrn, 'first_name' => $name['firstName'], 'last_name' => $name['lastName'], 'middle_name' => $name['middleName'],
             'grade_level_id' => $gradeId, 'section' => $section === '' ? null : $section, 'sex' => $sex === '' ? null : $sex, 'birth_date' => $birthDate,
         ];
-        $health = ['allergy' => self::labels($input['allergies'] ?? []), 'condition' => self::labels($input['medicalConditions'] ?? [])];
-        $contacts = self::contacts($input['emergencyContacts'] ?? []);
+        $health = ['allergy' => PatientFields::labels($input['allergies'] ?? []), 'condition' => PatientFields::labels($input['medicalConditions'] ?? [])];
+        $contacts = PatientFields::contacts($input['emergencyContacts'] ?? []);
 
         try {
             $studentId = DB::transaction(function () use ($id, $row, $health, $contacts, $current, $nameChanged, $reason, $userId, $role): int {
@@ -209,10 +214,7 @@ final class StudentService
     public function archive(int $id, string $reason, int $userId, string $role): array
     {
         $this->find($id);
-        $reason = mb_substr(PersonName::clean($reason), 0, 80);
-        if ($reason === '') {
-            throw ValidationException::withMessages(['reason' => 'Give the reason for archiving.']);
-        }
+        $reason = PatientFields::archiveReason($reason);
         DB::transaction(function () use ($id, $reason, $userId, $role): void {
             $now = CarbonImmutable::now();
             DB::table('students')->where('id', $id)->update([
@@ -301,29 +303,6 @@ final class StudentService
         }
     }
 
-    /**
-     * @param  array<string, mixed>  $input
-     * @return array{firstName: string, lastName: string, middleName: string|null}
-     */
-    private static function cleanName(array $input, string $whose): array
-    {
-        $middle = PersonName::clean(self::text($input, 'middleName'));
-        $name = ['firstName' => PersonName::clean(self::text($input, 'firstName')), 'lastName' => PersonName::clean(self::text($input, 'lastName')), 'middleName' => $middle === '' ? null : $middle];
-        if ($name['firstName'] === '') {
-            throw ValidationException::withMessages(['firstName' => "Enter {$whose} first name."]);
-        }
-        if ($name['lastName'] === '') {
-            throw ValidationException::withMessages(['lastName' => "Enter {$whose} last name."]);
-        }
-        foreach (self::NAME_MAX as $key => $max) {
-            if (mb_strlen((string) $name[$key]) > $max) {
-                throw ValidationException::withMessages([$key => 'The '.self::NAME_LABELS[$key]." can be at most {$max} characters."]);
-            }
-        }
-
-        return $name;
-    }
-
     private static function birthDate(string $value): ?string
     {
         if ($value === '') {
@@ -338,47 +317,6 @@ final class StudentService
         }
 
         return $value;
-    }
-
-    /** @param array<mixed> $input */
-    private static function text(array $input, string $key): string
-    {
-        $v = $input[$key] ?? null;
-
-        return is_string($v) ? $v : '';
-    }
-
-    /**
-     * Trimmed, blanks dropped, each label once (ignoring case).
-     *
-     * @return list<string>
-     */
-    private static function labels(mixed $values): array
-    {
-        $out = [];
-        foreach (is_array($values) ? $values : [] as $value) {
-            $clean = PersonName::clean(is_string($value) ? $value : '');
-            if ($clean !== '' && ! in_array(mb_strtolower($clean), array_map(mb_strtolower(...), $out), true)) {
-                $out[] = $clean;
-            }
-        }
-
-        return $out;
-    }
-
-    /** @return list<array{name: string, relationship: string, phone: string, verified: bool}> */
-    private static function contacts(mixed $values): array
-    {
-        $out = [];
-        foreach (is_array($values) ? $values : [] as $c) {
-            $c = is_array($c) ? $c : [];
-            $out[] = [
-                'name' => PersonName::clean(self::text($c, 'name')), 'relationship' => trim(self::text($c, 'relationship')),
-                'phone' => trim(self::text($c, 'phone')), 'verified' => ($c['verified'] ?? false) === true,
-            ];
-        }
-
-        return $out;
     }
 
     /** "Updated last name. Name corrected; reason: …" (ADR-058, ADR-064); the audit copy never carries an LRN or an email. */

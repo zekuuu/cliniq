@@ -136,3 +136,18 @@ it('searches active students by LRN prefix first, then by every word of the name
     signIn($this->admin);
     $this->postJson('/api/students/search', ['q' => 'ana'])->assertForbidden();
 });
+
+it('answers 409 duplicate_lrn when another save takes the LRN between the check and the insert', function () {
+    signIn($this->staff);
+    $raced = false;
+    DB::beforeExecuting(function (string $sql) use (&$raced): void {
+        if (! $raced && str_starts_with($sql, 'insert into `students`')) {
+            $raced = true; // the other save lands first
+            DB::table('students')->insert(['lrn' => '100000000001', 'first_name' => 'Other', 'last_name' => 'Save']);
+        }
+    });
+
+    $this->postJson('/api/students', studentInput())->assertConflict()
+        ->assertJsonPath('rule', 'duplicate_lrn')->assertJsonPath('message', 'This LRN is already used by another student record.');
+    expect($raced)->toBeTrue(); // the injected row rolls back with the refused save's transaction
+});

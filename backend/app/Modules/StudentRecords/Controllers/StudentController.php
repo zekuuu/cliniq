@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\StudentRecords\Controllers;
 
+use App\Modules\StudentRecords\Services\StudentImportService;
 use App\Modules\StudentRecords\Services\StudentService;
 use App\Modules\UserManagement\Controllers\AuthController;
+use App\Shared\Support\PatientFields;
 use App\Shared\Support\PersonName;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,24 +15,12 @@ use Illuminate\Http\Request;
 /** Student Records (API-Contract Module 2). An LRN only ever travels in a request body (ADR-028). */
 final class StudentController
 {
-    private const INPUT_RULES = [
+    private const INPUT_RULES = PatientFields::RULES + [
         'lrn' => ['required', 'string', 'max:20'],
-        'firstName' => ['present', 'nullable', 'string', 'max:200'],
-        'lastName' => ['present', 'nullable', 'string', 'max:200'],
-        'middleName' => ['nullable', 'string', 'max:200'],
         'gradeLevel' => ['nullable', 'string', 'max:40'],
         'section' => ['nullable', 'string', 'max:60'],
         'sex' => ['nullable', 'string', 'in:female,male'],
         'birthDate' => ['nullable', 'string', 'max:10'],
-        'allergies' => ['array', 'max:50'],
-        'allergies.*' => ['string', 'max:150'],
-        'medicalConditions' => ['array', 'max:50'],
-        'medicalConditions.*' => ['string', 'max:150'],
-        'emergencyContacts' => ['array', 'max:10'],
-        'emergencyContacts.*.name' => ['nullable', 'string', 'max:120'],
-        'emergencyContacts.*.relationship' => ['nullable', 'string', 'max:40'],
-        'emergencyContacts.*.phone' => ['nullable', 'string', 'max:30'],
-        'emergencyContacts.*.verified' => ['boolean'],
     ];
 
     public function __construct(private readonly StudentService $students) {}
@@ -97,6 +87,26 @@ final class StudentController
         $user = AuthController::user($request);
 
         return response()->json(['data' => $this->students->archive($id, $request->string('reason')->value(), $user->id, $user->role)]);
+    }
+
+    private const IMPORT_KEYS = ['lrn', 'firstName', 'lastName', 'middleName', 'gradeLevel', 'section', 'sex', 'birthDate'];
+
+    public function importPreview(Request $request, StudentImportService $import): JsonResponse
+    {
+        /** @var list<array{lrn: string, firstName: string, lastName: string, middleName: string, gradeLevel: string, section: string, sex: string, birthDate: string}> $rows */
+        $rows = PatientFields::importRows($request, self::IMPORT_KEYS);
+
+        return response()->json(['data' => $import->preview($rows)]);
+    }
+
+    public function import(Request $request, StudentImportService $import): JsonResponse
+    {
+        /** @var list<array{lrn: string, firstName: string, lastName: string, middleName: string, gradeLevel: string, section: string, sex: string, birthDate: string}> $rows */
+        $rows = PatientFields::importRows($request, self::IMPORT_KEYS);
+        $request->validate(['fileName' => ['nullable', 'string', 'max:255'], 'archiveIds' => ['array', 'max:5000'], 'archiveIds.*' => ['integer']]);
+        $ids = array_values(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, (array) $request->input('archiveIds', [])));
+
+        return response()->json(['data' => $import->apply($rows, $request->string('fileName')->value(), $ids, AuthController::user($request)->id)]);
     }
 
     public function incomplete(): JsonResponse
