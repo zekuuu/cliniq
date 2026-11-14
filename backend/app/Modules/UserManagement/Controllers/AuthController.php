@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\UserManagement\Controllers;
 
+use App\Modules\BackupVerification\Services\BackupService;
 use App\Modules\UserManagement\Models\User;
 use App\Modules\UserManagement\Services\AuthService;
 use App\Shared\AuditLog\AuditAction;
 use App\Shared\AuditLog\AuditEvent;
 use App\Shared\AuditLog\AuditLogger;
+use App\Shared\Http\BusinessRuleViolation;
 use App\Shared\Http\Middleware\FixedSessionLifetime;
 use App\Shared\Http\Middleware\IdleSignOut;
 use Carbon\CarbonImmutable;
@@ -16,6 +18,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+
+use function Illuminate\Support\defer;
 
 /** `POST /api/auth/login`, `logout`, `GET /api/auth/me`, `POST /api/auth/password` (API-Contract Module 1). */
 final class AuthController
@@ -27,14 +31,18 @@ final class AuthController
         $request->validate(['username' => ['required', 'string', 'max:50'], 'password' => ['required', 'string', 'max:255']]);
         $user = $this->auth->attempt($request->string('username')->value(), $request->string('password')->value());
 
+        // A fresh session: nothing from an earlier one (its idle clock, a pending authenticator) carries over.
+        $request->session()->invalidate();
         Auth::guard('web')->login($user);
         $request->session()->regenerate();
         $request->session()->put(FixedSessionLifetime::KEY, now()->getTimestamp());
+        $request->session()->put(IdleSignOut::LAST, now()->getTimestamp());
+        $request->session()->put(IdleSignOut::LIMIT, IdleSignOut::minutesFor($user));
 
         return response()->json(['data' => ['user' => self::sessionUser($user), 'mustChangePassword' => $user->must_change_password]]);
     }
 
-    public function logout(Request $request, AuditLogger $audit): Response
+    public function logout(Request $request, AuditLogger $audit, BackupService $backups): Response
     {
         $request->validate(['reason' => ['nullable', 'string', 'in:Signed out (idle)']]);
         $user = self::user($request);
@@ -50,6 +58,16 @@ final class AuthController
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+        // The backup at sign-out (ADR-037, ADR-052), after the response so signing out never waits for it.
+        defer(function () use ($backups, $user): void {
+            try {
+                $backups->run($user->id, $user->role);
+            } catch (BusinessRuleViolation) {
+                // No enabled location yet: nothing to back up to, and the Dashboard already says so.
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        });
 
         return response()->noContent();
     }

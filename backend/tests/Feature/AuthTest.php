@@ -6,6 +6,7 @@ use App\Modules\UserManagement\Models\User;
 use App\Shared\Settings\SettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Testing\TestResponse;
 
 uses(RefreshDatabase::class);
@@ -48,6 +49,15 @@ it('counts wrong passwords down, then locks for 5 minutes and audits the lock', 
     login('nurse')->assertStatus(423);
     $this->travel(5)->minutes();
     login('nurse')->assertOk();
+});
+
+it('starts a fresh idle clock at sign-in, even in a browser that kept an old session', function () {
+    User::factory()->create(['username' => 'nurse']);
+    login('nurse')->assertOk();
+    $this->travel(30)->days();
+
+    login('nurse')->assertOk();
+    asSpa()->getJson('/api/auth/me')->assertOk()->assertJsonPath('data.idleSecondsLeft', 3600);
 });
 
 it('locks an unknown username the same way, with no audit entry (Q6)', function () {
@@ -137,4 +147,16 @@ it('lets Staff save the idle sign-out minutes, audited by field name, and the Ad
 
     expect(app(SettingsService::class)->int('idle_signout_minutes_staff'))->toBe(90)
         ->and(DB::table('audit_logs')->where('target_label', 'settings/idle-signout')->value('summary'))->toBe('Updated Staff idle sign-out minutes');
+});
+
+it('ends a session whose password was changed elsewhere, and keeps the session that changed it', function () {
+    $user = User::factory()->create(['username' => 'nurse']);
+    login('nurse')->assertOk();
+    asSpa()->postJson('/api/auth/password', ['currentPassword' => 'password', 'nextPassword' => 'new-password-1'])->assertNoContent();
+    asSpa()->getJson('/api/auth/me')->assertOk(); // the session that changed it stays signed in
+
+    // Another session (or an Admin reset) changes the password: this browser's session ends.
+    $user->forceFill(['password_hash' => Hash::make('changed-elsewhere')])->save();
+    $this->app['auth']->forgetGuards();
+    asSpa()->getJson('/api/auth/me')->assertUnauthorized();
 });
