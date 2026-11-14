@@ -20,4 +20,4 @@ flowchart TD
     K -- Yes --> M[Notify the School Clinician] --> A
 ```
 
-The three checklist steps are the ones on the Backup screen today. A step-by-step **restore** procedure (reinstalling on a new PC and loading a backup) is not written yet; it belongs to backend phase B10. When it is, `APP_KEY` must come from the sealed handover papers, or every authenticator stops working ([Environment Setup](../04-Development/Environment-Setup.md#authenticator-recovery-the-encryption-key-and-the-administrators-break-glass)).
+The three checklist steps are the ones on the Backup screen today. A step-by-step **restore** procedure (reinstalling on a new PC and loading a backup) is not written yet; it belongs to backend phase B10. When it is, `APP_KEY` must come from the password-protected key file, or every authenticator stops working ([Environment Setup](../04-Development/Environment-Setup.md#authenticator-recovery-the-encryption-key-and-the-administrators-break-glass)).
