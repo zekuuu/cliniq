@@ -61,7 +61,7 @@ it('names every action the mock records', function () {
 });
 
 it('names every target the mock records', function () {
-    $mock = ['backup', 'backup-location', 'calendar-event', 'excuse-letter', 'follow-up', 'incident', 'incident-escalation', 'incident-report', 'inventory', 'inventory-adjustment', 'inventory-dispensation', 'inventory-restock', 'issue-report', 'pe-sports-referral', 'print-document', 'sports-report', 'staff', 'student', 'user', 'visit'];
+    $mock = ['backup', 'backup-location', 'calendar-event', 'excuse-letter', 'follow-up', 'incident', 'incident-escalation', 'incident-report', 'incident-stage-1', 'incident-stage-2', 'inventory', 'inventory-adjustment', 'inventory-dispensation', 'inventory-restock', 'issue-report', 'parent-notification', 'pe-sports-referral', 'print-document', 'school-year', 'sports-report', 'staff', 'staff-import', 'student', 'student-import', 'user', 'visit'];
 
     expect(array_map(fn (AuditTarget $target): string => $target->value, AuditTarget::cases()))->toEqualCanonicalizing($mock);
 });

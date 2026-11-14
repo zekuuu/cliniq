@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Shared\AuditLog;
 
 use App\Shared\Auth\ClinicUser;
+use App\Shared\Http\Paging;
 use App\Shared\Support\ClinicTime;
 use App\Shared\Support\Lrn;
 use Carbon\CarbonImmutable;
@@ -89,7 +90,7 @@ final class AuditLogController
 
         $buckets = self::strings($request->array('targetTypes'));
         $actions = self::strings($request->array('actionTypes'));
-        // ponytail: whole list, no paging; add page/perPage (contract Q19) when the log nears 12,000 rows.
+        // ponytail: pages are cut after the whole filtered list is read; move to LIMIT/OFFSET if 12,000 rows get slow.
         $rows = DB::table('audit_logs as a')
             ->leftJoin('users as u', 'u.id', '=', 'a.actor_user_id')
             ->leftJoin('students as s', 's.id', '=', 'a.subject_student_id')
@@ -108,7 +109,9 @@ final class AuditLogController
             $this->audit->record($this->event($request, AuditAction::Print, AuditTarget::PrintDocument, null, self::PRINTS['audit-log']));
         }
 
-        return response()->json([
+        [$rows, $meta] = Paging::apply($request, $rows);
+
+        return response()->json(($meta === null ? [] : ['meta' => $meta]) + [
             'rows' => $rows,
             'users' => DB::table('users')->orderBy('name')->get(['id', 'name'])
                 ->map(fn (\stdClass $u): array => ['id' => self::col($u, 'id'), 'name' => self::col($u, 'name')]),
