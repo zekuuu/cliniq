@@ -8,7 +8,9 @@ The Laravel API for CLINIQ, with Sanctum for sign-in (ADR-007, ADR-056) and Mari
 
 ## Current state
 
-**B0 foundation, B1 migrations (verified on MariaDB), B3 audit trail and B2 sign-in.** Laravel 13.39 with Sanctum in SPA cookie mode. The 48 migrations match `Reference-Schema.sql` (`php tools/db-checks.php`: parity plus the 260 constraint tests). The audit trail writes to `audit_logs` and has the Audit Log API. Sign-in has the shared 5-failure lockout, the forced and voluntary password change (history of 5), the per-role idle sign-out read from `system_settings`, password recovery with an authenticator app, and the own profile. Routes: see `routes/api.php`; `tests/Feature/HealthAndRoutesTest.php` fails on any undocumented route. Nothing is connected to the frontend (ADR-056). Next: B4 Student Records.
+**B0 to B9 built (Phase 1); B10 next.** Laravel 13.39 with Sanctum in SPA cookie mode. The 48 migrations match `Reference-Schema.sql` (`php tools/db-checks.php`: parity plus the 260 constraint tests). Built: the audit trail (B3); sign-in, lockout, password recovery and the own profile (B2); students, staff patients, imports, school years and the Archive (B4); visits, excuse letters, follow-ups and the stock core (B5); incidents and patient history (B7); inventory (B8); the Dashboard, calendar, monthly reports and Sports Reports (B9). Every module's Phase 2 audit comes after B10. Routes: see `routes/api.php`; `tests/Feature/HealthAndRoutesTest.php` fails on any undocumented route. Nothing is connected to the frontend (ADR-056).
+
+**Scheduled jobs.** `routes/console.php` schedules `cliniq:close-missed-follow-ups` (daily, 00:15) and `cliniq:sync-holidays` (hourly from 7:00 to 18:00; it fetches only when the last good sync is 30 or more days old, so a day without internet simply tries again later). On the clinic PC, Windows Task Scheduler must run `php artisan schedule:run` every minute. A backup also runs after each sign-out when a backup location is enabled (ADR-037, ADR-052); the sign-out does not wait for it. The holiday source is `CLINIQ_HOLIDAY_SOURCE_URL` (default: the repo's `holidays-ph.json` on GitHub); `php artisan cliniq:sync-holidays --file=path\to\holidays-ph.json` imports a copy offline, and `--force` fetches now.
 
 ## Install, configure and migrate
 
@@ -18,7 +20,7 @@ On Windows with XAMPP. The full steps, with reasons, are in [Environment Setup](
 2. `composer install`.
 3. Copy `.env.example` to `.env`, fill in the database account and run `php artisan key:generate` once. Never commit `.env`, and never regenerate the key on the clinic PC once accounts exist (it breaks every authenticator).
 4. `php artisan migrate` with the migration account, then switch `.env` back to `cliniq_app`.
-5. There is no seeder yet; the sample data lives only in the frontend.
+5. Optional, development only: `php artisan db:seed --class="App\Shared\Database\DevelopmentSeeder"` on a freshly migrated, empty database loads the frontend's fictional mock seed (`frontend/src/lib/mock-db/mock-db.json`) through the services. It refuses production and a database that already has data. The symptom lists and first-aid steps ship with the migrations (`insert_complaint_types`).
 
 Settings: the session limit, lock-out and idle defaults are in `config/cliniq.php` (7 days; 5 wrong passwords lock for 5 minutes; Staff 60 and Admin 30 idle minutes, overridable with `CLINIQ_IDLE_SIGNOUT_MINUTES_STAFF` and `CLINIQ_IDLE_SIGNOUT_MINUTES_ADMIN`, then stored in `system_settings`). There are no custom console commands yet.
 
