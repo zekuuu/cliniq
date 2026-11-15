@@ -26,4 +26,4 @@ No printout. Tests: `StaffPages.test.tsx`; also `features/staff-patients.test.ts
 
 Decided, not built:
 
-- Nothing in the frontend. The two patient tables (ADR-053) are in the approved ERD (ADR-057) and the B1 migrations; Import Staff List (ADR-069) and Incomplete Staff Records (ADR-067) are built.
+- Nothing in the frontend. The two patient tables (ADR-053) are in the approved ERD (ADR-057) and the B1 migrations; Import Staff List (ADR-069) and Incomplete Staff Records (ADR-067) are built. The backend's staff endpoints (`/api/personnel`, B4) are built on the `backend` branch; these screens do not call them yet (ADR-056).

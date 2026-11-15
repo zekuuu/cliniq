@@ -1,6 +1,6 @@
 # mock-db: the frontend's single source of mock data
 
-Last checked against the code on Saturday, October 31, 2026 (commit 9b4861db).
+Last checked against the code on Sunday, November 15, 2026 (`main` at `5bfee83`).
 
 Every CLINIQ screen reads and writes data through this folder during the frontend-first phases
 (ADR-006). Edit `mock-db.json` and every page changes with it. Decision record:
@@ -26,10 +26,12 @@ mock-db.json        raw records only (hand-edited, never written at runtime)
 Pages never import this folder's internals, and nothing outside `seed.ts` imports the JSON.
 The one exception is `holidays-ph.json`: real nationwide holidays with fixed proclamation dates
 (not synthetic, not relative), read only by `getHolidays` in `api.ts` (ADR-020). Add each new
-year's proclaimed dates there, with the proclamation references in its `meta`, until the backend
-sync job replaces it; `holidays.test.ts` pins the list to the proclamation texts.
-Feature `api/` modules import from `lib/mock-db` (the index). When the Laravel API lands, `api.ts`
-is the file that becomes HTTP calls. Nothing above it has to change.
+year's proclaimed dates there, with the proclamation references in its `meta`; `holidays.test.ts`
+pins the list to the proclamation texts. The backend's `cliniq:sync-holidays` job reads the same
+file format (built on the `backend` branch; it replaces this file once the screens use the API).
+Feature `api/` modules import from `lib/mock-db` (the index). The Laravel API is built on the
+`backend` branch but not connected yet (ADR-056); when it is, `api.ts` is the file that becomes
+HTTP calls. Nothing above it has to change.
 
 ## Editing `mock-db.json` safely
 
@@ -55,7 +57,7 @@ is the file that becomes HTTP calls. Nothing above it has to change.
    `frontendOnly.visitComplaintTypes` / `incidentComplaintTypes`.
 4. **Keep ids readable and unique:** `student-0053`, `personnel-0004`, `visit-0160`, `item-0015`, `user-staff-02`.
 5. **Shapes follow Frontend Context Brief §5** (`src/types/entities.ts`). This isn't a database
-   design; the [ERD](../../../../CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md) is a proposed draft, not final or approved. Anything a screen needs that §5 doesn't define lives under
+   design; that is the [ERD](../../../../CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md), approved (ADR-057). Anything a screen needs that §5 doesn't define lives under
    `frontendOnly` and is labelled mock-only. Don't add new top-level entities. The one exception is
    `personnel`, the staff patients of ADR-043.
 6. **Thresholds live in `config`.** They're open product decisions, not requirements (ADR-014). Since Friday, October 30, 2026 — 03:21 PHT `config` holds ADR-051's starting values, each one **a starting value, nurse to confirm**: a frequent visitor is 3 visits in 14 days (`frequentVisitorMinVisits`, `frequentVisitorWindowDays`), the follow-up reminder window is 7 days, the expiry warning 30 days, the top complaints 5, a pending follow-up is Overdue after `followUpOverdueAfterDays` (3) and reads as Missed after `followUpAutoCloseDays` (7) with "No response (closed automatically after 7 days)" (computed on every read in `api.ts` `view()`, never written), `vitalsUsualRanges` holds the usual vitals by age group, and stock exactly at an item's threshold counts as low. The Trends chart's cluster marker keeps `clusterMinCount` and `clusterRatio`. `showFrequentVisitors` (true/false, true) shows the Dashboard's Frequent-visitor panel, which lists the top five until "Show all"; false hides it. Each inventory item has an optional `brand` (`"generic"`, `"branded"`, or `null` for Not specified, PROVISIONAL); a browser that saved state before these existed is migrated in `store.ts` (`migratePersistedState`). `medicalCertificateAfterDays` (3, ADR-049) is the excused period, both dates counted, past which a letter warns that a medical certificate is usually needed. PROVISIONAL fields added by the decisions build (pending the ERD): `Visit.collectedBy`, `FollowUp.stayHomeUntilCleared` / `stayHomeNote`, the same two on an excuse-letter draft, and `recipient`, `body` and the stay-home pair on an excuse-letter approval. Also `Visit.gradeLevelAtTime` and `Incident.gradeLevelAtTime` (ADR-047) and `InventoryItem.avoidIfAllergicTo` (ADR-049). Also `Visit.extraComplaints` (ADR-053) and `frontendOnly.backupLocations` (ADR-052: label, path, enabled, a mock `status`, last backup time and result; never deleted), with `config.backupKeepLast` (60). `config.personnelTypes` now ends with "Other" (a saved copy is migrated). `Student.birthDate` is PROVISIONAL too (ADR-054), with `config.unusualAgeYears` (3) and `vitalsUsualRanges.grades1to6FromAge` (6) and `grades7to12FromAge` (13), starting values to confirm. `config` gains `idleSignoutMinutesStaff` (60) and `idleSignoutMinutesAdmin` (30), which replaced `adminIdleMinutes` (ADR-048, ADR-078; 10 to 240, Staff edit on Settings; a saved state is migrated), `clusterMinStudents` (3) and `clusterWindowDays` (3) for the Dashboard's possible-cluster alert (ADR-050; starting values, nurse to confirm). The seed holds none of the fields; an approved letter's wording and a record's grade at the time are filled on load (`fillApprovedLetterWording`, `fillGradeAtTime`).
