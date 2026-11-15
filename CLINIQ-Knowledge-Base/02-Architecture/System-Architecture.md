@@ -15,8 +15,8 @@ CLINIQ/
 ├── README.md
 ├── frontend/                  ← React + TypeScript + Vite, feature-based structure (see ADR-008)
 │   └── src/features/          ← one folder per module
-├── backend/                   ← Laravel API, module-based structure (see ADR-009); not started, only a README and `.env.example` today
-│   └── app/Modules/           ← one folder per module (foundation and migrations built), mirroring the frontend directly; Shared/ holds genuinely cross-cutting code (audit trail, base classes)
+├── backend/                   ← Laravel API, module-based structure (see ADR-009); built and tested, phases B0 to B10, on the `backend` branch (only a README and `.env.example` on `main`); not connected to the frontend yet (ADR-056)
+│   └── app/Modules/           ← one folder per module, mirroring the frontend directly; Shared/ holds genuinely cross-cutting code (audit trail, settings, follow-ups, paging)
 └── CLINIQ-Knowledge-Base/     ← this vault
 ```
 

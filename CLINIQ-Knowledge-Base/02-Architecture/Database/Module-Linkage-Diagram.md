@@ -80,7 +80,7 @@ If your viewer does not draw Mermaid, the same picture is exported as an image: 
 
 | From | To | What passes | Where it is written |
 |---|---|---|---|
-| Registrar's list | Student Records | The yearly import adds new students, updates continuing ones and archives those missing from the new list. Not built yet: the import waits for the school's data privacy agreement | ADR-047, ADR-051 |
+| Registrar's list | Student Records | The yearly import adds new students, updates continuing ones and archives those missing from the new list. Built (the screen on sample data, the backend import with preview); using it with the registrar's real list waits for the school's data privacy agreement | ADR-047, ADR-051 |
 | Student Records | Clinic Visit, Emergency Response | The patient is picked by LRN or name (a staff patient by name or Staff No.); allergies and conditions show beside the form and the medicine picker | Modules 2, 3, 4; ADR-018, ADR-043 |
 | First-aid checklist | Clinic Visit | Suggested steps for the complaint chosen | Module 7 |
 | Clinic Visit | Emergency Response | "Escalate to incident"; an escalated visit counts once, as the incident | ADR-036 |

@@ -27,4 +27,4 @@ flowchart LR
     BROWSER -.->|print or Save as PDF| PRINCIPAL
 ```
 
-What is built today: the frontend (on sample data), and the backend's foundation and migrations. During development the frontend runs on Vite's dev server (`http://localhost:5173`) and the backend separately; see [System Architecture](System-Architecture.md).
+What is built today (Sunday, November 15, 2026, code at `397e000`): the frontend, on sample data, and the backend, phases B0 to B10, with its three scheduled jobs (the 18:00 backup, the 00:15 missed follow-ups and the holiday sync); the two are not connected yet (ADR-056). During development the frontend runs on Vite's dev server (`http://localhost:5173`) and the backend separately; see [System Architecture](System-Architecture.md).

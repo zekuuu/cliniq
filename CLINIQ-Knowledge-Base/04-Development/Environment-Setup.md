@@ -148,13 +148,15 @@ schtasks /Create /TN "CLINIQ Scheduler" /SC MINUTE /MO 1 /RU <clinic account> /R
 
 It will carry the holiday sync (ADR-020) and the backup status (ADR-039, ADR-052). The Foundation adds no scheduled job, so the task is not needed until those phases. A computer that is off misses the minute; each job must therefore catch up on its next run rather than assume it ran.
 
+*Update (Sunday, November 15, 2026 — 08:38 PHT, code at `397e000`):* the backend now schedules three jobs in `backend/routes/console.php`, so the task is needed on the clinic PC: `cliniq:close-missed-follow-ups` (daily, 00:15), `cliniq:backup` (daily, 18:00) and `cliniq:sync-holidays` (hourly from 7:00 to 18:00; it fetches only when the last good sync is 30 or more days old).
+
 ## Authenticator recovery: the encryption key and the Administrator's break-glass
 
-Added Saturday, November 07, 2026 — 13:24 PHT for [ADR-073](../06-Decisions/ADR-073-Password-Recovery-With-An-Authenticator-App.md). Nothing here is built before phase B2.
+Added Saturday, November 07, 2026 — 13:24 PHT for [ADR-073](../06-Decisions/ADR-073-Password-Recovery-With-An-Authenticator-App.md). Nothing here is built before phase B2. *Update (Sunday, November 15, 2026 — 08:38 PHT): built; `cliniq:reset-admin-password` is in `backend/routes/console.php` and behaves as described below.*
 
 **The key.** `users.totp_secret` is encrypted with Laravel `Crypt`, which uses `APP_KEY` in `backend/.env`. The key lives in the environment, never in the database or the repository. If it is lost, every authenticator stops working and has to be set up again. If it leaks with a database copy, the secrets can be read. So:
 
-- Keep `APP_KEY` out of the database backups. A copy goes with the clinic's sealed handover papers, and nowhere on the backup drives in plain text. Who holds it is a `DECIDE` in `Backend-Issues-and-TODOs.md`.
+- Keep `APP_KEY` out of the database backups. A copy is kept in a password-protected file, never on the backup drives in plain text; the file's password is kept apart from the file, with the handover documents (Zean, Saturday, November 14, 2026 — 23:00 PHT).
 - Never run `php artisan key:generate` on the clinic computer once accounts exist: it would break every authenticator and every session. To rotate the key, use Laravel's `APP_PREVIOUS_KEYS`.
 
 **Break-glass for the Administrator.** Nobody in the app can reset the Administrator's password (ADR-033, ADR-073). The Administrator sets up the authenticator at handover and keeps the 8 recovery codes. If the password, the phone and the codes are all lost, someone at the clinic computer with Windows access to `C:\CLINIQ\backend` runs this offline:
@@ -163,7 +165,7 @@ Added Saturday, November 07, 2026 — 13:24 PHT for [ADR-073](../06-Decisions/AD
 "C:\xampp\php\php.exe" "C:\CLINIQ\backend\artisan" cliniq:reset-admin-password
 ```
 
-The command (to be built in B2):
+The command (built in B10; planned for B2):
 
 - asks for the Administrator's username and a temporary password at the console, never as an argument;
 - sets `must_change_password = 1`, so the Admin chooses a new one at the next sign-in;
