@@ -21,8 +21,13 @@ import { paths } from '../../routes/paths'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { addMonths, formatDateTime, todayISO } from '../../lib/dates'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
-import type { SessionUser } from '../../lib/mock-db'
-import { fetchMonthlyReport, type MonthlyReportData } from './api/reportsApi'
+import type { SessionUser } from '../../lib/data'
+import {
+  fetchMonthlyReport,
+  fetchMonthlyReportForPrint,
+  type MonthlyReportData,
+} from './api/reportsApi'
+import { useFullLrnPrint } from '../../hooks/useFullLrnPrint'
 import { HealthSummary } from './components/HealthSummary'
 import {
   InventorySheetTable,
@@ -182,6 +187,9 @@ export function ReportsPage({ viewer }: { viewer: SessionUser }) {
   const { data, status, isRefetching, reload } = useAsyncData(`report|${month}`, () =>
     fetchMonthlyReport(month),
   )
+  // ADR-044: paper carries the full LRN; on the API the Print button fetches it first (ADR-080).
+  const fullPrint = useFullLrnPrint('REPORTS', () => fetchMonthlyReportForPrint(month))
+  const printData = fullPrint.full ?? data
   const title =
     view === 'monthly'
       ? 'Monthly Report'
@@ -309,7 +317,7 @@ export function ReportsPage({ viewer }: { viewer: SessionUser }) {
                 Sports Reports
               </Link>
             )}
-            <PrintButton viewer={viewer} />
+            <PrintButton viewer={viewer} onPrint={() => void fullPrint.print()} />
           </div>
         </div>
       </Card>
@@ -325,13 +333,13 @@ export function ReportsPage({ viewer }: { viewer: SessionUser }) {
           }))}
         />
       </div>
-      {data && (
+      {printData && (
         <ReportsPrint
           view={view}
-          data={data}
+          data={printData}
           month={monthLabel(month)}
           previousMonth={monthLabel(previousMonthOf(month))}
-          archiveRows={sortArchive(data.incidents, archiveSort)}
+          archiveRows={sortArchive(printData.incidents, archiveSort)}
           archiveOrder={archiveOrder(archiveSort)}
           viewer={viewer}
         />

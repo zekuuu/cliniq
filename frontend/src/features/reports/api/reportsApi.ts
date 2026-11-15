@@ -1,9 +1,10 @@
 import {
   getLatestRecordedMonth,
   getMonthlyReport,
+  getMonthlyReportForPrint,
   getSchoolYearHistory,
   type MonthlyReportData,
-} from '../../../lib/mock-db'
+} from '../../../lib/data'
 import type { SchoolYearSettings } from '../../../lib/schoolYear'
 
 /**
@@ -15,6 +16,11 @@ export type { MonthlyReportData }
 
 export function fetchMonthlyReport(month: string): Promise<MonthlyReportData> {
   return getMonthlyReport(month)
+}
+
+/** The same report with full LRNs, for the Staff printout only (ADR-044, ADR-080). */
+export function fetchMonthlyReportForPrint(month: string): Promise<MonthlyReportData> {
+  return getMonthlyReportForPrint(month)
 }
 
 /** What the Admin's month drop-down needs (ADR-077): the school-year starts and the newest month with records. */
