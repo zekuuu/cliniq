@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { Button, Input, Modal } from '../../components'
 import { formatDateTime } from '../../lib/dates'
-import { ROLE_LABELS, updateOwnProfile, USER_NAME_MAX, type OwnAccount } from '../../lib/mock-db'
+import { ROLE_LABELS, updateOwnProfile, USER_NAME_MAX, type OwnAccount } from '../../lib/data'
 import {
   PROFILE_PICTURE_ACCEPT,
   profilePictureError,

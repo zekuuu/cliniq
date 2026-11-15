@@ -11,7 +11,7 @@ import {
   type DuplicateMatch,
   type SessionUser,
   type StudentDuplicateCheck,
-} from '../../../lib/mock-db'
+} from '../../../lib/data'
 import type { EmergencyContact, ISODate, Student, StudentSex } from '../../../types/entities'
 import { isNoneRecorded, tidyEntry } from '../../../lib/patients'
 

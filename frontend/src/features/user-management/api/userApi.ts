@@ -7,7 +7,7 @@ import {
   saveUser,
   setUserActive,
   type SessionUser,
-} from '../../../lib/mock-db'
+} from '../../../lib/data'
 
 export { DuplicateUsernameError, LastAdminError }
 import type { User, UserRole } from '../../../types/entities'

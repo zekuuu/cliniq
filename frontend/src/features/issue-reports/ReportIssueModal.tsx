@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useLocation } from 'react-router'
 import { Button, Modal, Textarea } from '../../components'
-import { ROLE_LABELS, type SessionUser } from '../../lib/mock-db'
+import { ROLE_LABELS, type SessionUser } from '../../lib/data'
 import { createIssueReport, type IssueReportInput } from './api/issueReportApi'
 import { ISSUE_REPORT_RECIPIENT } from './reportIssueConfig'
 

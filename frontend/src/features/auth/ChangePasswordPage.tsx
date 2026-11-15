@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { BackButton, Button, Card, Input } from '../../components'
 import { useCapsLock } from '../../hooks/useCapsLock'
-import { changeOwnPassword, type SessionUser } from '../../lib/mock-db'
+import { changeOwnPassword, type SessionUser } from '../../lib/data'
 import { paths } from '../../routes/paths'
 
 /** Self-service password change for whoever is signed in (Module 1, Password Management). */

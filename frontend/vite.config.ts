@@ -15,5 +15,26 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     css: false,
     globals: true,
+    // Tests run on the mock whatever a developer's .env says (ADR-080); API-mode tests stub these.
+    env: Object.fromEntries(
+      [
+        '',
+        '_AUTH',
+        '_STUDENTS',
+        '_STAFF_PATIENTS',
+        '_SCHOOL_YEARS',
+        '_VISITS',
+        '_INCIDENTS',
+        '_INVENTORY',
+        '_DASHBOARD',
+        '_REPORTS',
+        '_USERS',
+        '_BACKUP',
+        '_AUDIT',
+        '_SETTINGS',
+        '_ISSUE_REPORTS',
+        '_REFERENCE',
+      ].map((suffix) => [`VITE_API_MODE${suffix}`, '']),
+    ),
   },
 })

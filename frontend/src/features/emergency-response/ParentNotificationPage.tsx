@@ -18,7 +18,7 @@ import {
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
-import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
+import { getMockSessionUser, type SessionUser } from '../../lib/data'
 import type { ParentNotificationOutcome } from '../../types/entities'
 import { fetchIncidentRecord, logParentNotification } from './api/incidentRecordApi'
 import {

@@ -1,6 +1,6 @@
 import { Button, Icon, type ItemLineDraft } from '../../components'
 import { itemsNamedInNotes } from '../../lib/itemsGiven'
-import type { InventoryItemView } from '../../lib/mock-db'
+import type { InventoryItemView } from '../../lib/data'
 
 /**
  * Under Treatment notes (panel review VS-4): when the notes name a stocked item that isn't on a line,

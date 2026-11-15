@@ -1,7 +1,7 @@
 import type { RefObject } from 'react'
 import { Combobox, ExpandableSection, Input, Textarea, VitalsWarning } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import type { AgeGroup, VitalsWarningRanges } from '../../lib/mock-db'
+import type { AgeGroup, VitalsWarningRanges } from '../../lib/data'
 import { filledLogbookCount, type LogbookErrors, type LogbookValues } from './logbookValues'
 import { fetchAssistedByNames } from './api/newVisitApi'
 

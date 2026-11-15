@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, type ComponentType, type ReactNode } from 'r
 import { Navigate, Route, Routes, useLocation, useParams } from 'react-router'
 import { AppShell } from '../layouts/AppShell'
 import type { NavKey } from '../layouts/navigation'
-import type { SessionUser } from '../lib/mock-db'
+import type { SessionUser } from '../lib/data'
 import type { UserRole } from '../types/entities'
 import { NotFoundPage } from './NotFoundPage'
 import { paths } from './paths'

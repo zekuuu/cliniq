@@ -25,7 +25,7 @@ import {
   listInventory,
   listInventoryMovements,
   type InventoryMovementRow,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import { paths } from '../../routes/paths'
 
 const TYPE_OPTIONS = [

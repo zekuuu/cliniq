@@ -31,7 +31,7 @@ import {
   type SessionUser,
   type StudentImportPreview,
   type StudentImportResult,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import { paths } from '../../routes/paths'
 import { nameMatches } from '../../lib/personName'
 

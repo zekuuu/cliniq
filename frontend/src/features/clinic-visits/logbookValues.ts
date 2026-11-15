@@ -1,5 +1,5 @@
 import { formatTime } from '../../lib/dates'
-import type { VisitLogbookFields } from '../../lib/mock-db'
+import type { VisitLogbookFields } from '../../lib/data'
 import type { Visit } from '../../types/entities'
 
 /**

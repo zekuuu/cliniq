@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import { Icon } from '../../../components'
 import { formatDateRange } from '../../../lib/dates'
-import type { ClusterAlert } from '../../../lib/mock-db'
+import type { ClusterAlert } from '../../../lib/data'
 import { paths } from '../../../routes/paths'
 
 /**

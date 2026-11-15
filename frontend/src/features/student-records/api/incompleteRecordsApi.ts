@@ -1,4 +1,4 @@
-import { getIncompleteRecordQueue, type IncompleteRecord as QueueRow } from '../../../lib/mock-db'
+import { getIncompleteRecordQueue, type IncompleteRecord as QueueRow } from '../../../lib/data'
 import type { ISODate, ISODateTime } from '../../../types/entities'
 
 /**

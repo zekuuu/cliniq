@@ -25,7 +25,7 @@ import {
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { paths } from '../../routes/paths'
-import { getMockSessionUser } from '../../lib/mock-db'
+import { getMockSessionUser } from '../../lib/data'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { FollowUpStatus } from '../../types/entities'
 import {

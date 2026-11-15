@@ -1,4 +1,4 @@
-import type { ArchivedRecordRow } from '../../lib/mock-db'
+import type { ArchivedRecordRow } from '../../lib/data'
 
 /** The newest school year with an archived row, or null. The Archive opens on it from a list's Archive button. */
 export function newestArchivedYear(rows: ArchivedRecordRow[]): string | null {

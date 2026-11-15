@@ -29,7 +29,7 @@ import {
   unitSuggestions,
   type InventoryFormValues,
 } from './api/inventoryApi'
-import { getMockToday, StockRuleError, USED_FOR_REQUIRED } from '../../lib/mock-db'
+import { getMockToday, StockRuleError, USED_FOR_REQUIRED } from '../../lib/data'
 
 const BRAND_OPTIONS = [
   { value: '', label: 'Not specified' },

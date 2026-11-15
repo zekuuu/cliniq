@@ -1,5 +1,5 @@
 import { formatTime } from '../../lib/dates'
-import { LOCKOUT_MINUTES } from '../../lib/mock-db'
+import { LOCKOUT_MINUTES } from '../../lib/data'
 
 /** The lockout message, the same at sign-in and at password recovery (ADR-015). */
 export function lockedMessage(lockedUntil?: number): string {

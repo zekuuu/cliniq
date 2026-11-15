@@ -14,7 +14,7 @@ import {
   type SportsReportDetail,
   type SportsReportInput,
   type SportsReportSummary,
-} from '../../../lib/mock-db'
+} from '../../../lib/data'
 import type { StudentSearchResult } from '../../../types/entities'
 
 /*

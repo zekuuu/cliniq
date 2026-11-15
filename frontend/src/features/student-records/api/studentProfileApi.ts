@@ -7,7 +7,7 @@ import {
   recordView,
   type SessionUser,
   type StudentExcuseLetter,
-} from '../../../lib/mock-db'
+} from '../../../lib/data'
 import type { Incident, Student, Visit } from '../../../types/entities'
 
 /**

@@ -18,7 +18,7 @@ import {
   startAuthenticatorSetup,
   turnOffAuthenticator,
   type SessionUser,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 
 type Step =
   | { kind: 'status' }

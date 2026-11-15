@@ -1,1 +1,1 @@
-export { createIssueReport, listIssueReports, type IssueReportInput } from '../../../lib/mock-db'
+export { createIssueReport, listIssueReports, type IssueReportInput } from '../../../lib/data'

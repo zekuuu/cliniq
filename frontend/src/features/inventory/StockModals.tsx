@@ -8,7 +8,7 @@ import {
   StockRuleError,
   STAFF_ADJUSTMENT_REASONS,
   type StaffAdjustmentReason,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDate } from '../../lib/dates'

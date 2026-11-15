@@ -4,7 +4,7 @@ import type {
   SportsReportContent,
   SportsReportContentRow,
   SportsReportWindow,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 
 /* Wording and table columns shared by the Sports Report screen and its printout (ADR-034), so the preview is the paper. */
 

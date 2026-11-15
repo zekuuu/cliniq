@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { canPrint, usePrinting } from '../../hooks/usePrinting'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/cn'
-import { getMockSessionUser, type PrintAuditRecord, type SessionUser } from '../../lib/mock-db'
+import { getMockSessionUser, type PrintAuditRecord, type SessionUser } from '../../lib/data'
 // Inlined as a data URL: the tree mounts inside beforeprint, and a fetched image (the dev server
 // sends no-cache) is not ready in time, so the letterhead printed an empty box.
 import LOGO_SRC from './mca-logo-print.png?inline'

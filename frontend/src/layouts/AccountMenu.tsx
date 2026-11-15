@@ -4,7 +4,7 @@ import { Icon, ShortcutHint, type IconName } from '../components'
 import { SHORTCUT_KEYS } from '../lib/shortcuts'
 import { cn } from '../lib/cn'
 import { formatDateTime } from '../lib/dates'
-import { ROLE_LABELS, type OwnAccount, type SessionUser } from '../lib/mock-db'
+import { ROLE_LABELS, type OwnAccount, type SessionUser } from '../lib/data'
 import { UserAvatar } from '../features/user-management/UserAvatar'
 import { paths } from '../routes/paths'
 

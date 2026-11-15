@@ -1,6 +1,6 @@
 import type { ISODate } from '../types/entities'
 import { ageOn } from './age'
-import type { AgeGroup, VitalRange, VitalsUsualRanges, VitalsWarningRanges } from './mock-db'
+import type { AgeGroup, VitalRange, VitalsUsualRanges, VitalsWarningRanges } from './data'
 import { formatDecimal } from './numbers'
 
 /** Readings as typed into a form; a blank or missing one is simply not checked. */

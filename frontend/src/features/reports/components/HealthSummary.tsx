@@ -9,7 +9,7 @@ import { smoothTooltip } from '../../../components/charts/smoothTooltip'
 import { usePrefersReducedMotion } from '../../../hooks/usePrefersReducedMotion'
 import { colorToken } from '../../../lib/tokens'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../../lib/tableSort'
-import type { ComplaintCount } from '../../../lib/mock-db'
+import type { ComplaintCount } from '../../../lib/data'
 
 /*
  * Symptom summary (Screen Inventory #21, formerly Health Summaries): clinic visits per complaint for the report month.

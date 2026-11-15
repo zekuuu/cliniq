@@ -60,7 +60,7 @@ import {
   StockRuleError,
   type SessionUser,
   type VitalsWarningRanges,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import type {
   CalledContact,
   HospitalReferral,

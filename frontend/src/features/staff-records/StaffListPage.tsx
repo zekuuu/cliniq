@@ -29,7 +29,7 @@ import {
   getMockSessionUser,
   missingStaffFields,
   type SessionUser,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import { fetchStaffIncompleteRecords, fetchStaffList, fetchStaffTypes } from './api/staffApi'
 
 function StaffListSkeleton({ back }: { back: ReactNode }) {

@@ -20,7 +20,7 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
 import { nameMatches } from '../../lib/personName'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
-import { getMockSessionUser, type SessionUser, type StaffIncompleteRecord } from '../../lib/mock-db'
+import { getMockSessionUser, type SessionUser, type StaffIncompleteRecord } from '../../lib/data'
 import { fetchStaffIncompleteRecords } from './api/staffApi'
 
 type QueueFilter = 'open' | 'resolved' | 'all'

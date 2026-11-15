@@ -11,7 +11,7 @@ import {
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { addMonths, todayISO } from '../../lib/dates'
 import { SYMPTOM, symptom } from '../../lib/labels'
-import type { SessionUser } from '../../lib/mock-db'
+import type { SessionUser } from '../../lib/data'
 import { schoolYearOf, type SchoolYearSettings } from '../../lib/schoolYear'
 import { fetchMonthlyReport, fetchReportMonthSetup } from './api/reportsApi'
 import { ReportsPrint, type ReportView } from './components/ReportsPrint'

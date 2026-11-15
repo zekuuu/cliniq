@@ -15,7 +15,7 @@ import {
   type SessionUser,
   type VisitLogbookFields,
   type VitalsWarningRanges,
-} from '../../../lib/mock-db'
+} from '../../../lib/data'
 import { normalizeComplaint } from '../../../lib/complaints'
 import type {
   CollectedBy,

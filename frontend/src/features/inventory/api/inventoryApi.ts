@@ -16,7 +16,7 @@ import {
   type InventoryHistoryRow,
   type SessionUser,
   type StockAdjustmentInput,
-} from '../../../lib/mock-db'
+} from '../../../lib/data'
 import type {
   InventoryCategory,
   InventoryItem,

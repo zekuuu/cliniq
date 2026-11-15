@@ -2,7 +2,7 @@ import { SYMPTOM, symptom, symptoms } from '../../../lib/labels'
 import { splitText } from '../../../lib/patients'
 import { DataTable, EmptyState, PrintTable } from '../../../components'
 import { formatDate } from '../../../lib/dates'
-import type { MonthlyInventoryRow } from '../../../lib/mock-db'
+import type { MonthlyInventoryRow } from '../../../lib/data'
 import type { MonthlyReportData } from '../api/reportsApi'
 
 /*

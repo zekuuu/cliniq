@@ -10,7 +10,7 @@ import {
   type SessionUser,
   type BackupStatusView,
   type PendingExcuseLetter,
-} from '../../../lib/mock-db'
+} from '../../../lib/data'
 import type { ISODate } from '../../../types/entities'
 import type {
   CalendarDay,
@@ -88,4 +88,4 @@ export {
   validateCalendarEvent,
   type CalendarEventErrors,
   type CalendarEventInput,
-} from '../../../lib/mock-db'
+} from '../../../lib/data'

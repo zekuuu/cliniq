@@ -1,5 +1,5 @@
 import { todayISO } from '../../lib/dates'
-import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
+import { getMockSessionUser, type SessionUser } from '../../lib/data'
 import { VisitCalendar } from './components/VisitCalendar'
 
 /** The Activity calendar (ADR-050 renamed it) is a top-level operational screen, separate from the Dashboard's summary and trends. */
