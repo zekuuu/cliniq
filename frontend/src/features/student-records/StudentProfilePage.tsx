@@ -37,7 +37,7 @@ import {
   getMockToday,
   type SessionUser,
   type StudentExcuseLetter,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import type { Incident, Student, Visit } from '../../types/entities'
 import {
   DISPOSITION_LABELS as dispositionLabel,
@@ -282,9 +282,7 @@ function OverviewCard({ student }: { student: Student }) {
         </div>
         <div>
           <p className="text-xs font-semibold text-text-secondary">Sex</p>
-          <p className="text-sm font-semibold text-text-primary">
-            {student.sex === 'female' ? 'Female' : 'Male'}
-          </p>
+          <p className="text-sm font-semibold text-text-primary">{sexLabel(student.sex)}</p>
         </div>
         {student.birthDate && (
           <div>
@@ -519,7 +517,7 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
             { label: 'LRN', value: student.lrn },
             { label: 'Grade level', value: student.gradeLevel },
             ...(student.section ? [{ label: 'Section', value: student.section }] : []),
-            { label: 'Sex', value: student.sex === 'female' ? 'Female' : 'Male' },
+            { label: 'Sex', value: sexLabel(student.sex) },
             ...(student.birthDate
               ? [
                   {
@@ -628,6 +626,11 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
  */
 /** Why a student record is archived (professor's consultation, November 6, 2026). A mid-year transfer is "Transferred" with its date; "Other" asks which. */
 const REASONS = ['Transferred', 'Graduated', 'Left the school']
+
+/** The API returns null for a sex never recorded (contract G4); the mock fills it in as female. */
+function sexLabel(sex: string | null): string {
+  return sex === 'female' ? 'Female' : sex === 'male' ? 'Male' : 'Not recorded'
+}
 
 export function StudentProfilePage({
   viewer = getMockSessionUser(),
