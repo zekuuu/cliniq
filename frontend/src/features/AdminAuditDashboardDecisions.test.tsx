@@ -55,7 +55,10 @@ describe('Admin, audit and Dashboard', () => {
     expect(onLogout).not.toHaveBeenCalled()
     await act(() => vi.advanceTimersByTimeAsync(2 * 60_000))
     expect(onLogout).toHaveBeenCalledWith(30)
-    expect(getRecordedAuditEntries().at(-1)).toMatchObject({ actionType: 'logout', summary: 'Signed out (idle)' })
+    expect(getRecordedAuditEntries().at(-1)).toMatchObject({
+      actionType: 'logout',
+      summary: 'Signed out (idle)',
+    })
   })
 
   it('keeps the Admin signed in while they are active, and times the clinician out only after their own 60 minutes (ADR-078)', async () => {
@@ -81,7 +84,7 @@ describe('Admin, audit and Dashboard', () => {
     expect(staffLogout).toHaveBeenCalledWith(60)
   })
 
-  it("logs the clinician opening a student or staff profile or an incident report, once per record per session", async () => {
+  it('logs the clinician opening a student or staff profile or an incident report, once per record per session', async () => {
     await fetchStudentProfile('student-0001', STAFF)
     await fetchStudentProfile('student-0001', STAFF)
     await fetchStaffProfile('personnel-0001', STAFF)
@@ -96,15 +99,36 @@ describe('Admin, audit and Dashboard', () => {
 
   async function chillsVisits(patients: Array<{ studentId?: string; personnelId?: string }>) {
     for (const patient of patients)
-      await recordVisit({ ...patient, complaint: 'Chills', treatment: '', disposition: 'returned_to_class', followUp: null })
+      await recordVisit({
+        ...patient,
+        complaint: 'Chills',
+        treatment: '',
+        disposition: 'returned_to_class',
+        followUp: null,
+      })
   }
 
   it('flags 3 students with the same complaint and grade within 3 days, not 2, and ignores staff', async () => {
-    await chillsVisits([{ studentId: 'student-0001' }, { studentId: 'student-0014' }, { personnelId: 'personnel-0001' }, { studentId: 'student-0001' }])
-    expect((await listClusterAlerts(STAFF)).filter((alert) => alert.complaint === 'Chills')).toEqual([])
+    await chillsVisits([
+      { studentId: 'student-0001' },
+      { studentId: 'student-0014' },
+      { personnelId: 'personnel-0001' },
+      { studentId: 'student-0001' },
+    ])
+    expect(
+      (await listClusterAlerts(STAFF)).filter((alert) => alert.complaint === 'Chills'),
+    ).toEqual([])
     await chillsVisits([{ studentId: 'student-0027' }])
-    expect((await listClusterAlerts(STAFF)).filter((alert) => alert.complaint === 'Chills')).toEqual([
-      { complaint: 'Chills', gradeLevel: 'Kinder', students: 3, from: expect.any(String), to: todayISO() },
+    expect(
+      (await listClusterAlerts(STAFF)).filter((alert) => alert.complaint === 'Chills'),
+    ).toEqual([
+      {
+        complaint: 'Chills',
+        gradeLevel: 'Kinder',
+        students: 3,
+        from: expect.any(String),
+        to: todayISO(),
+      },
     ])
     expect(await listClusterAlerts(ADMIN)).toEqual([])
   })

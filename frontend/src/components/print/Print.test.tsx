@@ -27,25 +27,43 @@ describe('PrintDocument', () => {
   })
 
   it('writes one print audit entry with the signed-in user and document title', async () => {
-    render(<PrintDocument title="Student profile" scope="Scope" viewer={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}>Body</PrintDocument>)
+    render(
+      <PrintDocument
+        title="Student profile"
+        scope="Scope"
+        viewer={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+      >
+        Body
+      </PrintDocument>,
+    )
 
     act(() => {
       window.dispatchEvent(new Event('beforeprint'))
       window.dispatchEvent(new Event('beforeprint'))
     })
 
-    await waitFor(() => expect(getRecordedAuditEntries()).toEqual([
-      expect.objectContaining({
-        userId: 'user-staff-01',
-        actionType: 'print',
-        targetRecord: { type: 'print-document', id: 'Student profile' },
-      }),
-    ]))
+    await waitFor(() =>
+      expect(getRecordedAuditEntries()).toEqual([
+        expect.objectContaining({
+          userId: 'user-staff-01',
+          actionType: 'print',
+          targetRecord: { type: 'print-document', id: 'Student profile' },
+        }),
+      ]),
+    )
     act(() => window.dispatchEvent(new Event('afterprint')))
   })
 
   it('does not write an audit entry until printing starts', () => {
-    render(<PrintDocument title="Student profile" scope="Scope" viewer={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}>Body</PrintDocument>)
+    render(
+      <PrintDocument
+        title="Student profile"
+        scope="Scope"
+        viewer={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+      >
+        Body
+      </PrintDocument>,
+    )
     expect(getRecordedAuditEntries()).toEqual([])
   })
 })

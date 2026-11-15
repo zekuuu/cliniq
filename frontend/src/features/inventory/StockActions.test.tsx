@@ -1,7 +1,15 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { adjustInventoryStock, getInventoryItem, getRecordedAuditEntries, getStudent, isLargeWriteOff, listInventory, resetMockDb } from '../../lib/mock-db'
+import {
+  adjustInventoryStock,
+  getInventoryItem,
+  getRecordedAuditEntries,
+  getStudent,
+  isLargeWriteOff,
+  listInventory,
+  resetMockDb,
+} from '../../lib/mock-db'
 import { db } from '../../lib/mock-db/store'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { pickDate } from '../../test/pickDate'
@@ -25,7 +33,11 @@ describe('Adjust Stock', () => {
     const user = userEvent.setup()
     renderWithRouter(<InventoryListPage />)
     // Panel review IV-1: Adjust Stock sits under the row's Manage menu.
-    await selectOption(user, await screen.findByRole('button', { name: new RegExp(`^Manage ${itemName}`) }), 'Adjust Stock')
+    await selectOption(
+      user,
+      await screen.findByRole('button', { name: new RegExp(`^Manage ${itemName}`) }),
+      'Adjust Stock',
+    )
     return { user, dialog: screen.getByRole('dialog', { name: `Adjust Stock: ${itemName}` }) }
   }
 
@@ -51,13 +63,19 @@ describe('Adjust Stock', () => {
 
   it('disposes of an expired batch by setting the counted quantity', async () => {
     const { user, dialog } = await openAdjust('Oral Rehydration Salts')
-    expect(within(dialog).getByText(/The expiration date changes only through Restock/)).toBeInTheDocument()
+    expect(
+      within(dialog).getByText(/The expiration date changes only through Restock/),
+    ).toBeInTheDocument()
     await user.click(within(dialog).getByRole('radio', { name: 'Set to counted quantity' }))
     await user.type(within(dialog).getByLabelText(/counted quantity/i), '0')
     await selectOption(user, within(dialog).getByLabelText(/^reason/i), 'Expired - disposed')
     await user.type(within(dialog).getByLabelText(/^note/i), 'Whole batch past its expiry date')
     await user.click(within(dialog).getByRole('button', { name: 'Save Adjustment' }))
-    expect(await screen.findByText(/Oral Rehydration Salts adjusted \(Expired - disposed\)\. Usable stock is now 0 sachets/)).toBeInTheDocument()
+    expect(
+      await screen.findByText(
+        /Oral Rehydration Salts adjusted \(Expired - disposed\)\. Usable stock is now 0 sachets/,
+      ),
+    ).toBeInTheDocument()
     expect(await stock('item-0004')).toBe(0)
   })
 })
@@ -86,7 +104,11 @@ describe('Restock and Edit Item', () => {
     await user.click(await screen.findByRole('button', { name: 'Restock Gauze Pads' }))
     const dialog = screen.getByRole('dialog', { name: 'Restock: Gauze Pads' })
     await user.type(within(dialog).getByLabelText(/quantity received/i), '10')
-    await pickDate(user, within(dialog).getByRole('button', { name: /expiration date/i }), '2027-10-22')
+    await pickDate(
+      user,
+      within(dialog).getByRole('button', { name: /expiration date/i }),
+      '2027-10-22',
+    )
     await user.click(within(dialog).getByRole('button', { name: 'Save Restock' }))
     expect(await screen.findByText(/Gauze Pads restocked with 10 pieces/)).toBeInTheDocument()
     expect(await stock('item-0011')).toBe(50)
@@ -100,10 +122,16 @@ describe('Restock and Edit Item', () => {
     await user.type(within(dialog).getByLabelText(/quantity received/i), '10')
     await user.click(within(dialog).getByRole('button', { name: 'Save Restock' }))
 
-    expect(within(dialog).getByText('Choose an expiration date, or confirm this batch has no expiration date.')).toBeInTheDocument()
+    expect(
+      within(dialog).getByText(
+        'Choose an expiration date, or confirm this batch has no expiration date.',
+      ),
+    ).toBeInTheDocument()
     expect(await stock('item-0011')).toBe(40)
 
-    await user.click(within(dialog).getByRole('checkbox', { name: /this batch has no expiration date/i }))
+    await user.click(
+      within(dialog).getByRole('checkbox', { name: /this batch has no expiration date/i }),
+    )
     expect(within(dialog).getByRole('button', { name: /expiration date/i })).toBeDisabled()
     await user.click(within(dialog).getByRole('button', { name: 'Save Restock' }))
 
@@ -113,7 +141,9 @@ describe('Restock and Edit Item', () => {
 
   it('shows stock and expiry as read-only when editing an existing item', async () => {
     renderWithRouter(<InventoryFormPage />, { route: '/inventory/new?item=item-0001' })
-    expect(await screen.findByText('Changes only through Restock on the Inventory list.')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Changes only through Restock on the Inventory list.'),
+    ).toBeInTheDocument()
     expect(screen.queryByLabelText(/current stock/i)).not.toBeInTheDocument()
   })
 })
@@ -131,11 +161,17 @@ describe('Standalone Dispense', () => {
   it('records general use with no student', async () => {
     const user = userEvent.setup()
     renderWithRouter(<InventoryDispensePage />, { route: '/inventory/dispense' })
-    await selectOption(user, await screen.findByLabelText(/^for/i), 'Not for a person (general use)')
+    await selectOption(
+      user,
+      await screen.findByLabelText(/^for/i),
+      'Not for a person (general use)',
+    )
     await user.type(screen.getByRole('combobox', { name: 'Item' }), 'gloves')
     await user.click(screen.getByRole('option', { name: /Disposable Gloves/ }))
     await user.click(screen.getByRole('button', { name: 'Record Dispensation' }))
-    expect(await screen.findByText(/1 pairs of Disposable Gloves recorded for general use/)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/1 pairs of Disposable Gloves recorded for general use/),
+    ).toBeInTheDocument()
     expect(await stock('item-0014')).toBe(89)
   })
 
@@ -145,11 +181,18 @@ describe('Standalone Dispense', () => {
     renderWithRouter(<InventoryDispensePage />, { route: '/inventory/dispense' })
     await selectOption(user, await screen.findByLabelText(/^For/), 'A student or staff member')
     await pickStudent(user, student.lrn)
-    const notice = (await screen.findByText(/This student already has a visit today/)).closest('[role="status"]') as HTMLElement
-    expect(within(notice).getByRole('link', { name: /Open today’s visit/ })).toHaveAttribute('href', '/visits/visit-0159')
+    const notice = (await screen.findByText(/This student already has a visit today/)).closest(
+      '[role="status"]',
+    ) as HTMLElement
+    expect(within(notice).getByRole('link', { name: /Open today’s visit/ })).toHaveAttribute(
+      'href',
+      '/visits/visit-0159',
+    )
     expect(within(notice).queryByText(new RegExp(student.fullName))).not.toBeInTheDocument()
     // The picked student shows like New Visit's: a deliberate single lookup (cliniq-display-privacy).
-    expect(screen.getByRole('button', { name: `Change student or staff member (${student.fullName})` })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: `Change student or staff member (${student.fullName})` }),
+    ).toBeInTheDocument()
   })
 
   it('finds the student by name from the first letters and picks from the list', async () => {
@@ -157,8 +200,12 @@ describe('Standalone Dispense', () => {
     renderWithRouter(<InventoryDispensePage />, { route: '/inventory/dispense' })
     await selectOption(user, await screen.findByLabelText(/^For/), 'A student or staff member')
     await user.type(screen.getByRole('combobox', { name: /student/i }), 'Gian')
-    await user.click(await screen.findByRole('option', { name: /LRN ending in 0001 Gian Quizon Kinder/ }))
-    expect(screen.getByRole('button', { name: 'Change student or staff member (Gian Quizon)' })).toBeInTheDocument()
+    await user.click(
+      await screen.findByRole('option', { name: /LRN ending in 0001 Gian Quizon Kinder/ }),
+    )
+    expect(
+      screen.getByRole('button', { name: 'Change student or staff member (Gian Quizon)' }),
+    ).toBeInTheDocument()
   })
 
   it('shows expired items as unavailable', async () => {
@@ -185,42 +232,71 @@ describe('Large write-off rule (panel review IV-7)', () => {
 
   async function target() {
     const items = await listInventory()
-    const onHandOf = (item: (typeof items)[number]) => item.batches.reduce((sum, batch) => sum + batch.quantity, 0)
+    const onHandOf = (item: (typeof items)[number]) =>
+      item.batches.reduce((sum, batch) => sum + batch.quantity, 0)
     const item = items.find((candidate) => onHandOf(candidate) >= 8)!
-    return { item, onHand: onHandOf(item), batch: [...item.batches].sort((a, b) => b.quantity - a.quantity)[0] }
+    return {
+      item,
+      onHand: onHandOf(item),
+      batch: [...item.batches].sort((a, b) => b.quantity - a.quantity)[0],
+    }
   }
 
   it('saves a large removal with no note, and flags it in the audit (ADR-068)', async () => {
     const { item, onHand, batch } = await target()
     const change = -Math.min(batch.quantity, Math.ceil(onHand / 4))
     db().config.largeWriteOffPercent = 1
-    await adjustInventoryStock(item.id, { batchId: batch.id, change, reason: 'damaged_spilled', note: '' }, STAFF)
+    await adjustInventoryStock(
+      item.id,
+      { batchId: batch.id, change, reason: 'damaged_spilled', note: '' },
+      STAFF,
+    )
     expect(getRecordedAuditEntries().at(-1)!.summary).toBe('Damaged or spilled · Large write-off')
   })
 
   it('follows the setting', async () => {
     const { item, batch } = await target()
     db().config.largeWriteOffPercent = 100
-    await adjustInventoryStock(item.id, { batchId: batch.id, change: -1, reason: 'damaged_spilled' }, STAFF)
+    await adjustInventoryStock(
+      item.id,
+      { batchId: batch.id, change: -1, reason: 'damaged_spilled' },
+      STAFF,
+    )
     expect(getRecordedAuditEntries().at(-1)!.summary).toBe('Damaged or spilled')
     db().config.largeWriteOffPercent = 1
-    await adjustInventoryStock(item.id, { batchId: batch.id, change: -1, reason: 'damaged_spilled' }, STAFF)
+    await adjustInventoryStock(
+      item.id,
+      { batchId: batch.id, change: -1, reason: 'damaged_spilled' },
+      STAFF,
+    )
     expect(getRecordedAuditEntries().at(-1)!.summary).toBe('Damaged or spilled · Large write-off')
   })
 
   it('does not let the Admin adjust stock', async () => {
     const { item, batch } = await target()
-    await expect(adjustInventoryStock(item.id, { batchId: batch.id, change: -1, reason: 'damaged_spilled' }, ADMIN)).rejects.toThrow('Only the School Clinician')
+    await expect(
+      adjustInventoryStock(
+        item.id,
+        { batchId: batch.id, change: -1, reason: 'damaged_spilled' },
+        ADMIN,
+      ),
+    ).rejects.toThrow('Only the School Clinician')
   })
 
   it('says a large removal is flagged, and keeps the note optional', async () => {
     const user = userEvent.setup()
     db().config.largeWriteOffPercent = 1
     renderWithRouter(<InventoryListPage />)
-    await selectOption(user, await screen.findByRole('button', { name: /^Manage Gauze Pads/ }), 'Adjust Stock')
+    await selectOption(
+      user,
+      await screen.findByRole('button', { name: /^Manage Gauze Pads/ }),
+      'Adjust Stock',
+    )
     const dialog = screen.getByRole('dialog', { name: 'Adjust Stock: Gauze Pads' })
     await user.type(within(dialog).getByLabelText(/quantity to remove/i), '1')
-    expect(await within(dialog).findByText('Large write-off: it is flagged in the Audit Log.')).toBeInTheDocument()
+    expect(
+      await within(dialog).findByText('Large write-off: it is flagged in the Audit Log.'),
+    ).toBeInTheDocument()
     expect(within(dialog).getByLabelText(/^Note/)).not.toBeRequired()
   })
 })

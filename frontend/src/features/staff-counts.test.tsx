@@ -2,7 +2,14 @@ import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { afterEach, describe, expect, it } from 'vitest'
-import { getCalendarDays, getDashboardSummary, listIncidents, listVisits, recordVisit, type SessionUser } from '../lib/mock-db'
+import {
+  getCalendarDays,
+  getDashboardSummary,
+  listIncidents,
+  listVisits,
+  recordVisit,
+  type SessionUser,
+} from '../lib/mock-db'
 import { db } from '../lib/mock-db/store'
 import { rangeForPreset } from '../lib/dateRange'
 import { AppRoutes } from '../routes/AppRoutes'
@@ -28,16 +35,29 @@ describe('totals include staff and show the split (D14)', () => {
     expect(split.visits.staff).toBeGreaterThan(0)
     expect(split.incidents.staff).toBeGreaterThan(0)
 
-    const counted = (await listVisits({ from: ALL.from, to: ALL.to })).filter((v) => !v.escalatedIncidentId)
+    const counted = (await listVisits({ from: ALL.from, to: ALL.to })).filter(
+      (v) => !v.escalatedIncidentId,
+    )
     expect(counted.filter((v) => v.personnelId).length).toBe(split.visits.staff)
-    expect((await listIncidents({ from: ALL.from, to: ALL.to })).filter((i) => i.personnelId).length).toBe(split.incidents.staff)
+    expect(
+      (await listIncidents({ from: ALL.from, to: ALL.to })).filter((i) => i.personnelId).length,
+    ).toBe(split.incidents.staff)
   })
 
   it('counts a staff visit on the calendar day and in the clinic now', async () => {
     const today = db().today
     const before = await getDashboardSummary({ range: { preset: 'today', from: today, to: today } })
     const [dayBefore] = await getCalendarDays(today, today)
-    await recordVisit({ personnelId: 'personnel-0003', complaint: 'Headache', treatment: '', disposition: 'resting_in_clinic', followUp: null }, STAFF)
+    await recordVisit(
+      {
+        personnelId: 'personnel-0003',
+        complaint: 'Headache',
+        treatment: '',
+        disposition: 'resting_in_clinic',
+        followUp: null,
+      },
+      STAFF,
+    )
     const after = await getDashboardSummary({ range: { preset: 'today', from: today, to: today } })
     const [dayAfter] = await getCalendarDays(today, today)
     expect(after.counts.split.visits.staff).toBe(before.counts.split.visits.staff + 1)
@@ -48,7 +68,16 @@ describe('totals include staff and show the split (D14)', () => {
   it('leaves staff out of the grade-level trends and the frequent-visitor panel (ADR-063 moved by-sex to count them)', async () => {
     const before = await getDashboardSummary({ range: ALL })
     for (let i = 0; i < 4; i++)
-      await recordVisit({ personnelId: 'personnel-0008', complaint: 'Headache', treatment: '', disposition: 'returned_to_class', followUp: null }, STAFF)
+      await recordVisit(
+        {
+          personnelId: 'personnel-0008',
+          complaint: 'Headache',
+          treatment: '',
+          disposition: 'returned_to_class',
+          followUp: null,
+        },
+        STAFF,
+      )
     const after = await getDashboardSummary({ range: ALL })
     expect(after.demographics.gradeLevel).toEqual(before.demographics.gradeLevel)
     expect(after.frequentVisitors).toEqual(before.frequentVisitors)
@@ -61,7 +90,18 @@ describe('Audit Log and Privacy Policy', () => {
     const user = userEvent.setup()
     const { savePersonnel } = await import('../lib/mock-db')
     await savePersonnel(
-      { sex: 'female', firstName: 'Audit', lastName: 'Staff', middleName: null, type: 'Teacher', department: null, contactInfo: '', allergies: [], medicalConditions: [], emergencyContacts: [] },
+      {
+        sex: 'female',
+        firstName: 'Audit',
+        lastName: 'Staff',
+        middleName: null,
+        type: 'Teacher',
+        department: null,
+        contactInfo: '',
+        allergies: [],
+        medicalConditions: [],
+        emergencyContacts: [],
+      },
       { actor: STAFF },
     )
     render(
@@ -74,7 +114,10 @@ describe('Audit Log and Privacy Policy', () => {
     await user.click(screen.getByRole('button', { name: /target \/ module/i }))
     await user.click(screen.getByRole('checkbox', { name: 'Staff' }))
     await user.keyboard('{Escape}')
-    expect(await screen.findByRole('link', { name: 'STF-0013' })).toHaveAttribute('href', '/staff/personnel-0013')
+    expect(await screen.findByRole('link', { name: 'STF-0013' })).toHaveAttribute(
+      'href',
+      '/staff/personnel-0013',
+    )
     expect(screen.queryByText('Audit Staff')).not.toBeInTheDocument()
   })
 

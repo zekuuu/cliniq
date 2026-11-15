@@ -2,7 +2,14 @@ import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { formatDateRange, todayISO } from '../lib/dates'
-import { getDashboardSummary, getMonthlyReport, getPatient, listAuditLog, listStudents, resetMockDb } from '../lib/mock-db'
+import {
+  getDashboardSummary,
+  getMonthlyReport,
+  getPatient,
+  listAuditLog,
+  listStudents,
+  resetMockDb,
+} from '../lib/mock-db'
 import { db } from '../lib/mock-db/store'
 import { rangeForPreset } from '../lib/dateRange'
 import { renderWithRouter } from '../test/renderWithRouter'
@@ -126,7 +133,10 @@ describe('purpose-built printouts', () => {
   it('Excuse Letter: a draft mounts no printout and its Print is disabled (ADR-038 item 6)', async () => {
     renderWithRouter(<ExcuseLetterPage viewer={STAFF} visitId="visit-0151" />)
     await screen.findByRole('heading', { name: 'Excuse Letter' })
-    expect(screen.getByRole('button', { name: 'Print / Save as PDF' })).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.getByRole('button', { name: 'Print / Save as PDF' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
     act(() => {
       window.dispatchEvent(new Event('beforeprint'))
     })
@@ -234,11 +244,17 @@ describe('Visit Details printout (ADR-049, ADR-053)', () => {
   it('says on paper that a visit was entered in error, like a void excuse letter', async () => {
     resetMockDb()
     const visit = db().visits.find((row) => row.id === 'visit-0151')!
-    visit.enteredInError = { reason: 'Wrong student selected', at: `${todayISO()}T09:00:00+08:00`, byUserId: STAFF.id }
+    visit.enteredInError = {
+      reason: 'Wrong student selected',
+      at: `${todayISO()}T09:00:00+08:00`,
+      byUserId: STAFF.id,
+    }
     visible()
     await screen.findByRole('heading', { name: 'Visit Details' })
     const notice = print().querySelector('[data-print-void]')
-    expect(notice).toHaveTextContent(/^Entered in error\. This visit is not valid\. Reason: Wrong student selected\./)
+    expect(notice).toHaveTextContent(
+      /^Entered in error\. This visit is not valid\. Reason: Wrong student selected\./,
+    )
   })
 
   it('gives the Admin no printout', async () => {

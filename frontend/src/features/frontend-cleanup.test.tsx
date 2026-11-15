@@ -3,7 +3,14 @@ import userEvent from '@testing-library/user-event'
 import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DatePicker, ErrorState } from '../components'
-import { beginPasswordChange, getMockToday, getPendingPasswordChangeUser, getStudent, recordVisit, resetMockDb } from '../lib/mock-db'
+import {
+  beginPasswordChange,
+  getMockToday,
+  getPendingPasswordChangeUser,
+  getStudent,
+  recordVisit,
+  resetMockDb,
+} from '../lib/mock-db'
 import { renderWithRouter } from '../test/renderWithRouter'
 import { ForcePasswordChangePage } from './auth/ForcePasswordChangePage'
 import { LoginPage } from './auth/LoginPage'
@@ -18,7 +25,9 @@ import { StudentListPage } from './student-records/StudentListPage'
 import { StudentProfilePage } from './student-records/StudentProfilePage'
 
 vi.mock('react-chartjs-2', () => {
-  const Stub = (props: { 'aria-label'?: string }) => <div role="img" aria-label={props['aria-label']} />
+  const Stub = (props: { 'aria-label'?: string }) => (
+    <div role="img" aria-label={props['aria-label']} />
+  )
   return { Bar: Stub, Line: Stub, Doughnut: Stub }
 })
 
@@ -34,7 +43,10 @@ describe('Force Password Change on a shared workstation (C3)', () => {
     render(
       <MemoryRouter initialEntries={['/force-password-change']}>
         <Routes>
-          <Route path="/force-password-change" element={<ForcePasswordChangePage onComplete={() => {}} />} />
+          <Route
+            path="/force-password-change"
+            element={<ForcePasswordChangePage onComplete={() => {}} />}
+          />
           <Route path="/login" element={<LoginPage onLogin={() => {}} />} />
         </Routes>
       </MemoryRouter>,
@@ -83,7 +95,9 @@ describe('After Edit Student saves (C6)', () => {
     await user.click(screen.getByRole('link', { name: 'Open profile' }))
     await user.click(await screen.findByRole('link', { name: /edit/i }))
     await screen.findByRole('heading', { name: 'Edit Student' })
-    await user.click(screen.getByRole('radio', { name: student.sex === 'female' ? 'Male' : 'Female' }))
+    await user.click(
+      screen.getByRole('radio', { name: student.sex === 'female' ? 'Male' : 'Female' }),
+    )
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     expect(await screen.findByText(/^Student record updated for/)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Back' }))
@@ -96,11 +110,17 @@ describe('After Edit Staff saves', () => {
     const user = userEvent.setup({ delay: null })
     const id = 'personnel-0001'
     render(
-      <MemoryRouter initialEntries={['/previous', `/staff/${id}`, `/staff/${id}/edit`]} initialIndex={2}>
+      <MemoryRouter
+        initialEntries={['/previous', `/staff/${id}`, `/staff/${id}/edit`]}
+        initialIndex={2}
+      >
         <Routes>
           <Route path="/previous" element={<p>Previous screen</p>} />
           <Route path="/staff/:id" element={<StaffProfilePage viewer={STAFF} personnelId={id} />} />
-          <Route path="/staff/:id/edit" element={<StaffFormPage viewer={STAFF} personnelId={id} />} />
+          <Route
+            path="/staff/:id/edit"
+            element={<StaffFormPage viewer={STAFF} personnelId={id} />}
+          />
         </Routes>
       </MemoryRouter>,
     )
@@ -113,7 +133,9 @@ describe('After Edit Staff saves', () => {
 
 describe('Reopening a completed incident (C8)', () => {
   it('prefills the saved hospital referral', async () => {
-    renderWithRouter(<IncidentEntryPage incidentId="incident-0021" />, { route: '/incidents/incident-0021/complete' })
+    renderWithRouter(<IncidentEntryPage incidentId="incident-0021" />, {
+      route: '/incidents/incident-0021/complete',
+    })
     const referred = await screen.findByRole('checkbox', { name: /referred to hospital/i })
     expect(referred).toBeChecked()
     expect(screen.getByLabelText(/destination/i)).not.toHaveValue('')
@@ -146,14 +168,22 @@ describe('Dashboard links to Reports (C10)', () => {
       </MemoryRouter>,
     )
     await user.click(await screen.findByRole('link', { name: 'View full report: Monthly Report' }))
-    expect(await screen.findByRole('tab', { name: 'Monthly Report', selected: true })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /month/i })).toHaveTextContent(new Date(`${month}-01T00:00:00`).toLocaleDateString('en-PH', { month: 'long' }))
+    expect(
+      await screen.findByRole('tab', { name: 'Monthly Report', selected: true }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /month/i })).toHaveTextContent(
+      new Date(`${month}-01T00:00:00`).toLocaleDateString('en-PH', { month: 'long' }),
+    )
   })
 
   // Zean, November 5, 2026: the Overview link sits right-aligned on the "Activity summary" heading row
   // (it had been a footer under the Activity summary cards, S3 of November 4).
   it('puts the Overview link right-aligned on the Activity summary heading row, before its cards in tab order', async () => {
-    render(<MemoryRouter><DashboardPage viewer={STAFF} /></MemoryRouter>)
+    render(
+      <MemoryRouter>
+        <DashboardPage viewer={STAFF} />
+      </MemoryRouter>,
+    )
     const link = await screen.findByRole('link', { name: 'View full report: Monthly Report' })
     const heading = screen.getByRole('heading', { name: 'Activity summary' })
     const row = heading.parentElement!
@@ -164,8 +194,12 @@ describe('Dashboard links to Reports (C10)', () => {
     expect(link).toHaveAttribute('href', '/reports')
     expect(link).toHaveTextContent('View full report')
     const activity = heading.closest('section')!
-    const cardLinks = within(activity).getAllByRole('link').filter((element) => element !== link)
-    expect(link.compareDocumentPosition(cardLinks[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    const cardLinks = within(activity)
+      .getAllByRole('link')
+      .filter((element) => element !== link)
+    expect(
+      link.compareDocumentPosition(cardLinks[0]) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
   })
 
   it('puts the Frequent symptoms link in the card footer, not its header, and opens the Symptom summary', async () => {
@@ -188,7 +222,9 @@ describe('Dashboard links to Reports (C10)', () => {
     expect(heading.parentElement!.parentElement!.parentElement).not.toContainElement(link)
     expect(heading.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     await user.click(link)
-    expect(await screen.findByRole('tab', { name: 'Symptom summary', selected: true })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('tab', { name: 'Symptom summary', selected: true }),
+    ).toBeInTheDocument()
   })
 })
 
@@ -218,7 +254,13 @@ describe('?focus=search and Alt + K (C11)', () => {
 
 describe('?inClinic=1 (C12)', () => {
   it('the Visit Log opens filtered', async () => {
-    await recordVisit({ studentId: 'student-0001', complaint: 'Fever', treatment: '', disposition: 'resting_in_clinic', followUp: null })
+    await recordVisit({
+      studentId: 'student-0001',
+      complaint: 'Fever',
+      treatment: '',
+      disposition: 'resting_in_clinic',
+      followUp: null,
+    })
     renderWithRouter(<VisitLogListPage />, { route: '/visits?inClinic=1' })
     const table = (await screen.findAllByRole('table'))[0]
     expect(within(table).getAllByText('Fever').length).toBeGreaterThan(0)

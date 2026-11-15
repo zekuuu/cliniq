@@ -3,7 +3,14 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
-import { getInventoryItem, getVisit, recordVisit, saveIncidentStageOne, searchPatients, type SessionUser } from '../lib/mock-db'
+import {
+  getInventoryItem,
+  getVisit,
+  recordVisit,
+  saveIncidentStageOne,
+  searchPatients,
+  type SessionUser,
+} from '../lib/mock-db'
 import { db } from '../lib/mock-db/store'
 import { AppRoutes } from '../routes/AppRoutes'
 import { selectOption } from '../test/selectOption'
@@ -35,9 +42,13 @@ describe('the patient picker', () => {
   it('records a staff visit from New Visit, with the staff member chosen from the profile link and no excuse letter', async () => {
     const user = userEvent.setup()
     renderAt('/visits/new?staff=personnel-0002')
-    expect(await screen.findByText('Dindo Arcega · STF-0002 · Teacher · Science department')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Dindo Arcega · STF-0002 · Teacher · Science department'),
+    ).toBeInTheDocument()
     // The allergy beside the medicine picker works for staff.
-    expect(await within(screen.getByRole('note', { name: 'Allergies' })).findByText(/Penicillin/)).toBeInTheDocument()
+    expect(
+      await within(screen.getByRole('note', { name: 'Allergies' })).findByText(/Penicillin/),
+    ).toBeInTheDocument()
     await selectOption(user, screen.getByLabelText(/^Symptom/), 'Headache')
     await user.click(screen.getByRole('radio', { name: 'Sent home' }))
     expect(screen.queryByText('Prepare an excuse letter')).not.toBeInTheDocument()
@@ -45,7 +56,12 @@ describe('the patient picker', () => {
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
     expect(await screen.findByText(/Visit saved/)).toBeInTheDocument()
     const saved = db().visits.at(-1)!
-    expect(saved).toMatchObject({ studentId: null, personnelId: 'personnel-0002', disposition: 'sent_home', excuseLetterDraft: null })
+    expect(saved).toMatchObject({
+      studentId: null,
+      personnelId: 'personnel-0002',
+      disposition: 'sent_home',
+      excuseLetterDraft: null,
+    })
   })
 })
 
@@ -59,14 +75,30 @@ describe('lists never show a staff name', () => {
     for (const name of STAFF_NAMES()) expect(screen.queryByText(name)).not.toBeInTheDocument()
 
     await selectOption(user, screen.getByLabelText('Patient'), 'Staff')
-    expect(within(await screen.findByRole('table', { name: /visit/i })).queryAllByText('Student')).toHaveLength(0)
+    expect(
+      within(await screen.findByRole('table', { name: /visit/i })).queryAllByText('Student'),
+    ).toHaveLength(0)
 
     const range = { from: '2000-01-01', to: '2100-01-01' }
     const all = await fetchVisitLog({ ...range, search: '', disposition: 'all' })
-    const staffOnly = await fetchVisitLog({ ...range, search: '', disposition: 'all', patient: 'staff' })
-    const studentsOnly = await fetchVisitLog({ ...range, search: '', disposition: 'all', patient: 'students' })
+    const staffOnly = await fetchVisitLog({
+      ...range,
+      search: '',
+      disposition: 'all',
+      patient: 'staff',
+    })
+    const studentsOnly = await fetchVisitLog({
+      ...range,
+      search: '',
+      disposition: 'all',
+      patient: 'students',
+    })
     expect(staffOnly.length + studentsOnly.length).toBe(all.length)
-    expect(staffOnly.every((row) => row.patient.kind === 'personnel' && /^STF-\d{4}$/.test(row.patient.number))).toBe(true)
+    expect(
+      staffOnly.every(
+        (row) => row.patient.kind === 'personnel' && /^STF-\d{4}$/.test(row.patient.number),
+      ),
+    ).toBe(true)
   })
 })
 
@@ -81,23 +113,59 @@ describe('single-person screens for a staff patient', () => {
 
   it('the Incident Report and the notification log say emergency contact, not parent or guardian', async () => {
     renderAt('/incidents/incident-0025/report')
-    expect(await screen.findByRole('heading', { name: 'Emergency contact notification attempts' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Emergency contact notification attempts' }),
+    ).toBeInTheDocument()
     expect(screen.queryByText(/parent notification/i)).not.toBeInTheDocument()
   })
 
   it('escalates a staff visit to an incident for the same staff member', async () => {
-    const { visit } = await recordVisit({ personnelId: 'personnel-0006', complaint: 'Fainting', treatment: '', disposition: 'resting_in_clinic', followUp: null }, STAFF)
-    const incident = await saveIncidentStageOne({ personnelId: 'personnel-0006', complaint: 'Fainting', vitals: {}, sourceVisitId: visit.id }, STAFF)
-    expect(incident).toMatchObject({ studentId: null, personnelId: 'personnel-0006', sourceVisitId: visit.id })
+    const { visit } = await recordVisit(
+      {
+        personnelId: 'personnel-0006',
+        complaint: 'Fainting',
+        treatment: '',
+        disposition: 'resting_in_clinic',
+        followUp: null,
+      },
+      STAFF,
+    )
+    const incident = await saveIncidentStageOne(
+      { personnelId: 'personnel-0006', complaint: 'Fainting', vitals: {}, sourceVisitId: visit.id },
+      STAFF,
+    )
+    expect(incident).toMatchObject({
+      studentId: null,
+      personnelId: 'personnel-0006',
+      sourceVisitId: visit.id,
+    })
     expect((await getVisit(visit.id)).escalatedIncidentId).toBe(incident.id)
-    await expect(saveIncidentStageOne({ studentId: 'student-0001', complaint: 'Fainting', vitals: {}, sourceVisitId: visit.id }, STAFF)).rejects.toThrow(/another patient/)
+    await expect(
+      saveIncidentStageOne(
+        { studentId: 'student-0001', complaint: 'Fainting', vitals: {}, sourceVisitId: visit.id },
+        STAFF,
+      ),
+    ).rejects.toThrow(/another patient/)
   })
 
   it('takes stock when medicine is given to a staff member', async () => {
     const before = (await getInventoryItem('item-0010')).currentStock
-    await recordVisit({ personnelId: 'personnel-0011', complaint: 'Minor wound', treatment: '', disposition: 'returned_to_class', followUp: null, itemsGiven: [{ itemId: 'item-0010', quantity: 2 }] }, STAFF)
+    await recordVisit(
+      {
+        personnelId: 'personnel-0011',
+        complaint: 'Minor wound',
+        treatment: '',
+        disposition: 'returned_to_class',
+        followUp: null,
+        itemsGiven: [{ itemId: 'item-0010', quantity: 2 }],
+      },
+      STAFF,
+    )
     expect((await getInventoryItem('item-0010')).currentStock).toBe(before - 2)
-    expect(db().frontendOnly.inventoryTransactions.at(-1)).toMatchObject({ personnelId: 'personnel-0011', studentId: null })
+    expect(db().frontendOnly.inventoryTransactions.at(-1)).toMatchObject({
+      personnelId: 'personnel-0011',
+      studentId: null,
+    })
   })
 })
 

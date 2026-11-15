@@ -45,12 +45,21 @@ describe('Staff wording, extra complaints and backup locations', () => {
     const month = todayISO().slice(0, 7)
     const before = (await getMonthlyReport(month)).complaintCounts
     const total = (rows: typeof before) => rows.reduce((sum, row) => sum + row.count, 0)
-    const { visit } = await recordVisit({ studentId: 'student-0001', complaint: 'Fever', extraComplaints: ['Headache', 'Chills', 'fever'], treatment: '', disposition: 'returned_to_class', followUp: null })
+    const { visit } = await recordVisit({
+      studentId: 'student-0001',
+      complaint: 'Fever',
+      extraComplaints: ['Headache', 'Chills', 'fever'],
+      treatment: '',
+      disposition: 'returned_to_class',
+      followUp: null,
+    })
     // The main complaint is never repeated as a tag.
     expect(visit.extraComplaints).toEqual(['Headache', 'Chills'])
     const after = (await getMonthlyReport(month)).complaintCounts
     expect(total(after)).toBe(total(before) + 1)
-    expect(after.find((row) => row.complaint === 'Headache')?.count ?? 0).toBe(before.find((row) => row.complaint === 'Headache')?.count ?? 0)
+    expect(after.find((row) => row.complaint === 'Headache')?.count ?? 0).toBe(
+      before.find((row) => row.complaint === 'Headache')?.count ?? 0,
+    )
 
     renderWithRouter(<VisitDetailPage visitId={visit.id} />)
     expect(await screen.findByRole('heading', { name: 'Other symptoms' })).toBeInTheDocument()
@@ -59,38 +68,84 @@ describe('Staff wording, extra complaints and backup locations', () => {
 
   it('refuses a fourth extra complaint with a clear message', async () => {
     await expect(
-      recordVisit({ studentId: 'student-0001', complaint: 'Fever', extraComplaints: ['Headache', 'Chills', 'Dizziness', 'Toothache'], treatment: '', disposition: 'returned_to_class', followUp: null }),
+      recordVisit({
+        studentId: 'student-0001',
+        complaint: 'Fever',
+        extraComplaints: ['Headache', 'Chills', 'Dizziness', 'Toothache'],
+        treatment: '',
+        disposition: 'returned_to_class',
+        followUp: null,
+      }),
     ).rejects.toBeInstanceOf(ExtraComplaintsError)
     await expect(
-      recordVisit({ studentId: 'student-0001', complaint: 'Fever', extraComplaints: ['Headache', 'Chills', 'Dizziness', 'Toothache'], treatment: '', disposition: 'returned_to_class', followUp: null }),
+      recordVisit({
+        studentId: 'student-0001',
+        complaint: 'Fever',
+        extraComplaints: ['Headache', 'Chills', 'Dizziness', 'Toothache'],
+        treatment: '',
+        disposition: 'returned_to_class',
+        followUp: null,
+      }),
     ).rejects.toThrow('Add at most 3 extra complaints.')
   })
 
   it('stops the field at 3 extra complaints and says so', async () => {
     const { ExtraComplaintsField } = await import('./clinic-visits/ExtraComplaintsField')
-    renderWithRouter(<ExtraComplaintsField value={['Headache', 'Chills', 'Dizziness']} onChange={() => {}} main="Fever" suggestions={['Toothache']} />)
+    renderWithRouter(
+      <ExtraComplaintsField
+        value={['Headache', 'Chills', 'Dizziness']}
+        onChange={() => {}}
+        main="Fever"
+        suggestions={['Toothache']}
+      />,
+    )
     // A dropdown like the Complaint field (Zean, November 5, 2026): full, it's disabled and says why.
     expect(screen.getByRole('button', { name: /^Other symptoms/ })).toBeDisabled()
-    expect(screen.getByText('Up to 3. Remove one to add another. Reports count only the symptom above.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Up to 3. Remove one to add another. Reports count only the symptom above.'),
+    ).toBeInTheDocument()
   })
 
   it('adds a picked suggestion with Add, and a typed one through Other', async () => {
     const user = userEvent.setup()
     const { ExtraComplaintsField } = await import('./clinic-visits/ExtraComplaintsField')
     let value: string[] = []
-    const { rerender } = renderWithRouter(<ExtraComplaintsField value={value} onChange={(next) => (value = next)} main="Fever" suggestions={['Toothache', 'Fever']} />)
+    const { rerender } = renderWithRouter(
+      <ExtraComplaintsField
+        value={value}
+        onChange={(next) => (value = next)}
+        main="Fever"
+        suggestions={['Toothache', 'Fever']}
+      />,
+    )
     await selectOption(user, screen.getByRole('button', { name: /^Other symptoms/ }), 'Toothache')
     expect(value).toEqual([])
     await user.click(screen.getByRole('button', { name: 'Add' }))
     expect(value).toEqual(['Toothache'])
-    rerender(<ExtraComplaintsField value={value} onChange={(next) => (value = next)} main="Fever" suggestions={['Toothache', 'Fever']} />)
-    await selectOption(user, screen.getByRole('button', { name: /^Other symptoms/ }), 'Other (type your own)')
+    rerender(
+      <ExtraComplaintsField
+        value={value}
+        onChange={(next) => (value = next)}
+        main="Fever"
+        suggestions={['Toothache', 'Fever']}
+      />,
+    )
+    await selectOption(
+      user,
+      screen.getByRole('button', { name: /^Other symptoms/ }),
+      'Other (type your own)',
+    )
     await user.type(screen.getByLabelText(/^Specify other symptom/), 'Rash{Enter}')
     expect(value).toEqual(['Toothache', 'Rash'])
   })
 
   it('offers the staff type "Other", also in a saved copy that lacked it', async () => {
-    expect(await getPersonnelTypes()).toEqual(['Teacher', 'Non-teaching staff', 'Utility worker', 'Other'])
+    expect(await getPersonnelTypes()).toEqual([
+      'Teacher',
+      'Non-teaching staff',
+      'Utility worker',
+      'Other',
+    ])
     const state = resolveSeed(seed, todayISO())
     state.config.personnelTypes = ['Teacher', 'Non-teaching staff', 'Utility worker']
     const migrated = migratePersistedState({ state, seedAuditLength: 0 } as Saved)
@@ -101,7 +156,13 @@ describe('Staff wording, extra complaints and backup locations', () => {
     expect(dispositionLabel('returned_to_class', 'personnel')).toBe('Returned to work')
     expect(dispositionLabel('returned_to_class', 'student')).toBe('Returned to class')
     expect(dispositionLabel('sent_home', 'personnel')).toBe('Sent home')
-    const { visit } = await recordVisit({ personnelId: 'personnel-0001', complaint: 'Fever', treatment: '', disposition: 'returned_to_class', followUp: null })
+    const { visit } = await recordVisit({
+      personnelId: 'personnel-0001',
+      complaint: 'Fever',
+      treatment: '',
+      disposition: 'returned_to_class',
+      followUp: null,
+    })
     expect(visit.disposition).toBe('returned_to_class')
     renderWithRouter(<VisitDetailPage visitId={visit.id} />)
     expect(await screen.findByText('Returned to work')).toBeInTheDocument()
@@ -122,18 +183,27 @@ describe('Staff wording, extra complaints and backup locations', () => {
   it('adds and disables a backup location, each audited, never edits or deletes it, and backs up to each enabled one', async () => {
     const added = await saveBackupLocation({ label: 'USB stick', path: 'F:\\' }, { actor: STAFF })
     await setBackupLocationEnabled(added.id, false, STAFF)
-    const entries = getRecordedAuditEntries().filter((entry) => entry.targetRecord?.type === 'backup-location')
+    const entries = getRecordedAuditEntries().filter(
+      (entry) => entry.targetRecord?.type === 'backup-location',
+    )
     expect(entries.map((entry) => [entry.actionType, entry.summary])).toEqual([
       ['create', undefined],
       ['update', 'Disabled'],
     ])
     const { locations } = await listBackupLocations()
-    expect(locations.find((location) => location.id === added.id)).toMatchObject({ label: 'USB stick', enabled: false })
+    expect(locations.find((location) => location.id === added.id)).toMatchObject({
+      label: 'USB stick',
+      enabled: false,
+    })
     expect('deleteBackupLocation' in (await import('../lib/mock-db'))).toBe(false)
 
     await recordBackupNow(STAFF)
     const after = (await listBackupLocations()).locations
-    for (const location of after.filter((l) => l.enabled)) expect(location).toMatchObject({ lastResult: 'ok', lastBackupAt: expect.stringContaining(todayISO()) })
+    for (const location of after.filter((l) => l.enabled))
+      expect(location).toMatchObject({
+        lastResult: 'ok',
+        lastBackupAt: expect.stringContaining(todayISO()),
+      })
     expect(after.find((location) => location.id === added.id)?.lastBackupAt).toBeNull()
   })
 
@@ -148,7 +218,10 @@ describe('Staff wording, extra complaints and backup locations', () => {
     expect(screen.getByText('E:\\Backups\\.cliniq')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save location' }))
     await screen.findByText('E:\\Backups')
-    expect((await listBackupLocations()).locations.at(-1)).toMatchObject({ label: 'Blue USB', path: 'E:\\Backups' })
+    expect((await listBackupLocations()).locations.at(-1)).toMatchObject({
+      label: 'Blue USB',
+      path: 'E:\\Backups',
+    })
   })
 
   it('warns when no location is enabled, and refuses to back up', async () => {
@@ -156,6 +229,9 @@ describe('Staff wording, extra complaints and backup locations', () => {
     for (const location of db().frontendOnly.backupLocations) location.enabled = false
     await expect(recordBackupNow(STAFF)).rejects.toBeInstanceOf(NoBackupLocationError)
     renderWithRouter(<BackupStatusPage />)
-    expect(await screen.findByText(/^No backup location is enabled/)).toHaveAttribute('role', 'alert')
+    expect(await screen.findByText(/^No backup location is enabled/)).toHaveAttribute(
+      'role',
+      'alert',
+    )
   })
 })

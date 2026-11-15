@@ -24,7 +24,11 @@ describe('Staff List', () => {
     const user = userEvent.setup()
     renderAt('/staff')
     const table = await screen.findByRole('table', { name: 'Staff masterlist' })
-    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Full name', 'Staff No.', 'Type', 'Department or role', 'Record status', 'Actions'])
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((h) => h.textContent),
+    ).toEqual(['Full name', 'Staff No.', 'Type', 'Department or role', 'Record status', 'Actions'])
     expect(screen.getByText('11 results shown')).toBeInTheDocument()
     // Nothing medical inline.
     expect(screen.queryByText('Penicillin')).not.toBeInTheDocument()
@@ -45,10 +49,16 @@ describe('Staff List', () => {
     const user = userEvent.setup()
     renderAt('/staff')
     await user.click(await screen.findByRole('link', { name: 'Incomplete records (2)' }))
-    expect(await screen.findByRole('heading', { level: 1, name: 'Incomplete Staff Records' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Incomplete Staff Records' }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: 'Open' })).toHaveAttribute('aria-checked', 'true')
     const table = screen.getByRole('table', { name: 'Incomplete staff records' })
-    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Staff', 'Staff No.', 'Type', 'Missing fields', 'Resolution', 'Actions'])
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((h) => h.textContent),
+    ).toEqual(['Staff', 'Staff No.', 'Type', 'Missing fields', 'Resolution', 'Actions'])
     expect(within(table).getAllByText('Emergency contact')).toHaveLength(2)
 
     await user.click(within(table).getAllByRole('link', { name: /^Edit Record for / })[0])
@@ -60,28 +70,50 @@ describe('Staff List', () => {
     await user.type(screen.getByLabelText('Primary emergency contact phone'), '0917-333-4444')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'Incomplete Staff Records' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Incomplete Staff Records' }),
+    ).toBeInTheDocument()
     expect(await screen.findByText('1 resolved')).toBeInTheDocument()
     await user.click(screen.getByRole('radio', { name: 'Resolved' }))
-    expect(within(screen.getByRole('table', { name: 'Incomplete staff records' })).getByText('Resolved')).toBeInTheDocument()
+    expect(
+      within(screen.getByRole('table', { name: 'Incomplete staff records' })).getByText('Resolved'),
+    ).toBeInTheDocument()
   })
 })
 
 describe('Staff Profile', () => {
   it('shows the record, the allergy alert and the history, with Record a visit and Record an incident', async () => {
     renderAt('/staff/personnel-0009')
-    expect(await screen.findByRole('heading', { level: 1, name: 'Edgar Malonzo' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Edgar Malonzo' }),
+    ).toBeInTheDocument()
     expect(screen.getByText('STF-0009 · Utility worker · Maintenance')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Record a visit' })).toHaveAttribute('href', '/visits/new?staff=personnel-0009')
-    expect(screen.getByRole('link', { name: 'Record an incident' })).toHaveAttribute('href', '/incidents/new?staff=personnel-0009')
-    expect(within(screen.getByRole('region', { name: 'Incident History' })).getByText('Fall injury')).toBeInTheDocument()
-    expect(within(screen.getByRole('region', { name: 'Follow-Ups' })).getByText('Check the bruised forearm')).toBeInTheDocument()
-    expect(screen.queryByRole('region', { name: 'Allergies and medical conditions' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Record a visit' })).toHaveAttribute(
+      'href',
+      '/visits/new?staff=personnel-0009',
+    )
+    expect(screen.getByRole('link', { name: 'Record an incident' })).toHaveAttribute(
+      'href',
+      '/incidents/new?staff=personnel-0009',
+    )
+    expect(
+      within(screen.getByRole('region', { name: 'Incident History' })).getByText('Fall injury'),
+    ).toBeInTheDocument()
+    expect(
+      within(screen.getByRole('region', { name: 'Follow-Ups' })).getByText(
+        'Check the bruised forearm',
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('region', { name: 'Allergies and medical conditions' }),
+    ).not.toBeInTheDocument()
   })
 
   it('shows the allergy alert when one is recorded', async () => {
     renderAt('/staff/personnel-0002')
-    expect(await screen.findByRole('region', { name: 'Allergies and medical conditions' })).toHaveTextContent('Allergies: Penicillin')
+    expect(
+      await screen.findByRole('region', { name: 'Allergies and medical conditions' }),
+    ).toHaveTextContent('Allergies: Penicillin')
   })
 
   it('archives after a confirmation and logs it', async () => {
@@ -91,11 +123,17 @@ describe('Staff Profile', () => {
     const dialog = screen.getByRole('dialog', { name: 'Archive this staff record?' })
     // "Other" asks which reason, and the typed one is stored.
     await selectOption(user, within(dialog).getByLabelText(/^Reason/), 'Other (type your own)')
-    await user.type(within(dialog).getByLabelText(/^Specify the reason/), 'Moved to the main campus')
+    await user.type(
+      within(dialog).getByLabelText(/^Specify the reason/),
+      'Moved to the main campus',
+    )
     await user.click(within(dialog).getByRole('button', { name: 'Archive Record' }))
     await waitFor(async () => expect((await getPersonnel('personnel-0003')).archived).toBe(true))
     expect((await getPersonnel('personnel-0003')).archiveReason).toBe('Moved to the main campus')
-    expect(recordedWrites().at(-1)).toMatchObject({ actionType: 'archive', targetRecord: { type: 'staff', id: 'personnel-0003' } })
+    expect(recordedWrites().at(-1)).toMatchObject({
+      actionType: 'archive',
+      targetRecord: { type: 'staff', id: 'personnel-0003' },
+    })
   })
 })
 
@@ -130,8 +168,13 @@ describe('Staff Form', () => {
     expect(screen.getByText('Staff record created for Ana Test.')).toBeInTheDocument()
     expect(screen.getByText('STF-0013 · Teacher · Guidance office')).toBeInTheDocument()
     // "None" stores no allergy, as on the student form.
-    expect(screen.queryByRole('region', { name: 'Allergies and medical conditions' })).not.toBeInTheDocument()
-    expect(recordedWrites().at(-1)).toMatchObject({ actionType: 'create', targetRecord: { type: 'staff', id: 'personnel-0013' } })
+    expect(
+      screen.queryByRole('region', { name: 'Allergies and medical conditions' }),
+    ).not.toBeInTheDocument()
+    expect(recordedWrites().at(-1)).toMatchObject({
+      actionType: 'create',
+      targetRecord: { type: 'staff', id: 'personnel-0013' },
+    })
   })
 
   it('edits a record, shows the Staff No. read only, and checks a started emergency contact', async () => {
@@ -150,6 +193,9 @@ describe('Staff Form', () => {
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
     expect(await screen.findByText('Staff record updated for Liza Pangilinan.')).toBeInTheDocument()
     expect((await getPersonnel('personnel-0005')).medicalConditions).toEqual(['Migraine'])
-    expect(recordedWrites().at(-1)).toMatchObject({ actionType: 'update', summary: 'Updated medical conditions' })
+    expect(recordedWrites().at(-1)).toMatchObject({
+      actionType: 'update',
+      summary: 'Updated medical conditions',
+    })
   })
 })

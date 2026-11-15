@@ -24,7 +24,9 @@ describe('Assisted by and Parent or guardian', () => {
 
     const field = screen.getByRole('combobox', { name: 'Assisted by' })
     await user.click(field)
-    const names = within(await screen.findByRole('listbox')).getAllByRole('option').map((option) => option.textContent)
+    const names = within(await screen.findByRole('listbox'))
+      .getAllByRole('option')
+      .map((option) => option.textContent)
     expect(names).toEqual(['Demo Admin', 'Demo Clinician'])
 
     await user.type(field, 'Ms. Reyes')

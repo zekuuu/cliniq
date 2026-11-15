@@ -2,7 +2,12 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { formatDateRange } from '../../lib/dates'
-import { getExcuseLetterApproval, getRecordedAuditEntries, getVisit, resetMockDb } from '../../lib/mock-db'
+import {
+  getExcuseLetterApproval,
+  getRecordedAuditEntries,
+  getVisit,
+  resetMockDb,
+} from '../../lib/mock-db'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { VisitDetailPage } from './VisitDetailPage'
 import { fetchVisitDetail } from './api/visitDetailApi'
@@ -115,8 +120,12 @@ describe('Visit Details: excuse letter and disposition fields', () => {
 
     await screen.findByRole('heading', { name: 'Visit Details' })
     expect(within(letterCard()).getByText('Approved')).toBeInTheDocument()
-    expect(within(letterCard()).getByText(formatDateRange(approval.excusedFrom, approval.excusedUntil))).toBeInTheDocument()
-    expect(within(letterCard()).getByText('Please allow the student to submit missed work.')).toBeInTheDocument()
+    expect(
+      within(letterCard()).getByText(formatDateRange(approval.excusedFrom, approval.excusedUntil)),
+    ).toBeInTheDocument()
+    expect(
+      within(letterCard()).getByText('Please allow the student to submit missed work.'),
+    ).toBeInTheDocument()
     expect(within(letterCard()).getByRole('link', { name: 'View excuse letter' })).toHaveAttribute(
       'href',
       '/visits/visit-0139/excuse-letter',
@@ -128,8 +137,12 @@ describe('Visit Details: excuse letter and disposition fields', () => {
     const { unmount } = renderWithRouter(<VisitDetailPage visitId="visit-0151" />)
     await screen.findByRole('heading', { name: 'Visit Details' })
     expect(within(letterCard()).getByText('Pending approval')).toBeInTheDocument()
-    expect(within(letterCard()).getByText(formatDateRange(draft.excusedFrom, draft.excusedUntil))).toBeInTheDocument()
-    expect(within(letterCard()).getByRole('link', { name: 'Review excuse letter' })).toBeInTheDocument()
+    expect(
+      within(letterCard()).getByText(formatDateRange(draft.excusedFrom, draft.excusedUntil)),
+    ).toBeInTheDocument()
+    expect(
+      within(letterCard()).getByRole('link', { name: 'Review excuse letter' }),
+    ).toBeInTheDocument()
     unmount()
 
     renderWithRouter(<VisitDetailPage visitId="visit-0142" />)
@@ -139,7 +152,12 @@ describe('Visit Details: excuse letter and disposition fields', () => {
   })
 
   it('is Staff only: other roles see neither the visit nor its letter', async () => {
-    renderWithRouter(<VisitDetailPage visitId="visit-0139" viewer={{ id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }} />)
+    renderWithRouter(
+      <VisitDetailPage
+        visitId="visit-0139"
+        viewer={{ id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }}
+      />,
+    )
     expect(screen.getByText('Staff access required.')).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Excuse letter' })).not.toBeInTheDocument()
   })
@@ -151,7 +169,9 @@ describe('Visit Details: excuse letter and disposition fields', () => {
     await screen.findByRole('heading', { name: 'Visit Details' })
     await user.click(screen.getByRole('button', { name: 'Edit' }))
     // The saved draft loads into the form.
-    expect(screen.getByLabelText('Note for the teacher')).toHaveValue('Please allow the student to take the missed quiz.')
+    expect(screen.getByLabelText('Note for the teacher')).toHaveValue(
+      'Please allow the student to take the missed quiz.',
+    )
     expect(screen.queryByLabelText(/referred to/i)).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('radio', { name: 'Returned to class' }))
@@ -164,7 +184,9 @@ describe('Visit Details: excuse letter and disposition fields', () => {
 
     // "Excused until" was cleared, so it's required again.
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
-    expect(screen.getByText('Excused from and Excused until are both required.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Excused from and Excused until are both required.'),
+    ).toBeInTheDocument()
 
     await user.click(screen.getByLabelText(/prepare an excuse letter/i))
     await user.type(screen.getByLabelText(/referred to/i), 'Rural Health Unit')
