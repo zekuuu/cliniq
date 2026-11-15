@@ -2,7 +2,7 @@
 // Regenerates CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md from the repository.
 //
 //   node CLINIQ-Knowledge-Base/04-Development/tools/docs-facts.mjs            # write the sheet
-//   node CLINIQ-Knowledge-Base/04-Development/tools/docs-facts.mjs --tests    # also run both test suites
+//   node CLINIQ-Knowledge-Base/04-Development/tools/docs-facts.mjs --tests    # also run both test suites and backend/tools/db-checks.php
 //   node CLINIQ-Knowledge-Base/04-Development/tools/docs-facts.mjs --out f.md # write somewhere else (docs-check uses this)
 //   node CLINIQ-Knowledge-Base/04-Development/tools/docs-facts.mjs --json     # print the numbers as JSON
 //
@@ -41,7 +41,7 @@ const BE_LOCAL = existsSync(join(ROOT, 'backend', 'app'))
 const BE_REF = BE_LOCAL ? null : ['backend', 'origin/backend'].find((r) => { try { sh(`git rev-parse --verify --quiet ${r}`); return true } catch { return false } })
 const beRead = (p) => (BE_LOCAL ? read(p) : sh(`git show ${BE_REF}:${p}`))
 const beFiles = (prefix) => (BE_LOCAL ? walk(join(ROOT, prefix), () => true).map((p) => relative(ROOT, p).replace(/\\/g, '/')) : sh(`git ls-tree -r --name-only ${BE_REF} -- ${prefix}`).split('\n').filter(Boolean))
-const beDirs = (prefix) => [...new Set(beFiles(prefix).map((p) => p.slice(prefix.length + 1).split('/')[0]).filter((x) => x && !x.includes('.')))].sort()
+const beDirs = (prefix) => BE_LOCAL ? readdirSync(join(ROOT, prefix)).filter((n) => statSync(join(ROOT, prefix, n)).isDirectory()).sort() : [...new Set(beFiles(prefix).map((p) => p.slice(prefix.length + 1).split('/')[0]).filter((x) => x && !x.includes('.')))].sort()
 const beLines = (files) => (BE_LOCAL ? lines(files.map((p) => join(ROOT, p))) : files.reduce((n, p) => n + beRead(p).split('\n').filter((l) => l.trim()).length, 0))
 
 export function computeFacts() {
@@ -105,21 +105,40 @@ export function computeFacts() {
   f.foreignKeys = count(schema, /FOREIGN KEY/g)
   const ct = read('CLINIQ-Knowledge-Base/02-Architecture/Database/Checks/constraint-tests.sql')
   f.constraintTests = count(ct, /^CALL t_(accepts|rejects|count)\(/gm)
-  f.migrations = beFiles('backend/app').filter((p) => /Database\/Migrations\/.+\.php$/.test(p)).length
+  const migs = beFiles('backend/app').filter((p) => /Database\/Migrations\/.+\.php$/.test(p))
+  f.migrations = migs.length
+  f.tableMigrations = migs.filter((p) => /CREATE TABLE/.test(beRead(p))).length
 
   // API
   const contract = read('CLINIQ-Knowledge-Base/04-Development/API-Contract.md')
   f.contractEntries = count(contract, /^#### `(GET|POST|PUT|PATCH|DELETE) \//gm)
+  f.contractEndpoints = (contract.match(/^#### `(GET|POST|PUT|PATCH|DELETE) \/.*$/gm) || []).reduce((n, l) => n + count(l, /`(GET|POST|PUT|PATCH|DELETE) \//g), 0)
   try {
     if (!BE_LOCAL) throw new Error('no backend here')
     const list = JSON.parse(sh('php artisan route:list --json', join(ROOT, 'backend')))
     f.liveRoutes = list.map((r) => `${r.method.replace('|HEAD', '')} /${r.uri}`).sort()
     f.liveRoutesSource = '`php artisan route:list`'
+    // Endpoints per module, from each route's controller namespace (App\Modules\X\… or App\Shared\Y\…).
+    f.routesByModule = {}
+    for (const r of list) {
+      const p = (r.action || '').split('\\')
+      const i = p.indexOf('Modules')
+      const j = p.indexOf('Shared')
+      const k = i >= 0 ? p[i + 1] : j >= 0 ? `Shared/${p[j + 1]}` : 'Laravel/Sanctum'
+      f.routesByModule[k] = (f.routesByModule[k] || 0) + 1
+    }
   } catch {
     // Sanctum registers GET /sanctum/csrf-cookie itself; it is not in routes/api.php.
-    f.liveRoutes = ['GET /sanctum/csrf-cookie', ...[...beRead('backend/routes/api.php').matchAll(/Route::(get|post|put|patch|delete)\('([^']+)'/g)].map((m) => `${m[1].toUpperCase()} /api/${m[2].replace(/^\//, '')}`)].sort()
-    f.liveRoutesSource = '`backend/routes/api.php` plus Sanctum\'s CSRF route'
+    const apiSrc = beRead('backend/routes/api.php')
+    const routeCalls = [...apiSrc.matchAll(/Route::(get|post|put|patch|delete)\('([^']+)',\s*\[?(\w+)::class/g)]
+    f.liveRoutes = ['GET /sanctum/csrf-cookie', ...routeCalls.map((m) => `${m[1].toUpperCase()} /api/${m[2].replace(/^\//, '')}`)].sort()
+    f.liveRoutesSource = '`backend/routes/api.php` (each route\'s controller, by its `use` line) plus Sanctum\'s CSRF route; `php artisan route:list` did not run here'
+    // Endpoints per module, from the controller's `use App\Modules\X\…` or `use App\Shared\Y\…` line.
+    const owner = Object.fromEntries([...apiSrc.matchAll(/^use App\\(Modules|Shared)\\(\w+)\\[\w\\]*?(\w+);/gm)].map((m) => [m[3], m[1] === 'Modules' ? m[2] : `Shared/${m[2]}`]))
+    f.routesByModule = { 'Laravel/Sanctum': 1 }
+    for (const m of routeCalls) f.routesByModule[owner[m[3]] || 'unknown'] = (f.routesByModule[owner[m[3]] || 'unknown'] || 0) + 1
   }
+  f.scheduledJobs = [...beRead('backend/routes/console.php').matchAll(/Schedule::command\('([^']+)'\)([^;]*);/g)].map((m) => `\`${m[1]}\` ${m[2].replace(/->withoutOverlapping\(\)/g, '').replace(/->dailyAt\('([^']+)'\)/, 'daily at $1').replace(/->hourly\(\)/, 'hourly').replace(/->between\('([^']+)', '([^']+)'\)/, ' from $1 to $2')}`)
 
   // Tests and size
   const feTests = walk(join(ROOT, 'frontend/src'), (p) => /\.test\.tsx?$/.test(p))
@@ -182,6 +201,16 @@ async function runTests() {
   } catch (e) {
     out.backend = `could not run (${e.message.split('\n')[0]})`
   }
+  // Schema parity and constraint tests on a scratch database (reads the database settings itself).
+  if (!BE_LOCAL) out.db = 'not run here: no backend code on this branch'
+  else try {
+    const db = sh('php tools/db-checks.php 2>&1 || true', join(ROOT, 'backend'))
+    const parity = ['tables', 'columns', 'indexes', 'checks', 'foreign keys'].map((k) => `${k} ${(db.match(new RegExp(`^${k}\\s+(\\w+ \\(\\d+\\))`, 'm')) || [, '?'])[1]}`).join(', ')
+    const ct = db.match(/\|\s*NULL\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|/)
+    out.db = `${parity}; constraint tests ${ct ? `${ct[2]} of ${ct[1]} passed, ${ct[3]} failed` : '?'}; ${/ALL PASS/.test(db) ? 'ALL PASS' : 'NOT all pass'}`
+  } catch (e) {
+    out.db = `could not run (${e.message.split('\n')[0]})`
+  }
   for (const k in out) out[k] = out[k].replace(/\|/g, '\\|')
   return out
 }
@@ -192,6 +221,7 @@ export const backendTestNames = () => beFiles('backend/tests').map((p) => p.spli
 export function renderSheet(f, testSection) {
   // Backend paths link to the `backend` branch on GitHub when this tree has no backend code.
   const rel = (p) => (!BE_LOCAL && p.startsWith('backend/') ? `https://github.com/zekuuu/cliniq/${p.includes('.') ? 'blob' : 'tree'}/backend/${p}` : relative(join(KB, '00-Project-Core'), join(ROOT, p)).replace(/\\/g, '/'))
+  const lastRun = testSection.match(/Recorded (.+?) at `(\w+)`/)
   const routeRows = f.routes.map((r) => `| \`${r.path}\` | ${r.title} | ${r.roles.length === 2 ? 'Both' : r.roles[0] === 'staff' ? 'Staff' : 'Admin'} |`).join('\n')
   return `# Facts sheet
 
@@ -209,7 +239,7 @@ Every README, requirement document, diagram caption, and the Project Plan and SR
 | Screens in the inventory | **${f.screens}** numbered entries (numbers 1 to ${f.screenMax}; removed numbers are not reused) | [Screen Inventory](../03-Design/Screen-Inventory.md) |
 | Frontend routes | **${f.routeCount}** (${f.routes.length} signed-in routes plus Login and Force Password Change): ${f.routesStaffOnly} Staff only, ${f.routesAdminOnly} Admin only, ${f.routesBoth} both | [\`AppRoutes.tsx\`](${rel('frontend/src/routes/AppRoutes.tsx')}) |
 | Roles | **${f.roles.length}**: ${f.roles.map((r) => (r === 'staff' ? 'Staff (the School Clinician)' : 'Admin (the Principal)')).join(', ')} | \`chk_users_role\` in the schema; ADR-029, ADR-038 |
-| Backend modules | **${f.modules.length}**: ${f.modules.join(', ')} | [\`backend/app/Modules/\`](${rel('backend/app/Modules')}) |
+| Backend modules | **${f.modules.length}**: ${f.modules.join(', ')}${f.routesByModule ? `. With no routes of their own: ${f.modules.filter((m) => !f.routesByModule[m]).join(', ')}` : ''} | [\`backend/app/Modules/\`](${rel('backend/app/Modules')}) |
 | Backend shared services | **${f.shared.length}**: ${f.shared.join(', ')} | [\`backend/app/Shared/\`](${rel('backend/app/Shared')}) |
 | Mock API (sample data layer) | **${f.mockFunctions}** functions, **${f.mockConstants}** constants, **${f.mockErrors}** error classes | [\`mock-db/api.ts\`](${rel('frontend/src/lib/mock-db/api.ts')}) |
 | Mock entity types | **${f.mockTypes}** | [\`mock-db/types.ts\`](${rel('frontend/src/lib/mock-db/types.ts')}) |
@@ -217,11 +247,13 @@ Every README, requirement document, diagram caption, and the Project Plan and SR
 | Database columns | **${f.columns}** | same |
 | \`CHECK\` / \`UNIQUE\` / foreign keys | **${f.checks}** / **${f.uniques}** / **${f.foreignKeys}** | same |
 | Constraint test cases | **${f.constraintTests}** | [\`Checks/constraint-tests.sql\`](../02-Architecture/Database/Checks/constraint-tests.sql) |
-| Laravel migrations on disk | **${f.migrations}** (one per table) | \`backend/app/**/Database/Migrations/\` |
-| API contract entries | **${f.contractEntries}** | [API Contract](../04-Development/API-Contract.md) (\`####\` endpoint headings) |
-| API routes live in the backend | **${f.liveRoutes.length}**: ${f.liveRoutes.map((r) => `\`${r}\``).join(', ')} | ${f.liveRoutesSource} |
+| Laravel migrations on disk | **${f.migrations}**: ${f.tableMigrations} create a table (one per table), ${f.migrations - f.tableMigrations} ship product data (defaults, symptom lists) | \`backend/app/**/Database/Migrations/\` |
+| API contract entries | **${f.contractEntries}** headings naming **${f.contractEndpoints}** endpoints | [API Contract](../04-Development/API-Contract.md) (\`####\` endpoint headings) |
+| API routes live in the backend | **${f.liveRoutes.length}**${f.routesByModule ? `: ${Object.entries(f.routesByModule).sort((a, b) => a[0].localeCompare(b[0])).map(([k, n]) => `${k} ${n}`).join(', ')}` : ''} | ${f.liveRoutesSource} |
+| Scheduled jobs | **${f.scheduledJobs.length}**: ${f.scheduledJobs.join('; ')} | [\`backend/routes/console.php\`](${rel('backend/routes/console.php')}); Windows Task Scheduler runs \`php artisan schedule:run\` every minute |
 | Frontend test files | **${f.frontendTestFiles}** | \`frontend/src/**/*.test.ts(x)\` |
 | Backend test files | **${f.backendTestFiles}** | \`backend/tests/**/*Test.php\` |
+| Last recorded test run | ${lastRun ? `${lastRun[1]} at \`${lastRun[2]}\`` : 'none recorded'} | [Test runs](#test-runs) below |
 | Lines of code (non-blank) | frontend **${f.frontendLines}** (\`src\`, tests included); backend **${f.backendLines}** (\`app\`, \`config\`, \`routes\`, \`database\`, \`tests\`, \`bootstrap\`) | counted by the script |
 
 ${testSection}
@@ -283,6 +315,7 @@ Recorded ${f.timestamp} at \`${f.commit}\` by \`docs-facts.mjs --tests\`.
 |---|---|---|
 | Frontend (Vitest) | \`cd frontend && npm test\` | ${t.frontend} |
 | Backend (Pest) | \`cd backend && composer test\` | ${t.backend} |
+| Database (parity with \`Reference-Schema.sql\`, constraint tests) | \`cd backend && php tools/db-checks.php\` | ${t.db} |
 
 A frontend count that moves between runs comes from 5-second timeouts under full-suite load; the failing files pass when run alone. See the VERIFY entry "The full test suite fails more under CPU load" in [Frontend-Issues-and-TODOs](../08-Logs/Frontend-Issues-and-TODOs.md).`
   }

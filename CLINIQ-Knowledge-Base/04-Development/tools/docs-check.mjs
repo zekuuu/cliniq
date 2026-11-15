@@ -79,9 +79,11 @@ function anchors(text) {
     [/ADR-001 to ADR-(\d+)/, +f.adrLast.slice(4), 'newest ADR'],
     [/\b(\d+) (?:ADRs|decision records)\b/i, f.adrCount, 'ADRs'],
     [/\b(\d+) (?:numbered )?screens\b/i, f.screens, 'screens'],
-    [/\b(\d+) (?:frontend )?routes\b/i, f.routeCount, 'routes'],
+    // "N routes" on a line about the backend or the API counts the live API routes; otherwise the frontend's.
+    [/\b(\d+) (?:frontend )?routes\b/i, (l) => (/backend|\bAPI\b|Laravel|endpoint|route:list/i.test(l) ? f.liveRoutes.length : f.routeCount), 'routes'],
     [/\b(\d+) constraint tests?\b/i, f.constraintTests, 'constraint tests'],
-    [/\b(\d+) (?:Laravel )?migrations\b/i, f.migrations, 'migrations'],
+    // 48 create the tables; the total adds the migrations that ship product data. Either count is true.
+    [/\b(\d+) (?:Laravel |table )?migrations\b/i, [f.tableMigrations, f.migrations], 'migrations'],
     [/\b(\d+) (?:API )?contract entries\b/i, f.contractEntries, 'contract entries'],
     [/\b(\d+) backend modules\b/i, f.modules.length, 'backend modules'],
   ]
@@ -92,7 +94,8 @@ function anchors(text) {
       for (const [re, want, what] of rules) {
         const m = l.match(re)
         const got = m && +(m[1] ?? m[2])
-        if (m && got !== want) bad.push(`${file}:${i + 1}: says ${got} ${what}; Facts sheet: ${want}`)
+        const ok = [typeof want === 'function' ? want(l) : want].flat()
+        if (m && !ok.includes(got)) bad.push(`${file}:${i + 1}: says ${got} ${what}; Facts sheet: ${ok.join(' or ')}`)
       }
     })
   }
