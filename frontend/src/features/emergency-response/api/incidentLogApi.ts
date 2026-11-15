@@ -1,4 +1,5 @@
-import { listIncidents, listPersonnel, listStudents, type SessionUser } from '../../../lib/mock-db'
+import { listIncidents, listPersonnel, listStudents, type SessionUser } from '../../../lib/data'
+import { lrnMatchesSearch } from '../../../lib/lrn'
 import { matchesPatientFilter, type PatientFilter, type PatientNumber } from '../../../lib/patients'
 import { todayISO } from '../../../lib/dates'
 import { rangeForPreset } from '../../../lib/dateRange'
@@ -39,7 +40,9 @@ export async function fetchIncidentLog(
   const [incidents, students, personnel] = await Promise.all([
     listIncidents({ from: query.from, to: query.to }, viewer),
     listStudents({ includeArchived: true, fullLrn: true }),
-    listPersonnel({ includeArchived: true }),
+    // The staff list is Staff only (ADR-043): the API answers the Admin 403, and the Admin's log has
+    // no staff incidents to name anyway.
+    viewer?.role === 'admin' ? Promise.resolve([]) : listPersonnel({ includeArchived: true }),
   ])
   const studentsById = new Map(students.map((student) => [student.id, student]))
   const personnelById = new Map(personnel.map((person) => [person.id, person]))
@@ -73,7 +76,7 @@ export async function fetchIncidentLog(
       if (!search) return true
       return (
         (row.patient.kind === 'student'
-          ? row.patient.number.startsWith(search.replace(/[\s-]/g, ''))
+          ? lrnMatchesSearch(row.patient.number, search)
           : row.patient.number.toLowerCase().startsWith(search.replace(/\s/g, ''))) ||
         row.gradeLevel.toLowerCase().includes(search) ||
         row.complaint.toLowerCase().includes(search) ||
