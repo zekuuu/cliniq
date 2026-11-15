@@ -1,6 +1,6 @@
 # Start Here for the SRS and Project Plan
 
-Last checked against the code on Tuesday, November 10, 2026 (`main` at `8f70297`, backend read from the `backend` branch at `b51166a`). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
+Last checked against the code on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
 
 ## CLINIQ in five lines
 
@@ -8,7 +8,7 @@ Last checked against the code on Tuesday, November 10, 2026 (`main` at `8f70297`
 2. It records student and staff health profiles, clinic visits, emergencies (in two stages), follow-ups, medicines and supplies, and backups, and produces monthly reports.
 3. Two roles: **Staff** (the School Clinician) does the clinic work; the **Admin** (the Principal) reads, manages accounts and never prints.
 4. It runs on the clinic PC only, at `http://localhost`; the Principal gets the Monthly Report as a PDF.
-5. Today the screens are built and run on sample data; the backend has its foundation and database migrations but is not connected yet.
+5. Today the screens are built and run on sample data; the backend is built and tested (phases B0 to B10) and saves to MariaDB, but the screens are not connected to it yet.
 
 ## What is authoritative for what
 
@@ -90,9 +90,9 @@ Last checked against the code on Tuesday, November 10, 2026 (`main` at `8f70297`
 
 ## Decided but not built, and built but not tested on real hardware
 
-**Built:** every screen, on sample data only ([screenshots](../03-Design/assets/screens/)); the backend foundation (85 tests pass); 48 database migrations (written, not yet run on MariaDB).
+**Built:** every screen, on sample data only ([screenshots](../03-Design/assets/screens/)). The backend, phases B0 to B10, on the `backend` branch: real sign-in with lock-out and password recovery, saving to the database, the audit log in the database, real backups and three scheduled jobs; 127 routes, 228 tests pass. The 48 database migrations run on MariaDB and match the approved schema; its 260 constraint tests pass. Numbers: [Facts sheet](Facts-Sheet.md).
 
-**Decided, not built:** the backend modules (B2 to B10): real sign-in, saving to the database, the audit log in the database, real backups and the scheduler; connecting the frontend to the backend; a written restore procedure.
+**Decided, not built:** connecting the frontend to the backend (the screens still read sample data; a separate step, ADR-056); a written restore procedure.
 
 **Never tried on the clinic PC:** no install, no real data, no performance measurement on the 4 GB workstation, no backup to a real drive. The non-functional numbers are targets until then.
 
@@ -105,7 +105,6 @@ Last checked against the code on Tuesday, November 10, 2026 (`main` at `8f70297`
 | Whether the symptom list needs "LBM"; whether items need a brand name | Team Tasks and Questions |
 | The school year's dates (June 15 to April 14) with the Principal | Team Tasks and Questions |
 | Which archive reasons the clinic uses; whether 7 days' notice is right | Team Tasks and Questions |
-| Who holds the encryption key (`APP_KEY`) and where it is backed up | [Backend Issues](../08-Logs/Backend-Issues-and-TODOs.md) (DECIDE) |
 
 Do not write an unconfirmed answer into the SRS as fact; say it is to be confirmed.
 
