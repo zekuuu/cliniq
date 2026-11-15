@@ -889,11 +889,14 @@ function HolidaySourceLine({
       {missing && <Icon name="alertTriangle" size={14} />}
       {missing && !failed && <span>No holidays loaded for {year}.</span>}
       {feed && !failed ? (
-        <span>
-          Holidays updated{' '}
-          {formatDate(feed.lastUpdated, { month: 'short', day: 'numeric', year: 'numeric' })} ·
-          Source {feed.source}
-        </span>
+        // On the API a feed never synced has no update date yet (ADR-080): the "No holidays" line says enough.
+        feed.lastUpdated && (
+          <span>
+            Holidays updated{' '}
+            {formatDate(feed.lastUpdated, { month: 'short', day: 'numeric', year: 'numeric' })} ·
+            Source {feed.source}
+          </span>
+        )
       ) : (
         <span>Holidays could not be loaded.</span>
       )}

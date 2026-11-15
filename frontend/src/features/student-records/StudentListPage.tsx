@@ -24,7 +24,7 @@ import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { paths } from '../../routes/paths'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { StudentListRow } from '../../types/entities'
-import { getArchive, getMockSessionUser, type SessionUser } from '../../lib/mock-db'
+import { getArchive, getMockSessionUser, type SessionUser } from '../../lib/data'
 import { fetchGradeLevels, fetchIncompleteCount, fetchStudentList } from './api/studentListApi'
 import { MaskedLrn } from '../../components/ui/MaskedLrn'
 
@@ -157,7 +157,10 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
   }
   const key = `${search}|${gradeLevel}|${includeArchived}|${recordStatus}`
   // R11: a way to the Incomplete Records Queue besides the Dashboard. The queue is Staff only (ADR-038).
-  const { data: incompleteCount } = useAsyncData('incomplete-count', fetchIncompleteCount)
+  // Staff only: the link is never shown to the Admin, and the API answers the Admin 403 (ADR-080).
+  const { data: incompleteCount } = useAsyncData(`incomplete-count|${viewer.role}`, () =>
+    viewer.role === 'staff' ? fetchIncompleteCount() : Promise.resolve(undefined),
+  )
   // The second door to the Archive page (the sidebar is the first); one page, one store.
   const { data: archive } = useAsyncData(`archive-count|${viewer.role}`, () => getArchive(viewer))
   const { data, status, isRefetching, reload } = useAsyncData(key, () =>
