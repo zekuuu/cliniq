@@ -23,6 +23,8 @@ Final update Saturday, November 14, 2026 — 19:11 PHT. One agent (Claude Opus 5
 | B10 | ticked | ticked | `UsersBackupTest` 8 pass | Also the reference lists, issue reports, break-glass |
 | Phase 2 | — | — | `Audit/AccessAndRecordsTest` 4, `Flows/ClinicFlowsTest` 9 pass | Access matrix on every route; no-delete scan; nine whole flows |
 
+*Note (Sunday, November 15, 2026 — 08:38 PHT):* this table predates the close of B1. B1's Build and Audit boxes were ticked Saturday, November 14, 2026 — 20:38 PHT, as the text above and "ONLY YOU CAN DO" item 3 say. Since commit `397e000` the append-only check in `AuditTrailTest` runs instead of being skipped: 228 passed, 0 skipped.
+
 Whole suite: **227 passed, 1 skipped, 0 failed**. Larastan level max: 0 errors. Pint: clean. `composer audit`: no advisories.
 
 ## NEEDS YOUR CALL

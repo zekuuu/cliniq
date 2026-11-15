@@ -61,29 +61,41 @@ Keyboard shortcuts (`04-Development/Keyboard-Shortcuts-and-Efficiency.md`) wired
 
 ## Backend Phases
 
-**Status at `b51166a` (Tuesday, November 10, 2026 — 17:27 PHT):** B0 done and tested (85 Pest tests pass). B1 code-complete: 48 migrations, one per table, written on Monday, November 9, 2026; not yet run against MariaDB, so `b1-done` is not tagged (see `08-Logs/Overnight-Run-Nov9/MORNING-REPORT.md`). B2 to B10 not started. The frontend's F0 to F2 are built on sample data; F3's demo-ready check is open.
+**Status at `397e000` (Sunday, November 15, 2026 — 08:38 PHT):** B0 to B10 are built and audited (Build and Audit boxes ticked in `Backend-Loop-Engineering.md`; B6 was removed). 127 routes, every endpoint of the API Contract; `composer test`: 228 passed; the 48 migrations run on MariaDB and match `Reference-Schema.sql`, with 260 of 260 constraint tests passing (`php tools/db-checks.php`). Nothing is connected to the frontend (ADR-056); the frontend's F0 to F2 are built on sample data and F3's demo-ready check is open. **Next:** connecting the frontend to the API, a separate step that needs its own decision (ADR-056). Per-phase reports: `08-Logs/Overnight-Run-Nov9/` and `08-Logs/Overnight-Run-Nov10/MORNING-REPORT.md`. The phase descriptions below are the original plan; each phase's **Status** line says what was built, and where the code departs from the plan, the later ADR named there wins.
 
 Some backend work can't wait for frontend to finish (auth, schema, audit trail) — these start early and run alongside the frontend phases, not strictly after them. See "How These Interleave" below.
 
 ### Phase B0 — Environment & Scaffold
 Run the actual Laravel scaffold into `backend/` (commands in `Environment-Setup.md`). Install Sanctum. Confirm the target XAMPP install's PHP version before picking a Laravel version (Laravel 11+ needs PHP 8.2+ — a check, not an assumption). Set up the modular folder structure (`app/Modules/<Module>/`, `app/Shared/`) and its PSR-4 mapping in `composer.json` before any module code gets written — see `06-Decisions/ADR-009-Modular-Backend-Architecture.md`. Retrofitting this after B4+ have already scattered code into Laravel's default flat structure is real, avoidable rework. **Prepared first, as the foundation round (ADR-056):** the scaffold, the modular folders, configuration, CORS, Sanctum SPA settings, middleware, one error format, the audit-log service contract and a health route, with no tables, and nothing connected to the frontend. A written API contract and an ERD review come before it. See the checklist in `Backend-Loop-Engineering.md`.
 
+**Status:** built and audited (Sunday, November 1, 2026); the per-role idle sign-out and keep-alive added Monday, November 9, 2026 (ADR-078).
+
 ### Phase B1 — Database Schema — ERD Approved, Next
 **Don't guess a schema.** [`ERD.md`](../02-Architecture/Database/ERD.md) is approved (ADR-057). Inferring or extending it from the frontend-facing entity shapes is not a substitute for a new decision. Build migrations from it directly, consistent with the entity shapes already fixed in `CLINIQ_Frontend_Context_Brief.md` §5 (Student, User, Visit, Incident, FollowUp, InventoryItem, Report, BackupLog, AuditLogEntry) — those shapes are real commitments already made; the schema should match them, not reinvent them.
 
 See `04-Development/Backend-Readiness-Checklist.md` for the current pre-migration readiness checklist.
 
+**Status:** built and audited. 48 table migrations plus two that ship product data (default settings; symptom lists and first-aid steps); they run on MariaDB and match `Reference-Schema.sql`; the development seeder loads the mock data through the services. Closed Saturday, November 14, 2026 — 20:38 PHT, when Zean confirmed the migration account `cliniq_migrate`.
+
 ### Phase B2 — Auth & RBAC
 Sanctum SPA authentication. Two roles (Staff, Admin/Principal; PE/Sports Instructors have no account, ADR-029) with the specific per-module permission matrix already fully documented in `01-Requirements/Features/Module-Overview.md`'s Access Summary table — this is a direct implementation target, not a design task. Consider a Spatie `laravel-permission`-based approach (flagged in `Skills-Setup.md`) given how closely CLINIQ's access model matches that package's shape. Session lifetime is **1 week**, with no idle timeout for Staff (`06-Decisions/ADR-015`) and a 30-minute idle sign-out for the Admin/Principal (ADR-048) — set the expiry accordingly (**ADR-056 chose SPA cookie mode**, so this is the session lifetime, 10080 minutes, and not a token `expiration`).
+
+**Status:** built and audited. Sign-in with the 5-failure, 5-minute lock-out, sign-out, the forced and voluntary password change, password recovery with an authenticator app and recovery codes (ADR-073), the own profile, and the idle sign-out per role: Staff 60 and Admin 30 minutes by default, as settings (ADR-078, which replaces "no idle timeout for Staff" above). Roles are checked by the module's own `role:` middleware; no permissions package was added.
 
 ### Phase B3 — Audit Trail Infrastructure (Build Early, Not Late)
 Build this as reusable middleware/service/trait *before* the module APIs below, so each subsequent phase hooks into existing infrastructure instead of retrofitting logging afterward. Must capture: who, what action type, what target record, when — for every login, submission, approval, print, opened profile or incident report, and create/update/delete/archive, across every module (`Modules-and-Features`, "Audit Trail" section; `.claude/skills/cliniq-audit-trail/`).
 
+**Status:** built and audited. The database audit logger, `GET /api/audit-log` (paged), and the view and print entries; `cliniq_app` cannot update or delete an audit entry, and `AuditTrailTest` checks it.
+
 ### Phase B4 — Student Records API
 CRUD, LRN validation (12 digits, unique; ADR-028), duplicate detection (name + grade level), archive (not delete) semantics.
 
+**Status:** built and audited. Also staff patients (ADR-043, ADR-076), the student and staff imports with preview, school years started and ended by hand (ADR-075) and the Archive page (ADR-072).
+
 ### Phase B5 — Clinic Visit Monitoring API
 Visit CRUD, Excuse Letter generation/approval workflow, Follow-Up Handling endpoints (shared with B7 — same feature, two entry points).
+
+**Status:** built and audited. Also PE referrals and the stock service that visits draw on (built here, in the Inventory module, before B8).
 
 ### Phase B6 — (Removed)
 The QR Digital Health ID API was removed with the feature (ADR-027). The phase number is kept so later phases keep theirs.
@@ -91,16 +103,24 @@ The QR Digital Health ID API was removed with the feature (ADR-027). The phase n
 ### Phase B7 — Emergency Response API
 Two-stage incident endpoints (Stage 1 minimal-fields save; Stage 2 completion). Hospital referral, parent-notification log (multi-attempt, timestamped). Follow-Up Handling endpoints (shared with B5).
 
+**Status:** built and audited. Also the incident report's approval and trail, and a student's or staff patient's history.
+
 ### Phase B8 — Inventory API
 The stock-flow logic exactly as specified in `Modules-and-Features` §8: dispense decrements + auto threshold-check; stock is held in received batches, dispensed earliest-expiring usable batch first (ADR-030); restock is a separate action that adds a batch (ADR-035); a dispense that would go negative warns but does not block the save (a deliberate, already-decided behavior — don't "fix" this into a hard block).
+
+**Status:** built and audited: items, batches, history, movements, Dispense, Restock and Adjust, on the stock service from B5.
 
 ### Phase B9 — Dashboard & Reports API
 Aggregation queries for the Clinic Overview Dashboard (counts, trends, frequent-visitor flags by masked LRN, due/upcoming follow-ups computed on request — not a background job, since none exists in this architecture). Monthly/Incident/Complaint summary report generation, and the monthly inventory sheet.
 
 **Holiday sync job (ADR-020).** A monthly scheduled job fetches this year's and next year's nationwide Philippine holidays when internet is available, stores them for `getHolidays`, keeps the last good data on failure, updates `lastUpdated`, and raises a warning when the last successful sync is stale (about 45 days) or next year's list is still missing in December. This is the one scheduled job in this architecture, and it never blocks a page load. The source is still open (ADR-020 lists two candidates); before choosing, read the source code, call it, compare its current-year output with the official proclamation, check Islamic and special days, test failure cases (site down, empty result, layout change), pin versions, and keep last-good data.
 
+**Status:** built and audited: the Dashboard summary and cluster alerts, the activity calendar, the monthly reports for Staff and the Admin (ADR-077) and Sports Reports. The holiday source was chosen on Friday, November 13, 2026: `cliniq:sync-holidays` runs hourly from 7:00 to 18:00 and fetches when the last good sync is 30 or more days old. It is now one of three scheduled jobs, with the daily missed-follow-up job and the 18:00 backup; Windows Task Scheduler runs `php artisan schedule:run` every minute.
+
 ### Phase B10 — User Management & Backup Verification API
 Account CRUD for both roles. Backup-status endpoint reading whatever the `mysqldump`-based backup mechanism (Project Plan §5.3) actually produces — this is the same tracked-file-size signal that Modules & Features already names as the future trigger for building retention-purge tooling (`02-Architecture/Database/Data-Retention-Policy.md`).
+
+**Status:** built and audited. Accounts, backups (`.zip`, ADR-052) to the chosen locations, run by hand, nightly at 18:00 and after each sign-out; the reference lists and issue reports; the console commands `cliniq:create-admin` and `cliniq:reset-admin-password`.
 
 ---
 
@@ -111,10 +131,10 @@ Per ADR-006, frontend leads and backend follows *per feature*, not "all frontend
 | Frontend phase | Matching backend phase | Notes |
 |---|---|---|
 | F0 | B0 | Can run in parallel — no dependency |
-| — | B1 (schema) | ERD approved (ADR-057); migrations written, waiting for a MariaDB run; doesn't block the frontend, which runs on mock data |
-| — | B2, B3 (auth, audit) | Planned to land before F2 got far; F2 finished on mocks first, so these come before any module API |
+| — | B1 (schema) | Built: the 48 migrations run on MariaDB and match the approved ERD (ADR-057); it never blocked the frontend, which runs on mock data |
+| — | B2, B3 (auth, audit) | Built before the module APIs, as planned; F2 had finished on mocks first |
 | F1 (5 reference screens) | — | Runs entirely on mock data — this is the point; client feedback happens before backend logic is finalized |
-| F2, module by module | B4–B10, matching module | Once a module's frontend is validated with the client, wire it to its real backend phase rather than leaving it on mocks indefinitely |
+| F2, module by module | B4–B10, matching module | Built and tested on both sides, separately. **Next:** wire each screen to its real endpoint instead of the mock, a separate step that needs its own decision (ADR-056) |
 | F3 (polish) | — | No backend equivalent; purely frontend quality |
 
 ---

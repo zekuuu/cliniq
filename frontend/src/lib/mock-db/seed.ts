@@ -119,8 +119,8 @@ export function resolveSeed(source: MockDbSeed, today: ISODate): DbState {
           followUpDate: resolveSchoolDate(f.followUpDate, today),
         })),
         // The seed-only `_note` comment is dropped on load.
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         inventoryItems: source.inventoryItems.map(
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           ({ currentStock, expirationDate, _note: _seedNote, ...item }) => ({
             ...item,
             batches: [

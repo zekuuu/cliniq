@@ -123,7 +123,7 @@ Each item has a **Build** and an **Audit** box, each with its own Resume Note. L
 - [x] Build / [x] Audit — **B0.10 Backend documents**: `backend/README.md`, `Environment-Setup.md`, `Backend-Readiness-Checklist.md` ticks, session log, Changelog row, Issues entries
   Build note: README, Environment-Setup, checklist, logs. · Audit note: Readiness boxes ticked only where truly done. Scaffold commands corrected to the ones that ran.
 
-### Phases B1 to B10 (not started; each waits for the item named)
+### Phases B1 to B10 (all built and audited by Saturday, November 14, 2026; each waited for the item named)
 
 - [x] Build / [x] Audit — **B1. Database schema** — the ERD is approved (ADR-057)
   **Before B1** (each true on the development machine, or B1 does not start):

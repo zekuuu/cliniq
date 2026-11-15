@@ -84,7 +84,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 - A student has **no number of their own** on the record (ADR-054): families are reached through the emergency contacts. Staff records keep theirs.
 - **Birthdate (optional)** (ADR-054): a real date, never in the future. The form shows a soft note when the age is more than `config.unusualAgeYears` (3, to confirm) from the usual age for the grade (Kinder 5, Grade n is n + 5), and still saves. The age is calculated, never stored; the Student Profile header shows it. The date shows only in the profile details, the Add/Edit Student form and the profile printout, never on a list, picker, Dashboard, report or other printout.
 
-**Yearly List and Archiving (ADR-047, ADR-051) — not built yet**
+**Yearly List and Archiving (ADR-047, ADR-051) — the import is built (the screen on sample data; the backend, with its preview, Sunday, November 15, 2026); the 5-year deletion is not built**
 - Grade level and section come from one yearly import of the registrar's student list; there is no bulk promotion button. The import adds new students, updates continuing ones (and fills each student's birthdate when the list has one, ADR-054) and flags students missing from the new list. It waits for the school's data privacy agreement
 - Before the import is applied, the clinician sees the list of students that would be archived. A student missing from the new list is then archived automatically, without a reason; a returning student is restored, not re-created
 - The clinician can also archive a single record at any time (built)

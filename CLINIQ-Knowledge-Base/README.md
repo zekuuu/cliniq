@@ -1,8 +1,8 @@
 # CLINIQ Knowledge Base
 
-Last checked against the code on Tuesday, November 10, 2026 (`main` at 8f70297; backend on the `backend` branch at b51166a).
+Last checked against the code on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in).
 
-**Current state:** the browser app (frontend) is built and runs on sample (mock) data; the backend has its tested foundation and 48 migrations written from the approved database design (ADR-057), not yet run, and no module endpoints; nothing is connected yet. CLINIQ will run on the clinic PC only (ADR-079). The full status list is in the root [README.md](../README.md#current-state).
+**Current state:** the browser app (frontend) is built and runs on sample (mock) data; the backend is built and tested, phases B0 to B10 (127 routes, 228 tests passing), and its 48 migrations run on MariaDB and match the approved database design (ADR-057); the two are not connected yet (ADR-056). CLINIQ will run on the clinic PC only (ADR-079). The full status list is in the root [README.md](../README.md#current-state).
 
 **Start here:**
 
@@ -24,7 +24,7 @@ Last checked against the code on Tuesday, November 10, 2026 (`main` at 8f70297; 
 | [`05-Testing`](05-Testing/) | Test strategy and test cases |
 | [`06-Decisions`](06-Decisions/) | ADR-001 to ADR-079, their summary and index |
 | [`07-AI-Agents`](07-AI-Agents/) | Agent workflow and source-of-truth order |
-| [`08-Logs`](08-Logs/) | Changelogs, issue logs, session logs (history, not current truth) |
+| [`08-Logs`](08-Logs/) | Changelogs, issue logs, session logs, and the reports of the two overnight backend runs ([`Overnight-Run-Nov9`](08-Logs/Overnight-Run-Nov9/), [`Overnight-Run-Nov10`](08-Logs/Overnight-Run-Nov10/), which built B1 to B10); history, not current truth |
 | [`09-References`](09-References/) | The five canonical documents, privacy policy, external references |
 
 This is the operational reference for building CLINIQ, meant to be opened as an Obsidian vault. It complements — not replaces — the five canonical planning documents (see `09-References/Canonical-Documents.md`), which remain the source of truth for *what* the system must do. This vault is where *how it's being built*, day to day, gets recorded: architecture-as-implemented, development conventions, decisions, and the running history of what every AI agent (or human) has done.

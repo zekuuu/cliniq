@@ -1,6 +1,6 @@
 # frontend
 
-Last checked against the code on Tuesday, November 10, 2026 (`main` at 8f70297).
+Last checked against the code on Sunday, November 15, 2026 (the `backend` branch at `397e000`; `frontend/` unchanged since `6a94e3f`).
 
 ## Purpose
 
@@ -8,7 +8,7 @@ The CLINIQ browser app: React + TypeScript, built with Vite and styled with Tail
 
 ## Current state
 
-**Built (on sample data).** Every screen runs on the shared mock-data layer in `src/lib/mock-db/`. The backend has its foundation but no module endpoints, so there is no API client and no Sanctum sign-in yet (ADR-056). The screens, and the features decided but not built yet, are listed in the root [README.md](../README.md#current-state).
+**Built (on sample data).** Every screen runs on the shared mock-data layer in `src/lib/mock-db/`. The backend is built (phases B0 to B10, on the `backend` branch), but nothing here calls it yet: there is no API client and no Sanctum sign-in in the frontend (ADR-056). The screens, and the features decided but not built yet, are listed in the root [README.md](../README.md#current-state).
 
 ## How to run
 

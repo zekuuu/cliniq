@@ -1,6 +1,6 @@
 # backend
 
-Last checked against the code on Tuesday, November 10, 2026 (the `backend` branch at `b51166a`). On `main` this folder holds only this README and `.env.example`; the code lives on this `backend` branch (ADR-056). Numbers: [Facts sheet](../CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
+Last checked against the code on Sunday, November 15, 2026 (the `backend` branch at `397e000`). On `main` this folder holds only this README and `.env.example`; the code lives on this `backend` branch (ADR-056). Numbers: [Facts sheet](../CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
 
 ## Purpose
 
@@ -8,25 +8,51 @@ The Laravel API for CLINIQ, with Sanctum for sign-in (ADR-007, ADR-056) and Mari
 
 ## Current state
 
-**B0 to B9 built (Phase 1); B10 next.** Laravel 13.39 with Sanctum in SPA cookie mode. The 48 migrations match `Reference-Schema.sql` (`php tools/db-checks.php`: parity plus the 260 constraint tests). Built: the audit trail (B3); sign-in, lockout, password recovery and the own profile (B2); students, staff patients, imports, school years and the Archive (B4); visits, excuse letters, follow-ups and the stock core (B5); incidents and patient history (B7); inventory (B8); the Dashboard, calendar, monthly reports and Sports Reports (B9). Every module's Phase 2 audit comes after B10. Routes: see `routes/api.php`; `tests/Feature/HealthAndRoutesTest.php` fails on any undocumented route. Nothing is connected to the frontend (ADR-056).
+**B0 to B10 built and audited; nothing connected to the frontend yet (ADR-056).** Laravel 13.42 with Sanctum in SPA cookie mode. 127 routes: every endpoint of `API-Contract.md`, plus the health check and Sanctum's CSRF cookie. `composer test`: 228 passed. The 48 table migrations match `Reference-Schema.sql` (`php tools/db-checks.php`: parity plus the 260 constraint tests, all pass); two more migrations ship product data (the default settings, and the symptom lists with their first-aid steps). `tests/Feature/HealthAndRoutesTest.php` fails on any undocumented route; `tests/Feature/Audit/AccessAndRecordsTest.php` checks sign-in, both session checks and a role on every route. Counts: [Facts sheet](../CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
 
-**Scheduled jobs.** `routes/console.php` schedules `cliniq:close-missed-follow-ups` (daily, 00:15) and `cliniq:sync-holidays` (hourly from 7:00 to 18:00; it fetches only when the last good sync is 30 or more days old, so a day without internet simply tries again later). On the clinic PC, Windows Task Scheduler must run `php artisan schedule:run` every minute. A backup also runs after each sign-out when a backup location is enabled (ADR-037, ADR-052); the sign-out does not wait for it. The holiday source is `CLINIQ_HOLIDAY_SOURCE_URL` (default: the repo's `holidays-ph.json` on GitHub); `php artisan cliniq:sync-holidays --file=path\to\holidays-ph.json` imports a copy offline, and `--force` fetches now.
+## Modules and what each exposes
+
+| Module | Endpoints (under `/api`) | Phase |
+|---|---|---|
+| `UserManagement` | sign-in, sign-out, `me`, password change, password recovery and the authenticator app (`auth/*`); own profile; accounts (`users`) | B2, B10 |
+| `StudentRecords` | students (list, search, duplicate check, save, archive, import, incomplete queue); school years started and ended by hand; the Archive page (`archive/*`) | B4 |
+| `StaffPatients` | staff patients (`personnel`: list, search, save, archive, import, incomplete queue); the one patient search box (`patients/*`) | B4 |
+| `ClinicVisits` | visits, excuse letters, PE referrals, a student's excuse letters | B5 |
+| `EmergencyResponse` | incidents in two stages, parent calls, approval and trail; a student's or staff patient's history | B7 |
+| `InventoryTracker` | items, batches, history, movements, Dispense, Restock, Adjust; the stock service that visits and incidents call | B5, B8 |
+| `Dashboard` | summary, cluster alerts, the activity calendar (events, holidays, days) | B9 |
+| `ReportsGeneration` | monthly reports (Staff and Admin), the latest month, Sports Reports | B9 |
+| `BackupVerification` | backup status, Back up now, verify latest, locations and the folder picker | B10 |
+| `FirstAidChecklist` | no routes; holds the first-aid tables' migrations | B1 |
+| `AuditLogViewer` | no code; the Audit Log API lives in `Shared/AuditLog` | B3 |
+| `Shared/AuditLog` | `audit-log` (read, paged), `audit/views`, `audit/prints` | B3 |
+| `Shared/FollowUps` | follow-ups list and update | B5 |
+| `Shared/Settings` | idle sign-out settings; the reference lists (`reference/*`) | B2, B10 |
+| `Shared/Feedback` | issue reports | B10 |
+| `Shared/Http` | `health`, `session/keepalive` | B0 |
+
+## Scheduled jobs and console commands
+
+`routes/console.php` schedules three jobs: `cliniq:close-missed-follow-ups` (daily, 00:15), `cliniq:backup` (daily, 18:00, while the clinic PC is still on) and `cliniq:sync-holidays` (hourly from 7:00 to 18:00; it fetches only when the last good sync is 30 or more days old, so a day without internet simply tries again later). On the clinic PC, Windows Task Scheduler must run `php artisan schedule:run` every minute. A backup also runs after each sign-out when a backup location is enabled (ADR-037, ADR-052); the sign-out does not wait for it. The holiday source is `CLINIQ_HOLIDAY_SOURCE_URL` (default: the repo's `holidays-ph.json` on GitHub); `php artisan cliniq:sync-holidays --file=path\to\holidays-ph.json` imports a copy offline, and `--force` fetches now.
+
+Two commands are run by hand: `php artisan cliniq:create-admin <username>` creates the first Admin on a new install, and `php artisan cliniq:reset-admin-password` is the break-glass reset when no Admin can sign in ([Environment Setup](../CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md)).
 
 ## Install, configure and migrate
 
 On Windows with XAMPP. The full steps, with reasons, are in [Environment Setup](../CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md).
 
-1. Set up PHP and harden MariaDB once (Environment Setup, "Set up a machine" and "MariaDB hardening"): a root password, `bind-address=127.0.0.1`, the `cliniq` database and two accounts, `cliniq_app` (data only) and a separate migration account with schema rights. `cliniq_app` keeps only `SELECT` and `INSERT` on `audit_logs`.
+1. Set up PHP and harden MariaDB once (Environment Setup, "Set up a machine" and "MariaDB hardening"): a root password, `bind-address=127.0.0.1`, the `cliniq` database and two accounts, `cliniq_app` (data only) and `cliniq_migrate`, the separate migration account with schema rights on `cliniq`, `cliniq_testing` and the `cliniq_check_%` scratch databases. `cliniq_app` keeps only `SELECT` and `INSERT` on `audit_logs`.
 2. `composer install`.
 3. Copy `.env.example` to `.env`, fill in the database account and run `php artisan key:generate` once. Never commit `.env`, and never regenerate the key on the clinic PC once accounts exist (it breaks every authenticator).
-4. `php artisan migrate` with the migration account, then switch `.env` back to `cliniq_app`.
-5. Optional, development only: `php artisan db:seed --class="App\Shared\Database\DevelopmentSeeder"` on a freshly migrated, empty database loads the frontend's fictional mock seed (`frontend/src/lib/mock-db/mock-db.json`) through the services. It refuses production and a database that already has data. The symptom lists and first-aid steps ship with the migrations (`insert_complaint_types`).
+4. `php artisan migrate` with `cliniq_migrate`, then switch `.env` back to `cliniq_app`.
+5. Optional, development only: `php artisan db:seed --class="App\Shared\Database\DevelopmentSeeder"` on a freshly migrated, empty database loads the frontend's fictional mock seed (`frontend/src/lib/mock-db/mock-db.json`) through the services (313 records on Sunday, November 15, 2026). It refuses production and a database that already has data. `cliniq_app` cannot run `migrate:fresh` (it has no DROP on `audit_logs`, by design), so migrate a fresh development database with `cliniq_migrate` first. The symptom lists and first-aid steps ship with the migrations (`insert_complaint_types`).
+6. `php artisan serve` starts the API at `http://127.0.0.1:8000`; `GET /api/health` answers `{"data":{"status":"ok"}}`.
 
-Settings: the session limit, lock-out and idle defaults are in `config/cliniq.php` (7 days; 5 wrong passwords lock for 5 minutes; Staff 60 and Admin 30 idle minutes, overridable with `CLINIQ_IDLE_SIGNOUT_MINUTES_STAFF` and `CLINIQ_IDLE_SIGNOUT_MINUTES_ADMIN`, then stored in `system_settings`). There are no custom console commands yet.
+Settings: the session limit, lock-out and idle defaults are in `config/cliniq.php` (7 days; 5 wrong passwords lock for 5 minutes; Staff 60 and Admin 30 idle minutes, overridable with `CLINIQ_IDLE_SIGNOUT_MINUTES_STAFF` and `CLINIQ_IDLE_SIGNOUT_MINUTES_ADMIN`, then stored in `system_settings`).
 
 ## Run the checks
 
-Use XAMPP's PHP (`C:\xampp\php\php.exe`). Copy `.env.example` to `.env` and run `php artisan key:generate` to run the app; the tests need neither, a database, or `zip` and `intl`.
+Use XAMPP's PHP (`C:\xampp\php\php.exe`) with the `zip` extension enabled (backups are `.zip`, ADR-052). The tests need MariaDB running and the test database `cliniq_testing`.
 
 ```bash
 composer test      # Pest
@@ -35,7 +61,7 @@ composer analyse   # Larastan at level max
 composer check     # all three
 composer audit
 php artisan route:list
-php tools/db-checks.php   # B1: schema parity with Reference-Schema.sql, then the 260 constraint tests
+php tools/db-checks.php   # schema parity with Reference-Schema.sql, then the 260 constraint tests
 ```
 
 Tests read `.env.testing` (the `cliniq_testing` database, migration account) when it exists, else `.env.example`. `db-checks.php` uses the same file and creates, then drops, the scratch databases `cliniq_check_ref` and `cliniq_check_mig`.
@@ -48,20 +74,23 @@ app/
 │     UserManagement, StudentRecords, ClinicVisits, EmergencyResponse, FirstAidChecklist,
 │     StaffPatients, InventoryTracker, Dashboard, ReportsGeneration, BackupVerification, AuditLogViewer
 └── Shared/
-    ├── AuditLog/    the logger interface, the event, its names, an in-memory logger until B3, its migration
+    ├── AuditLog/    the logger interface, the event, its names, the database logger, the Audit Log API, its migration
     ├── Auth/        ClinicUser, what middleware needs from a signed-in user
-    ├── Http/        error envelope, BusinessRuleViolation, ApiError, middleware, health
+    ├── Http/        error envelope, BusinessRuleViolation, ApiError, middleware, paging, health, keep-alive
     ├── Logging/     keeps data out of the log files
-    ├── Support/     Lrn, Age, ClinicTime
-    ├── Database/    shared tables (school years, grade levels)
-    └── Settings, Sequences, FollowUps, Feedback    their migrations only, until their phase
+    ├── Support/     Lrn, Age, ClinicTime, PersonName, PatientFields, SchoolYears, the start-up check
+    ├── Database/    shared tables (school years, grade levels), product data, the development seeder
+    ├── Settings/    system settings, idle sign-out settings, the reference lists
+    ├── FollowUps/   follow-ups and the daily missed-follow-up job
+    ├── Feedback/    issue reports
+    └── Sequences/   reference numbers (STF-, EL-, IR-)
 ```
 
 The module list is ERD rule M-1, which extends ADR-009 (the QR module is gone; the first-aid checklist, staff patients and the audit viewer are added). Controllers and models go in their module, never in `app/Http` or `app/Models`. Plain PSR-4 in `composer.json`, no modules package.
 
 `tests/Feature/HealthAndRoutesTest.php` fails when a route appears that is not on its list. Add a route to that list and to `API-Contract.md` together.
 
-Middleware for later routes: `auth:sanctum`, then `session.fixed` (ends the session 7 days after sign-in, 401 `session_expired`), `session.idle` (each role's idle minutes, ADR-048 and ADR-078; 401 `session_idle`) and `role:staff,admin`. B2 stores the sign-in time at sign-in, under `FixedSessionLifetime::KEY`.
+Middleware on every signed-in route: `auth:sanctum`, then `session.fixed` (ends the session 7 days after sign-in, 401 `session_expired`), `session.idle` (each role's idle minutes, ADR-048 and ADR-078; 401 `session_idle`) and `role:staff,admin`. Sign-in stores the sign-in time under `FixedSessionLifetime::KEY` and starts a fresh idle clock.
 
 ## What the frontend will one day do
 

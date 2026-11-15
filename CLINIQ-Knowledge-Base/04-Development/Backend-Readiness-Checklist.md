@@ -1,10 +1,10 @@
 # CLINIQ Backend Readiness Checklist
 
-Verified Friday, October 09, 2026 — 00:11 PHT. Based on `main` at commit `4c3c8c9`. No repo files were changed before this checklist was integrated. Refreshed against the code on Saturday, October 31, 2026 (commit `9b4861db`). **Refreshed Saturday, November 07, 2026 — 13:35 PHT against `main` `cfd4bd84` by the counter-check ([`Backend-Counter-Check-Nov7.md`](./Backend-Counter-Check-Nov7.md)).**
+Verified Friday, October 09, 2026 — 00:11 PHT. Based on `main` at commit `4c3c8c9`. No repo files were changed before this checklist was integrated. Refreshed against the code on Saturday, October 31, 2026 (commit `9b4861db`). **Refreshed Saturday, November 07, 2026 — 13:35 PHT against `main` `cfd4bd84` by the counter-check ([`Backend-Counter-Check-Nov7.md`](./Backend-Counter-Check-Nov7.md)).** Updated Sunday, November 15, 2026 — 08:38 PHT for the backend build, code at `397e000`: section 1's rows and the import item below; the checklist items themselves are history.
 
 ## Summary
 
-The backend foundation is built: no tables or feature endpoints yet. The [ERD and data dictionary](../02-Architecture/Database/ERD.md) are approved (ADR-057), and migrations are built from them in phase B1. The frontend has already written much of the spec: the mock API, the entity types, the access matrix, and the ADRs.
+The backend is built, B0 to B10 (Sunday, November 15, 2026): 127 routes, the 48 migrations run on MariaDB, nothing connected to the frontend yet (ADR-056). The [ERD and data dictionary](../02-Architecture/Database/ERD.md) are approved (ADR-057), and the migrations match them. The frontend has already written much of the spec: the mock API, the entity types, the access matrix, and the ADRs.
 
 **Suggested order of work**
 
@@ -20,8 +20,8 @@ The backend foundation is built: no tables or feature endpoints yet. The [ERD an
 
 | Area | Current state |
 |---|---|
-| `backend/` | Laravel 13 foundation: Sanctum SPA mode, CORS, middleware, error format, audit contract, helpers, 85 tests. Three routes (health, the CSRF cookie, the keep-alive), no tables. |
-| `ERD.md` | Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057), with a data dictionary, reference schema and constraint tests. Since then changed through ADR-063, 064, 071, 072, 073 and 075: 47 tables, 247 constraint tests passing on MariaDB 10.11.16 (November 7, 2026). |
+| `backend/` | Phases B0 to B10 built and audited (Laravel 13.42, Sanctum SPA mode): 127 routes, every endpoint of the API Contract plus health and the CSRF cookie; 228 Pest tests pass; three scheduled jobs. Not connected to the frontend (ADR-056). Checked Sunday, November 15, 2026 at `397e000`; numbers in the [Facts sheet](../00-Project-Core/Facts-Sheet.md). |
+| `ERD.md` | Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057), with a data dictionary, reference schema and constraint tests. Since then changed through ADR-063, 064, 071, 072, 073, 075 and 076: 48 tables, 462 columns. The 48 migrations match it and its 260 constraint tests pass (`php tools/db-checks.php`, Sunday, November 15, 2026). |
 | Mock API (`api.ts`) | 126 exported functions, 15 exported constants and 19 error classes, about 3,840 lines (November 7, 2026; 104 and 10 on October 31). It holds real business rules: stock integrity, excused-period checks, duplicate-student detection, LRN validation and uniqueness, incident stage rules. It is a working but unwritten API contract. |
 | Auth and roles | The access matrix in `Module-Overview.md` covers 11 rows (Modules 1 to 5 and 7 to 11, plus 2a) × 2 roles. ADR-015 sets a 7-day session lifetime and lockout after 5 failed attempts for 5 minutes; each role is signed out after its own idle minutes, Staff 60 and Admin 30, both settings (ADR-048, amended by ADR-078; Sunday, November 08, 2026 — 18:35 PHT); ADR-056 chose SPA cookie mode. |
 
@@ -58,7 +58,7 @@ The backend foundation is built: no tables or feature endpoints yet. The [ERD an
 - [ ] **Printed documents:** the Excuse Letter and Incident Report need a human-facing reference number, since internal ids must never be shown.
 - [x] **Stored letters:** should an approved Excuse Letter keep its final wording? Yes (ADR-049); stored with the approval.
 - [x] **Reports:** computed live, with no Finalize month (ADR-050): store only the request (type, range, who) and generate the data on demand, as the mock does.
-- [ ] **School year and grade promotion:** decided (ADR-047, ADR-051): one yearly import of the registrar's list. The import is not built and waits for the school's data privacy agreement and the file format.
+- [ ] **School year and grade promotion:** decided (ADR-047, ADR-051): one yearly import of the registrar's list. The import is built (the Import Student List screen on sample data, and `POST /api/students/import` with its preview on the backend); using it with the registrar's real list waits for the school's data privacy agreement and the file format.
 
 ---
 

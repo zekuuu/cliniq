@@ -1,7 +1,7 @@
 # Facts sheet
 
-**Last regenerated:** Tuesday, November 10, 2026 — 18:39 PHT
-**From commit:** `8f70297` on `main`; backend numbers from the `backend` branch at `b51166a` (read through git; `main` holds no backend code, ADR-056)
+**Last regenerated:** Sunday, November 15, 2026 — 10:50 PHT
+**From commit:** `397e000` on `backend`; backend numbers from this working tree
 **Regenerate with:** `npm run docs:facts` from the repository root (add `-- --tests` to rerun both test suites). The script is [`docs-facts.mjs`](../04-Development/tools/docs-facts.mjs).
 
 Every README, requirement document, diagram caption, and the Project Plan and SRS quote their numbers from this sheet. If a document disagrees with this sheet, the document is wrong. If this sheet disagrees with the repository, regenerate it: the script reads the repository and nothing else. Do not edit the numbers by hand.
@@ -14,29 +14,32 @@ Every README, requirement document, diagram caption, and the Project Plan and SR
 | Screens in the inventory | **34** numbered entries (numbers 1 to 42; removed numbers are not reused) | [Screen Inventory](../03-Design/Screen-Inventory.md) |
 | Frontend routes | **47** (45 signed-in routes plus Login and Force Password Change): 28 Staff only, 3 Admin only, 14 both | [`AppRoutes.tsx`](../../frontend/src/routes/AppRoutes.tsx) |
 | Roles | **2**: Staff (the School Clinician), Admin (the Principal) | `chk_users_role` in the schema; ADR-029, ADR-038 |
-| Backend modules | **11**: AuditLogViewer, BackupVerification, ClinicVisits, Dashboard, EmergencyResponse, FirstAidChecklist, InventoryTracker, ReportsGeneration, StaffPatients, StudentRecords, UserManagement | [`backend/app/Modules/`](https://github.com/zekuuu/cliniq/tree/backend/backend/app/Modules) |
-| Backend shared services | **10**: AuditLog, Auth, Database, Feedback, FollowUps, Http, Logging, Sequences, Settings, Support | [`backend/app/Shared/`](https://github.com/zekuuu/cliniq/tree/backend/backend/app/Shared) |
+| Backend modules | **11**: AuditLogViewer, BackupVerification, ClinicVisits, Dashboard, EmergencyResponse, FirstAidChecklist, InventoryTracker, ReportsGeneration, StaffPatients, StudentRecords, UserManagement. With no routes of their own: AuditLogViewer, FirstAidChecklist | [`backend/app/Modules/`](../../backend/app/Modules) |
+| Backend shared services | **10**: AuditLog, Auth, Database, Feedback, FollowUps, Http, Logging, Sequences, Settings, Support | [`backend/app/Shared/`](../../backend/app/Shared) |
 | Mock API (sample data layer) | **132** functions, **20** constants, **20** error classes | [`mock-db/api.ts`](../../frontend/src/lib/mock-db/api.ts) |
 | Mock entity types | **37** | [`mock-db/types.ts`](../../frontend/src/lib/mock-db/types.ts) |
 | Database tables (approved schema) | **48** | [`Reference-Schema.sql`](../02-Architecture/Database/Reference-Schema.sql); ADR-057 |
 | Database columns | **462** | same |
 | `CHECK` / `UNIQUE` / foreign keys | **92** / **36** / **96** | same |
 | Constraint test cases | **260** | [`Checks/constraint-tests.sql`](../02-Architecture/Database/Checks/constraint-tests.sql) |
-| Laravel migrations on disk | **48** (one per table) | `backend/app/**/Database/Migrations/` |
-| API contract entries | **126** | [API Contract](../04-Development/API-Contract.md) (`####` endpoint headings) |
-| API routes live in the backend | **3**: `GET /api/health`, `GET /sanctum/csrf-cookie`, `POST /api/session/keepalive` | `backend/routes/api.php` plus Sanctum's CSRF route |
+| Laravel migrations on disk | **50**: 48 create a table (one per table), 2 ship product data (defaults, symptom lists) | `backend/app/**/Database/Migrations/` |
+| API contract entries | **126** headings naming **127** endpoints | [API Contract](../04-Development/API-Contract.md) (`####` endpoint headings) |
+| API routes live in the backend | **127**: BackupVerification 7, ClinicVisits 12, Dashboard 8, EmergencyResponse 10, InventoryTracker 9, Laravel/Sanctum 1, ReportsGeneration 9, Shared/AuditLog 3, Shared/Feedback 2, Shared/FollowUps 3, Shared/Http 2, Shared/Settings 12, StaffPatients 11, StudentRecords 18, UserManagement 20 | `php artisan route:list` |
+| Scheduled jobs | **3**: `cliniq:close-missed-follow-ups` daily at 00:15; `cliniq:backup` daily at 18:00; `cliniq:sync-holidays` hourly from 7:00 to 18:00 | [`backend/routes/console.php`](../../backend/routes/console.php); Windows Task Scheduler runs `php artisan schedule:run` every minute |
 | Frontend test files | **135** | `frontend/src/**/*.test.ts(x)` |
-| Backend test files | **8** | `backend/tests/**/*Test.php` |
-| Lines of code (non-blank) | frontend **64393** (`src`, tests included); backend **4450** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
+| Backend test files | **25** | `backend/tests/**/*Test.php` |
+| Last recorded test run | Sunday, November 15, 2026 — 08:38 PHT at `397e000` | [Test runs](#test-runs) below |
+| Lines of code (non-blank) | frontend **64596** (`src`, tests included); backend **14859** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
 
 ## Test runs
 
-Recorded Tuesday, November 10, 2026 — 18:39 PHT at `8f70297` by `docs-facts.mjs --tests`.
+Recorded Sunday, November 15, 2026 — 08:38 PHT at `397e000` by `docs-facts.mjs --tests`.
 
 | Suite | Command | Result |
 |---|---|---|
 | Frontend (Vitest) | `cd frontend && npm test` | 1185 passed (1185) |
-| Backend (Pest) | `cd backend && composer test` | not run here: no backend code on this branch; run `composer test` on `backend` |
+| Backend (Pest) | `cd backend && composer test` | 228 passed (1464 assertions) |
+| Database (parity with `Reference-Schema.sql`, constraint tests) | `cd backend && php tools/db-checks.php` | tables match (48), columns match (462), indexes match (198), checks match (92), foreign keys match (96); constraint tests 260 of 260 passed, 0 failed; ALL PASS |
 
 A frontend count that moves between runs comes from 5-second timeouts under full-suite load; the failing files pass when run alone. See the VERIFY entry "The full test suite fails more under CPU load" in [Frontend-Issues-and-TODOs](../08-Logs/Frontend-Issues-and-TODOs.md).
 
@@ -45,7 +48,7 @@ A frontend count that moves between runs comes from 5-second timeouts under full
 | Frontend | Version | Backend | Version |
 |---|---|---|---|
 | react | 19.3.0 | php | ^8.3 |
-| react-router | 7.18.4 | laravel/framework | 13.39.0 |
+| react-router | 7.18.4 | laravel/framework | 13.42.0 |
 | typescript | 6.0.3 | laravel/sanctum | 4.3.3 |
 | vite | 8.3.1 | pestphp/pest | 5.3.4 |
 | tailwindcss | 4.3.3 | larastan/larastan | 3.13.2 |
@@ -61,7 +64,7 @@ CLINIQ runs on the clinic PC only, at `http://localhost`: no LAN access, no host
 
 ## Session, lock-out and idle sign-out
 
-Values from [`backend/config/cliniq.php`](https://github.com/zekuuu/cliniq/blob/backend/backend/config/cliniq.php); the idle minutes are settings stored in `system_settings` with these as defaults.
+Values from [`backend/config/cliniq.php`](../../backend/config/cliniq.php); the idle minutes are settings stored in `system_settings` with these as defaults.
 
 | Rule | Value | Decision |
 |---|---|---|

@@ -1,4 +1,4 @@
-This is the longer overview of CLINIQ. The root [README.md](./README.md) is the short, current one, with the full status list (built, decided, not started). Last checked against the code on Tuesday, November 10, 2026 (`main` at 8f70297; backend on the `backend` branch at b51166a). Numbers come from the [Facts sheet](./CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
+This is the longer overview of CLINIQ. The root [README.md](./README.md) is the short, current one, with the full status list (built, decided, not started). Last checked against the code on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in). Numbers come from the [Facts sheet](./CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
 
 <div align="center">
 
@@ -20,7 +20,7 @@ Built for **Mendez Christian Academy** — Asis III, Mendez, Cavite, Philippines
 ![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
 
-![Status](https://img.shields.io/badge/status-frontend%20on%20mock%20data%20%C2%B7%20backend%20foundation-yellow?style=flat-square)
+![Status](https://img.shields.io/badge/status-frontend%20on%20mock%20data%20%C2%B7%20backend%20built%2C%20not%20connected-yellow?style=flat-square)
 ![Deployment](https://img.shields.io/badge/deployment-clinic%20PC%20only-blue?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
@@ -76,7 +76,7 @@ Every feature in this project — down to individual UI decisions like *which sc
 </tr>
 </table>
 
-> Every feature above is built in the frontend and runs on sample (mock) data. The backend has its foundation and its database migrations, but no module endpoints yet, so nothing is saved to a database. What is decided but not built is listed in [README.md](./README.md#decided-not-built).
+> Every feature above is built in the frontend and runs on sample (mock) data. The backend behind it is built too (phases B0 to B10, 127 routes, 228 tests passing) and saves to MariaDB, but the screens are not connected to it yet (ADR-056). What is decided but not built is listed in [README.md](./README.md#decided-not-built).
 
 <br/>
 
@@ -99,9 +99,9 @@ Taken from the running app on sample data (no real names). More, and both roles:
 |---|---|---|
 | 🎨 Frontend | React + TypeScript, built with **Vite** | Modern SPA tooling, static build output — no Node runtime needed in production |
 | 💅 Styling | Tailwind CSS | Utility-first, fast to build a consistent design system on |
-| ⚙️ Backend | Laravel 13 (PHP), foundation built | Batteries-included framework, small-team-friendly |
+| ⚙️ Backend | Laravel 13 (PHP), every module built and tested, not yet connected | Batteries-included framework, small-team-friendly |
 | 🔐 Auth | Laravel Sanctum, SPA cookie mode (ADR-056) | Cookie sessions for the browser app; no API tokens |
-| 🗄️ Database | MariaDB (XAMPP), MySQL-compatible; 48 tables approved, migrations written | XAMPP ships MariaDB; Laravel reaches it through its MySQL driver |
+| 🗄️ Database | MariaDB (XAMPP), MySQL-compatible; 48 tables approved, migrated and checked against the reference schema | XAMPP ships MariaDB; Laravel reaches it through its MySQL driver |
 | 📈 Charts | Chart.js + `react-chartjs-2` | Smaller bundle, Canvas rendering — matters on a 4GB RAM workstation |
 | 🧪 Testing | Vitest + RTL (frontend) · Pest (backend) | |
 | 🏠 Local Dev | XAMPP, standardized across every machine | Matches the client's actual production environment |
@@ -152,7 +152,7 @@ One repository, not three — frontend, backend, and the knowledge base travel t
 
 ## 🚀 Getting Started
 
-> ⚠️ **The frontend runs on its own, on sample (mock) data.** The backend has its foundation and tests but no module endpoints yet, and the two are not connected (ADR-056). The [database design](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md) is approved; its migrations have not been run yet.
+> ⚠️ **The frontend runs on its own, on sample (mock) data.** The backend is built and tested on its own branch, and the two are not connected yet (ADR-056). The [database design](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md) is approved, and its migrations run on MariaDB.
 
 **Prerequisites:** Node.js 22.22.2 or a later 22.x, 24.15 or a later 24.x, or 26 or later · Git · for the backend, XAMPP (PHP 8.3 or later, MariaDB) and Composer
 
@@ -167,12 +167,14 @@ npm run dev        # http://localhost:5173
 npm test           # Vitest + React Testing Library
 npm run build      # type-check and production build
 
-# 3. Backend tests (backend code is on the backend branch; no database needed)
+# 3. Backend (code on the backend branch; needs MariaDB, the databases and .env, see below)
 cd ..
 git switch backend
 cd backend
 composer install
-composer test      # Pest
+php artisan migrate        # with the migration account cliniq_migrate
+composer test              # Pest, on the cliniq_testing database
+php artisan serve          # http://127.0.0.1:8000/api/health
 ```
 
 First-time Windows setup, step by step: [`setup-step.md`](./setup-step.md). Sign-in accounts for the mock data: [`frontend/src/lib/mock-db/README.md`](./frontend/src/lib/mock-db/README.md).
@@ -188,7 +190,7 @@ Frontend and backend are built as two coordinated tracks — frontend leads (per
 | Track | Phases |
 |---|---|
 | 🎨 **Frontend** | `F0` Setup & design tokens → `F1` 5 reference screens → `F2` every remaining screen, module by module → `F3` polish & accessibility *(screens built on mock data; the F3 demo-ready exit check is still open)* |
-| ⚙️ **Backend** | `B0` Scaffold *(done, tested)* → `B1` Database schema *(48 migrations written from the [approved ERD](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md), not yet run on MariaDB)* → `B2` Auth/RBAC → `B3` Audit trail → `B4`–`B10` one phase per module |
+| ⚙️ **Backend** | `B0` Scaffold → `B1` Database schema *(48 migrations from the [approved ERD](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md), run on MariaDB)* → `B2` Auth/RBAC → `B3` Audit trail → `B4`–`B10` one phase per module *(all built and audited; connecting the frontend is the next, separate step)* |
 
 Full phase-by-phase detail, dependencies, and the two Phase F0 decisions (now resolved in ADR-012 and ADR-013): [`CLINIQ-Knowledge-Base/04-Development/Development-Phases.md`](./CLINIQ-Knowledge-Base/04-Development/Development-Phases.md)
 

@@ -1,6 +1,6 @@
 # CLINIQ
 
-Last checked against the code on Tuesday, November 10, 2026 (`main` at 8f70297; backend code on the `backend` branch at b51166a, which has `main` merged in).
+Last checked against the code on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in; `main` itself holds no backend code, ADR-056).
 
 CLINIQ is an intelligent clinic tracking and monitoring system for Mendez Christian Academy. The Project Plan and related documents in this repository were prepared as working reference material during planning, not as the team's official deliverable. The formal Software Requirements Specification is being written separately; this repository supports that work.
 
@@ -20,14 +20,14 @@ CLINIQ replaces the school clinic's paper logbooks and Excel sheets. It is built
 ## Current state
 
 - **Frontend: built, on sample data.** Every screen runs on sample (mock) data in [`frontend/src/lib/mock-db/`](./frontend/src/lib/mock-db/README.md). No real student data is used, and nothing is connected to the backend yet (ADR-056).
-- **Backend: foundation built and tested; database tables written, not yet run.** All backend code is on the `backend` branch (ADR-056); `main` holds only `backend/README.md` and `.env.example`. Laravel with Sanctum in SPA cookie mode, the 11 module folders, configuration, CORS, middleware, one error format, the audit-log contract, the 7-day session limit, the per-role idle sign-out and its keep-alive (phase B0, 85 backend tests pass). Phase B1 wrote 48 Laravel migrations, one per table, but they have not yet been run against MariaDB. There are no models, seeders or module endpoints yet, so nobody can sign in to the backend. Live routes: `GET /api/health`, `GET /sanctum/csrf-cookie`, `POST /api/session/keepalive`.
-- **Database: designed and approved (48 tables, ADR-057), not yet created.** The [ERD](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md), [Data Dictionary](./CLINIQ-Knowledge-Base/02-Architecture/Database/Data-Dictionary.md) and [Reference Schema](./CLINIQ-Knowledge-Base/02-Architecture/Database/Reference-Schema.sql) are approved; 260 constraint test cases check the schema.
+- **Backend: phases B0 to B10 built and tested; not connected to the frontend yet (ADR-056).** All backend code is on the `backend` branch; `main` holds only `backend/README.md` and `.env.example`. Laravel with Sanctum in SPA cookie mode serves 127 routes: every endpoint of the [API Contract](./CLINIQ-Knowledge-Base/04-Development/API-Contract.md), plus the health check and the CSRF cookie. Sign-in with lock-out and password recovery, students and staff patients with imports, visits, excuse letters, follow-ups, incidents, inventory, the Dashboard and calendar, reports, the audit log, accounts and backups all save to MariaDB. 228 backend tests pass; three scheduled jobs (missed follow-ups, the nightly backup, the holiday sync) need Windows Task Scheduler on the clinic PC.
+- **Database: approved (48 tables, ADR-057), migrated and checked.** The 48 migrations run on MariaDB and match the [Reference Schema](./CLINIQ-Knowledge-Base/02-Architecture/Database/Reference-Schema.sql) table for table, column for column (`php tools/db-checks.php`); its 260 constraint test cases pass. The [ERD](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md) and [Data Dictionary](./CLINIQ-Knowledge-Base/02-Architecture/Database/Data-Dictionary.md) describe it. A development seeder loads the frontend's fictional sample data.
 - **Deployment: decided, not done.** CLINIQ will run on the clinic PC only, at `http://localhost`: no LAN access, no hostname, no HTTPS, inbound connections blocked. The Admin account is used on the clinic PC; the clinician sends the Principal the Monthly Report as a PDF (ADR-029, ADR-079). Backups stay local with no cloud copy, and must not stay only on the clinic PC's own disk (ADR-039, ADR-052, ADR-079).
 - **Stack.** React 19, TypeScript 6, Vite 8 and Tailwind CSS 4 for the frontend; Laravel 13 with Sanctum 4 and Pest 5 for the backend; MariaDB from XAMPP for the database. Exact versions: [Facts sheet](./CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md#stack-installed-versions); reasons: [Tech Stack](./CLINIQ-Knowledge-Base/02-Architecture/Tech-Stack.md) and ADR-007.
 
 ### Built (frontend, on sample data)
 
-Checked against the router (`frontend/src/routes/AppRoutes.tsx`) on Tuesday, November 10, 2026. "Both" means Staff and Admin; the Admin reads only.
+Checked against the router (`frontend/src/routes/AppRoutes.tsx`) on Sunday, November 15, 2026. "Both" means Staff and Admin; the Admin reads only.
 
 | Area | Screens | Who can use them |
 |---|---|---|
@@ -49,15 +49,14 @@ Checked against the router (`frontend/src/routes/AppRoutes.tsx`) on Tuesday, Nov
 | Archive | Archived students, staff, reports and audit entries by school year; End and Start school year (ADR-072, ADR-075) | Both (Staff act, Admin reads) |
 | Audit Log | Read-only, filterable | Both (ADR-016, ADR-037) |
 | Accounts | User List, Add / Edit User | Admin (ADR-033) |
-| Backup | Backup status, guided recovery checklist, Back up now, backup locations (add and disable) | Both (ADR-037). Sample records only; no real backup runs yet. |
+| Backup | Backup status, guided recovery checklist, Back up now, backup locations (add and disable) | Both (ADR-037). The screen shows sample records; the backend's real backups are not connected to it yet. |
 | Settings | Idle sign-out minutes per role | Both (Staff edit, Admin reads, ADR-078) |
 
 The Admin does not print (ADR-038). Every printout is a purpose-built A4 document (ADR-026). The Dashboard prints nothing (ADR-074).
 
 ### Decided, not built
 
-- **Everything behind the screens:** real sign-in, saving to the database, the audit log in the database, real backups and the scheduler. These are backend phases B2 to B10 in [Development Phases](./CLINIQ-Knowledge-Base/04-Development/Development-Phases.md#backend-phases).
-- **Connecting the frontend to the backend** (after the backend phases; ADR-056).
+- **Connecting the frontend to the backend.** The backend phases are done ([Development Phases](./CLINIQ-Knowledge-Base/04-Development/Development-Phases.md#backend-phases)); switching the screens from sample data to the API is a separate step, still to be decided (ADR-056).
 - **The clinic PC set-up** of ADR-079: Windows password and screen lock, BitLocker on Windows Pro, Windows Firewall rule, backups kept away from the room, one Staff account per person.
 
 ### Deferred
@@ -67,7 +66,7 @@ The Admin does not print (ADR-038). Every printout is a purpose-built A4 documen
 
 ## How to run it
 
-Windows with XAMPP first. Git and Node.js 22.22.2 or a later 22.x, 24.15 or a later 24.x, or 26 or later are needed for the frontend; PHP 8.3 or later (XAMPP's) and Composer for the backend. Every command below was run on Tuesday, November 10, 2026.
+Windows with XAMPP first. Git and Node.js 22.22.2 or a later 22.x, 24.15 or a later 24.x, or 26 or later are needed for the frontend; PHP 8.3 or later (XAMPP's) and Composer for the backend. Every command below was run on Sunday, November 15, 2026.
 
 **Frontend** (runs on its own, on sample data; no PHP or database needed):
 
@@ -81,18 +80,19 @@ npm run lint       # ESLint
 npm run build      # type-check and production build
 ```
 
-**Backend** (on the `backend` branch; tests need no database):
+**Backend** (on the `backend` branch; needs MariaDB from XAMPP running, the `cliniq` and `cliniq_testing` databases, the two accounts `cliniq_migrate` and `cliniq_app`, and a `.env`; see [Environment Setup](./CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md) and [backend/README.md](./backend/README.md)):
 
 ```bash
 git switch backend
 cd backend
 composer install
-composer test               # Pest
-composer check              # Pint, Larastan and Pest
-php artisan route:list      # the 3 live routes
+php artisan migrate         # with cliniq_migrate in .env, then switch back to cliniq_app
+php artisan db:seed --class="App\Shared\Database\DevelopmentSeeder"   # development only, empty database
+php artisan serve           # http://127.0.0.1:8000/api/health
+composer check              # Pint, Larastan and Pest (needs the cliniq_testing database)
+php tools/db-checks.php     # schema parity with Reference-Schema.sql and the 260 constraint tests
+php artisan route:list      # the 127 live routes
 ```
-
-Creating the database, its two accounts, `.env` and running the migrations: [Environment Setup](./CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md) and [backend/README.md](./backend/README.md). There is no seeder yet; the sample data lives only in the frontend.
 
 **Documentation checks** (from the repository root):
 
