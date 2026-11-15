@@ -8,7 +8,7 @@ The CLINIQ browser app: React + TypeScript, built with Vite and styled with Tail
 
 ## Current state
 
-**Built (on sample data).** Every screen runs on the shared mock-data layer in `src/lib/mock-db/`. The backend is built (phases B0 to B10, on the `backend` branch), but nothing here calls it yet: there is no API client and no Sanctum sign-in in the frontend (ADR-056). The screens, and the features decided but not built yet, are listed in the root [README.md](../README.md#current-state).
+**Built; runs on sample data or on the real API (ADR-080).** Every screen still runs on the shared mock-data layer in `src/lib/mock-db/` by default, and that layer is kept. Since Sunday, November 15, 2026 (`feat/connect-frontend`) each module can run on the Laravel API instead, behind a switch: screens import `src/lib/data`, which sends each call to the mock or to its HTTP twin in `src/lib/api/http/`. The screens, and the features decided but not built yet, are listed in the root [README.md](../README.md#current-state).
 
 ## How to run
 
@@ -20,6 +20,17 @@ npm run dev        # http://localhost:5173
 npm test           # Vitest + React Testing Library
 npm run build      # type-check and production build
 ```
+
+### Run on the real API (ADR-080)
+
+1. Start the API from `backend/` (development database `cliniq`, seeded with the development seeder): `php artisan serve` (port 8000). Its `.env` needs `CORS_ALLOWED_ORIGINS=http://localhost:5173` and `SANCTUM_STATEFUL_DOMAINS=localhost:5173`.
+2. Set the mode, then start this server with `npm run dev`. Three ways, the first one wins:
+   - **Everything on the API:** `VITE_API_MODE=api` (or `mock` to force the mock everywhere).
+   - **Module by module:** leave `VITE_API_MODE` empty and set `VITE_API_MODE_<MODULE>=api` for `AUTH`, `STUDENTS`, `STAFF_PATIENTS`, `SCHOOL_YEARS`, `VISITS`, `INCIDENTS`, `INVENTORY`, `DASHBOARD`, `REPORTS`, `USERS`, `BACKUP`, `AUDIT`, `SETTINGS`, `ISSUE_REPORTS`, `REFERENCE`. A module on the API needs its dependencies on the API too (every module needs `AUTH`); a red development banner names a missing one.
+   - **Nothing set:** every module on the mock, as before.
+3. Put the values in `frontend/.env.local` (or the shell), with `VITE_API_URL=http://localhost:8000/api` for the two development servers.
+
+A development-only line at the bottom right shows each module's mode, and the console prints a table at start-up. Tests always run on the mock. A production build (`npm run build`) served beside the API on the clinic PC needs no setting: the API is at the relative `/api` (ADR-079); build it with `VITE_API_MODE=api`.
 
 Node.js 22.22.2 or a later 22.x, 24.15 or a later 24.x, or 26 or later. First-time Windows setup: [../setup-step.md](../setup-step.md). Sign-in accounts: [src/lib/mock-db/README.md](./src/lib/mock-db/README.md). Preview switches: [../URL-Parameters.md](../URL-Parameters.md).
 

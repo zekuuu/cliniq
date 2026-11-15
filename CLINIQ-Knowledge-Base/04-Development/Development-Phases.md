@@ -134,7 +134,7 @@ Per ADR-006, frontend leads and backend follows *per feature*, not "all frontend
 | — | B1 (schema) | Built: the 48 migrations run on MariaDB and match the approved ERD (ADR-057); it never blocked the frontend, which runs on mock data |
 | — | B2, B3 (auth, audit) | Built before the module APIs, as planned; F2 had finished on mocks first |
 | F1 (5 reference screens) | — | Runs entirely on mock data — this is the point; client feedback happens before backend logic is finalized |
-| F2, module by module | B4–B10, matching module | Built and tested on both sides, separately. **Next:** wire each screen to its real endpoint instead of the mock, a separate step that needs its own decision (ADR-056) |
+| F2, module by module | B4–B10, matching module | Built and tested on both sides. **Connected (ADR-080, Sunday, November 15, 2026, `feat/connect-frontend`):** every module (AUTH, STUDENTS, STAFF_PATIENTS, SCHOOL_YEARS, VISITS, INCIDENTS, INVENTORY, DASHBOARD, REPORTS, USERS, BACKUP, AUDIT, SETTINGS, ISSUE_REPORTS, REFERENCE) can run on the real API behind the mock/API switch, and each was checked in a real browser against the running API (S1 to S8, [run report](../08-Logs/Connect-Frontend-Nov15/REPORT.md)). The mock stays the default and the tests' base |
 | F3 (polish) | — | No backend equivalent; purely frontend quality |
 
 ---

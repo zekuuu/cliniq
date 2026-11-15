@@ -22,7 +22,7 @@ Last checked against the code on Sunday, November 15, 2026 (the `backend` branch
 | [`03-Design`](03-Design/) | Design system, screen inventory, reference screens, screenshots |
 | [`04-Development`](04-Development/) | Phases, loop manuals, API contract, environment set-up, conventions, `tools/` |
 | [`05-Testing`](05-Testing/) | Test strategy and test cases |
-| [`06-Decisions`](06-Decisions/) | ADR-001 to ADR-079, their summary and index |
+| [`06-Decisions`](06-Decisions/) | ADR-001 to ADR-080, their summary and index |
 | [`07-AI-Agents`](07-AI-Agents/) | Agent workflow and source-of-truth order |
 | [`08-Logs`](08-Logs/) | Changelogs, issue logs, session logs, and the reports of the two overnight backend runs ([`Overnight-Run-Nov9`](08-Logs/Overnight-Run-Nov9/), [`Overnight-Run-Nov10`](08-Logs/Overnight-Run-Nov10/), which built B1 to B10); history, not current truth |
 | [`09-References`](09-References/) | The five canonical documents, privacy policy, external references |

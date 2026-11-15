@@ -30,7 +30,7 @@ Last checked against the code on Sunday, November 15, 2026 (the `backend` branch
 | [`03-Design`](../03-Design/) | Design system, screen inventory, [screenshots](../03-Design/assets/screens/) |
 | [`04-Development`](../04-Development/) | Phases, API contract, set-up, the build manuals |
 | [`05-Testing`](../05-Testing/) | Test strategy and where the tests are |
-| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-079 and their indexes |
+| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-080 and their indexes |
 | [`09-References`](../09-References/) | Canonical documents, Privacy Policy |
 | `frontend/`, `backend/` | The code (backend code is on the `backend` branch) |
 

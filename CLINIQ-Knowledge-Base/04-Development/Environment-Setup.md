@@ -43,6 +43,12 @@ Do these steps in order. They only change XAMPP's own configuration files.
 3. Harden MariaDB, once: see "MariaDB hardening" below.
 4. Restart Apache and MySQL from the XAMPP Control Panel. Check with `C:\xampp\php\php.exe -m`: the list must include `intl`, `zip`, `pdo_mysql`, `openssl`, `mbstring`, `fileinfo` and `bcmath`.
 
+## Run the frontend on the API (development)
+
+Added Sunday, November 15, 2026 — 23:26 PHT for ADR-080. Two servers: the API from `backend/` with `php artisan serve` (port 8000), the frontend from `frontend/` with `npm run dev` (port 5173). The backend `.env` needs `CORS_ALLOWED_ORIGINS=http://localhost:5173` and `SANCTUM_STATEFUL_DOMAINS=localhost:5173`; the frontend reads `VITE_API_URL=http://localhost:8000/api` and the mode from `VITE_API_MODE` (all modules) or `VITE_API_MODE_<MODULE>` (one module; see `frontend/README.md`). With nothing set, the frontend runs on the mock. Run Vitest from a `D:` path, not `d:` (a lowercase drive letter makes it load its setup twice and fail).
+
+**The clinic-PC build.** Build the frontend with `VITE_API_MODE=api` and no `VITE_API_URL`: it then calls the relative `/api`, served beside it at `http://localhost` (see "Clinic PC only" below), with no CORS needed.
+
 ## MariaDB hardening
 
 Do this once on Zean's own machine. XAMPP's MariaDB ships listening on the network, with a blank `root` password. Run the SQL with `C:\xampp\mysql\bin\mysql.exe -u root`.
