@@ -8,6 +8,7 @@ use App\Shared\AuditLog\AuditEvent;
 use App\Shared\AuditLog\AuditLogger;
 use App\Shared\AuditLog\AuditTarget;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
@@ -131,6 +132,24 @@ it('has no route that updates or deletes an audit entry', function () {
 });
 
 it('refuses UPDATE and DELETE on audit_logs for the app account', function () {
-    // The test connection is the migration account; the cliniq_app grant cannot be shown from here.
-    // Run notes Nov10, ANSWERS AND DECISIONS: "append-only grant test".
-})->skip('cliniq_app is not reachable from the test connection; see Overnight-Run-Nov10/NOTES.md');
+    // Reads cliniq_app's grant on the `cliniq` database from the grant tables (read only; nothing in
+    // `cliniq` is touched). Needs, once, as root:
+    //   GRANT SELECT ON mysql.global_priv TO 'cliniq_migrate'@'localhost';
+    //   GRANT SELECT ON mysql.db TO 'cliniq_migrate'@'localhost';
+    //   GRANT SELECT ON mysql.tables_priv TO 'cliniq_migrate'@'localhost';
+    try {
+        $global = DB::selectOne("SELECT JSON_VALUE(Priv, '$.access') AS access FROM mysql.global_priv WHERE User = 'cliniq_app' AND Host = 'localhost'");
+        $db = DB::selectOne("SELECT Select_priv, Insert_priv, Update_priv, Delete_priv FROM mysql.db WHERE User = 'cliniq_app' AND Host = 'localhost' AND Db = 'cliniq'");
+        $tables = collect(DB::select("SELECT Table_name, Table_priv FROM mysql.tables_priv WHERE User = 'cliniq_app' AND Host = 'localhost' AND Db = 'cliniq'"))
+            ->mapWithKeys(fn (object $r): array => [$r->Table_name => explode(',', (string) $r->Table_priv)]);
+    } catch (QueryException) {
+        $this->markTestSkipped('The test account cannot read the grant tables; run the three GRANT SELECT lines above as root.');
+    }
+
+    expect($global)->not->toBeNull('cliniq_app@localhost does not exist')
+        ->and((int) $global->access & (4 | 8))->toBe(0); // no global UPDATE (4) or DELETE (8)
+    expect($db)->not->toBeNull()
+        ->and([$db->Select_priv, $db->Insert_priv, $db->Update_priv, $db->Delete_priv])->toBe(['Y', 'Y', 'N', 'N']);
+    expect($tables->get('audit_logs', []))->not->toContain('Update')->not->toContain('Delete');
+    expect($tables->filter(fn (array $p): bool => in_array('Update', $p, true) && in_array('Delete', $p, true))->count())->toBe(47);
+});
