@@ -59,13 +59,13 @@ it('lists newest first with the actor, a masked LRN for students and the Staff N
 
     foreach ([$this->staff, $this->admin] as $viewer) {
         $res = signIn($viewer)->getJson(auditLog())->assertOk();
-        expect($res->json('rows.0.target.label'))->toBe('T-0042')
-            ->and($res->json('rows.0.dateTime'))->toBe('2026-11-06T11:00:00+08:00')
-            ->and($res->json('rows.1.target.label'))->not->toBe('000000250009')
-            ->and($res->json('rows.1.target.label'))->toContain('0009')
-            ->and($res->json('rows.1.target.studentId'))->toBe((string) $this->studentId)
-            ->and($res->json('rows.1.userName'))->toBe('Nurse Joy')
-            ->and($res->json('rows.1.summary'))->toBe('Updated allergies')
+        expect($res->json('data.rows.0.target.label'))->toBe('T-0042')
+            ->and($res->json('data.rows.0.dateTime'))->toBe('2026-11-06T11:00:00+08:00')
+            ->and($res->json('data.rows.1.target.label'))->not->toBe('000000250009')
+            ->and($res->json('data.rows.1.target.label'))->toContain('0009')
+            ->and($res->json('data.rows.1.target.studentId'))->toBe((string) $this->studentId)
+            ->and($res->json('data.rows.1.userName'))->toBe('Nurse Joy')
+            ->and($res->json('data.rows.1.summary'))->toBe('Updated allergies')
             ->and($res->getContent())->not->toContain('Ana')->not->toContain('Reyes')->not->toContain('000000250009');
     }
     expect(DB::table('audit_logs')->count())->toBe(2); // reading writes nothing (ADR-016)
@@ -77,11 +77,20 @@ it('filters by date range, user, action and target bucket', function () {
     logAt('2026-11-03 08:00:00', $this->admin, AuditAction::Login, null, null, ['label' => 'Signed in']);
 
     $this->actingAs($this->staff);
-    expect($this->getJson(auditLog())->json('rows'))->toHaveCount(2)
-        ->and($this->getJson(auditLog(['userId' => $this->admin->id]))->json('rows.0.summary'))->toBe('Signed in')
-        ->and($this->getJson(auditLog(['actionTypes' => ['login']]))->json('rows'))->toHaveCount(1)
-        ->and($this->getJson(auditLog(['targetTypes' => ['inventory']]))->json('rows.0.target'))
+    expect($this->getJson(auditLog())->json('data.rows'))->toHaveCount(2)
+        ->and($this->getJson(auditLog(['userId' => $this->admin->id]))->json('data.rows.0.summary'))->toBe('Signed in')
+        ->and($this->getJson(auditLog(['actionTypes' => ['login']]))->json('data.rows'))->toHaveCount(1)
+        ->and($this->getJson(auditLog(['targetTypes' => ['inventory']]))->json('data.rows.0.target'))
         ->toMatchArray(['type' => 'inventory', 'recordType' => 'inventory-restock', 'kind' => 'Inventory', 'label' => 'Paracetamol']);
+});
+
+it('answers in the { data } envelope, with meta beside it when paged (contract Format, ADR-080)', function () {
+    logAt('2026-11-02 08:00:00', $this->staff, AuditAction::Create, AuditTarget::Visit, '1');
+
+    $this->actingAs($this->staff)->getJson(auditLog())
+        ->assertOk()->assertJsonStructure(['data' => ['rows', 'users']])->assertJsonMissingPath('rows');
+    $this->getJson(auditLog(['page' => 1, 'perPage' => 25]))
+        ->assertOk()->assertJsonPath('meta.total', 1)->assertJsonCount(1, 'data.rows');
 });
 
 it('rejects bad filters with 422 and a signed-out request with 401', function () {
@@ -96,7 +105,7 @@ it('gives Staff the full LRN for the printout and records the print; the Admin g
         ['fields' => ['allergies'], 'student' => (string) $this->studentId]);
 
     $this->actingAs($this->staff)->getJson(auditLog(['fullLrn' => 1]))
-        ->assertOk()->assertJsonPath('rows.0.target.label', '000000250009');
+        ->assertOk()->assertJsonPath('data.rows.0.target.label', '000000250009');
     $print = DB::table('audit_logs')->where('action_type', 'print')->sole();
     expect($print->target_label)->toBe('Audit Log');
 

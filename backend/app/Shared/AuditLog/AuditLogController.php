@@ -111,11 +111,12 @@ final class AuditLogController
 
         [$rows, $meta] = Paging::apply($request, $rows);
 
-        return response()->json(($meta === null ? [] : ['meta' => $meta]) + [
+        // `{ data: AuditLogList, meta? }` like every other success (contract "Format"; fixed for the frontend switch-over, ADR-080).
+        return response()->json(['data' => [
             'rows' => $rows,
             'users' => DB::table('users')->orderBy('name')->get(['id', 'name'])
                 ->map(fn (\stdClass $u): array => ['id' => self::col($u, 'id'), 'name' => self::col($u, 'name')]),
-        ]);
+        ]] + ($meta === null ? [] : ['meta' => $meta]));
     }
 
     public function view(Request $request): Response
