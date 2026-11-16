@@ -105,7 +105,7 @@ Rendered images live in `Diagrams/` (PNG to view, SVG to zoom, `ERD-Overview.dot
 | `Diagrams/ERD-3.5-Inventory.png` | Items, symptom tags, medicines given, stock ledger |
 | `Diagrams/ERD-3.6-Access-and-Operations.png` | Users (TOTP columns, no email), recovery codes, school years, settings, calendar, Sports Reports, backups, audit |
 
-The five module images (3.2 to 3.6) were regenerated Tuesday, November 10, 2026 — 17:27 PHT from the Mermaid blocks below, which are now their source; the overview's SVG and PNG were regenerated from `ERD-Overview.dot` at the same time. Command: `npm run docs:diagrams` (see the [diagram index](Diagrams/README.md)).
+The five module images (3.2 to 3.6) were regenerated Tuesday, November 10, 2026 — 17:27 PHT (3.2, 3.5 and 3.6 again Saturday, November 14, 2026 — 23:00 PHT, with Chrome) from the Mermaid blocks below, which are now their source; the overview's SVG and PNG were regenerated from `ERD-Overview.dot` at the same time. Command: `npm run docs:diagrams` (see the [diagram index](Diagrams/README.md)).
 
 ### 3.1 Overview (all 48 tables)
 
