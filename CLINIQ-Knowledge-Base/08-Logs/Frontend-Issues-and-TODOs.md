@@ -17,14 +17,14 @@
 
 ## Open work at a glance
 
-Open: FIX 4 · AUDIT 0 · DOC 31 · DECIDE 1 · LATER 13 | Notes: NOTE 77 · VERIFY 30 | Done: 492 (all in `Issues-Done-Archive.md`) (recounted Tuesday, November 10, 2026 — 18:38 PHT: the demo accounts' real names, added and resolved the same day)
+Open: FIX 4 · AUDIT 0 · DOC 31 · DECIDE 1 · LATER 14 | Notes: NOTE 77 · VERIFY 29 | Done: 494 (all in `Issues-Done-Archive.md`) (recounted Monday, November 16, 2026 — 22:10 PHT: follow-ups of the connect run closed 1 DOC and 1 LATER)
 
 **Open `FIX` items:** Import page empty steps fail colour contrast (Pager field, history scroll, report link and name split); keyboard-shortcut tips fail colour contrast (Professor's consultation, November 6: Parts 2 to 4); close "Backend: email password reset" on `main`, and the three old failing frontend tests (Moved from Backend-Issues-and-TODOs).
 
 - **AUDIT** (0): none. The final audit of the frontend clean-up, Part 3, superseded all ten.
 - **DOC** (31): Professor's consultation, November 6: Parts 2 to 4; Professor's consultation, November 6: Part 1; Staff list import (ADR-069); Adjust Stock note optional (ADR-068); Staff record status (ADR-067); Incident Stage 2 optional (ADR-065); Narrow page width 832px; Pager field, history scroll, report link and name split; Frontend review round 2, Parts 2 and 3; Frontend review round 2, Part 1; Groupmate system review; Professor consultation and team meeting, October 16; Meeting with the Principal and the clinic, around October 14: what we learned and what is still open; Panel-style system review; Feedback from Sir Mina and Sir Rey; Decisions sheet answers; Decisions sheet follow-up answers; Canonical documents updated to the ADRs; Moved from Backend-Issues-and-TODOs
 - **DECIDE** (1): Open decisions, waiting on someone outside the dev team
-- **LATER** (13): Reported UI/UX follow-ups; Open FIX and styling DECIDE sweep; Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); Professor consultation and team meeting, October 16; System review fixes; Birthdate instead of the student's own number; Moved from Backend-Issues-and-TODOs
+- **LATER** (14): Reported UI/UX follow-ups; Open FIX and styling DECIDE sweep; Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); Professor consultation and team meeting, October 16; System review fixes; Birthdate instead of the student's own number; Moved from Backend-Issues-and-TODOs; Connect the frontend to the API (ADR-080)
 
 ---
 
@@ -566,3 +566,8 @@ Frontend entries that were logged in the backend file, moved here unchanged, exc
 ## Docs sync for the SRS and Project Plan — Tuesday, November 10, 2026 — 16:55 PHT
 
 All entries in this section are resolved. They are in [Issues-Done-Archive.md](Issues-Done-Archive.md).
+
+## Connect the frontend to the API (ADR-080) — Sunday, November 15, 2026 — 23:25 PHT
+
+- [ ] **[LATER]** **The app shell re-reads the account, the idle limit and the reminders on every route** (logged Sunday, November 15, 2026 — 23:25 PHT). On the API that is several requests per screen; a scripted walk through 16 screens in 40 seconds reached the API's limit of 120 requests a minute (429). A person does not move that fast; keep these reads for the sign-in session if it ever shows. Session: [S8](Agent-Sessions/2026-11-15-frontend-connect-s8-whole-app-on-the-api.md)
+
