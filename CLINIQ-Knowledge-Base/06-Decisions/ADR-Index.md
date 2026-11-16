@@ -1,6 +1,6 @@
 # ADR index
 
-Every decision record, one line each. Generated Tuesday, November 10, 2026 — 17:19 PHT by `npm run docs:adrs` from the ADR headers and [Decisions-Summary.md](Decisions-Summary.md); do not edit by hand. A later dated note at the top of an ADR changes what it says, and a later ADR can replace an earlier one: always read the record itself before quoting it. Plain-language summaries: [Decisions-Summary.md](Decisions-Summary.md). What changed since Project Plan revision 2.8: [Changes-Since-Project-Plan-2.8.md](Changes-Since-Project-Plan-2.8.md).
+Every decision record, one line each. Generated Sunday, November 15, 2026 — 23:23 PHT by `npm run docs:adrs` from the ADR headers and [Decisions-Summary.md](Decisions-Summary.md); do not edit by hand. A later dated note at the top of an ADR changes what it says, and a later ADR can replace an earlier one: always read the record itself before quoting it. Plain-language summaries: [Decisions-Summary.md](Decisions-Summary.md). What changed since Project Plan revision 2.8: [Changes-Since-Project-Plan-2.8.md](Changes-Since-Project-Plan-2.8.md).
 
 | ADR | Title | Status | Date | Effect in one line | Changed |
 |---|---|---|---|---|---|
@@ -83,3 +83,4 @@ Every decision record, one line each. Generated Tuesday, November 10, 2026 — 1
 | [77](ADR-077-Admin-Reports-Month-List-View-Only.md) | The Admin's Reports page is a month drop-down with the monthly reports, view only | Accepted | November 08, 2026 | The Admin sees a Report month drop-down (the current school year, newest first, then earlier recorded years) and the four monthly reports as a list. | — |
 | [78](ADR-078-Staff-Idle-Signout-Idle-Times-Are-Settings.md) | Staff are signed out after idle time (default 60 minutes); idle times are settings | Accepted | November 08, 2026 | Both roles are signed out after idle time: Staff after `idleSignoutMinutesStaff` (60) and the Admin after `idleSignoutMinutesAdmin` (30), each 10 to 240 whole minutes. | — |
 | [79](ADR-079-Clinic-PC-Only-Principal-Gets-Monthly-PDF.md) | CLINIQ is deployed on the clinic PC only; the Principal gets a monthly PDF | Accepted | November 09, 2026 | CLINIQ runs on the clinic PC only, at `http://localhost`: no LAN access, no fixed address or hostname, no HTTPS, inbound connections blocked by Windows Firewall, nothing forwarded from the router. | — |
+| [80](ADR-080-Frontend-Connects-To-The-API-Behind-A-Mode-Switch-Mock-Stays.md) | The frontend connects to the API behind a global and per-module switch; the mock layer stays | Accepted | November 15, 2026 |  | — |
