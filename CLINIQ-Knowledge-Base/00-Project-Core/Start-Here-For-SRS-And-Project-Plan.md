@@ -1,6 +1,6 @@
 # Start Here for the SRS and Project Plan
 
-Last checked against the code on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
+Last checked against the code on Tuesday, November 17, 2026 for the changes of the follow-ups and load run only (`feat/connect-frontend`, uncommitted; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
 
 ## CLINIQ in five lines
 

@@ -1,6 +1,6 @@
 # frontend
 
-Last checked against the code on Sunday, November 15, 2026 (the `backend` branch at `397e000`; `frontend/` unchanged since `6a94e3f`).
+Last checked against the code on Tuesday, November 17, 2026 for the changes of the follow-ups and load run only (`feat/connect-frontend`, uncommitted; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`; `frontend/` unchanged since `6a94e3f`).
 
 ## Purpose
 

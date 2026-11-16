@@ -1,6 +1,6 @@
 # CLINIQ Knowledge Base
 
-Last checked against the code on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in).
+Last checked against the code on Tuesday, November 17, 2026 for the changes of the follow-ups and load run only (`feat/connect-frontend`, uncommitted; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in).
 
 **Current state:** the browser app (frontend) is built and runs on sample (mock) data; the backend is built and tested, phases B0 to B10 (127 routes, 228 tests passing), and its 48 migrations run on MariaDB and match the approved database design (ADR-057); the two are not connected yet (ADR-056). CLINIQ will run on the clinic PC only (ADR-079). The full status list is in the root [README.md](../README.md#current-state).
 

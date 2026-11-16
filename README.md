@@ -1,6 +1,6 @@
 # CLINIQ
 
-Last checked against the code on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in; `main` itself holds no backend code, ADR-056).
+Last checked against the code on Tuesday, November 17, 2026 for the changes of the follow-ups and load run only (`feat/connect-frontend`, uncommitted; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in; `main` itself holds no backend code, ADR-056).
 
 CLINIQ is an intelligent clinic tracking and monitoring system for Mendez Christian Academy. The Project Plan and related documents in this repository were prepared as working reference material during planning, not as the team's official deliverable. The formal Software Requirements Specification is being written separately; this repository supports that work.
 

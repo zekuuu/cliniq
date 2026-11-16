@@ -1,6 +1,6 @@
 # backend
 
-Last checked against the code on Sunday, November 15, 2026 (the `backend` branch at `397e000`). On `main` this folder holds only this README and `.env.example`; the code lives on this `backend` branch (ADR-056). Numbers: [Facts sheet](../CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
+Last checked against the code on Tuesday, November 17, 2026 for the changes of the follow-ups and load run only (`feat/connect-frontend`, uncommitted; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). On `main` this folder holds only this README and `.env.example`; the code lives on this `backend` branch (ADR-056). Numbers: [Facts sheet](../CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
 
 ## Purpose
 
@@ -65,6 +65,8 @@ php tools/db-checks.php   # schema parity with Reference-Schema.sql, then the 26
 ```
 
 Tests read `.env.testing` (the `cliniq_testing` database, migration account) when it exists, else `.env.example`. `db-checks.php` uses the same file and creates, then drops, the scratch databases `cliniq_check_ref` and `cliniq_check_mig`.
+
+**Load testing** (added Tuesday, November 17, 2026 — 05:20 PHT): `tools/load/` builds a fictional 900-student school with up to five years of history in one deterministic command, checks it, and measures the API on Apache. See [`tools/load/README.md`](tools/load/README.md). `composer test` empties `cliniq_testing`, so rebuild the load data afterwards or run Pest with `DB_DATABASE=cliniq_check_pest`.
 
 ## Structure
 
