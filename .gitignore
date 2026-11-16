@@ -6,6 +6,7 @@ backend/storage/logs/*
 backend/storage/framework/cache/*
 backend/storage/framework/sessions/*
 backend/storage/framework/views/*
+backend/storage/load/
 backend/bootstrap/cache/*
 !backend/storage/logs/.gitkeep
 

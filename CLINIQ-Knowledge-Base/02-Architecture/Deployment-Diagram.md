@@ -27,4 +27,4 @@ flowchart LR
     BROWSER -.->|print or Save as PDF| PRINCIPAL
 ```
 
-What is built today (Sunday, November 15, 2026, code at `397e000`): the frontend, on sample data, and the backend, phases B0 to B10, with its three scheduled jobs (the 18:00 backup, the 00:15 missed follow-ups and the holiday sync); the two are not connected yet (ADR-056). During development the frontend runs on Vite's dev server (`http://localhost:5173`) and the backend separately; see [System Architecture](System-Architecture.md).
+What is built today (Tuesday, November 17, 2026, code at `759781e` on `feat/connect-frontend`): the frontend, on sample data by default, and the backend, phases B0 to B10, with its three scheduled jobs (the 18:00 backup, the 00:15 missed follow-ups and the holiday sync); the frontend runs on the backend behind a mock/API switch (ADR-080). Neither the backend nor the connection is merged into `main` yet (ADR-056). During development the frontend runs on Vite's dev server (`http://localhost:5173`) and the backend separately; see [System Architecture](System-Architecture.md).

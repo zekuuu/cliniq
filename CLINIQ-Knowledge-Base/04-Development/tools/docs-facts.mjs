@@ -35,14 +35,37 @@ function walk(dir, keep, out = []) {
 }
 const lines = (files) => files.reduce((n, f) => n + readFileSync(f, 'utf8').split('\n').filter((l) => l.trim()).length, 0)
 
-// Backend source: the working tree when backend code is here (the `backend` branch), otherwise the
-// `backend` branch read through git without checking it out (`main` carries only backend/README.md, ADR-056).
-const BE_LOCAL = existsSync(join(ROOT, 'backend', 'app'))
-const BE_REF = BE_LOCAL ? null : ['backend', 'origin/backend'].find((r) => { try { sh(`git rev-parse --verify --quiet ${r}`); return true } catch { return false } })
-const beRead = (p) => (BE_LOCAL ? read(p) : sh(`git show ${BE_REF}:${p}`))
-const beFiles = (prefix) => (BE_LOCAL ? walk(join(ROOT, prefix), () => true).map((p) => relative(ROOT, p).replace(/\\/g, '/')) : sh(`git ls-tree -r --name-only ${BE_REF} -- ${prefix}`).split('\n').filter(Boolean))
-const beDirs = (prefix) => BE_LOCAL ? readdirSync(join(ROOT, prefix)).filter((n) => statSync(join(ROOT, prefix, n)).isDirectory()).sort() : [...new Set(beFiles(prefix).map((p) => p.slice(prefix.length + 1).split('/')[0]).filter((x) => x && !x.includes('.')))].sort()
-const beLines = (files) => (BE_LOCAL ? lines(files.map((p) => join(ROOT, p))) : files.reduce((n, p) => n + beRead(p).split('\n').filter((l) => l.trim()).length, 0))
+// Code sources. Each side (backend, frontend) is read from the newest remote branch tip that contains its
+// folder (`backend/app`, `frontend/src`), through git, without checking anything out or merging: `main` holds
+// no backend code and not the newest frontend (ADR-056, ADR-080). The working tree is read instead when it has
+// the folder and HEAD already contains that newest tip (for example on the newest branch itself).
+// `git fetch origin` first, or the tips are as old as the last fetch.
+const isAncestor = (a, b) => { try { sh(`git merge-base --is-ancestor ${a} ${b}`); return true } catch { return false } }
+const TIPS = sh('git for-each-ref --sort=-committerdate --format=%(refname:short) refs/remotes/origin').split('\n').filter((r) => r && r !== 'origin' && r !== 'origin/HEAD')
+function source(dir) {
+  const tip = TIPS.find((r) => { try { return sh(`git ls-tree --name-only ${r} -- ${dir}`) !== '' } catch { return false } })
+  const local = existsSync(join(ROOT, dir)) && (!tip || isAncestor(tip, 'HEAD'))
+  const ref = local ? null : tip
+  if (!local && !ref) throw new Error(`docs-facts: no working-tree copy and no remote branch holds ${dir}`)
+  const sha = local ? null : sh(`git rev-parse --short ${ref}`)
+  const s = {
+    local,
+    ref,
+    sha,
+    read: (p) => (local ? read(p) : sh(`git show ${ref}:${p}`)),
+    has: (p) => (local ? has(p) : sh(`git ls-tree --name-only ${ref} -- ${p}`) !== ''),
+    files: (prefix) => (local ? walk(join(ROOT, prefix), () => true).map((p) => relative(ROOT, p).replace(/\\/g, '/')) : sh(`git ls-tree -r --name-only ${ref} -- ${prefix}`).split('\n').filter(Boolean)),
+    label: local ? 'this working tree' : `\`${ref.replace(/^origin\//, '')}\` at \`${sha}\` (${manilaNow(new Date(sh(`git log -1 --format=%cI ${ref}`)))}; read through git, not merged into this branch)`,
+  }
+  s.dirs = (prefix) => (local ? readdirSync(join(ROOT, prefix)).filter((n) => statSync(join(ROOT, prefix, n)).isDirectory()).sort() : [...new Set(s.files(prefix).map((p) => p.slice(prefix.length + 1).split('/')[0]).filter((x) => x && !x.includes('.')))].sort())
+  s.lines = (files) => (local ? lines(files.map((p) => join(ROOT, p))) : files.reduce((n, p) => n + s.read(p).split('\n').filter((l) => l.trim()).length, 0))
+  return s
+}
+const BE = source('backend/app')
+const FE = source('frontend/src')
+const BE_LOCAL = BE.local
+const beRead = BE.read
+const beFiles = BE.files
 
 export function computeFacts() {
   const f = {}
@@ -61,9 +84,9 @@ export function computeFacts() {
   const nums = [...inv.matchAll(/^(\d+)\. \*\*/gm)].map((m) => +m[1])
   f.screens = nums.length
   f.screenMax = Math.max(...nums)
-  const routesSrc = read('frontend/src/routes/AppRoutes.tsx')
+  const routesSrc = FE.read('frontend/src/routes/AppRoutes.tsx')
   const block = routesSrc.slice(routesSrc.indexOf('const APP_ROUTES'), routesSrc.indexOf('function RouteLoading'))
-  const pathsSrc = read('frontend/src/routes/paths.ts')
+  const pathsSrc = FE.read('frontend/src/routes/paths.ts')
   const resolve = (expr) => {
     const lit = expr.match(/^'([^']+)'$/)
     if (lit) return lit[1]
@@ -82,18 +105,19 @@ export function computeFacts() {
   f.routesBoth = f.routes.filter((r) => r.roles.length === 2).length
 
   // Modules and roles
-  f.backendSource = BE_LOCAL ? 'this working tree' : `the \`${BE_REF}\` branch at \`${sh(`git rev-parse --short ${BE_REF}`)}\` (read through git; \`main\` holds no backend code, ADR-056)`
-  f.modules = beDirs('backend/app/Modules')
-  f.shared = beDirs('backend/app/Shared')
+  f.backendSource = BE.label
+  f.frontendSource = FE.label
+  f.modules = BE.dirs('backend/app/Modules')
+  f.shared = BE.dirs('backend/app/Shared')
   const schema = read('CLINIQ-Knowledge-Base/02-Architecture/Database/Reference-Schema.sql')
   f.roles = (schema.match(/chk_users_role CHECK \(role IN \(([^)]+)\)/) || [, ''])[1].replace(/'/g, '').split(',')
 
   // Mock data layer
-  const api = read('frontend/src/lib/mock-db/api.ts')
+  const api = FE.read('frontend/src/lib/mock-db/api.ts')
   f.mockFunctions = count(api, /^export (async )?function /gm)
   f.mockConstants = count(api, /^export const /gm)
   f.mockErrors = count(api, /^export class /gm)
-  f.mockTypes = count(read('frontend/src/lib/mock-db/types.ts'), /^export (type|interface) /gm)
+  f.mockTypes = count(FE.read('frontend/src/lib/mock-db/types.ts'), /^export (type|interface) /gm)
 
   // Database
   const tables = [...schema.matchAll(/^CREATE TABLE (\w+) \(([\s\S]*?)^\)/gm)]
@@ -141,15 +165,15 @@ export function computeFacts() {
   f.scheduledJobs = [...beRead('backend/routes/console.php').matchAll(/Schedule::command\('([^']+)'\)([^;]*);/g)].map((m) => `\`${m[1]}\` ${m[2].replace(/->withoutOverlapping\(\)/g, '').replace(/->dailyAt\('([^']+)'\)/, 'daily at $1').replace(/->hourly\(\)/, 'hourly').replace(/->between\('([^']+)', '([^']+)'\)/, ' from $1 to $2')}`)
 
   // Tests and size
-  const feTests = walk(join(ROOT, 'frontend/src'), (p) => /\.test\.tsx?$/.test(p))
-  f.frontendTestFiles = feTests.length
+  const feSrc = FE.files('frontend/src')
+  f.frontendTestFiles = feSrc.filter((p) => /\.test\.tsx?$/.test(p)).length
   f.backendTestFiles = beFiles('backend/tests').filter((p) => /Test\.php$/.test(p)).length
-  f.frontendLines = lines(walk(join(ROOT, 'frontend/src'), (p) => /\.(tsx?|css)$/.test(p)))
-  f.backendLines = beLines(['app', 'config', 'routes', 'database', 'tests', 'bootstrap'].flatMap((d) => beFiles(`backend/${d}`)).filter((p) => p.endsWith('.php')))
+  f.frontendLines = FE.lines(feSrc.filter((p) => /\.(tsx?|css)$/.test(p)))
+  f.backendLines = BE.lines(['app', 'config', 'routes', 'database', 'tests', 'bootstrap'].flatMap((d) => beFiles(`backend/${d}`)).filter((p) => p.endsWith('.php')))
 
   // Stack
-  const pkg = JSON.parse(read('frontend/package.json'))
-  const lock = has('frontend/package-lock.json') ? JSON.parse(read('frontend/package-lock.json')) : { packages: {} }
+  const pkg = JSON.parse(FE.read('frontend/package.json'))
+  const lock = FE.has('frontend/package-lock.json') ? JSON.parse(FE.read('frontend/package-lock.json')) : { packages: {} }
   const v = (name) => lock.packages[`node_modules/${name}`]?.version || (pkg.dependencies?.[name] || pkg.devDependencies?.[name] || '?').replace('^', '')
   f.frontendStack = ['react', 'react-router', 'typescript', 'vite', 'tailwindcss', 'vitest', 'chart.js', 'qrcode'].map((n) => [n, v(n)])
   const composer = JSON.parse(beRead('backend/composer.json'))
@@ -215,18 +239,19 @@ async function runTests() {
   return out
 }
 
-/** Backend test file names, from this tree or the `backend` branch (docs-trace uses them). */
+/** Backend test file names, from the backend source above (docs-trace uses them). */
 export const backendTestNames = () => beFiles('backend/tests').map((p) => p.split('/').pop())
 
 export function renderSheet(f, testSection) {
-  // Backend paths link to the `backend` branch on GitHub when this tree has no backend code.
-  const rel = (p) => (!BE_LOCAL && p.startsWith('backend/') ? `https://github.com/zekuuu/cliniq/${p.includes('.') ? 'blob' : 'tree'}/backend/${p}` : relative(join(KB, '00-Project-Core'), join(ROOT, p)).replace(/\\/g, '/'))
+  // Code read through git links to GitHub at that commit (a branch name moves; a commit does not).
+  const at = (p) => (p.startsWith('backend/') && !BE.local ? BE.sha : p.startsWith('frontend/') && !FE.local ? FE.sha : null)
+  const rel = (p) => (at(p) ? `https://github.com/zekuuu/cliniq/${p.includes('.') ? 'blob' : 'tree'}/${at(p)}/${p}` : relative(join(KB, '00-Project-Core'), join(ROOT, p)).replace(/\\/g, '/'))
   const lastRun = testSection.match(/Recorded (.+?) at `(\w+)`/)
   const routeRows = f.routes.map((r) => `| \`${r.path}\` | ${r.title} | ${r.roles.length === 2 ? 'Both' : r.roles[0] === 'staff' ? 'Staff' : 'Admin'} |`).join('\n')
   return `# Facts sheet
 
 **Last regenerated:** ${f.timestamp}
-**From commit:** \`${f.commit}\` on \`${f.branch}\`; backend numbers from ${f.backendSource}
+**From commit:** \`${f.commit}\` on \`${f.branch}\` (documents); frontend numbers from ${f.frontendSource}; backend numbers from ${f.backendSource}
 **Regenerate with:** \`npm run docs:facts\` from the repository root (add \`-- --tests\` to rerun both test suites). The script is [\`docs-facts.mjs\`](${rel('CLINIQ-Knowledge-Base/04-Development/tools/docs-facts.mjs')}).
 
 Every README, requirement document, diagram caption, and the Project Plan and SRS quote their numbers from this sheet. If a document disagrees with this sheet, the document is wrong. If this sheet disagrees with the repository, regenerate it: the script reads the repository and nothing else. Do not edit the numbers by hand.
