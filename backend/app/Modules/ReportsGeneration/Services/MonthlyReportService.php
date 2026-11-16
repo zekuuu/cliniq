@@ -73,6 +73,8 @@ final class MonthlyReportService
             'students' => $visits->filter(fn (object $v): bool => Row::int($v, 'student_id') !== null && Row::str($v, 'student_sex') === $s)->count(),
             'staff' => $visits->filter(fn (object $v): bool => Row::int($v, 'personnel_id') !== null && Row::str($v, 'staff_sex') === $s)->count(),
         ];
+        // A missing sex is never read as female (contract G4): a student or staff record without one counts here.
+        $noSex = $visits->filter(fn (object $v): bool => Row::str($v, Row::int($v, 'student_id') !== null ? 'student_sex' : 'staff_sex') === null);
         $previous = CarbonImmutable::parse($first)->subMonth()->format('Y-m');
 
         return [
@@ -87,8 +89,9 @@ final class MonthlyReportService
             'weeklyComplaints' => ['weeks' => $weeks, 'rows' => $rows, 'totals' => $totals],
             'visitsBySex' => [
                 'female' => $sex('female'), 'male' => $sex('male'),
-                // A missing sex is never read as female (contract G4): a student or staff record without one counts here.
-                'noSexRecorded' => $visits->filter(fn (object $v): bool => Row::str($v, Row::int($v, 'student_id') !== null ? 'student_sex' : 'staff_sex') === null)->count(),
+                'noSexRecorded' => $noSex->count(),
+                // Additive (November 16, 2026): which of those are students and which staff; the mock has staff only.
+                'noSexRecordedParts' => ['students' => $noSex->filter(fn (object $v): bool => Row::int($v, 'student_id') !== null)->count(), 'staff' => $noSex->filter(fn (object $v): bool => Row::int($v, 'student_id') === null)->count()],
             ],
             'inventory' => $this->inventory($first, $last),
             'principalName' => Row::str((object) ['n' => DB::table('users')->where('role', 'admin')->whereNull('deactivated_at')->orderBy('id')->value('name')], 'n'),

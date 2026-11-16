@@ -77,7 +77,7 @@ function valuesFromStudent(student: Student | null): StudentFormValues {
     middleName: student.middleName ?? '',
     gradeLevel: student.gradeLevel,
     section: student.section ?? '',
-    sex: student.sex,
+    sex: student.sex ?? '',
     birthDate: student.birthDate ?? '',
     emergencyContacts: student.emergencyContacts.length
       ? student.emergencyContacts.map(({ name, relationship, phone, verified }) => ({

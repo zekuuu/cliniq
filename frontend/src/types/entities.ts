@@ -35,7 +35,8 @@ export interface Student {
   gradeLevel: string
   /** Optional until the yearly import fills it (ADR-047). PROVISIONAL, pending the ERD. */
   section?: string | null
-  sex: StudentSex
+  /** Null when the school never recorded it (API contract G4): shown as "Not recorded", and the record is incomplete. The mock always has a value. */
+  sex: StudentSex | null
   /** Optional (ADR-054). The age is calculated from it, never stored. Single-student screens only. PROVISIONAL, pending the ERD. */
   birthDate: ISODate | null
   allergies: string[]

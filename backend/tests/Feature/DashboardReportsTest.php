@@ -38,7 +38,7 @@ it('builds the monthly report from the records, masked, staff incidents included
         ->and($r['complaintCounts'])->toBe([['complaint' => 'Headache', 'count' => 3], ['complaint' => 'Cough', 'count' => 1]])
         ->and($r['weeklyComplaints']['weeks'][0])->toBe(['from' => '2026-11-01', 'to' => '2026-11-07', 'label' => '1-7'])
         ->and($r['weeklyComplaints']['totals'])->toBe([3, 1, 0, 0, 0])
-        ->and($r['visitsBySex'])->toBe(['female' => ['students' => 2, 'staff' => 1], 'male' => ['students' => 1, 'staff' => 0], 'noSexRecorded' => 0])
+        ->and($r['visitsBySex'])->toBe(['female' => ['students' => 2, 'staff' => 1], 'male' => ['students' => 1, 'staff' => 0], 'noSexRecorded' => 0, 'noSexRecordedParts' => ['students' => 0, 'staff' => 0]])
         ->and(array_column($r['incidents'], 'patient'))->toBe([['kind' => 'student', 'number' => '●●●●●●●●0001'], ['kind' => 'personnel', 'number' => 'STF-0001']])
         ->and($r['principalName'])->toBe('Principal Oak');
     $this->getJson('/api/reports/monthly?month=2026-13')->assertUnprocessable();
@@ -121,6 +121,16 @@ it('syncs holidays monthly when online, keeps the last good list when offline, a
     $this->getJson('/api/calendar/holidays?from=2026-11-01&to=2026-11-30')->assertOk()
         ->assertJsonPath('data.holidays', [['date' => '2026-11-30', 'name' => 'Bonifacio Day', 'kind' => 'regular', 'confirmed' => true]])
         ->assertJsonPath('data.years', [2026])->assertJsonPath('data.source', 'Official Gazette (test)');
+});
+
+it('counts a student with no recorded sex as a student, never as female or as staff', function () {
+    // personnel.sex is NOT NULL in the schema, so only a student can lack it on the API; the mock has the reverse.
+    $g7 = DB::table('grade_levels')->where('name', 'Grade 7')->value('id');
+    $cy = DB::table('students')->insertGetId(['lrn' => '100000000003', 'first_name' => 'Cy', 'last_name' => 'Dee', 'sex' => null, 'grade_level_id' => $g7]);
+    DB::table('visits')->insert(['student_id' => $cy, 'grade_level_at_time' => 'Grade 7', 'visited_at' => '2026-11-09 08:00:00', 'complaint' => 'Headache', 'disposition' => 'returned_to_class', 'logged_by_user_id' => $this->staff->id]);
+    signIn($this->staff);
+    expect($this->getJson('/api/reports/monthly?month=2026-11')->assertOk()->json('data.visitsBySex'))
+        ->toBe(['female' => ['students' => 2, 'staff' => 1], 'male' => ['students' => 1, 'staff' => 0], 'noSexRecorded' => 1, 'noSexRecordedParts' => ['students' => 1, 'staff' => 0]]);
 });
 
 it('records an unreachable holiday source and an empty source URL as failed runs, never throwing', function () {
