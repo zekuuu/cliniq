@@ -54,7 +54,8 @@ function source(dir) {
     sha,
     read: (p) => (local ? read(p) : sh(`git show ${ref}:${p}`)),
     has: (p) => (local ? has(p) : sh(`git ls-tree --name-only ${ref} -- ${p}`) !== ''),
-    files: (prefix) => (local ? walk(join(ROOT, prefix), () => true).map((p) => relative(ROOT, p).replace(/\\/g, '/')) : sh(`git ls-tree -r --name-only ${ref} -- ${prefix}`).split('\n').filter(Boolean)),
+    // Local lists skip git-ignored files (vendor, bootstrap/cache), so both modes count the same files.
+    files: (prefix) => (local ? sh(`git ls-files --cached --others --exclude-standard -- ${prefix}`).split('\n').filter((p) => p && has(p)) : sh(`git ls-tree -r --name-only ${ref} -- ${prefix}`).split('\n').filter(Boolean)),
     label: local ? 'this working tree' : `\`${ref.replace(/^origin\//, '')}\` at \`${sha}\` (${manilaNow(new Date(sh(`git log -1 --format=%cI ${ref}`)))}; read through git, not merged into this branch)`,
   }
   s.dirs = (prefix) => (local ? readdirSync(join(ROOT, prefix)).filter((n) => statSync(join(ROOT, prefix, n)).isDirectory()).sort() : [...new Set(s.files(prefix).map((p) => p.slice(prefix.length + 1).split('/')[0]).filter((x) => x && !x.includes('.')))].sort())
