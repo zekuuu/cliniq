@@ -3,6 +3,8 @@
 **Date:** Sunday, November 15, 2026 — 23:22 PHT
 **Status:** Accepted (Zean, in chat, Sunday, November 15, 2026 — 08:35 PHT, answering the three setup questions of `Prompt-Connect-Frontend-To-API-Nov15.md`; two follow-up answers in the run's pop-ups, 18:12 and 22:42 PHT). It is the separate step that ADR-056 kept for later ("nothing wired"). It keeps ADR-013 (no data-fetching library), ADR-014 (one data-access layer) and ADR-079 (the clinic PC serves the API beside the frontend). Built on `feat/connect-frontend` ([run notes](../08-Logs/Connect-Frontend-Nov15/NOTES.md)).
 
+*Note (Monday, November 16, 2026 — 22:11 PHT):* one type-only line in the mock was changed with Zean's word (pop-up, follow-up 1.4): `SeedStudent.sex?: StudentSex | null` in `frontend/src/lib/mock-db/types.ts`, because widening `Student.sex` to `StudentSex | null` (contract G4) widens the mock's `StudentInput`. No mock data, function or behaviour changed; the mock still fills in a sex. Point 6 below otherwise holds.
+
 ## Context
 The backend (B1 to B10) is built and tested against the agreed contract (`04-Development/API-Contract.md`). Every screen still read only the mock data layer (`frontend/src/lib/mock-db/`), which is also the executable spec of the contract and the base of 1185 frontend tests. The project needs to run on the real API without losing the mock: for demos with no server, for the tests, and to switch one module over at a time while it is checked.
 
