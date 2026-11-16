@@ -1,6 +1,6 @@
 # API Contract
 
-**Status: the agreed contract, built on the `backend` branch; the frontend does not call it yet (ADR-056).** *Updated Sunday, November 15, 2026 — 08:38 PHT for the backend build, code at `397e000`: every endpoint below has a route (127 with the health check and the CSRF cookie, `php artisan route:list`). The sentence "No endpoint here exists yet" below is history.* Written Saturday, October 31, 2026 — 22:05 PHT on the `backend` branch, from `frontend/src/lib/mock-db/api.ts` at commit `b0a0fed7`; questions closed Sunday, November 1, 2026 — 01:55 PHT (ADR-057). No endpoint here exists yet except the two in the Foundation list (ADR-056). Line numbers are that commit's. The contract was generated against the file, and every exported function is either an entry or listed in [Not endpoints](#not-endpoints).
+**Status: the agreed contract, built on the `backend` branch; the frontend calls it behind a mock/API switch on `feat/connect-frontend` (ADR-080, Sunday, November 15, 2026).** *Updated Sunday, November 15, 2026 — 08:38 PHT for the backend build, code at `397e000`: every endpoint below has a route (127 with the health check and the CSRF cookie, `php artisan route:list`). The sentence "No endpoint here exists yet" below is history.* Written Saturday, October 31, 2026 — 22:05 PHT on the `backend` branch, from `frontend/src/lib/mock-db/api.ts` at commit `b0a0fed7`; questions closed Sunday, November 1, 2026 — 01:55 PHT (ADR-057). No endpoint here exists yet except the two in the Foundation list (ADR-056). Line numbers are that commit's. The contract was generated against the file, and every exported function is either an entry or listed in [Not endpoints](#not-endpoints).
 
 The mock API is the executable spec (ADR-056). This file adds the HTTP layer: URLs, roles, status codes. It adds no behaviour of its own: where the mock and a decision disagreed, the answer is under [Questions](#questions), and the entry follows it. "Mock differs" marks a change the frontend fix branch makes.
 
@@ -676,7 +676,7 @@ Every endpoint is Staff only. The database row lock of `ERD.md` section 9 replac
 - Copies: `saveInventoryItem` (`api.ts:1904`); tests: `ClinicRulesDecisions`, `InventoryPanelReview`, `RecordsDecisions`, `auditCoverage` and 1 more.
 
 #### `GET /api/inventory/{id}/history`
-- Roles: S. Response: `InventoryHistoryRow[]`, newest first.
+- Roles: S. Response: `InventoryHistoryRow[]`, newest first. *Update (Monday, November 16, 2026 — 22:35 PHT):* a new item's starting count is now an `opening` row (type `opening`, `reason` null), here and in `GET /api/inventory/movements`, as the ERD has it ("Starting stock for a new item"); the screens label it "Opening stock". Items created before this have none. The mock has no opening rows.
 - Copies: `listInventoryHistory` (`api.ts:1883`); tests: none.
 
 #### `POST /api/inventory/{id}/dispense`
@@ -708,7 +708,7 @@ Every endpoint is Staff only. The database row lock of `ERD.md` section 9 replac
 #### `GET /api/reports/monthly`
 - Roles: S, A (view; no printing).
 - Query: `month`, `YYYY-MM`; 422 otherwise.
-- Response: `MonthlyReportData`, computed on each call, masked; `fullLrn=1` for the Staff print. May include staff incidents (Q8). `visitsBySex` is `{ female: { students, staff }, male: { students, staff }, noSexRecorded }` (ADR-063).
+- Response: `MonthlyReportData`, computed on each call, masked; `fullLrn=1` for the Staff print. May include staff incidents (Q8). `visitsBySex` is `{ female: { students, staff }, male: { students, staff }, noSexRecorded }` (ADR-063). *Update (Monday, November 16, 2026 — 21:53 PHT):* it also carries `noSexRecordedParts: { students, staff }`, an additive split of `noSexRecorded`; on the API only a student can lack a sex (`personnel.sex` is NOT NULL), while the mock, which sends only the total, has the reverse.
 - Copies: `getMonthlyReport` (`api.ts:2358`); tests: `Birthdate`, `ClinicRulesDecisions`, `ReportsDecisions`, `ReportsPage` and 5 more.
 
 #### `GET /api/reports/latest-month`
