@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\UserManagement\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -120,6 +121,22 @@ it('syncs holidays monthly when online, keeps the last good list when offline, a
     $this->getJson('/api/calendar/holidays?from=2026-11-01&to=2026-11-30')->assertOk()
         ->assertJsonPath('data.holidays', [['date' => '2026-11-30', 'name' => 'Bonifacio Day', 'kind' => 'regular', 'confirmed' => true]])
         ->assertJsonPath('data.years', [2026])->assertJsonPath('data.source', 'Official Gazette (test)');
+});
+
+it('records an unreachable holiday source and an empty source URL as failed runs, never throwing', function () {
+    // The clinic PC is offline most days (ADR-029): this is the normal path, not an error for the scheduler.
+    Http::fake(fn () => throw new ConnectionException('Could not resolve host'));
+    $this->artisan('cliniq:sync-holidays')->expectsOutput('Holiday sync failed; the last good list stays. It will try again tomorrow.')->assertSuccessful();
+
+    config(['cliniq.holiday_source_url' => '']);
+    $this->artisan('cliniq:sync-holidays')->expectsOutput('Holiday sync failed; the last good list stays. It will try again tomorrow.')->assertSuccessful();
+
+    expect(DB::table('holiday_sync_runs')->orderBy('id')->get(['status', 'error_message'])->map(fn ($r) => [$r->status, $r->error_message])->all())
+        ->toBe([['failed', 'Could not resolve host'], ['failed', 'No holiday source is set (CLINIQ_HOLIDAY_SOURCE_URL).']]);
+
+    signIn($this->staff);
+    $this->getJson('/api/calendar/holidays?from=2026-11-01&to=2026-11-30')->assertOk()
+        ->assertJsonPath('data.holidays', [])->assertJsonPath('data.lastUpdated', null);
 });
 
 it('keeps Sports Reports: lists only the students, computes content when asked, duplicates and archives', function () {
