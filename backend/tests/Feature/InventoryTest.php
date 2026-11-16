@@ -29,6 +29,13 @@ it('adds an item with its first batch, tags in the option order, and audits it',
     expect($item['currentStock'])->toBe(20)->and($item['batches'][0]['expirationDate'])->toBe('2027-01-01')
         ->and($item['avoidIfAllergicTo'])->toBe(['paracetamol'])->and($item['usedFor'])->toBe([(string) $this->fever, (string) $this->headache])
         ->and($item['flags'])->toBe([])->and(DB::table('audit_logs')->value('target_type'))->toBe('inventory');
+    // The starting count is an `opening` ledger row with its batch, so the ledger sums to the stock (ERD; defect D1, November 16, 2026).
+    $opening = DB::table('inventory_transactions')->where('item_id', $item['id'])->first();
+    expect([$opening->type, $opening->quantity_delta, $opening->stock_after])->toBe(['opening', 20, 20])
+        ->and(DB::table('inventory_transaction_batches')->where('transaction_id', $opening->id)->sum('quantity'))->toEqual(20)
+        ->and(DB::table('audit_logs')->count())->toBe(1);
+    $this->postJson('/api/inventory', itemInput(['name' => 'Gauze', 'currentStock' => 0]))->assertCreated();
+    expect(DB::table('inventory_transactions')->where('type', 'opening')->pluck('quantity_delta')->all())->toBe([20, 0]);
 });
 
 it('refuses bad items with the mock messages', function (Closure $over, int $status, string $message) {
@@ -66,7 +73,7 @@ it('restocks a new batch, dispenses earliest expiry first, and lists the movemen
     expect($moves[0]['type'])->toBe('dispense')->and($moves[0]['change'])->toBe(-12)->and($moves[0]['patientNumber'])->toBe('●●●●●●●●0001')
         ->and($moves[0]['batches'])->toBe([['expirationDate' => '2026-12-01', 'quantity' => 10], ['expirationDate' => '2027-01-01', 'quantity' => 2]]);
     $history = $this->getJson("/api/inventory/{$id}/history")->json('data');
-    expect(array_column($history, 'type'))->toBe(['dispense', 'restock'])->and($history[0]['quantity'])->toBe(12);
+    expect(array_column($history, 'type'))->toBe(['dispense', 'restock', 'opening'])->and($history[0]['quantity'])->toBe(12);
     $this->postJson("/api/inventory/{$id}/dispense", ['quantity' => 1, 'studentId' => (string) $student, 'personnelId' => '1'])->assertConflict()
         ->assertJsonPath('message', 'Choose one patient: a student or a staff member.');
 });

@@ -105,7 +105,13 @@ final class InventoryService
             $row = ['name' => $name, 'category' => $category, 'unit' => $unit, 'low_stock_threshold' => $threshold, 'brand' => $brand];
             if ($id === null) {
                 $id = DB::table('inventory_items')->insertGetId($row);
-                DB::table('inventory_batches')->insert((array) $first + ['item_id' => $id, 'received_date' => ClinicTime::today()]);
+                $batch = DB::table('inventory_batches')->insertGetId((array) $first + ['item_id' => $id, 'received_date' => ClinicTime::today()]);
+                // The starting count is an `opening` ledger row, so the ledger always sums to the stock (ERD).
+                $opening = $first['quantity'];
+                $txn = DB::table('inventory_transactions')->insertGetId(['item_id' => $id, 'type' => 'opening', 'quantity_delta' => $opening, 'stock_after' => $opening, 'occurred_at' => $now, 'user_id' => $userId]);
+                if ($opening > 0) {
+                    DB::table('inventory_transaction_batches')->insert(['transaction_id' => $txn, 'batch_id' => $batch, 'quantity' => $opening]);
+                }
             } else {
                 DB::table('inventory_items')->where('id', $id)->update($row);
             }

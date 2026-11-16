@@ -20,6 +20,9 @@ import {
 } from './api/inventoryApi'
 import { ITEM_BRAND_LABELS } from '../../types/entities'
 
+/** The API writes an `opening` row for a new item's starting count (ERD; the mock has none). */
+const isOpening = (type: string) => type === 'opening'
+
 type AdjustMode = 'add' | 'remove' | 'count'
 
 const reasonOptions = STAFF_ADJUSTMENT_REASONS.map((reason) => ({
@@ -133,11 +136,13 @@ export function BatchDetailsModal({
                   <span className="font-semibold text-text-primary">
                     {entry.reason === 'expired_disposed'
                       ? 'Disposed'
-                      : entry.type === 'restock'
-                        ? 'Restocked'
-                        : entry.type === 'dispense'
-                          ? 'Dispensed'
-                          : 'Adjusted'}
+                      : isOpening(entry.type)
+                        ? 'Opening stock'
+                        : entry.type === 'restock'
+                          ? 'Restocked'
+                          : entry.type === 'dispense'
+                            ? 'Dispensed'
+                            : 'Adjusted'}
                   </span>{' '}
                   · {entry.quantity > 0 ? '+' : ''}
                   {entry.quantity} {item.unit}
