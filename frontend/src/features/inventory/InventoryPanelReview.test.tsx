@@ -87,12 +87,18 @@ describe('Add Item expiry (IV-2, ADR-035, D10)', () => {
 
   it('asks on the form before saving a blank expiry', async () => {
     const user = userEvent.setup()
+    // One paste per field, not a keystroke per character: each keystroke re-renders the whole item form
+    // (duplicate check, unit suggestions), and about 40 of them timed out at 5 s under a full parallel run.
+    const fill = async (field: HTMLElement, text: string) => {
+      await user.click(field)
+      await user.paste(text)
+    }
     renderWithRouter(<InventoryFormPage />, { route: '/inventory/new' })
     await screen.findByRole('heading', { name: 'Add Inventory Item' })
-    await user.type(screen.getByLabelText(/item name/i), NEW_ITEM.name)
-    await user.type(screen.getByLabelText(/current stock/i), '10')
-    await user.type(screen.getByRole('combobox', { name: /^unit/i }), 'bottles')
-    await user.type(screen.getByLabelText(/low-stock threshold/i), '2')
+    await fill(screen.getByLabelText(/item name/i), NEW_ITEM.name)
+    await fill(screen.getByLabelText(/current stock/i), '10')
+    await fill(screen.getByRole('combobox', { name: /^unit/i }), 'bottles')
+    await fill(screen.getByLabelText(/low-stock threshold/i), '2')
     await user.click(screen.getByRole('button', { name: 'Add Item' }))
     expect(
       screen.getByText('Choose an expiration date, or confirm this item has no expiration date.'),
@@ -104,7 +110,7 @@ describe('Add Item expiry (IV-2, ADR-035, D10)', () => {
       screen.getByText('Choose at least one symptom this item is commonly used for.'),
     ).toBeInTheDocument()
     await user.click(screen.getByRole('checkbox', { name: 'Other' }))
-    await user.type(screen.getByRole('textbox', { name: /^Other/ }), 'eye irritation, ')
+    await fill(screen.getByRole('textbox', { name: /^Other/ }), 'eye irritation, ')
     await user.click(screen.getByRole('button', { name: 'Add Item' }))
     expect(await screen.findByText('Saline solution was added successfully.')).toBeInTheDocument()
     expect(db().inventoryItems.find((i) => i.name === 'Saline solution')?.usedFor).toEqual([
