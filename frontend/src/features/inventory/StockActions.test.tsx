@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { adjustInventoryStock, getInventoryItem, getRecordedAuditEntries, getStudent, isLargeWriteOff, listInventory, resetMockDb } from '../../lib/mock-db'
 import { db } from '../../lib/mock-db/store'
 import { renderWithRouter } from '../../test/renderWithRouter'
@@ -12,7 +12,10 @@ import { InventoryFormPage } from './InventoryFormPage'
 import { InventoryListPage } from './InventoryListPage'
 
 // The whole list on one page: these tests reach every item (Inventory is paged since review round 2, R26).
-beforeEach(() => window.sessionStorage.setItem('cliniq.pageSize', '50'))
+vi.mock('../../hooks/usePageSize', async (importOriginal) => {
+  const { useState } = await import('react')
+  return { ...(await importOriginal<object>()), usePageSize: () => useState(50) }
+})
 
 /** Adjust Stock, Restock, the locked Edit Item fields, and the standalone Dispense rules (ADR-018). */
 

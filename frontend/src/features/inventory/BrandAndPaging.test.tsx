@@ -45,7 +45,7 @@ describe('Generic or branded (optional)', () => {
 })
 
 describe('Rows per page', () => {
-  it('offers 10, 20, 50 or 100 rows, returns to page 1 on a change, and keeps the choice for the session', async () => {
+  it('offers 10, 20, 50 or 100 rows, returns to page 1 on a change, and opens at 10 again', async () => {
     const user = userEvent.setup()
     const view = renderWithRouter(<VisitLogListPage />, {
       route: '/visits?from=2000-01-01&to=2100-12-31',
@@ -73,6 +73,8 @@ describe('Rows per page', () => {
 
     view.unmount()
     renderWithRouter(<VisitLogListPage />, { route: '/visits?from=2000-01-01&to=2100-12-31' })
-    expect(await screen.findByLabelText('Rows per page')).toHaveTextContent('20')
+    // Not remembered (Zean, November 17, 2026): every list opens at 10.
+    expect(await screen.findByLabelText('Rows per page')).toHaveTextContent('10')
+    expect(window.sessionStorage.getItem('cliniq.pageSize')).toBeNull()
   })
 })

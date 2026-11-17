@@ -323,7 +323,6 @@ describe('R26: the Inventory list is paged', () => {
 describe('R27: Expired does not look like Low stock on the Inventory list', () => {
   it('shows Expired solid red with light text and Low stock in the warning style, both in words', async () => {
     resetMockDb()
-    window.sessionStorage.setItem('cliniq.pageSize', '50')
     render(<MemoryRouter initialEntries={['/inventory']}><AppRoutes user={STAFF} onLogout={() => {}} /></MemoryRouter>)
     const table = await screen.findByRole('table', { name: 'Inventory items' }, { timeout: 5000 })
     const expired = within(table).getAllByText('Expired', { selector: 'span *, span' }).find((el) => el.closest('.bg-error'))!.closest('.bg-error')!
