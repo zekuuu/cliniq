@@ -1,0 +1,4 @@
+# Local only: Playwright install and capture run output.
+_capture/node_modules/
+_capture/results.json
+_capture/run.log

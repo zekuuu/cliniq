@@ -23,5 +23,10 @@ than rendering every row at once.
 - Offer **Rows per page: 10, 20, 50 or 100** (Sir Rey, Sunday, October 25, 2026; 50 and 100 added Saturday, October 31, 2026): pass `onPageSizeChange` and
   take the size from `hooks/usePageSize.ts`, which keeps the choice for the browser session and shares
   it between lists. Changing the size returns to page 1. Default 10.
+- **No hidden caps** (Zean, Tuesday, November 17, 2026 — 21:04 PHT). A paged list fetches every record
+  that matches its search and filters, and the pager's total is that count. Never pass a `limit` to a
+  list fetch. Search, filters, "Include archived" and sorting run over all records, not over a slice.
+  A `limit` is for suggestion lists (comboboxes, item pickers, complaint suggestions) and for "recent"
+  summaries that say so in their heading. Before: the Student List fetched at most 80 students.
 
 Follow `cliniq-interactive-states` for cursor, hover, focus, and reduced-motion behavior.

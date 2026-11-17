@@ -1,0 +1,16 @@
+{
+  "baseUrl": "http://localhost:5180",
+  "apiUrl": "http://localhost:8001/api",
+  "users": { "staff": "load.nurse", "admin": "load.principal" },
+  "ids": {
+    "student": "389",
+    "staffMember": "33",
+    "visit": "22458",
+    "stage1Incident": "673",
+    "completedIncident": "677"
+  },
+  "newVisit": { "patientQuery": "999900000401", "symptom": "Headache" },
+  "calendarMonth": "",
+  "reportsQuery": "",
+  "pauseMs": 4000
+}

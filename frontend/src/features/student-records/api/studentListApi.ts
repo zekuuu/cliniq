@@ -8,8 +8,9 @@ export interface StudentListQuery {
   recordStatus?: '' | 'complete' | 'incomplete'
 }
 
+/** Every student matching the search and filters, uncapped: the screen pages them (Zean, November 17, 2026). */
 export function fetchStudentList(query: StudentListQuery): Promise<StudentListRow[]> {
-  return listStudents({ ...query, limit: 80 })
+  return listStudents(query)
 }
 
 export function fetchGradeLevels(): Promise<string[]> {
