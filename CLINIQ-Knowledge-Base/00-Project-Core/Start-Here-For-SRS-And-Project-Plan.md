@@ -12,12 +12,12 @@ Last checked against the code on Tuesday, November 17, 2026 for the changes of t
 
 ## Where the code lives
 
-`main` holds the documents and the frontend as it ran on sample data only. The newer code is on other branches and is not merged into `main` yet; read it at the linked commit. Last synced to `main` on Tuesday, November 17, 2026 — 05:46 PHT; [sync log](../08-Logs/Main-Sync-Log.md).
+`main` holds the documents and the frontend as it ran on sample data only. The newer code is on other branches and is not merged into `main` yet; read it at the linked commit. Last synced to `main` on Tuesday, November 17, 2026 — 08:15 PHT, from `main@57c3cc8` and `feat/connect-frontend@3a890f5`; [sync log](../08-Logs/Main-Sync-Log.md).
 
 | Branch | What it holds | Tip commit and date | Merged into `main` | Why not on `main` |
 |---|---|---|---|---|
-| `main` | Documents; the frontend on sample data only; `backend/` holds only its README and `.env.example` | [`dda26b2`](https://github.com/zekuuu/cliniq/tree/dda26b2), Sunday, November 15, 2026 — 09:22 PHT | (this branch) | |
-| `feat/connect-frontend` | **The newest code: everything below plus the frontend connected to the API behind a mock/API switch (ADR-080), the follow-ups and the load-test tools.** Contains `backend` and `main` | [`759781e`](https://github.com/zekuuu/cliniq/tree/759781e), Tuesday, November 17, 2026 — 05:27 PHT | no | Not reviewed and merged yet; the backend it contains stays off `main` until Zean merges it (ADR-056) |
+| `main` | Documents; the frontend on sample data only; `backend/` holds only its README and `.env.example` | [`57c3cc8`](https://github.com/zekuuu/cliniq/tree/57c3cc8), Tuesday, November 17, 2026 — 06:20 PHT | (this branch) | |
+| `feat/connect-frontend` | **The newest code: everything below plus the frontend connected to the API behind a mock/API switch (ADR-080), the follow-ups and the load-test tools.** Contains `backend` and `main` | [`3a890f5`](https://github.com/zekuuu/cliniq/tree/3a890f5), Tuesday, November 17, 2026 — 06:22 PHT | no | Not reviewed and merged yet; the backend it contains stays off `main` until Zean merges it (ADR-056) |
 | `backend` | The Laravel API, phases B0 to B10, the 50 migrations and the backend tests | [`18ff415`](https://github.com/zekuuu/cliniq/tree/18ff415), Sunday, November 15, 2026 — 10:50 PHT | no | On purpose: the backend stays on its own branch until Zean reviews and merges it (ADR-056) |
 | `feat/build-backend` | An older step of `backend` (fully contained in it) | [`3bcbe16`](https://github.com/zekuuu/cliniq/tree/3bcbe16), Saturday, November 14, 2026 — 23:07 PHT | no | Superseded by `backend` |
 
@@ -138,7 +138,7 @@ Unchanged: 127 API routes, 126 contract entries naming 127 endpoints, 48 tables,
 
 ## Decided but not built, and built but not tested on real hardware
 
-**Built:** every screen ([screenshots](../03-Design/assets/screens/)), on sample data by default and on the real API behind a mock/API switch (ADR-080, `feat/connect-frontend`; each module checked in a real browser). The backend, phases B0 to B10, on the `backend` branch: real sign-in with lock-out and password recovery, saving to the database, the audit log in the database, real backups and three scheduled jobs; 127 routes, 231 tests pass. A deterministic 900-student test school and a load bench (`backend/tools/load/`, on `feat/connect-frontend`); the measurements are not finished. The 48 database migrations run on MariaDB and match the approved schema; its 260 constraint tests pass. Numbers: [Facts sheet](Facts-Sheet.md).
+**Built:** every screen ([screenshots](../03-Design/assets/screens/)), on sample data by default and on the real API behind a mock/API switch (ADR-080, `feat/connect-frontend`; each module checked in a real browser). The backend, phases B0 to B10, on the `backend` branch: real sign-in with lock-out and password recovery, saving to the database, the audit log in the database, real backups and three scheduled jobs; 127 routes, 231 tests pass. A deterministic 900-student test school and a load bench (`backend/tools/load/`, on `feat/connect-frontend`); the measurements are not finished. The 50 migrations (48 create a table, 2 ship product data) run on MariaDB and match the approved schema; its 260 constraint tests pass. Numbers: [Facts sheet](Facts-Sheet.md).
 
 **Decided, not built:** a written restore procedure. **Built, not merged into `main`:** the backend and the frontend's connection to it (ADR-056, ADR-080).
 

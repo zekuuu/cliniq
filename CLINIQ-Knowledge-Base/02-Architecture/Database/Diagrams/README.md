@@ -24,6 +24,7 @@ It needs Chrome or Chromium for Mermaid (`PUPPETEER_EXECUTABLE_PATH`, never Micr
 | States 1 to 3 | School year, incident, follow-up | [State-Diagrams.md](../../State-Diagrams.md) | `State-1-School-Year` to `State-3-Follow-Up` | SRS 3.1 |
 | Backup and recovery | Backup, warning and verification | [Backup-And-Recovery-Flow.md](../../Backup-And-Recovery-Flow.md) | `Backup-Recovery` | SRS 3.4, Plan maintenance |
 | ERD overview | All 48 tables by module | [`ERD-Overview.dot`](ERD-Overview.dot) | `ERD-Overview.svg`, `.png` | SRS 3.5 (data) |
+| ERD overview, editable | Editable overview in Lucidchart (same 48 tables, 53 relationships); `Reference-Schema.sql` stays the source of truth | [CLINIQ ERD (APPROVED, 48 tables) — Overview](https://lucid.app/lucidchart/65191fd0-5a22-4b15-820f-f48f75dcedad/edit) | none (opens in Lucidchart) | SRS 3.5 (data) |
 | ERD by module | Students, visits, emergency, inventory, access and operations | [ERD.md](../ERD.md) sections 3.2 to 3.6 | `ERD-3.2-Students` to `ERD-3.6-Access-and-Operations` | SRS 3.5 |
 
 Each export name means the pair `<name>.svg` and `<name>.png`. Every source file has a title, a one-paragraph caption and the documents it was drawn from; quote the caption with the image.
