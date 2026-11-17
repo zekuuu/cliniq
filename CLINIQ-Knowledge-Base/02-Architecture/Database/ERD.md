@@ -2,6 +2,8 @@
 
 > **STATUS: Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057); changes after this go through a new decision.** Drafted Friday, October 09, 2026 — 00:29 PHT. Migrations are built from it in phase B1, in the order of section 13.
 >
+> Editable overview in Lucidchart (same 48 tables, 53 relationships): [CLINIQ ERD (APPROVED, 48 tables) — Overview](https://lucid.app/lucidchart/65191fd0-5a22-4b15-820f-f48f75dcedad/edit). [`Reference-Schema.sql`](./Reference-Schema.sql) is the source of truth; the Lucid copy is for viewing and editing the picture only.
+>
 
 > **Updated Sunday, November 08, 2026 — 18:35 PHT, following ADR-078, which amends ADR-015, ADR-048 and ADR-057:** `system_settings` replaces `admin_idle_minutes` with two keys, `idle_signout_minutes_staff` (60) and `idle_signout_minutes_admin` (30), each 10 to 240 by `chk_settings_idle_signout`. Staff edit them; the Admin reads. No new table or column. 260 constraint tests pass.
 >
@@ -13,13 +15,13 @@
 >
 > **Updated Sunday, November 1, 2026 — 22:36 PHT:** `personnel.sex` added by [ADR-063](../../06-Decisions/ADR-063-Staff-Patients-Record-Sex.md). Loaded into MariaDB with the ADR-064 change on Thursday, November 05, 2026 — 01:33 PHT; its two cases pass, and two older staff cases that left out `sex` were fixed.
 >
-> **Updated to the decisions up to ADR-056 on Saturday, October 31, 2026 — 20:28 PHT.** Still a proposed draft, not final or approved. Choices no decision settles are in [`ERD-Review.md`](./ERD-Review.md); no migration, seeder or model with columns is built from this (ADR-056).
+> **Draft history:** updated to the decisions up to ADR-056 on Saturday, October 31, 2026 — 20:28 PHT, while the ERD was still a draft; approved the next day (ADR-057). The design choices that were open then are in [`ERD-Review.md`](./ERD-Review.md).
 
 This file replaces the old "TBA" placeholder. For the wider readiness picture (API contract, auth, backups, pinned versions and so on) see `04-Development/Backend-Readiness-Checklist.md`.
 
 What backs it up:
 
-- `Reference-Schema.sql` (same folder) is the reference DDL. It loads on MariaDB 10.11.16 and passes the **254 constraint tests** in `Checks/constraint-tests.sql` (Saturday, November 07, 2026 — 16:12 PHT, after ADR-076; 247 after ADR-071, 072, 073 and 075; 204 after ADR-064): every CHECK and UNIQUE is tested, and the retention purge is run end to end.
+- `Reference-Schema.sql` (same folder) is the reference DDL. It loads on MariaDB 10.11.16 and passes the **260 constraint tests** in `Checks/constraint-tests.sql` (Sunday, November 08, 2026 — 18:35 PHT, after ADR-078; 254 after ADR-076; 247 after ADR-071, 072, 073 and 075; 204 after ADR-064): every CHECK and UNIQUE is tested, and the retention purge is run end to end.
 - The first draft was then loaded with a stress volume (**150,000 visits, 25,000 incidents, 1,500,000 audit rows**, the worst-case assumptions from the planning discussion) and the dashboard, calendar, audit-viewer and list queries each ran in **under 30 ms**.
 - `Data-Dictionary.md` (same folder) was generated from that same database; later updates were written by hand and compared with the DDL.
 
