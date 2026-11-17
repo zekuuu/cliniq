@@ -643,6 +643,14 @@ final class LoadGenerator
         }
     }
 
+    /** An item whose every batch has expired can't be given (StockService); the nurse skips it until the next restock. */
+    private function givable(int $item): bool
+    {
+        $today = CarbonImmutable::now()->format('Y-m-d');
+
+        return DB::table('inventory_batches')->where('item_id', $item)->where(fn ($q) => $q->whereNull('expiration_date')->orWhere('expiration_date', '>=', $today))->exists();
+    }
+
     private function pick(array $weighted): string
     {
         $total = array_sum(array_column($weighted, 1));
@@ -703,7 +711,10 @@ final class LoadGenerator
         if (mt_rand(1, 100) <= 40) {
             $candidates = $typeId !== null ? ($this->itemsFor[$typeId] ?? []) : [];
             $item = $candidates !== [] ? $candidates[mt_rand(0, count($candidates) - 1)] : array_keys($this->items)[mt_rand(0, count($this->items) - 1)];
-            $lines[] = ['itemId' => (string) $item, 'quantity' => mt_rand(1, 2), 'instructions' => null];
+            $quantity = mt_rand(1, 2);
+            if ($this->givable($item)) {
+                $lines[] = ['itemId' => (string) $item, 'quantity' => $quantity, 'instructions' => null];
+            }
         }
         $now = CarbonImmutable::now();
         $letter = $student && in_array($disposition, ['sent_home', 'referred_to_hospital'], true) && mt_rand(1, 100) <= 95;
@@ -757,7 +768,9 @@ final class LoadGenerator
             $typeId = $this->types[$complaint] ?? null;
             $c = $typeId !== null ? ($this->itemsFor[$typeId] ?? []) : [];
             $item = $c !== [] ? $c[0] : array_keys($this->items)[mt_rand(0, count($this->items) - 1)];
-            $lines[] = ['itemId' => (string) $item, 'quantity' => 1, 'instructions' => null];
+            if ($this->givable($item)) {
+                $lines[] = ['itemId' => (string) $item, 'quantity' => 1, 'instructions' => null];
+            }
         }
         $service->stageTwo($id, [
             'complaint' => $complaint, 'vitals' => $vitals, 'itemsGiven' => $lines, 'followUp' => null,
