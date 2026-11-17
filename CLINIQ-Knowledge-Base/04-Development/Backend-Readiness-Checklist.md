@@ -4,7 +4,7 @@ Verified Friday, October 09, 2026 — 00:11 PHT. Based on `main` at commit `4c3c
 
 ## Summary
 
-The backend is built, B0 to B10 (Sunday, November 15, 2026): 127 routes, the 48 migrations run on MariaDB, nothing connected to the frontend yet (ADR-056). The [ERD and data dictionary](../02-Architecture/Database/ERD.md) are approved (ADR-057), and the migrations match them. The frontend has already written much of the spec: the mock API, the entity types, the access matrix, and the ADRs.
+The backend is built, B0 to B10 (Sunday, November 15, 2026): 127 routes, the 50 migrations (48 create a table, 2 ship product data) run on MariaDB; the frontend on `main` still runs on sample data only; the version connected to the API behind a mock/API switch is on `feat/connect-frontend` (ADR-080) and is not merged (ADR-056). The [ERD and data dictionary](../02-Architecture/Database/ERD.md) are approved (ADR-057), and the migrations match them. The frontend has already written much of the spec: the mock API, the entity types, the access matrix, and the ADRs.
 
 **Suggested order of work**
 
@@ -21,7 +21,7 @@ The backend is built, B0 to B10 (Sunday, November 15, 2026): 127 routes, the 48 
 | Area | Current state |
 |---|---|
 | `backend/` | Phases B0 to B10 built and audited (Laravel 13.42, Sanctum SPA mode): 127 routes, every endpoint of the API Contract plus health and the CSRF cookie; 231 Pest tests pass (Monday, November 16, 2026, `08-Logs/Load-Test-Nov16/NOTES.md`); three scheduled jobs. The frontend calls it behind a mock/API switch on `feat/connect-frontend` (ADR-080). Checked Sunday, November 15, 2026 at `397e000`, the connection and test count Tuesday, November 17, 2026 at `759781e`; numbers in the [Facts sheet](../00-Project-Core/Facts-Sheet.md). |
-| `ERD.md` | Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057), with a data dictionary, reference schema and constraint tests. Since then changed through ADR-063, 064, 071, 072, 073, 075 and 076: 48 tables, 462 columns. The 48 migrations match it and its 260 constraint tests pass (`php tools/db-checks.php`, Sunday, November 15, 2026). |
+| `ERD.md` | Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057), with a data dictionary, reference schema and constraint tests. Since then changed through ADR-063, 064, 071, 072, 073, 075 and 076: 48 tables, 462 columns. The 48 table migrations match it and its 260 constraint tests pass (`php tools/db-checks.php`, Sunday, November 15, 2026). |
 | Mock API (`api.ts`) | 126 exported functions, 15 exported constants and 19 error classes, about 3,840 lines (November 7, 2026; 104 and 10 on October 31). It holds real business rules: stock integrity, excused-period checks, duplicate-student detection, LRN validation and uniqueness, incident stage rules. It is a working but unwritten API contract. |
 | Auth and roles | The access matrix in `Module-Overview.md` covers 11 rows (Modules 1 to 5 and 7 to 11, plus 2a) × 2 roles. ADR-015 sets a 7-day session lifetime and lockout after 5 failed attempts for 5 minutes; each role is signed out after its own idle minutes, Staff 60 and Admin 30, both settings (ADR-048, amended by ADR-078; Sunday, November 08, 2026 — 18:35 PHT); ADR-056 chose SPA cookie mode. |
 
