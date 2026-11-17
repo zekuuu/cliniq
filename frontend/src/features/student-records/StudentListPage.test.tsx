@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { StudentListPage } from './StudentListPage'
 import { fetchStudentList } from './api/studentListApi'
 import { getStudent, listStudents } from '../../lib/mock-db'
+import { db } from '../../lib/mock-db/store'
 import { lrnLabel } from '../../lib/lrn'
 
 describe('Student List', () => {
@@ -106,5 +107,35 @@ describe('Student List', () => {
     const table = within(screen.getByRole('table', { name: 'Student masterlist' }))
     expect(table.queryByText('Complete')).not.toBeInTheDocument()
     expect(table.getAllByText('Incomplete').length).toBeGreaterThan(0)
+  })
+
+  // The list used to fetch at most 80 students, so the rest were reachable only by search (Zean, November 17, 2026).
+  it('pages through every matching student, 10 a page, with no cap', async () => {
+    const user = userEvent.setup()
+    const state = db()
+    const template = state.students.find((student) => !student.archived)!
+    for (let i = 0; i < 100; i += 1) {
+      state.students.push({
+        ...template,
+        id: `paging-student-${i}`,
+        lrn: String(910000000000 + i),
+        firstName: 'Paging',
+        lastName: `Zz Student ${String(i).padStart(3, '0')}`,
+      })
+    }
+    const total = (await listStudents()).length
+    expect(total).toBeGreaterThan(80)
+    const pages = Math.ceil(total / 10)
+
+    renderWithRouter(<StudentListPage />)
+    expect(await screen.findByText(`${total} results shown`)).toBeInTheDocument()
+    expect(screen.getByText(`Showing 1–10 of ${total} students`)).toBeInTheDocument()
+    expect(screen.getByText(`Page 1 of ${pages}`)).toBeInTheDocument()
+    const table = screen.getByRole('table', { name: 'Student masterlist' })
+    expect(within(table).getAllByRole('row')).toHaveLength(11)
+
+    await user.click(screen.getByRole('button', { name: 'Last page' }))
+    expect(screen.getByText(`Page ${pages} of ${pages}`)).toBeInTheDocument()
+    expect(screen.getByRole('rowheader', { name: /Zz Student 099/ })).toBeInTheDocument()
   })
 })
