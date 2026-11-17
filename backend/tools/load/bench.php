@@ -8,22 +8,24 @@ declare(strict_types=1);
  * cookie, the login, then the session and X-XSRF-TOKEN), one session per person, and never weakens a
  * limit: logins are paced under 10 a minute, each person stays under 120 requests a minute.
  *
- *   php tools/load/bench.php journey  [--base=http://localhost:8081] [--runs=5] [--user=load.nurse]
+ *   php tools/load/bench.php journey  [--base=http://localhost:8081] [--runs=5] [--user=demo.nurse]
  *   php tools/load/bench.php crowd    --people=5 --minutes=10 [--pause=3]    (pause 0 = until the first 429 or error)
  *   php tools/load/bench.php nav      count the requests one screen change makes is a browser job; see NOTES
  *
- * Accounts: load.nurse and load.bench01..20, password Load-Test-Only-2026 (test database only).
+ * Accounts: demo.nurse (password demo-nurse, as in the mock) and load.bench01..20 (password
+ * Load-Test-Only-2026), test database only.
  * Results: printed, and appended to storage/load/results.jsonl.
  */
 
 $cmd = $argv[1] ?? 'journey';
-$opt = ['base' => 'http://localhost:8081', 'runs' => 5, 'user' => 'load.nurse', 'people' => 5, 'minutes' => 10, 'pause' => 3, 'label' => ''];
+$opt = ['base' => 'http://localhost:8081', 'runs' => 5, 'user' => 'demo.nurse', 'people' => 5, 'minutes' => 10, 'pause' => 3, 'label' => ''];
 foreach (array_slice($argv, 2) as $a) {
     if (preg_match('/\A--([a-z]+)=(.*)\z/', $a, $m) === 1) {
         $opt[$m[1]] = is_numeric($m[2]) ? $m[2] + 0 : $m[2];
     }
 }
 const PASSWORD = 'Load-Test-Only-2026';
+const DEMO_PASSWORDS = ['demo.nurse' => 'demo-nurse', 'demo.principal' => 'demo-admin'];
 $jar = __DIR__.'/../../storage/load/sessions';
 @mkdir($jar, 0777, true);
 
@@ -87,7 +89,7 @@ final class Person
         }
         @unlink($this->cookies);
         $this->call('GET', '/sanctum/csrf-cookie');
-        [$status, , , $body] = $this->call('POST', '/api/auth/login', ['username' => $this->user, 'password' => PASSWORD]);
+        [$status, , , $body] = $this->call('POST', '/api/auth/login', ['username' => $this->user, 'password' => DEMO_PASSWORDS[$this->user] ?? PASSWORD]);
         if ($status !== 200) {
             throw new RuntimeException("Sign-in of {$this->user} answered {$status}: ".json_encode($body));
         }
