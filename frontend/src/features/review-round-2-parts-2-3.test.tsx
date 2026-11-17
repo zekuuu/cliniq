@@ -415,7 +415,6 @@ describe('R26: the Inventory list is paged', () => {
 describe('R27: Expired does not look like Low stock on the Inventory list', () => {
   it('shows Expired solid red with light text and Low stock in the warning style, both in words', async () => {
     resetMockDb()
-    window.sessionStorage.setItem('cliniq.pageSize', '50')
     render(
       <MemoryRouter initialEntries={['/inventory']}>
         <AppRoutes user={STAFF} onLogout={() => {}} />

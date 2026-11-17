@@ -4,30 +4,10 @@ import { useState } from 'react'
 export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const
 export type PageSize = (typeof PAGE_SIZE_OPTIONS)[number]
 
-const KEY = 'cliniq.pageSize'
-const DEFAULT: PageSize = 10
-
-function stored(): PageSize {
-  try {
-    const value = Number(window.sessionStorage.getItem(KEY))
-    return (PAGE_SIZE_OPTIONS as readonly number[]).includes(value) ? (value as PageSize) : DEFAULT
-  } catch {
-    return DEFAULT
-  }
-}
-
-/** The chosen page size, kept for this browser session and shared by every paged list. */
-export function usePageSize(): [PageSize, (size: PageSize) => void] {
-  const [size, setSize] = useState<PageSize>(stored)
-  return [
-    size,
-    (next) => {
-      setSize(next)
-      try {
-        window.sessionStorage.setItem(KEY, String(next))
-      } catch {
-        // Storage may be blocked; the choice still holds while the screen is open.
-      }
-    },
-  ]
+/**
+ * The list's page size: 10 every time the screen opens. A change holds only while the screen stays
+ * open; nothing is stored and nothing goes in the URL (Zean, November 17, 2026).
+ */
+export function usePageSize() {
+  return useState<PageSize>(10)
 }

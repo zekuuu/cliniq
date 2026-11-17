@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { addDays } from '../../lib/dates'
 import {
   getInventoryItem,
@@ -19,7 +19,10 @@ import { InventoryFormPage } from './InventoryFormPage'
 import { InventoryListPage } from './InventoryListPage'
 
 // The whole list on one page: these tests reach every item (Inventory is paged since review round 2, R26).
-beforeEach(() => window.sessionStorage.setItem('cliniq.pageSize', '50'))
+vi.mock('../../hooks/usePageSize', async (importOriginal) => {
+  const { useState } = await import('react')
+  return { ...(await importOriginal<object>()), usePageSize: () => useState(50) }
+})
 
 /** Panel review part 5: the Manage menu, expiry on Add Item, the duplicate warning, Add/Remove. */
 

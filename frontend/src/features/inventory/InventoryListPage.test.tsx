@@ -1,12 +1,15 @@
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { InventoryListPage } from './InventoryListPage'
 import { fetchInventory } from './api/inventoryApi'
 import { inventoryStatusSortValue } from './inventoryStatusSort'
 
 // The whole list on one page: these tests reach every item (Inventory is paged since review round 2, R26).
-beforeEach(() => window.sessionStorage.setItem('cliniq.pageSize', '50'))
+vi.mock('../../hooks/usePageSize', async (importOriginal) => {
+  const { useState } = await import('react')
+  return { ...(await importOriginal<object>()), usePageSize: () => useState(50) }
+})
 
 describe('Inventory List', () => {
   it('defaults to the staff attention order in the Status column', async () => {
