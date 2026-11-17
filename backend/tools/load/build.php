@@ -45,7 +45,7 @@ if (app()->isProduction() || ! in_array($db, ALLOWED, true)) {
     fwrite(STDERR, "Refused: the database {$db} is not one of ".implode(', ', ALLOWED).".\n");
     exit(1);
 }
-if (Schema::hasTable('users') && (DB::table('users')->where('username', 'not like', 'load.%')->exists()
+if (Schema::hasTable('users') && (DB::table('users')->where('username', 'not like', 'load.%')->whereNotIn('username', LoadGenerator::DEMO_USERNAMES)->exists()
     || DB::table('students')->where('lrn', 'not like', LoadGenerator::LRN_PREFIX.'%')->exists())) {
     fwrite(STDERR, "Refused: {$db} holds accounts or students this tool did not make.\n");
     exit(1);

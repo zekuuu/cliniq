@@ -18,6 +18,7 @@ if (! function_exists('app')) {
     $app = require __DIR__.'/../../bootstrap/app.php';
     $app->make(Kernel::class)->bootstrap();
 }
+require_once __DIR__.'/Generator.php'; // LoadGenerator::DEMO_USERNAMES
 
 /** @return int number of failed checks */
 function loadChecks(): int
@@ -113,7 +114,8 @@ function loadChecks(): int
             $hits += in_array(mb_strtolower((string) $last), $surnames, true) ? 1 : 0;
         }
     }
-    foreach (DB::table('users')->pluck('name') as $name) {
+    // The demo accounts are copied from the mock on purpose (same names and passwords), so they are not matched.
+    foreach (DB::table('users')->whereNotIn('username', LoadGenerator::DEMO_USERNAMES)->pluck('name') as $name) {
         foreach ($surnames as $s) {
             $hits += str_contains(mb_strtolower((string) $name), $s) ? 1 : 0;
         }

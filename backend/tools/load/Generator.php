@@ -66,7 +66,11 @@ final class LoadHttp
 
 final class LoadGenerator
 {
+    /** The background `load.*` accounts' password. The demo accounts use the mock's passwords. */
     public const PASSWORD = 'Load-Test-Only-2026';
+
+    /** The mock's accounts (`frontend/src/lib/mock-db/mock-db.json`, `devAccounts`): one set of sign-ins for both. */
+    public const DEMO_USERNAMES = ['demo.principal', 'demo.nurse', 'demo.new'];
 
     public const LRN_PREFIX = '999900';
 
@@ -183,15 +187,18 @@ final class LoadGenerator
         $this->at($at);
         $users = app(UserService::class);
         $auth = app(AuthService::class);
-        $make = function (string $name, string $username, string $role, int $actor) use ($users, $auth): User {
+        $make = function (string $name, string $username, string $role, int $actor, string $password = self::PASSWORD) use ($users, $auth): User {
             $saved = $users->save(['name' => $name, 'username' => $username, 'role' => $role, 'temporaryPassword' => 'Temporary-'.$username], null, $actor);
             $user = User::query()->findOrFail((int) $saved['id']);
-            $auth->setPassword($user, self::PASSWORD, 'Load test password set');
+            $auth->setPassword($user, $password, 'Load test password set');
 
             return $user->refresh();
         };
-        $this->admin = $make('Principal Load Test', 'load.principal', 'admin', 0);
-        $this->nurse = $make('Nurse Load Test', 'load.nurse', 'staff', $this->admin->id);
+        // The mock's three accounts, names and passwords (Zean, November 17, 2026); the load.* ones are background.
+        $this->admin = $make('Demo Admin', 'demo.principal', 'admin', 0, 'demo-admin');
+        $this->nurse = $make('Demo Clinician', 'demo.nurse', 'staff', $this->admin->id, 'demo-nurse');
+        // As in the mock: a temporary password, changed at the first sign-in.
+        $users->save(['name' => 'Grace Tolentino', 'username' => 'demo.new', 'role' => 'staff', 'temporaryPassword' => 'demo-change'], null, $this->admin->id);
         $this->staffUsers = [$this->nurse];
         foreach ([1, 2, 3] as $n) {
             $this->staffUsers[] = $make("Covering Staff {$n}", "load.cover{$n}", 'staff', $this->admin->id);
