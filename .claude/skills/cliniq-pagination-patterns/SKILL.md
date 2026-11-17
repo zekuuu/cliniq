@@ -21,8 +21,10 @@ than rendering every row at once.
 - Reset to the first page when a filter changes so a user never lands on an empty later page.
 - A print/export action renders the complete current filtered result, not only the visible page.
 - Offer **Rows per page: 10, 20, 50 or 100** (Sir Rey, Sunday, October 25, 2026; 50 and 100 added Saturday, October 31, 2026): pass `onPageSizeChange` and
-  take the size from `hooks/usePageSize.ts`, which keeps the choice for the browser session and shares
-  it between lists. Changing the size returns to page 1. Default 10.
+  take the size from `hooks/usePageSize.ts`. Changing the size returns to page 1. **Every list opens at
+  10, every time** (Zean, Tuesday, November 17, 2026 — 23:58 PHT): a change holds only while that screen
+  stays open. Nothing is stored (no `sessionStorage`) and nothing goes in the URL. Before: the choice
+  was kept for the browser session and shared between lists, so one pick of 100 opened every list at 100.
 - **No hidden caps** (Zean, Tuesday, November 17, 2026 — 21:04 PHT). A paged list fetches every record
   that matches its search and filters, and the pager's total is that count. Never pass a `limit` to a
   list fetch. Search, filters, "Include archived" and sorting run over all records, not over a slice.
