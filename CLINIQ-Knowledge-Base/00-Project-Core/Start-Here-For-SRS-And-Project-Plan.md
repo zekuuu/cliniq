@@ -12,12 +12,12 @@ Last checked against the code on Tuesday, November 17, 2026 for the changes of t
 
 ## Where the code lives
 
-`main` holds the documents and the frontend as it ran on sample data only. The newer code is on other branches and is not merged into `main` yet; read it at the linked commit. Last synced to `main` on Tuesday, November 17, 2026 — 08:15 PHT, from `main@57c3cc8` and `feat/connect-frontend@3a890f5`; [sync log](../08-Logs/Main-Sync-Log.md).
+`main` holds the documents, the frontend as it ran on sample data only, and the [screenshots](../../screenshots/INDEX.md) of the system. The newer code is on other branches and is not merged into `main` yet; read it at the linked commit. Last synced to `main` on Wednesday, November 18, 2026 — 09:46 PHT, from `main@24f51cc` and `feat/connect-frontend@b9496e8`; [sync log](../08-Logs/Main-Sync-Log.md).
 
 | Branch | What it holds | Tip commit and date | Merged into `main` | Why not on `main` |
 |---|---|---|---|---|
-| `main` | Documents; the frontend on sample data only; `backend/` holds only its README and `.env.example` | [`57c3cc8`](https://github.com/zekuuu/cliniq/tree/57c3cc8), Tuesday, November 17, 2026 — 06:20 PHT | (this branch) | |
-| `feat/connect-frontend` | **The newest code: everything below plus the frontend connected to the API behind a mock/API switch (ADR-080), the follow-ups and the load-test tools.** Contains `backend` and `main` | [`3a890f5`](https://github.com/zekuuu/cliniq/tree/3a890f5), Tuesday, November 17, 2026 — 06:22 PHT | no | Not reviewed and merged yet; the backend it contains stays off `main` until Zean merges it (ADR-056) |
+| `main` | Documents; the frontend on sample data only; the 34 screenshots in `screenshots/`; `backend/` holds only its README and `.env.example` | [`24f51cc`](https://github.com/zekuuu/cliniq/tree/24f51cc), Wednesday, November 18, 2026 — 09:26 PHT | (this branch) | |
+| `feat/connect-frontend` | **The newest code: everything below plus the frontend connected to the API behind a mock/API switch (ADR-080), the follow-ups and the load-test tools.** Contains `backend` and `main` | [`b9496e8`](https://github.com/zekuuu/cliniq/tree/b9496e8), Wednesday, November 18, 2026 — 09:37 PHT | no | Not reviewed and merged yet; the backend it contains stays off `main` until Zean merges it (ADR-056) |
 | `backend` | The Laravel API, phases B0 to B10, the 50 migrations and the backend tests | [`18ff415`](https://github.com/zekuuu/cliniq/tree/18ff415), Sunday, November 15, 2026 — 10:50 PHT | no | On purpose: the backend stays on its own branch until Zean reviews and merges it (ADR-056) |
 | `feat/build-backend` | An older step of `backend` (fully contained in it) | [`3bcbe16`](https://github.com/zekuuu/cliniq/tree/3bcbe16), Saturday, November 14, 2026 — 23:07 PHT | no | Superseded by `backend` |
 
@@ -92,7 +92,7 @@ Unchanged: 127 API routes, 126 contract entries naming 127 endpoints, 48 tables,
 | 2.3 User characteristics | [User Roles and Permissions](../01-Requirements/User-Roles-and-Permissions.md), [Role matrix](../02-Architecture/Role-Permission-Matrix.md) |
 | 2.4 Constraints, assumptions | [Non-Functional Requirements](../01-Requirements/Non-Functional-Requirements.md), [ADR-079](../06-Decisions/ADR-079-Clinic-PC-Only-Principal-Gets-Monthly-PDF.md), [Privacy Policy](../09-References/Privacy-Policy.md) |
 | 3.1 Functional requirements | [Functional Requirements](../01-Requirements/Functional-Requirements.md) with its [traceability table](../01-Requirements/Functional-Requirements.md#traceability), [Activity diagrams](../02-Architecture/Database/Activity-Diagram.md), [State diagrams](../02-Architecture/State-Diagrams.md) |
-| 3.2 External interfaces: user | [Screen Inventory](../03-Design/Screen-Inventory.md), [Screen-flow map](../02-Architecture/Screen-Flow-Map.md), [Design System](../03-Design/Design-System.md), screenshots |
+| 3.2 External interfaces: user | [Screen Inventory](../03-Design/Screen-Inventory.md), [Screen-flow map](../02-Architecture/Screen-Flow-Map.md), [Design System](../03-Design/Design-System.md), [screenshots](../../screenshots/INDEX.md) |
 | 3.3 External interfaces: software and hardware | [Tech Stack](../02-Architecture/Tech-Stack.md), [API Contract](../04-Development/API-Contract.md), [Sequence diagrams](../02-Architecture/Sequence-Diagrams.md) |
 | 3.4 Non-functional requirements | [Non-Functional Requirements](../01-Requirements/Non-Functional-Requirements.md), [Backup and recovery](../02-Architecture/Backup-And-Recovery-Flow.md) |
 | 3.5 Data requirements | [ERD](../02-Architecture/Database/ERD.md), [Data Dictionary](../02-Architecture/Database/Data-Dictionary.md), [Data Retention Policy](../02-Architecture/Database/Data-Retention-Policy.md) |
@@ -118,6 +118,7 @@ Unchanged: 127 API routes, 126 contract entries naming 127 endpoints, 48 tables,
 - **A requirement:** its ID, for example FR-16 or NFR-09. IDs never change; new ones are added at the end.
 - **A diagram:** its title and caption from the source file, and the PNG from `02-Architecture/Database/Diagrams/`.
 - **A number:** from the Facts sheet, with its date.
+- **A screen:** the image from [`screenshots/`](../../screenshots/INDEX.md), with its file name and screen title from `INDEX.md`. These are real screenshots of every major screen (34: the login, 27 Staff, 6 Admin), taken on the fictional load-test school, so every person shown is generated. Caution: the dates and times on them follow a capture clock that starts at Tuesday, November 17, 2026, 13:00 (the last day of the generated school), and the two accounts' display names (Jennesse Baas and Gilan Avelida) were set for this set.
 
 ## Glossary
 
