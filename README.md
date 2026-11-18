@@ -70,6 +70,8 @@ Checked against the router (`frontend/src/routes/AppRoutes.tsx`) on Sunday, Nove
 
 The Admin does not print (ADR-038). Every printout is a purpose-built A4 document (ADR-026). The Dashboard prints nothing (ADR-074).
 
+The keyboard shortcuts (Alt+N, Alt+I, Alt+K, Alt+D and the rest, listed under Keyboard shortcuts in the account menu) are written for Windows, the clinic PC's system (ADR-079). They have not been tried on a Mac, where Option+letter types a symbol, so they may not work there (Sir Rey, October 25, 2026).
+
 ### Decided, not built
 
 - **The clinic PC set-up** of ADR-079: Windows password and screen lock, BitLocker on Windows Pro, Windows Firewall rule, backups kept away from the room, one Staff account per person.
