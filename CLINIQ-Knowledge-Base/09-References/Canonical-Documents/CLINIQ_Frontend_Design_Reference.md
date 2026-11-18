@@ -1,6 +1,6 @@
 # CLINIQ — Frontend Design Reference
 
-This is a companion to `CLINIQ_Frontend_Context_Brief.md` (the fuller technical/functional spec), built specifically for **designing the UI**, not coding it. It carries over everything a designer needs — project context, roles, and the full visual design system — then goes deep on **5 reference screens**. Those 5 were picked because between them they use nearly every component type in the system; design them carefully and thoroughly, and the remaining screens should mostly be recombinations of the same patterns rather than new decisions. A mapping table at the end says which reference screen to follow for each of the rest. Brought up to date with ADR-001 to ADR-053 on Thursday, October 29, 2026; it says what the screens should look like, not what is already built. **Words used:** "Staff" is the clinician role (School Clinician in the app); teachers and other employees seen as patients are "staff patients" (ADR-043).
+This is a companion to `CLINIQ_Frontend_Context_Brief.md` (the fuller technical/functional spec), built specifically for **designing the UI**, not coding it. It carries over everything a designer needs — project context, roles, and the full visual design system — then goes deep on **5 reference screens**. Those 5 were picked because between them they use nearly every component type in the system; design them carefully and thoroughly, and the remaining screens should mostly be recombinations of the same patterns rather than new decisions. A mapping table at the end says which reference screen to follow for each of the rest. Brought up to date with ADR-001 to ADR-053 on Thursday, October 29, 2026 (*note, Wednesday, November 18, 2026 — 18:01 PHT: then brought in line with ADR-062 (warning colour), ADR-063 (staff sex), ADR-065 (Stage 2 optional), ADR-070 ("Symptoms", "Released to"), ADR-074 (no Dashboard print) and the 832px narrow page width, to match `03-Design/Design-System.md`; no section was renumbered; backlog run of November 18, 2026*); it says what the screens should look like, not what is already built. **Words used:** "Staff" is the clinician role (School Clinician in the app); teachers and other employees seen as patients are "staff patients" (ADR-043).
 
 ---
 
@@ -48,7 +48,7 @@ Semantic colors, each contrast-checked rather than assumed:
 | Token | Hex | Use | Contrast w/ white |
 |---|---|---|---|
 | `success` | `#20753A` | Confirmations, success buttons/badges with white text | 5.73:1 — passes. (A brighter `#2E9E4F` only hits 3.43:1 — use that lighter shade as `success-light` for icons/dark-text badges only, not for white text) |
-| `warning` | `#A85F00` | Low-stock, nearing-expiration, frequent-visitor flags — anywhere with white text | 4.88:1 — passes. The first candidate, `#ED8B00`, measured **2.53:1 — an outright fail**, not borderline; keep that shade only as `warning-light` for dark-text badges |
+| `warning` | `#E9882F` | Pending, due-soon, nearing-expiration, low-stock and review-needed states: borders, bars and solid fills only (ADR-062) | Never carries white text; a solid fill takes `text-primary` (6.65:1). Words use `warning-text` `#9A4A00`. The former `#A85F00` and `warning-light` are gone |
 | `error` / `destructive` | `#D32F2F` | Delete/irreversible actions, validation errors | 4.98:1 — passes |
 | `info` | `#1976D2` | Neutral system messages | 4.60:1 — passes |
 
@@ -66,7 +66,7 @@ Small-to-medium, consistent, comfortable to tap/click. Slightly rounded corners 
 **Text input standard:** the shared `Input` matches the standard 40px dropdown control: `border-border`, light card shadow, semibold 14px values, and `brand-green` hover/focus treatment. Do not shrink a filter input below its paired standard dropdown.
 
 ### Layout & Spacing
-Clean, organized, compact, uncluttered — avoid both crowding and excessive whitespace. Consistent spacing/alignment to show relationships; group related information, separate unrelated information visually. **Two page widths only:** 1200px for lists, tables, reports and dashboards, and 720px for single-record forms and detail views stacked in one column.
+Clean, organized, compact, uncluttered — avoid both crowding and excessive whitespace. Consistent spacing/alignment to show relationships; group related information, separate unrelated information visually. **Two page widths only:** 1200px for lists, tables, reports and dashboards, and 832px (52rem; 720px until Thursday, November 05, 2026) for single-record forms and detail views stacked in one column.
 
 ### Forms
 Real labels, not placeholder-only. Group related fields, mark a field as required only when saving is blocked without it (a field that can be saved empty shows no mark, ADR-051), explain confusing fields, give understandable (not technical) validation errors, preserve entered data on validation failure, and move focus to the first invalid field after a failed submit. Cancel asks "Discard unsaved changes?" only when something unsaved has been typed or chosen, with "Keep Editing" as the safe, focused choice (ADR-021). A user should always be able to answer: *What do I enter? → Why? → What happens next?*
@@ -103,7 +103,7 @@ Design these five in full detail first. Everything else in the system should be 
 **Why this one:** the single most component-dense screen in the system — this is where most of your component library gets exercised at once.
 
 **Layout, top to bottom:**
-1. **Header** — page title, current date, a date-range filter control, and a **Print** button. For Staff only, the minimal **backup-status indicator** (status + last-backup date, linking to the Backup screen) sits in the header above Date range and Print, and a **New Visit** action sits on the view-tab row, right of the tabs (above them on phones). Both are navigation, not edits, so the Dashboard stays view-only. The Admin/Principal has no New Visit action; the Admin does see the stale-backup chip and can open Backup (ADR-037).
+1. **Header** — page title, current date and a date-range filter control; no Print button (ADR-074). For Staff only, the minimal **backup-status indicator** (status + last-backup date, linking to the Backup screen) sits in the header above Date range, and a **New Visit** action sits on the view-tab row, right of the tabs (above them on phones). Both are navigation, not edits, so the Dashboard stays view-only. The Admin/Principal has no New Visit action; the Admin does see the stale-backup chip and can open Backup (ADR-037).
 2. **View tabs under the header** — **Overview** (the default) and **Trends** only (ADR-025, 032). The chosen view is kept in the address (`?view=trends`) without adding Back steps, each view keeps its own state, and the Overview tab carries the count of urgent items (expired stock, overdue follow-ups, incidents awaiting Stage 2) so alerts stay noticeable from every view. The date range applies to Overview and Trends.
 3. **Overview** — a row of stat cards (visits, incidents, active students, pending excuse letters, due or overdue follow-ups), each with an icon, a large number, a label that says what it counts, and a small change indicator that shows both counts ("4 vs 1 in the prior 22 days") while the earlier period is small. Then compact **attention chips** for Staff that drill through to the right list (inventory, incomplete records, in the clinic now, stale backup), and lower down the alert lists, each row in the list-row pattern (masked LRN, never a name):
    - Due/upcoming follow-ups (masked LRN, reason, due date, status badge)
@@ -134,10 +134,10 @@ A Weekly / Monthly / Yearly switch and a Calendar / Table switch with their own 
 
 **Layout, top to bottom:**
 1. **Patient header** — the student's name, full LRN and grade level (a single-student screen, ADR-040), or the staff member's name and Staff No.; picked on the form with one patient search whose results are labelled Student or Staff (ADR-043)
-2. **Visit date and time** (defaults to now, never in the future; a late-entry reason appears when it is more than 30 minutes ago) and a **main complaint field** — free text with suggestions, plus up to 3 extra complaint tags (ADR-053); a one-line hint says a Visit is a common case and an Incident a worse one (ADR-051), and an emergency-type complaint shows "Escalate to an incident?"
+2. **Visit date and time** (defaults to now, never in the future; a late-entry reason appears when it is more than 30 minutes ago) and a **main complaint field**, labelled **"Symptoms"** on screen (ADR-070, label only) — free text with suggestions, plus up to 3 "Other symptoms" tags (ADR-053); a one-line hint says a Visit is a common case and an Incident a worse one (ADR-051), and an emergency-type complaint shows "Escalate to an incident?"
 3. **First-aid checklist panel** — appears dynamically the moment a complaint is selected: a titled checklist card ("Suggested first-aid steps for: [complaint]"), checkboxes, visually distinct from the surrounding form (e.g., `surface` background) so it reads as guidance, not a required field
 4. **Treatment** — a **Treatment notes** textarea and repeatable **Medicines & supplies given** lines (searchable inventory picker showing stock and unit, a quantity stepper, optional instructions; the patient's recorded allergies are shown beside the picker; both parts are optional, ADR-018)
-5. **Disposition** — segmented control or radio group: Returned to class ("Returned to work" for staff) / Resting in clinic / Sent home / Referred to hospital. Sent home and Referred show an "Excuse letter" section (students only) and optional collected-by, relationship and time (ADR-049)
+5. **Disposition** — segmented control or radio group: Returned to class ("Returned to work" for staff) / Resting in clinic / Sent home / Referred to hospital. Sent home and Referred show an "Excuse letter" section (students only) and optional **"Released to"** (stored as collected-by; Other asks "Specify who", ADR-070), relationship and time (ADR-049)
 6. **Follow-up prompt** — a collapsed/inline section at the bottom: "Does this student need a follow-up?" toggle; expanding it reveals a date picker, reason field, and optional notes — this should feel like a natural continuation of the same form, not a popup interruption
 7. **Actions** — primary "Save Visit" button, a quieter secondary "Escalate to Incident" button (ADR-036), neutral "Cancel" text link
 
@@ -158,7 +158,7 @@ A Weekly / Monthly / Yearly switch and a Calendar / Table switch with their own 
 2. **Sectioned content** (tabs or stacked sections, designer's call, but pick one pattern and reuse it everywhere else this applies): Overview (demographics, emergency contact), Medical History (allergies and conditions as tag/chip components; an empty field reads "None recorded" in plain text, ADR-049, 051), Visit History (chronological list), Incident History (chronological list, including which are Stage 1/incomplete vs complete)
 3. **Actions** (Staff only) — Edit, Print, Archive. Archive should visually read as a lower-emphasis, non-destructive action (it's reversible and doesn't delete anything) — don't style it like a destructive button
 
-**Staff patients use the same template** (ADR-043): name and Staff No. in the header, no LRN, grade or sex.
+**Staff patients use the same template** (ADR-043): name and Staff No. in the header, no LRN or grade; the sex shows in the details, Staff only (ADR-063).
 
 **Components this exercises:** tag/chip, tabbed or sectioned content, list rows (reused from Reference 1's pattern), status badge, role-conditional action bar.
 
@@ -186,7 +186,7 @@ The QR Scan/Lookup Hub reference screen was removed with the QR feature (ADR-027
 1. Stage 1 fields shown filled-in (editable or read-only, designer's call), status badge now showing "In progress"
 2. **Additional fields unlocked:** full vitals, treatment notes, hospital referral group (destination, transport mode, departure time)
 3. **Parent Notification log** — a repeatable list of attempts, each with an outcome (Reached / No answer / Left message or voicemail / Wrong number), who was called, and a timestamp — this is a multi-attempt log pattern, not a single field
-4. Status badge changes to "Complete" once saved with at least one of treatment notes, a medicine line, a notification attempt or a hospital referral, or with "Nothing further was needed or done" ticked and a one-line reason
+4. Status badge changes to "Complete" once Stage 2 is saved. Every Stage 2 field is optional and Complete Incident is always available (ADR-065); an empty record shows "No treatment recorded. Check this is correct before approving." and can still be approved
 5. The Incident Report screen is read-only for the Admin/Principal; the Principal signs the printed report by hand (ADR-060)
 
 **Components this exercises:** urgency-styled primary button, stage/status badge (three states: Needs completion → In progress → Complete), multi-attempt log list, timestamped entries, hospital-referral field group.
