@@ -6,7 +6,7 @@ Everything open about the backend lives here: the Laravel API, the database buil
 
 ## Open work at a glance
 
-Open: FIX 0 · AUDIT 0 · DOC 0 · DECIDE 0 · LATER 24 · FIX-FRONTEND 0 | Notes: NOTE 10 · VERIFY 0 | Done: 21 (recounted Tuesday, November 17, 2026 — 05:20 PHT: defect D1 of the load run, found and fixed)
+Open: FIX 0 · AUDIT 0 · DOC 0 · DECIDE 0 · LATER 26 · FIX-FRONTEND 0 | Notes: NOTE 11 · VERIFY 0 | Done: 21 (recounted Wednesday, November 18, 2026 — 21:55 PHT: the demo seeder's two LATER items and one NOTE)
 
 **Open `FIX` items:** none.
 
@@ -70,6 +70,12 @@ Backend entries that were logged in the frontend file, moved here unchanged. Ses
 ## Run of November 10 (B1 verified, B3 built) — Tuesday, November 10, 2026 — 14:05 PHT
 
 - **[NOTE]** The follow-ups of this run are listed once, in [`Overnight-Run-Nov10/BACKEND-NOTES.md`](Overnight-Run-Nov10/BACKEND-NOTES.md), under FOLLOW-UPS (Audit Log paging, the `symptom-summary` print title, the per-module dev seeder, missing `AuditTarget` values). See [Agent session](Agent-Sessions/2026-11-10-backend-b1-verify-b3-audit.md).
+
+## Demo seeder — Wednesday, November 18, 2026 — 21:55 PHT
+
+- [ ] **[LATER]** **Stock flags in a mid-year demo** (logged Wednesday, November 18, 2026 — 21:55 PHT). The demo school shows no low-stock, expiring or expired item before late March: the generator's "ordered, not arrived" group sits in the last 15 school days before April 14 (it was the last 15 days before the build's end), and medicine lots last 10 to 30 months. A rule by date (for example, a few items skip the Monday restock in the second half of each month) would show the flags all year and stay prefix-stable; it changes the stock rows, so ask Zean first. Session: [2026-11-18-backend-demo-seeder](Agent-Sessions/2026-11-18-backend-demo-seeder.md)
+- [ ] **[LATER]** **Optional: a top-up that keeps hand-entered records** (logged Wednesday, November 18, 2026 — 21:55 PHT). Zean chose "reseed to now", which wipes what was typed by hand in `cliniq_testing`; a dev-only command that adds the missing days to an existing demo school would keep them, but needs the generator's state rebuilt from the database. Session: [2026-11-18-backend-demo-seeder](Agent-Sessions/2026-11-18-backend-demo-seeder.md)
+- **[NOTE]** The demo school's `created_at` and `updated_at` come from the database's own clock (`DEFAULT CURRENT_TIMESTAMP`), so they hold the time of the seed, not the record's time; the screens read the record times (`visited_at`, `occurred_at`, `ran_at`), which follow the generator's clock. As before the move. Session: [2026-11-18-backend-demo-seeder](Agent-Sessions/2026-11-18-backend-demo-seeder.md)
 
 ## Done
 
