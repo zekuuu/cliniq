@@ -1,7 +1,7 @@
 # Facts sheet
 
-**Last regenerated:** Wednesday, November 18, 2026 — 10:12 PHT
-**From commit:** `b58d59b` on `main` (documents); frontend numbers from this working tree; backend numbers from this working tree
+**Last regenerated:** Wednesday, November 18, 2026 — 21:54 PHT
+**From commit:** `af1e02d` on `main` (documents); frontend numbers from this working tree; backend numbers from this working tree
 **Regenerate with:** `npm run docs:facts` from the repository root (add `-- --tests` to rerun both test suites). The script is [`docs-facts.mjs`](../04-Development/tools/docs-facts.mjs).
 
 Every README, requirement document, diagram caption, and the Project Plan and SRS quote their numbers from this sheet. If a document disagrees with this sheet, the document is wrong. If this sheet disagrees with the repository, regenerate it: the script reads the repository and nothing else. Do not edit the numbers by hand.
@@ -26,10 +26,10 @@ Every README, requirement document, diagram caption, and the Project Plan and SR
 | API contract entries | **126** headings naming **127** endpoints | [API Contract](../04-Development/API-Contract.md) (`####` endpoint headings) |
 | API routes live in the backend | **127**: BackupVerification 7, ClinicVisits 12, Dashboard 8, EmergencyResponse 10, InventoryTracker 9, Laravel/Sanctum 1, ReportsGeneration 9, Shared/AuditLog 3, Shared/Feedback 2, Shared/FollowUps 3, Shared/Http 2, Shared/Settings 12, StaffPatients 11, StudentRecords 18, UserManagement 20 | `php artisan route:list` |
 | Scheduled jobs | **3**: `cliniq:close-missed-follow-ups` daily at 00:15; `cliniq:backup` daily at 18:00; `cliniq:sync-holidays` hourly from 7:00 to 18:00 | [`backend/routes/console.php`](../../backend/routes/console.php); Windows Task Scheduler runs `php artisan schedule:run` every minute |
-| Frontend test files | **148** | `frontend/src/**/*.test.ts(x)` |
-| Backend test files | **25** | `backend/tests/**/*Test.php` |
+| Frontend test files | **149** | `frontend/src/**/*.test.ts(x)` |
+| Backend test files | **26** | `backend/tests/**/*Test.php` |
 | Last recorded test run | Sunday, November 15, 2026 — 08:38 PHT at `397e000` | [Test runs](#test-runs) below |
-| Lines of code (non-blank) | frontend **69270** (`src`, tests included); backend **14562** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
+| Lines of code (non-blank) | frontend **69320** (`src`, tests included); backend **15531** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
 
 ## Test runs
 
@@ -43,7 +43,7 @@ Recorded Sunday, November 15, 2026 — 08:38 PHT at `397e000` by `docs-facts.mjs
 
 A frontend count that moves between runs comes from 5-second timeouts under full-suite load; the failing files pass when run alone. See the VERIFY entry "The full test suite fails more under CPU load" in [Frontend-Issues-and-TODOs](../08-Logs/Frontend-Issues-and-TODOs.md).
 
-**Newer recorded runs, not re-run for this sheet** (added by hand Tuesday, November 17, 2026 — 05:42 PHT; the script carries this section over unchanged): on `feat/connect-frontend`, Monday, November 16, 2026, from [`08-Logs/Load-Test-Nov16/NOTES.md`](../08-Logs/Load-Test-Nov16/NOTES.md): frontend **1250 passed** in 146 files (22:10 PHT); backend **231 passed**, Pint and Larastan pass (22:35 PHT, on the scratch database `cliniq_check_pest`). Quote these until `npm run docs:facts -- --tests` records a new run.
+**Newer recorded runs, not re-run for this sheet** (added by hand Tuesday, November 17, 2026 — 05:42 PHT; the script carries this section over unchanged): on `feat/connect-frontend`, Monday, November 16, 2026, from [`08-Logs/Load-Test-Nov16/NOTES.md`](../08-Logs/Load-Test-Nov16/NOTES.md): frontend **1250 passed** in 146 files (22:10 PHT); backend **231 passed**, Pint and Larastan pass (22:35 PHT, on the scratch database `cliniq_check_pest`). On `main`, Wednesday, November 18, 2026 — 18:13 PHT (backlog run, uncommitted working tree on `af1e02d`; added by hand): frontend **1254 passed** in 149 files, 0 failed; the backend was not run (no database commands in that run). On `main`, Wednesday, November 18, 2026 — 21:55 PHT (demo-seeder run, uncommitted; added by hand): backend **236 passed** (231 plus the 5 of `DemoSchoolSeederTest`), Pint and Larastan pass, on `cliniq_check_pest`. Quote these until `npm run docs:facts -- --tests` records a new run.
 
 ## Stack (installed versions)
 
