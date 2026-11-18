@@ -1,7 +1,9 @@
 # ADR-056: Backend preparation: Sanctum SPA cookie mode, a separate `backend` branch, nothing wired to the frontend yet, and no migrations before the ERD is approved
 
+**Note (Wednesday, November 18, 2026 — 10:07 PHT):** Partly superseded by [ADR-081](ADR-081-Backend-Merged-Into-Main-Main-Holds-The-Whole-System.md) on Wednesday, November 18, 2026: the backend is on `main` (merge commit `bc654dd`). Only item 2 and the rejected alternative "Develop on `main`" are replaced; everything else below stands. The decision text below is not edited.
+
 **Date:** Saturday, October 31, 2026 — 18:20 PHT
-**Status:** Accepted (Zean, in chat, Saturday, October 31, 2026 — 18:10 PHT, with his answers to Claude's three questions the same evening). Settles the "Sanctum mode" item that ADR-015 left to Phase B2. Does not change ADR-015's session lifetime, the lockout, ADR-048's Admin sign-out or ADR-009's folder structure.
+**Status:** Accepted — partly superseded by ADR-081 (Zean, in chat, Saturday, October 31, 2026 — 18:10 PHT, with his answers to Claude's three questions the same evening). Settles the "Sanctum mode" item that ADR-015 left to Phase B2. Does not change ADR-015's session lifetime, the lockout, ADR-048's Admin sign-out or ADR-009's folder structure.
 
 **Note (Saturday, October 31, 2026 — 20:31 PHT):** Zean: the ERD, Data Dictionary, Reference Schema and ERD diagrams are drafts that had fallen behind the decisions (the birthdate and others). Rule 6 is narrowed: the drafts are kept up to date with accepted decisions and the frontend's real data shapes from now on, as documents only. What still waits for the team's approval is every design choice no decision settles (id types, provisional fields, the audit retention figure, indexes) and, as before, any migration, seeder or model with columns. The drafts stay marked as a proposed draft, not final or approved.
 

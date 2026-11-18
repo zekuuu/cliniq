@@ -317,3 +317,7 @@ Both roles are signed out after idle time: Staff after `idleSignoutMinutesStaff`
 ### ADR-079: CLINIQ is deployed on the clinic PC only; the Principal gets a monthly PDF
 
 CLINIQ runs on the clinic PC only, at `http://localhost`: no LAN access, no fixed address or hostname, no HTTPS, inbound connections blocked by Windows Firewall, nothing forwarded from the router. The clinician sends the Principal the Monthly Report as a PDF (printed, or saved with the browser's Save as PDF); the Admin account is used on the clinic PC. The shared, unlocked room needs a Windows password and screen lock, BitLocker on Windows Pro, backups kept away from the room, and one Staff account per person. Joining the school network later is a new decision. Reinforces ADR-029. [ADR-079](ADR-079-Clinic-PC-Only-Principal-Gets-Monthly-PDF.md)
+
+### ADR-081: Backend merged into main; main holds the whole system
+
+The backend and the connected frontend were merged into `main` on Wednesday, November 18, 2026 (merge commit `bc654dd`), because the project is moving to testing and deployment. Before the merge, `main` was tagged `checkpoint-frontend-only-2026-11-18` (`f250ab6`), the last state with the frontend on sample data only. New work goes on short `feat/*` branches merged into `main`; the old `backend`, `feat/connect-frontend` and `feat/build-backend` branches are kept for history. Replaces only ADR-056's own-branch rule; the rest of ADR-056 stands. [ADR-081](ADR-081-Backend-Merged-Into-Main-Main-Holds-The-Whole-System.md)
