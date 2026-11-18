@@ -4,20 +4,24 @@ declare(strict_types=1);
 
 /*
  * Builds the fictional load-test school from nothing, deterministically (08-Logs/Load-Test-Nov16).
- *   php tools/load/build.php --students=900 --staff=60 --years=5 [--audit=100000] [--seed=20261116]
+ *   php tools/load/build.php --students=900 --staff=60 --years=5 [--audit=100000] [--seed=20261116] [--until=YYYY-MM-DD]
+ *
+ * The school itself is App\Shared\Database\DemoSchool\LoadGenerator, shared with DemoSchoolSeeder
+ * (since Wednesday, November 18, 2026). --until stops it at the end of that day; the default is now.
  *
  * Runs as the testing environment (.env.testing: the migration account). The database is
- * cliniq_testing unless DB_DATABASE names cliniq_load. It refuses: production; any other database;
+ * cliniq_testing unless DB_DATABASE names cliniq_load or a cliniq_check_* scratch database
+ * (DemoSchoolSeeder::refusal, the same allow list as the seeder). It refuses: production; any other database;
  * a database whose users or students did not come from this tool (it would be wiped). It never
  * touches cliniq. Pest's RefreshDatabase empties cliniq_testing, so rebuild after `composer test`.
  */
 
+use App\Shared\Database\DemoSchool\LoadGenerator;
+use App\Shared\Database\DemoSchoolSeeder;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-
-const ALLOWED = ['cliniq_testing', 'cliniq_load'];
 
 if (getenv('APP_ENV') === 'production') {
     fwrite(STDERR, "Refused: APP_ENV is production.\n");
@@ -28,11 +32,15 @@ $_ENV['APP_ENV'] = $_SERVER['APP_ENV'] = 'testing';
 require __DIR__.'/../../vendor/autoload.php';
 $app = require __DIR__.'/../../bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
-require __DIR__.'/Generator.php';
 require __DIR__.'/checks.php';
 
-$opt = ['students' => 900, 'staff' => 60, 'years' => 5, 'audit' => 0, 'seed' => 20261116];
+$opt = ['students' => 900, 'staff' => 60, 'years' => 5, 'audit' => 0, 'seed' => 20261116, 'until' => DemoSchoolSeeder::until('')];
 foreach (array_slice($argv, 1) as $arg) {
+    if (preg_match('/\A--until=(\d{4}-\d{2}-\d{2})\z/', $arg, $m) === 1) {
+        $opt['until'] = DemoSchoolSeeder::until($m[1]);
+
+        continue;
+    }
     if (preg_match('/\A--(students|staff|years|audit|seed)=(\d+)\z/', $arg, $m) !== 1) {
         fwrite(STDERR, "Unknown option {$arg}\n");
         exit(1);
@@ -41,8 +49,9 @@ foreach (array_slice($argv, 1) as $arg) {
 }
 
 $db = DB::getDatabaseName();
-if (app()->isProduction() || ! in_array($db, ALLOWED, true)) {
-    fwrite(STDERR, "Refused: the database {$db} is not one of ".implode(', ', ALLOWED).".\n");
+$refused = DemoSchoolSeeder::refusal($db, app()->isProduction());
+if ($refused !== null) {
+    fwrite(STDERR, $refused."\n");
     exit(1);
 }
 if (Schema::hasTable('users') && (DB::table('users')->where('username', 'not like', 'load.%')->whereNotIn('username', LoadGenerator::DEMO_USERNAMES)->exists()
@@ -52,7 +61,7 @@ if (Schema::hasTable('users') && (DB::table('users')->where('username', 'not lik
 }
 
 $t0 = microtime(true);
-printf("Building on %s: %d students, %d staff, %d years, audit %s, seed %d\n", $db, $opt['students'], $opt['staff'], $opt['years'], $opt['audit'] ?: 'as generated', $opt['seed']);
+printf("Building on %s: %d students, %d staff, %d years, audit %s, seed %d, until %s\n", $db, $opt['students'], $opt['staff'], $opt['years'], $opt['audit'] ?: 'as generated', $opt['seed'], $opt['until']->format('Y-m-d H:i'));
 $t = microtime(true);
 Artisan::call('migrate:fresh', ['--force' => true]);
 printf("%-22s %7.1f s\n", 'migrate:fresh', microtime(true) - $t);

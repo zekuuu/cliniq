@@ -2,12 +2,21 @@
 
 declare(strict_types=1);
 
+namespace App\Shared\Database\DemoSchool;
+
 /*
- * The fictional load-test school (08-Logs/Load-Test-Nov16/NOTES.md, "JOB 2 PLAN"). Development only:
- * build.php refuses production, any database outside the allow list, and a database holding rows it
- * did not make. Every person is invented; every LRN is in the reserved range 999900000001 to
- * 999900999999. One fixed seed drives every choice, and the clock is set to each record's time
- * (Carbon::setTestNow), as the development seeder does, so the same command makes the same school.
+ * The fictional demo and load-test school (08-Logs/Load-Test-Nov16/NOTES.md, "JOB 2 PLAN"), moved here
+ * from tools/load/Generator.php on Wednesday, November 18, 2026 so DemoSchoolSeeder and build.php share
+ * it. Development only: both refuse production, any database outside their allow list, and a database
+ * holding rows they did not make. Every person is invented; every LRN is in the reserved range
+ * 999900000001 to 999900999999. The clock is set to each record's time (Carbon::setTestNow), as the
+ * development seeder does.
+ *
+ * Deterministic and prefix-stable: the school runs from the first school year's June 15 up to `until`
+ * (default: the real clock) and stops at that minute. Each school day draws from its own seed (the
+ * fixed seed and the date), and the no-class days are chosen by a hash of the seed and the date, so a
+ * later `until` never changes an earlier day: a reseed tomorrow gives the same rows, with the same ids,
+ * up to today, and adds tomorrow.
  *
  * Records go in through the owner services (ERD rule M-1), the yearly lists and the school-year steps
  * through the real endpoints, in-process. Two labelled shortcuts: the daily backup rows are inserted
@@ -32,37 +41,8 @@ use App\Shared\AuditLog\AuditTarget;
 use App\Shared\FollowUps\FollowUpService;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
-use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Testing\Concerns\InteractsWithAuthentication;
-use Illuminate\Foundation\Testing\Concerns\InteractsWithSession;
-use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
+use Closure;
 use Illuminate\Support\Facades\DB;
-
-/** Calls the real routes in-process (routing, middleware, validation, controller), as the Pest tests do. */
-final class LoadHttp
-{
-    use InteractsWithAuthentication, InteractsWithSession, MakesHttpRequests;
-
-    public function __construct(public Application $app) {}
-
-    public function as(User $user): self
-    {
-        $this->defaultHeaders = [];
-
-        return $this->withHeader('Referer', 'http://'.config('sanctum.stateful')[0].'/')->flushSession()->actingAs($user);
-    }
-
-    /** @return array<string, mixed> the `data` of a 2xx answer, or throws with the body */
-    public function ok(string $method, string $uri, array $body = []): array
-    {
-        $r = $this->json($method, $uri, $body);
-        if ($r->getStatusCode() >= 300) {
-            throw new RuntimeException("$method $uri answered {$r->getStatusCode()}: ".mb_substr((string) $r->getContent(), 0, 400));
-        }
-
-        return (array) ($r->json('data') ?? []);
-    }
-}
 
 final class LoadGenerator
 {
@@ -137,10 +117,13 @@ final class LoadGenerator
     /** @var array<string, int> */
     public array $counts = [];
 
-    /** @param array{students: int, staff: int, years: int, audit: int, seed: int} $o */
+    private CarbonImmutable $until;
+
+    /** @param array{students: int, staff: int, years: int, audit: int, seed: int, until: CarbonImmutable} $o */
     public function __construct(array $o, Closure $say)
     {
         $this->o = $o;
+        $this->until = $o['until'];
         $this->say = $say;
         $this->http = new LoadHttp(app());
     }
@@ -148,8 +131,8 @@ final class LoadGenerator
     public function run(): void
     {
         mt_srand($this->o['seed']);
-        $today = CarbonImmutable::now('Asia/Manila')->startOfDay();
-        $currentStart = $today->month >= 6 && ! ($today->month === 6 && $today->day < 15) ? $today->year : $today->year - 1;
+        $end = $this->until;
+        $currentStart = $end->month >= 6 && ! ($end->month === 6 && $end->day < 15) ? $end->year : $end->year - 1;
         $years = range($currentStart - $this->o['years'] + 1, $currentStart);
         $this->types = DB::table('complaint_types')->pluck('id', 'label')->map(fn ($v) => (int) $v)->all();
 
@@ -157,11 +140,15 @@ final class LoadGenerator
             $this->phase('accounts', fn () => $this->accounts(CarbonImmutable::create($years[0], 6, 1, 7, 0, 0, 'Asia/Manila')));
             $this->phase('holidays', fn () => app(CalendarService::class)->sync(true, base_path('../frontend/src/lib/mock-db/holidays-ph.json')));
             $this->phase('inventory', fn () => $this->inventory(CarbonImmutable::create($years[0], 6, 10, 8, 0, 0, 'Asia/Manila')));
-            foreach ($years as $i => $y) {
-                $this->phase("year {$y}–".($y + 1), fn () => $this->year($y, $i === 0, $y === $currentStart ? $today : null));
+            try {
+                foreach ($years as $y) {
+                    $this->phase("year {$y}–".($y + 1), fn () => $this->year($y, $y === $years[0]));
+                }
+            } catch (ReachedEnd) {
+                // The clock reached `until`: the school stops at that minute.
             }
             if ($this->o['audit'] > 0) {
-                $this->phase('audit padding', fn () => $this->padAudit($this->o['audit'], $today));
+                $this->phase('audit padding', fn () => $this->padAudit($this->o['audit'], $end));
             }
         } finally {
             Carbon::setTestNow();
@@ -171,13 +158,26 @@ final class LoadGenerator
     private function phase(string $name, Closure $work): void
     {
         $t = microtime(true);
-        $work();
-        ($this->say)(sprintf('%-22s %7.1f s  %6.0f MB peak', $name, microtime(true) - $t, memory_get_peak_usage(true) / 1048576));
+        try {
+            $work();
+        } finally {
+            ($this->say)(sprintf('%-22s %7.1f s  %6.0f MB peak', $name, microtime(true) - $t, memory_get_peak_usage(true) / 1048576));
+        }
     }
 
+    /** Sets the clock to the next record's time; nothing is written after `until`. */
     private function at(CarbonImmutable $t): void
     {
+        if ($t->greaterThan($this->until)) {
+            throw new ReachedEnd;
+        }
         Carbon::setTestNow($t);
+    }
+
+    /** A fresh random stream for one day or one year-start, so a later `until` never changes it. */
+    private function reseed(string $key): void
+    {
+        mt_srand(crc32($this->o['seed'].'|'.$key));
     }
 
     // ---------------------------------------------------------------- accounts
@@ -194,9 +194,10 @@ final class LoadGenerator
 
             return $user->refresh();
         };
-        // The mock's three accounts, names and passwords (Zean, November 17, 2026); the load.* ones are background.
-        $this->admin = $make('Demo Admin', 'demo.principal', 'admin', 0, 'demo-admin');
-        $this->nurse = $make('Demo Clinician', 'demo.nurse', 'staff', $this->admin->id, 'demo-nurse');
+        // The mock's three accounts and passwords (Zean, November 17, 2026); the load.* ones are background.
+        // Display names as set by hand in cliniq_testing for the screenshots (Zean, November 18, 2026).
+        $this->admin = $make('Gilan Avelida', 'demo.principal', 'admin', 0, 'demo-admin');
+        $this->nurse = $make('Jennesse Baas', 'demo.nurse', 'staff', $this->admin->id, 'demo-nurse');
         // As in the mock: a temporary password, changed at the first sign-in.
         $users->save(['name' => 'Grace Tolentino', 'username' => 'demo.new', 'role' => 'staff', 'temporaryPassword' => 'demo-change'], null, $this->admin->id);
         $this->staffUsers = [$this->nurse];
@@ -301,26 +302,26 @@ final class LoadGenerator
 
     // ---------------------------------------------------------------- a school year
 
-    private function year(int $y, bool $first, ?CarbonImmutable $stopAt): void
+    private function year(int $y, bool $first): void
     {
         $start = CarbonImmutable::create($y, 6, 15, 7, 0, 0, 'Asia/Manila');
         $lastClass = CarbonImmutable::create($y + 1, 4, 14, 16, 0, 0, 'Asia/Manila');
         $this->at($start);
+        $this->reseed("year-{$y}");
         $this->http->as($this->nurse)->ok('POST', '/api/school-years/start');
         if ($first) {
             $this->staffImport($this->o['staff']);
         }
         $this->studentImport($y, $first);
 
-        $days = $this->schoolDays($start, $stopAt ?? $lastClass);
-        $dayNo = 0;
-        foreach ($days as $day) {
-            $this->day($day, $dayNo++, count($days));
+        // The whole year's days, as for a finished year; at() stops the loop at `until`.
+        $days = $this->schoolDays($start, $lastClass);
+        foreach ($days as $dayNo => $day) {
+            $this->reseed($day->format('Y-m-d'));
+            $this->day($day, $dayNo, count($days));
         }
-        if ($stopAt === null) {
-            $this->at($lastClass->setTime(16, 30));
-            $this->http->as($this->nurse)->ok('POST', '/api/school-years/end');
-        }
+        $this->at($lastClass->setTime(16, 30));
+        $this->http->as($this->nurse)->ok('POST', '/api/school-years/end');
     }
 
     /** @return list<CarbonImmutable> */
@@ -335,13 +336,10 @@ final class LoadGenerator
             }
             $out[] = $d;
         }
-        // About 20 no-class days a year (exams, events), from the seed.
-        $drop = (int) round(count($out) * 20 / 200);
-        for ($i = 0; $i < $drop && count($out) > 1; $i++) {
-            array_splice($out, mt_rand(1, count($out) - 1), 1);
-        }
 
-        return $out;
+        // About 20 no-class days a year (exams, events): one in ten, by a hash of the seed and the date,
+        // not by position, so the end date never changes which days exist. The first day stays.
+        return array_values(array_filter($out, fn (CarbonImmutable $d, int $i): bool => $i === 0 || crc32($this->o['seed'].'|drop|'.$d->format('Y-m-d')) % 10 !== 0, ARRAY_FILTER_USE_BOTH));
     }
 
     // ---------------------------------------------------------------- students and staff

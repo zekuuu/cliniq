@@ -8,6 +8,7 @@ declare(strict_types=1);
  * Exit code 0 = every check passes. Prints counts and names of checks, never a person's name.
  */
 
+use App\Shared\Database\DemoSchool\LoadGenerator;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +19,6 @@ if (! function_exists('app')) {
     $app = require __DIR__.'/../../bootstrap/app.php';
     $app->make(Kernel::class)->bootstrap();
 }
-require_once __DIR__.'/Generator.php'; // LoadGenerator::DEMO_USERNAMES
 
 /** @return int number of failed checks */
 function loadChecks(): int

@@ -9,3 +9,7 @@ parameters:
         - config/cliniq.php
         - config/cors.php
         - routes
+    excludePaths:
+        # The demo and load-test school: development-only data generation, moved from tools/load/
+        # (never analysed there) on November 18, 2026. The seeder and LoadHttp are analysed.
+        - app/Shared/Database/DemoSchool/LoadGenerator.php
