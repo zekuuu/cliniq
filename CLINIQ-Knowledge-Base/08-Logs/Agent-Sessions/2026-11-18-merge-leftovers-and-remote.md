@@ -12,7 +12,7 @@ Files Modified:
 
 Git: `git remote set-url origin https://github.com/zekuuu/cliniq.git` (was `https://github.com/xKurty06/cliniq.git`, which redirected); `git ls-remote origin` answers with `main` `6ab8d95`. No other `git config` changed. `backend/.env.example` holds no `xKurty06` URL (`git grep`), so the Nov 16 to-do in `Load-Test-Nov16/NOTES.md` item 3 is done too.
 
-Testing Performed: `npx vitest run review-round-2 print-documents` from `D:\ (lower case) the same command fails to load the suites ("Vitest failed to find the current suite"): a drive-letter casing quirk on Windows, not a test failure. `npm run docs:check` result in the changelog row.
+Testing Performed: `npx vitest run review-round-2 print-documents` from `D:\`: 3 files, 71 of 71 passed (the visit count was fixed by `5cd491f`; the full suite was 1253 of 1253 on `bf304af` this morning). Run from `d:\` (lower case), the same command fails to load the suites ("Vitest failed to find the current suite"): a drive-letter casing quirk on Windows, not a test failure. `npm run docs:check`: all checks passed.
 
 Known Issues: none new. Session logs that mention `xKurty06` are dated records and stay as written.
 
