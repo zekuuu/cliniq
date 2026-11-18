@@ -106,7 +106,7 @@ export function LoginPage({
             <img
               src="/MCA_Logo.png"
               alt="Mendez Christian Academy logo"
-              className="size-14 shrink-0 object-contain"
+              className="size-20 shrink-0 object-contain"
             />
             <span className="flex flex-col gap-1">
               <span className="font-brand text-[1.75rem] leading-none font-bold tracking-wide whitespace-nowrap text-brand-green-dark">
@@ -245,7 +245,7 @@ function PhotoLockup() {
         <img
           src="/MCA_Logo.png"
           alt="Mendez Christian Academy logo"
-          className="size-28 object-contain drop-shadow-lg lg:size-32"
+          className="size-40 object-contain drop-shadow-lg lg:size-48"
         />
         <span className="flex flex-col items-center gap-2 text-white drop-shadow-md">
           <span className="font-brand text-5xl leading-none font-bold tracking-wide lg:text-6xl">
