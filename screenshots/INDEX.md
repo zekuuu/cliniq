@@ -1,9 +1,10 @@
 # CLINIQ screenshots for the Project Plan
 
-- **Branch and commit:** `feat/connect-frontend` at `24d2c8e` (plus one uncommitted fix to the load generator, see "Notes").
+- **Branch and commit:** `feat/connect-frontend` at `23c2fdc` (contains `main` with the pagination changes). The first set was taken from `24d2c8e`.
 - **Data:** API mode (`VITE_API_MODE=api`), the real Laravel API on MariaDB, database **`cliniq_testing`**, the fictional load-test school built with `php tools/load/build.php --students=900 --staff=60 --years=5` (903 active students, 301 archived, 65 staff, 23,750 visits, 682 incidents, five school years 2022–2023 to 2026–2027, 40 holidays). All checks in `tools/load/checks.php` pass. Every person on screen is generated; LRNs are in the reserved test range `9999…`.
-- **Accounts:** `load.nurse` (Staff, School Clinician) and `load.principal` (Admin, Principal).
-- **Captured:** Tuesday, November 17, 2026, 12:58 to 13:15 (Asia/Manila).
+- **Accounts:** `demo.nurse`, shown as **Jennesse Baas** (Staff, School Clinician), and `demo.principal`, shown as **Gilan Avelida** (Admin, Principal). Both display names were set in `cliniq_testing` through the Admin's Edit user form at Zean's request (November 18, 2026); they are the names the mock used before commit `d14ef76`.
+- **Captured:** Wednesday, November 18, 2026, 07:56 to 08:08 (Asia/Manila), all 34 retaken. The first set was taken on Tuesday, November 17, 2026, 12:58 to 13:15.
+- **Clock:** the generated school ends on Tuesday, November 17, 2026, so the browser clock (Playwright `clock.setSystemTime`) and the API's clock (a capture-only PHP `auto_prepend_file` that shifts Carbon) both start at **Tuesday, November 17, 2026, 13:00** and run on from there. "Today" views therefore show November 17, as in the first set. No application file was changed.
 - **Viewport:** 1536 × 960 CSS px, device scale factor 2, Chromium (Playwright), light colour scheme, reduced motion, locale `en-PH`, time zone `Asia/Manila`. Page only, no browser chrome. Every image is PNG, 3072 px wide.
 - **Single** = one screen, 3072 × 1920 px. **Scrolling** = the whole page in one image: the viewport is grown to the page's height (width unchanged), so the image is that height × 2.
 
@@ -32,7 +33,7 @@
 | 02_staff_dashboard-overview.png | staff | Dashboard, Overview | `/` | Overview, default range (Today) | scrolling | 3072 × 2166 |
 | 03_staff_dashboard-trends.png | staff | Dashboard, Trends | `/?view=trends` | Trends, Today | scrolling | 3072 × 1998 |
 | 04_staff_activity-calendar.png | staff | Activity calendar | `/calendar` | Monthly, Calendar view, November 2026 (visits, All Saints', All Souls', Bonifacio Day, school events) | scrolling | 3072 × 2038 |
-| 05_staff_student-list.png | staff | Student list | `/students` | Default list, first page | scrolling | 3072 × 2060 |
+| 05_staff_student-list.png | staff | Student list | `/students` | Default list, first page, 10 rows of 903 students (91 pages) | scrolling | 3072 × 2060 |
 | 06_staff_add-student.png | staff | Add student | `/students/new` | Empty form | scrolling | 3072 × 2712 |
 | 07_staff_student-profile.png | staff | Student profile | `/students/389` | Allergy, emergency contact, visit history, excuse letters, incidents | scrolling | 3072 × 7328 |
 | 08_staff_incomplete-student-records.png | staff | Incomplete student records | `/students/incomplete` | Review queue, Open (61) | scrolling | 3072 × 7848 |
@@ -57,9 +58,9 @@
 | 27_staff_audit-log.png | staff | Audit log | `/audit-log` | Default list (All), first page | scrolling | 3072 × 2048 |
 | 28_staff_settings.png | staff | Settings | `/settings` | "Sign out after inactivity" card | single | 3072 × 1920 |
 | 29_admin_dashboard.png | admin | Dashboard | `/` | Admin's Clinic Overview, Today | single | 3072 × 1920 |
-| 30_admin_student-list-read-only.png | admin | Student list (read only) | `/students` | Admin's read-only list | scrolling | 3072 × 1956 |
+| 30_admin_student-list-read-only.png | admin | Student list (read only) | `/students` | Admin's read-only list, first page, 10 rows of 903 students | scrolling | 3072 × 1956 |
 | 31_admin_reports.png | admin | Reports | `/reports` | Report month drop-down, November 2026 | single | 3072 × 1920 |
-| 32_admin_user-accounts.png | admin | User accounts | `/users` | All 26 accounts | scrolling | 3072 × 5218 |
+| 32_admin_user-accounts.png | admin | User accounts | `/users` | All 27 accounts (was 26: the rebuilt data adds `demo.new`) | scrolling | 3072 × 5388 |
 | 33_admin_add-user.png | admin | Add user | `/users/new` | Empty form with role selection | single | 3072 × 1920 |
 | 34_admin_archive.png | admin | Archive | `/archive` | Current school year, Students tab | scrolling | 3072 × 2600 |
 
@@ -67,11 +68,13 @@ Skipped: none. Role variants not in the agreed table (Staff Archive; Admin Incid
 
 ## Notes
 
+- **Retaken on Wednesday, November 18, 2026 after the pagination changes: all 34** (Zean's choice). By the code, only 05 and 30 changed (`c995c10` removed the Student list's 80-row cap); the 10-row default of `7c8296e` was already what the first set showed. But `cliniq_testing` had been rebuilt with the demo accounts after the first set (same seed, same record ids), so every signed-in screen showed new names; 01 came out byte-identical. 32 grew from 5218 to 5388 px (27 accounts); every other image kept its size.
+- **Rebuilt data:** the rebuild removed the two records added for the first set; they were added again the same way on November 18 (below).
 - **Two records were added for this set** (Zean's choice, `cliniq_testing` only, through the app's own forms): backup location "External drive" at `D:\` (stores a row only, no file written), and the sports report "Grade 10 basketball try-outs" (Grade 10, requested by "PE instructor"). Without them, 26 showed the red "No backup location is enabled" banner and 25 the empty state.
-- **The load generator was patched** (`backend/tools/load/Generator.php`, uncommitted): the five-year build stopped with "Clove oil has no usable batch and can't be given" when an item's every batch had expired between two Monday restocks. The generator now skips such an item that day.
+- **The load generator was patched** (`backend/tools/load/Generator.php`, committed as `28772d5`): the five-year build stopped with "Clove oil has no usable batch and can't be given" when an item's every batch had expired between two Monday restocks. The generator now skips such an item that day.
 - **Audit log memory:** with five years of history (about 60,500 entries) the audit-log request exceeds PHP's 128 MB default and the page shows "Unable to load the audit log". The capture API ran with `memory_limit=512M`, the value in XAMPP's `php.ini` on Zean's machine. Worth a backend look before the clinic PC has years of data.
-- The Student list shows 80 results by design (`studentListApi.ts` asks for 80; search narrows it).
 - Today's visits in the generated data run to the end of the school day, so some rows are later than the clock in the header.
+- Some database timestamps come from the real clock, not the shifted one: the audit log's newest rows (sign-ins on the evening of Nov 17), the user list's last logins, and the sports report's "Last updated Nov 18, 2026".
 - Long inner lists keep their designed height; only the page itself is expanded.
 
 ## Retake
@@ -79,9 +82,12 @@ Skipped: none. Role variants not in the agreed table (Staff Archive; Admin Incid
 ```
 cd screenshots/_capture
 npm install                      (once; Playwright and Chromium only here)
-set CLINIQ_CAPTURE_PASSWORD=...  (the test accounts' password, never stored in a file)
+set CLINIQ_CAPTURE_PASSWORD_STAFF=...  (demo.nurse's password, never stored in a file)
+set CLINIQ_CAPTURE_PASSWORD_ADMIN=...  (demo.principal's password)
 node capture.mjs                 all screens
 node capture.mjs 07 13           only those numbers
 ```
 
-`config.json` holds the base URLs, the usernames, the record ids above and the pause between screens (the API allows 120 requests a minute per user). The dev servers used: Vite on `localhost:5180` (`VITE_API_MODE=api`, `VITE_API_URL=http://localhost:8001/api`) and the API on `127.0.0.1:8001` (`DB_DATABASE=cliniq_testing`, `CORS_ALLOWED_ORIGINS=http://localhost:5180`, `SANCTUM_STATEFUL_DOMAINS=localhost:5180`, `memory_limit=512M`). `probe.mjs` prints the app's API lists for choosing records.
+`config.json` holds the base URLs, the usernames, the starting clock, the record ids above and the pause between screens (the API allows 120 requests a minute per user). The dev servers used: Vite on `localhost:5180` (`VITE_API_MODE=api`, `VITE_API_URL=http://localhost:8001/api`) and the API on `127.0.0.1:8001` (`DB_DATABASE=cliniq_testing`, `CORS_ALLOWED_ORIGINS=http://localhost:5180`, `SANCTUM_STATEFUL_DOMAINS=localhost:5180`, `memory_limit=512M`). `probe.mjs` prints the app's API lists for choosing records.
+
+For "Today" views to show the build day, start the API with the capture clock as well: `CAPTURE_CLOCK=2026-11-17T13:00:00+08:00`, `CAPTURE_STARTED=<unix seconds now>` and `php -d auto_prepend_file=<clock-prepend.php>` (a five-line file that calls `Carbon::setTestNow`; kept outside the repository). After moving the clock, clear the app cache (`php artisan cache:clear` on `cliniq_testing`) so old rate-limit windows do not block the run.

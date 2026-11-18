@@ -1,11 +1,12 @@
 // Captures the Project Plan screenshots of CLINIQ (see ../INDEX.md).
 //
-//   set CLINIQ_CAPTURE_PASSWORD=<the test accounts' password>
+//   set CLINIQ_CAPTURE_PASSWORD_STAFF=<the staff account's password>
+//   set CLINIQ_CAPTURE_PASSWORD_ADMIN=<the admin account's password>
 //   node capture.mjs            all screens
 //   node capture.mjs 07 13      only those numbers
 //
-// Settings and the picked record ids are in config.json. The password is read from the
-// environment only, never from a file.
+// Settings, the picked record ids and the frozen clock are in config.json. Passwords are read
+// from the environment only, never from a file (CLINIQ_CAPTURE_PASSWORD serves both if set).
 import { chromium } from 'playwright'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -14,8 +15,10 @@ import { fileURLToPath } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const out = join(here, '..')
 const config = JSON.parse(readFileSync(join(here, 'config.json'), 'utf8').replace(/^﻿/, ''))
-const password = process.env.CLINIQ_CAPTURE_PASSWORD
-if (!password) throw new Error('Set CLINIQ_CAPTURE_PASSWORD first.')
+const passwords = {
+  staff: process.env.CLINIQ_CAPTURE_PASSWORD_STAFF ?? process.env.CLINIQ_CAPTURE_PASSWORD,
+  admin: process.env.CLINIQ_CAPTURE_PASSWORD_ADMIN ?? process.env.CLINIQ_CAPTURE_PASSWORD,
+}
 const only = process.argv.slice(2)
 const ids = config.ids
 const W = 1536
@@ -178,14 +181,18 @@ async function context(browser) {
     if (document.head) add()
     else document.addEventListener('DOMContentLoaded', add)
   }, CAPTURE_CSS)
+  // The generated school ends on its build day; the browser's clock starts there so "Today" views
+  // show that day (Zean, November 18, 2026). Time runs on from this moment.
+  if (config.clock) await ctx.clock.setSystemTime(new Date(config.clock))
   return ctx
 }
 
-async function signIn(ctx, username) {
+async function signIn(ctx, username, who) {
+  if (!passwords[who]) throw new Error(`Set CLINIQ_CAPTURE_PASSWORD_${who.toUpperCase()} first.`)
   const page = await ctx.newPage()
   await page.goto(`${config.baseUrl}/login`)
   await page.locator('input[autocomplete="username"]').fill(username)
-  await page.locator('input[autocomplete="current-password"]').fill(password)
+  await page.locator('input[autocomplete="current-password"]').fill(passwords[who])
   await page.getByRole('button', { name: /sign in/i }).click()
   await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 20000 })
   await page.close()
@@ -204,7 +211,7 @@ try {
     const key = loggedIn ? who : 'anonymous'
     if (!contexts[key]) {
       contexts[key] = await context(browser)
-      if (loggedIn) await signIn(contexts[key], config.users[who])
+      if (loggedIn) await signIn(contexts[key], config.users[who], who)
     }
     const path = typeof route === 'function' ? route() : route
     // The API allows 120 requests a minute per user: pace the screens, and retake a screen whose
@@ -213,6 +220,8 @@ try {
       const page = await contexts[key].newPage()
       const bad = []
       page.on('response', (r) => {
+        // A signed-out page asks /auth/me and gets 401: expected on the Login screen.
+        if (!loggedIn && r.status() === 401 && r.url().includes('/auth/me')) return
         if (r.url().startsWith(config.apiUrl) && r.status() >= 400) bad.push(`${r.status()} ${new URL(r.url()).pathname}${new URL(r.url()).search}`)
       })
       try {
