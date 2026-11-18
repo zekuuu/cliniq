@@ -9,7 +9,8 @@ Where to run them:
 
 Databases:
 - `cliniq` is the development database. Treat it as real data.
-- `cliniq_testing` is for tests and the load-test school. It may be emptied at any time.
+- `cliniq_testing` is for tests and the demo (load-test) school. It may be emptied at any time; reseed it with the demo seeder.
+- `cliniq_check_*` are scratch databases (Pest with `DB_DATABASE=cliniq_check_pest`, `db-checks.php`, trials of the demo seeder).
 
 ## Quick reference
 
@@ -74,6 +75,7 @@ Folder: **F** = `frontend/`, **R** = repository root, **B** = `backend/`, **S** 
 | `php artisan route:list --path=api` | B | List API routes |
 | `php artisan about` | B | Environment and versions |
 | `php tools/db-checks.php` | B | Compare migrations with the reference schema |
+| `php artisan migrate:fresh --seeder="App\Shared\Database\DemoSchoolSeeder" --env=testing --force` | B | ⚠ Wipe `cliniq_testing` and seed the demo school up to now |
 | `php tools/load/build.php --students=900 --staff=60 --years=1` | B | ⚠ Build the test school in `cliniq_testing` (runs `migrate:fresh`) |
 | `php tools/load/checks.php` | B | Read-only checks on the test school |
 | `php tools/load/app-grants.php cliniq_testing > storage/load/grants-cliniq_testing.sql` | B | Write app-account grants SQL |
@@ -321,6 +323,14 @@ Checks that the migrations match the approved reference schema.
 
 It uses `.env.testing` and drops both scratch databases at the end. Exit code 0 means everything passed.
 
+### `php artisan migrate:fresh --seeder="App\Shared\Database\DemoSchoolSeeder" --env=testing --force`
+Wipes the database and seeds the fictional demo school: 900 students, 60 staff, the current school year from June 15 up to the real clock (added Wednesday, November 18, 2026 — 21:55 PHT).
+- **It replaces everything in `cliniq_testing`.** Use it after `composer test` (which empties `cliniq_testing`) or whenever the demo school should reach today.
+- Run it again on a later day and the earlier days come out the same (same ids); only the new days are added.
+- About 40 s. It refuses production, `cliniq`, other databases, and a database that is not empty.
+- `set DB_DATABASE=cliniq_check_demo` first to try it on a scratch database instead.
+- Options (`DEMO_SCHOOL_YEARS`, `DEMO_SCHOOL_UNTIL` and the rest) and the accounts are in `backend/tools/load/README.md`.
+
 ### `php tools/load/build.php --students=900 --staff=60 --years=1`
 Builds a fictional, repeatable school the size of the real clinic's in `cliniq_testing`: students, staff, visits, incidents, follow-ups, excuse letters, stock, calendar and audit trail.
 - **It runs `migrate:fresh` first**, so everything in `cliniq_testing` is replaced.
@@ -329,7 +339,8 @@ Builds a fictional, repeatable school the size of the real clinic's in `cliniq_t
 - `--staff=150` builds the larger staff case.
 - `--audit=100000` pads the audit log to test a big one.
 - `--seed=<n>` changes the fixed seed. The same options always make the same school.
-- `DB_DATABASE=cliniq_load` builds into `cliniq_load` instead.
+- `--until=YYYY-MM-DD` stops at the end of that day (never later than now; the default is now).
+- `DB_DATABASE=cliniq_load` (or a `cliniq_check_*` name) builds there instead.
 - Sign-in accounts and passwords are in `backend/tools/load/README.md`.
 - Generated CSVs and logs go to `backend/storage/load/` (git-ignored).
 
