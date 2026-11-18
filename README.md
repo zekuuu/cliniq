@@ -1,6 +1,6 @@
 # CLINIQ
 
-**Last synced:** Tuesday, November 17, 2026 — 08:15 PHT, from `feat/connect-frontend@3a890f5`, `backend@18ff415` and `main@57c3cc8` ([where the code lives](#where-the-code-lives), [sync log](./CLINIQ-Knowledge-Base/08-Logs/Main-Sync-Log.md)).
+**Last synced:** Wednesday, November 18, 2026 — 09:46 PHT, from `feat/connect-frontend@b9496e8`, `backend@18ff415` and `main@24f51cc` ([where the code lives](#where-the-code-lives), [sync log](./CLINIQ-Knowledge-Base/08-Logs/Main-Sync-Log.md)).
 
 Last checked against the code on Tuesday, November 17, 2026 for the changes of the follow-ups and load run only (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in; `main` itself holds no backend code, ADR-056).
 
@@ -13,12 +13,12 @@ CLINIQ is an intelligent clinic tracking and monitoring system for Mendez Christ
 
 ## Where the code lives
 
-`main` holds the documents and the frontend as it ran on sample data only. The newer code is on other branches and is not merged into `main` yet; read it at the linked commit. Last synced to `main` on Tuesday, November 17, 2026 — 08:15 PHT, from `main@57c3cc8` and `feat/connect-frontend@3a890f5`; [sync log](./CLINIQ-Knowledge-Base/08-Logs/Main-Sync-Log.md).
+`main` holds the documents, the frontend as it ran on sample data only, and the [screenshots](./screenshots/INDEX.md) of the system. The newer code is on other branches and is not merged into `main` yet; read it at the linked commit. Last synced to `main` on Wednesday, November 18, 2026 — 09:46 PHT, from `main@24f51cc` and `feat/connect-frontend@b9496e8`; [sync log](./CLINIQ-Knowledge-Base/08-Logs/Main-Sync-Log.md).
 
 | Branch | What it holds | Tip commit and date | Merged into `main` | Why not on `main` |
 |---|---|---|---|---|
-| `main` | Documents; the frontend on sample data only; `backend/` holds only its README and `.env.example` | [`57c3cc8`](https://github.com/zekuuu/cliniq/tree/57c3cc8), Tuesday, November 17, 2026 — 06:20 PHT | (this branch) | |
-| `feat/connect-frontend` | **The newest code: everything below plus the frontend connected to the API behind a mock/API switch (ADR-080), the follow-ups and the load-test tools.** Contains `backend` and `main` | [`3a890f5`](https://github.com/zekuuu/cliniq/tree/3a890f5), Tuesday, November 17, 2026 — 06:22 PHT | no | Not reviewed and merged yet; the backend it contains stays off `main` until Zean merges it (ADR-056) |
+| `main` | Documents; the frontend on sample data only; the 34 screenshots in `screenshots/`; `backend/` holds only its README and `.env.example` | [`24f51cc`](https://github.com/zekuuu/cliniq/tree/24f51cc), Wednesday, November 18, 2026 — 09:26 PHT | (this branch) | |
+| `feat/connect-frontend` | **The newest code: everything below plus the frontend connected to the API behind a mock/API switch (ADR-080), the follow-ups and the load-test tools.** Contains `backend` and `main` | [`b9496e8`](https://github.com/zekuuu/cliniq/tree/b9496e8), Wednesday, November 18, 2026 — 09:37 PHT | no | Not reviewed and merged yet; the backend it contains stays off `main` until Zean merges it (ADR-056) |
 | `backend` | The Laravel API, phases B0 to B10, the 50 migrations and the backend tests | [`18ff415`](https://github.com/zekuuu/cliniq/tree/18ff415), Sunday, November 15, 2026 — 10:50 PHT | no | On purpose: the backend stays on its own branch until Zean reviews and merges it (ADR-056) |
 | `feat/build-backend` | An older step of `backend` (fully contained in it) | [`3bcbe16`](https://github.com/zekuuu/cliniq/tree/3bcbe16), Saturday, November 14, 2026 — 23:07 PHT | no | Superseded by `backend` |
 
@@ -72,13 +72,19 @@ The Admin does not print (ADR-038). Every printout is a purpose-built A4 documen
 
 ### Decided, not built
 
-- **Connecting the frontend to the backend.** The backend phases are done ([Development Phases](./CLINIQ-Knowledge-Base/04-Development/Development-Phases.md#backend-phases)); switching the screens from sample data to the API is a separate step, still to be decided (ADR-056).
+- **Merging the backend and the connected frontend into `main`.** The backend phases are done ([Development Phases](./CLINIQ-Knowledge-Base/04-Development/Development-Phases.md#backend-phases)) and the screens run on the API behind a switch on `feat/connect-frontend` (ADR-080); that code stays off `main` until Zean reviews and merges it (ADR-056).
 - **The clinic PC set-up** of ADR-079: Windows password and screen lock, BitLocker on Windows Pro, Windows Firewall rule, backups kept away from the room, one Staff account per person.
 
 ### Deferred
 
 - Canteen Staff access ([Module Overview](./CLINIQ-Knowledge-Base/01-Requirements/Features/Module-Overview.md), "Future Development").
 - Remote or off-campus access, parent portals, automated messaging and billing ([Scope](./CLINIQ-Knowledge-Base/00-Project-Core/Scope.md)). Putting the PC on the school network would be a new decision (ADR-079).
+
+## Screenshots of the system
+
+[`screenshots/INDEX.md`](./screenshots/INDEX.md) lists 34 screenshots of the major screens: the login, 27 of the Staff (School Clinician) role and 6 of the Admin (Principal) role, each with its route and the state it shows. They were taken from the frontend connected to the real Laravel API (`feat/connect-frontend`) on the fictional load-test school in `cliniq_testing`, so every person on screen is generated, at a laptop screen size: 1536 × 960 CSS px, device scale factor 2, PNG 3072 px wide, long pages captured whole.
+
+Caution: the generated school ends on Tuesday, November 17, 2026, so the browser clock and the API's clock both start at Tuesday, November 17, 2026, 13:00, and the dates and times on the screens follow that clock; the two accounts' display names (Jennesse Baas and Gilan Avelida) were set in `cliniq_testing` for this set.
 
 ## How to run it
 
