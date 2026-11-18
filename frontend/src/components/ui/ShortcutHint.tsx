@@ -11,8 +11,9 @@ export function ShortcutHint({ keys, className }: { keys: string; className?: st
     <kbd
       aria-hidden="true"
       className={cn(
-        // Muted plain text, no outline (Zean, November 5, 2026): a quiet aside, not a second label.
-        'ml-auto hidden shrink-0 pl-3 font-sans text-xs leading-5 font-normal whitespace-nowrap opacity-75 md:inline',
+        // Plain text, no outline (Zean, November 5, 2026): a quiet aside, not a second label. No opacity:
+        // the inherited colour already passes 4.5:1, and 75% opacity did not (axe, November 7, 2026).
+        'ml-auto hidden shrink-0 pl-3 font-sans text-xs leading-5 font-normal whitespace-nowrap md:inline',
         className,
       )}
     >

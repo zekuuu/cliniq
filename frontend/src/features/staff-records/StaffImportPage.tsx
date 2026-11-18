@@ -47,7 +47,7 @@ function EmptyStep({
   waiting: string
 }) {
   return (
-    <Card aria-labelledby={id} className="opacity-70">
+    <Card aria-labelledby={id}>
       <CardHeader titleId={id} title={title} icon={<Icon name={icon} />} />
       <CardBody>
         <p className="text-sm text-text-secondary">{waiting}</p>

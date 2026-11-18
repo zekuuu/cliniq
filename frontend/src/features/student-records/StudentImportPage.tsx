@@ -38,7 +38,7 @@ import { nameMatches } from '../../lib/personName'
 /** Import the yearly student list (ADR-047): file, column mapping, reviewed preview, then apply. Staff only. */
 const students = (count: number) => `${count} ${count === 1 ? 'student' : 'students'}`
 
-/** A later step shown empty from the start, so the clinician sees how many steps there are (Zean, November 3, 2026). */
+/** A later step shown empty from the start, so the clinician sees how many steps there are (Zean, November 3, 2026). No opacity: at 70% the text measured 3.23:1 (axe); the waiting line uses text-secondary instead. */
 function EmptyStep({
   id,
   title,
@@ -51,7 +51,7 @@ function EmptyStep({
   waiting: string
 }) {
   return (
-    <Card aria-labelledby={id} className="opacity-70">
+    <Card aria-labelledby={id}>
       <CardHeader titleId={id} title={title} icon={<Icon name={icon} />} />
       <CardBody>
         <p className="text-sm text-text-secondary">{waiting}</p>
