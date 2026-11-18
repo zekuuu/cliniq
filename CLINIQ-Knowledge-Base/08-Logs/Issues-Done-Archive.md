@@ -754,6 +754,10 @@ Moved: 180 entries (and 4 more on Tuesday, October 20, 2026 — 15:16 PHT, at th
 - [x] **[DONE]** **ADR-072 and ADR-073 written** With notes at the top of ADR-048 and ADR-052 and their Decisions-Summary lines. Resolved Saturday, November 07, 2026 — 06:37 PHT. [2026-11-07-consultation-part-4-authenticator-recovery](Agent-Sessions/2026-11-07-consultation-part-4-authenticator-recovery.md)
 - [x] **[DONE]** **Admin screens and LRN rule recorded in the skills** cliniq-input-patterns (save feedback, incident summary) and cliniq-display-privacy (`<Lrn>`), with Skills-Setup rows. Resolved Saturday, November 07, 2026 — 06:37 PHT. [2026-11-07-consultation-part-4-authenticator-recovery](Agent-Sessions/2026-11-07-consultation-part-4-authenticator-recovery.md)
 
+## Moved from Backend-Issues-and-TODOs — Sunday, November 08, 2026 — 17:42 PHT
+
+- [x] **[DONE]** **The three old failing frontend tests** (logged Saturday, November 07, 2026 — 13:35 PHT). Calendar legend and table months (`review-round-2.test.tsx`), Student Health Record visit count (`print-documents.test.tsx`), failing since `1b50a113`; 1137 of 1140 pass. For Zean to decide on `main`. Report: [`Backend-Counter-Check-Nov7.md`](../04-Development/Backend-Counter-Check-Nov7.md) C-19. Session: [2026-11-07-backend-counter-check](Agent-Sessions/2026-11-07-backend-counter-check.md) Resolved Wednesday, November 18, 2026 — 17:25 PHT: both files pass on `main` after the merge (`npx vitest run review-round-2 print-documents`, 71 of 71; whole suite 1253 of 1253 on `bf304af`); the visit count was fixed by `5cd491f`. Session: [2026-11-18-merge-leftovers-and-remote](Agent-Sessions/2026-11-18-merge-leftovers-and-remote.md)
+
 ## Admin Reports page, view only (ADR-077) — Sunday, November 08, 2026 — 18:45 PHT
 
 - [x] **[DONE]** **The Admin's Reports page: a month drop-down, the four monthly reports, a view-only sheet (ADR-077)** Built with tests, axe clean at 375, 768 and 1280; Staff-only report routes redirect the Admin to `/reports`. Resolved Sunday, November 08, 2026 — 18:45 PHT. [2026-11-08-admin-reports-view-only](Agent-Sessions/2026-11-08-admin-reports-view-only.md)

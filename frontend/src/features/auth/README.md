@@ -19,7 +19,7 @@ Login and the forced password change for a new account.
 
 ## Data and API files
 
-No `api/` folder: the pages call `authenticateMockUser` and the session functions in `src/lib/mock-db/` (`session.ts`). Sanctum replaces them in Phase B2.
+No `api/` folder: the pages import sign-in and the session functions from `src/lib/data`, which sends each call to the mock (`src/lib/mock-db/`) or to Sanctum sign-in on the Laravel API (`src/lib/api/http/auth.ts`) behind the `AUTH` mock/API switch (ADR-080).
 
 ## Printouts and tests
 
@@ -28,4 +28,3 @@ No printouts. Tests: `LoginPage.test.tsx`, `ForcePasswordChangePage.test.tsx`, `
 ## Not built yet
 
 - Nothing else decided is waiting in the frontend. "Forgot password?" is built: the username, then a 6-digit code from an authenticator app or a recovery code, then a new password (ADR-073, which replaced the email reset; accounts have no email address).
-- Sanctum sign-in (SPA cookie mode, ADR-056). Not started.

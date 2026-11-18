@@ -3,6 +3,8 @@
 **Date:** Wednesday, November 18, 2026 — 10:07 PHT
 **Status:** Accepted (requested by Zean, Wednesday, November 18, 2026; his two answers in the run's pop-up, 10:04 PHT). The merge commit is [`bc654dd`](https://github.com/zekuuu/cliniq/commit/bc654dd2ad3822668c745d6080a2532d885476e1), Wednesday, November 18, 2026 — 10:07 PHT. Partly supersedes ADR-056 (item 2 and its rejected alternative "Develop on `main`" only). Keeps ADR-057 and ADR-080.
 
+**Note (Wednesday, November 18, 2026 — 17:25 PHT):** the Project Plan flag under Consequences is checked: `CLINIQ_Project_Plan.md` names ADR-056 only for Sanctum SPA cookie mode, which stands, and says nothing about branches or mock-only data, so it needs no change. The decision text below is not edited.
+
 ## Context
 ADR-056 kept the backend on its own branch, `backend`, and off `main` until Zean reviewed and merged it, so `main` held the documents and the frontend on sample data only. On Wednesday, November 18, 2026 the backend was built and audited, phases B0 to B10; the frontend was connected to it behind a mock/API switch (ADR-080, on `feat/connect-frontend`); the loaded-data checks of the 900-student load run were done; and the 34 screenshots were on `main`.
 
