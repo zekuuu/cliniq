@@ -29,7 +29,7 @@ import {
   type SessionUser,
   type StaffImportPreview,
   type StaffImportResult,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import { paths } from '../../routes/paths'
 
 const staff = (count: number) => `${count} staff ${count === 1 ? 'record' : 'records'}`

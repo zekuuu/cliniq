@@ -1,7 +1,7 @@
 import { Icon } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { medicalCertificateWarning, type LetterPeriod } from '../../lib/excuseLetter'
-import { getMedicalCertificateAfterDays } from '../../lib/mock-db'
+import { getMedicalCertificateAfterDays } from '../../lib/data'
 
 /** Next to an excused period: a warning, never a block, when it runs past `config.medicalCertificateAfterDays` (ADR-049, D2). */
 export function CertificateWarning({ period }: { period: LetterPeriod }) {

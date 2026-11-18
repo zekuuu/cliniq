@@ -18,7 +18,7 @@ import {
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDateTime } from '../../lib/dates'
-import type { SessionUser, SportsReportSummary } from '../../lib/mock-db'
+import type { SessionUser, SportsReportSummary } from '../../lib/data'
 import { paths } from '../../routes/paths'
 import { archiveSportsReport, copySportsReport, fetchSportsReports } from './api/sportsReportApi'
 

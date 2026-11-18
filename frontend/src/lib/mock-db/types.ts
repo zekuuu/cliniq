@@ -41,7 +41,7 @@ export type SeedUser = Replace<User, { lastLogin: RelativeDateTime | null }>
 
 /** Old mock JSON did not hold Sex; `resolveSeed` assigns a deterministic synthetic value on load. */
 export type SeedStudent = Omit<Student, 'recordComplete' | 'sex' | 'fullName'> & {
-  sex?: StudentSex
+  sex?: StudentSex | null
   nameCorrectionReason?: string
 }
 

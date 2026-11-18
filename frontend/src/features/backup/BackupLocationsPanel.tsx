@@ -3,7 +3,7 @@ import { Badge, Button, Card, CardBody, CardHeader, Combobox, Icon, Modal } from
 import { formatDateTime } from '../../lib/dates'
 import { useSaveFeedback } from '../../hooks/useSaveFeedback'
 import { SaveFeedback } from '../../components/forms/SaveFeedback'
-import type { BackupLocation, BackupLocationSettings, SessionUser } from '../../lib/mock-db'
+import type { BackupLocation, BackupLocationSettings, SessionUser } from '../../lib/data'
 import {
   fetchBackupFolders,
   saveLocation,

@@ -32,13 +32,15 @@ import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/t
 import {
   ROLE_LABELS,
   auditTargetTypes,
+  type AuditLogList,
   type AuditLogRow,
   type AuditTargetType,
   type SessionUser,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import type { AuditActionType } from '../../types/entities'
 import { paths } from '../../routes/paths'
-import { fetchAuditLog } from './api/auditLogApi'
+import { fetchAuditLog, fetchAuditLogForPrint } from './api/auditLogApi'
+import { useFullLrnPrint } from '../../hooks/useFullLrnPrint'
 
 type AuditSortKey = 'timestamp' | 'user' | 'action' | 'module' | 'record'
 
@@ -207,6 +209,13 @@ function filtersInWords(
  * The compliance printout (ADR-026, Module 11 "export/print a filtered view"): the filters in words, the
  * entry count, and every matching entry (not just the page on screen), in the screen's order.
  */
+/** The rows the screen shows, in its order, each swapped for its full-LRN copy when one was loaded. */
+function withFullRows(rows: AuditLogRow[], full: AuditLogList | null): AuditLogRow[] {
+  if (!full) return rows
+  const byId = new Map(full.rows.map((row) => [row.id, row]))
+  return rows.map((row) => byId.get(row.id) ?? row)
+}
+
 function AuditLogPrint({
   rows,
   filters,
@@ -309,6 +318,10 @@ export function AuditLogPage({
   const queryKey = `${range.from}|${range.to}|${userId}|${actionTypes.join(',')}|${targetTypes.join(',')}`
   const { data, status, isRefetching, reload } = useAsyncData(queryKey, () =>
     fetchAuditLog({ from: range.from, to: range.to, userId, actionTypes, targetTypes }),
+  )
+  // ADR-044: the printout carries the full LRN; on the API the Print button fetches it first (ADR-080).
+  const fullPrint = useFullLrnPrint('AUDIT', () =>
+    fetchAuditLogForPrint({ from: range.from, to: range.to, userId, actionTypes, targetTypes }),
   )
   const updateFilters = (changes: Partial<AuditLogFilters>) => {
     setFilters((current) => ({ ...current, ...changes }))
@@ -535,12 +548,17 @@ export function AuditLogPage({
               or deleted.
             </p>
           </div>
-          <PrintButton viewer={viewer} />
+          <PrintButton viewer={viewer} onPrint={() => void fullPrint.print()} />
         </div>
       </Card>
 
       {entries}
-      <AuditLogPrint rows={sortedRows} filters={filters} users={data.users} viewer={viewer} />
+      <AuditLogPrint
+        rows={withFullRows(sortedRows, fullPrint.full)}
+        filters={filters}
+        users={data.users}
+        viewer={viewer}
+      />
     </div>
   )
 }

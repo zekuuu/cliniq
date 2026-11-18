@@ -37,7 +37,7 @@ import {
 } from './api/incidentLogApi'
 import { PatientFilterSelect, PatientNumber } from '../../components'
 import type { PatientFilter } from '../../lib/patients'
-import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
+import { getMockSessionUser, type SessionUser } from '../../lib/data'
 
 type CompletionFilter = IncidentCompletion | 'all'
 

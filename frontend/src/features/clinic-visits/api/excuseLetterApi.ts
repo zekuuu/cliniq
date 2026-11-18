@@ -11,10 +11,10 @@ import {
   type ExcuseLetterApproval,
   type ExcusedPeriod,
   type SessionUser,
-} from '../../../lib/mock-db'
+} from '../../../lib/data'
 import { EXCUSE_LETTER_RECIPIENT, excuseLetterBody } from '../../../lib/excuseLetter'
 
-export { excusedPeriodError, type ExcusedPeriod } from '../../../lib/mock-db'
+export { excusedPeriodError, type ExcusedPeriod } from '../../../lib/data'
 import type { ISODateTime, Student, Visit } from '../../../types/entities'
 
 export interface ExcuseLetterContext {

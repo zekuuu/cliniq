@@ -16,14 +16,30 @@ const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Principal', role: 'admi
 
 describe('stat card trends (DB-2, D4)', () => {
   it('shows both counts instead of a percentage when the prior count is under the threshold', () => {
-    expect(trendFor(4, 1, range, 5)).toEqual({ direction: 'up', text: '4 vs 1 in the prior 22 days' })
-    expect(trendFor(3, 0, range, 5)).toEqual({ direction: 'up', text: '3 vs 0 in the prior 22 days' })
-    expect(trendFor(2, 2, range, 5)).toEqual({ direction: 'flat', text: 'No change vs prior 22 days' })
+    expect(trendFor(4, 1, range, 5)).toEqual({
+      direction: 'up',
+      text: '4 vs 1 in the prior 22 days',
+    })
+    expect(trendFor(3, 0, range, 5)).toEqual({
+      direction: 'up',
+      text: '3 vs 0 in the prior 22 days',
+    })
+    expect(trendFor(2, 2, range, 5)).toEqual({
+      direction: 'flat',
+      text: 'No change vs prior 22 days',
+    })
   })
 
   it('keeps the percentage from the threshold up, with the counts for screen readers', () => {
-    expect(trendFor(30, 10, range, 5)).toEqual({ direction: 'up', text: '200% vs prior 22 days', detail: '30 vs 10 in the prior 22 days' })
-    expect(trendFor(5, 10, range, 5)).toMatchObject({ direction: 'down', text: '50% vs prior 22 days' })
+    expect(trendFor(30, 10, range, 5)).toEqual({
+      direction: 'up',
+      text: '200% vs prior 22 days',
+      detail: '30 vs 10 in the prior 22 days',
+    })
+    expect(trendFor(5, 10, range, 5)).toMatchObject({
+      direction: 'down',
+      text: '50% vs prior 22 days',
+    })
   })
 })
 
@@ -58,7 +74,9 @@ describe('Due follow-ups: Patient filter (D11)', () => {
     const user = userEvent.setup()
     resetMockDb()
     const today = getMockToday()
-    const summary = await getDashboardSummary({ range: { preset: 'today', from: today, to: today } })
+    const summary = await getDashboardSummary({
+      range: { preset: 'today', from: today, to: today },
+    })
     const staffOnly = summary.dueFollowUps.filter((row) => row.patient.kind !== 'student').length
     renderWithRouter(<FollowUpsAlert summary={summary} canNavigate />)
     const filter = screen.getByLabelText('Patient')

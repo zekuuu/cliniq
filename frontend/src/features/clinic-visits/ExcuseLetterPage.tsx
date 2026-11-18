@@ -26,7 +26,7 @@ import { CertificateWarning } from './CertificateWarning'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
 import { formatDate, formatDateRange, formatDateTime } from '../../lib/dates'
-import { getMockSessionUser, ROLE_LABELS, type SessionUser } from '../../lib/mock-db'
+import { getMockSessionUser, ROLE_LABELS, type SessionUser } from '../../lib/data'
 import {
   approveExcuseLetter,
   defaultBody,

@@ -1,6 +1,6 @@
 import { useLayoutEffect, useState } from 'react'
 import { flushSync } from 'react-dom'
-import { recordPrint, type PrintAuditRecord, type SessionUser } from '../lib/mock-db'
+import { recordPrint, type PrintAuditRecord, type SessionUser } from '../lib/data'
 
 let activePrintAudit = false
 

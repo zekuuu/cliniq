@@ -18,7 +18,7 @@ import {
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDateTime } from '../../lib/dates'
-import type { SessionUser, SportsReportContent, SportsReportContentRow } from '../../lib/mock-db'
+import type { SessionUser, SportsReportContent, SportsReportContentRow } from '../../lib/data'
 import { paths } from '../../routes/paths'
 import { fetchSportsReportContent } from './api/sportsReportApi'
 import { SportsReportPrint } from './components/SportsReportPrint'

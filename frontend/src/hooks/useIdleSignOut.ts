@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { API_ACTIVITY_EVENT } from '../lib/sessionActivity'
+import { apiMode } from '../lib/api/mode'
+import { keepAlive } from '../lib/api/http/auth'
 
 /** The warning shows this long before the sign-out (ADR-078; one minute under ADR-048). */
 export const IDLE_WARNING_MS = 120_000
@@ -44,9 +46,25 @@ export function useIdleSignOut(
       lastRef.current = Date.now()
       setSecondsLeft(null)
     }
+    // API mode (ADR-078, ADR-080): the server's clock decides. A person's activity sends a keep-alive
+    // at most once a minute; every answered request restarts the count, and the keep-alive's
+    // `idleSecondsLeft` sets it exactly. Nothing is sent while the person is idle.
+    const onApi = apiMode('AUTH') === 'api'
+    const personActivity = onApi
+      ? () => {
+          if (!warningRef.current) void keepAlive().catch(() => undefined)
+        }
+      : activity
+    const apiActivity = (event: Event) => {
+      if (warningRef.current) return
+      const left = (event as CustomEvent<{ idleSecondsLeft?: number } | null>).detail
+        ?.idleSecondsLeft
+      lastRef.current = typeof left === 'number' ? Date.now() - (limit - left * 1000) : Date.now()
+      setSecondsLeft(null)
+    }
     for (const name of ACTIVITY_EVENTS)
-      window.addEventListener(name, activity, { capture: true, passive: true })
-    window.addEventListener(API_ACTIVITY_EVENT, activity)
+      window.addEventListener(name, personActivity, { capture: true, passive: true })
+    window.addEventListener(API_ACTIVITY_EVENT, apiActivity)
     const timer = setInterval(() => {
       const idle = Date.now() - lastRef.current
       if (idle >= limit) {
@@ -60,8 +78,8 @@ export function useIdleSignOut(
     return () => {
       clearInterval(timer)
       for (const name of ACTIVITY_EVENTS)
-        window.removeEventListener(name, activity, { capture: true })
-      window.removeEventListener(API_ACTIVITY_EVENT, activity)
+        window.removeEventListener(name, personActivity, { capture: true })
+      window.removeEventListener(API_ACTIVITY_EVENT, apiActivity)
     }
   }, [minutes])
 
@@ -69,6 +87,8 @@ export function useIdleSignOut(
     warningRef.current = false
     lastRef.current = Date.now()
     setSecondsLeft(null)
+    // "Stay signed in" on the API tells the server too; its answer resets the count (ADR-078).
+    if (apiMode('AUTH') === 'api') void keepAlive(true).catch(() => undefined)
   }, [])
 
   return { secondsLeft, stay }

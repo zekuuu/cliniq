@@ -38,7 +38,7 @@ import {
   outcomeChangedSinceApproval,
   StockRuleError,
   type SessionUser,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import { paths } from '../../routes/paths'
 import type { Disposition } from '../../types/entities'
 import { ComplaintField } from './ComplaintField'

@@ -4,7 +4,7 @@ import {
   setFollowUpStatus,
   type FollowUpView,
   type SessionUser,
-} from '../../../lib/mock-db'
+} from '../../../lib/data'
 import type { FollowUpStatus } from '../../../types/entities'
 
 /** Follow-Up List (#18c). Rows carry the LRN only (multi-student list, ADR-004). */

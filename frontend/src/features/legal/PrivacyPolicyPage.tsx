@@ -1,4 +1,4 @@
-import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
+import { getMockSessionUser, type SessionUser } from '../../lib/data'
 import { paths } from '../../routes/paths'
 import { BackButton, BULLET_LIST, Card } from '../../components'
 

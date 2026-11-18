@@ -14,7 +14,7 @@ import {
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDateTime } from '../../lib/dates'
-import { getMockSessionUser, NoBackupLocationError } from '../../lib/mock-db'
+import { getMockSessionUser, NoBackupLocationError } from '../../lib/data'
 import {
   backUpNow,
   fetchBackupLocations,

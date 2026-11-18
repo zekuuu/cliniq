@@ -11,7 +11,8 @@ import { StudentProfilePage } from './student-records/StudentProfilePage'
 /** ADR-038: the Admin reads the Student List, Student Profile, Incident Log and Incident Report, and never prints. */
 const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Principal', role: 'admin' }
 const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
-const WRITE_CONTROLS = /^(Add Student|Edit|Archive$|New Visit|New Incident|Complete Stage 2|Approve Report|Review letter|Log .*notification)/
+const WRITE_CONTROLS =
+  /^(Add Student|Edit|Archive$|New Visit|New Incident|Complete Stage 2|Approve Report|Review letter|Log .*notification)/
 
 function expectNoWriteControls() {
   expect(screen.queryByRole('link', { name: WRITE_CONTROLS })).not.toBeInTheDocument()
@@ -36,7 +37,9 @@ describe('Admin read-only access (ADR-038)', () => {
     renderWithRouter(<StudentProfilePage viewer={ADMIN} studentId="student-0001" />)
     await screen.findByRole('heading', { name: 'Visit History' })
     expectNoWriteControls()
-    expect(within(screen.getByRole('list', { name: 'Visit History' })).queryByRole('link')).not.toBeInTheDocument()
+    expect(
+      within(screen.getByRole('list', { name: 'Visit History' })).queryByRole('link'),
+    ).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Excuse Letters' })).not.toBeInTheDocument()
     const print = screen.getByRole('button', { name: /print/i })
     expect(print).toHaveAttribute('aria-disabled', 'true')
@@ -104,7 +107,9 @@ describe('Admin read-only access (ADR-038)', () => {
     const again = renderWithRouter(<StudentProfilePage viewer={ADMIN} studentId="student-0001" />)
     await screen.findByRole('heading', { name: 'Visit History' })
     again.unmount()
-    const report = renderWithRouter(<IncidentReportPage viewer={ADMIN} incidentId="incident-0022" />)
+    const report = renderWithRouter(
+      <IncidentReportPage viewer={ADMIN} incidentId="incident-0022" />,
+    )
     await screen.findByRole('heading', { name: 'Incident summary' })
     report.unmount()
     await waitFor(() => expect(viewEntries()).toHaveLength(2))
@@ -124,6 +129,9 @@ describe('Admin read-only access (ADR-038)', () => {
     renderWithRouter(<StudentProfilePage viewer={STAFF} studentId="student-0002" />)
     await screen.findByRole('heading', { name: 'Visit History' })
     await waitFor(() => expect(viewEntries()).toHaveLength(4))
-    expect(viewEntries().at(-1)).toMatchObject({ userId: STAFF.id, targetRecord: { type: 'student', id: 'student-0002' } })
+    expect(viewEntries().at(-1)).toMatchObject({
+      userId: STAFF.id,
+      targetRecord: { type: 'student', id: 'student-0002' },
+    })
   })
 })

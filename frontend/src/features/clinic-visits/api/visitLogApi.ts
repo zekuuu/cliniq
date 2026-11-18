@@ -1,10 +1,5 @@
-import {
-  getMockToday,
-  listPersonnel,
-  listStudents,
-  listUsers,
-  listVisits,
-} from '../../../lib/mock-db'
+import { getMockToday, listPersonnel, listStudents, listUsers, listVisits } from '../../../lib/data'
+import { lrnMatchesSearch } from '../../../lib/lrn'
 import { matchesPatientFilter, type PatientFilter, type PatientNumber } from '../../../lib/patients'
 import { todayISO } from '../../../lib/dates'
 import { rangeForPreset } from '../../../lib/dateRange'
@@ -108,7 +103,7 @@ export async function fetchVisitLog(query: VisitLogQuery): Promise<VisitLogRow[]
       if (!search) return true
       return (
         (row.patient.kind === 'student'
-          ? row.patient.number.startsWith(search.replace(/[\s-]/g, ''))
+          ? lrnMatchesSearch(row.patient.number, search)
           : row.patient.number.toLowerCase().startsWith(search.replace(/\s/g, ''))) ||
         row.gradeLevel.toLowerCase().includes(search) ||
         row.complaint.toLowerCase().includes(search) ||

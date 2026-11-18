@@ -61,22 +61,34 @@ describe('setting up the authenticator', () => {
   it('confirms with the first code, returns 8 one-time codes, and stores only their hashes', async () => {
     startMockSession(NURSE)
     const { secret, uri } = await startAuthenticatorSetup()
-    expect(uri).toBe(`otpauth://totp/CLINIQ%3Ademo.nurse?secret=${secret}&issuer=CLINIQ&algorithm=SHA1&digits=6&period=30`)
-    await expect(confirmAuthenticatorSetup('000000' === (await codeFor(secret)) ? '111111' : '000000')).rejects.toThrow(/date and time are set automatically/)
+    expect(uri).toBe(
+      `otpauth://totp/CLINIQ%3Ademo.nurse?secret=${secret}&issuer=CLINIQ&algorithm=SHA1&digits=6&period=30`,
+    )
+    await expect(
+      confirmAuthenticatorSetup('000000' === (await codeFor(secret)) ? '111111' : '000000'),
+    ).rejects.toThrow(/date and time are set automatically/)
     const { recoveryCodes } = await confirmAuthenticatorSetup(await codeFor(secret))
     expect(recoveryCodes).toHaveLength(8)
-    const record = db().frontendOnly.devAccounts.find((account) => account.userId === NURSE.id)!.authenticator!
+    const record = db().frontendOnly.devAccounts.find(
+      (account) => account.userId === NURSE.id,
+    )!.authenticator!
     expect(record.recoveryCodeHashes).toHaveLength(8)
     for (const code of recoveryCodes) expect(JSON.stringify(record)).not.toContain(code)
     expect(await getAuthenticatorStatus()).toEqual({ enabled: true, recoveryCodesLeft: 8 })
-    expect(getRecordedAuditEntries().at(-1)).toMatchObject({ actionType: 'update', summary: 'Set up authenticator', targetRecord: { type: 'user', id: NURSE.id } })
+    expect(getRecordedAuditEntries().at(-1)).toMatchObject({
+      actionType: 'update',
+      summary: 'Set up authenticator',
+      targetRecord: { type: 'user', id: NURSE.id },
+    })
     expectAuditClean(secret, ...recoveryCodes)
   })
 
   it('accepts a code from one step before (phone clock drift)', async () => {
     startMockSession(NURSE)
     const { secret } = await startAuthenticatorSetup()
-    await expect(confirmAuthenticatorSetup(await codeFor(secret, Date.now() - 30_000))).resolves.toMatchObject({ recoveryCodes: expect.any(Array) })
+    await expect(
+      confirmAuthenticatorSetup(await codeFor(secret, Date.now() - 30_000)),
+    ).resolves.toMatchObject({ recoveryCodes: expect.any(Array) })
   })
 
   it('replaces and turns off only after the current code or a recovery code', async () => {
@@ -84,7 +96,9 @@ describe('setting up the authenticator', () => {
     await expect(startAuthenticatorSetup()).rejects.toThrow(/did not work/)
     const replaced = await startAuthenticatorSetup(recoveryCodes[0])
     await confirmAuthenticatorSetup(await codeFor(replaced.secret))
-    expect(getRecordedAuditEntries().map((entry) => entry.summary)).toEqual(expect.arrayContaining(['Used a recovery code', 'Replaced authenticator']))
+    expect(getRecordedAuditEntries().map((entry) => entry.summary)).toEqual(
+      expect.arrayContaining(['Used a recovery code', 'Replaced authenticator']),
+    )
     await expect(turnOffAuthenticator(await codeFor(secret))).rejects.toThrow(/did not work/)
     await turnOffAuthenticator(await codeFor(replaced.secret))
     expect(await getAuthenticatorStatus()).toEqual({ enabled: false, recoveryCodesLeft: 0 })
@@ -101,7 +115,9 @@ describe('Forgot password with the authenticator', () => {
     await resetPasswordWithRecovery(token, 'new-pass-2026')
     const result = await authenticateMockUser('demo.new', 'new-pass-2026')
     expect(result.mustChangePassword).toBe(false)
-    expect(getRecordedAuditEntries().map((entry) => entry.summary)).toEqual(expect.arrayContaining(['Changed password', 'Reset password with authenticator']))
+    expect(getRecordedAuditEntries().map((entry) => entry.summary)).toEqual(
+      expect.arrayContaining(['Changed password', 'Reset password with authenticator']),
+    )
     // The token is spent.
     await expect(resetPasswordWithRecovery(token, 'another-pass-1')).rejects.toThrow(/expired/)
     expectAuditClean(secret, 'new-pass-2026')
@@ -110,8 +126,12 @@ describe('Forgot password with the authenticator', () => {
   it('takes a recovery code once; a replay gets the generic message', async () => {
     const { recoveryCodes } = await setUp()
     await verifyPasswordRecovery('demo.nurse', recoveryCodes[2])
-    await expect(verifyPasswordRecovery('demo.nurse', recoveryCodes[2])).rejects.toThrow(RECOVERY_FAILED_MESSAGE)
-    expect(getRecordedAuditEntries().filter((entry) => entry.summary === 'Used a recovery code')).toHaveLength(1)
+    await expect(verifyPasswordRecovery('demo.nurse', recoveryCodes[2])).rejects.toThrow(
+      RECOVERY_FAILED_MESSAGE,
+    )
+    expect(
+      getRecordedAuditEntries().filter((entry) => entry.summary === 'Used a recovery code'),
+    ).toHaveLength(1)
     expectAuditClean(...recoveryCodes)
   })
 
@@ -120,35 +140,54 @@ describe('Forgot password with the authenticator', () => {
     const good = await codeFor(secret)
     const wrong = good === '123456' ? '654321' : '123456'
     const messages = []
-    for (const [name, code] of [['demo.nurse', wrong], ['nobody.here', good], ['demo.principal', good]] as const)
+    for (const [name, code] of [
+      ['demo.nurse', wrong],
+      ['nobody.here', good],
+      ['demo.principal', good],
+    ] as const)
       messages.push(await verifyPasswordRecovery(name, code).catch((cause: Error) => cause.message))
     await setUserActive(NURSE.id, false, ADMIN)
-    messages.push(await verifyPasswordRecovery('demo.nurse', good).catch((cause: Error) => cause.message))
+    messages.push(
+      await verifyPasswordRecovery('demo.nurse', good).catch((cause: Error) => cause.message),
+    )
     expect(messages).toEqual(Array(4).fill(RECOVERY_FAILED_MESSAGE))
   })
 
   it('locks after 5 failures, as sign-in does, and a locked account refuses even a good code', async () => {
     const { secret } = await setUp()
-    for (let i = 0; i < 4; i += 1) await expect(verifyPasswordRecovery('demo.nurse', '000001')).rejects.toThrow(RECOVERY_FAILED_MESSAGE)
-    const locked = await verifyPasswordRecovery('demo.nurse', '000001').catch((cause: unknown) => cause)
+    for (let i = 0; i < 4; i += 1)
+      await expect(verifyPasswordRecovery('demo.nurse', '000001')).rejects.toThrow(
+        RECOVERY_FAILED_MESSAGE,
+      )
+    const locked = await verifyPasswordRecovery('demo.nurse', '000001').catch(
+      (cause: unknown) => cause,
+    )
     expect(locked).toBeInstanceOf(MockAuthError)
     expect((locked as MockAuthError).reason).toBe('locked')
-    await expect(verifyPasswordRecovery('demo.nurse', await codeFor(secret))).rejects.toMatchObject({ reason: 'locked' })
-    await expect(authenticateMockUser('demo.nurse', 'demo-nurse')).rejects.toMatchObject({ reason: 'locked' })
+    await expect(verifyPasswordRecovery('demo.nurse', await codeFor(secret))).rejects.toMatchObject(
+      { reason: 'locked' },
+    )
+    await expect(authenticateMockUser('demo.nurse', 'demo-nurse')).rejects.toMatchObject({
+      reason: 'locked',
+    })
   })
 })
 
 describe('the screens', () => {
   it('offers "Set up authenticator app" in a dialog, with the Admin warned to keep the codes', async () => {
     startMockSession(ADMIN)
-    renderWithRouter(<AuthenticatorDialog open viewer={ADMIN} onClose={() => {}} onChanged={() => {}} />)
+    renderWithRouter(
+      <AuthenticatorDialog open viewer={ADMIN} onClose={() => {}} onChanged={() => {}} />,
+    )
     const dialog = await screen.findByRole('dialog', { name: 'Authenticator app' })
     expect(within(dialog).getByText(/nobody else can reset your password/)).toBeInTheDocument()
     expect(await within(dialog).findByText('Not set up')).toBeInTheDocument()
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     await user.click(within(dialog).getByRole('button', { name: 'Set up' }))
     expect(await within(dialog).findByText('Setup key')).toBeInTheDocument()
-    const key = within(dialog).getByText(/^[A-Z2-7]{4}( [A-Z2-7]{1,4})+$/).textContent!.replace(/\s/g, '')
+    const key = within(dialog)
+      .getByText(/^[A-Z2-7]{4}( [A-Z2-7]{1,4})+$/)
+      .textContent!.replace(/\s/g, '')
     await user.type(within(dialog).getByLabelText(/^6-digit code/), await codeFor(key))
     await user.click(within(dialog).getByRole('button', { name: 'Confirm' }))
     const codes = await screen.findByRole('list', { name: 'Recovery codes' })
@@ -161,7 +200,9 @@ describe('the screens', () => {
 
   it('shows Enabled, and disables with the code boxes or a recovery code (Zean, November 8, 2026)', async () => {
     const { recoveryCodes } = await setUp()
-    renderWithRouter(<AuthenticatorDialog open viewer={NURSE} onClose={() => {}} onChanged={() => {}} />)
+    renderWithRouter(
+      <AuthenticatorDialog open viewer={NURSE} onClose={() => {}} onChanged={() => {}} />,
+    )
     const dialog = await screen.findByRole('dialog', { name: 'Authenticator app' })
     expect(await within(dialog).findByText('Enabled')).toBeInTheDocument()
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
@@ -186,7 +227,7 @@ describe('the screens', () => {
     // Code boxes: six digits continue by themselves.
     const boxes = await within(dialog).findByLabelText('6-digit code')
     expect(dialog.querySelectorAll('[data-code-box]')).toHaveLength(6)
-    if (await codeFor(secret) !== '000002') {
+    if ((await codeFor(secret)) !== '000002') {
       await user.type(boxes, '000002')
       expect(await within(dialog).findByRole('alert')).toHaveTextContent(RECOVERY_FAILED_MESSAGE)
     }
@@ -222,7 +263,9 @@ describe('the screens', () => {
     const dialog = screen.getByRole('dialog', { name: 'Forgot your password?' })
     await user.type(within(dialog).getByLabelText(/^Username/), 'demo.nurse')
     await user.click(within(dialog).getByRole('button', { name: 'Continue' }))
-    await user.click(await within(dialog).findByRole('button', { name: 'Use a recovery code instead' }))
+    await user.click(
+      await within(dialog).findByRole('button', { name: 'Use a recovery code instead' }),
+    )
     await user.type(within(dialog).getByLabelText(/^Recovery code/), recoveryCodes[0])
     await user.click(within(dialog).getByRole('button', { name: 'Continue' }))
     expect(await within(dialog).findByLabelText(/^New password/)).toBeInTheDocument()
@@ -235,7 +278,8 @@ describe('the account check (Zean, November 7, 2026)', () => {
     await expect(checkRecoveryAccount('demo.nurse')).rejects.toThrow(RECOVERY_NOT_SET_UP_MESSAGE)
     await setUp()
     await expect(checkRecoveryAccount('demo.nurse')).resolves.toBeUndefined()
-    for (let i = 0; i < 4; i += 1) await expect(checkRecoveryAccount('ghost.user')).rejects.toThrow(RECOVERY_NO_ACCOUNT_MESSAGE)
+    for (let i = 0; i < 4; i += 1)
+      await expect(checkRecoveryAccount('ghost.user')).rejects.toThrow(RECOVERY_NO_ACCOUNT_MESSAGE)
     await expect(checkRecoveryAccount('ghost.user')).rejects.toMatchObject({ reason: 'locked' })
   })
 })

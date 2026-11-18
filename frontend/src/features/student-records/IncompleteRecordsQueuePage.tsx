@@ -21,7 +21,7 @@ import { paths } from '../../routes/paths'
 import { formatDate } from '../../lib/dates'
 import { nameMatches } from '../../lib/personName'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
-import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
+import { getMockSessionUser, type SessionUser } from '../../lib/data'
 import { fetchIncompleteRecords, type IncompleteRecord } from './api/incompleteRecordsApi'
 import { MaskedLrn } from '../../components/ui/MaskedLrn'
 

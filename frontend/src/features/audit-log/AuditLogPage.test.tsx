@@ -10,7 +10,11 @@ import { maskLrn } from '../../lib/lrn'
 const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' } as const
 
 function renderPage() {
-  return render(<MemoryRouter><AuditLogPage viewer={STAFF} /></MemoryRouter>)
+  return render(
+    <MemoryRouter>
+      <AuditLogPage viewer={STAFF} />
+    </MemoryRouter>,
+  )
 }
 
 describe('Audit Log', () => {
@@ -27,7 +31,7 @@ describe('Audit Log', () => {
     await user.click(screen.getByRole('button', { name: /action type 1 selected/i }))
     await screen.findByText(/2 entries shown/)
     const [filtered] = screen.getAllByRole('table', { name: 'Filtered audit log' })
-    const student = (await getStudent('student-0009'))
+    const student = await getStudent('student-0009')
     expect(within(filtered).getAllByRole('row')[1]).toHaveTextContent(`LRN ${maskLrn(student.lrn)}`)
     expect(within(filtered).getAllByRole('row')[1]).not.toHaveTextContent(student.lrn)
     expect(within(filtered).getAllByRole('row')[1]).not.toHaveTextContent(student.fullName)
@@ -68,12 +72,16 @@ describe('Audit Log', () => {
 
     expect(within(table).getAllByText('School Clinician').length).toBeGreaterThan(0)
 
-    await userEvent.setup().type(screen.getByRole('searchbox', { name: 'Search' }), 'updated allergies')
+    await userEvent
+      .setup()
+      .type(screen.getByRole('searchbox', { name: 'Search' }), 'updated allergies')
     await screen.findByText(/1 entry shown/)
     expect(screen.getAllByText('Updated allergies').length).toBeGreaterThan(0)
     const [filtered] = screen.getAllByRole('table', { name: 'Filtered audit log' })
     expect(within(filtered).getAllByText('Student').length).toBeGreaterThan(0)
-    expect(within(filtered).getAllByRole('link', { name: /^LRN ending in \d{4}$/ }).length).toBeGreaterThan(0)
+    expect(
+      within(filtered).getAllByRole('link', { name: /^LRN ending in \d{4}$/ }).length,
+    ).toBeGreaterThan(0)
   })
 
   it('filters action types through the multi-select control', async () => {
@@ -124,7 +132,9 @@ describe('Audit Log', () => {
     await user.clear(field)
     await user.type(field, '3{Enter}')
     expect(screen.getByText(/Showing 21–/)).toBeInTheDocument()
-    expect(within(screen.getByRole('navigation', { name: /pagination/ })).getByRole('status')).toHaveTextContent('Page 3 of 3')
+    expect(
+      within(screen.getByRole('navigation', { name: /pagination/ })).getByRole('status'),
+    ).toHaveTextContent('Page 3 of 3')
 
     await selectOption(user, screen.getByLabelText('User'), 'user-admin-01')
     await screen.findByText(/7 entries shown/)
@@ -149,16 +159,24 @@ describe('Audit Log', () => {
 
   it('audits printing the current filtered view once', async () => {
     const user = userEvent.setup()
-    const print = vi.spyOn(window, 'print').mockImplementation(() => window.dispatchEvent(new Event('beforeprint')))
+    const print = vi
+      .spyOn(window, 'print')
+      .mockImplementation(() => window.dispatchEvent(new Event('beforeprint')))
     renderPage()
     await screen.findByRole('table', { name: 'Filtered audit log' })
 
     await user.click(screen.getByRole('button', { name: 'Print / Save as PDF' }))
 
     expect(print).toHaveBeenCalledOnce()
-    await waitFor(() => expect(getRecordedAuditEntries()).toEqual([
-      expect.objectContaining({ actionType: 'print', userId: STAFF.id, targetRecord: { type: 'print-document', id: 'Audit Log' } }),
-    ]))
+    await waitFor(() =>
+      expect(getRecordedAuditEntries()).toEqual([
+        expect.objectContaining({
+          actionType: 'print',
+          userId: STAFF.id,
+          targetRecord: { type: 'print-document', id: 'Audit Log' },
+        }),
+      ]),
+    )
     window.dispatchEvent(new Event('afterprint'))
   })
 })

@@ -9,7 +9,7 @@ import {
   PrintTable,
 } from '../../../components'
 import { formatDateTime } from '../../../lib/dates'
-import { ROLE_LABELS, type ComplaintCount, type SessionUser } from '../../../lib/mock-db'
+import { ROLE_LABELS, type ComplaintCount, type SessionUser } from '../../../lib/data'
 import { DISPOSITION_LABELS } from '../../../lib/dispositions'
 import { maskPatientNumber } from '../../../lib/patients'
 import type { MonthlyReportData } from '../api/reportsApi'

@@ -1,4 +1,4 @@
-import type { AgeGroup, VitalsWarningRanges } from '../../lib/mock-db'
+import type { AgeGroup, VitalsWarningRanges } from '../../lib/data'
 import { feverNote, unusualReadings, usualRangeNotes, type TypedReadings } from '../../lib/vitals'
 import { Icon } from '../icons/Icon'
 

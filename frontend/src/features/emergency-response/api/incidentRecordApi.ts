@@ -12,7 +12,7 @@ import {
   recordView,
   type IncidentTrail,
   type SessionUser,
-} from '../../../lib/mock-db'
+} from '../../../lib/data'
 import type {
   CalledContact,
   Incident,

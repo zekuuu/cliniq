@@ -32,3 +32,17 @@ export function lrnLabel(lrn: string): string {
 
 /** Shortest query a student search answers; below it nothing is listed (no browsable roster). */
 export const STUDENT_SEARCH_MIN_LENGTH = 1
+
+/**
+ * Whether typed digits find a student's LRN on a log. A full LRN (mock mode) matches by its prefix,
+ * as before. A masked LRN (API mode, ADR-040: lists never carry the full one) shows only its last
+ * 4 digits, so typed digits match those: a few digits found in them, or a longer entry that ends
+ * with them (Zean, Sunday, November 15, 2026, ADR-080).
+ */
+export function lrnMatchesSearch(lrn: string, typed: string): boolean {
+  const digits = typed.replace(/[\s-]/g, '')
+  if (!lrn.includes('●')) return lrn.startsWith(digits)
+  const tail = lrn.replace(/\D/g, '')
+  if (!digits || !/^\d+$/.test(digits)) return false
+  return digits.length <= tail.length ? tail.includes(digits) : digits.endsWith(tail)
+}

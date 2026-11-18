@@ -2,7 +2,7 @@ import { SYMPTOM, symptom, symptoms } from '../../../lib/labels'
 import { splitText } from '../../../lib/patients'
 import { DataTable, EmptyState, PrintTable } from '../../../components'
 import { formatDate } from '../../../lib/dates'
-import type { MonthlyInventoryRow } from '../../../lib/mock-db'
+import type { MonthlyInventoryRow } from '../../../lib/data'
 import type { MonthlyReportData } from '../api/reportsApi'
 
 /*
@@ -163,10 +163,16 @@ export function InventorySheetPrint({ rows }: { rows: MonthlyInventoryRow[] }) {
   )
 }
 
-type BySex = MonthlyReportData['visitsBySex']
+/**
+ * `noSexRecordedParts` comes from the API only (November 16, 2026): there a student can lack a sex
+ * (contract G4) and staff cannot. The mock sends just the total, and only staff lack one there.
+ */
+type BySex = MonthlyReportData['visitsBySex'] & {
+  noSexRecordedParts?: { students: number; staff: number }
+}
 
 /** Visits by sex, as the Dashboard's Trends tables word it (ADR-045, ADR-051), students and staff as the two parts (ADR-063). */
-function sexRows({ female, male, noSexRecorded }: BySex) {
+function sexRows({ female, male, noSexRecorded, noSexRecordedParts }: BySex) {
   return [
     {
       label: 'Female',
@@ -180,7 +186,7 @@ function sexRows({ female, male, noSexRecorded }: BySex) {
           {
             label: 'No sex recorded',
             count: noSexRecorded,
-            parts: { students: 0, staff: noSexRecorded },
+            parts: noSexRecordedParts ?? { students: 0, staff: noSexRecorded },
             accent: '',
           },
         ]

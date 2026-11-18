@@ -25,7 +25,7 @@ import {
   listInventory,
   listInventoryMovements,
   type InventoryMovementRow,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import { paths } from '../../routes/paths'
 
 const TYPE_OPTIONS = [
@@ -35,14 +35,19 @@ const TYPE_OPTIONS = [
   { value: 'adjustment', label: 'Adjusted' },
 ]
 
+/** The API writes an `opening` row for a new item's starting count (ERD; the mock has none). */
+const isOpening = (type: string) => type === 'opening'
+
 const typeText = (row: InventoryMovementRow) =>
   row.reason
     ? `Adjusted: ${ADJUSTMENT_REASON_LABELS[row.reason]}`
-    : row.type === 'dispense'
-      ? 'Dispensed'
-      : row.type === 'restock'
-        ? 'Restocked'
-        : 'Adjusted'
+    : isOpening(row.type)
+      ? 'Opening stock'
+      : row.type === 'dispense'
+        ? 'Dispensed'
+        : row.type === 'restock'
+          ? 'Restocked'
+          : 'Adjusted'
 
 // Fits the card at 1280px with the sidebar open (about 56rem, less the focus-ring room), so a desktop never scrolls sideways
 // (Zean, November 4, 2026). Balanced to the content (November 5): Change, Batch, Patient and By are

@@ -6,7 +6,13 @@ import { busyLabel } from '../components/ui/buttonClassName'
 import { focusTopMessage } from '../components/forms/ErrorSummary'
 import { SaveFeedback } from '../components/forms/SaveFeedback'
 import { SAVE_FAILED_MESSAGE, SAVED_MESSAGE_MS, useSaveFeedback } from '../hooks/useSaveFeedback'
-import { listBackupLocations, recordBackupNow, resetMockDb, saveBackupLocation, setBackupLocationEnabled } from '../lib/mock-db'
+import {
+  listBackupLocations,
+  recordBackupNow,
+  resetMockDb,
+  saveBackupLocation,
+  setBackupLocationEnabled,
+} from '../lib/mock-db'
 import { renderWithRouter } from '../test/renderWithRouter'
 import { BackupStatusPage } from './backup/BackupStatusPage'
 import { IncidentEntryPage } from './emergency-response/IncidentEntryPage'
@@ -34,7 +40,12 @@ describe('P2.1 save buttons give clear feedback', () => {
     return (
       <>
         <input aria-label="Typed value" defaultValue="kept" />
-        <Button loading={feedback.saving} onClick={() => void feedback.run(action, { saved: 'Saved.' })}>Save</Button>
+        <Button
+          loading={feedback.saving}
+          onClick={() => void feedback.run(action, { saved: 'Saved.' })}
+        >
+          Save
+        </Button>
         <SaveFeedback result={feedback.result} />
       </>
     )
@@ -80,7 +91,10 @@ describe('P2.1 save buttons give clear feedback', () => {
     await user.type(within(dialog).getByLabelText(/^Label/), 'Blue USB')
     await user.click(within(dialog).getAllByRole('radio')[0])
     await user.click(within(dialog).getByRole('button', { name: 'Save location' }))
-    expect(await screen.findByText('Blue USB added. Backups now go there too.')).toHaveAttribute('role', 'status')
+    expect(await screen.findByText('Blue USB added. Backups now go there too.')).toHaveAttribute(
+      'role',
+      'status',
+    )
   })
 })
 
@@ -121,7 +135,12 @@ describe('P2.6 no Clinic Overview printout (ADR-074)', () => {
   it('Reports has only the four monthly reports', async () => {
     renderWithRouter(<ReportsPage viewer={STAFF} />)
     await screen.findByRole('heading', { name: 'Monthly Report' })
-    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Monthly Report', 'Incident register', 'Symptom summary', 'Inventory sheet'])
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      'Monthly Report',
+      'Incident register',
+      'Symptom summary',
+      'Inventory sheet',
+    ])
   })
 })
 
@@ -132,16 +151,20 @@ describe('P2.7 backup locations are never edited', () => {
     renderWithRouter(<BackupStatusPage />)
     await screen.findByRole('button', { name: 'Add location' })
     expect(screen.queryByRole('button', { name: /^Edit /i })).not.toBeInTheDocument()
-    expect(screen.getByText(/To change a location, add a new one and disable the old one/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/To change a location, add a new one and disable the old one/),
+    ).toBeInTheDocument()
   })
 
-  it('keeps each run\'s location names in the history after a location is disabled', async () => {
+  it("keeps each run's location names in the history after a location is disabled", async () => {
     const added = await saveBackupLocation({ label: 'Blue USB', path: 'F:\\' }, { actor: STAFF })
     await recordBackupNow(STAFF)
     await setBackupLocationEnabled(added.id, false, STAFF)
     renderWithRouter(<BackupStatusPage />)
     const history = await screen.findByRole('heading', { name: 'Recent runs' })
     expect(history.parentElement).toHaveTextContent(/to .*Blue USB/)
-    expect((await listBackupLocations()).locations.find((l) => l.id === added.id)?.enabled).toBe(false)
+    expect((await listBackupLocations()).locations.find((l) => l.id === added.id)?.enabled).toBe(
+      false,
+    )
   })
 })

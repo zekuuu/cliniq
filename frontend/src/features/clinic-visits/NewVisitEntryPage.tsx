@@ -46,7 +46,7 @@ import {
   type ComplaintType,
   type InventoryItemView,
   type SessionUser,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import { paths } from '../../routes/paths'
 import type { Disposition, PatientRef } from '../../types/entities'
 import {

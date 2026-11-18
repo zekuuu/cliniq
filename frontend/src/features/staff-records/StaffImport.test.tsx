@@ -1,8 +1,21 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { applyStaffImport, getPersonnel, getRecordedAuditEntries, getStaffIncompleteQueue, listPersonnel, previewStaffImport, resetMockDb } from '../../lib/mock-db'
-import { guessStaffMapping, mapStaffRows, parseCsv, type StaffImportRow } from '../../lib/staffImport'
+import {
+  applyStaffImport,
+  getPersonnel,
+  getRecordedAuditEntries,
+  getStaffIncompleteQueue,
+  listPersonnel,
+  previewStaffImport,
+  resetMockDb,
+} from '../../lib/mock-db'
+import {
+  guessStaffMapping,
+  mapStaffRows,
+  parseCsv,
+  type StaffImportRow,
+} from '../../lib/staffImport'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import SAMPLE from '../../../sample-data/staff-list-sample.csv?raw'
 import { StaffImportPage } from './StaffImportPage'
@@ -56,36 +69,60 @@ describe('Staff list import (ADR-069)', () => {
     const result = await applyStaffImport(rowsOf(CSV), { fileName: 'staff.csv', actor: STAFF })
     expect(result).toEqual({ created: 1, updated: 2, flagged: 4 })
     const liza = await getPersonnel('personnel-0005')
-    expect(liza.emergencyContacts).toEqual([{ name: 'Ana Pangilinan', relationship: 'Sister', phone: '0917-111-2222', verified: false }])
-    expect((await getStaffIncompleteQueue()).find((row) => row.person.id === 'personnel-0005')?.status).toBe('resolved')
+    expect(liza.emergencyContacts).toEqual([
+      { name: 'Ana Pangilinan', relationship: 'Sister', phone: '0917-111-2222', verified: false },
+    ])
+    expect(
+      (await getStaffIncompleteQueue()).find((row) => row.person.id === 'personnel-0005')?.status,
+    ).toBe('resolved')
     expect((await listPersonnel({ search: 'Dindo' }))[0].department).toBe('Math department')
     const carla = (await listPersonnel({ search: 'Carla Reyes' }))[0]
-    expect(carla).toMatchObject({ staffNumber: 'STF-0013', type: 'Non-teaching staff', contactInfo: '0918-000-1111' })
+    expect(carla).toMatchObject({
+      staffNumber: 'STF-0013',
+      type: 'Non-teaching staff',
+      contactInfo: '0918-000-1111',
+    })
     expect(getRecordedAuditEntries().at(-1)!.summary).toBe('1 added, 2 updated, 4 flagged')
   })
 
-  it("never replaces a contact CLINIQ already has, and writes nothing when nothing changes", async () => {
-    const rows = rowsOf('Staff No.,Last Name,First Name,Sex,Type,Emergency Contact Name,Relationship,Emergency Contact Phone\nSTF-0002,Arcega,Dindo,M,Teacher,New Person,Friend,0917-999-0000')
+  it('never replaces a contact CLINIQ already has, and writes nothing when nothing changes', async () => {
+    const rows = rowsOf(
+      'Staff No.,Last Name,First Name,Sex,Type,Emergency Contact Name,Relationship,Emergency Contact Phone\nSTF-0002,Arcega,Dindo,M,Teacher,New Person,Friend,0917-999-0000',
+    )
     const before = (await getPersonnel('personnel-0002')).emergencyContacts
     const audits = getRecordedAuditEntries().length
-    expect(await applyStaffImport(rows, { fileName: 'x.csv', actor: STAFF })).toEqual({ created: 0, updated: 0, flagged: 0 })
+    expect(await applyStaffImport(rows, { fileName: 'x.csv', actor: STAFF })).toEqual({
+      created: 0,
+      updated: 0,
+      flagged: 0,
+    })
     expect((await getPersonnel('personnel-0002')).emergencyContacts).toEqual(before)
     expect(getRecordedAuditEntries()).toHaveLength(audits)
   })
 
   it('imports the sample file with nothing skipped', async () => {
     const preview = await previewStaffImport(rowsOf(SAMPLE), STAFF)
-    expect(preview).toMatchObject({ newCount: 4, continuingCount: 3, changedCount: 3, problems: [] })
+    expect(preview).toMatchObject({
+      newCount: 4,
+      continuingCount: 3,
+      changedCount: 3,
+      problems: [],
+    })
   })
 
   it('walks the page from file to applied list', async () => {
     const user = userEvent.setup()
     renderWithRouter(<StaffImportPage viewer={STAFF} />)
-    await user.upload(screen.getByLabelText('Staff list (CSV)'), new File([CSV], 'staff.csv', { type: 'text/csv' }))
+    await user.upload(
+      screen.getByLabelText('Staff list (CSV)'),
+      new File([CSV], 'staff.csv', { type: 'text/csv' }),
+    )
     await user.click(await screen.findByRole('button', { name: 'Preview' }))
     expect(await screen.findByText('Rows with a problem')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Apply List' }))
     await user.click(screen.getAllByRole('button', { name: 'Apply List' }).at(-1)!)
-    expect(await screen.findByText('List applied: 1 added, 2 updated, 4 left out.')).toBeInTheDocument()
+    expect(
+      await screen.findByText('List applied: 1 added, 2 updated, 4 left out.'),
+    ).toBeInTheDocument()
   })
 })

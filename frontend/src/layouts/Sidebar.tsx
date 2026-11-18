@@ -5,7 +5,7 @@ import { BACKUP_CHANGED_EVENT, fetchBackupStatus } from '../features/backup/api/
 import { useAsyncData } from '../hooks/useAsyncData'
 import { cn } from '../lib/cn'
 import { navGroupsFor, type NavKey } from './navigation'
-import { getSchoolYearReminder, type SessionUser } from '../lib/mock-db'
+import { getSchoolYearReminder, type SessionUser } from '../lib/data'
 import { SCHOOL_YEAR_CHANGED_EVENT } from '../lib/accountEvents'
 import { paths } from '../routes/paths'
 import { APP_VERSION } from '../config/appVersion'

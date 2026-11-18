@@ -19,7 +19,7 @@ import {
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
-import { getMockSessionUser, ROLE_LABELS, type SessionUser } from '../../lib/mock-db'
+import { getMockSessionUser, ROLE_LABELS, type SessionUser } from '../../lib/data'
 import { paths } from '../../routes/paths'
 import type { User } from '../../types/entities'
 import { changeUserStatus, fetchUsers, LastAdminError, resetPassword } from './api/userApi'

@@ -28,8 +28,8 @@ import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { useGoBack } from '../../hooks/useGoBack'
 import { isPhilippinePhone, PHONE_ERROR } from '../../lib/phone'
 import { paths } from '../../routes/paths'
-import type { SessionUser } from '../../lib/mock-db'
-import { getMockSessionUser } from '../../lib/mock-db'
+import type { SessionUser } from '../../lib/data'
+import { getMockSessionUser } from '../../lib/data'
 import type { ISODate, Student } from '../../types/entities'
 import {
   checkStudentDuplicates,
@@ -77,7 +77,7 @@ function valuesFromStudent(student: Student | null): StudentFormValues {
     middleName: student.middleName ?? '',
     gradeLevel: student.gradeLevel,
     section: student.section ?? '',
-    sex: student.sex,
+    sex: student.sex ?? '',
     birthDate: student.birthDate ?? '',
     emergencyContacts: student.emergencyContacts.length
       ? student.emergencyContacts.map(({ name, relationship, phone, verified }) => ({

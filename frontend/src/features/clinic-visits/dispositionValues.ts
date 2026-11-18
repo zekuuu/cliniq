@@ -1,4 +1,4 @@
-import { excusedPeriodError } from '../../lib/mock-db'
+import { excusedPeriodError } from '../../lib/data'
 import { todayISO } from '../../lib/dates'
 import type { CollectedBy, Disposition, ExcuseLetterDraft } from '../../types/entities'
 import { currentClock } from './logbookValues'

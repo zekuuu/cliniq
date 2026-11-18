@@ -2,7 +2,7 @@ import { RELEASED_TO } from '../../lib/labels'
 import type { ChangeEvent } from 'react'
 import { Combobox, DatePicker, FIELD_HALF, Input, StayHomeField } from '../../components'
 import { formatDateRange } from '../../lib/dates'
-import type { ExcusedPeriod } from '../../lib/mock-db'
+import type { ExcusedPeriod } from '../../lib/data'
 import type { Disposition } from '../../types/entities'
 import { CertificateWarning } from './CertificateWarning'
 import {

@@ -10,7 +10,7 @@ import {
   savePersonnel,
   type PersonnelHistory,
   type SessionUser,
-} from '../../../lib/mock-db'
+} from '../../../lib/data'
 import type { EmergencyContact, Personnel, StudentSex } from '../../../types/entities'
 import { isNoneRecorded, tidyEntry } from '../../../lib/patients'
 

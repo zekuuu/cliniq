@@ -12,7 +12,7 @@ import {
   validIdleMinutes,
   type IdleSignoutSettings,
   type SessionUser,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 
 /*
  * Settings (ADR-078): the idle sign-out minutes per role. Staff edit them; the Admin reads them. Saved

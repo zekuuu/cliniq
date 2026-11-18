@@ -14,7 +14,7 @@ import {
   type SessionUser,
   type VisitLogbookFields,
   type VitalsWarningRanges,
-} from '../../../lib/mock-db'
+} from '../../../lib/data'
 import type { Patient } from '../../../lib/patients'
 import type {
   CollectedBy,

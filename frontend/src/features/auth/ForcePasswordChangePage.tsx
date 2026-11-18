@@ -9,7 +9,7 @@ import {
   getPendingPasswordChangeUser,
   getUser,
   type SessionUser,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCapsLock } from '../../hooks/useCapsLock'
 import { paths } from '../../routes/paths'

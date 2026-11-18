@@ -21,7 +21,7 @@ import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { paths } from '../../routes/paths'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
-import { getMockSessionUser, type SessionUser } from '../../lib/mock-db'
+import { getMockSessionUser, type SessionUser } from '../../lib/data'
 import type { Disposition } from '../../types/entities'
 import {
   fetchPeReferralContext,

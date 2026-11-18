@@ -3,7 +3,7 @@ import {
   searchStudents,
   submitPeReferral as submitToLayer,
   type SessionUser,
-} from '../../../lib/mock-db'
+} from '../../../lib/data'
 import type { Disposition, Student, StudentSearchResult } from '../../../types/entities'
 
 export interface PeReferralContext {

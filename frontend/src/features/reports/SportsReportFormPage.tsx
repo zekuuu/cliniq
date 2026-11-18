@@ -28,7 +28,7 @@ import {
   type SportsReportErrors,
   type SportsReportStudentRow,
   type SportsReportWindow,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import { paths } from '../../routes/paths'
 import type { StudentSearchResult } from '../../types/entities'
 import {

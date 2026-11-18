@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button, Icon, Input, Select } from '../../components'
 import { cleanComplaint, COMPLAINT_MAX_LENGTH } from '../../lib/complaints'
-import { EXTRA_COMPLAINTS_MAX } from '../../lib/mock-db'
+import { EXTRA_COMPLAINTS_MAX } from '../../lib/data'
 import { symptom, symptoms } from '../../lib/labels'
 
 const OTHER_VALUE = '__other__'

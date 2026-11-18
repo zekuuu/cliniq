@@ -7,7 +7,7 @@ import {
   resetPasswordWithRecovery,
   verifyPasswordRecovery,
   RECOVERY_FAILED_MESSAGE,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import { lockedMessage, withAttemptsLeft } from './lockMessage'
 
 type Step = 'account' | 'code' | 'reset'

@@ -50,7 +50,7 @@ describe('Student and incident records', () => {
       middleName: '',
       gradeLevel: student.gradeLevel,
       section: '',
-      sex: student.sex,
+      sex: student.sex ?? 'female',
       birthDate: student.birthDate ?? '2015-06-01',
       emergencyContacts: student.emergencyContacts,
     }

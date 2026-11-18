@@ -36,7 +36,7 @@ import {
   type ArchivedRecordRow,
   type ArchiveView,
   type SessionUser,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import { schoolYearSettingsError, type SchoolYearSettings } from '../../lib/schoolYear'
 import { paths } from '../../routes/paths'
 import { SCHOOL_YEAR_CHANGED_EVENT } from '../../lib/accountEvents'

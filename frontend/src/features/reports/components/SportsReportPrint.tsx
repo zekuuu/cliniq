@@ -1,6 +1,6 @@
 import { PrintDocument, PrintNote, PrintSignatures, PrintTable } from '../../../components'
 import { formatDateRange, formatDateTime } from '../../../lib/dates'
-import { ROLE_LABELS, type SessionUser, type SportsReportContent } from '../../../lib/mock-db'
+import { ROLE_LABELS, type SessionUser, type SportsReportContent } from '../../../lib/data'
 import { leftOutText, sportsReportColumns } from '../sportsReportContent'
 
 /** The A4 Sports Report (ADR-026, ADR-034): mounts only while printing, from the content the screen loaded. */

@@ -1,4 +1,4 @@
-import { getGradeLevels, getIncompleteRecordQueue, listStudents } from '../../../lib/mock-db'
+import { getGradeLevels, getIncompleteRecordQueue, listStudents } from '../../../lib/data'
 import type { StudentListRow } from '../../../types/entities'
 
 export interface StudentListQuery {

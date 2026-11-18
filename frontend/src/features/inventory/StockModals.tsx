@@ -8,7 +8,7 @@ import {
   StockRuleError,
   STAFF_ADJUSTMENT_REASONS,
   type StaffAdjustmentReason,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDate } from '../../lib/dates'
@@ -19,6 +19,9 @@ import {
   type InventoryItemView,
 } from './api/inventoryApi'
 import { ITEM_BRAND_LABELS } from '../../types/entities'
+
+/** The API writes an `opening` row for a new item's starting count (ERD; the mock has none). */
+const isOpening = (type: string) => type === 'opening'
 
 type AdjustMode = 'add' | 'remove' | 'count'
 
@@ -133,11 +136,13 @@ export function BatchDetailsModal({
                   <span className="font-semibold text-text-primary">
                     {entry.reason === 'expired_disposed'
                       ? 'Disposed'
-                      : entry.type === 'restock'
-                        ? 'Restocked'
-                        : entry.type === 'dispense'
-                          ? 'Dispensed'
-                          : 'Adjusted'}
+                      : isOpening(entry.type)
+                        ? 'Opening stock'
+                        : entry.type === 'restock'
+                          ? 'Restocked'
+                          : entry.type === 'dispense'
+                            ? 'Dispensed'
+                            : 'Adjusted'}
                   </span>{' '}
                   · {entry.quantity > 0 ? '+' : ''}
                   {entry.quantity} {item.unit}

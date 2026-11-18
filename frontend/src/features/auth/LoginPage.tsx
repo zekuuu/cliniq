@@ -9,10 +9,11 @@ import {
   beginPasswordChange,
   MockAuthError,
   type SessionUser,
-} from '../../lib/mock-db'
+} from '../../lib/data'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { APP_VERSION } from '../../config/appVersion'
 import { paths } from '../../routes/paths'
+import { sessionEndedNotice } from '../../lib/api/http/auth'
 import { DemoAccounts } from './DemoAccounts'
 import { LoginBackdrop } from './LoginBackdrop'
 
@@ -46,6 +47,8 @@ export function LoginPage({
   const idleMinutes =
     signedOutAfterMinutes ??
     (location.state as { signedOutAfterMinutes?: unknown } | null)?.signedOutAfterMinutes
+  // API mode (ADR-080): the server ended the session (7-day maximum, or the account changed).
+  const sessionEnded = sessionEndedNotice()
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -122,6 +125,14 @@ export function LoginPage({
             <p className="mt-2 text-center text-sm text-text-secondary">
               Use your CLINIQ account to open the clinic records.
             </p>
+            {typeof idleMinutes !== 'number' && sessionEnded && (
+              <p
+                role="status"
+                className="mt-4 rounded-md border border-info bg-info/10 px-3 py-2 text-sm text-text-primary"
+              >
+                Your session has ended. Sign in again.
+              </p>
+            )}
             {typeof idleMinutes === 'number' && (
               <p
                 role="status"

@@ -23,7 +23,8 @@ import { UserListPage } from '../user-management/UserListPage'
 const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
 const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }
 const today = () => getMockToday()
-const summary = () => getDashboardSummary({ range: { preset: 'today', from: today(), to: today() } })
+const summary = () =>
+  getDashboardSummary({ range: { preset: 'today', from: today(), to: today() } })
 
 beforeEach(() => {
   resetMockDb()
@@ -37,7 +38,9 @@ describe('Backup for both roles (ADR-037, D12)', () => {
         <AppRoutes user={ADMIN} onLogout={() => {}} />
       </MemoryRouter>,
     )
-    expect(await screen.findByRole('heading', { name: 'Backup Verification' }, { timeout: 5000 })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Backup Verification' }, { timeout: 5000 }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Back up now' })).toBeInTheDocument()
   })
 
@@ -47,7 +50,9 @@ describe('Backup for both roles (ADR-037, D12)', () => {
     await recordBackupNow(STAFF)
     expect(db().backupLogs.length).toBe(before + 2)
     expect(db().backupLogs.at(-1)).toMatchObject({ status: 'ok', verifiedByUserId: null })
-    expect(getRecordedAuditEntries().map((e) => [e.userId, e.actionType, e.targetRecord?.type])).toEqual([
+    expect(
+      getRecordedAuditEntries().map((e) => [e.userId, e.actionType, e.targetRecord?.type]),
+    ).toEqual([
       ['user-admin-01', 'create', 'backup'],
       ['user-staff-01', 'create', 'backup'],
     ])
@@ -59,21 +64,40 @@ describe('stale-backup alert (BK-2, D5)', () => {
     expect((await summary()).backupAlert).toBeNull()
     // Only one successful run, 3 days ago: older than 48 hours.
     const ago = (ms: number) => new Date(Date.now() - ms).toISOString()
-    db().backupLogs = [{ lastRun: ago(3 * 86_400_000), fileSizeBytes: 18_000_000, status: 'ok', verifiedByUserId: null }]
+    db().backupLogs = [
+      {
+        lastRun: ago(3 * 86_400_000),
+        fileSizeBytes: 18_000_000,
+        status: 'ok',
+        verifiedByUserId: null,
+      },
+    ]
     // The warning reads the newest success on an enabled backup location (ADR-052).
-    for (const location of db().frontendOnly.backupLocations) location.lastBackupAt = ago(3 * 86_400_000)
+    for (const location of db().frontendOnly.backupLocations)
+      location.lastBackupAt = ago(3 * 86_400_000)
     expect((await summary()).backupAlert).toMatchObject({ kind: 'stale', staleAfterHours: 48 })
-    db().backupLogs.push({ lastRun: ago(60_000), fileSizeBytes: 0, status: 'failed', verifiedByUserId: null })
+    db().backupLogs.push({
+      lastRun: ago(60_000),
+      fileSizeBytes: 0,
+      status: 'failed',
+      verifiedByUserId: null,
+    })
     expect((await summary()).backupAlert?.kind).toBe('failed')
     db().backupLogs = []
-    for (const location of db().frontendOnly.backupLocations) Object.assign(location, { lastBackupAt: null, lastResult: null })
+    for (const location of db().frontendOnly.backupLocations)
+      Object.assign(location, { lastBackupAt: null, lastResult: null })
     expect((await summary()).backupAlert?.kind).toBe('never')
   })
 })
 
 describe('verifying a backup', () => {
   it('refuses a failed run (Q10)', async () => {
-    db().backupLogs.push({ lastRun: new Date().toISOString(), fileSizeBytes: 0, status: 'failed', verifiedByUserId: null })
+    db().backupLogs.push({
+      lastRun: new Date().toISOString(),
+      fileSizeBytes: 0,
+      status: 'failed',
+      verifiedByUserId: null,
+    })
     await expect(verifyLatestBackup()).rejects.toThrow('cannot be verified')
     expect(db().backupLogs.at(-1)?.verifiedByUserId).toBeNull()
   })
@@ -110,11 +134,21 @@ describe('no default role on Add User (AC-4)', () => {
 describe('lockouts are audit-logged (Zean, Friday, October 23, 2026)', () => {
   it('logs the fifth wrong sign-in against the account, never a single miss or the password', async () => {
     const { authenticateMockUser } = await import('../../lib/mock-db')
-    for (let i = 0; i < 4; i += 1) await expect(authenticateMockUser('demo.nurse', `wrong-${i}`)).rejects.toMatchObject({ reason: 'invalid_credentials' })
+    for (let i = 0; i < 4; i += 1)
+      await expect(authenticateMockUser('demo.nurse', `wrong-${i}`)).rejects.toMatchObject({
+        reason: 'invalid_credentials',
+      })
     expect(getRecordedAuditEntries()).toEqual([])
-    await expect(authenticateMockUser('demo.nurse', 'wrong-4')).rejects.toMatchObject({ reason: 'locked' })
+    await expect(authenticateMockUser('demo.nurse', 'wrong-4')).rejects.toMatchObject({
+      reason: 'locked',
+    })
     expect(getRecordedAuditEntries()).toEqual([
-      expect.objectContaining({ userId: STAFF.id, actionType: 'login', targetRecord: { type: 'user', id: STAFF.id }, summary: 'Account locked for 5 minutes after 5 wrong passwords (sign-in)' }),
+      expect.objectContaining({
+        userId: STAFF.id,
+        actionType: 'login',
+        targetRecord: { type: 'user', id: STAFF.id },
+        summary: 'Account locked for 5 minutes after 5 wrong passwords (sign-in)',
+      }),
     ])
     expect(JSON.stringify(getRecordedAuditEntries())).not.toContain('wrong-4')
   })

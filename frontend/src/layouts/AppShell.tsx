@@ -12,7 +12,7 @@ import {
   getOwnAccount,
   logoutMockSession,
   type SessionUser,
-} from '../lib/mock-db'
+} from '../lib/data'
 import {
   anyFormDirty,
   IDLE_SETTINGS_CHANGED_EVENT,
@@ -25,7 +25,7 @@ import { navGroupsFor, type NavKey } from './navigation'
 import { ReportIssueModal } from '../features/issue-reports/ReportIssueModal'
 import { EditProfileDialog } from '../features/account/EditProfileDialog'
 import { AuthenticatorDialog } from '../features/account/AuthenticatorDialog'
-import { getAuthenticatorStatus } from '../lib/mock-db'
+import { getAuthenticatorStatus } from '../lib/data'
 import { AccountMenu } from './AccountMenu'
 import { paths } from '../routes/paths'
 
