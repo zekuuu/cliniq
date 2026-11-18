@@ -1,6 +1,6 @@
 # backend
 
-Last checked against the code on Tuesday, November 17, 2026 for the changes of the follow-ups and load run only (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). On `main` this folder holds only this README and `.env.example`; the code lives on this `backend` branch (ADR-056). Numbers: [Facts sheet](../CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
+Last checked against the code on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). This code is on `main` since Wednesday, November 18, 2026 (ADR-081); before that it lived on the `backend` branch (ADR-056). Numbers: [Facts sheet](../CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
 
 ## Purpose
 
@@ -8,7 +8,7 @@ The Laravel API for CLINIQ, with Sanctum for sign-in (ADR-007, ADR-056) and Mari
 
 ## Current state
 
-**B0 to B10 built and audited; the frontend can call it behind a mock/API switch on `feat/connect-frontend` (ADR-080).** Laravel 13.42 with Sanctum in SPA cookie mode. 127 routes: every endpoint of `API-Contract.md`, plus the health check and Sanctum's CSRF cookie. `composer test`: 231 passed (Monday, November 16, 2026 — 22:35 PHT, `08-Logs/Load-Test-Nov16/NOTES.md`). The 48 table migrations match `Reference-Schema.sql` (`php tools/db-checks.php`: parity plus the 260 constraint tests, all pass); two more migrations ship product data (the default settings, and the symptom lists with their first-aid steps). `tests/Feature/HealthAndRoutesTest.php` fails on any undocumented route; `tests/Feature/Audit/AccessAndRecordsTest.php` checks sign-in, both session checks and a role on every route. Counts: [Facts sheet](../CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
+**B0 to B10 built and audited; the frontend can call it behind a mock/API switch (ADR-080).** Laravel 13.42 with Sanctum in SPA cookie mode. 127 routes: every endpoint of `API-Contract.md`, plus the health check and Sanctum's CSRF cookie. `composer test`: 231 passed (Monday, November 16, 2026 — 22:35 PHT, `08-Logs/Load-Test-Nov16/NOTES.md`; again on Wednesday, November 18, 2026 before the merge into `main`). The 48 table migrations match `Reference-Schema.sql` (`php tools/db-checks.php`: parity plus the 260 constraint tests, all pass); two more migrations ship product data (the default settings, and the symptom lists with their first-aid steps). `tests/Feature/HealthAndRoutesTest.php` fails on any undocumented route; `tests/Feature/Audit/AccessAndRecordsTest.php` checks sign-in, both session checks and a role on every route. Counts: [Facts sheet](../CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
 
 ## Modules and what each exposes
 

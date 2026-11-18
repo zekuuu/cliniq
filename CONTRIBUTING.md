@@ -4,15 +4,16 @@ Read [AGENTS.md](./AGENTS.md) first (it is the same as `CLAUDE.md`). This page i
 
 ## Branches
 
-- `main`: the frontend, the knowledge base and every document. It holds no backend code.
-- `backend`: the Laravel backend (`backend/`), built on its own branch and merged with `main` from time to time (ADR-056). Backend issues and changelog rows go in `08-Logs/Backend-Issues-and-TODOs.md` and `08-Logs/Backend-Changelog.md`.
-- Work on a short branch from the right one and open a pull request.
+- `main`: everything, the frontend, the Laravel backend (`backend/`), the knowledge base and every document (ADR-081, since Wednesday, November 18, 2026). The last frontend-only state is the tag `checkpoint-frontend-only-2026-11-18`.
+- Work on a short `feat/*` branch from `main` and merge it into `main`.
+- `backend`, `feat/connect-frontend`, `feat/build-backend`: merged into `main` and kept for history only.
+- Backend issues and changelog rows go in `08-Logs/Backend-Issues-and-TODOs.md` and `08-Logs/Backend-Changelog.md` (ADR-056).
 
 ## Checks to run
 
 ```bash
 cd frontend && npm test && npm run lint && npm run build   # frontend
-cd backend && composer check                               # backend (on the backend branch)
+cd backend && composer check                               # backend
 npm run docs:check                                         # documents, from the repository root
 ```
 

@@ -4,7 +4,7 @@ Verified Friday, October 09, 2026 — 00:11 PHT. Based on `main` at commit `4c3c
 
 ## Summary
 
-The backend is built, B0 to B10 (Sunday, November 15, 2026): 127 routes, the 50 migrations (48 create a table, 2 ship product data) run on MariaDB; the frontend on `main` still runs on sample data only; the version connected to the API behind a mock/API switch is on `feat/connect-frontend` (ADR-080) and is not merged (ADR-056). The [ERD and data dictionary](../02-Architecture/Database/ERD.md) are approved (ADR-057), and the migrations match them. The frontend has already written much of the spec: the mock API, the entity types, the access matrix, and the ADRs.
+The backend is built, B0 to B10 (Sunday, November 15, 2026): 127 routes, the 50 migrations (48 create a table, 2 ship product data) run on MariaDB; the frontend runs on sample data by default and on the API behind a mock/API switch (ADR-080); both are on `main` since Wednesday, November 18, 2026 (ADR-081). The [ERD and data dictionary](../02-Architecture/Database/ERD.md) are approved (ADR-057), and the migrations match them. The frontend has already written much of the spec: the mock API, the entity types, the access matrix, and the ADRs.
 
 **Suggested order of work**
 

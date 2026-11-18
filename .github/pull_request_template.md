@@ -4,7 +4,7 @@
 
 ## Checklist
 
-- [ ] Tests pass (`npm test` in `frontend/`, or `composer check` in `backend/` on the `backend` branch)
+- [ ] Tests pass (`npm test` in `frontend/`, or `composer check` in `backend/`)
 - [ ] `npm run docs:check` passes, or its findings are explained here
 - [ ] A changed requirement or design has an ADR, and its canonical document is updated
 - [ ] No real student, staff or parent data, no `.env`, keys or dumps

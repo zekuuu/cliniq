@@ -1,8 +1,8 @@
 # CLINIQ Knowledge Base
 
-Last checked against the code on Tuesday, November 17, 2026 for the changes of the follow-ups and load run only (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in).
+Last checked against the code on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in).
 
-**Current state:** the browser app (frontend) is built and runs on sample (mock) data by default; the backend is built and tested, phases B0 to B10 (127 routes, 231 tests passing), and its 50 migrations (48 create a table, 2 ship product data) run on MariaDB and match the approved database design (ADR-057); the frontend can run on the backend behind a mock/API switch (ADR-080). The backend and the connection are on the `backend` and `feat/connect-frontend` branches, not on `main` yet ([where the code lives](../README.md#where-the-code-lives)). CLINIQ will run on the clinic PC only (ADR-079). The full status list is in the root [README.md](../README.md#current-state).
+**Current state:** the browser app (frontend) is built and runs on sample (mock) data by default; the backend is built and tested, phases B0 to B10 (127 routes, 231 tests passing), and its 50 migrations (48 create a table, 2 ship product data) run on MariaDB and match the approved database design (ADR-057); the frontend can run on the backend behind a mock/API switch (ADR-080). The backend and the connection are on `main` since Wednesday, November 18, 2026 (ADR-081, [where the code lives](../README.md#where-the-code-lives)). CLINIQ will run on the clinic PC only (ADR-079). The full status list is in the root [README.md](../README.md#current-state).
 
 **Start here:**
 
@@ -22,7 +22,7 @@ Last checked against the code on Tuesday, November 17, 2026 for the changes of t
 | [`03-Design`](03-Design/) | Design system, screen inventory, reference screens, screenshots |
 | [`04-Development`](04-Development/) | Phases, loop manuals, API contract, environment set-up, conventions, `tools/` |
 | [`05-Testing`](05-Testing/) | Test strategy and test cases |
-| [`06-Decisions`](06-Decisions/) | ADR-001 to ADR-080, their summary and index |
+| [`06-Decisions`](06-Decisions/) | ADR-001 to ADR-081, their summary and index |
 | [`07-AI-Agents`](07-AI-Agents/) | Agent workflow and source-of-truth order |
 | [`08-Logs`](08-Logs/) | Changelogs, issue logs, session logs, and the reports of the two overnight backend runs ([`Overnight-Run-Nov9`](08-Logs/Overnight-Run-Nov9/), [`Overnight-Run-Nov10`](08-Logs/Overnight-Run-Nov10/), which built B1 to B10); history, not current truth |
 | [`09-References`](09-References/) | The five canonical documents, privacy policy, external references |

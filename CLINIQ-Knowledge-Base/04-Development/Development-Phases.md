@@ -2,7 +2,7 @@
 
 The execution roadmap agents should actually follow, one phase at a time. This is more granular and agent-actionable than the Project Plan's Work Breakdown Structure (Section 6.2, which is sprint-level, written for a Gantt chart and a professor, not a build sequence) — that document still governs the academic timeline; this one governs what an agent opens `AGENTS.md`/`CLAUDE.md` and then actually does.
 
-**Read `AGENTS.md` at the repo root before starting any phase below** — the before/during/after workflow, the timestamp rule, and the source-of-truth hierarchy all still apply per-phase, not just per-task. **Backend phases (B0 to B10) are built the way [`Backend-Loop-Engineering.md`](./Backend-Loop-Engineering.md) describes**, on a separate `backend` branch that changes only `backend/` (ADR-056).
+**Read `AGENTS.md` at the repo root before starting any phase below** — the before/during/after workflow, the timestamp rule, and the source-of-truth hierarchy all still apply per-phase, not just per-task. **Backend phases (B0 to B10) are built the way [`Backend-Loop-Engineering.md`](./Backend-Loop-Engineering.md) describes**, changing only `backend/` (ADR-056). They were built on a separate `backend` branch, merged into `main` on Wednesday, November 18, 2026 (ADR-081); new work goes on `feat/*` branches merged into `main`.
 
 ---
 

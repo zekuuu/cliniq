@@ -1,6 +1,8 @@
 # Main sync log
 
-One row per run of the reusable prompt that brings `main`'s documents, READMEs, diagrams and numbers up to date with the newest work on every branch, without putting backend code on `main` (ADR-056). The next run reads the **last row** as its starting point ("since"). Details of each run are in its `Main-Sync-<date>/NOTES.md`.
+One row per run of the reusable prompt that brings `main`'s documents, READMEs, diagrams and numbers up to date with the newest work on every branch, without putting backend code on `main` (ADR-056). The next run reads the **last row** as its starting point ("since").
+
+**Note (Wednesday, November 18, 2026):** the backend and the connected frontend were merged into `main` (ADR-081), so `main` is the main line and the sync prompt (`Prompt-Sync-Main-Docs-From-All-Branches.md`) is no longer needed. The rows below are kept as the record; the last one is the merge. Details of each run are in its `Main-Sync-<date>/NOTES.md`.
 
 | Run | Since | Sources (branch, tip, class) | Copied exactly / synthesised | Numbers changed | Checks | Notes |
 |---|---|---|---|---|---|---|

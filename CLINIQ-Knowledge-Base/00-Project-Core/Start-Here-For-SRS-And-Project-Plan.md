@@ -1,6 +1,6 @@
 # Start Here for the SRS and Project Plan
 
-Last checked against the code on Tuesday, November 17, 2026 for the changes of the follow-ups and load run only (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
+Last checked against the code on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). All of that code is on `main` since Wednesday, November 18, 2026 (ADR-081). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
 
 ## CLINIQ in five lines
 
@@ -8,24 +8,33 @@ Last checked against the code on Tuesday, November 17, 2026 for the changes of t
 2. It records student and staff health profiles, clinic visits, emergencies (in two stages), follow-ups, medicines and supplies, and backups, and produces monthly reports.
 3. Two roles: **Staff** (the School Clinician) does the clinic work; the **Admin** (the Principal) reads, manages accounts and never prints.
 4. It runs on the clinic PC only, at `http://localhost`; the Principal gets the Monthly Report as a PDF.
-5. Today the screens are built and run on sample data by default; the backend is built and tested (phases B0 to B10) and saves to MariaDB, and the screens can run on it behind a mock/API switch (ADR-080). That code is on branches not merged into `main` yet (table below).
+5. Today the screens are built and run on sample data by default; the backend is built and tested (phases B0 to B10) and saves to MariaDB, and the screens can run on it behind a mock/API switch (ADR-080). All of it is on `main` (table below).
 
 ## Where the code lives
 
-`main` holds the documents, the frontend as it ran on sample data only, and the [screenshots](../../screenshots/INDEX.md) of the system. The newer code is on other branches and is not merged into `main` yet; read it at the linked commit. Last synced to `main` on Wednesday, November 18, 2026 — 09:46 PHT, from `main@24f51cc` and `feat/connect-frontend@b9496e8`; [sync log](../08-Logs/Main-Sync-Log.md).
+`main` holds everything and is the branch to read: the documents, the frontend (sample data or the real API behind a mock/API switch, ADR-080), the backend (the Laravel API, 50 migrations, the backend tests, the load-test tools) and the [screenshots](../../screenshots/INDEX.md). The backend and the connected frontend were merged into `main` on Wednesday, November 18, 2026 — 10:07 PHT ([`bc654dd`](https://github.com/zekuuu/cliniq/commit/bc654dd), [ADR-081](../06-Decisions/ADR-081-Backend-Merged-Into-Main-Main-Holds-The-Whole-System.md)). The old frontend-only `main`, on sample data with no backend, is the tag [`checkpoint-frontend-only-2026-11-18`](https://github.com/zekuuu/cliniq/tree/checkpoint-frontend-only-2026-11-18) (`f250ab6`).
 
-| Branch | What it holds | Tip commit and date | Merged into `main` | Why not on `main` |
-|---|---|---|---|---|
-| `main` | Documents; the frontend on sample data only; the 34 screenshots in `screenshots/`; `backend/` holds only its README and `.env.example` | [`24f51cc`](https://github.com/zekuuu/cliniq/tree/24f51cc), Wednesday, November 18, 2026 — 09:26 PHT | (this branch) | |
-| `feat/connect-frontend` | **The newest code: everything below plus the frontend connected to the API behind a mock/API switch (ADR-080), the follow-ups and the load-test tools.** Contains `backend` and `main` | [`b9496e8`](https://github.com/zekuuu/cliniq/tree/b9496e8), Wednesday, November 18, 2026 — 09:37 PHT | no | Not reviewed and merged yet; the backend it contains stays off `main` until Zean merges it (ADR-056) |
-| `backend` | The Laravel API, phases B0 to B10, the 50 migrations and the backend tests | [`18ff415`](https://github.com/zekuuu/cliniq/tree/18ff415), Sunday, November 15, 2026 — 10:50 PHT | no | On purpose: the backend stays on its own branch until Zean reviews and merges it (ADR-056) |
-| `feat/build-backend` | An older step of `backend` (fully contained in it) | [`3bcbe16`](https://github.com/zekuuu/cliniq/tree/3bcbe16), Saturday, November 14, 2026 — 23:07 PHT | no | Superseded by `backend` |
+| Branch | What it holds | Tip commit and date | Merged into `main` |
+|---|---|---|---|
+| `main` | Everything: documents, frontend, backend, screenshots | Merge commit [`bc654dd`](https://github.com/zekuuu/cliniq/commit/bc654dd), Wednesday, November 18, 2026 — 10:07 PHT, and the documents commits after it | (this branch) |
+| `feat/connect-frontend` | The frontend connected to the API (ADR-080), the follow-ups and the load-test tools; kept for history | [`bf304af`](https://github.com/zekuuu/cliniq/tree/bf304af), Wednesday, November 18, 2026 — 10:05 PHT | yes, at `bc654dd` |
+| `backend` | The Laravel API, phases B0 to B10; kept for history | [`bf304af`](https://github.com/zekuuu/cliniq/tree/bf304af), Wednesday, November 18, 2026 — 10:05 PHT | yes, at `bc654dd` |
+| `feat/build-backend` | An older step of `backend`; kept for history | [`3bcbe16`](https://github.com/zekuuu/cliniq/tree/3bcbe16), Saturday, November 14, 2026 — 23:07 PHT | yes (through `backend`) |
 
-Backend code: [`backend/app/Modules`](https://github.com/zekuuu/cliniq/tree/759781e/backend/app/Modules), [`backend/routes/api.php`](https://github.com/zekuuu/cliniq/blob/759781e/backend/routes/api.php). Frontend connection: [`frontend/src/lib/data`](https://github.com/zekuuu/cliniq/tree/759781e/frontend/src/lib/data), [`frontend/src/lib/api`](https://github.com/zekuuu/cliniq/tree/759781e/frontend/src/lib/api).
+Backend code: [`backend/app/Modules`](../../backend/app/Modules), [`backend/routes/api.php`](../../backend/routes/api.php). Frontend connection: [`frontend/src/lib/data`](../../frontend/src/lib/data), [`frontend/src/lib/api`](../../frontend/src/lib/api).
+
+## Changes on Wednesday, November 18, 2026: everything merged into `main`
+
+- **Where the code is.** Everything is on `main` now: the frontend, the backend and the connection between them. Read `main`; the other branches are kept for history only.
+- **Numbers.** Quote the [Facts sheet](Facts-Sheet.md), regenerated on the merged `main`. Unchanged: 48 tables, 462 columns, 260 constraint tests, 127 API routes, 50 migration files. Changed only because they are now counted from the connected frontend: frontend test files **148**, frontend lines **69270**; decision records **81**.
+- **Decision added.** [ADR-081](../06-Decisions/ADR-081-Backend-Merged-Into-Main-Main-Holds-The-Whole-System.md): the backend is merged into `main`; it replaces only ADR-056's own-branch rule.
+- **Statements that are now wrong:** any sentence saying the backend is not on `main`, or that the frontend and backend are not connected.
+- **The old state.** The frontend-only `main` (sample data, no backend) is the tag [`checkpoint-frontend-only-2026-11-18`](https://github.com/zekuuu/cliniq/tree/checkpoint-frontend-only-2026-11-18).
+- **Screenshots.** The 34 screenshots are in [`screenshots/`](../../screenshots/INDEX.md).
 
 ## Changes since the last sync (Tuesday, November 17, 2026)
 
-For the Project Plan and the SRS. Newest sync first; each later sync adds its section above this one. This one covers everything after `main` at `dda26b2` (Sunday, November 15, 2026 — 09:22 PHT, the last docs refresh) up to `feat/connect-frontend` at `759781e` (Tuesday, November 17, 2026 — 05:27 PHT). None of the code below is on `main` yet ([where the code lives](#where-the-code-lives)).
+For the Project Plan and the SRS. Newest sync first; each later sync adds its section above this one. This one covers everything after `main` at `dda26b2` (Sunday, November 15, 2026 — 09:22 PHT, the last docs refresh) up to `feat/connect-frontend` at `759781e` (Tuesday, November 17, 2026 — 05:27 PHT). All of the code below is on `main` since Wednesday, November 18, 2026 ([where the code lives](#where-the-code-lives)).
 
 **Decisions added or amended**
 
@@ -78,9 +87,9 @@ Unchanged: 127 API routes, 126 contract entries naming 127 endpoints, 48 tables,
 | [`03-Design`](../03-Design/) | Design system, screen inventory, [screenshots](../03-Design/assets/screens/) |
 | [`04-Development`](../04-Development/) | Phases, API contract, set-up, the build manuals |
 | [`05-Testing`](../05-Testing/) | Test strategy and where the tests are |
-| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-080 and their indexes |
+| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-081 and their indexes |
 | [`09-References`](../09-References/) | Canonical documents, Privacy Policy |
-| `frontend/`, `backend/` | The code (on `main`: the frontend on sample data only; the backend and the connection are on `backend` and `feat/connect-frontend`, see [Where the code lives](#where-the-code-lives)) |
+| `frontend/`, `backend/` | The code: the frontend and the backend, both on `main` (see [Where the code lives](#where-the-code-lives)) |
 
 ## SRS sections and what to read
 
@@ -139,9 +148,9 @@ Unchanged: 127 API routes, 126 contract entries naming 127 endpoints, 48 tables,
 
 ## Decided but not built, and built but not tested on real hardware
 
-**Built:** every screen ([screenshots](../03-Design/assets/screens/)), on sample data by default and on the real API behind a mock/API switch (ADR-080, `feat/connect-frontend`; each module checked in a real browser). The backend, phases B0 to B10, on the `backend` branch: real sign-in with lock-out and password recovery, saving to the database, the audit log in the database, real backups and three scheduled jobs; 127 routes, 231 tests pass. A deterministic 900-student test school and a load bench (`backend/tools/load/`, on `feat/connect-frontend`); the measurements are not finished. The 50 migrations (48 create a table, 2 ship product data) run on MariaDB and match the approved schema; its 260 constraint tests pass. Numbers: [Facts sheet](Facts-Sheet.md).
+**Built:** every screen ([screenshots](../03-Design/assets/screens/)), on sample data by default and on the real API behind a mock/API switch (ADR-080; each module checked in a real browser). The backend, phases B0 to B10, on `main`: real sign-in with lock-out and password recovery, saving to the database, the audit log in the database, real backups and three scheduled jobs; 127 routes, 231 tests pass. A deterministic 900-student test school and a load bench (`backend/tools/load/`, on `feat/connect-frontend`); the measurements are not finished. The 50 migrations (48 create a table, 2 ship product data) run on MariaDB and match the approved schema; its 260 constraint tests pass. Numbers: [Facts sheet](Facts-Sheet.md).
 
-**Decided, not built:** a written restore procedure. **Built, not merged into `main`:** the backend and the frontend's connection to it (ADR-056, ADR-080).
+**Decided, not built:** a written restore procedure.
 
 **Never tried on the clinic PC:** no install, no real data, no performance measurement on the 4 GB workstation, no backup to a real drive. The non-functional numbers are targets until then.
 

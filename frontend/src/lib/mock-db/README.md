@@ -28,10 +28,10 @@ The one exception is `holidays-ph.json`: real nationwide holidays with fixed pro
 (not synthetic, not relative), read only by `getHolidays` in `api.ts` (ADR-020). Add each new
 year's proclaimed dates there, with the proclamation references in its `meta`; `holidays.test.ts`
 pins the list to the proclamation texts. The backend's `cliniq:sync-holidays` job reads the same
-file format (built on the `backend` branch; it replaces this file once the screens use the API).
-Feature `api/` modules import from `lib/mock-db` (the index). The Laravel API is built on the
-`backend` branch but not connected yet (ADR-056); when it is, `api.ts` is the file that becomes
-HTTP calls. Nothing above it has to change.
+file format (in `backend/`; it replaces this file once the screens use the API).
+Feature `api/` modules import from `lib/mock-db` (the index). The Laravel API is built in
+`backend/` and connected behind a mock/API switch (ADR-080): `src/lib/data` sends each call to
+`api.ts` or to its HTTP twin in `src/lib/api/http/`. Nothing above it has to change.
 
 ## Editing `mock-db.json` safely
 
