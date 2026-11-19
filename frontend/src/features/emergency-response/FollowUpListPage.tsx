@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
+import { notify } from '../../lib/notify'
 import { useSaveFeedback } from '../../hooks/useSaveFeedback'
-import { SaveFeedback } from '../../components/forms/SaveFeedback'
 import { usePatientFilter } from '../../hooks/usePatientFilter'
 import { addDays, formatDate, todayISO } from '../../lib/dates'
 import {
@@ -146,7 +146,7 @@ export function FollowUpListPage() {
     const saved = await feedback.run(
       () => updateFollowUpStatus(item.id, next, getMockSessionUser(), why),
       {
-        saved: `Follow-up marked ${FOLLOW_UP_STATUS_WORDS[next]}.`,
+        saved: `Follow-up marked ${FOLLOW_UP_STATUS_WORDS[next]}`,
       },
     )
     if (!saved.ok) {
@@ -166,6 +166,7 @@ export function FollowUpListPage() {
     if (!confirming) return
     if (confirming.status === 'cancelled' && !reason.trim()) {
       setReasonError('Give the reason.')
+      notify.checkFields()
       return
     }
     void applyStatus(confirming.item, confirming.status, reason)
@@ -176,7 +177,12 @@ export function FollowUpListPage() {
     try {
       await setNewFollowUpDate(rescheduling.id, newDate, getMockSessionUser())
       setRescheduling(null)
+      notify.success('New follow-up date set', { id: 'follow-up-date' })
       reload()
+    } catch (cause) {
+      notify.apiError(cause, 'The new date was not set. Please try again.', {
+        id: 'follow-up-date',
+      })
     } finally {
       setScheduling(false)
     }
@@ -305,7 +311,6 @@ export function FollowUpListPage() {
           }
         />
         <CardBody>
-          <SaveFeedback result={feedback.result} className="mb-3" />
           {data.total ? (
             <>
               <DataTable

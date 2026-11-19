@@ -1,13 +1,5 @@
 import { symptom } from '../../lib/labels'
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-  type ReactNode,
-} from 'react'
+import { useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import { cleanComplaint, COMPLAINT_MAX_LENGTH } from '../../lib/complaints'
 import { useLocation, useSearchParams } from 'react-router'
 import {
@@ -41,9 +33,10 @@ import {
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
-import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
-import { ErrorSummary, focusTopMessage } from '../../components/forms/ErrorSummary'
+import { ErrorSummary } from '../../components/forms/ErrorSummary'
 import { paths } from '../../routes/paths'
+import { notify } from '../../lib/notify'
+import { scrollToTop } from '../../lib/scrollToTop'
 import { CHOOSE_STUDENT_MESSAGE, useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { addDays, formatTime, todayISO } from '../../lib/dates'
 import { draftsFrom, formatItemGiven } from '../../lib/itemsGiven'
@@ -422,31 +415,25 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const [followUpNotes, setFollowUpNotes] = useState('')
   const [followUpStayHome, setFollowUpStayHome] = useState({ checked: false, note: '' })
   const [lines, setLines] = useState<ItemLineDraft[]>(() => draftsFrom(existing?.itemsGiven ?? []))
-  const [stockMessage, setStockMessage] = useState('')
   const [errors, setErrors] = useState<Errors>({})
   const [savingStageOne, setSavingStageOne] = useState(false)
   const [savingStageTwo, setSavingStageTwo] = useState(false)
   const invalidRef = useRef<HTMLFormElement>(null)
   const departureClockRef = useRef<HTMLInputElement>(null)
-  // After Save Stage 1 or Complete (professor's consultation, November 6, 2026): the top message takes
-  // focus, so the result shows without scrolling. A failure shows an error summary linking each field.
+  // After Save Stage 1 or Complete (professor's consultation, November 6, 2026): the result is a
+  // toast and the page goes back to the top (ADR-083). A failure shows an error summary linking each
+  // field, plus one "check the fields" toast.
   const [summary, setSummary] = useState({ messages: [] as string[], attempt: 0 })
-  const [savedAttempt, setSavedAttempt] = useState(0)
-  const topRef = useRef<HTMLDivElement>(null)
-  const reducedMotion = usePrefersReducedMotion()
-  useEffect(() => {
-    if (savedAttempt > 0) focusTopMessage(topRef.current, reducedMotion)
-    // Only a new save moves focus.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [savedAttempt])
-  const reportErrors = (messages: Array<string | undefined>) =>
+  const reportErrors = (messages: Array<string | undefined>) => {
+    notify.checkFields()
     setSummary((current) => ({
       messages: messages.filter((m): m is string => Boolean(m)),
       attempt: current.attempt + 1,
     }))
+  }
   const reportSaved = () => {
     setSummary((current) => ({ ...current, messages: [] }))
-    setSavedAttempt((current) => current + 1)
+    scrollToTop()
   }
   const readingsChanged = (from: Incident | null) =>
     Object.entries(savedReadings(from)).some(
@@ -525,7 +512,13 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       )
       setIncident(saved)
       setStage('stage2')
+      notify.success('Incident Stage 1 saved', {
+        id: 'incident-stage-1',
+        description: 'This incident still needs completion.',
+      })
       reportSaved()
+    } catch (cause) {
+      notify.apiError(cause, 'Stage 1 was not saved. Please try again.')
     } finally {
       setSavingStageOne(false)
     }
@@ -583,7 +576,6 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) return reportErrors(Object.values(nextErrors))
     setSavingStageTwo(true)
-    setStockMessage('')
     try {
       const hospitalReferral: HospitalReferral | null = referToHospital
         ? {
@@ -632,14 +624,22 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       )
       setIncident(result.incident)
       setCompleted(true)
+      notify.success('Incident completed', { id: 'incident-complete' })
       if (result.belowZero.length)
-        setStockMessage(`Now below zero: ${result.belowZero.join(', ')}. Recount and restock.`)
+        notify.warning('Some stock is now below zero. Recount and restock in Inventory.', {
+          id: 'incident-below-zero',
+        })
       reportSaved()
     } catch (caught) {
-      // The data layer rejected a medicine line; nothing was saved and stock is unchanged.
-      if (!(caught instanceof StockRuleError)) throw caught
-      setStockMessage(`${caught.message} Nothing was saved.`)
-      reportSaved()
+      // The data layer rejected a medicine line; nothing was saved and stock is unchanged. The reason
+      // names the item, so it stays beside the items, not in the toast (ADR-083 privacy).
+      if (!(caught instanceof StockRuleError)) {
+        notify.apiError(caught, 'The incident was not completed. Please try again.')
+        return
+      }
+      const message = `${caught.message} Nothing was saved.`
+      setErrors((current) => ({ ...current, itemsGiven: message }))
+      reportErrors([message])
     } finally {
       setSavingStageTwo(false)
     }
@@ -671,34 +671,6 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
       </Card>
 
       <ErrorSummary messages={summary.messages} formRef={invalidRef} attempt={summary.attempt} />
-      {/* Focused after a save; scroll-mt keeps it clear of the sticky top bar. */}
-      <div
-        ref={topRef}
-        tabIndex={-1}
-        className="flex scroll-mt-20 flex-col gap-4 outline-none empty:hidden"
-      >
-        {incident && (!existing || completed) && (
-          <div
-            role="status"
-            // Completed is saved and done: green, like every saved message. Stage 1 still needs work: amber.
-            className={`rounded-md border px-4 py-3 text-sm font-semibold text-text-primary ${completed ? 'border-success bg-success/10' : 'border-warning bg-warning-fill'}`}
-          >
-            {completed
-              ? 'Incident completed. Stage 2 details are now saved.'
-              : 'Stage 1 saved. This incident still needs completion.'}
-          </div>
-        )}
-
-        {stockMessage && (
-          <div
-            role="alert"
-            className="rounded-md border border-error bg-error/10 px-4 py-3 text-sm font-semibold text-text-primary"
-          >
-            {stockMessage}
-          </div>
-        )}
-      </div>
-
       <SegmentedControl
         label="Incident stage"
         value={stage}

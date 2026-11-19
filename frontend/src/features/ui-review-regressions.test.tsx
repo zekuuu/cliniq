@@ -88,7 +88,7 @@ describe('UI/UX review regressions', () => {
     const dialog = screen.getByRole('dialog', { name: 'Approve this incident report?' })
     expect(recordedWrites()).toEqual([])
     await user.click(within(dialog).getByRole('button', { name: 'Approve Report' }))
-    expect(await screen.findByText('Report approved and logged.')).toBeInTheDocument()
+    expect(await screen.findByText('Report approved and logged')).toBeInTheDocument()
     expect(recordedWrites().map((entry) => entry.actionType)).toEqual(['approve'])
 
     // Signed off: it can't be approved again, and only it is marked approved in the picker.
@@ -273,7 +273,7 @@ describe('UI/UX review Group B decisions', () => {
     await user.keyboard('{Enter}')
     await screen.findByRole('button', { name: /change student/i })
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
-    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
+    expect(await screen.findByText(/visit recorded/i)).toBeInTheDocument()
     const student = await getStudent('student-0001')
     const visits = await listVisits()
     expect(
@@ -299,7 +299,7 @@ describe('UI/UX review Group B decisions', () => {
     await user.click(
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Mark as Verified' }),
     )
-    expect(await screen.findByText('Verification recorded in the audit trail.')).toBeInTheDocument()
+    expect(await screen.findByText('Verification recorded in the audit trail')).toBeInTheDocument()
     expect(recordedWrites().map((entry) => entry.actionType)).toEqual(['update'])
   })
 

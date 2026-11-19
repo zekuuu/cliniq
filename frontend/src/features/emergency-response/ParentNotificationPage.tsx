@@ -18,6 +18,8 @@ import {
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { paths } from '../../routes/paths'
+import { notify } from '../../lib/notify'
+import { scrollToTop } from '../../lib/scrollToTop'
 import { getMockSessionUser, type SessionUser } from '../../lib/data'
 import type { ParentNotificationOutcome } from '../../types/entities'
 import { fetchIncidentRecord, logParentNotification } from './api/incidentRecordApi'
@@ -110,7 +112,7 @@ export function ParentNotificationPage({
   async function addAttempt() {
     const called = resolveCalledContact(draft, student.emergencyContacts)
     setCalledErrors(called.errors ?? {})
-    if (!called.contact) return
+    if (!called.contact) return notify.checkFields()
     // Cleared first, so each added attempt shows "Added" on the button again.
     setSaved(false)
     setSaving(true)
@@ -118,9 +120,14 @@ export function ParentNotificationPage({
       const attempt = await logParentNotification(incident.id, outcome, viewer, called.contact)
       setNotes((current) => ({ ...current, [attempt.timestamp]: note.trim() }))
       setNote('')
+      setOutcome('reached')
       setSaved(true)
       setCalledDraft(null)
+      notify.success('Notification attempt saved', { id: 'parent-notification' })
+      scrollToTop()
       reload()
+    } catch (cause) {
+      notify.apiError(cause, 'The attempt was not saved. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -193,14 +200,6 @@ export function ParentNotificationPage({
               Add Attempt
             </Button>
           </div>
-          {saved && (
-            <p
-              role="status"
-              className="rounded-md border border-success bg-success/10 px-3 py-2 text-sm font-semibold text-text-primary"
-            >
-              Notification attempt saved with an audit entry.
-            </p>
-          )}
           {attempts.length ? (
             <ol className="divide-y divide-border rounded-md border border-border">
               {attempts.map((attempt, index) => (

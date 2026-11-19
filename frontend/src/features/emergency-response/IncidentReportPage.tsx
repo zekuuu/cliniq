@@ -1,4 +1,5 @@
 import { SYMPTOM } from '../../lib/labels'
+import { notify } from '../../lib/notify'
 import { useState, type ReactNode } from 'react'
 import {
   capitalize,
@@ -276,7 +277,6 @@ export function IncidentReportPage({
   const { data, status, reload } = useAsyncData(`incident-report|${selectedId ?? 'default'}`, () =>
     fetchIncidentRecord(selectedId, viewer),
   )
-  const [justApproved, setJustApproved] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [approving, setApproving] = useState(false)
 
@@ -324,16 +324,17 @@ export function IncidentReportPage({
       await approveReport(incident.id, viewer)
       // Stay on the signed record and drop it from the pending list.
       setSelectedId(incident.id)
-      setJustApproved(true)
       setConfirming(false)
+      notify.success('Report approved and logged', { id: 'incident-approve' })
       reload()
+    } catch (cause) {
+      notify.apiError(cause, 'The report was not approved. Please try again.')
     } finally {
       setApproving(false)
     }
   }
 
   function selectIncident(id: string) {
-    setJustApproved(false)
     setSelectedId(id)
   }
 
@@ -531,15 +532,6 @@ export function IncidentReportPage({
             </h2>
             <EmergencyContactList contacts={student.emergencyContacts} />
           </section>
-
-          {justApproved && approved && (
-            <p
-              role="status"
-              className="rounded-md border border-success bg-success/10 px-3 py-2 text-sm font-semibold text-text-primary"
-            >
-              Report approved and logged.
-            </p>
-          )}
         </CardBody>
       </Card>
 
