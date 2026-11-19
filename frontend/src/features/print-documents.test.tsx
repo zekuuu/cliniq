@@ -203,16 +203,32 @@ describe('purpose-built printouts', () => {
       actionTypes: [],
       targetTypes: [],
     })
-    const doc = print()
-    expectDocument(doc, 'Audit Log')
-    expect(doc.querySelector('[data-print-scope]')).toHaveTextContent(
+    // The screen holds one page since ADR-082; the Print button loads every matching entry first.
+    let doc: HTMLElement | undefined
+    const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {
+      doc = print()
+    })
+    await userEvent.click(screen.getByRole('button', { name: 'Print / Save as PDF' }))
+    printSpy.mockRestore()
+    expectDocument(doc!, 'Audit Log')
+    expect(doc!.querySelector('[data-print-scope]')).toHaveTextContent(
       `${rows.length} entries. Filters: all dates; all users; all actions; all targets`,
     )
-    expect(within(doc).getAllByRole('row')).toHaveLength(rows.length + 1)
+    expect(within(doc!).getAllByRole('row')).toHaveLength(rows.length + 1)
     // The printout keeps the full LRN; the screen masks it (Zean, November 7, 2026).
     const student = rows.find((row) => row.target?.studentId && row.target.label)!
-    expect(doc).toHaveTextContent(student.target!.label!)
-    await expectNoNamesOrIds(doc)
+    expect(doc!).toHaveTextContent(student.target!.label!)
+    await expectNoNamesOrIds(doc!)
+  })
+
+  it('Audit Log: Ctrl+P alone prints the page on screen and says so (ADR-082)', async () => {
+    renderWithRouter(<AuditLogPage viewer={STAFF} />)
+    await screen.findByRole('table', { name: 'Filtered audit log' })
+    const doc = print()
+    expect(doc.querySelector('[data-print-scope]')).toHaveTextContent(
+      /^Page 1 of \d+ only: 10 of [\d,]+ entries\. Use the Print button for every entry\./,
+    )
+    expect(within(doc).getAllByRole('row')).toHaveLength(11)
   })
 
   it('uses the period in words, never the All placeholder', async () => {

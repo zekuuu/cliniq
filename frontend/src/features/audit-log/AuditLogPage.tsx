@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Lrn } from '../../components/ui/MaskedLrn'
 import {
   Button,
@@ -23,26 +24,29 @@ import {
   type DataTableColumn,
   type StatusMap,
 } from '../../components'
-import { useAsyncData } from '../../hooks/useAsyncData'
-import { usePageSize, type PageSize } from '../../hooks/usePageSize'
+import { usePagedList } from '../../hooks/usePagedList'
+import { apiMode } from '../../lib/api/mode'
 import { describeRange, rangeForPreset, type DateRange } from '../../lib/dateRange'
 import { formatDateRange, formatDateTime, todayISO } from '../../lib/dates'
 import type { ISODate } from '../../types/entities'
-import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
+import { toggleTableSort } from '../../lib/tableSort'
 import {
   ROLE_LABELS,
   auditTargetTypes,
-  type AuditLogList,
   type AuditLogRow,
   type AuditTargetType,
   type SessionUser,
 } from '../../lib/data'
 import type { AuditActionType } from '../../types/entities'
 import { paths } from '../../routes/paths'
-import { fetchAuditLog, fetchAuditLogForPrint } from './api/auditLogApi'
-import { useFullLrnPrint } from '../../hooks/useFullLrnPrint'
-
-type AuditSortKey = 'timestamp' | 'user' | 'action' | 'module' | 'record'
+import {
+  AUDIT_SORT_KEYS,
+  fetchAuditLog,
+  fetchAuditLogForPrint,
+  fetchAuditLogPage,
+  filterAndSortAudit,
+  type AuditSortKey,
+} from './api/auditLogApi'
 
 const actionOptions: Array<{ value: AuditActionType; label: string }> = [
   { value: 'login', label: 'Login' },
@@ -209,29 +213,28 @@ function filtersInWords(
  * The compliance printout (ADR-026, Module 11 "export/print a filtered view"): the filters in words, the
  * entry count, and every matching entry (not just the page on screen), in the screen's order.
  */
-/** The rows the screen shows, in its order, each swapped for its full-LRN copy when one was loaded. */
-function withFullRows(rows: AuditLogRow[], full: AuditLogList | null): AuditLogRow[] {
-  if (!full) return rows
-  const byId = new Map(full.rows.map((row) => [row.id, row]))
-  return rows.map((row) => byId.get(row.id) ?? row)
-}
-
 function AuditLogPrint({
   rows,
+  onePage,
   filters,
   users,
   viewer,
 }: {
   rows: AuditLogRow[]
+  /** Set when only the page on screen prints (Ctrl+P without the Print button); the scope says so. */
+  onePage: { page: number; lastPage: number; total: number } | null
   filters: AuditLogFilters
   users: Array<{ id: string; name: string }>
   viewer: SessionUser
 }) {
+  const count = onePage
+    ? `Page ${onePage.page} of ${onePage.lastPage} only: ${rows.length.toLocaleString('en-PH')} of ${onePage.total.toLocaleString('en-PH')} entries. Use the Print button for every entry`
+    : `${rows.length.toLocaleString('en-PH')} ${rows.length === 1 ? 'entry' : 'entries'}`
   return (
     <PrintDocument
       title="Audit Log"
       viewer={viewer}
-      scope={`${rows.length.toLocaleString('en-PH')} ${rows.length === 1 ? 'entry' : 'entries'}. Filters: ${filtersInWords(filters, users)}. Entries are permanent and cannot be edited or deleted.`}
+      scope={`${count}. Filters: ${filtersInWords(filters, users)}. Entries are permanent and cannot be edited or deleted.`}
     >
       <PrintTable
         caption="Filtered audit log"
@@ -296,36 +299,42 @@ export function AuditLogPage({
   const defaultRange: DateRange = startRange
     ? { preset: 'custom', ...startRange }
     : rangeForPreset('all', todayISO())
-  const [filters, setFilters] = useState<AuditLogFilters>({
-    search: '',
+  const [selected, setSelected] = useState<Omit<AuditLogFilters, 'search'>>({
     range: defaultRange,
     userId: '',
     actionTypes: [],
     targetTypes: [],
   })
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = usePageSize()
-  // A new page size starts again at page 1 (cliniq-pagination-patterns).
-  const changePageSize = (size: PageSize) => {
-    setPageSize(size)
-    setPage(1)
-  }
-  const [sort, setSort] = useState<TableSortState<AuditSortKey>>({
-    key: 'timestamp',
-    direction: 'descending',
+  const { range, userId, actionTypes, targetTypes } = selected
+  const query = { from: range.from, to: range.to, userId, actionTypes, targetTypes }
+  // One page at a time from the server; page, search and sort live in the address (ADR-082).
+  const list = usePagedList({
+    key: 'audit-log',
+    filters: query,
+    sortKeys: AUDIT_SORT_KEYS,
+    defaultSort: { key: 'timestamp', direction: 'descending' },
+    load: fetchAuditLogPage,
   })
-  const { search, range, userId, actionTypes, targetTypes } = filters
-  const queryKey = `${range.from}|${range.to}|${userId}|${actionTypes.join(',')}|${targetTypes.join(',')}`
-  const { data, status, isRefetching, reload } = useAsyncData(queryKey, () =>
-    fetchAuditLog({ from: range.from, to: range.to, userId, actionTypes, targetTypes }),
-  )
-  // ADR-044: the printout carries the full LRN; on the API the Print button fetches it first (ADR-080).
-  const fullPrint = useFullLrnPrint('AUDIT', () =>
-    fetchAuditLogForPrint({ from: range.from, to: range.to, userId, actionTypes, targetTypes }),
-  )
+  const { page: data, status, isRefetching, reload, sort } = list
+  const filters: AuditLogFilters = { ...selected, search: list.search }
+  // The Print button prints every matching entry, not the page on screen. On the API it loads the
+  // full-LRN copy, which is the print's audit entry (ADR-044, ADR-080); in mock mode the mock's own.
+  const [printRows, setPrintRows] = useState<AuditLogRow[] | null>(null)
+  async function printAll() {
+    try {
+      const all =
+        apiMode('AUDIT') === 'api' ? await fetchAuditLogForPrint(query) : await fetchAuditLog(query)
+      flushSync(() => setPrintRows(filterAndSortAudit(all.rows, list.search, sort)))
+      window.addEventListener('afterprint', () => setPrintRows(null), { once: true })
+    } catch {
+      // The page on screen still prints, and its printout says so.
+    }
+    window.print()
+  }
   const updateFilters = (changes: Partial<AuditLogFilters>) => {
-    setFilters((current) => ({ ...current, ...changes }))
-    setPage(1)
+    const { search, ...rest } = changes
+    if (search !== undefined) list.setSearch(search)
+    if (Object.keys(rest).length) setSelected((current) => ({ ...current, ...rest }))
   }
 
   if (status === 'error')
@@ -344,31 +353,8 @@ export function AuditLogPage({
       </>
     )
 
-  // Search matches only what the table already shows, so it never surfaces hidden student details.
-  const needle = search.trim().toLowerCase()
-  const filteredRows = needle
-    ? data.rows.filter((row) =>
-        [
-          row.userName,
-          row.userRole ? ROLE_LABELS[row.userRole] : '',
-          actionStatusMap[row.actionType].label,
-          row.summary ?? '',
-          row.target?.kind ?? 'No record',
-          row.target?.label ?? '',
-        ].some((text) => text.toLowerCase().includes(needle)),
-      )
-    : data.rows
-  const sortedRows = sortTableRows(filteredRows, sort, (row, key) => {
-    if (key === 'timestamp') return row.dateTime
-    if (key === 'user') return row.userName
-    if (key === 'action') return actionStatusMap[row.actionType].label
-    if (key === 'module') return row.target?.kind ?? ''
-    return row.target?.label ?? ''
-  })
-  const changeSort = (key: AuditSortKey) => {
-    setSort((current) => toggleTableSort(current, key))
-    setPage(1)
-  }
+  // The server searches only what the table shows, so a search never surfaces hidden student details.
+  const changeSort = (key: AuditSortKey) => list.setSort(toggleTableSort(sort, key))
   const sortColumn = (key: AuditSortKey, label: string) => ({
     label,
     direction: sort.key === key ? sort.direction : undefined,
@@ -424,14 +410,11 @@ export function AuditLogPage({
       cell: (row) => recordCell(row, viewer),
     },
   ]
-  const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize))
-  const currentPage = Math.min(page, pageCount)
-  const pageRows = sortedRows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   const clearFilters = () => {
     updateFilters({ search: '', range: defaultRange, userId: '', actionTypes: [], targetTypes: [] })
   }
 
-  const shownLine = `${sortedRows.length.toLocaleString('en-PH')} entr${sortedRows.length === 1 ? 'y' : 'ies'} shown · ${describeRange(range)}`
+  const shownLine = `${data.total.toLocaleString('en-PH')} entr${data.total === 1 ? 'y' : 'ies'} shown · ${describeRange(range)}`
   const clearButton = (
     <Button variant="neutral" onClick={clearFilters} className="print:hidden">
       Clear Filters
@@ -443,7 +426,7 @@ export function AuditLogPage({
         <Input
           label="Search"
           type="search"
-          value={search}
+          value={list.searchInput}
           placeholder="User, role, action, or target record"
           onChange={(event) => updateFilters({ search: event.target.value })}
           className="w-full sm:min-w-56 sm:flex-1"
@@ -484,23 +467,23 @@ export function AuditLogPage({
         />
       </div>
       <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>
-        {sortedRows.length ? (
+        {data.total ? (
           <>
             <DataTable
               caption="Filtered audit log"
               columns={columns}
-              rows={pageRows}
+              rows={data.rows}
               rowKey={(row) => row.id}
               fixedLayout
             />
             <Pagination
-              page={currentPage}
-              pageCount={pageCount}
-              total={sortedRows.length}
-              pageSize={pageSize}
-              onPageSizeChange={changePageSize}
+              page={list.pageNumber}
+              pageCount={data.lastPage}
+              total={data.total}
+              pageSize={list.pageSize}
+              onPageSizeChange={list.setPageSize}
               itemLabel="entries"
-              onPageChange={setPage}
+              onPageChange={list.setPage}
             />
           </>
         ) : (
@@ -548,13 +531,18 @@ export function AuditLogPage({
               or deleted.
             </p>
           </div>
-          <PrintButton viewer={viewer} onPrint={() => void fullPrint.print()} />
+          <PrintButton viewer={viewer} onPrint={() => void printAll()} />
         </div>
       </Card>
 
       {entries}
       <AuditLogPrint
-        rows={withFullRows(sortedRows, fullPrint.full)}
+        rows={printRows ?? data.rows}
+        onePage={
+          printRows || data.lastPage === 1
+            ? null
+            : { page: list.pageNumber, lastPage: data.lastPage, total: data.total }
+        }
         filters={filters}
         users={data.users}
         viewer={viewer}
