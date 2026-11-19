@@ -12,10 +12,12 @@ use App\Shared\AuditLog\AuditLogger;
 use App\Shared\AuditLog\AuditTarget;
 use App\Shared\FollowUps\FollowUpService;
 use App\Shared\Http\BusinessRuleViolation;
+use App\Shared\Http\PatientLog;
 use App\Shared\Sequences\Sequences;
 use App\Shared\Support\ClinicTime;
 use App\Shared\Support\Row;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -36,6 +38,48 @@ final class IncidentService
         private readonly VisitService $visits,
         private readonly AuditLogger $audit,
     ) {}
+
+    /**
+     * The Incident Log's rows (`IncidentLogRow`, ADR-082), filtered, searched and sorted in SQL. The
+     * Admin never sees a staff patient's incident (ADR-043).
+     *
+     * @param  array{from: ?string, to: ?string, admin: bool, completion: string, patient: string, search: string}  $f
+     * @param  'asc'|'desc'  $direction
+     */
+    public function logQuery(array $f, string $sort, string $direction): Builder
+    {
+        $query = PatientLog::join(DB::table('incidents as i'), 'i')
+            ->select(['i.id', 'i.occurred_at', 'i.complaint', 'i.stage', 'i.event_tag', 's.lrn', 'p.staff_number'])
+            ->selectRaw(PatientLog::gradeSql('i').' AS grade')
+            ->when($f['admin'], fn ($q) => $q->whereNull('i.personnel_id'))
+            ->when($f['from'] !== null, fn ($q) => $q->where('i.occurred_at', '>=', "{$f['from']} 00:00:00"))
+            ->when($f['to'] !== null, fn ($q) => $q->where('i.occurred_at', '<=', "{$f['to']} 23:59:59"))
+            ->when($f['completion'] === 'needs_completion', fn ($q) => $q->where('i.stage', 1))
+            ->when($f['completion'] === 'complete', fn ($q) => $q->where('i.stage', '<>', 1));
+        PatientLog::patient($query, 'i', $f['patient']);
+        PatientLog::search($query, 'i', $f['search'], ['complaint', 'event_tag']);
+
+        match ($sort) {
+            'student' => PatientLog::orderByNumber($query, 'i', $direction),
+            'complaint' => $query->orderBy('i.complaint', $direction),
+            // By the shown words: "Complete" (stage 2) before "Needs completion" (stage 1) when ascending.
+            'status' => $query->orderBy('i.stage', $direction === 'asc' ? 'desc' : 'asc'),
+            default => $query->orderBy('i.occurred_at', $direction),
+        };
+
+        // Equal values keep the log's own order, newest first, as the screen's stable sort did.
+        return $sort === 'time' ? $query->orderBy('i.id', $direction) : $query->orderByDesc('i.occurred_at')->orderByDesc('i.id');
+    }
+
+    /** @return array<string, mixed> one `IncidentLogRow` */
+    public function logRow(\stdClass $r): array
+    {
+        return [
+            'id' => (string) Row::int($r, 'id'), 'patient' => PatientLog::number($r), 'gradeLevel' => (string) Row::str($r, 'grade'),
+            'time' => ClinicTime::iso(CarbonImmutable::parse((string) Row::str($r, 'occurred_at'))), 'complaint' => (string) Row::str($r, 'complaint'),
+            'completion' => Row::int($r, 'stage') === 1 ? 'needs_completion' : 'complete', 'eventTag' => Row::str($r, 'event_tag'),
+        ];
+    }
 
     /** @return list<array<string, mixed>> `Incident[]`, newest first */
     public function list(?string $from, ?string $to, bool $admin, ?int $studentId = null, ?int $personnelId = null, ?int $limit = null): array

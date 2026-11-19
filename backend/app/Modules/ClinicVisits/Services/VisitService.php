@@ -12,9 +12,11 @@ use App\Shared\AuditLog\AuditTarget;
 use App\Shared\AuditLog\DatabaseAuditLogger;
 use App\Shared\FollowUps\FollowUpService;
 use App\Shared\Http\BusinessRuleViolation;
+use App\Shared\Http\PatientLog;
 use App\Shared\Support\ClinicTime;
 use App\Shared\Support\Row;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -46,13 +48,82 @@ final class VisitService
     /** @return list<array<string, mixed>> `Visit[]`, newest first */
     public function list(?string $from, ?string $to, bool $includeEnteredInError): array
     {
-        $rows = DB::table('visits')
+        return $this->shape($this->listQuery($from, $to, $includeEnteredInError)->get()->values()->all());
+    }
+
+    /** `Visit[]` newest first, in SQL; `GET /api/visits` with `page` reads one page of it (Q19, ADR-082). */
+    public function listQuery(?string $from, ?string $to, bool $includeEnteredInError): Builder
+    {
+        return DB::table('visits')
             ->when($from !== null, fn ($q) => $q->where('visited_at', '>=', "{$from} 00:00:00"))
             ->when($to !== null, fn ($q) => $q->where('visited_at', '<=', "{$to} 23:59:59"))
             ->when(! $includeEnteredInError, fn ($q) => $q->whereNull('entered_in_error_at'))
-            ->orderByDesc('visited_at')->orderByDesc('id')->get()->values()->all();
+            ->orderByDesc('visited_at')->orderByDesc('id');
+    }
 
+    /**
+     * @param  list<\stdClass>  $rows
+     * @return list<array<string, mixed>> `Visit[]`
+     */
+    public function shapeRows(array $rows): array
+    {
         return $this->shape($rows);
+    }
+
+    /**
+     * The Visit Log's rows (`VisitLogRow`, ADR-082): filtered, searched and sorted in SQL, one page at
+     * a time. Each row carries the masked LRN or the Staff No., never the name (ADR-004, ADR-043).
+     *
+     * @param  array{from: ?string, to: ?string, includeEnteredInError: bool, disposition: string, letter: string, inClinicNow: bool, patient: string, search: string}  $f
+     * @param  'asc'|'desc'  $direction
+     */
+    public function logQuery(array $f, string $sort, string $direction): Builder
+    {
+        $today = ClinicTime::today();
+        $draft = DB::table('excuse_letters as e')->selectRaw('1')->whereColumn('e.visit_id', 'v.id')->where('e.status', 'draft');
+        $query = PatientLog::join(DB::table('visits as v'), 'v')->leftJoin('users as u', 'u.id', '=', 'v.logged_by_user_id')
+            ->select(['v.id', 'v.visited_at', 'v.complaint', 'v.disposition', 'v.event_tag', 'v.time_out', 'v.escalated_incident_id', 'v.entered_in_error_at', 'v.student_id', 's.lrn', 's.archived_at', 'p.staff_number', 'u.name as logged_by'])
+            ->selectRaw(PatientLog::gradeSql('v').' AS grade')
+            ->selectRaw("EXISTS (SELECT 1 FROM excuse_letters e WHERE e.visit_id = v.id AND e.status = 'draft') AS has_draft")
+            ->when($f['from'] !== null, fn ($q) => $q->where('v.visited_at', '>=', "{$f['from']} 00:00:00"))
+            ->when($f['to'] !== null, fn ($q) => $q->where('v.visited_at', '<=', "{$f['to']} 23:59:59"))
+            ->when(! $f['includeEnteredInError'], fn ($q) => $q->whereNull('v.entered_in_error_at'))
+            ->when($f['disposition'] !== '', fn ($q) => $q->where('v.disposition', $f['disposition']))
+            // The Dashboard's "Pending excuse letters": a draft, for a student not archived, not entered in error.
+            ->when($f['letter'] === 'pending', fn ($q) => $q->whereExists($draft)->whereNotNull('v.student_id')->whereNull('s.archived_at')->whereNull('v.entered_in_error_at'))
+            // The Dashboard's "In clinic now": resting today with no Time out.
+            ->when($f['inClinicNow'], fn ($q) => $q->where('v.disposition', 'resting_in_clinic')->whereNull('v.time_out')
+                ->whereBetween('v.visited_at', ["{$today} 00:00:00", "{$today} 23:59:59"])->whereNull('v.entered_in_error_at'));
+        PatientLog::patient($query, 'v', $f['patient']);
+        PatientLog::search($query, 'v', $f['search'], ['complaint', 'event_tag']);
+
+        match ($sort) {
+            'lrn' => PatientLog::orderByNumber($query, 'v', $direction),
+            'record' => $query->orderBy('v.complaint', $direction),
+            // The shown words (frontend dispositionLabel): a staff patient's "Returned to class" reads "Returned to work".
+            'disposition' => $query->orderByRaw("CASE v.disposition WHEN 'returned_to_class' THEN IF(v.personnel_id IS NULL, 'Returned to class', 'Returned to work') WHEN 'sent_home' THEN 'Sent home' WHEN 'referred_to_hospital' THEN 'Referred to hospital' ELSE 'Resting in clinic' END {$direction}"),
+            default => $query->orderBy('v.visited_at', $direction),
+        };
+
+        // Equal values keep the log's own order, newest first, as the screen's stable sort did.
+        return $sort === 'dateTime' ? $query->orderBy('v.id', $direction) : $query->orderByDesc('v.visited_at')->orderByDesc('v.id');
+    }
+
+    /** @return array<string, mixed> one `VisitLogRow` */
+    public function logRow(\stdClass $r): array
+    {
+        $today = ClinicTime::today();
+        $at = CarbonImmutable::parse((string) Row::str($r, 'visited_at'));
+        $error = Row::str($r, 'entered_in_error_at') !== null;
+
+        return [
+            'id' => (string) Row::int($r, 'id'), 'patient' => PatientLog::number($r), 'gradeLevel' => (string) Row::str($r, 'grade'),
+            'dateTime' => ClinicTime::iso($at), 'complaint' => (string) Row::str($r, 'complaint'), 'disposition' => (string) Row::str($r, 'disposition'),
+            'eventTag' => Row::str($r, 'event_tag'), 'loggedBy' => Row::str($r, 'logged_by') ?? 'Unknown user',
+            'letterPending' => Row::str($r, 'has_draft') === '1' && Row::str($r, 'student_id') !== null && Row::str($r, 'archived_at') === null && ! $error,
+            'inClinicNow' => Row::str($r, 'disposition') === 'resting_in_clinic' && Row::str($r, 'time_out') === null && $at->format('Y-m-d') === $today && ! $error,
+            'escalated' => Row::str($r, 'escalated_incident_id') !== null, 'enteredInError' => $error,
+        ];
     }
 
     /** @return list<array<string, mixed>> one patient's visits, newest first (the history) */
@@ -306,11 +377,16 @@ final class VisitService
     private function complaint(string $text): string
     {
         $clean = trim(mb_substr((string) preg_replace('/\s+/u', ' ', trim($text)), 0, self::COMPLAINT_MAX));
-        $known = DB::table('complaint_types')->where('used_in_visits', 1)->pluck('label')
-            ->merge(DB::table('visits')->distinct()->pluck('complaint'))->filter(fn (mixed $v): bool => is_string($v));
-        $match = $known->first(fn (string $label): bool => mb_strtolower($label) === mb_strtolower($clean));
+        if ($clean === '') {
+            return $clean;
+        }
+        // Two lookups that stay small as history grows: the known types, then one earlier visit with
+        // the same complaint (the column's collation compares case-insensitively), instead of every
+        // distinct complaint ever recorded (Load-Test-Nov16, ADR-082).
+        $match = DB::table('complaint_types')->where('used_in_visits', 1)->where('label', $clean)->value('label')
+            ?? DB::table('visits')->where('complaint', $clean)->value('complaint');
 
-        return is_string($match) ? $match : $clean;
+        return is_string($match) && mb_strtolower($match) === mb_strtolower($clean) ? $match : $clean;
     }
 
     /** @return list<string> cleaned, without repeats or the main one; more than 3 is refused (ADR-053) */

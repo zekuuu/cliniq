@@ -33,7 +33,7 @@ const ADMIN_MAY = [
     // student list and profile, read (ADR-038)
     'POST api/students/query', 'GET api/students/{id}', 'GET api/students/{id}/history', 'GET api/patients/{kind}/{id}', 'GET api/reference/grade-levels',
     // incidents, read (ADR-038)
-    'GET api/incidents', 'GET api/incidents/{id}', 'GET api/incidents/approved-ids', 'GET api/incidents/{id}/trail',
+    'GET api/incidents', 'GET api/incidents/log', 'GET api/incidents/{id}', 'GET api/incidents/approved-ids', 'GET api/incidents/{id}/trail',
     // reports, view only (ADR-077), Dashboard and calendar (ADR-042 writes events)
     'GET api/reports/monthly', 'GET api/reports/latest-month', 'GET api/dashboard/summary', 'GET api/dashboard/cluster-alerts',
     'GET api/calendar/days', 'GET api/calendar/holidays', 'GET api/calendar/events', 'POST api/calendar/events', 'PUT api/calendar/events/{id}', 'DELETE api/calendar/events/{id}',
@@ -55,7 +55,7 @@ function everyRoute(): array
         if (in_array($uri, PUBLIC_ROUTES, true)) {
             continue;
         }
-        $out[] = [$method, $uri, '/'.str_replace(['{id}', '{kind}'], ['999999', 'student'], $uri)];
+        $out[] = [$method, $uri, '/'.str_replace(['{id}', '{kind}', '{index}'], ['999999', 'student', '0'], $uri)];
     }
 
     return $out;

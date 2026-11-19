@@ -26,6 +26,26 @@ final class IncidentController
 
     public function __construct(private readonly IncidentService $incidents) {}
 
+    /** `GET /api/incidents/log`: the Incident Log, one page of `IncidentLogRow` (ADR-082). Both roles. */
+    public function log(Request $request): JsonResponse
+    {
+        $request->validate([
+            'from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d'], 'completion' => ['nullable', 'in:all,needs_completion,complete'],
+            'patient' => ['nullable', 'in:everyone,students,staff'], 'search' => ['nullable', 'string', 'max:120'],
+        ]);
+        [$sort, $direction] = Paging::sort($request, ['time', 'student', 'complaint', 'status'], '-time');
+        [$rows, $meta] = Paging::sql($request, $this->incidents->logQuery([
+            'from' => $request->filled('from') ? $request->string('from')->value() : null,
+            'to' => $request->filled('to') ? $request->string('to')->value() : null,
+            'admin' => AuthController::user($request)->role === 'admin',
+            'completion' => $request->string('completion')->value(),
+            'patient' => $request->string('patient')->value(),
+            'search' => $request->string('search')->value(),
+        ], $sort, $direction), $this->incidents->logRow(...));
+
+        return response()->json(['data' => $rows, 'meta' => $meta]);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $request->validate(['from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d']]);

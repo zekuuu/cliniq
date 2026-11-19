@@ -162,6 +162,6 @@ it('pages the visit list only when asked (contract Q19)', function () {
 
     $this->getJson('/api/visits')->assertOk()->assertJsonCount(3, 'data')->assertJsonMissingPath('meta');
     $this->getJson('/api/visits?page=2&perPage=2')->assertOk()->assertJsonCount(1, 'data')
-        ->assertJsonPath('meta', ['page' => 2, 'perPage' => 2, 'total' => 3]);
+        ->assertJsonPath('meta', ['page' => 2, 'perPage' => 2, 'total' => 3, 'lastPage' => 2]); // lastPage since ADR-082
     $this->getJson('/api/visits?perPage=101')->assertUnprocessable();
 });

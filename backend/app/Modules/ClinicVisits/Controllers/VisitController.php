@@ -43,15 +43,43 @@ final class VisitController
 
     public function __construct(private readonly VisitService $visits, private readonly ExcuseLetterService $letters) {}
 
+    /** `GET /api/visits/log`: the Visit Log, one page of `VisitLogRow` (ADR-082). */
+    public function log(Request $request): JsonResponse
+    {
+        $request->validate([
+            'from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d'], 'includeEnteredInError' => ['nullable', 'in:0,1,true,false'],
+            'disposition' => ['nullable', 'in:all,returned_to_class,resting_in_clinic,sent_home,referred_to_hospital'], 'letter' => ['nullable', 'in:pending'],
+            'inClinicNow' => ['nullable', 'in:0,1,true,false'], 'patient' => ['nullable', 'in:everyone,students,staff'], 'search' => ['nullable', 'string', 'max:120'],
+        ]);
+        [$sort, $direction] = Paging::sort($request, ['dateTime', 'lrn', 'record', 'disposition'], '-dateTime');
+        $disposition = $request->string('disposition')->value();
+        [$rows, $meta] = Paging::sql($request, $this->visits->logQuery([
+            'from' => $request->filled('from') ? $request->string('from')->value() : null,
+            'to' => $request->filled('to') ? $request->string('to')->value() : null,
+            'includeEnteredInError' => $request->boolean('includeEnteredInError'),
+            'disposition' => $disposition === 'all' ? '' : $disposition,
+            'letter' => $request->string('letter')->value(),
+            'inClinicNow' => $request->boolean('inClinicNow'),
+            'patient' => $request->string('patient')->value(),
+            'search' => $request->string('search')->value(),
+        ], $sort, $direction), $this->visits->logRow(...));
+
+        return response()->json(['data' => $rows, 'meta' => $meta]);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $request->validate(['from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d'], 'includeEnteredInError' => ['nullable', 'in:0,1,true,false']]);
 
-        return Paging::json($request, $this->visits->list(
-            $request->filled('from') ? $request->string('from')->value() : null,
-            $request->filled('to') ? $request->string('to')->value() : null,
-            $request->boolean('includeEnteredInError'),
-        ));
+        $from = $request->filled('from') ? $request->string('from')->value() : null;
+        $to = $request->filled('to') ? $request->string('to')->value() : null;
+        if (! Paging::wanted($request)) {
+            return response()->json(['data' => $this->visits->list($from, $to, $request->boolean('includeEnteredInError'))]);
+        }
+        // One page in SQL, its lines and letters read for that page only (ADR-082).
+        [$rows, $meta] = Paging::sqlRows($request, $this->visits->listQuery($from, $to, $request->boolean('includeEnteredInError')));
+
+        return response()->json(['data' => $this->visits->shapeRows(array_values($rows->all())), 'meta' => $meta]);
     }
 
     public function store(Request $request): JsonResponse

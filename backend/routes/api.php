@@ -110,6 +110,7 @@ Route::middleware(['auth:sanctum', 'session.fixed', 'session.idle', 'account.act
 
         // Incidents: the Admin reads, and never a staff patient's (ADR-043).
         Route::get('incidents', [IncidentController::class, 'index']);
+        Route::get('incidents/log', [IncidentController::class, 'log']);
         Route::get('incidents/approved-ids', [IncidentController::class, 'approvedIds']);
         Route::get('incidents/{id}', [IncidentController::class, 'show'])->whereNumber('id');
         Route::get('incidents/{id}/trail', [IncidentController::class, 'trail'])->whereNumber('id');
@@ -142,6 +143,7 @@ Route::middleware(['auth:sanctum', 'session.fixed', 'session.idle', 'account.act
 
         // Clinic visits, excuse letters, PE referrals and follow-ups (Module 3).
         Route::get('visits', [VisitController::class, 'index']);
+        Route::get('visits/log', [VisitController::class, 'log']);
         Route::post('visits', [VisitController::class, 'store']);
         Route::get('visits/{id}', [VisitController::class, 'show'])->whereNumber('id');
         Route::put('visits/{id}', [VisitController::class, 'update'])->whereNumber('id');
@@ -181,6 +183,7 @@ Route::middleware(['auth:sanctum', 'session.fixed', 'session.idle', 'account.act
         Route::post('students/import', [StudentController::class, 'import']);
         Route::put('students/{id}', [StudentController::class, 'update'])->whereNumber('id');
         Route::post('students/{id}/archive', [StudentController::class, 'archive'])->whereNumber('id');
+        Route::post('students/{id}/emergency-contacts/{index}/verify', [StudentController::class, 'verifyContact'])->whereNumber(['id', 'index']);
 
         // Staff patients: the Staff role only (ADR-043 item 9).
         Route::get('personnel', [PersonnelController::class, 'index']);
@@ -192,6 +195,7 @@ Route::middleware(['auth:sanctum', 'session.fixed', 'session.idle', 'account.act
         Route::get('personnel/{id}', [PersonnelController::class, 'show'])->whereNumber('id');
         Route::put('personnel/{id}', [PersonnelController::class, 'update'])->whereNumber('id');
         Route::post('personnel/{id}/archive', [PersonnelController::class, 'archive'])->whereNumber('id');
+        Route::post('personnel/{id}/emergency-contacts/{index}/verify', [PersonnelController::class, 'verifyContact'])->whereNumber(['id', 'index']);
         Route::post('patients/search', [PersonnelController::class, 'searchPatients']);
         Route::get('archive/staff', [ArchiveController::class, 'staff']);
     });
