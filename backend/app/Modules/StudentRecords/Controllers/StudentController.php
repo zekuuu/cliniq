@@ -7,8 +7,10 @@ namespace App\Modules\StudentRecords\Controllers;
 use App\Modules\StudentRecords\Services\StudentImportService;
 use App\Modules\StudentRecords\Services\StudentService;
 use App\Modules\UserManagement\Controllers\AuthController;
+use App\Shared\Http\Paging;
 use App\Shared\Support\PatientFields;
 use App\Shared\Support\PersonName;
+use App\Shared\Support\Row;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -32,13 +34,35 @@ final class StudentController
             'includeArchived' => ['boolean'], 'recordStatus' => ['nullable', 'in:complete,incomplete'], 'limit' => ['nullable', 'integer', 'min:1', 'max:5000'],
         ]);
 
-        return response()->json(['data' => $this->students->list(
+        $rows = $this->students->list(
             $request->string('search')->value(),
             $request->string('gradeLevel')->value(),
             $request->boolean('includeArchived'),
             $request->string('recordStatus')->value(),
-            $request->filled('limit') ? $request->integer('limit') : null,
-        )]);
+            Paging::wanted($request) || ! $request->filled('limit') ? null : $request->integer('limit'),
+        );
+        if (! Paging::wanted($request)) {
+            return response()->json(['data' => $rows]);
+        }
+        // One page of the Student List (ADR-082). ponytail: sorted and cut in memory, which the school
+        // roll bounds (about 1,200 rows with the archived); the name match and the record status are
+        // PHP rules. Move to SQL if the roll ever passes about 20,000.
+        [$sort, $direction] = Paging::sort($request, ['name', 'number', 'grade', 'status'], 'name');
+        $value = fn (array $s): string => match ($sort) {
+            'number' => substr(Row::text($s['lrn']), -4),
+            'grade' => Row::text($s['gradeLevel']),
+            'status' => $s['recordComplete'] ? ($s['archived'] ? 'Complete Archived' : 'Complete') : 'Incomplete',
+            default => '',
+        };
+        $sign = $direction === 'desc' ? -1 : 1;
+        if ($sort === 'name') {
+            $rows = $sign === 1 ? $rows : array_reverse($rows);
+        } else {
+            // usort is stable: equal values keep the name order, as the screen's sort did.
+            usort($rows, fn (array $a, array $b): int => $sign * strnatcasecmp($value($a), $value($b)));
+        }
+
+        return Paging::json($request, $rows);
     }
 
     public function search(Request $request): JsonResponse
@@ -89,6 +113,14 @@ final class StudentController
         return response()->json(['data' => $this->students->archive($id, $request->string('reason')->value(), $user->id, $user->role)]);
     }
 
+    public function verifyContact(Request $request, int $id, int $index): JsonResponse
+    {
+        $request->validate(['verified' => ['boolean']]);
+        $user = AuthController::user($request);
+
+        return response()->json(['data' => $this->students->verifyContact($id, $index, $request->boolean('verified', true), $user->id, $user->role)]);
+    }
+
     private const IMPORT_KEYS = ['lrn', 'firstName', 'lastName', 'middleName', 'gradeLevel', 'section', 'sex', 'birthDate'];
 
     public function importPreview(Request $request, StudentImportService $import): JsonResponse
@@ -109,9 +141,59 @@ final class StudentController
         return response()->json(['data' => $import->apply($rows, $request->string('fileName')->value(), $ids, AuthController::user($request)->id)]);
     }
 
-    public function incomplete(): JsonResponse
+    public function incomplete(Request $request): JsonResponse
     {
-        return response()->json(['data' => $this->students->incompleteQueue()]);
+        $rows = $this->students->incompleteQueue();
+        if (! Paging::wanted($request)) {
+            return response()->json(['data' => $rows]);
+        }
+        // One page of the Incomplete Records Queue (ADR-082), with the Open and Resolved counts of the
+        // whole queue. ponytail: filtered and cut in memory; the active roll bounds it (about 900).
+        $request->validate(['status' => ['nullable', 'in:open,resolved,all'], 'search' => ['nullable', 'string', 'max:120']]);
+        $counts = ['open' => 0, 'resolved' => 0];
+        foreach ($rows as $r) {
+            $counts[$r['status'] === 'open' ? 'open' : 'resolved']++;
+        }
+        $status = $request->string('status')->value() ?: 'open';
+        $term = mb_strtolower(trim($request->string('search')->value()));
+        $digits = (string) preg_replace('/[\s-]/', '', $term);
+        $student = fn (array $r): array => is_array($r['student']) ? $r['student'] : [];
+        $rows = array_values(array_filter($rows, function (array $r) use ($status, $term, $digits, $student): bool {
+            if ($status !== 'all' && $r['status'] !== $status) {
+                return false;
+            }
+            if ($term === '') {
+                return true;
+            }
+            $s = $student($r);
+            $tail = substr(Row::text($s['lrn'] ?? ''), -4);
+            $byLrn = preg_match('/\A\d+\z/', $digits) === 1 && (strlen($digits) <= 4 ? str_contains($tail, $digits) : str_ends_with($digits, $tail));
+
+            return $byLrn || PersonName::matches(Row::text($s['fullName'] ?? ''), $term) || str_contains(mb_strtolower(Row::text($s['gradeLevel'] ?? '')), $term);
+        }));
+        [$sort, $direction] = Paging::sort($request, ['student', 'grade', 'missing', 'imported', 'status'], '-imported');
+        $value = fn (array $r): ?string => match ($sort) {
+            'grade' => Row::text($student($r)['gradeLevel'] ?? ''),
+            'missing' => implode(', ', array_map(Row::text(...), is_array($r['missingFields']) ? $r['missingFields'] : [])),
+            'imported' => is_array($r['review']) ? Row::text($r['review']['importedAt'] ?? '') : null,
+            'status' => $r['status'] === 'open' ? 'Open' : 'Resolved',
+            default => null,
+        };
+        $sign = $direction === 'desc' ? -1 : 1;
+        if ($sort === 'student') {
+            $rows = $sign === 1 ? $rows : array_reverse($rows);
+        } else {
+            // A record with no value (no import review) stays at the bottom either way, as on the screen.
+            usort($rows, fn (array $a, array $b): int => match (true) {
+                $value($a) === null && $value($b) === null => 0,
+                $value($a) === null => 1,
+                $value($b) === null => -1,
+                default => $sign * strnatcasecmp((string) $value($a), (string) $value($b)),
+            });
+        }
+        [$page, $meta] = Paging::apply($request, $rows);
+
+        return response()->json(['data' => $page, 'meta' => ($meta ?? []) + ['counts' => $counts]]);
     }
 
     /** @return array<string, mixed> the validated `StudentInput` fields */

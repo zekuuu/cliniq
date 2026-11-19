@@ -39,9 +39,17 @@ final class ArchiveController
                 ->union(DB::table('audit_logs')->selectRaw('DATE(occurred_at) AS d')),
             'x',
         )->distinct()->pluck('d')->filter(fn (mixed $v): bool => is_string($v));
-        // ponytail: one school-year lookup per distinct day; fine for years of daily records.
-        $labels = $dates->map(fn (string $d): string => $this->years->labelOn($d))
-            ->merge($archived)->push($current['label'])->unique()->sortDesc()->values();
+        // The days in order, looking a school year up only when a day falls outside the last one found:
+        // one lookup per year, not per day (2.7 s on five years of records, ADR-082).
+        $found = [];
+        $year = null;
+        foreach ($dates->sort()->values() as $d) {
+            if ($year === null || $d < $year['from'] || $d > $year['to']) {
+                $year = $this->years->of($d);
+            }
+            $found[] = $year['label'];
+        }
+        $labels = collect($found)->merge($archived)->push($current['label'])->unique()->sortDesc()->values();
 
         $starts = $this->years->starts();
         $settings = $this->years->settings();

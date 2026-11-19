@@ -185,12 +185,13 @@ final class StudentService
         try {
             $studentId = DB::transaction(function () use ($id, $row, $health, $contacts, $current, $nameChanged, $reason, $userId, $role): int {
                 $now = CarbonImmutable::now();
-                if ($id === null) {
+                $creating = $id === null;
+                if ($creating) {
                     $id = DB::table('students')->insertGetId($row + ['created_by_user_id' => $userId]);
                 } else {
                     DB::table('students')->where('id', $id)->update($row + ($nameChanged ? ['name_correction_reason' => mb_substr($reason, 0, 300)] : []));
                 }
-                $this->writeDetails($id, $health, $contacts, $userId, $now);
+                $this->writeDetails($id, $health, $contacts, $userId, $now, $creating);
                 $saved = $this->find($id);
                 $this->audit->record(new AuditEvent(
                     actorId: (string) $userId, actorRole: $role, action: $current === null ? AuditAction::Create : AuditAction::Update,
@@ -230,6 +231,30 @@ final class StudentService
         return $this->show($id);
     }
 
+    /**
+     * Marks one emergency contact verified or unverified (Module 2: "Mark each contact number as verified/unverified").
+     * `$index` is the contact's place in the list, 0 being the primary.
+     *
+     * @return array<string, mixed>
+     */
+    public function verifyContact(int $id, int $index, bool $verified, int $userId, string $role): array
+    {
+        $this->find($id);
+        $contactId = DB::table('emergency_contacts')->where('student_id', $id)->where('sort_order', $index)->value('id');
+        abort_if($contactId === null, 404);
+        DB::transaction(function () use ($id, $contactId, $verified, $userId, $role): void {
+            $now = CarbonImmutable::now();
+            DB::table('emergency_contacts')->where('id', $contactId)->update(['is_verified' => $verified ? 1 : 0, 'verified_at' => $verified ? $now : null, 'verified_by_user_id' => $verified ? $userId : null]);
+            DB::table('emergency_contact_verifications')->insert(['contact_id' => $contactId, 'result' => $verified ? 'verified' : 'unverified', 'recorded_by_user_id' => $userId, 'recorded_at' => $now]);
+            $this->audit->record(new AuditEvent(
+                actorId: (string) $userId, actorRole: $role, action: AuditAction::Update, targetType: AuditTarget::Student,
+                targetId: (string) $id, targetLabel: null, at: $now, subjectStudentId: (string) $id, summary: $verified ? 'Marked an emergency contact verified.' : 'Marked an emergency contact unverified.',
+            ));
+        });
+
+        return $this->show($id);
+    }
+
     // ---- helpers --------------------------------------------------------------------------
 
     private function find(int $id): StudentRecord
@@ -254,21 +279,27 @@ final class StudentService
         $rows = $query->get()->sort(PersonName::compare(...))->values();
         $ids = $rows->map(fn (object $r): int => (int) Row::int($r, 'id'))->all();
         $detailIds = $withDetails ? $ids : []; // an empty whereIn reads nothing
-        $health = DB::table('student_health_entries')->whereIn('student_id', $detailIds)->orderBy('sort_order')->get();
-        $contacts = DB::table('emergency_contacts')->whereIn('student_id', $detailIds)->orderBy('sort_order')->get();
+        // Grouped once by student: filtering the whole set for each student was O(students × entries),
+        // about 0.5 s of every list read on the load-test school (ADR-082).
+        $health = [];
+        foreach (DB::table('student_health_entries')->whereIn('student_id', $detailIds)->orderBy('sort_order')->get() as $h) {
+            $kind = Row::str($h, 'kind');
+            if ($kind === 'allergy' || $kind === 'condition') {
+                $health[(int) Row::int($h, 'student_id')][$kind][] = (string) Row::str($h, 'label');
+            }
+        }
+        $contacts = [];
+        foreach (DB::table('emergency_contacts')->whereIn('student_id', $detailIds)->orderBy('sort_order')->get() as $c) {
+            $contacts[(int) Row::int($c, 'student_id')][] = [
+                'name' => (string) Row::str($c, 'name'), 'relationship' => Row::str($c, 'relationship') ?? '',
+                'phone' => (string) Row::str($c, 'phone'), 'verified' => Row::str($c, 'is_verified') === '1',
+            ];
+        }
 
         return $rows->mapWithKeys(function (object $r) use ($health, $contacts): array {
             $id = (int) Row::int($r, 'id');
-            $labels = fn (string $kind): array => array_values($health
-                ->filter(fn (object $h): bool => Row::int($h, 'student_id') === $id && Row::str($h, 'kind') === $kind)
-                ->map(fn (object $h): string => (string) Row::str($h, 'label'))->all());
-            $mine = array_values($contacts->filter(fn (object $c): bool => Row::int($c, 'student_id') === $id)
-                ->map(fn (object $c): array => [
-                    'name' => (string) Row::str($c, 'name'), 'relationship' => Row::str($c, 'relationship') ?? '',
-                    'phone' => (string) Row::str($c, 'phone'), 'verified' => Row::str($c, 'is_verified') === '1',
-                ])->all());
 
-            return [$id => StudentRecord::fromRow($r, $labels('allergy'), $labels('condition'), $mine)];
+            return [$id => StudentRecord::fromRow($r, $health[$id]['allergy'] ?? [], $health[$id]['condition'] ?? [], $contacts[$id] ?? [])];
         });
     }
 
@@ -284,7 +315,7 @@ final class StudentService
      * @param  array<string, list<string>>  $health
      * @param  list<array{name: string, relationship: string, phone: string, verified: bool}>  $contacts
      */
-    private function writeDetails(int $id, array $health, array $contacts, int $userId, CarbonImmutable $now): void
+    private function writeDetails(int $id, array $health, array $contacts, int $userId, CarbonImmutable $now, bool $creating): void
     {
         DB::table('student_health_entries')->where('student_id', $id)->delete();
         foreach ($health as $kind => $labels) {
@@ -292,15 +323,39 @@ final class StudentService
                 DB::table('student_health_entries')->insert(['student_id' => $id, 'kind' => $kind, 'label' => $label, 'sort_order' => $i, 'created_by_user_id' => $userId]);
             }
         }
-        // ponytail: contacts are replaced on each save, so a kept "verified" gets a new verified_at.
-        DB::table('emergency_contacts')->where('student_id', $id)->delete();
+        // A contact keeps its row, and so its verification and history, while its number is unchanged.
+        // A new or changed number starts unverified, except on create, where the input says.
+        $existing = DB::table('emergency_contacts')->where('student_id', $id)->get()
+            ->groupBy(fn (object $c): string => self::digits((string) Row::str($c, 'phone')))->map(fn (Collection $g): array => $g->all())->all();
+        DB::table('emergency_contacts')->where('student_id', $id)->update(['is_primary' => 0]);
+        $kept = [];
         foreach ($contacts as $i => $c) {
-            DB::table('emergency_contacts')->insert([
-                'student_id' => $id, 'name' => $c['name'], 'relationship' => $c['relationship'] === '' ? null : $c['relationship'],
+            $fields = [
+                'name' => $c['name'], 'relationship' => $c['relationship'] === '' ? null : $c['relationship'],
                 'phone' => $c['phone'], 'is_primary' => $i === 0 ? 1 : 0, 'sort_order' => $i,
-                'is_verified' => $c['verified'] ? 1 : 0, 'verified_at' => $c['verified'] ? $now : null, 'verified_by_user_id' => $c['verified'] ? $userId : null,
+            ];
+            $key = self::digits($c['phone']);
+            $match = isset($existing[$key]) ? array_shift($existing[$key]) : null;
+            if ($match !== null) {
+                $kept[] = $contactId = (int) Row::int($match, 'id');
+                DB::table('emergency_contacts')->where('id', $contactId)->update($fields);
+
+                continue;
+            }
+            $verified = $creating && $c['verified'];
+            $kept[] = $contactId = DB::table('emergency_contacts')->insertGetId($fields + [
+                'student_id' => $id, 'is_verified' => $verified ? 1 : 0, 'verified_at' => $verified ? $now : null, 'verified_by_user_id' => $verified ? $userId : null,
             ]);
+            if ($verified) {
+                DB::table('emergency_contact_verifications')->insert(['contact_id' => $contactId, 'result' => 'verified', 'recorded_by_user_id' => $userId, 'recorded_at' => $now]);
+            }
         }
+        DB::table('emergency_contacts')->where('student_id', $id)->whereNotIn('id', $kept)->delete();
+    }
+
+    private static function digits(string $phone): string
+    {
+        return (string) preg_replace('/\D/', '', $phone);
     }
 
     private static function birthDate(string $value): ?string
