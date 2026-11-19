@@ -16,17 +16,17 @@ import {
   type DataTableColumn,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { usePageSize, type PageSize } from '../../hooks/usePageSize'
+import { usePagedList } from '../../hooks/usePagedList'
 import { rangeForPreset, type DateRange } from '../../lib/dateRange'
 import { formatDate, formatDateTime } from '../../lib/dates'
 import {
   ADJUSTMENT_REASON_LABELS,
   getMockToday,
   listInventory,
-  listInventoryMovements,
   type InventoryMovementRow,
 } from '../../lib/data'
 import { paths } from '../../routes/paths'
+import { fetchMovementsPage } from './api/inventoryApi'
 
 const TYPE_OPTIONS = [
   { value: '', label: 'All movements' },
@@ -111,23 +111,21 @@ export function InventoryHistoryPage() {
   const [itemId, setItemId] = useState(params.get('item') ?? '')
   const [type, setType] = useState('')
   const [range, setRange] = useState<DateRange>(() => rangeForPreset('all', today))
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = usePageSize()
-  const { data, status, isRefetching, reload } = useAsyncData(
-    `${itemId}|${type}|${range.from}|${range.to}`,
-    async () => {
-      const [items, rows] = await Promise.all([
-        listInventory(),
-        listInventoryMovements({
-          itemId,
-          type: type as InventoryMovementRow['type'] | '',
-          from: range.from,
-          to: range.to,
-        }),
-      ])
-      return { items, rows }
+  // The item filter's choices, read once; the movements come one page at a time (ADR-082).
+  const { data: items = [] } = useAsyncData('usage-history-items', () => listInventory())
+  const list = usePagedList({
+    key: 'usage-history',
+    filters: {
+      itemId,
+      type: type as InventoryMovementRow['type'] | '',
+      from: range.from,
+      to: range.to,
     },
-  )
+    sortKeys: ['timestamp'] as const,
+    defaultSort: { key: 'timestamp', direction: 'descending' },
+    load: fetchMovementsPage,
+  })
+  const { page: data, status, isRefetching, reload } = list
   const back = <BackButton fallback={paths.inventory} />
   const shell = 'mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8'
   if (status === 'error')
@@ -150,14 +148,6 @@ export function InventoryHistoryPage() {
         </Card>
       </div>
     )
-  const pageCount = Math.max(1, Math.ceil(data.rows.length / pageSize))
-  const currentPage = Math.min(page, pageCount)
-  const change =
-    <T,>(setter: (value: T) => void) =>
-    (value: T) => {
-      setter(value)
-      setPage(1)
-    }
   return (
     <div className={shell}>
       {back}
@@ -173,7 +163,7 @@ export function InventoryHistoryPage() {
         <CardHeader
           titleId="usage-history-title"
           title="Stock movements"
-          description={`${data.rows.length} movement${data.rows.length === 1 ? '' : 's'} shown`}
+          description={`${data.total} movement${data.total === 1 ? '' : 's'} shown`}
           icon={<Icon name="clipboardList" />}
         />
         <CardBody className="flex flex-col gap-4">
@@ -184,20 +174,20 @@ export function InventoryHistoryPage() {
               value={itemId}
               options={[
                 { value: '', label: 'All items' },
-                ...data.items.map((item) => ({ value: item.id, label: item.name })),
+                ...items.map((item) => ({ value: item.id, label: item.name })),
               ]}
-              onChange={change(setItemId)}
+              onChange={setItemId}
             />
             <Select
               className="w-44"
               label="Movement"
               value={type}
               options={TYPE_OPTIONS}
-              onChange={change(setType)}
+              onChange={setType}
             />
             <DateRangePicker
               value={range}
-              onChange={change(setRange)}
+              onChange={setRange}
               today={today}
               presets={['all', 'today', 'last7', 'thisMonth', 'custom']}
               presetLabels={{ last7: 'This week' }}
@@ -205,24 +195,24 @@ export function InventoryHistoryPage() {
             />
           </div>
           <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>
-            {data.rows.length ? (
+            {data.total ? (
               <>
                 <DataTable
                   caption="Stock movements"
                   columns={columns}
-                  rows={data.rows.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                  rows={data.rows}
                   rowKey={(row) => row.id}
                   fixedLayout
                   minTableWidth={HISTORY_TABLE_MIN_WIDTH}
                 />
                 <Pagination
-                  page={currentPage}
-                  pageCount={pageCount}
-                  total={data.rows.length}
-                  pageSize={pageSize}
-                  onPageSizeChange={change<PageSize>(setPageSize)}
+                  page={list.pageNumber}
+                  pageCount={data.lastPage}
+                  total={data.total}
+                  pageSize={list.pageSize}
+                  onPageSizeChange={list.setPageSize}
                   itemLabel="movements"
-                  onPageChange={setPage}
+                  onPageChange={list.setPage}
                 />
               </>
             ) : (

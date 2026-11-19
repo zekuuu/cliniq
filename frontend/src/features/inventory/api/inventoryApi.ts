@@ -7,6 +7,7 @@ import {
   getPatient,
   getVisitComplaintTypes,
   listInventory,
+  listInventoryMovements,
   listVisits,
   restockInventoryItem as restockInLayer,
   saveInventoryItem as saveInLayer,
@@ -14,18 +15,23 @@ import {
   type DispenseResult,
   type InventoryItemView,
   type InventoryHistoryRow,
+  type InventoryMovementRow,
   type SessionUser,
   type StockAdjustmentInput,
 } from '../../../lib/data'
 import type {
   InventoryCategory,
   InventoryItem,
+  ISODate,
   ItemBrand,
   PatientRef,
   PatientSearchResult,
   Visit,
 } from '../../../types/entities'
 import type { Patient } from '../../../lib/patients'
+import { requestPage } from '../../../lib/api/client'
+import { routed } from '../../../lib/api/routed'
+import { pageInMemory, toPage, type Page, type PageRequest } from '../../../lib/paging'
 
 /**
  * Inventory (#28–#30). Low-stock, nearing-expiration, expired, and below-zero states are computed
@@ -195,3 +201,45 @@ export async function findDispensePatient(
 export function searchDispensePatients(query: string): Promise<PatientSearchResult[]> {
   return searchPatients(query)
 }
+
+/** Inventory Usage History's filters (ADR-082). */
+export interface MovementFilters {
+  itemId: string
+  type: InventoryMovementRow['type'] | ''
+  from: ISODate
+  to: ISODate
+}
+
+async function mockMovementsPage(
+  request: PageRequest<MovementFilters, 'timestamp'>,
+): Promise<Page<InventoryMovementRow>> {
+  // Newest first, as the list arrives; the sort is stable, so equal times keep their order.
+  return pageInMemory(
+    await listInventoryMovements(request.filters),
+    request,
+    (row) => row.timestamp,
+  )
+}
+
+/** `GET /api/inventory/movements` with `page`: one page, filtered in SQL (ADR-082). */
+async function httpMovementsPage(
+  request: PageRequest<MovementFilters, 'timestamp'>,
+  signal?: AbortSignal,
+): Promise<Page<InventoryMovementRow>> {
+  const { filters } = request
+  const result = await requestPage<InventoryMovementRow[]>('/inventory/movements', {
+    query: {
+      from: filters.from,
+      to: filters.to,
+      itemId: filters.itemId,
+      type: filters.type,
+      page: request.page,
+      perPage: request.perPage,
+    },
+    signal,
+  })
+  return toPage(result, request)
+}
+
+/** One page of Inventory Usage History (ADR-082). */
+export const fetchMovementsPage = routed('INVENTORY', mockMovementsPage, httpMovementsPage)
