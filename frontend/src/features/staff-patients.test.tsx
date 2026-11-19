@@ -54,7 +54,7 @@ describe('the patient picker', () => {
     expect(screen.queryByText('Prepare an excuse letter')).not.toBeInTheDocument()
     expect(screen.getByText('This staff member needs a follow-up')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
-    expect(await screen.findByText(/Visit saved/)).toBeInTheDocument()
+    expect(await screen.findByText(/Visit recorded/)).toBeInTheDocument()
     const saved = db().visits.at(-1)!
     expect(saved).toMatchObject({
       studentId: null,

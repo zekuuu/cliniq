@@ -56,7 +56,7 @@ describe('Visit Details', () => {
     await user.click(screen.getByRole('button', { name: /^Symptom/ }))
     await user.click(screen.getByRole('option', { name: 'Headache' }))
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
-    expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
+    expect(await screen.findByText('Visit updated')).toBeInTheDocument()
     expect(screen.getByText('No treatment recorded.')).toBeInTheDocument()
     expect((await getVisit('visit-0157')).treatment).toBe('')
   })
@@ -71,7 +71,7 @@ describe('Visit Details', () => {
     await user.click(screen.getByRole('option', { name: 'Headache' }))
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
-    expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
+    expect(await screen.findByText('Visit updated')).toBeInTheDocument()
     expect((await getVisit('visit-0158')).complaint).toBe('Headache')
   })
 
@@ -91,7 +91,7 @@ describe('Visit Details', () => {
     await user.type(otherComplaint, 'Noise-related discomfort')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
-    expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
+    expect(await screen.findByText('Visit updated')).toBeInTheDocument()
     expect((await getVisit('visit-0158')).complaint).toBe('Noise-related discomfort')
   })
 
@@ -105,7 +105,7 @@ describe('Visit Details', () => {
     await user.type(screen.getByLabelText(/treatment/i), 'Observed in clinic and released.')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
-    expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
+    expect(await screen.findByText('Visit updated')).toBeInTheDocument()
     expect(screen.getByText('Observed in clinic and released.')).toBeInTheDocument()
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['update'])
   })
@@ -191,7 +191,7 @@ describe('Visit Details: excuse letter and disposition fields', () => {
     await user.click(screen.getByLabelText(/prepare an excuse letter/i))
     await user.type(screen.getByLabelText(/referred to/i), 'Rural Health Unit')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
-    expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
+    expect(await screen.findByText('Visit updated')).toBeInTheDocument()
     expect(await getVisit('visit-0151')).toMatchObject({
       disposition: 'referred_to_hospital',
       referredTo: 'Rural Health Unit',
@@ -213,7 +213,7 @@ describe('Visit Details: excuse letter and disposition fields', () => {
     expect(screen.getByText(/doesn't change or remove it/i)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
-    expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
+    expect(await screen.findByText('Visit updated')).toBeInTheDocument()
     expect(await getExcuseLetterApproval('visit-0141')).toEqual(before)
     expect((await getVisit('visit-0141')).excuseLetterDraft).toBeNull()
     expect(within(letterCard()).getByText('Approved')).toBeInTheDocument()

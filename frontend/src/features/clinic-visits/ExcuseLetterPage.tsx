@@ -1,4 +1,6 @@
 import { Lrn } from '../../components/ui/MaskedLrn'
+import { notify } from '../../lib/notify'
+import { scrollToTop } from '../../lib/scrollToTop'
 import { useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import {
@@ -283,13 +285,17 @@ function ExcuseLetterEditor({
   async function replace() {
     if (!replaceReason.trim()) {
       setReplaceError('Give the reason for the replacement.')
+      notify.checkFields()
       return
     }
     setReplaceSaving(true)
     try {
       await issueReplacement(context.visit.id, replaceReason)
       setReplacing(false)
+      notify.success('Replacement letter started', { id: 'letter-replace' })
       onReplaced()
+    } catch (cause) {
+      notify.apiError(cause, 'The replacement was not started. Please try again.')
     } finally {
       setReplaceSaving(false)
     }
@@ -307,6 +313,10 @@ function ExcuseLetterEditor({
         stayHomeNote: stayHome.note,
       })
       setApproved(true)
+      notify.success('Excuse letter approved and stored', { id: 'letter-approve' })
+      scrollToTop()
+    } catch (cause) {
+      notify.apiError(cause, 'The letter was not approved. Please try again.')
     } finally {
       setSaving(false)
     }

@@ -101,7 +101,7 @@ describe('New Visit', () => {
     await selectComplaint(user, 'Headache')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
-    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
+    expect(await screen.findByText(/visit recorded/i)).toBeInTheDocument()
     expect(await getSavedVisit()).toMatchObject({
       complaint: 'Headache',
       treatment: '',
@@ -122,8 +122,8 @@ describe('New Visit', () => {
     await user.type(screen.getByLabelText(/reason/i), 'Recheck symptoms tomorrow')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
-    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
-    expect(screen.getByText(/pending follow-up was created/i)).toBeInTheDocument()
+    expect(await screen.findByText(/visit recorded/i)).toBeInTheDocument()
+    expect(screen.getByText(/follow-up created/i)).toBeInTheDocument()
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['submit', 'create'])
   })
 
@@ -145,7 +145,7 @@ describe('New Visit', () => {
     await user.type(screen.getByLabelText(/treatment/i), 'Pinched nose, leaned forward.')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
-    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
+    expect(await screen.findByText(/visit recorded/i)).toBeInTheDocument()
     expect((await getSavedVisit()).complaint).toBe('Nose bleed')
   })
 
@@ -178,7 +178,7 @@ describe('New Visit', () => {
     await user.type(screen.getByLabelText(/treatment/i), 'Rested.')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
-    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
+    expect(await screen.findByText(/visit recorded/i)).toBeInTheDocument()
     expect((await getSavedVisit()).complaint).toBe('Headache')
   })
 })
@@ -311,7 +311,7 @@ describe('New Visit: disposition-specific fields', () => {
     // Hidden fields aren't validated: back to Returned to class, the visit saves with no letter.
     await user.click(screen.getByRole('radio', { name: 'Returned to class' }))
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
-    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
+    expect(await screen.findByText(/visit recorded/i)).toBeInTheDocument()
     expect(await getSavedVisit()).toMatchObject({ excuseLetterDraft: null, referredTo: null })
   })
 
@@ -324,7 +324,7 @@ describe('New Visit: disposition-specific fields', () => {
     await user.type(screen.getByLabelText('Note for the teacher'), 'Excuse from PE this week')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
-    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
+    expect(await screen.findByText(/visit recorded/i)).toBeInTheDocument()
     const visit = await getSavedVisit()
     expect(visit).toMatchObject({
       disposition: 'referred_to_hospital',
@@ -336,10 +336,8 @@ describe('New Visit: disposition-specific fields', () => {
       },
     })
     expect(await getExcuseLetterApproval(visit.id)).toBeNull()
-    expect(screen.getByRole('link', { name: 'Review excuse letter' })).toHaveAttribute(
-      'href',
-      `/visits/${visit.id}/excuse-letter`,
-    )
+    // The success toast offers the letter as its action (ADR-083).
+    expect(screen.getByRole('button', { name: 'Review letter' })).toBeInTheDocument()
   })
 
   it('stores no draft when "Prepare an excuse letter" is unticked', async () => {
@@ -349,9 +347,9 @@ describe('New Visit: disposition-specific fields', () => {
     expect(screen.queryByRole('button', { name: /^Excused until/ })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
-    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
+    expect(await screen.findByText(/visit recorded/i)).toBeInTheDocument()
     expect((await getSavedVisit()).excuseLetterDraft).toBeNull()
-    expect(screen.queryByRole('link', { name: 'Review excuse letter' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Review letter' })).not.toBeInTheDocument()
   })
 
   it('uses the last successfully saved disposition for the next visit in this session', async () => {
@@ -360,7 +358,7 @@ describe('New Visit: disposition-specific fields', () => {
     await user.click(screen.getByLabelText(/prepare an excuse letter/i))
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
-    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
+    expect(await screen.findByText(/visit recorded/i)).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: 'Sent home' })).toHaveAttribute('aria-checked', 'true')
   })
 })

@@ -84,7 +84,7 @@ describe('Visit logbook fields ("Show more fields")', () => {
     await user.clear(screen.getByLabelText('Parent or guardian'))
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
-    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
+    expect(await screen.findByText(/visit recorded/i)).toBeInTheDocument()
     expect(await getSavedVisit()).toMatchObject({
       temperatureC: null,
       timeOut: null,
@@ -111,7 +111,7 @@ describe('Visit logbook fields ("Show more fields")', () => {
     expect(moreButton()).toHaveAccessibleName('Show more fields (5 filled)')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
-    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
+    expect(await screen.findByText(/visit recorded/i)).toBeInTheDocument()
     expect(await getSavedVisit()).toMatchObject({
       temperatureC: 37.8,
       timeOut: '23:59',
@@ -155,7 +155,7 @@ describe('Visit logbook fields ("Show more fields")', () => {
     ).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
-    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
+    expect(await screen.findByText(/visit recorded/i)).toBeInTheDocument()
     expect((await getSavedVisit()).temperatureC).toBe(38.1)
   })
 
@@ -183,7 +183,7 @@ describe('Visit logbook fields ("Show more fields")', () => {
     setTimeOut('23:59')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
-    expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
+    expect(await screen.findByText('Visit updated')).toBeInTheDocument()
     expect((await getVisit('visit-0158')).timeOut).toBe('23:59')
     expect(screen.getByRole('heading', { name: 'Time out' })).toBeInTheDocument()
     // The date shows with the time out (Sir Rey, October 25, 2026).

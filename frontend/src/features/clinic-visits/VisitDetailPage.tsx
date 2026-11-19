@@ -40,6 +40,8 @@ import {
   type SessionUser,
 } from '../../lib/data'
 import { paths } from '../../routes/paths'
+import { notify } from '../../lib/notify'
+import { scrollToTop } from '../../lib/scrollToTop'
 import type { Disposition } from '../../types/entities'
 import { ComplaintField } from './ComplaintField'
 import { ExtraComplaintsField } from './ExtraComplaintsField'
@@ -276,7 +278,6 @@ function VisitDetailEditor({
   const [lines, setLines] = useState<ItemLineDraft[]>(() => draftsFrom(initialVisit.itemsGiven))
   const [errors, setErrors] = useState<Errors>({})
   const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState('')
   /** Set after a successful save; lists any items the edit took below zero. */
   const [saved, setSaved] = useState<null | { belowZero: string[] }>(null)
   const invalidRef = useRef<HTMLFormElement>(null)
@@ -309,6 +310,10 @@ function VisitDetailEditor({
       setVisit(await markEnteredInError(visit.id, errorReason))
       setMarkingError(false)
       setSaved(null)
+      notify.success('Visit marked as entered in error')
+      scrollToTop()
+    } catch (cause) {
+      notify.apiError(cause, 'The visit was not marked. Please try again.')
     } finally {
       setMarkingSaving(false)
     }
@@ -371,7 +376,6 @@ function VisitDetailEditor({
     if (Object.keys(nextErrors).length) return
     setSaved(null)
     setSaving(true)
-    setSaveError('')
     try {
       const { visit: updated, belowZero } = await updateVisitDetail(
         visit,
@@ -389,10 +393,22 @@ function VisitDetailEditor({
       setLines(draftsFrom(updated.itemsGiven))
       setEditing(false)
       setSaved({ belowZero })
+      // ADR-083: the form shows what was saved, from the top.
+      notify.success('Visit updated', { id: 'visit-update' })
+      if (belowZero.length)
+        notify.warning('Some stock is now below zero. Recount and restock in Inventory.', {
+          id: 'visit-below-zero',
+        })
+      scrollToTop()
     } catch (caught) {
-      // The data layer rejected a line; nothing was saved and stock is unchanged.
-      if (!(caught instanceof StockRuleError)) throw caught
-      setSaveError(`${caught.message} Nothing was saved.`)
+      // The data layer rejected a line; nothing was saved and stock is unchanged. The reason names
+      // the item, so it stays beside the items, not in the toast (ADR-083 privacy).
+      if (!(caught instanceof StockRuleError)) {
+        notify.apiError(caught, 'The visit was not saved. Please try again.')
+        return
+      }
+      setErrors((current) => ({ ...current, itemsGiven: `${caught.message} Nothing was saved.` }))
+      invalid.report(1)
     } finally {
       setSaving(false)
     }
@@ -408,7 +424,6 @@ function VisitDetailEditor({
     setValues(valuesFromVisit(visit))
     setLines(draftsFrom(visit.itemsGiven))
     setErrors({})
-    setSaveError('')
     setEditing(false)
   }
 
@@ -499,29 +514,6 @@ function VisitDetailEditor({
           >
             Open the incident
           </Link>
-        </div>
-      )}
-
-      {saved && (
-        <div
-          role="status"
-          className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary"
-        >
-          Visit updated.
-          {saved.belowZero.length > 0 && (
-            <span className="mt-1 block text-warning-text">
-              Now below zero: {saved.belowZero.join(', ')}. Recount and restock.
-            </span>
-          )}
-        </div>
-      )}
-
-      {saveError && (
-        <div
-          role="alert"
-          className="rounded-md border border-error bg-error/10 px-4 py-3 text-sm font-semibold text-text-primary"
-        >
-          {saveError}
         </div>
       )}
 

@@ -65,7 +65,9 @@ describe('New Visit: medicines and supplies given', () => {
     expect(expiry).toHaveClass('block', 'text-warning-text')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
 
-    expect(await screen.findByText(/3 items were taken from inventory/)).toBeInTheDocument()
+    expect(await screen.findByText('Visit recorded')).toBeInTheDocument()
+    // A count in the toast, never a medicine's name.
+    expect(screen.getByText(/3 items taken from stock/)).toBeInTheDocument()
     expect(await stock('item-0001')).toBe(10)
     expect(await stock('item-0011')).toBe(39)
   })
@@ -110,7 +112,10 @@ describe('New Visit: medicines and supplies given', () => {
     await user.type(quantity, '15')
     expect(screen.getByText(/Only 12 tablets in stock/)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
-    expect(await screen.findByText(/Now below zero: Paracetamol 500mg/)).toBeInTheDocument()
+    // A warning toast without the medicine's name (ADR-083 privacy).
+    expect(
+      await screen.findByText('Some stock is now below zero. Recount and restock in Inventory.'),
+    ).toBeInTheDocument()
     expect(await stock('item-0001')).toBe(-3)
   })
 
@@ -139,7 +144,7 @@ describe('Visit Detail: medicines and supplies given', () => {
     await user.click(screen.getByRole('button', { name: 'Decrease Gauze Pads' }))
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
-    expect(await screen.findByText('Visit updated.')).toBeInTheDocument()
+    expect(await screen.findByText('Visit updated')).toBeInTheDocument()
     expect(screen.getByText('Gauze Pads × 1 pieces')).toBeInTheDocument()
     expect(await stock('item-0011')).toBe(41)
   })

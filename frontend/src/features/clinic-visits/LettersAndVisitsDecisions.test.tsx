@@ -84,7 +84,7 @@ describe('Letters and visits (ADR-049)', () => {
     await user.click(screen.getByRole('radio', { name: 'Sent home' }))
     await user.click(screen.getByRole('button', { name: 'Today only' }))
     await user.click(screen.getByRole('button', { name: 'Save and approve now' }))
-    expect(await screen.findByText(/excuse letter was approved and stored/i)).toBeInTheDocument()
+    expect(await screen.findByText(/letter approved and stored/i)).toBeInTheDocument()
     const approveEntry = getRecordedAuditEntries().findLast((e) => e.actionType === 'approve')
     expect(approveEntry?.targetRecord?.type).toBe('excuse-letter')
 
@@ -188,7 +188,7 @@ describe('Letters and visits (ADR-049)', () => {
     await user.type(screen.getByLabelText('Relationship'), 'Guardian')
     await user.click(screen.getByLabelText(/prepare an excuse letter/i))
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
-    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
+    expect(await screen.findByText(/visit recorded/i)).toBeInTheDocument()
     const entry = getRecordedAuditEntries().findLast(
       (e) => e.actionType === 'submit' && e.targetRecord?.type === 'visit',
     )
@@ -223,7 +223,7 @@ describe('Letters and visits (ADR-049)', () => {
     ).toBe(false)
     await user.type(screen.getByLabelText(/^Specify who/), 'Neighbour')
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
-    expect(await screen.findByText(/visit saved/i)).toBeInTheDocument()
+    expect(await screen.findByText(/visit recorded/i)).toBeInTheDocument()
     const entry = getRecordedAuditEntries().findLast(
       (e) => e.actionType === 'submit' && e.targetRecord?.type === 'visit',
     )

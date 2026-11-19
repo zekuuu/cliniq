@@ -19,6 +19,8 @@ import {
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { paths } from '../../routes/paths'
+import { notify } from '../../lib/notify'
+import { scrollToTop } from '../../lib/scrollToTop'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
 import { getMockSessionUser, type SessionUser } from '../../lib/data'
@@ -115,17 +117,20 @@ function validate(values: PeReferralValues): Errors {
   return errors
 }
 
+/** What a new referral looks like; a save brings the form back to it (ADR-083). */
+const EMPTY_REFERRAL: PeReferralValues = {
+  referredBy: '',
+  activity: '',
+  injurySummary: '',
+  clinicalAssessment: '',
+  treatment: '',
+  disposition: 'returned_to_class',
+}
+
 export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser }) {
   const { data, status, reload } = useAsyncData('pe-referral', fetchPeReferralContext)
   const identified = useIdentifiedStudent(null, findReferralStudent)
-  const [values, setValues] = useState<PeReferralValues>({
-    referredBy: '',
-    activity: '',
-    injurySummary: '',
-    clinicalAssessment: '',
-    treatment: '',
-    disposition: 'returned_to_class',
-  })
+  const [values, setValues] = useState<PeReferralValues>(EMPTY_REFERRAL)
   const [errors, setErrors] = useState<Errors>({})
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -173,6 +178,18 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
       if (!student) return
       await submitPeReferral(values, student, viewer)
       setSaved(true)
+      notify.success(
+        needsEmergency
+          ? 'PE/Sports referral saved. Emergency Response escalation was queued.'
+          : 'PE/Sports referral saved',
+        { id: 'pe-referral' },
+      )
+      setValues(EMPTY_REFERRAL)
+      setErrors({})
+      identified.reset()
+      scrollToTop()
+    } catch (cause) {
+      notify.apiError(cause, 'The referral was not saved. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -233,16 +250,6 @@ export function PeSportsReferralPage({ viewer = getMockSessionUser() }: { viewer
           </div>
         </div>
       </Card>
-
-      {saved && (
-        <div
-          role="status"
-          className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary"
-        >
-          PE/Sports referral saved.
-          {needsEmergency ? ' Emergency Response escalation was queued.' : ''}
-        </div>
-      )}
 
       <form ref={invalidRef} noValidate onSubmit={onSubmit}>
         <p role="status" className="sr-only">

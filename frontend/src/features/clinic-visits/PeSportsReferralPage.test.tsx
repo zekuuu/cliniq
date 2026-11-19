@@ -61,9 +61,14 @@ describe('PE/Sports Injury Referral', () => {
     await user.type(screen.getByLabelText(/treatment or action taken/i), 'Cold compress and rest.')
     await user.click(screen.getByRole('button', { name: 'Save Referral' }))
 
-    expect(await screen.findByText('PE/Sports referral saved.')).toBeInTheDocument()
+    expect(await screen.findByText('PE/Sports referral saved')).toBeInTheDocument()
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['submit'])
     expect(db().frontendOnly.peReferrals.at(-1)).toMatchObject({ referredBy: 'Coach Reyes' })
+    // ADR-083: a saved referral leaves a new, empty form, student included.
+    expect(screen.getByLabelText(/referred by/i)).toHaveValue('')
+    expect(screen.getByLabelText(/injury summary/i)).toHaveValue('')
+    expect(screen.getByLabelText(/treatment or action taken/i)).toHaveValue('')
+    expect(screen.queryByRole('button', { name: /change student/i })).not.toBeInTheDocument()
   })
 
   it('queues Emergency Response escalation when hospital referral is selected', async () => {
@@ -107,7 +112,7 @@ describe('PE/Sports Injury Referral', () => {
     await user.click(await screen.findByRole('option', { name: /LRN ending in 0001/ }))
     expect(await screen.findByRole('button', { name: /change student/i })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save Referral' }))
-    expect(await screen.findByText('PE/Sports referral saved.')).toBeInTheDocument()
+    expect(await screen.findByText('PE/Sports referral saved')).toBeInTheDocument()
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['submit'])
   })
 })

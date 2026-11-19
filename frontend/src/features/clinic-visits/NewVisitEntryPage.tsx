@@ -7,11 +7,10 @@ import {
   type FormEvent,
   type ReactNode,
 } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import {
   BackButton,
   Button,
-  buttonClassName,
   Card,
   CardBody,
   CardHeader,
@@ -48,6 +47,8 @@ import {
   type SessionUser,
 } from '../../lib/data'
 import { paths } from '../../routes/paths'
+import { notify } from '../../lib/notify'
+import { scrollToTop } from '../../lib/scrollToTop'
 import type { Disposition, PatientRef } from '../../types/entities'
 import {
   fetchComplaintSuggestions,
@@ -294,7 +295,6 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
   const [freshSuggestions, setFreshSuggestions] = useState<string[] | null>(null)
   const [errors, setErrors] = useState<Errors>({})
   const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState('')
   /** Set after a successful save: whether it created a follow-up, what it took from inventory, and its letter draft. */
   const [saved, setSaved] = useState<null | {
     visitId: string
@@ -428,7 +428,6 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
     if (Object.keys(nextErrors).length || !studentOk) return
     setSaved(null)
     setSaving(true)
-    setSaveError('')
     try {
       const patient = await identified.resolve()
       if (!patient) return
@@ -499,10 +498,44 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
       setErrors({})
       identified.reset()
       saveAndNewRef.current = false
+      // ADR-083: the result as a toast, then the clean form from the top. No health detail in it.
+      // One short line of fragments, so the toast stays small: a count, never a medicine's name.
+      const given = lines.length
+      const details = [
+        given ? `${given} ${given === 1 ? 'item' : 'items'} taken from stock` : '',
+        needsFollowUp ? 'Follow-up created' : '',
+        approveNow
+          ? 'Letter approved and stored'
+          : result.visit.excuseLetterDraft !== null
+            ? 'Letter draft saved'
+            : '',
+      ].filter(Boolean)
+      const hasLetter = approveNow || result.visit.excuseLetterDraft !== null
+      notify.success('Visit recorded', {
+        id: 'visit-create',
+        description: details.join(' · ') || undefined,
+        action: hasLetter
+          ? {
+              label: approveNow ? 'Open letter' : 'Review letter',
+              // Replaces the submitted form in history, so Back from the letter can't reopen it.
+              onClick: () => navigate(paths.excuseLetter(result.visit.id), { replace: true }),
+            }
+          : undefined,
+      })
+      if (result.belowZero.length)
+        notify.warning('Some stock is now below zero. Recount and restock in Inventory.', {
+          id: 'visit-below-zero',
+        })
+      scrollToTop()
     } catch (caught) {
       // The data layer rejected a line (an item expired since the form loaded, say); nothing was saved.
-      if (!(caught instanceof StockRuleError)) throw caught
-      setSaveError(`${caught.message} Nothing was saved.`)
+      // The reason names the item, so it stays beside the items, not in the toast (ADR-083 privacy).
+      if (!(caught instanceof StockRuleError)) {
+        notify.apiError(caught, 'The visit was not saved. Please try again.')
+        return
+      }
+      setErrors((current) => ({ ...current, itemsGiven: `${caught.message} Nothing was saved.` }))
+      invalid.report(1)
       setFreshItems(await fetchVisitItems())
     } finally {
       setSaving(false)
@@ -570,57 +603,6 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
           </div>
         </div>
       </Card>
-
-      {saved && (
-        <div
-          role="status"
-          className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary"
-        >
-          Visit saved.{' '}
-          {saved.given > 0 &&
-            `${saved.given} ${saved.given === 1 ? 'item was' : 'items were'} taken from inventory. `}
-          {saved.withFollowUp ? 'A pending follow-up was created.' : 'No follow-up was created.'}
-          {saved.belowZero.length > 0 && (
-            <span className="mt-1 block text-warning-text">
-              Now below zero: {saved.belowZero.join(', ')}. Recount and restock.
-            </span>
-          )}
-          {saved.letterApproved && (
-            <span className="mt-2 flex flex-wrap items-center gap-2 font-normal">
-              The excuse letter was approved and stored in the student&apos;s record.
-              <Link
-                to={paths.excuseLetter(saved.visitId)}
-                replace
-                className={buttonClassName({ size: 'sm' })}
-              >
-                Open excuse letter
-              </Link>
-            </span>
-          )}
-          {saved.letterPrepared && (
-            <span className="mt-2 flex flex-wrap items-center gap-2 font-normal">
-              An excuse letter draft was saved with the visit. It isn't approved yet.
-              {/* Replaces the submitted form in history, so Back from the letter can't reopen it. */}
-              <Link
-                to={paths.excuseLetter(saved.visitId)}
-                replace
-                className={buttonClassName({ size: 'sm' })}
-              >
-                Review excuse letter
-              </Link>
-            </span>
-          )}
-        </div>
-      )}
-
-      {saveError && (
-        <div
-          role="alert"
-          className="rounded-md border border-error bg-error/10 px-4 py-3 text-sm font-semibold text-text-primary"
-        >
-          {saveError}
-        </div>
-      )}
 
       <form ref={formRef} onSubmit={onSubmit} noValidate>
         <p role="status" className="sr-only">
