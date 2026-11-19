@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
-import { createBrowserRouter, RouterProvider, useNavigate } from 'react-router'
+import { createBrowserRouter, RouterProvider, ScrollRestoration, useNavigate } from 'react-router'
 import { getAuthenticatedUser, startMockSession, type SessionUser } from './lib/data'
 import { AppRoutes } from './routes/AppRoutes'
 import { KeyboardShortcuts } from './components/KeyboardShortcuts'
+import { Toaster } from './components/ui/Toaster'
+// TEMPORARY: the dev-only toast test buttons (remove with the file).
+import { ToastPreview } from './components/ToastPreview'
 import { paths } from './routes/paths'
 import { ACCOUNT_CHANGED_EVENT } from './lib/accountEvents'
 import { DevDataMode } from './lib/api/DevDataMode'
@@ -90,6 +93,10 @@ function AppContent() {
       />
       <KeyboardShortcuts />
       <DevDataMode />
+      {/* A new screen starts at the top; Back returns to where the list was (ADR-083). */}
+      <ScrollRestoration />
+      <Toaster />
+      <ToastPreview />
     </>
   )
 }
