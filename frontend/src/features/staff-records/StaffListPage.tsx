@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { DRILL_THROUGH_STATE } from '../../hooks/useGoBack'
-import { rowsInNewestYear } from '../archive/newestArchivedYear'
+import { fetchArchiveCount } from '../archive/archiveCount'
 import { Link } from 'react-router'
 import {
   BackButton,
@@ -24,12 +24,7 @@ import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { paths } from '../../routes/paths'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import type { Personnel } from '../../types/entities'
-import {
-  getArchive,
-  getMockSessionUser,
-  missingStaffFields,
-  type SessionUser,
-} from '../../lib/data'
+import { getMockSessionUser, missingStaffFields, type SessionUser } from '../../lib/data'
 import { fetchStaffIncompleteRecords, fetchStaffList, fetchStaffTypes } from './api/staffApi'
 
 function StaffListSkeleton({ back }: { back: ReactNode }) {
@@ -163,7 +158,10 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
   // The button counts the open rows on the staff Incomplete Records page.
   const queue = useAsyncData('staff-incomplete-records', fetchStaffIncompleteRecords)
   // The Archive page's door from here too, as on the Student List (professor's consultation, November 6, 2026).
-  const archive = useAsyncData(`archive-count|${viewer.role}`, () => getArchive(viewer))
+  // Only the Archive button's count is read, not the whole Archive (ADR-082).
+  const archive = useAsyncData(`staff-archive-count|${viewer.role}`, () =>
+    fetchArchiveCount(viewer, 'staff'),
+  )
   const incompleteCount = queue.data?.filter((record) => record.status === 'open').length ?? 0
 
   const back = <BackButton fallback={paths.dashboard} drillThroughOnly />
@@ -292,7 +290,7 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
               state={{ ...DRILL_THROUGH_STATE, section: 'staff' }}
             >
               <Icon name="archive" />
-              Archive{archive.data ? ` (${rowsInNewestYear(archive.data.staff).length})` : ''}
+              Archive{archive.data !== undefined ? ` (${archive.data})` : ''}
             </Link>
             {/* ADR-067: the staff Incomplete Records page, as the Student List's button opens the student queue. */}
             <Link className={buttonClassName({ variant: 'secondary' })} to={paths.staffIncomplete}>

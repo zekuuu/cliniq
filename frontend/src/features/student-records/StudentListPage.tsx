@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { DRILL_THROUGH_STATE } from '../../hooks/useGoBack'
-import { rowsInNewestYear } from '../archive/newestArchivedYear'
+import { fetchArchiveCount } from '../archive/archiveCount'
 import { Link, useLocation, useSearchParams } from 'react-router'
 import {
   BackButton,
@@ -20,12 +20,19 @@ import {
   type DataTableColumn,
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { usePageSize, type PageSize } from '../../hooks/usePageSize'
+import { usePagedList } from '../../hooks/usePagedList'
+import { STUDENT_SEARCH_MIN_LENGTH } from '../../lib/lrn'
 import { paths } from '../../routes/paths'
-import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
+import { toggleTableSort } from '../../lib/tableSort'
 import type { StudentListRow } from '../../types/entities'
-import { getArchive, getMockSessionUser, type SessionUser } from '../../lib/data'
-import { fetchGradeLevels, fetchIncompleteCount, fetchStudentList } from './api/studentListApi'
+import { getMockSessionUser, type SessionUser } from '../../lib/data'
+import {
+  fetchGradeLevels,
+  fetchIncompleteCount,
+  fetchStudentPage,
+  STUDENT_SORT_KEYS,
+  type StudentSortKey,
+} from './api/studentListApi'
 import { MaskedLrn } from '../../components/ui/MaskedLrn'
 
 function StudentListSkeleton({ back }: { back: ReactNode }) {
@@ -75,8 +82,6 @@ const recordStatusOptions = [
   { value: 'incomplete', label: 'Incomplete' },
 ]
 
-type StudentSortKey = 'name' | 'number' | 'grade' | 'status'
-
 const baseColumns: Array<DataTableColumn<StudentListRow>> = [
   {
     key: 'name',
@@ -120,12 +125,13 @@ const baseColumns: Array<DataTableColumn<StudentListRow>> = [
     width: '15%',
     align: 'right',
     cell: (student) => (
-      <a
-        href={paths.studentProfile(student.id)}
+      // A router link: a plain href reloaded the whole app and its shell reads (ADR-082).
+      <Link
+        to={paths.studentProfile(student.id)}
         className="inline-flex min-h-8 cursor-pointer items-center justify-center rounded-md border border-border px-2.5 text-xs font-semibold text-brand-green-dark transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green motion-reduce:transition-none"
       >
         View Profile
-      </a>
+      </Link>
     ),
   },
 ]
@@ -136,7 +142,6 @@ const baseColumns: Array<DataTableColumn<StudentListRow>> = [
  */
 export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser } = {}) {
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const [search, setSearch] = useState('')
   const [gradeLevel, setGradeLevel] = useState('')
   const [includeArchived, setIncludeArchived] = useState(false)
   // `?record=incomplete` is read only on arrival; the Dashboard chip now opens the Incomplete Records Queue instead.
@@ -145,27 +150,25 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
     const value = searchParams.get('record')
     return value === 'complete' || value === 'incomplete' ? value : ''
   })
-  const [sort, setSort] = useState<TableSortState<StudentSortKey>>({
-    key: 'name',
-    direction: 'ascending',
-  })
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = usePageSize()
-  const changePageSize = (size: PageSize) => {
-    setPageSize(size)
-    setPage(1)
-  }
-  const key = `${search}|${gradeLevel}|${includeArchived}|${recordStatus}`
   // R11: a way to the Incomplete Records Queue besides the Dashboard. The queue is Staff only (ADR-038).
   // Staff only: the link is never shown to the Admin, and the API answers the Admin 403 (ADR-080).
   const { data: incompleteCount } = useAsyncData(`incomplete-count|${viewer.role}`, () =>
     viewer.role === 'staff' ? fetchIncompleteCount() : Promise.resolve(undefined),
   )
-  // The second door to the Archive page (the sidebar is the first); one page, one store.
-  const { data: archive } = useAsyncData(`archive-count|${viewer.role}`, () => getArchive(viewer))
-  const { data, status, isRefetching, reload } = useAsyncData(key, () =>
-    fetchStudentList({ search, gradeLevel, includeArchived, recordStatus }),
+  // The second door to the Archive page (the sidebar is the first): only its count is read.
+  const { data: archiveCount } = useAsyncData(`archive-count|${viewer.role}`, () =>
+    fetchArchiveCount(viewer, 'students'),
   )
+  // One page at a time from the server; page, search and sort live in the address (ADR-082).
+  const list = usePagedList({
+    key: 'student-list',
+    filters: { gradeLevel, includeArchived, recordStatus },
+    sortKeys: STUDENT_SORT_KEYS,
+    defaultSort: { key: 'name', direction: 'ascending' },
+    load: fetchStudentPage,
+    minSearch: STUDENT_SEARCH_MIN_LENGTH,
+  })
+  const { page: data, status, isRefetching, reload, sort } = list
 
   // The field renders once the list has loaded; Alt + K can also arrive while the page is already open.
   const listReady = Boolean(data)
@@ -200,7 +203,7 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
   const sortColumn = (key: StudentSortKey, label: string) => ({
     label,
     direction: sort.key === key ? sort.direction : undefined,
-    onSort: () => setSort((current) => toggleTableSort(current, key)),
+    onSort: () => list.setSort(toggleTableSort(sort, key)),
   })
   const columns: Array<DataTableColumn<StudentListRow>> = baseColumns.map((column) => {
     if (column.key === 'name') return { ...column, sort: sortColumn('name', 'Full name') }
@@ -209,21 +212,6 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
     if (column.key === 'status') return { ...column, sort: sortColumn('status', 'Record status') }
     return column
   })
-  // The list arrives in school-list order, last name then first name (ADR-064); the Name column sorts by that order.
-  const nameOrder = new Map(data.map((student, index) => [student.id, index]))
-  const sortedData = sortTableRows(data, sort, (student, key) => {
-    if (key === 'name') return nameOrder.get(student.id)
-    if (key === 'number') return student.lrn
-    if (key === 'grade') return student.gradeLevel
-    return student.recordComplete
-      ? student.archived
-        ? 'Complete Archived'
-        : 'Complete'
-      : 'Incomplete'
-  })
-  const pageCount = Math.max(1, Math.ceil(sortedData.length / pageSize))
-  const currentPage = Math.min(page, pageCount)
-  const pageRows = sortedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   return (
     <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
@@ -244,7 +232,7 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
               state={{ ...DRILL_THROUGH_STATE, section: 'students' }}
             >
               <Icon name="archive" />
-              Archive{archive ? ` (${rowsInNewestYear(archive.students).length})` : ''}
+              Archive{archiveCount !== undefined ? ` (${archiveCount})` : ''}
             </Link>
             {viewer.role === 'staff' && (
               <>
@@ -278,7 +266,7 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
         <CardHeader
           titleId="student-list-title"
           title="Student records"
-          description={`${data.length.toLocaleString('en-PH')} result${data.length === 1 ? '' : 's'} shown`}
+          description={`${data.total.toLocaleString('en-PH')} result${data.total === 1 ? '' : 's'} shown`}
           icon={<Icon name="users" />}
         />
         <CardBody className="flex flex-col gap-4">
@@ -287,39 +275,24 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
               ref={searchInputRef}
               label="Search"
               type="search"
-              value={search}
+              value={list.searchInput}
               placeholder="Name or LRN"
-              onChange={(event) => {
-                setSearch(event.target.value)
-                setPage(1)
-              }}
+              onChange={(event) => list.setSearch(event.target.value)}
             />
-            <GradeSelect
-              value={gradeLevel}
-              onChange={(value) => {
-                setGradeLevel(value)
-                setPage(1)
-              }}
-            />
+            <GradeSelect value={gradeLevel} onChange={setGradeLevel} />
             <Select
               label="Record status"
               value={recordStatus}
               placeholder="All records"
               clearable
               options={recordStatusOptions}
-              onChange={(value) => {
-                setRecordStatus(value as RecordStatusFilter)
-                setPage(1)
-              }}
+              onChange={(value) => setRecordStatus(value as RecordStatusFilter)}
             />
             <label className="flex min-h-10 cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-text-primary shadow-card transition-colors hover:bg-surface">
               <input
                 type="checkbox"
                 checked={includeArchived}
-                onChange={(event) => {
-                  setIncludeArchived(event.target.checked)
-                  setPage(1)
-                }}
+                onChange={(event) => setIncludeArchived(event.target.checked)}
                 className="size-4 cursor-pointer accent-brand-green-dark"
               />
               Include archived
@@ -327,24 +300,24 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
           </div>
 
           <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>
-            {data.length ? (
+            {data.total ? (
               <>
                 <DataTable
                   caption="Student masterlist"
                   columns={columns}
-                  rows={pageRows}
+                  rows={data.rows}
                   rowKey={(student) => student.id}
                   fixedLayout
                   minTableWidth="40rem"
                 />
                 <Pagination
-                  page={currentPage}
-                  pageCount={pageCount}
-                  total={sortedData.length}
-                  pageSize={pageSize}
-                  onPageSizeChange={changePageSize}
+                  page={list.pageNumber}
+                  pageCount={data.lastPage}
+                  total={data.total}
+                  pageSize={list.pageSize}
+                  onPageSizeChange={list.setPageSize}
                   itemLabel="students"
-                  onPageChange={setPage}
+                  onPageChange={list.setPage}
                 />
               </>
             ) : (

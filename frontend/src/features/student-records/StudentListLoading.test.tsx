@@ -7,6 +7,9 @@ vi.mock('./api/studentListApi', () => ({
   fetchStudentList: () => new Promise(() => {}),
   fetchGradeLevels: () => Promise.resolve(['Grade 1']),
   fetchIncompleteCount: () => new Promise(() => {}),
+  // The screen asks for one page at a time (ADR-082).
+  fetchStudentPage: () => new Promise(() => {}),
+  STUDENT_SORT_KEYS: ['name', 'number', 'grade', 'status'],
 }))
 
 describe('Student List: first-load skeleton', () => {

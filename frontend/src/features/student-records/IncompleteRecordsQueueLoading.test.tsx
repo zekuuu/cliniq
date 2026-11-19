@@ -5,6 +5,9 @@ import { IncompleteRecordsQueuePage } from './IncompleteRecordsQueuePage'
 
 vi.mock('./api/incompleteRecordsApi', () => ({
   fetchIncompleteRecords: () => new Promise(() => {}),
+  // The screen asks for one page at a time (ADR-082).
+  fetchIncompletePage: () => new Promise(() => {}),
+  INCOMPLETE_SORT_KEYS: ['student', 'grade', 'missing', 'imported', 'status'],
 }))
 
 describe('Incomplete Records Review Queue: first-load skeleton', () => {

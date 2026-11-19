@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import {
   BackButton,
@@ -12,21 +12,25 @@ import {
   ErrorState,
   Icon,
   Input,
+  Pagination,
   SegmentedControl,
   Skeleton,
   type DataTableColumn,
 } from '../../components'
-import { useAsyncData } from '../../hooks/useAsyncData'
+import { usePagedList } from '../../hooks/usePagedList'
 import { paths } from '../../routes/paths'
 import { formatDate } from '../../lib/dates'
-import { nameMatches } from '../../lib/personName'
-import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
+import { STUDENT_SEARCH_MIN_LENGTH } from '../../lib/lrn'
+import { toggleTableSort } from '../../lib/tableSort'
 import { getMockSessionUser, type SessionUser } from '../../lib/data'
-import { fetchIncompleteRecords, type IncompleteRecord } from './api/incompleteRecordsApi'
+import {
+  fetchIncompletePage,
+  INCOMPLETE_SORT_KEYS,
+  type IncompleteRecord,
+  type IncompleteSortKey,
+  type QueueFilter,
+} from './api/incompleteRecordsApi'
 import { MaskedLrn } from '../../components/ui/MaskedLrn'
-
-type QueueFilter = 'open' | 'resolved' | 'all'
-type IncompleteSortKey = 'student' | 'grade' | 'missing' | 'imported' | 'status'
 
 function QueueSkeleton({ back }: { back: ReactNode }) {
   return (
@@ -68,16 +72,17 @@ export function IncompleteRecordsQueuePage({
 }: {
   viewer?: SessionUser
 }) {
-  const { data, status, isRefetching, reload } = useAsyncData(
-    'incomplete-records',
-    fetchIncompleteRecords,
-  )
   const [filter, setFilter] = useState<QueueFilter>('open') // Resolved rows stay one click away (Zean, November 5, 2026).
-  const [search, setSearch] = useState('')
-  const [sort, setSort] = useState<TableSortState<IncompleteSortKey>>({
-    key: 'imported',
-    direction: 'descending',
+  // One page at a time from the server; page, search and sort live in the address (ADR-082).
+  const list = usePagedList({
+    key: 'incomplete-records',
+    filters: { status: filter },
+    sortKeys: INCOMPLETE_SORT_KEYS,
+    defaultSort: { key: 'imported', direction: 'descending' },
+    load: fetchIncompletePage,
+    minSearch: STUDENT_SEARCH_MIN_LENGTH,
   })
+  const { page: data, status, isRefetching, reload, sort } = list
 
   // A record is resolved when Edit Student saves it complete; the data layer records who and when.
   const resolutionOf = (record: IncompleteRecord) =>
@@ -85,47 +90,10 @@ export function IncompleteRecordsQueuePage({
       ? { resolvedBy: record.resolvedBy ?? 'Unknown user', resolvedAt: record.resolvedAt }
       : undefined
 
-  const visibleRows = useMemo(() => {
-    if (!data) return []
-    const term = search.trim().toLowerCase()
-    return data
-      .filter((record) => {
-        const isResolved = Boolean(resolutionOf(record))
-        if (filter === 'open') return !isResolved
-        if (filter === 'resolved') return isResolved
-        return true
-      })
-      .filter((record) => {
-        if (!term) return true
-        return (
-          nameMatches(record.fullName, term) ||
-          record.lrn.startsWith(term.replace(/[\s-]/g, '')) ||
-          record.gradeLevel.toLowerCase().includes(term)
-        )
-      })
-  }, [data, filter, search])
-
-  const nameOrder = useMemo(
-    () => new Map((data ?? []).map((record, index) => [record.id, index])),
-    [data],
-  )
-  const sortedRows = useMemo(
-    () =>
-      sortTableRows(visibleRows, sort, (record, key) => {
-        // The queue arrives by last name, then first name (ADR-064); the Student column sorts by that order.
-        if (key === 'student') return nameOrder.get(record.id)
-        if (key === 'grade') return record.gradeLevel
-        if (key === 'missing') return record.missingFields.join(', ')
-        if (key === 'imported') return record.importedAt
-        return resolutionOf(record) ? 'Resolved' : 'Open'
-      }),
-    [visibleRows, sort, nameOrder],
-  )
-
   const sortColumn = (key: IncompleteSortKey, label: string) => ({
     label,
     direction: sort.key === key ? sort.direction : undefined,
-    onSort: () => setSort((current) => toggleTableSort(current, key)),
+    onSort: () => list.setSort(toggleTableSort(sort, key)),
   })
 
   const columns: Array<DataTableColumn<IncompleteRecord>> = [
@@ -255,8 +223,7 @@ export function IncompleteRecordsQueuePage({
     )
   }
 
-  const openCount = data.filter((record) => !resolutionOf(record)).length
-  const resolvedCount = data.length - openCount
+  const { open: openCount, resolved: resolvedCount } = data.counts
 
   return (
     <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
@@ -286,7 +253,7 @@ export function IncompleteRecordsQueuePage({
         <CardHeader
           titleId="incomplete-records-title"
           title="Review queue"
-          description={`${visibleRows.length.toLocaleString('en-PH')} record${visibleRows.length === 1 ? '' : 's'} shown`}
+          description={`${data.total.toLocaleString('en-PH')} record${data.total === 1 ? '' : 's'} shown`}
           icon={<Icon name="inbox" />}
           actions={
             <SegmentedControl
@@ -305,23 +272,35 @@ export function IncompleteRecordsQueuePage({
           <Input
             label="Search"
             type="search"
-            value={search}
+            value={list.searchInput}
             placeholder="Name, LRN, or grade"
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => list.setSearch(event.target.value)}
             className="max-w-xl"
           />
 
           <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>
-            {visibleRows.length ? (
-              <DataTable
-                caption="Incomplete student records"
-                columns={columns}
-                rows={sortedRows}
-                rowKey={(record) => record.id}
-                fixedLayout
-                // Below this the six columns squeeze; the table scrolls inside the card instead.
-                minTableWidth="60rem"
-              />
+            {data.total ? (
+              <>
+                <DataTable
+                  caption="Incomplete student records"
+                  columns={columns}
+                  rows={data.rows}
+                  rowKey={(record) => record.id}
+                  fixedLayout
+                  // Below this the six columns squeeze; the table scrolls inside the card instead.
+                  minTableWidth="60rem"
+                />
+                {/* Paged since ADR-082: the queue showed every row at once (885 on five years of records). */}
+                <Pagination
+                  page={list.pageNumber}
+                  pageCount={data.lastPage}
+                  total={data.total}
+                  pageSize={list.pageSize}
+                  onPageSizeChange={list.setPageSize}
+                  itemLabel="records"
+                  onPageChange={list.setPage}
+                />
+              </>
             ) : (
               <EmptyState
                 icon="inbox"
