@@ -323,7 +323,7 @@ Broadened from complaint trends alone into an overall operational snapshot, per 
 - View backup history/log
 - **Backup locations** (ADR-052): the clinician adds and disables, never edits, the internal and external backup locations on the Backup screen (a label, a path, a status of found / not found / not writable, the last backup time and result, and an enabled switch). A location is never deleted, only disabled, and the last enabled one cannot be disabled (review round 2, R32; ADR-052 note); the screen still warns if none is enabled. Every change is audit-logged
 - A backup runs to **every enabled location** and shows each result; "Back up now", the nightly backup and the backup at sign-out use the same list
-- The system **creates the folders itself**: `<location>\.cliniq\` with a marker file `cliniq.json`, `backups\YYYY\MM\cliniq-YYYY-MM-DD_HHmm.zip` and `logs\backup-YYYY-MM.log`. Each zip holds the database dump, uploaded files and a manifest with a checksum; the oldest backups beyond the latest 60 per location are removed (a setting)
+- The system **creates the folders itself**: `<location>\.cliniq\` with a marker file `cliniq.json`, `backups\YYYY\MM\cliniq-YYYY-MM-DD_at_HH-mm.zip` and `logs\backup-YYYY-MM.log`. Each zip holds the database dump, uploaded files and a manifest with a checksum; the oldest backups beyond the latest 60 per location are removed (a setting)
 - **Decided (ADR-039, 052):** backups stay local on the clinic computer's internal drive and an external drive. There is no cloud copy (off-site health data needs the parents' consent and a provider agreement, and the school has no IT staff), and a second copy held by the Principal was suggested and withdrawn. Whether an extra layer is ever needed remains an open question
 
 ---
