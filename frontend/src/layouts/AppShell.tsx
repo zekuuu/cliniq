@@ -28,6 +28,8 @@ import { AuthenticatorDialog } from '../features/account/AuthenticatorDialog'
 import { getAuthenticatorStatus } from '../lib/data'
 import { AccountMenu } from './AccountMenu'
 import { paths } from '../routes/paths'
+import { notify } from '../lib/notify'
+import { scrollToTop } from '../lib/scrollToTop'
 
 /**
  * App shell: left sidebar (logo + role-aware nav) and a top bar (user chip), following the reference
@@ -87,7 +89,6 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
   const [isConfirmingSignOut, setIsConfirmingSignOut] = useState(false)
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const [isReportIssueOpen, setIsReportIssueOpen] = useState(false)
-  const [reportIssueNotice, setReportIssueNotice] = useState<string | null>(null)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [isAuthenticatorOpen, setIsAuthenticatorOpen] = useState(false)
   const [authenticatorVersion, setAuthenticatorVersion] = useState(0)
@@ -132,7 +133,6 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
   }, [printBlocked])
 
   function openReportIssue() {
-    setReportIssueNotice(null)
     setIsReportIssueOpen(true)
   }
 
@@ -142,8 +142,10 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
     try {
       await logoutMockSession(user)
       onLogout()
-    } catch {
+      notify.success('Signed out')
+    } catch (cause) {
       setIsLoggingOut(false)
+      notify.apiError(cause, 'Could not sign out. Please try again.')
     }
   }
 
@@ -337,7 +339,7 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
         onSaved={() => {
           setIsEditingProfile(false)
           setAccountVersion((version) => version + 1)
-          setReportIssueNotice('Profile updated.')
+          notify.success('Profile updated')
           // App reads the signed-in user again, so every place that shows the name updates at once.
           window.dispatchEvent(new CustomEvent(ACCOUNT_CHANGED_EVENT))
         }}
@@ -347,22 +349,14 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
         user={user}
         onClose={() => setIsReportIssueOpen(false)}
         onSubmitted={(mailtoOpened) => {
-          setReportIssueNotice(
-            mailtoOpened
-              ? 'Issue submitted. An email draft was opened as a fallback.'
-              : 'Issue submitted. The report was saved, but the email draft could not be opened.',
-          )
+          if (mailtoOpened)
+            notify.success('Issue submitted. An email draft was opened as a fallback.')
+          else
+            notify.warning(
+              'Issue submitted. The report was saved, but the email draft could not be opened.',
+            )
         }}
       />
-      {reportIssueNotice && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed right-4 bottom-4 z-50 max-w-sm rounded-md border border-success bg-background px-4 py-3 text-sm font-semibold text-text-primary shadow-card"
-        >
-          {reportIssueNotice}
-        </div>
-      )}
     </div>
   )
 }
@@ -385,17 +379,12 @@ function ScrollToTopButton() {
       window.removeEventListener('resize', update)
     }
   }, [])
-  function toTop() {
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })
-    document.getElementById('main-content')?.focus({ preventScroll: true })
-  }
   return (
     <button
       type="button"
       aria-label="Scroll to top"
       title="Scroll to top"
-      onClick={toTop}
+      onClick={() => scrollToTop()}
       className={cn(
         'fixed right-4 bottom-4 z-20 inline-flex size-10 cursor-pointer items-center justify-center rounded-full border border-border bg-background text-text-secondary shadow-raised transition-[opacity,translate,color,background-color] duration-200 hover:bg-surface hover:text-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none print:hidden',
         visible ? 'visible translate-y-0 opacity-100' : 'invisible translate-y-2 opacity-0',

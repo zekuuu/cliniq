@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { notify } from '../../lib/notify'
 import {
   Badge,
   Button,
@@ -14,7 +15,6 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import {
   confirmAuthenticatorSetup,
   getAuthenticatorStatus,
-  RecoveryError,
   startAuthenticatorSetup,
   turnOffAuthenticator,
   type SessionUser,
@@ -85,7 +85,6 @@ export function AuthenticatorDialog({
   const [error, setError] = useState('')
   const [working, setWorking] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [notice, setNotice] = useState('')
   // The Copy button reads "Copied" for a moment (Button's done state, Zean, November 8, 2026); reset
   // after it, so a second copy shows it again.
   const [copied, setCopied] = useState(false)
@@ -105,10 +104,11 @@ export function AuthenticatorDialog({
 
   function requestClose() {
     // The codes are shown once: closing first needs "I have saved the codes".
-    if (step.kind === 'codes' && !saved)
+    if (step.kind === 'codes' && !saved) {
+      notify.checkFields('Tick "I have saved the codes" before closing.')
       return setError('Tick "I have saved the codes" before closing.')
+    }
     reset()
-    setNotice('')
     onClose()
   }
 
@@ -118,7 +118,8 @@ export function AuthenticatorDialog({
     try {
       await action()
     } catch (cause) {
-      setError(cause instanceof RecoveryError ? cause.message : 'That did not work. Try again.')
+      // A refused code or step is a toast above the dialog (ADR-083).
+      notify.apiError(cause, 'That did not work. Please try again.', { id: 'authenticator' })
     } finally {
       setWorking(false)
     }
@@ -133,13 +134,19 @@ export function AuthenticatorDialog({
 
   function submitProof(event: FormEvent, then: 'replace' | 'off') {
     event.preventDefault()
-    if (useRecoveryCode ? !code.trim() : code.length !== 6)
-      return setError(useRecoveryCode ? 'Enter a recovery code.' : 'Enter the 6-digit code.')
+    if (useRecoveryCode ? !code.trim() : code.length !== 6) {
+      const message = useRecoveryCode ? 'Enter a recovery code.' : 'Enter the 6-digit code.'
+      notify.checkFields(message)
+      return setError(message)
+    }
     if (then === 'replace') return void begin(code)
     void run(async () => {
       await turnOffAuthenticator(code)
       reset()
-      setNotice('Authenticator app disabled. Ask the Administrator if you forget your password.')
+      notify.success('Authenticator app disabled', {
+        id: 'authenticator',
+        description: 'Ask the Administrator if you forget your password.',
+      })
       setVersion((v) => v + 1)
       onChanged()
     })
@@ -151,6 +158,9 @@ export function AuthenticatorDialog({
       const { recoveryCodes } = await confirmAuthenticatorSetup(code)
       setCode('')
       setStep({ kind: 'codes', codes: recoveryCodes })
+      notify.success('Authenticator app set up. Save the recovery codes now', {
+        id: 'authenticator',
+      })
       setVersion((v) => v + 1)
       onChanged()
     })
@@ -178,11 +188,6 @@ export function AuthenticatorDialog({
           your password here without internet. Signing in still uses your username and password.
         </p>
         {adminNote}
-        {notice && (
-          <p role="status" className="text-sm font-semibold text-success">
-            {notice}
-          </p>
-        )}
         {status.data && (
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-md border border-border bg-surface px-3 py-2">
             <p className="flex items-center gap-2 text-sm font-semibold text-text-primary">
@@ -352,7 +357,13 @@ export function AuthenticatorDialog({
             icon="fileText"
             done={copied}
             onClick={() =>
-              void navigator.clipboard?.writeText(step.codes.join('\n')).then(() => setCopied(true))
+              void navigator.clipboard?.writeText(step.codes.join('\n')).then(
+                () => {
+                  setCopied(true)
+                  notify.success('Recovery codes copied', { id: 'authenticator-copy' })
+                },
+                () => notify.error('Could not copy. Select the codes and copy them by hand.'),
+              )
             }
           >
             Copy

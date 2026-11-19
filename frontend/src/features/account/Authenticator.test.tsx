@@ -1,4 +1,5 @@
 import { screen, within } from '@testing-library/react'
+import { findToast } from '../../test/findToast'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
@@ -212,7 +213,7 @@ describe('the screens', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Use a recovery code instead' }))
     await user.type(within(dialog).getByLabelText(/^Recovery code/), recoveryCodes[0])
     await user.click(within(dialog).getByRole('button', { name: 'Disable' }))
-    expect(await within(dialog).findByText(/Authenticator app disabled/)).toBeInTheDocument()
+    expect(await findToast('Authenticator app disabled')).toBeInTheDocument()
     expect(await getAuthenticatorStatus()).toEqual({ enabled: false, recoveryCodesLeft: 0 })
   })
 
@@ -229,7 +230,7 @@ describe('the screens', () => {
     expect(dialog.querySelectorAll('[data-code-box]')).toHaveLength(6)
     if ((await codeFor(secret)) !== '000002') {
       await user.type(boxes, '000002')
-      expect(await within(dialog).findByRole('alert')).toHaveTextContent(RECOVERY_FAILED_MESSAGE)
+      expect(await findToast(RECOVERY_FAILED_MESSAGE)).toBeInTheDocument()
     }
     await user.type(within(dialog).getByLabelText('6-digit code'), await codeFor(secret))
     await user.type(await within(dialog).findByLabelText(/^New password/), 'fresh-pass-77')
@@ -246,13 +247,13 @@ describe('the screens', () => {
     const dialog = screen.getByRole('dialog', { name: 'Forgot your password?' })
     await user.type(within(dialog).getByLabelText(/^Username/), 'nobody.here')
     await user.click(within(dialog).getByRole('button', { name: 'Continue' }))
-    expect(await within(dialog).findByRole('alert')).toHaveTextContent(RECOVERY_NO_ACCOUNT_MESSAGE)
+    expect(await findToast(RECOVERY_NO_ACCOUNT_MESSAGE)).toBeInTheDocument()
     expect(within(dialog).queryByLabelText('6-digit code')).not.toBeInTheDocument()
     await user.clear(within(dialog).getByLabelText(/^Username/))
     // No authenticator set up on the demo nurse yet.
     await user.type(within(dialog).getByLabelText(/^Username/), 'demo.nurse')
     await user.click(within(dialog).getByRole('button', { name: 'Continue' }))
-    expect(await within(dialog).findByRole('alert')).toHaveTextContent(RECOVERY_NOT_SET_UP_MESSAGE)
+    expect(await findToast(RECOVERY_NOT_SET_UP_MESSAGE)).toBeInTheDocument()
   })
 
   it('offers a recovery code instead of the app', async () => {

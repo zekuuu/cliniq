@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { notify } from '../../lib/notify'
 import { useLocation } from 'react-router'
 import { Button, Modal, Textarea } from '../../components'
 import { ROLE_LABELS, type SessionUser } from '../../lib/data'
@@ -70,6 +71,7 @@ function ReportIssueForm({
     const trimmed = description.trim()
     if (!trimmed) {
       setError('Describe the issue before submitting.')
+      notify.checkFields()
       return
     }
 
@@ -90,8 +92,8 @@ function ReportIssueForm({
       )
       onSubmitted(mailtoOpened)
       onClose()
-    } catch {
-      setError('The issue could not be saved. Try again.')
+    } catch (cause) {
+      notify.apiError(cause, 'The issue could not be saved. Please try again.')
       setSaving(false)
     }
   }

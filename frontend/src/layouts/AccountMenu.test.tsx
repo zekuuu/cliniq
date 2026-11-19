@@ -254,7 +254,7 @@ describe('Edit profile dialog', () => {
     await user.clear(field)
     await user.type(field, 'Demo B. Clinician')
     await user.click(within(dialog).getByRole('button', { name: 'Save changes' }))
-    expect(await screen.findByText('Profile updated.')).toBeInTheDocument()
+    expect(await screen.findByText('Profile updated')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(
       await screen.findByRole('button', { name: 'Account menu, Demo B. Clinician' }),
@@ -305,7 +305,7 @@ describe('Edit profile dialog', () => {
     const dialog = await openEditProfile(user)
     await user.click(within(dialog).getByRole('button', { name: 'Remove picture' }))
     await user.click(within(dialog).getByRole('button', { name: 'Save changes' }))
-    await screen.findByText('Profile updated.')
+    await screen.findByText('Profile updated')
     expect(staff.profilePicture).toBeNull()
     expect(getRecordedAuditEntries().map((entry) => entry.summary)).toEqual([
       'Changed own profile picture',

@@ -1,4 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react'
+import { notify } from '../../lib/notify'
 import { Button, Input, Modal } from '../../components'
 import { formatDateTime } from '../../lib/dates'
 import { ROLE_LABELS, updateOwnProfile, USER_NAME_MAX, type OwnAccount } from '../../lib/data'
@@ -44,7 +45,6 @@ function EditProfileBody({
   const [picture, setPicture] = useState<string | null>(account.profilePicture)
   const [nameError, setNameError] = useState('')
   const [pictureError, setPictureError] = useState('')
-  const [saveError, setSaveError] = useState('')
   const [saving, setSaving] = useState(false)
   const [asking, setAsking] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -74,16 +74,17 @@ function EditProfileBody({
 
   async function save(event: FormEvent) {
     event.preventDefault()
-    if (!name.trim()) return setNameError('Enter your full name.')
+    if (!name.trim()) {
+      notify.checkFields()
+      return setNameError('Enter your full name.')
+    }
     setSaving(true)
-    setSaveError('')
     try {
       await updateOwnProfile({ name, profilePicture: picture })
       onSaved()
     } catch (cause) {
-      setSaveError(
-        cause instanceof Error ? cause.message : 'Your profile could not be saved. Try again.',
-      )
+      // Shown above the dialog, which stays open with what was typed (ADR-083).
+      notify.apiError(cause, 'Your profile could not be saved. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -176,11 +177,6 @@ function EditProfileBody({
           <p className="text-sm text-text-secondary">
             To change your password, use Change password in the menu.
           </p>
-          {saveError && (
-            <p role="alert" className="text-sm font-semibold text-error">
-              {saveError}
-            </p>
-          )}
           <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
             <Button variant="neutral" onClick={requestClose}>
               Cancel
