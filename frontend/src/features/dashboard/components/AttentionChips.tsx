@@ -26,6 +26,8 @@ function CountChip({
   to: string
   canNavigate: boolean
 }) {
+  // Nothing to do, no chip (Zean, November 19, 2026).
+  if (count === 0) return null
   const content = (
     <>
       <Icon name="alertTriangle" size={16} />
