@@ -76,7 +76,9 @@ final class Person
     {
         $h = $this->prepare($method, $path, $body);
         $out = (string) curl_exec($h);
-        curl_setopt($h, CURLOPT_COOKIEJAR, $this->cookies); // flush the jar now
+        // Write the jar now, so xsrf() reads this answer's token. Setting CURLOPT_COOKIEJAR again does
+        // not write it with XAMPP's libcurl 8.23 (sign-in answered 419, Thursday, November 19, 2026).
+        curl_setopt($h, CURLOPT_COOKIELIST, 'FLUSH');
 
         return [curl_getinfo($h, CURLINFO_RESPONSE_CODE), curl_getinfo($h, CURLINFO_TOTAL_TIME) * 1000, (int) curl_getinfo($h, CURLINFO_SIZE_DOWNLOAD), json_decode($out, true)];
     }
@@ -189,9 +191,17 @@ function journey(Person $p): array
         ['inventory/{id}/history', 'GET', "/api/inventory/{$item}/history", null],
         ['inventory/movements (month)', 'GET', "/api/inventory/movements?from={$month1}&to={$today}", null],
         ['reports/monthly (last month)', 'GET', "/api/reports/monthly?month={$busy}", null],
-        ['audit-log (whole)', 'GET', '/api/audit-log', null],
-        ['audit-log (page 1 of 25)', 'GET', '/api/audit-log?page=1&perPage=25', null],
-        ['audit-log (page 40 of 25)', 'GET', '/api/audit-log?page=40&perPage=25', null],
+        // The log needs its period (from, to) since the date filter became required; every year here.
+        ['audit-log (whole)', 'GET', "/api/audit-log?from=2020-01-01&to={$today}", null],
+        ['audit-log (page 1 of 25)', 'GET', "/api/audit-log?from=2020-01-01&to={$today}&page=1&perPage=25", null],
+        ['audit-log (page 40 of 25)', 'GET', "/api/audit-log?from=2020-01-01&to={$today}&page=40&perPage=25", null],
+        // The paged lists the screens read since ADR-082 (page 1 of 10, as they open).
+        ['visits/log (page 1 of 10)', 'GET', '/api/visits/log?page=1&perPage=10', null],
+        ['incidents/log (page 1 of 10)', 'GET', '/api/incidents/log?page=1&perPage=10', null],
+        ['follow-ups (page 1 of 10)', 'GET', '/api/follow-ups?page=1&perPage=10', null],
+        ['students/query (page 1 of 10)', 'POST', '/api/students/query', ['search' => '', 'page' => 1, 'perPage' => 10]],
+        ['students/incomplete (page 1 of 10)', 'GET', '/api/students/incomplete?status=open&page=1&perPage=10', null],
+        ['backups/status (summary)', 'GET', '/api/backups/status?summary=1', null],
         ['archive/years', 'GET', '/api/archive/years', null],
         ['archive/students (year, page 1)', 'GET', '/api/archive/students?year='.rawurlencode($year).'&page=1&perPage=25', null],
         ['personnel', 'GET', '/api/personnel', null],
