@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { errorMessage, notify } from '../lib/notify'
 
 export type SaveResult = { kind: 'saved' | 'failed'; message: string } | null
 
@@ -6,14 +7,14 @@ export type SaveResult = { kind: 'saved' | 'failed'; message: string } | null
 export const SAVED_MESSAGE_MS = 5000
 
 /** Shown when a save fails for a reason the screen doesn't explain itself. */
-export const SAVE_FAILED_MESSAGE = 'Not saved. Nothing you typed was lost; try again.'
+export const SAVE_FAILED_MESSAGE = 'Not saved. Nothing you typed was lost. Please try again.'
 
 /**
  * One save behaviour for every Save, Add, Update, Complete, Confirm and Submit (professor's consultation,
  * November 6, 2026: never a silent save, never a double submit). `run` refuses a second call while the
- * first is working, exposes `saving` for the button's `loading`, and sets `result`: a success that
- * clears itself after a few seconds, or a failure that stays. Show it with `<SaveFeedback>`.
- * The form keeps its values on failure because `run` never resets them.
+ * first is working, exposes `saving` for the button's `loading`, and shows the result as a toast
+ * (ADR-083). `result` stays for the button's `done` check: a success that clears itself after a few
+ * seconds, or a failure. The form keeps its values on failure because `run` never resets them.
  */
 export function useSaveFeedback() {
   const busy = useRef(false)
@@ -40,16 +41,20 @@ export function useSaveFeedback() {
     setResult(null)
     try {
       const value = await action()
-      setResult({
-        kind: 'saved',
-        message: typeof messages.saved === 'function' ? messages.saved(value) : messages.saved,
-      })
+      const message = typeof messages.saved === 'function' ? messages.saved(value) : messages.saved
+      setResult({ kind: 'saved', message })
+      notify.success(message)
       return { ok: true, value }
     } catch (cause) {
-      const message = messages.failed?.(cause)
-      setResult(
-        message === null ? null : { kind: 'failed', message: message ?? SAVE_FAILED_MESSAGE },
-      )
+      const failed = messages.failed?.(cause)
+      if (failed === null) {
+        setResult(null)
+        notify.checkFields()
+      } else {
+        const message = failed ?? errorMessage(cause, SAVE_FAILED_MESSAGE)
+        setResult({ kind: 'failed', message })
+        notify.error(message)
+      }
       return { ok: false }
     } finally {
       busy.current = false

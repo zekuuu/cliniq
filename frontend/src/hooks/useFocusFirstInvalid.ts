@@ -1,4 +1,5 @@
 import { useEffect, useState, type RefObject } from 'react'
+import { notify } from '../lib/notify'
 
 /**
  * Moves focus to the first invalid field inside `root`: the first element marked `aria-invalid`, or,
@@ -21,7 +22,8 @@ export function focusFirstInvalid(root: HTMLElement | null): boolean {
  * Failed-submit behaviour for every entry and edit form (`cliniq-input-patterns`). Pass the ref of the
  * form (or the element wrapping its fields) and call `report(errorCount)` on every submit.
  * Focus moves once React has rendered the messages. Render `announcement` in a polite live region
- * so screen-reader users hear how many fields need attention.
+ * so screen-reader users hear how many fields need attention. A failed submit also shows one toast,
+ * "Please check the highlighted fields" (ADR-083); the messages stay beside the fields.
  */
 export function useFocusFirstInvalid(ref: RefObject<HTMLElement | null>) {
   const [attempt, setAttempt] = useState({ seq: 0, count: 0 })
@@ -32,8 +34,11 @@ export function useFocusFirstInvalid(ref: RefObject<HTMLElement | null>) {
 
   const { count } = attempt
   return {
-    report: (errorCount: number) =>
-      setAttempt((current) => ({ seq: current.seq + 1, count: errorCount })),
+    /** `message`: a form-level reason with no field of its own, shown as the toast's text. */
+    report: (errorCount: number, message?: string) => {
+      if (errorCount > 0) notify.checkFields(message)
+      setAttempt((current) => ({ seq: current.seq + 1, count: errorCount }))
+    },
     announcement:
       count > 0 ? `${count} ${count === 1 ? 'field needs' : 'fields need'} attention.` : '',
   }

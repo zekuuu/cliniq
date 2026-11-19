@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Button } from '../components'
 import { busyLabel } from '../components/ui/buttonClassName'
 import { focusTopMessage } from '../components/forms/ErrorSummary'
-import { SaveFeedback } from '../components/forms/SaveFeedback'
 import { SAVE_FAILED_MESSAGE, SAVED_MESSAGE_MS, useSaveFeedback } from '../hooks/useSaveFeedback'
 import {
   listBackupLocations,
@@ -46,14 +45,13 @@ describe('P2.1 save buttons give clear feedback', () => {
         >
           Save
         </Button>
-        <SaveFeedback result={feedback.result} />
       </>
     )
   }
 
   afterEach(() => vi.useRealTimers())
 
-  it('confirms a save in a status message that clears itself, and refuses a double submit', async () => {
+  it('confirms a save in a toast (ADR-083), and refuses a double submit', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     let finish = () => {}
     const action = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)))
@@ -65,19 +63,18 @@ describe('P2.1 save buttons give clear feedback', () => {
     busy.click()
     expect(action).toHaveBeenCalledTimes(1)
     await act(async () => finish())
-    expect(screen.getByRole('status')).toHaveTextContent('Saved.')
+    expect(await screen.findByText('Saved.')).toBeInTheDocument()
+    // The button's own check clears itself after a few seconds.
     act(() => vi.advanceTimersByTime(SAVED_MESSAGE_MS + 10))
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled()
   })
 
-  it('keeps a failure on screen as an alert, and the typed input', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true })
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    render(<Harness action={() => Promise.reject(new Error('offline'))} />)
+  it('shows a failure as an error toast, and keeps the typed input', async () => {
+    const user = userEvent.setup()
+    // A developer error never reaches the toast; the plain fallback does.
+    render(<Harness action={() => Promise.reject(new TypeError('x is undefined'))} />)
     await user.click(screen.getByRole('button', { name: 'Save' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent(SAVE_FAILED_MESSAGE)
-    act(() => vi.advanceTimersByTime(SAVED_MESSAGE_MS * 3))
-    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(await screen.findByText(SAVE_FAILED_MESSAGE)).toBeInTheDocument()
     expect(screen.getByLabelText('Typed value')).toHaveValue('kept')
     expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled()
   })
@@ -91,28 +88,25 @@ describe('P2.1 save buttons give clear feedback', () => {
     await user.type(within(dialog).getByLabelText(/^Label/), 'Blue USB')
     await user.click(within(dialog).getAllByRole('radio')[0])
     await user.click(within(dialog).getByRole('button', { name: 'Save location' }))
-    expect(await screen.findByText('Blue USB added. Backups now go there too.')).toHaveAttribute(
-      'role',
-      'status',
-    )
+    // ADR-083: the result is a toast, shown once the modal has closed.
+    expect(await screen.findByText('Blue USB added. Backups now go there too')).toBeInTheDocument()
   })
 })
 
 describe('P2.2 incident saves go straight to the result', () => {
   beforeEach(() => resetMockDb())
 
-  it('focuses the completed message after Complete, clear of the sticky top bar', async () => {
+  it('confirms Complete in a success toast and goes back to the top (ADR-083)', async () => {
     const user = userEvent.setup({ delay: null })
+    const scroll = vi.spyOn(window, 'scrollTo')
     renderWithRouter(<IncidentEntryPage incidentId="incident-0022" />)
     await screen.findByRole('heading', { name: 'Complete Incident Record' })
     await user.click(screen.getByRole('button', { name: 'Complete Incident' }))
-    const done = await screen.findByText('Incident completed. Stage 2 details are now saved.')
-    const top = done.parentElement!
-    expect(top).toHaveFocus()
-    expect(top).toHaveClass('scroll-mt-20')
-    // Saved means green (Zean, November 7, 2026).
-    expect(done).toHaveClass('border-success', 'bg-success/10')
-    expect(done).not.toHaveClass('border-warning')
+    const done = await screen.findByText('Incident completed')
+    // Saved means green (Zean, November 7, 2026): a success toast.
+    expect(done.closest('[data-sonner-toast]')).toHaveAttribute('data-type', 'success')
+    expect(scroll).toHaveBeenCalledWith(expect.objectContaining({ top: 0 }))
+    scroll.mockRestore()
   })
 
   it('jumps without a smooth scroll when motion is reduced', () => {
