@@ -35,18 +35,14 @@ function walk(dir, keep, out = []) {
 }
 const lines = (files) => files.reduce((n, f) => n + readFileSync(f, 'utf8').split('\n').filter((l) => l.trim()).length, 0)
 
-// Code sources. Each side (backend, frontend) is read from the newest remote branch tip that contains its
-// folder (`backend/app`, `frontend/src`), through git, without checking anything out or merging: `main` holds
-// no backend code and not the newest frontend (ADR-056, ADR-080). The working tree is read instead when it has
-// the folder and HEAD already contains that newest tip (for example on the newest branch itself).
-// `git fetch origin` first, or the tips are as old as the last fetch.
-const isAncestor = (a, b) => { try { sh(`git merge-base --is-ancestor ${a} ${b}`); return true } catch { return false } }
-const TIPS = sh('git for-each-ref --sort=-committerdate --format=%(refname:short) refs/remotes/origin').split('\n').filter((r) => r && r !== 'origin' && r !== 'origin/HEAD')
+// Code sources. Since ADR-081 (Wednesday, November 18, 2026) `main` holds the frontend and the backend, so
+// both sides are read from this working tree: the checked-out commit plus any uncommitted change. Nothing is
+// read from another branch, nothing is checked out or merged (changed Friday, November 20, 2026; before, each
+// side came from the newest remote branch tip that held its folder).
 function source(dir) {
-  const tip = TIPS.find((r) => { try { return sh(`git ls-tree --name-only ${r} -- ${dir}`) !== '' } catch { return false } })
-  const local = existsSync(join(ROOT, dir)) && (!tip || isAncestor(tip, 'HEAD'))
-  const ref = local ? null : tip
-  if (!local && !ref) throw new Error(`docs-facts: no working-tree copy and no remote branch holds ${dir}`)
+  const local = existsSync(join(ROOT, dir))
+  const ref = null
+  if (!local) throw new Error(`docs-facts: ${dir} is missing from this working tree`)
   const sha = local ? null : sh(`git rev-parse --short ${ref}`)
   const s = {
     local,
@@ -176,7 +172,7 @@ export function computeFacts() {
   const pkg = JSON.parse(FE.read('frontend/package.json'))
   const lock = FE.has('frontend/package-lock.json') ? JSON.parse(FE.read('frontend/package-lock.json')) : { packages: {} }
   const v = (name) => lock.packages[`node_modules/${name}`]?.version || (pkg.dependencies?.[name] || pkg.devDependencies?.[name] || '?').replace('^', '')
-  f.frontendStack = ['react', 'react-router', 'typescript', 'vite', 'tailwindcss', 'vitest', 'chart.js', 'qrcode'].map((n) => [n, v(n)])
+  f.frontendStack = ['react', 'react-router', 'typescript', 'vite', 'tailwindcss', 'vitest', 'chart.js', 'qrcode', '@tanstack/react-query', 'sonner'].map((n) => [n, v(n)])
   const composer = JSON.parse(beRead('backend/composer.json'))
   const clock = JSON.parse(beRead('backend/composer.lock'))
   const cv = (name) => [...clock.packages, ...clock['packages-dev']].find((p) => p.name === name)?.version?.replace(/^v/, '') || composer.require?.[name] || composer['require-dev']?.[name] || '?'
