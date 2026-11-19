@@ -67,7 +67,7 @@ Do this once on Zean's own machine. XAMPP's MariaDB ships listening on the netwo
    CREATE USER 'cliniq_app'@'localhost' IDENTIFIED BY '<a real password>';
    GRANT SELECT, INSERT, UPDATE, DELETE ON cliniq.* TO 'cliniq_app'@'localhost';
    ```
-   Migrations use a separate account with schema rights, and `cliniq_app` keeps only `SELECT` and `INSERT` on `audit_logs` (`ERD.md` section 13).
+   Migrations use a separate account with schema rights, and `cliniq_app` keeps only `SELECT` and `INSERT` on `audit_logs` (`ERD.md` section 13). Once the tables exist, `php tools/load/app-grants.php cliniq` writes exactly those grants table by table; `setup-step.md` step 14 uses it instead of the blanket grant above (Thursday, November 19, 2026 — 21:48 PHT).
 4. Stop using `root` in `.env`: set `DB_USERNAME=cliniq_app` and its password.
 
 The clinic computer repeats these steps. Real data never crosses a network: CLINIQ runs on the clinic PC only (see "Clinic PC only" below).
