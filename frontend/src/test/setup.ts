@@ -12,4 +12,7 @@ afterEach(async () => {
   const { resetMockDb, setMockToday } = await import('../lib/mock-db')
   setMockToday(null)
   resetMockDb()
+  // The paged lists' cache (ADR-082): each test starts with none.
+  const { queryClient } = await import('../lib/queryClient')
+  queryClient.clear()
 })

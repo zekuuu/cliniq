@@ -142,6 +142,10 @@ export interface PageMeta {
   page: number
   perPage: number
   total: number
+  /** Added with the paged lists (ADR-082). */
+  lastPage?: number
+  /** The Incomplete Records Queue's Open and Resolved counts. */
+  counts?: Record<string, number>
 }
 
 async function call<T>(
@@ -181,9 +185,12 @@ export async function request<T>(method: Method, path: string, options: RequestO
   return (await call<T>(method, path, options)).data
 }
 
-/** A paged list read: `data` with the contract's `meta` (Q19). */
-export function requestPage<T>(path: string, options: RequestOptions = {}) {
-  return call<T>('GET', path, options)
+/** A paged list read: `data` with the contract's `meta` (Q19, ADR-082). The student search is a POST. */
+export function requestPage<T>(
+  path: string,
+  options: RequestOptions & { method?: 'GET' | 'POST' } = {},
+) {
+  return call<T>(options.method ?? 'GET', path, options)
 }
 
 export const http = {
