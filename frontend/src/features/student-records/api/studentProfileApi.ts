@@ -1,5 +1,6 @@
 import {
   archiveStudent,
+  verifyStudentContact,
   getDemoStudent,
   getStudent,
   getStudentExcuseLetters,
@@ -50,4 +51,14 @@ export function archiveStudentRecord(
   reason: string,
 ): Promise<Student> {
   return archiveStudent(studentId, actor, reason)
+}
+
+/** Marks one emergency contact verified or unverified (`index` 0 is the primary); audited. */
+export function verifyStudentContactRecord(
+  studentId: string,
+  index: number,
+  verified: boolean,
+  actor: SessionUser,
+): Promise<Student> {
+  return verifyStudentContact(studentId, index, verified, actor)
 }

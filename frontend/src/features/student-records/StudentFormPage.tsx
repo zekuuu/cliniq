@@ -315,7 +315,10 @@ function StudentFormEditor({
     setValues((current) => ({
       ...current,
       emergencyContacts: current.emergencyContacts.map((contact, contactIndex) =>
-        contactIndex === index ? { ...contact, [field]: value } : contact,
+        // A changed number needs verifying again.
+        contactIndex === index
+          ? { ...contact, [field]: value, ...(field === 'phone' && { verified: false }) }
+          : contact,
       ),
     }))
     setErrors((current) => ({ ...current, [contactErrorKey(index, field)]: undefined }))

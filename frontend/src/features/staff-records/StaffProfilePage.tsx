@@ -28,7 +28,7 @@ import { complaintWithExtras, incidentCareSummary, visitCareSummary } from '../.
 import { getMockSessionUser, type SessionUser } from '../../lib/data'
 import type { FollowUp, Incident, Personnel, Visit } from '../../types/entities'
 import { paths } from '../../routes/paths'
-import { archiveStaffRecord, fetchStaffProfile } from './api/staffApi'
+import { archiveStaffRecord, fetchStaffProfile, verifyStaffContact } from './api/staffApi'
 
 const incidentStageMap = {
   1: { label: 'Needs completion', tone: 'unfinished', icon: 'alertTriangle', variant: 'soft' },
@@ -228,7 +228,13 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function Overview({ person }: { person: Personnel }) {
+function Overview({
+  person,
+  onVerifyContact,
+}: {
+  person: Personnel
+  onVerifyContact?: (index: number, verified: boolean) => Promise<unknown>
+}) {
   return (
     <Card aria-labelledby="staff-overview">
       <CardHeader titleId="staff-overview" title="Overview" icon={<Icon name="user" />} />
@@ -245,7 +251,7 @@ function Overview({ person }: { person: Personnel }) {
         <div className="sm:col-span-2">
           <p className="text-xs font-semibold text-text-secondary">Emergency contacts</p>
           {person.emergencyContacts.length ? (
-            <EmergencyContactList contacts={person.emergencyContacts} />
+            <EmergencyContactList contacts={person.emergencyContacts} onVerify={onVerifyContact} />
           ) : (
             <p className="text-sm text-text-secondary">No emergency contact recorded.</p>
           )}
@@ -440,7 +446,15 @@ export function StaffProfilePage({
           {savedMessage}
         </div>
       )}
-      <Overview person={data.personnel} />
+      <Overview
+        person={data.personnel}
+        onVerifyContact={
+          data.personnel.archived
+            ? undefined
+            : (index, verified) =>
+                verifyStaffContact(data.personnel.id, index, verified, viewer).then(reload)
+        }
+      />
       <Medical person={data.personnel} />
       <Visits visits={data.visits} />
       <Incidents incidents={data.incidents} />

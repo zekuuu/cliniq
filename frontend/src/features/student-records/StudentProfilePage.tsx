@@ -48,6 +48,7 @@ import {
   archiveStudentRecord,
   fetchStudentProfile,
   type StudentProfileData,
+  verifyStudentContactRecord,
 } from './api/studentProfileApi'
 
 const incidentStageMap = {
@@ -259,7 +260,13 @@ function AllergyBanner({ student }: { student: Student }) {
   )
 }
 
-function OverviewCard({ student }: { student: Student }) {
+function OverviewCard({
+  student,
+  onVerifyContact,
+}: {
+  student: Student
+  onVerifyContact?: (index: number, verified: boolean) => Promise<unknown>
+}) {
   return (
     <Card aria-labelledby="profile-overview">
       <CardHeader titleId="profile-overview" title="Overview" icon={<Icon name="users" />} />
@@ -300,7 +307,7 @@ function OverviewCard({ student }: { student: Student }) {
         </div>
         <div className="sm:col-span-2">
           <p className="text-xs font-semibold text-text-secondary">Emergency contacts</p>
-          <EmergencyContactList contacts={student.emergencyContacts} />
+          <EmergencyContactList contacts={student.emergencyContacts} onVerify={onVerifyContact} />
         </div>
       </CardBody>
     </Card>
@@ -682,7 +689,17 @@ export function StudentProfilePage({
       )}
       <div className="grid grid-cols-1 gap-4">
         <div className="flex flex-col gap-4">
-          <OverviewCard student={data.student} />
+          <OverviewCard
+            student={data.student}
+            onVerifyContact={
+              viewer.role === 'staff' && !data.student.archived
+                ? (index, verified) =>
+                    verifyStudentContactRecord(data.student.id, index, verified, viewer).then(
+                      reload,
+                    )
+                : undefined
+            }
+          />
           <MedicalHistoryCard student={data.student} />
         </div>
         <div className="flex flex-col gap-4">

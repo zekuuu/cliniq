@@ -182,7 +182,10 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
     setValues((current) => ({
       ...current,
       emergencyContacts: current.emergencyContacts.map((contact, i) =>
-        i === index ? { ...contact, [field]: value } : contact,
+        // A changed number needs verifying again.
+        i === index
+          ? { ...contact, [field]: value, ...(field === 'phone' && { verified: false }) }
+          : contact,
       ),
     }))
     setErrors((current) => ({ ...current, [contactKey(index, field)]: undefined }))

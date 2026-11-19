@@ -1,5 +1,6 @@
 import {
   archivePersonnel,
+  verifyPersonnelContact,
   getPersonnel,
   getPersonnelDepartments,
   getPersonnelHistory,
@@ -56,6 +57,16 @@ export function archiveStaffRecord(
   reason: string,
 ): Promise<Personnel> {
   return archivePersonnel(personnelId, actor, reason)
+}
+
+/** Marks one emergency contact verified or unverified (`index` 0 is the primary); audited. */
+export function verifyStaffContact(
+  personnelId: string,
+  index: number,
+  verified: boolean,
+  actor: SessionUser,
+): Promise<Personnel> {
+  return verifyPersonnelContact(personnelId, index, verified, actor)
 }
 
 export interface StaffFormValues {

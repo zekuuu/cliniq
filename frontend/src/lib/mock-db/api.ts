@@ -1504,6 +1504,29 @@ export function archiveStudent(
   })
 }
 
+/** Module 2: mark one emergency contact verified or unverified; `index` 0 is the primary. */
+export function verifyStudentContact(
+  studentId: string,
+  index: number,
+  verified: boolean,
+  actor: SessionUser | undefined,
+): Promise<Student> {
+  return write('verify student contact', (s) => {
+    const record = studentOf(s, studentId)
+    const contact = record.emergencyContacts[index]
+    if (!contact) throw new Error('That emergency contact was not found.')
+    contact.verified = verified
+    audit(
+      s,
+      actorOr(actor),
+      'update',
+      { type: 'student', id: record.id },
+      `Marked an emergency contact ${verified ? 'verified' : 'unverified'}.`,
+    )
+    return toStudent(record)
+  })
+}
+
 // ---- yearly student list import (ADR-047, mock level) ----------------------------------------
 
 export interface ImportProblem {
@@ -2099,6 +2122,30 @@ export function archivePersonnel(
     const record = personnelOf(s, personnelId)
     Object.assign(record, archiveDetails(s, cleanReason(reason)))
     audit(s, by, 'archive', { type: 'staff', id: record.id })
+    return toPersonnel(record)
+  })
+}
+
+export function verifyPersonnelContact(
+  personnelId: string,
+  index: number,
+  verified: boolean,
+  actor: SessionUser | undefined,
+): Promise<Personnel> {
+  return write('verify staff contact', (s) => {
+    const by = actorOr(actor)
+    requireClinician(by)
+    const record = personnelOf(s, personnelId)
+    const contact = record.emergencyContacts[index]
+    if (!contact) throw new Error('That emergency contact was not found.')
+    contact.verified = verified
+    audit(
+      s,
+      by,
+      'update',
+      { type: 'staff', id: record.id },
+      `Marked an emergency contact ${verified ? 'verified' : 'unverified'}.`,
+    )
     return toPersonnel(record)
   })
 }
