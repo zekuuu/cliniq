@@ -1,5 +1,4 @@
 import {
-  Button,
   inventoryFlagMap,
   stockQuantityText,
   followUpDueMap,
@@ -10,6 +9,8 @@ import {
   StatusBadge,
 } from '../../../components'
 import { useState } from 'react'
+import { Pagination } from '../../../components/ui/Pagination'
+import { usePageSize } from '../../../hooks/usePageSize'
 import { PatientFilterSelect } from '../../../components/forms/PatientFilterSelect'
 import { matchesPatientFilter, type PatientFilter } from '../../../lib/patients'
 import { describeRange, type DateRange } from '../../../lib/dateRange'
@@ -102,9 +103,6 @@ export function FollowUpsAlert({
   )
 }
 
-/** How many frequent visitors the Overview lists before "Show all". */
-const FREQUENT_VISITORS_SHOWN = 5
-
 export function FrequentVisitorsAlert({
   summary,
   range,
@@ -112,36 +110,38 @@ export function FrequentVisitorsAlert({
   summary: DashboardSummary
   range: DateRange
 }) {
-  // Zean (October 25, 2026): the panel is back, but shows only the students with the most visits
-  // until "Show all" (the list is already sorted most visits first). The count badge keeps the total.
-  const [showAll, setShowAll] = useState(false)
-  const rows = showAll
-    ? summary.frequentVisitors
-    : summary.frequentVisitors.slice(0, FREQUENT_VISITORS_SHOWN)
-  const hidden = summary.frequentVisitors.length - FREQUENT_VISITORS_SHOWN
+  // Zean (November 20, 2026): the list pages, 10 by default, most visits first. This replaced the
+  // top five and "Show all" (October 25, 2026), which put all 300 rows in one card.
+  // The caller keys this panel by its date range, so a new range starts on page 1.
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = usePageSize()
+  const total = summary.frequentVisitors.length
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
+  const current = Math.min(page, pageCount)
+  const rows = summary.frequentVisitors.slice((current - 1) * pageSize, current * pageSize)
   const scope = describeRange(range).toLowerCase()
   return (
     <ListCard
       title={LISTS.frequent.title}
       icon={LISTS.frequent.icon}
-      count={summary.frequentVisitors.length}
-      // The title keeps at least 14rem, so on a phone "Show all" drops below it instead of squeezing it.
-      className="[&>div:first-child>div:first-child]:basis-56"
-      actions={
-        hidden > 0 && (
-          <Button
-            variant="secondary"
-            size="sm"
-            aria-expanded={showAll}
-            onClick={() => setShowAll((current) => !current)}
-          >
-            {showAll
-              ? `Show top ${FREQUENT_VISITORS_SHOWN}`
-              : `Show all ${summary.frequentVisitors.length}`}
-          </Button>
-        )
-      }
+      count={total}
       maxHeightClass={ALERT_LIST_HEIGHT}
+      footer={
+        <div className="px-5 pb-4">
+          <Pagination
+            page={current}
+            pageCount={pageCount}
+            total={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            itemLabel="frequent visitors"
+            onPageSizeChange={(size) => {
+              setPageSize(size)
+              setPage(1)
+            }}
+          />
+        </div>
+      }
       description={`Students with ${summary.frequentVisitorMinVisits}+ visits (${scope}); staff are not counted. A warning only, not a diagnosis.`}
       empty={{
         title: 'No frequent-visitor warnings',

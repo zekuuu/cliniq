@@ -25,6 +25,8 @@ export interface ListCardProps {
   /** Caps the visible height on screen (rows scroll). Print always shows every row. */
   maxHeightClass?: string
   className?: string
+  /** Below the rows, outside the scroll region (a pager). */
+  footer?: ReactNode
 }
 
 /**
@@ -43,6 +45,7 @@ export function ListCard({
   empty,
   maxHeightClass = 'max-h-80',
   className,
+  footer,
 }: ListCardProps) {
   const headingId = useId()
   return (
@@ -83,6 +86,7 @@ export function ListCard({
           <RowList labelledBy={headingId}>{children}</RowList>
         </div>
       )}
+      {count > 0 && footer}
     </Card>
   )
 }

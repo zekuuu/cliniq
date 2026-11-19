@@ -100,8 +100,8 @@ export type SeedAuditLogEntry = Replace<AuditLogEntry, { timestamp: RelativeDate
 export interface MockDbConfig {
   /**
    * Shows the Frequent-visitor panel on the Dashboard and its section in the Clinic Overview Report.
-   * On; the panel lists the five students with the most visits until "Show all" (Zean, October 25,
-   * 2026, after Sir Mina and Sir Rey called the Dashboard crowded). Set false to hide it.
+   * On; the panel pages its students, most visits first, 10 per page (Zean, November 20, 2026;
+   * from October 25, 2026 it showed the top five until "Show all"). Set false to hide it.
    */
   showFrequentVisitors: boolean
   /** Visits within the window that raise the frequent-visitor warning. */

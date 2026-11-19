@@ -274,7 +274,11 @@ export function DashboardPage({ viewer = getMockSessionUser() }: { viewer?: Sess
                   {viewer.role === 'staff' && <ClusterAlerts alerts={clusters.data ?? []} />}
                   {d.showFrequentVisitors && (
                     <section aria-label="Frequent visitor warnings">
-                      <FrequentVisitorsAlert summary={d} range={range} />
+                      <FrequentVisitorsAlert
+                        key={`${range.from}:${range.to}`}
+                        summary={d}
+                        range={range}
+                      />
                     </section>
                   )}
                 </>

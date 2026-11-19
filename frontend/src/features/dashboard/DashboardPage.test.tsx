@@ -51,7 +51,7 @@ describe('Clinic Overview Dashboard', () => {
     expect(screen.getByRole('heading', { name: /frequent-visitor warnings/i })).toBeInTheDocument()
   })
 
-  it('lists the five most frequent visitors, with Show all for the rest (Zean, October 25, 2026)', async () => {
+  it('pages the frequent visitors, 10 at a time, with no Show all (Zean, November 20, 2026)', async () => {
     const user = userEvent.setup()
     renderWithRouter(<DashboardPage />, { route: '/?range=all' })
     await screen.findByRole('region', { name: 'Summary counts' })
@@ -59,16 +59,17 @@ describe('Clinic Overview Dashboard', () => {
     await user.click(screen.getByRole('option', { name: 'All' }))
     const panel = screen.getByRole('region', { name: 'Frequent visitor warnings' })
     const list = () => within(panel).getAllByRole('listitem')
-    const showAll = await within(panel).findByRole('button', { name: /^Show all \d+$/ })
-    const total = Number(showAll.textContent?.match(/\d+/)?.[0])
-    expect(total).toBeGreaterThan(5)
-    expect(list()).toHaveLength(5)
+    const summary = await within(panel).findByText(/^Showing 1–\d+ of \d+ frequent visitors$/)
+    const total = Number(summary.textContent?.match(/of (\d+)/)?.[1])
+    expect(total).toBeGreaterThan(10)
+    expect(list()).toHaveLength(10)
+    expect(within(panel).queryByRole('button', { name: /^Show (all|top)/ })).not.toBeInTheDocument()
     // The section title already says it; no per-row "Frequent-visit warning" badge (Zean, October 25, 2026).
     expect(within(panel).queryByText('Frequent-visit warning')).not.toBeInTheDocument()
-    await user.click(showAll)
-    expect(list()).toHaveLength(total)
-    await user.click(within(panel).getByRole('button', { name: 'Show top 5' }))
-    expect(list()).toHaveLength(5)
+    await user.click(within(panel).getByRole('button', { name: 'Next page' }))
+    expect(
+      within(panel).getByText(new RegExp(`^Showing 11–\\d+ of ${total} frequent visitors$`)),
+    ).toBeInTheDocument()
   })
 
   it.each([false, true])(
