@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { notify } from '../../lib/notify'
+import { scrollToTop } from '../../lib/scrollToTop'
 import {
   BackButton,
   Button,
@@ -30,7 +32,6 @@ import {
   previewStudentImport,
   type SessionUser,
   type StudentImportPreview,
-  type StudentImportResult,
 } from '../../lib/data'
 import { paths } from '../../routes/paths'
 import { nameMatches } from '../../lib/personName'
@@ -71,7 +72,6 @@ export function StudentImportPage({ viewer = getMockSessionUser() }: { viewer?: 
   const [find, setFind] = useState('')
   const [confirming, setConfirming] = useState(false)
   const [applying, setApplying] = useState(false)
-  const [result, setResult] = useState<StudentImportResult | null>(null)
   const [error, setError] = useState('')
 
   const shell = 'mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8'
@@ -88,11 +88,11 @@ export function StudentImportPage({ viewer = getMockSessionUser() }: { viewer?: 
     const parsed = parseCsv(await file.text())
     setFileName(file.name)
     setPreview(null)
-    setResult(null)
     if (parsed.length < 2) {
       setCsv(null)
       setMapping(null)
       setError('This file has no student rows.')
+      notify.checkFields('This file has no student rows.')
       return
     }
     setError('')
@@ -111,11 +111,22 @@ export function StudentImportPage({ viewer = getMockSessionUser() }: { viewer?: 
   async function apply() {
     setApplying(true)
     try {
-      setResult(await applyStudentImport(rows, { fileName, archiveIds, actor: viewer }))
+      const result = await applyStudentImport(rows, { fileName, archiveIds, actor: viewer })
+      // ADR-083: the result as a toast, then a clean step 1 from the top.
+      notify.success(
+        result.created || result.updated || result.archived
+          ? `List applied: ${result.created} added, ${result.updated} updated, ${result.archived} archived, ${result.flagged} left out`
+          : 'Nothing to change. The student records already match this list',
+        { id: 'student-import' },
+      )
       setPreview(null)
       setCsv(null)
       setMapping(null)
+      setFileName('')
       setConfirming(false)
+      scrollToTop()
+    } catch (cause) {
+      notify.apiError(cause, 'The list was not applied. Please try again.')
     } finally {
       setApplying(false)
     }
@@ -155,16 +166,6 @@ export function StudentImportPage({ viewer = getMockSessionUser() }: { viewer?: 
           Update the list from the registrar's yearly CSV. Nothing changes until you apply it.
         </p>
       </Card>
-      {result && (
-        <p
-          role="status"
-          className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary"
-        >
-          {result.created || result.updated || result.archived
-            ? `List applied: ${result.created} added, ${result.updated} updated, ${result.archived} archived, ${result.flagged} left out.`
-            : 'Nothing to change. The student records already match this list.'}
-        </p>
-      )}
       <Card aria-labelledby="import-file-title">
         <CardHeader
           titleId="import-file-title"
@@ -192,7 +193,11 @@ export function StudentImportPage({ viewer = getMockSessionUser() }: { viewer?: 
               type="file"
               aria-label="Student list (CSV)"
               accept=".csv,text/csv"
-              onChange={(event) => void chooseFile(event.target.files?.[0])}
+              onChange={(event) => {
+                void chooseFile(event.target.files?.[0])
+                // Cleared, so the same file can be chosen again after a reset (ADR-083).
+                event.target.value = ''
+              }}
               className="sr-only"
             />
             <Icon name="upload" size={28} className="text-brand-green-dark" />

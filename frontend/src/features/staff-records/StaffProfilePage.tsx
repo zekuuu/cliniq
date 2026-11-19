@@ -1,7 +1,7 @@
 import { SelectWithOther } from '../../components'
-import { useEffect, useState, type ReactNode } from 'react'
+import { notify } from '../../lib/notify'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { clearSavedMessage, peekSavedMessage } from '../../lib/savedMessage'
 import {
   BackButton,
   Badge,
@@ -99,12 +99,18 @@ function Header({
   const [reasonError, setReasonError] = useState('')
 
   async function archive() {
-    if (!reason.trim()) return setReasonError('Choose the reason for archiving.')
+    if (!reason.trim()) {
+      notify.checkFields()
+      return setReasonError('Choose the reason for archiving.')
+    }
     setArchiving(true)
     try {
       await archiveStaffRecord(person.id, viewer, reason)
       setConfirming(false)
+      notify.success('Staff record archived', { id: 'archive-record' })
       onArchived()
+    } catch (cause) {
+      notify.apiError(cause, 'The record was not archived. Please try again.')
     } finally {
       setArchiving(false)
     }
@@ -403,8 +409,6 @@ export function StaffProfilePage({
   const { data, status, reload } = useAsyncData(`staff-profile|${personnelId}`, () =>
     fetchStaffProfile(personnelId, viewer),
   )
-  const [savedMessage] = useState(peekSavedMessage)
-  useEffect(clearSavedMessage, [])
   const back = <BackButton fallback={paths.staff} />
 
   if (viewer.role !== 'staff') {
@@ -438,14 +442,6 @@ export function StaffProfilePage({
       {back}
       <Header person={data.personnel} viewer={viewer} onArchived={reload} />
       <AllergyBanner person={data.personnel} />
-      {savedMessage && (
-        <div
-          role="status"
-          className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary"
-        >
-          {savedMessage}
-        </div>
-      )}
       <Overview
         person={data.personnel}
         onVerifyContact={

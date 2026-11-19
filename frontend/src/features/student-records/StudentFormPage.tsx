@@ -47,7 +47,8 @@ import {
 import { unusualAgeNote } from '../../lib/age'
 import { formatPersonName } from '../../lib/personName'
 import { isLrn, normalizeLrn } from '../../lib/lrn'
-import { setSavedMessage } from '../../lib/savedMessage'
+import { notify } from '../../lib/notify'
+import { scrollToTop } from '../../lib/scrollToTop'
 import { NONE_RECORDED } from '../../lib/patients'
 import { STARTER_ALLERGIES, STARTER_CONDITIONS } from '../../config/healthStarterList'
 
@@ -229,7 +230,6 @@ function StudentFormEditor({
   const [duplicateMatches, setDuplicateMatches] = useState<DuplicateMatch[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
-  const successRef = useRef<HTMLParagraphElement>(null)
   const [liveDuplicates, setLiveDuplicates] = useState<StudentDuplicateCheck>({
     lrnTaken: false,
     nameMatches: [],
@@ -379,7 +379,10 @@ function StudentFormEditor({
           nameCorrectionReason: nameChanged ? nameReason : undefined,
         })
       } catch (cause) {
-        if (!(cause instanceof DuplicateLrnError)) throw cause
+        if (!(cause instanceof DuplicateLrnError)) {
+          notify.apiError(cause, 'The student record was not saved. Please try again.')
+          return
+        }
         setErrors({ lrn: cause.message })
         invalid.report(1)
         return
@@ -391,25 +394,33 @@ function StudentFormEditor({
       setDuplicateMatches([])
       if (result.action === 'update' && returnTo) {
         // Back through history, not a new entry, so Back on the queue doesn't show the queue again.
+        notify.success('Student record updated', { id: 'student-save' })
         allowLeave()
         goBackToReturn()
         return
       }
       if (result.action === 'update') {
-        // An edit ends on the record it changed, like Visit Details; the profile shows the confirmation.
+        // An edit ends on the record it changed, like Visit Details; the toast stays across the move.
         // Back through history, so the next Back leaves the profile instead of showing it again.
-        setSavedMessage(`Student record updated for ${result.student.fullName}.`)
+        notify.success('Student record updated', { id: 'student-save' })
         allowLeave()
         if (location.key === 'default')
           void navigate(paths.studentProfile(result.student.id), { replace: true })
         else void navigate(-1)
         return
       }
-      // A create clears the form for the next student; the banner says what was saved.
+      // A create clears the form for the next student and goes back to the top (ADR-083).
+      const created = result.student.id
       setValues(EMPTY_VALUES)
       setBaseline(EMPTY_VALUES)
-      setSuccessMessage(`Student record created for ${result.student.fullName}.`)
-      successRef.current?.scrollIntoView?.({ block: 'center' })
+      setErrors({})
+      setNameReason('')
+      setSuccessMessage('created')
+      notify.success('Student record created', {
+        id: 'student-save',
+        action: { label: 'Open record', onClick: () => navigate(paths.studentProfile(created)) },
+      })
+      scrollToTop()
     } finally {
       setIsSaving(false)
     }
@@ -454,18 +465,6 @@ function StudentFormEditor({
             }
           />
           <CardBody className="flex flex-col gap-5">
-            <p
-              ref={successRef}
-              role="status"
-              className={
-                successMessage
-                  ? 'rounded-md border border-success/40 bg-success/10 px-3 py-2 text-sm font-semibold text-success'
-                  : 'sr-only'
-              }
-            >
-              {successMessage}
-            </p>
-
             <FormSection
               id="identity-title"
               title="Identity"

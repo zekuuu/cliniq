@@ -1,4 +1,5 @@
 import { SelectWithOther } from '../../components'
+import { notify } from '../../lib/notify'
 import { Lrn } from '../../components/ui/MaskedLrn'
 import { SYMPTOM } from '../../lib/labels'
 import {
@@ -25,9 +26,8 @@ import {
   StatusBadge,
   type StatusMap,
 } from '../../components'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { clearSavedMessage, peekSavedMessage } from '../../lib/savedMessage'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { ageOn, ageText } from '../../lib/age'
 import { formatDate, formatDateRange, formatDateTime } from '../../lib/dates'
@@ -132,12 +132,18 @@ function ProfileHeader({
   const age = ageOn(student.birthDate, getMockToday())
 
   async function archive() {
-    if (!reason.trim()) return setReasonError('Choose the reason for archiving.')
+    if (!reason.trim()) {
+      notify.checkFields()
+      return setReasonError('Choose the reason for archiving.')
+    }
     setArchiving(true)
     try {
       await archiveStudentRecord(student.id, viewer, reason)
       setConfirmingArchive(false)
+      notify.success('Student record archived', { id: 'archive-record' })
       onArchived()
+    } catch (cause) {
+      notify.apiError(cause, 'The record was not archived. Please try again.')
     } finally {
       setArchiving(false)
     }
@@ -650,8 +656,6 @@ export function StudentProfilePage({
     fetchStudentProfile(studentId, viewer),
   )
   // Set by Edit Student after a successful save, which returns here.
-  const [savedMessage] = useState(peekSavedMessage)
-  useEffect(clearSavedMessage, [])
   const back = <BackButton fallback={paths.students} />
 
   if (status === 'error') {
@@ -679,14 +683,6 @@ export function StudentProfilePage({
       {back}
       <ProfileHeader student={data.student} viewer={viewer} onArchived={reload} />
       <AllergyBanner student={data.student} />
-      {savedMessage && (
-        <div
-          role="status"
-          className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary"
-        >
-          {savedMessage}
-        </div>
-      )}
       <div className="grid grid-cols-1 gap-4">
         <div className="flex flex-col gap-4">
           <OverviewCard

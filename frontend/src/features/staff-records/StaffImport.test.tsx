@@ -122,7 +122,7 @@ describe('Staff list import (ADR-069)', () => {
     await user.click(screen.getByRole('button', { name: 'Apply List' }))
     await user.click(screen.getAllByRole('button', { name: 'Apply List' }).at(-1)!)
     expect(
-      await screen.findByText('List applied: 1 added, 2 updated, 4 left out.'),
+      await screen.findByText('List applied: 1 added, 2 updated, 4 left out'),
     ).toBeInTheDocument()
   })
 })

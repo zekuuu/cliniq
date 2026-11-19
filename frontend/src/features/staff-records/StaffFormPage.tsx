@@ -27,7 +27,7 @@ import { getMockSessionUser, type SessionUser } from '../../lib/data'
 import { paths } from '../../routes/paths'
 import { NONE_RECORDED } from '../../lib/patients'
 import { STARTER_ALLERGIES, STARTER_CONDITIONS } from '../../config/healthStarterList'
-import { setSavedMessage } from '../../lib/savedMessage'
+import { notify } from '../../lib/notify'
 import type { Personnel } from '../../types/entities'
 import {
   fetchStaffFormContext,
@@ -137,7 +137,6 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
   const [values, setValues] = useState(initial)
   const [errors, setErrors] = useState<Errors>({})
   const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState('')
   const navigate = useNavigate()
   const location = useLocation()
   const returnTo = (location.state as { returnTo?: string } | null)?.returnTo
@@ -206,15 +205,15 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
     invalid.report(Object.keys(next).length)
     if (Object.keys(next).length) return
     setSaving(true)
-    setSaveError('')
     try {
       const { personnel, action } = await submitStaffForm(values, {
         personnelId: data.personnel?.id,
         actor: viewer,
       })
-      setSavedMessage(
-        `Staff record ${action === 'create' ? 'created' : 'updated'} for ${personnel.fullName}.`,
-      )
+      // The toast stays across the move to the profile, which starts at the top (ADR-083).
+      notify.success(`Staff record ${action === 'create' ? 'created' : 'updated'}`, {
+        id: 'staff-save',
+      })
       // An edit returns through history, so the next Back leaves the profile instead of showing it again.
       allowLeave()
       // From the staff Incomplete Records page: back there, as on the student queue (ADR-067).
@@ -222,7 +221,7 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
       if (action === 'update' && location.key !== 'default') void navigate(-1)
       else void navigate(paths.staffProfile(personnel.id), { replace: true })
     } catch (cause) {
-      setSaveError(cause instanceof Error ? cause.message : 'The staff record could not be saved.')
+      notify.apiError(cause, 'The staff record could not be saved. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -253,14 +252,6 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
             icon={<Icon name="user" />}
           />
           <CardBody className="flex flex-col gap-5">
-            {saveError && (
-              <p
-                role="alert"
-                className="rounded-md border border-error bg-error/10 px-3 py-2 text-sm font-semibold text-text-primary"
-              >
-                {saveError}
-              </p>
-            )}
             <FormSection
               id="staff-identity"
               title="Identity"

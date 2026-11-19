@@ -74,7 +74,7 @@ describe('Add/Edit Student', () => {
       await user.type(screen.getByLabelText(/contact phone/i), '0917-333-4444')
       await user.click(screen.getByRole('button', { name: 'Save Student' }))
 
-      expect(await screen.findByText('Student record created for Lara Santos.')).toBeInTheDocument()
+      expect(await screen.findByText('Student record created')).toBeInTheDocument()
       const created = (await listStudents({ search: 'Lara Santos' }))[0]
       expect((await getStudent(created.id)).birthDate).toBeNull()
     },

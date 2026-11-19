@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { notify } from '../../lib/notify'
+import { scrollToTop } from '../../lib/scrollToTop'
 import {
   BackButton,
   Button,
@@ -28,7 +30,6 @@ import {
   previewStaffImport,
   type SessionUser,
   type StaffImportPreview,
-  type StaffImportResult,
 } from '../../lib/data'
 import { paths } from '../../routes/paths'
 
@@ -69,7 +70,6 @@ export function StaffImportPage({ viewer = getMockSessionUser() }: { viewer?: Se
   const [preview, setPreview] = useState<StaffImportPreview | null>(null)
   const [confirming, setConfirming] = useState(false)
   const [applying, setApplying] = useState(false)
-  const [result, setResult] = useState<StaffImportResult | null>(null)
   const [error, setError] = useState('')
 
   const shell = 'mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8'
@@ -85,11 +85,11 @@ export function StaffImportPage({ viewer = getMockSessionUser() }: { viewer?: Se
     const parsed = parseCsv(await file.text())
     setFileName(file.name)
     setPreview(null)
-    setResult(null)
     if (parsed.length < 2) {
       setCsv(null)
       setMapping(null)
       setError('This file has no staff rows.')
+      notify.checkFields('This file has no staff rows.')
       return
     }
     setError('')
@@ -107,11 +107,22 @@ export function StaffImportPage({ viewer = getMockSessionUser() }: { viewer?: Se
   async function apply() {
     setApplying(true)
     try {
-      setResult(await applyStaffImport(rows, { fileName, actor: viewer }))
+      const result = await applyStaffImport(rows, { fileName, actor: viewer })
+      // ADR-083: the result as a toast, then a clean step 1 from the top.
+      notify.success(
+        result.created || result.updated
+          ? `List applied: ${result.created} added, ${result.updated} updated, ${result.flagged} left out`
+          : 'Nothing to change. The staff records already match this list',
+        { id: 'staff-import' },
+      )
       setPreview(null)
       setCsv(null)
       setMapping(null)
+      setFileName('')
       setConfirming(false)
+      scrollToTop()
+    } catch (cause) {
+      notify.apiError(cause, 'The list was not applied. Please try again.')
     } finally {
       setApplying(false)
     }
@@ -137,16 +148,6 @@ export function StaffImportPage({ viewer = getMockSessionUser() }: { viewer?: Se
           are. Nothing changes until you apply it.
         </p>
       </Card>
-      {result && (
-        <p
-          role="status"
-          className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary"
-        >
-          {result.created || result.updated
-            ? `List applied: ${result.created} added, ${result.updated} updated, ${result.flagged} left out.`
-            : 'Nothing to change. The staff records already match this list.'}
-        </p>
-      )}
       <Card aria-labelledby="staff-import-file-title">
         <CardHeader
           titleId="staff-import-file-title"
@@ -172,7 +173,11 @@ export function StaffImportPage({ viewer = getMockSessionUser() }: { viewer?: Se
               type="file"
               aria-label="Staff list (CSV)"
               accept=".csv,text/csv"
-              onChange={(event) => void chooseFile(event.target.files?.[0])}
+              onChange={(event) => {
+                void chooseFile(event.target.files?.[0])
+                // Cleared, so the same file can be chosen again after a reset (ADR-083).
+                event.target.value = ''
+              }}
               className="sr-only"
             />
             <Icon name="upload" size={28} className="text-brand-green-dark" />

@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { MemoryRouter, Route, Routes, useParams } from 'react-router'
@@ -61,7 +61,8 @@ describe('Back after a save never returns to the submitted form', () => {
       addDays(todayISO(), 1),
     )
     await user.click(screen.getByRole('button', { name: 'Save Visit' }))
-    await user.click(await screen.findByRole('link', { name: 'Review excuse letter' }))
+    // The success toast carries the letter as its action (ADR-083).
+    await user.click(await screen.findByRole('button', { name: 'Review letter' }))
     await screen.findByRole('heading', { name: 'Excuse Letter' })
 
     await user.click(back())
@@ -77,7 +78,12 @@ describe('Back after a save never returns to the submitted form', () => {
     await screen.findByRole('heading', { name: 'Edit Student' })
     await user.type(screen.getByLabelText(/contact name/i), 'x')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
-    await screen.findByText(/^Student record updated for/)
+    await screen.findByText('Student record updated')
+    // The toast shows before the move; wait for the profile itself.
+    await waitFor(() =>
+      expect(screen.queryByRole('heading', { name: 'Edit Student' })).not.toBeInTheDocument(),
+    )
+    await screen.findByRole('heading', { level: 1 })
 
     await user.click(back())
     expect(screen.getByText('Previous screen')).toBeInTheDocument()
@@ -98,7 +104,7 @@ describe('Back after a save never returns to the submitted form', () => {
     await user.type(screen.getByLabelText(/allergies/i), 'None')
     await user.type(screen.getByLabelText(/medical conditions/i), 'None')
     await user.click(screen.getByRole('button', { name: 'Save Student' }))
-    await screen.findByText('Student record created for Lara Santos.')
+    await screen.findByText('Student record created')
 
     await user.click(back())
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -118,7 +124,7 @@ describe('Back after a save never returns to the submitted form', () => {
     await user.click(screen.getByLabelText(/this item has no expiration date/i))
     await user.click(screen.getByRole('checkbox', { name: 'Headache' }))
     await user.click(screen.getByRole('button', { name: 'Add Item' }))
-    await screen.findByText('Saline solution was added successfully.')
+    await screen.findByText('Saline solution added')
 
     await user.click(back())
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

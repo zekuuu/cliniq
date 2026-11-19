@@ -165,7 +165,7 @@ describe('Staff Form', () => {
     await user.click(screen.getByRole('button', { name: 'Save Staff' }))
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Ana Test' })).toBeInTheDocument()
-    expect(screen.getByText('Staff record created for Ana Test.')).toBeInTheDocument()
+    expect(screen.getByText('Staff record created')).toBeInTheDocument()
     expect(screen.getByText('STF-0013 · Teacher · Guidance office')).toBeInTheDocument()
     // "None" stores no allergy, as on the student form.
     expect(
@@ -191,7 +191,7 @@ describe('Staff Form', () => {
     await user.clear(screen.getByRole('combobox', { name: /^Medical conditions/ }))
     await user.type(screen.getByRole('combobox', { name: /^Medical conditions/ }), 'Migraine')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
-    expect(await screen.findByText('Staff record updated for Liza Pangilinan.')).toBeInTheDocument()
+    expect(await screen.findByText('Staff record updated')).toBeInTheDocument()
     expect((await getPersonnel('personnel-0005')).medicalConditions).toEqual(['Migraine'])
     expect(recordedWrites().at(-1)).toMatchObject({
       actionType: 'update',

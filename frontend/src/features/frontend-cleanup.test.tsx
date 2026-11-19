@@ -99,7 +99,11 @@ describe('After Edit Student saves (C6)', () => {
       screen.getByRole('radio', { name: student.sex === 'female' ? 'Male' : 'Female' }),
     )
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
-    expect(await screen.findByText(/^Student record updated for/)).toBeInTheDocument()
+    expect(await screen.findByText('Student record updated')).toBeInTheDocument()
+    // The toast shows before the move back; wait until the form is gone (ADR-083).
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Save Changes' })).not.toBeInTheDocument(),
+    )
     await user.click(screen.getByRole('button', { name: 'Back' }))
     expect(await screen.findByRole('link', { name: 'Open profile' })).toBeInTheDocument()
   })
@@ -125,7 +129,11 @@ describe('After Edit Staff saves', () => {
       </MemoryRouter>,
     )
     await user.click(await screen.findByRole('button', { name: 'Save Changes' }))
-    expect(await screen.findByText(/^Staff record updated for/)).toBeInTheDocument()
+    expect(await screen.findByText('Staff record updated')).toBeInTheDocument()
+    // The toast shows before the move back; wait until the form is gone (ADR-083).
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Save Changes' })).not.toBeInTheDocument(),
+    )
     await user.click(screen.getByRole('button', { name: 'Back' }))
     expect(await screen.findByText('Previous screen')).toBeInTheDocument()
   })

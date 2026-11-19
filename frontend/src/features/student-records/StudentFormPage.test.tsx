@@ -216,7 +216,7 @@ describe('Student Form', () => {
     expect(await screen.findByText('Enter the emergency contact phone.')).toBeInTheDocument()
     await user.clear(screen.getByLabelText(/contact name/i))
     await user.click(screen.getByRole('button', { name: 'Save Student' }))
-    expect(await screen.findByText('Student record created for Lara Santos.')).toBeInTheDocument()
+    expect(await screen.findByText('Student record created')).toBeInTheDocument()
   })
 
   it('validates required fields inline', async () => {
@@ -276,7 +276,7 @@ describe('Student Form', () => {
 
     await user.click(screen.getByRole('button', { name: 'Save Student' }))
 
-    expect(await screen.findByText('Student record created for Lara Santos.')).toBeInTheDocument()
+    expect(await screen.findByText('Student record created')).toBeInTheDocument()
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['create'])
     // The form is cleared for the next student.
     expect(screen.getByLabelText(/^First name/)).toHaveValue('')
@@ -344,11 +344,10 @@ describe('Student Form', () => {
     await user.type(screen.getByLabelText(/contact name/i), ' Jr')
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
 
-    expect(
-      await screen.findByText(`Student record updated for ${existing.fullName}.`),
-    ).toBeInTheDocument()
+    expect(await screen.findByText('Student record updated')).toBeInTheDocument()
+    // The toast shows before the move back to the profile (ADR-083).
+    expect(await screen.findByRole('heading', { name: existing.fullName })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Edit Student' })).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: existing.fullName })).toBeInTheDocument()
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toContain('update')
   })
 
@@ -449,9 +448,7 @@ describe('Student Form: First name, Last name and Middle name (S4, ADR-064)', ()
     await selectOption(user, screen.getByLabelText(/grade level/i), 'Grade 6')
     await user.click(screen.getByRole('radio', { name: 'Female' }))
     await user.click(screen.getByRole('button', { name: 'Save Student' }))
-    expect(
-      await screen.findByText('Student record created for Maria Angela Santos Dela Cruz.'),
-    ).toBeInTheDocument()
+    expect(await screen.findByText('Student record created')).toBeInTheDocument()
     const [saved] = await fetchStudentList({
       search: 'dela cruz',
       gradeLevel: '',
