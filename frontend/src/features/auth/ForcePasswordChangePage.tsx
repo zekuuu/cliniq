@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { notify } from '../../lib/notify'
 import { Navigate, useNavigate } from 'react-router'
 import { BackButton, Button, Card, Input } from '../../components'
 import { BrandLogo } from '../../layouts/Sidebar'
@@ -51,16 +52,28 @@ function ForcePasswordChangeForm({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
-    if (nextPassword.length < 8) return setError('Password must be at least 8 characters.')
-    if (nextPassword !== confirmation) return setError('Passwords do not match.')
+    // A form-level check stays beside the fields and is also the toast's text (ADR-083).
+    const problem =
+      nextPassword.length < 8
+        ? 'Password must be at least 8 characters.'
+        : nextPassword !== confirmation
+          ? 'Passwords do not match.'
+          : ''
+    if (problem) {
+      notify.checkFields(problem)
+      return setError(problem)
+    }
     setSaving(true)
     try {
       await changeMockPassword(userId, nextPassword)
       const user = account ?? (await getUser(userId))
       onComplete({ id: user.id, name: user.name, role: user.role })
+      notify.success('Password set. Welcome to CLINIQ', { id: 'change-password' })
       navigate(paths.dashboard, { replace: true })
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to update the password.')
+      notify.apiError(cause, 'Unable to update the password. Please try again.', {
+        id: 'change-password',
+      })
     } finally {
       setSaving(false)
     }

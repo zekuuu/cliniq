@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
+import { findToast } from '../../test/findToast'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -58,9 +59,7 @@ describe('Change Password', () => {
 
   it('refuses a wrong current password, changes nothing and audits nothing', async () => {
     await fill('not-the-password', 'a-new-password')
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Your current password is incorrect.',
-    )
+    expect(await findToast('Your current password is incorrect.')).toBeInTheDocument()
     expect(passwordEntries()).toEqual([])
     await expect(authenticateMockUser('demo.nurse', 'demo-nurse')).resolves.toMatchObject({
       user: { id: STAFF.id },
@@ -69,7 +68,7 @@ describe('Change Password', () => {
 
   it('changes the password, so the new one signs in, and audits it without a password', async () => {
     await fill('demo-nurse', 'a-new-password')
-    expect(await screen.findByRole('status')).toHaveTextContent('Password changed.')
+    expect(await findToast('Password changed')).toBeInTheDocument()
     await expect(authenticateMockUser('demo.nurse', 'a-new-password')).resolves.toMatchObject({
       user: { id: STAFF.id },
     })
@@ -79,7 +78,7 @@ describe('Change Password', () => {
 
   it('lets the Admin change their own password', async () => {
     await fill('demo-admin', 'a-new-admin-password', 'a-new-admin-password', ADMIN)
-    expect(await screen.findByRole('status')).toHaveTextContent('Password changed.')
+    expect(await findToast('Password changed')).toBeInTheDocument()
     await expect(
       authenticateMockUser('demo.principal', 'a-new-admin-password'),
     ).resolves.toMatchObject({ user: { id: ADMIN.id } })
@@ -101,9 +100,7 @@ describe('Change Password', () => {
     await changeOwnPassword(STAFF.id, 'demo-nurse', 'second-password')
     await changeOwnPassword(STAFF.id, 'second-password', 'third-password')
     await fill('third-password', 'demo-nurse')
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Choose a password that was not used recently.',
-    )
+    expect(await findToast('Choose a password that was not used recently.')).toBeInTheDocument()
     expect(passwordEntries()).toHaveLength(2)
     await expect(authenticateMockUser('demo.nurse', 'third-password')).resolves.toMatchObject({
       user: { id: STAFF.id },

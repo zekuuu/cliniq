@@ -244,7 +244,7 @@ describe('Idle sign-out settings', () => {
     expect(await screen.findByText('Enter whole minutes from 10 to 240.')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Staff (minutes)'), { target: { value: '90' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
-    expect(await screen.findByText('Sign-out times saved.')).toBeInTheDocument()
+    expect(await screen.findByText('Sign-out times saved')).toBeInTheDocument()
     expect((await getIdleSignoutSettings()).idleSignoutMinutesStaff).toBe(90)
     unmount()
 
@@ -258,7 +258,7 @@ describe('Idle sign-out settings', () => {
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
   })
 
-  it('tells Login how many minutes ended the session', () => {
+  it('tells Login how many minutes ended the session', async () => {
     render(
       <MemoryRouter initialEntries={[{ pathname: '/login', state: { signedOutAfterMinutes: 60 } }]}>
         <LoginPage onLogin={() => {}} />
@@ -267,5 +267,7 @@ describe('Idle sign-out settings', () => {
     expect(
       screen.getByText('You were signed out after 60 minutes of inactivity. Sign in again.'),
     ).toBeInTheDocument()
+    // The notice stays, and one warning toast says it too (Zean, November 19, 2026).
+    expect(await screen.findByText('Signed out after 60 minutes of inactivity')).toBeInTheDocument()
   })
 })

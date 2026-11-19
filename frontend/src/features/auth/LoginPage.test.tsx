@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
+import { findToast } from '../../test/findToast'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
@@ -102,7 +103,8 @@ describe('LoginPage', () => {
       await user.clear(screen.getByLabelText(/^Password/))
       await user.type(screen.getByLabelText(/^Password/), `wrong-${attempt}`)
       await user.click(screen.getByRole('button', { name: 'Sign In' }))
-      await screen.findByRole('alert')
+      // Each refusal is one toast, replaced by the next (ADR-083).
+      await findToast('')
     }
     expect(
       await screen.findByText(/locked after repeated failed attempts\. Try again at \d{1,2}:\d{2}/),

@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { Button, Input } from '../../components'
 import { ForgotPasswordDialog } from './ForgotPasswordDialog'
@@ -14,6 +14,7 @@ import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { APP_VERSION } from '../../config/appVersion'
 import { paths } from '../../routes/paths'
 import { sessionEndedNotice } from '../../lib/api/http/auth'
+import { notify } from '../../lib/notify'
 import { DemoAccounts } from './DemoAccounts'
 import { LoginBackdrop } from './LoginBackdrop'
 
@@ -34,10 +35,8 @@ export function LoginPage({
   const location = useLocation()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [forgotOpen, setForgotOpen] = useState(false)
-  const [notice, setNotice] = useState('')
   const capsLock = useCapsLock()
   const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({})
   const formRef = useRef<HTMLFormElement>(null)
@@ -49,10 +48,16 @@ export function LoginPage({
     (location.state as { signedOutAfterMinutes?: unknown } | null)?.signedOutAfterMinutes
   // API mode (ADR-080): the server ended the session (7-day maximum, or the account changed).
   const sessionEnded = sessionEndedNotice()
+  // The notice stays on the page for whoever comes back to the PC; the toast adds it once on arrival
+  // (Zean, November 19, 2026). The id keeps it to one toast.
+  useEffect(() => {
+    if (typeof idleMinutes === 'number')
+      notify.warning(`Signed out after ${idleMinutes} minutes of inactivity`, { id: 'signed-out' })
+    else if (sessionEnded) notify.warning('Your session has ended', { id: 'signed-out' })
+  }, [idleMinutes, sessionEnded])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError('')
     // Inline messages like every other CLINIQ form, instead of the browser's native bubble.
     const nextFieldErrors = {
       username: username.trim() ? undefined : 'Enter your username.',
@@ -74,16 +79,16 @@ export function LoginPage({
       onLogin(result.user)
       navigate(returnPath(location.state) ?? paths.dashboard, { replace: true })
     } catch (cause) {
+      // ADR-083: the username stays; only the password is cleared for the next try.
+      setPassword('')
       if (cause instanceof MockAuthError && cause.reason === 'locked') {
-        setError(lockedMessage(cause.lockedUntil))
-      } else {
-        setError(
-          withAttemptsLeft(
-            'Unable to sign in with those credentials.',
-            cause instanceof MockAuthError ? cause.remaining : undefined,
-          ),
+        notify.error(lockedMessage(cause.lockedUntil), { id: 'sign-in' })
+      } else if (cause instanceof MockAuthError) {
+        notify.error(
+          withAttemptsLeft('Unable to sign in with those credentials.', cause.remaining),
+          { id: 'sign-in' },
         )
-      }
+      } else notify.apiError(cause, 'Unable to sign in. Please try again.', { id: 'sign-in' })
     } finally {
       setLoading(false)
     }
@@ -172,16 +177,6 @@ export function LoginPage({
                 error={fieldErrors.password}
                 required
               />
-              {notice && !error && (
-                <p role="status" className="text-sm font-semibold text-success">
-                  {notice}
-                </p>
-              )}
-              {error && (
-                <p role="alert" className="text-sm font-semibold text-error">
-                  {error}
-                </p>
-              )}
               <Button type="submit" variant="primary" className="mt-2 w-full" loading={loading}>
                 Sign In
               </Button>
@@ -219,8 +214,7 @@ export function LoginPage({
         onReset={(name) => {
           setUsername(name)
           setPassword('')
-          setError('')
-          setNotice('Password changed. You can sign in.')
+          notify.success('Password changed. You can sign in.', { id: 'password-reset' })
         }}
       />
       <div className="relative h-36 shrink-0 md:h-auto md:flex-1">

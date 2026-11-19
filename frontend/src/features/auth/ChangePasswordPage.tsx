@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { notify } from '../../lib/notify'
+import { scrollToTop } from '../../lib/scrollToTop'
 import { BackButton, Button, Card, Input } from '../../components'
 import { useCapsLock } from '../../hooks/useCapsLock'
 import { changeOwnPassword, type SessionUser } from '../../lib/data'
@@ -18,8 +20,17 @@ export function ChangePasswordPage({ viewer }: { viewer: SessionUser }) {
     event.preventDefault()
     setError('')
     setSaved(false)
-    if (nextPassword.length < 8) return setError('Password must be at least 8 characters.')
-    if (nextPassword !== confirmation) return setError('Passwords do not match.')
+    // A form-level check stays beside the fields and is also the toast's text (ADR-083).
+    const problem =
+      nextPassword.length < 8
+        ? 'Password must be at least 8 characters.'
+        : nextPassword !== confirmation
+          ? 'Passwords do not match.'
+          : ''
+    if (problem) {
+      notify.checkFields(problem)
+      return setError(problem)
+    }
     setSaving(true)
     try {
       await changeOwnPassword(viewer.id, currentPassword, nextPassword)
@@ -27,8 +38,12 @@ export function ChangePasswordPage({ viewer }: { viewer: SessionUser }) {
       setNextPassword('')
       setConfirmation('')
       setSaved(true)
+      notify.success('Password changed', { id: 'change-password' })
+      scrollToTop()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to update the password.')
+      notify.apiError(cause, 'Unable to update the password. Please try again.', {
+        id: 'change-password',
+      })
     } finally {
       setSaving(false)
     }
@@ -72,11 +87,6 @@ export function ChangePasswordPage({ viewer }: { viewer: SessionUser }) {
           {error && (
             <p role="alert" className="text-sm font-semibold text-error">
               {error}
-            </p>
-          )}
-          {saved && (
-            <p role="status" className="text-sm font-semibold text-brand-green-dark">
-              Password changed.
             </p>
           )}
           <div className="mt-2 flex justify-end">

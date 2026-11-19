@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { notify } from '../../lib/notify'
 import { Button, CodeOrRecoveryField, Input, Modal } from '../../components'
 import {
   checkRecoveryAccount,
@@ -47,17 +48,23 @@ export function ForgotPasswordDialog({
     onClose()
   }
 
+  // ADR-083: a refused step is a toast above the dialog; a missing entry stays beside the field.
   function showFailure(cause: unknown) {
+    const options = { id: 'password-recovery' }
     if (cause instanceof MockAuthError && cause.reason === 'locked')
-      setError(lockedMessage(cause.lockedUntil))
+      notify.error(lockedMessage(cause.lockedUntil), options)
     else if (cause instanceof RecoveryError)
-      setError(withAttemptsLeft(cause.message, cause.remaining))
-    else setError(RECOVERY_FAILED_MESSAGE)
+      notify.error(withAttemptsLeft(cause.message, cause.remaining), options)
+    else notify.apiError(cause, RECOVERY_FAILED_MESSAGE, options)
+  }
+  function invalidEntry(message: string) {
+    notify.checkFields(message)
+    setError(message)
   }
 
   async function checkAccount(event: FormEvent) {
     event.preventDefault()
-    if (!username.trim()) return setError('Enter your username.')
+    if (!username.trim()) return invalidEntry('Enter your username.')
     setWorking(true)
     setError('')
     try {
@@ -72,7 +79,7 @@ export function ForgotPasswordDialog({
 
   async function verify(proof: string) {
     if (!proof.trim())
-      return setError(useRecoveryCode ? 'Enter a recovery code.' : 'Enter the 6-digit code.')
+      return invalidEntry(useRecoveryCode ? 'Enter a recovery code.' : 'Enter the 6-digit code.')
     if (working) return
     setWorking(true)
     setError('')
@@ -90,8 +97,8 @@ export function ForgotPasswordDialog({
 
   async function reset(event: FormEvent) {
     event.preventDefault()
-    if (password.trim().length < 8) return setError('Password must be at least 8 characters.')
-    if (password !== confirm) return setError('The two passwords do not match.')
+    if (password.trim().length < 8) return invalidEntry('Password must be at least 8 characters.')
+    if (password !== confirm) return invalidEntry('The two passwords do not match.')
     setWorking(true)
     setError('')
     try {
@@ -99,7 +106,7 @@ export function ForgotPasswordDialog({
       onReset(username.trim())
       close()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'The password was not changed. Try again.')
+      showFailure(cause)
     } finally {
       setWorking(false)
     }
