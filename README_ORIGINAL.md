@@ -1,4 +1,4 @@
-This is the longer overview of CLINIQ. The root [README.md](./README.md) is the short, current one, with the full status list (built, decided, not started). Last checked against the code on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in). Numbers come from the [Facts sheet](./CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
+This is the longer overview of CLINIQ. The root [README.md](./README.md) is the short, current one, with the full status list (built, decided, not started). Last checked against the code on Friday, November 20, 2026 — 01:54 PHT for the docs sync of `main` at `533df61` (ADR-082, ADR-083, the emergency-contact check, the demo seeder) and the Overview's frequent-visitor pager; on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in). Numbers come from the [Facts sheet](./CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
 
 <div align="center">
 
@@ -76,7 +76,7 @@ Every feature in this project — down to individual UI decisions like *which sc
 </tr>
 </table>
 
-> Every feature above is built in the frontend and runs on sample (mock) data by default. The backend behind it is built too (phases B0 to B10, 127 routes, 231 tests passing) and saves to MariaDB, and the screens can run on it behind a mock/API switch (ADR-080). That code is on `main` since Wednesday, November 18, 2026 (ADR-081, [where the code lives](./README.md#where-the-code-lives)). What is decided but not built is listed in [README.md](./README.md#decided-not-built).
+> Every feature above is built in the frontend and runs on sample (mock) data by default. The backend behind it is built too (phases B0 to B10, 131 routes, 251 tests passing) and saves to MariaDB, and the screens can run on it behind a mock/API switch (ADR-080). That code is on `main` since Wednesday, November 18, 2026 (ADR-081, [where the code lives](./README.md#where-things-live)). What is decided but not built is listed in [README.md](./README.md#decided-not-built).
 
 <br/>
 

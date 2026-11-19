@@ -1,6 +1,6 @@
 # Start Here for the SRS and Project Plan
 
-Last checked against the code on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). All of that code is on `main` since Wednesday, November 18, 2026 (ADR-081). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
+Last checked against the code on Friday, November 20, 2026 — 01:54 PHT for the docs sync of `main` at `533df61` (ADR-082, ADR-083, the emergency-contact check, the demo seeder) and the Overview's frequent-visitor pager; on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). All of that code is on `main` since Wednesday, November 18, 2026 (ADR-081). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
 
 ## CLINIQ in five lines
 
@@ -10,18 +10,60 @@ Last checked against the code on Thursday, November 19, 2026 for the paged lists
 4. It runs on the clinic PC only, at `http://localhost`; the Principal gets the Monthly Report as a PDF.
 5. Today the screens are built and run on sample data by default; the backend is built and tested (phases B0 to B10) and saves to MariaDB, and the screens can run on it behind a mock/API switch (ADR-080). All of it is on `main` (table below).
 
-## Where the code lives
+## Where things live
 
-`main` holds everything and is the branch to read: the documents, the frontend (sample data or the real API behind a mock/API switch, ADR-080), the backend (the Laravel API, 50 migrations, the backend tests, the load-test tools) and the [screenshots](../../screenshots/INDEX.md). The backend and the connected frontend were merged into `main` on Wednesday, November 18, 2026 — 10:07 PHT ([`bc654dd`](https://github.com/zekuuu/cliniq/commit/bc654dd), [ADR-081](../06-Decisions/ADR-081-Backend-Merged-Into-Main-Main-Holds-The-Whole-System.md)). The old frontend-only `main`, on sample data with no backend, is the tag [`checkpoint-frontend-only-2026-11-18`](https://github.com/zekuuu/cliniq/tree/checkpoint-frontend-only-2026-11-18) (`f250ab6`).
+`main` holds the whole system and is the branch to read ([ADR-081](../06-Decisions/ADR-081-Backend-Merged-Into-Main-Main-Holds-The-Whole-System.md)). The backend and the connected frontend were merged into it on Wednesday, November 18, 2026 — 10:07 PHT ([`bc654dd`](https://github.com/zekuuu/cliniq/commit/bc654dd)).
 
-| Branch | What it holds | Tip commit and date | Merged into `main` |
+| Folder | What it holds | How to run or read it |
+|---|---|---|
+| [`frontend/`](../../frontend) | The React app: every screen, on sample data by default ([`src/lib/mock-db`](../../frontend/src/lib/mock-db/README.md)) or on the real API behind a mock/API switch ([`src/lib/data`](../../frontend/src/lib/data), [`src/lib/api`](../../frontend/src/lib/api), ADR-080) | `cd frontend`, `npm ci`, `npm run dev` ([frontend/README.md](../../frontend/README.md)) |
+| [`backend/`](../../backend) | The Laravel API: [`app/Modules`](../../backend/app/Modules), [`routes/api.php`](../../backend/routes/api.php), the 50 migrations, the backend tests | XAMPP's MariaDB and PHP, then `composer install`, `php artisan serve` ([backend/README.md](../../backend/README.md)) |
+| [`backend/tools/load/`](../../backend/tools/load/README.md) | The demo-school generator and the load and speed tools | [its README](../../backend/tools/load/README.md), [COMMANDS.md](../../COMMANDS.md) |
+| [`screenshots/`](../../screenshots/INDEX.md) | 34 screenshots of the major screens | [INDEX.md](../../screenshots/INDEX.md) |
+| [`CLINIQ-Knowledge-Base/`](../README.md) | Requirements, architecture, design, decisions (ADRs), testing, logs | this page, then the table [below](#srs-sections-and-what-to-read) |
+
+The branches `backend`, `feat/connect-frontend` and `feat/build-backend` are kept for history only and hold nothing that `main` lacks; the old frontend-only `main`, on sample data with no backend, is the tag [`checkpoint-frontend-only-2026-11-18`](https://github.com/zekuuu/cliniq/tree/checkpoint-frontend-only-2026-11-18) (`f250ab6`).
+
+## Changes since the last sync (Wednesday, November 18, 2026)
+
+For the Project Plan and the SRS. This covers `main` after `6ab8d95` (Wednesday, November 18, 2026 — 10:13 PHT, the merge sync) up to `533df61` (Thursday, November 19, 2026 — 23:57 PHT): 62 commits on `main`'s own line. Synced Friday, November 20, 2026 — 01:54 PHT.
+
+**Decisions added or amended**
+
+- **ADR-082, added** (Thursday, November 19, 2026): [the long lists are paged by the server, one page at a time, through TanStack Query](../06-Decisions/ADR-082-Server-Side-Pagination-Of-The-Long-Lists-And-TanStack-Query.md). The data layer is no longer "plain `fetch`, no library".
+- **ADR-083, added** (Thursday, November 19, 2026, two dated notes the same night): [every action's result is a Sonner toast at the bottom right; a successful form resets and goes back to the top](../06-Decisions/ADR-083-Action-Feedback-In-Sonner-Toasts-Forms-Reset-And-Scroll-To-Top.md).
+- **ADR-081**, a dated note (Wednesday, November 18, 2026): the Project Plan needs no change for the merge. **ADR-052**, a dated note (Thursday, November 19, 2026): clearer backup file names.
+
+**Numbers that changed** (quote the [Facts sheet](Facts-Sheet.md) line named)
+
+| What | Before | After | Facts-sheet line or source |
 |---|---|---|---|
-| `main` | Everything: documents, frontend, backend, screenshots | Merge commit [`bc654dd`](https://github.com/zekuuu/cliniq/commit/bc654dd), Wednesday, November 18, 2026 — 10:07 PHT, and the documents commits after it | (this branch) |
-| `feat/connect-frontend` | The frontend connected to the API (ADR-080), the follow-ups and the load-test tools; kept for history | [`bf304af`](https://github.com/zekuuu/cliniq/tree/bf304af), Wednesday, November 18, 2026 — 10:05 PHT | yes, at `bc654dd` |
-| `backend` | The Laravel API, phases B0 to B10; kept for history | [`bf304af`](https://github.com/zekuuu/cliniq/tree/bf304af), Wednesday, November 18, 2026 — 10:05 PHT | yes, at `bc654dd` |
-| `feat/build-backend` | An older step of `backend`; kept for history | [`3bcbe16`](https://github.com/zekuuu/cliniq/tree/3bcbe16), Saturday, November 14, 2026 — 23:07 PHT | yes (through `backend`) |
+| Decision records | was 81 (ADR-001 to ADR-081) | **83** (ADR-001 to ADR-083) | "Decision records (ADRs)" |
+| API routes live in the backend | 127 | **131** (two paged logs, the two emergency-contact verify routes) | "API routes live in the backend" |
+| API contract entries | 126 headings naming 127 endpoints | **128** naming **129** | "API contract entries" |
+| Frontend test files | 148 | **152** | "Frontend test files" |
+| Backend test files | 25 | **27** | "Backend test files" |
+| Frontend tests passing | 1254 (Wednesday, November 18) | **1277** | `08-Logs/Agent-Sessions/2026-11-19-toasts-follow-up-login-and-item-count.md`, Thursday, November 19, 2026 — 23:01 PHT, not re-run |
+| Backend tests passing | 236 (Wednesday, November 18) | **251** (1,623 assertions) | `08-Logs/Agent-Sessions/2026-11-19-performance-server-paging.md`, Thursday, November 19, 2026, not re-run |
+| Lines of code (non-blank) | frontend 69270, backend 14562 | frontend **70710**, backend **16359** | "Lines of code" |
 
-Backend code: [`backend/app/Modules`](../../backend/app/Modules), [`backend/routes/api.php`](../../backend/routes/api.php). Frontend connection: [`frontend/src/lib/data`](../../frontend/src/lib/data), [`frontend/src/lib/api`](../../frontend/src/lib/api).
+Unchanged: 48 tables, 462 columns, 260 constraint tests, 50 migrations, 34 screens, 11 backend modules, 3 scheduled jobs, 2 roles. The frontend router is unchanged too (47, the Facts-sheet line "Frontend routes").
+
+**Features added or changed**
+
+- **Server paging (ADR-082).** The Visit Log, Incident Log, Follow-Ups, Student List, Incomplete Records, Audit Log and Usage History fetch one page at a time; search, filters and sorting run on the server over every record. A printout still loads every matching record. Measured on the one-year demo school: the Visit Log's first page went from about 2.1 s to 105–148 ms and the Audit Log's from 9.5 s to 96–140 ms (`2026-11-19-performance-server-paging.md`).
+- **Toasts and form reset (ADR-083).** Every save, status change, copy, backup and sign-out reports in one bottom-right toast with a shrinking time line; field errors stay beside the fields; a successful new-record form clears and scrolls to the top. Toasts carry no health detail.
+- **Emergency contacts.** A contact can be marked verified, or unverified, with one click on the Student and Staff profiles.
+- **Demo school seeder.** `DemoSchoolSeeder` rebuilds the fictional demo school up to the current day with one command, the same every time (`backend/tools/load/README.md`).
+- **Smaller changes.** Dashboard chips with a count of 0 are hidden; the backup file names are clearer and "Back up now" works under `php artisan serve`; a larger school logo on Login; a contrast fix on the import steps and the shortcut tips.
+
+**Terms renamed:** none.
+
+**Statements in the Project Plan or the SRS that are now wrong** (logged in `08-Logs/Frontend-Issues-and-TODOs.md`):
+
+- Any line saying the frontend's data layer is plain `fetch` with no library: TanStack Query now pages the long lists (ADR-082).
+- Any line describing screen feedback as banners or messages on the page: an action's result is now a bottom-right toast (ADR-083).
+- Any route, endpoint or test count from before Thursday, November 19, 2026: quote the Facts sheet.
 
 ## Changes on Wednesday, November 18, 2026: everything merged into `main`
 
@@ -34,7 +76,7 @@ Backend code: [`backend/app/Modules`](../../backend/app/Modules), [`backend/rout
 
 ## Changes since the last sync (Tuesday, November 17, 2026)
 
-For the Project Plan and the SRS. Newest sync first; each later sync adds its section above this one. This one covers everything after `main` at `dda26b2` (Sunday, November 15, 2026 — 09:22 PHT, the last docs refresh) up to `feat/connect-frontend` at `759781e` (Tuesday, November 17, 2026 — 05:27 PHT). All of the code below is on `main` since Wednesday, November 18, 2026 ([where the code lives](#where-the-code-lives)).
+For the Project Plan and the SRS. Newest sync first; each later sync adds its section above this one. This one covers everything after `main` at `dda26b2` (Sunday, November 15, 2026 — 09:22 PHT, the last docs refresh) up to `feat/connect-frontend` at `759781e` (Tuesday, November 17, 2026 — 05:27 PHT). All of the code below is on `main` since Wednesday, November 18, 2026 ([where the code lives](#where-things-live)).
 
 **Decisions added or amended**
 
@@ -89,7 +131,7 @@ Unchanged then: 131 API routes, 128 contract entries naming 129 endpoints (count
 | [`05-Testing`](../05-Testing/) | Test strategy and where the tests are |
 | [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-083 and their indexes |
 | [`09-References`](../09-References/) | Canonical documents, Privacy Policy |
-| `frontend/`, `backend/` | The code: the frontend and the backend, both on `main` (see [Where the code lives](#where-the-code-lives)) |
+| `frontend/`, `backend/` | The code: the frontend and the backend, both on `main` (see [Where things live](#where-things-live)) |
 
 ## SRS sections and what to read
 

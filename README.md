@@ -1,8 +1,10 @@
 # CLINIQ
 
-**Everything is on `main`** since Wednesday, November 18, 2026 — 10:07 PHT: the documents, the frontend and the backend ([where the code lives](#where-the-code-lives), ADR-081).
+**Last synced:** Friday, November 20, 2026 — 01:54 PHT, describing `main` at `533df61`.
 
-Last checked against the code on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). That code was merged into `main` on Wednesday, November 18, 2026 (ADR-081).
+**Everything is on `main`** since Wednesday, November 18, 2026 — 10:07 PHT: the documents, the frontend and the backend ([where things live](#where-things-live), ADR-081).
+
+Last checked against the code on Friday, November 20, 2026 — 01:54 PHT for the docs sync of `main` at `533df61` (ADR-082, ADR-083, the emergency-contact check, the demo seeder) and the Overview's frequent-visitor pager; on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). That code was merged into `main` on Wednesday, November 18, 2026 (ADR-081).
 
 CLINIQ is an intelligent clinic tracking and monitoring system for Mendez Christian Academy. The Project Plan and related documents in this repository were prepared as working reference material during planning, not as the team's official deliverable. The formal Software Requirements Specification is being written separately; this repository supports that work.
 
@@ -11,18 +13,19 @@ CLINIQ is an intelligent clinic tracking and monitoring system for Mendez Christ
 - **Need a diagram?** See the [diagram index](./CLINIQ-Knowledge-Base/02-Architecture/Database/Diagrams/README.md).
 - The longer overview with the feature list, team and documentation links is [README_ORIGINAL.md](./README_ORIGINAL.md).
 
-## Where the code lives
+## Where things live
 
-`main` holds the whole system and is the branch to read: the documents, the frontend (sample data or the real API behind a mock/API switch, ADR-080), the backend (the Laravel API, 50 migrations, the backend tests, the load-test tools in `backend/tools/load/`) and the [screenshots](./screenshots/INDEX.md). The backend and the connected frontend were merged into `main` on Wednesday, November 18, 2026 — 10:07 PHT ([`bc654dd`](https://github.com/zekuuu/cliniq/commit/bc654dd), ADR-081). The last frontend-only state of `main`, on sample data with no backend integration, is the tag [`checkpoint-frontend-only-2026-11-18`](https://github.com/zekuuu/cliniq/tree/checkpoint-frontend-only-2026-11-18) (`f250ab6`). New work goes on short `feat/*` branches merged into `main`.
+`main` holds the whole system and is the branch to read (ADR-081). The backend and the connected frontend were merged into it on Wednesday, November 18, 2026 — 10:07 PHT ([`bc654dd`](https://github.com/zekuuu/cliniq/commit/bc654dd)).
 
-| Branch | What it holds | Tip commit and date | Merged into `main` |
-|---|---|---|---|
-| `main` | Everything: documents, frontend, backend, screenshots | Merge commit [`bc654dd`](https://github.com/zekuuu/cliniq/commit/bc654dd), Wednesday, November 18, 2026 — 10:07 PHT, and the documents commits after it | (this branch) |
-| `feat/connect-frontend` | The frontend connected to the API (ADR-080), the follow-ups and the load-test tools; kept for history | [`bf304af`](https://github.com/zekuuu/cliniq/tree/bf304af), Wednesday, November 18, 2026 — 10:05 PHT | yes, at `bc654dd` |
-| `backend` | The Laravel API, phases B0 to B10; kept for history | [`bf304af`](https://github.com/zekuuu/cliniq/tree/bf304af) (fast-forwarded to `feat/connect-frontend`), Wednesday, November 18, 2026 — 10:05 PHT | yes, at `bc654dd` |
-| `feat/build-backend` | An older step of `backend` (fully contained in it); kept for history | [`3bcbe16`](https://github.com/zekuuu/cliniq/tree/3bcbe16), Saturday, November 14, 2026 — 23:07 PHT | yes (through `backend`) |
+| Folder | What it holds | How to run or read it |
+|---|---|---|
+| [`frontend/`](./frontend) | The React app: every screen, on sample data by default ([`src/lib/mock-db`](./frontend/src/lib/mock-db/README.md)) or on the real API behind a mock/API switch ([`src/lib/data`](./frontend/src/lib/data), [`src/lib/api`](./frontend/src/lib/api), ADR-080) | `cd frontend`, `npm ci`, `npm run dev` ([frontend/README.md](./frontend/README.md)) |
+| [`backend/`](./backend) | The Laravel API: [`app/Modules`](./backend/app/Modules), [`routes/api.php`](./backend/routes/api.php), the 50 migrations, the backend tests | XAMPP's MariaDB and PHP, then `composer install`, `php artisan serve` ([backend/README.md](./backend/README.md)) |
+| [`backend/tools/load/`](./backend/tools/load/README.md) | The demo-school generator and the load and speed tools | [its README](./backend/tools/load/README.md), [COMMANDS.md](./COMMANDS.md) |
+| [`screenshots/`](./screenshots/INDEX.md) | 34 screenshots of the major screens | [INDEX.md](./screenshots/INDEX.md) |
+| [`CLINIQ-Knowledge-Base/`](./CLINIQ-Knowledge-Base/README.md) | Requirements, architecture, design, decisions (ADRs), testing, logs | [Start Here for the SRS and Project Plan](./CLINIQ-Knowledge-Base/00-Project-Core/Start-Here-For-SRS-And-Project-Plan.md) |
 
-Backend code: [`backend/app/Modules`](./backend/app/Modules), [`backend/routes/api.php`](./backend/routes/api.php). Frontend connection: [`frontend/src/lib/data`](./frontend/src/lib/data), [`frontend/src/lib/api`](./frontend/src/lib/api).
+The branches `backend`, `feat/connect-frontend` and `feat/build-backend` are kept for history only and hold nothing that `main` lacks; the last frontend-only `main`, on sample data, is the tag [`checkpoint-frontend-only-2026-11-18`](https://github.com/zekuuu/cliniq/tree/checkpoint-frontend-only-2026-11-18) (`f250ab6`). New work goes on short `feat/*` branches merged into `main`.
 
 ## What CLINIQ is and who it is for
 
@@ -34,9 +37,9 @@ CLINIQ replaces the school clinic's paper logbooks and Excel sheets. It is built
 
 ## Current state
 
-- **Frontend: built, on sample data by default.** Every screen runs on sample (mock) data in [`frontend/src/lib/mock-db/`](./frontend/src/lib/mock-db/README.md), and that stays the default. No real student data is used. The connection to the backend is on `main` too (next line).
+- **Frontend: built, on sample data by default.** Every screen runs on sample (mock) data in [`frontend/src/lib/mock-db/`](./frontend/src/lib/mock-db/README.md), and that stays the default. No real student data is used. The connection to the backend is on `main` too (next line). Since Thursday, November 19, 2026 the seven long lists (Visit Log, Incident Log, Follow-Ups, Student List, Incomplete Records, Audit Log, Usage History) ask the server for one page at a time (ADR-082); every action's result is a bottom-right toast and a successful form clears and returns to the top (ADR-083); an emergency contact can be marked verified with one click on the Student and Staff profiles.
 - **Frontend on the real API: connected behind a switch (ADR-080), in [`frontend/src/lib/api`](./frontend/src/lib/api), on `main` since Wednesday, November 18, 2026 (ADR-081).** Each module can run on the Laravel API (`VITE_API_MODE=api` for all, or one module at a time); the mock data layer stays the default and is kept unchanged. Every module was checked in a real browser against the running API ([run report](./CLINIQ-Knowledge-Base/08-Logs/Connect-Frontend-Nov15/REPORT.md)). How to run it: [`frontend/README.md`](./frontend/README.md#run-on-the-real-api-adr-080).
-- **Backend: phases B0 to B10 built and tested, connected to the frontend.** The backend code is in [`backend/`](./backend) on `main` (ADR-081). Laravel with Sanctum in SPA cookie mode serves 127 routes: every endpoint of the [API Contract](./CLINIQ-Knowledge-Base/04-Development/API-Contract.md), plus the health check and the CSRF cookie. Sign-in with lock-out and password recovery, students and staff patients with imports, visits, excuse letters, follow-ups, incidents, inventory, the Dashboard and calendar, reports, the audit log, accounts and backups all save to MariaDB. 231 backend tests pass (re-run Wednesday, November 18, 2026 before the merge into `main`, with Pint and Larastan; first recorded Monday, November 16, 2026 — 22:35 PHT in `08-Logs/Load-Test-Nov16/NOTES.md`); three scheduled jobs (missed follow-ups, the nightly backup, the holiday sync) need Windows Task Scheduler on the clinic PC.
+- **Backend: phases B0 to B10 built and tested, connected to the frontend.** The backend code is in [`backend/`](./backend) on `main` (ADR-081). Laravel with Sanctum in SPA cookie mode serves 131 routes: every endpoint of the [API Contract](./CLINIQ-Knowledge-Base/04-Development/API-Contract.md), plus the health check and the CSRF cookie. Sign-in with lock-out and password recovery, students and staff patients with imports, visits, excuse letters, follow-ups, incidents, inventory, the Dashboard and calendar, reports, the audit log, accounts and backups all save to MariaDB. 251 backend tests pass (1,623 assertions, with Pint and Larastan; recorded Thursday, November 19, 2026 in `08-Logs/Agent-Sessions/2026-11-19-performance-server-paging.md`, not re-run); three scheduled jobs (missed follow-ups, the nightly backup, the holiday sync) need Windows Task Scheduler on the clinic PC.
 - **Database: approved (48 tables, ADR-057), migrated and checked.** The 50 migrations (48 create a table, 2 ship product data) run on MariaDB and match the [Reference Schema](./CLINIQ-Knowledge-Base/02-Architecture/Database/Reference-Schema.sql) table for table, column for column (`php tools/db-checks.php`); its 260 constraint test cases pass. The [ERD](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md) and [Data Dictionary](./CLINIQ-Knowledge-Base/02-Architecture/Database/Data-Dictionary.md) describe it. A development seeder loads the frontend's fictional sample data.
 - **Deployment: decided, not done.** CLINIQ will run on the clinic PC only, at `http://localhost`: no LAN access, no hostname, no HTTPS, inbound connections blocked. The Admin account is used on the clinic PC; the clinician sends the Principal the Monthly Report as a PDF (ADR-029, ADR-079). Backups stay local with no cloud copy, and must not stay only on the clinic PC's own disk (ADR-039, ADR-052, ADR-079).
 - **Stack.** React 19, TypeScript 6, Vite 8 and Tailwind CSS 4 for the frontend; Laravel 13 with Sanctum 4 and Pest 5 for the backend; MariaDB from XAMPP for the database. Exact versions: [Facts sheet](./CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md#stack-installed-versions); reasons: [Tech Stack](./CLINIQ-Knowledge-Base/02-Architecture/Tech-Stack.md) and ADR-007.
@@ -89,7 +92,7 @@ Caution: the generated school ends on Tuesday, November 17, 2026, so the browser
 
 ## How to run it
 
-Windows with XAMPP first. Git and Node.js 22.22.2 or a later 22.x, 24.15 or a later 24.x, or 26 or later are needed for the frontend; PHP 8.3 or later (XAMPP's) and Composer for the backend. Every command below was run on Sunday, November 15, 2026.
+Windows with XAMPP first. Git and Node.js 22.22.2 or a later 22.x, 24.15 or a later 24.x, or 26 or later are needed for the frontend; PHP 8.3 or later (XAMPP's) and Composer for the backend. Every command below was run on Sunday, November 15, 2026 (on the `backend` branch then; the backend is on `main` since Wednesday, November 18, 2026).
 
 **Frontend** (runs on its own, on sample data; no PHP or database needed):
 
@@ -106,7 +109,6 @@ npm run build      # type-check and production build
 **Backend** (needs MariaDB from XAMPP running, the `cliniq` and `cliniq_testing` databases, the two accounts `cliniq_migrate` and `cliniq_app`, and a `.env`; see [Environment Setup](./CLINIQ-Knowledge-Base/04-Development/Environment-Setup.md) and [backend/README.md](./backend/README.md)):
 
 ```bash
-git switch backend
 cd backend
 composer install
 php artisan migrate         # with cliniq_migrate in .env, then switch back to cliniq_app
@@ -114,7 +116,7 @@ php artisan db:seed --class="App\Shared\Database\DevelopmentSeeder"   # developm
 php artisan serve           # http://127.0.0.1:8000/api/health
 composer check              # Pint, Larastan and Pest (needs the cliniq_testing database)
 php tools/db-checks.php     # schema parity with Reference-Schema.sql and the 260 constraint tests
-php artisan route:list      # the 127 live routes
+php artisan route:list      # the 131 live routes
 ```
 
 **Documentation checks** (from the repository root):
