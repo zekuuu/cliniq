@@ -3,6 +3,8 @@
 **Date:** Sunday, September 27, 2026 — 15:09
 **Status:** Accepted
 
+*Note (Thursday, November 19, 2026 — 12:18 PHT):* superseded for the server-paged lists by [ADR-082](ADR-082-Server-Side-Pagination-Of-The-Long-Lists-And-TanStack-Query.md), which revisits this decision for "pagination coordination", as foreseen below. Those lists use TanStack Query through `usePagedList`. Every other screen keeps `useAsyncData`.
+
 ## Context
 
 The frontend-first phases run against mock APIs while the Laravel API and database schema remain unfinished. The original F0 checklist left TanStack Query, SWR, and plain fetch/context open. The current React/Vite app already has a small `useAsyncData` hook that centralizes loading, error, retry, and refetching behavior without adding a client-state dependency.

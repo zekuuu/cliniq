@@ -1,6 +1,6 @@
 # ADR index
 
-Every decision record, one line each. Generated Wednesday, November 18, 2026 — 10:08 PHT by `npm run docs:adrs` from the ADR headers and [Decisions-Summary.md](Decisions-Summary.md); do not edit by hand. A later dated note at the top of an ADR changes what it says, and a later ADR can replace an earlier one: always read the record itself before quoting it. Plain-language summaries: [Decisions-Summary.md](Decisions-Summary.md). What changed since Project Plan revision 2.8: [Changes-Since-Project-Plan-2.8.md](Changes-Since-Project-Plan-2.8.md).
+Every decision record, one line each. Generated Thursday, November 19, 2026 — 12:19 PHT by `npm run docs:adrs` from the ADR headers and [Decisions-Summary.md](Decisions-Summary.md); do not edit by hand. A later dated note at the top of an ADR changes what it says, and a later ADR can replace an earlier one: always read the record itself before quoting it. Plain-language summaries: [Decisions-Summary.md](Decisions-Summary.md). What changed since Project Plan revision 2.8: [Changes-Since-Project-Plan-2.8.md](Changes-Since-Project-Plan-2.8.md).
 
 | ADR | Title | Status | Date | Effect in one line | Changed |
 |---|---|---|---|---|---|
@@ -85,3 +85,4 @@ Every decision record, one line each. Generated Wednesday, November 18, 2026 —
 | [79](ADR-079-Clinic-PC-Only-Principal-Gets-Monthly-PDF.md) | CLINIQ is deployed on the clinic PC only; the Principal gets a monthly PDF | Accepted | November 09, 2026 | CLINIQ runs on the clinic PC only, at `http://localhost`: no LAN access, no fixed address or hostname, no HTTPS, inbound connections blocked by Windows Firewall, nothing forwarded from the router. | — |
 | [80](ADR-080-Frontend-Connects-To-The-API-Behind-A-Mode-Switch-Mock-Stays.md) | The frontend connects to the API behind a global and per-module switch; the mock layer stays | Accepted | November 15, 2026 |  | — |
 | [81](ADR-081-Backend-Merged-Into-Main-Main-Holds-The-Whole-System.md) | Backend merged into main; main holds the whole system | Accepted | November 18, 2026 | The backend and the connected frontend were merged into `main` on Wednesday, November 18, 2026 (merge commit `bc654dd`), because the project is moving to testing and deployment. | README, Start-Here-For-SRS-And-Project-Plan, Facts-Sheet |
+| [82](ADR-082-Server-Side-Pagination-Of-The-Long-Lists-And-TanStack-Query.md) | The long lists are paged by the server, one page at a time, through TanStack Query | Accepted | November 19, 2026 |  | — |
