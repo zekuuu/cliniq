@@ -1,6 +1,6 @@
 # Start Here for the SRS and Project Plan
 
-Last checked against the code on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). All of that code is on `main` since Wednesday, November 18, 2026 (ADR-081). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
+Last checked against the code on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). All of that code is on `main` since Wednesday, November 18, 2026 (ADR-081). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
 
 ## CLINIQ in five lines
 
@@ -50,7 +50,7 @@ For the Project Plan and the SRS. Newest sync first; each later sync adds its se
 | Backend tests passing | 228 | **231** | Same notes, 22:35 PHT, not re-run |
 | Lines of code (non-blank) | frontend 64596, backend 14515 | frontend **69235**, backend **14562** | "Lines of code" |
 
-Unchanged: 127 API routes, 126 contract entries naming 127 endpoints, 48 tables, 50 migrations, 260 constraint tests, 34 screens, 11 backend modules, 25 backend test files, 3 scheduled jobs. The frontend router is unchanged too (47, the Facts-sheet line "Frontend routes").
+Unchanged then: 131 API routes, 128 contract entries naming 129 endpoints (counts as of Thursday, November 19, 2026, with the two paged logs of ADR-082 and the two contact-verify routes), 48 tables, 50 migrations, 260 constraint tests, 34 screens, 11 backend modules, 25 backend test files, 3 scheduled jobs. The frontend router is unchanged too (47, the Facts-sheet line "Frontend routes").
 
 **Features added or changed** (all on `feat/connect-frontend`)
 
@@ -87,7 +87,7 @@ Unchanged: 127 API routes, 126 contract entries naming 127 endpoints, 48 tables,
 | [`03-Design`](../03-Design/) | Design system, screen inventory, [screenshots](../03-Design/assets/screens/) |
 | [`04-Development`](../04-Development/) | Phases, API contract, set-up, the build manuals |
 | [`05-Testing`](../05-Testing/) | Test strategy and where the tests are |
-| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-081 and their indexes |
+| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-082 and their indexes |
 | [`09-References`](../09-References/) | Canonical documents, Privacy Policy |
 | `frontend/`, `backend/` | The code: the frontend and the backend, both on `main` (see [Where the code lives](#where-the-code-lives)) |
 
@@ -148,7 +148,7 @@ Unchanged: 127 API routes, 126 contract entries naming 127 endpoints, 48 tables,
 
 ## Decided but not built, and built but not tested on real hardware
 
-**Built:** every screen ([screenshots](../03-Design/assets/screens/)), on sample data by default and on the real API behind a mock/API switch (ADR-080; each module checked in a real browser). The backend, phases B0 to B10, on `main`: real sign-in with lock-out and password recovery, saving to the database, the audit log in the database, real backups and three scheduled jobs; 127 routes, 231 tests pass. A deterministic 900-student test school and a load bench (`backend/tools/load/`, on `feat/connect-frontend`); the measurements are not finished. The 50 migrations (48 create a table, 2 ship product data) run on MariaDB and match the approved schema; its 260 constraint tests pass. Numbers: [Facts sheet](Facts-Sheet.md).
+**Built:** every screen ([screenshots](../03-Design/assets/screens/)), on sample data by default and on the real API behind a mock/API switch (ADR-080; each module checked in a real browser). The backend, phases B0 to B10, on `main`: real sign-in with lock-out and password recovery, saving to the database, the audit log in the database, real backups and three scheduled jobs; 131 routes, 231 tests pass. A deterministic 900-student test school and a load bench (`backend/tools/load/`, on `feat/connect-frontend`); the measurements are not finished. The 50 migrations (48 create a table, 2 ship product data) run on MariaDB and match the approved schema; its 260 constraint tests pass. Numbers: [Facts sheet](Facts-Sheet.md).
 
 **Decided, not built:** a written restore procedure.
 

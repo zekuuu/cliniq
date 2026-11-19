@@ -1,7 +1,7 @@
 # Facts sheet
 
-**Last regenerated:** Wednesday, November 18, 2026 — 21:54 PHT
-**From commit:** `af1e02d` on `main` (documents); frontend numbers from this working tree; backend numbers from this working tree
+**Last regenerated:** Thursday, November 19, 2026 — 12:58 PHT
+**From commit:** `cd6e877` on `main` (documents); frontend numbers from this working tree; backend numbers from this working tree
 **Regenerate with:** `npm run docs:facts` from the repository root (add `-- --tests` to rerun both test suites). The script is [`docs-facts.mjs`](../04-Development/tools/docs-facts.mjs).
 
 Every README, requirement document, diagram caption, and the Project Plan and SRS quote their numbers from this sheet. If a document disagrees with this sheet, the document is wrong. If this sheet disagrees with the repository, regenerate it: the script reads the repository and nothing else. Do not edit the numbers by hand.
@@ -10,26 +10,26 @@ Every README, requirement document, diagram caption, and the Project Plan and SR
 
 | Fact | Value | Source |
 |---|---|---|
-| Decision records (ADRs) | **81** (ADR-001 to ADR-081) | [`06-Decisions/`](../06-Decisions/), template not counted |
+| Decision records (ADRs) | **82** (ADR-001 to ADR-082) | [`06-Decisions/`](../06-Decisions/), template not counted |
 | Screens in the inventory | **34** numbered entries (numbers 1 to 42; removed numbers are not reused) | [Screen Inventory](../03-Design/Screen-Inventory.md) |
 | Frontend routes | **47** (45 signed-in routes plus Login and Force Password Change): 28 Staff only, 3 Admin only, 14 both | [`AppRoutes.tsx`](../../frontend/src/routes/AppRoutes.tsx) |
 | Roles | **2**: Staff (the School Clinician), Admin (the Principal) | `chk_users_role` in the schema; ADR-029, ADR-038 |
 | Backend modules | **11**: AuditLogViewer, BackupVerification, ClinicVisits, Dashboard, EmergencyResponse, FirstAidChecklist, InventoryTracker, ReportsGeneration, StaffPatients, StudentRecords, UserManagement. With no routes of their own: AuditLogViewer, FirstAidChecklist | [`backend/app/Modules/`](../../backend/app/Modules) |
 | Backend shared services | **10**: AuditLog, Auth, Database, Feedback, FollowUps, Http, Logging, Sequences, Settings, Support | [`backend/app/Shared/`](../../backend/app/Shared) |
-| Mock API (sample data layer) | **132** functions, **20** constants, **20** error classes | [`mock-db/api.ts`](../../frontend/src/lib/mock-db/api.ts) |
+| Mock API (sample data layer) | **134** functions, **20** constants, **20** error classes | [`mock-db/api.ts`](../../frontend/src/lib/mock-db/api.ts) |
 | Mock entity types | **37** | [`mock-db/types.ts`](../../frontend/src/lib/mock-db/types.ts) |
 | Database tables (approved schema) | **48** | [`Reference-Schema.sql`](../02-Architecture/Database/Reference-Schema.sql); ADR-057 |
 | Database columns | **462** | same |
 | `CHECK` / `UNIQUE` / foreign keys | **92** / **36** / **96** | same |
 | Constraint test cases | **260** | [`Checks/constraint-tests.sql`](../02-Architecture/Database/Checks/constraint-tests.sql) |
 | Laravel migrations on disk | **50**: 48 create a table (one per table), 2 ship product data (defaults, symptom lists) | `backend/app/**/Database/Migrations/` |
-| API contract entries | **126** headings naming **127** endpoints | [API Contract](../04-Development/API-Contract.md) (`####` endpoint headings) |
-| API routes live in the backend | **127**: BackupVerification 7, ClinicVisits 12, Dashboard 8, EmergencyResponse 10, InventoryTracker 9, Laravel/Sanctum 1, ReportsGeneration 9, Shared/AuditLog 3, Shared/Feedback 2, Shared/FollowUps 3, Shared/Http 2, Shared/Settings 12, StaffPatients 11, StudentRecords 18, UserManagement 20 | `php artisan route:list` |
+| API contract entries | **128** headings naming **129** endpoints | [API Contract](../04-Development/API-Contract.md) (`####` endpoint headings) |
+| API routes live in the backend | **131**: BackupVerification 7, ClinicVisits 13, Dashboard 8, EmergencyResponse 11, InventoryTracker 9, Laravel/Sanctum 1, ReportsGeneration 9, Shared/AuditLog 3, Shared/Feedback 2, Shared/FollowUps 3, Shared/Http 2, Shared/Settings 12, StaffPatients 12, StudentRecords 19, UserManagement 20 | `php artisan route:list` |
 | Scheduled jobs | **3**: `cliniq:close-missed-follow-ups` daily at 00:15; `cliniq:backup` daily at 18:00; `cliniq:sync-holidays` hourly from 7:00 to 18:00 | [`backend/routes/console.php`](../../backend/routes/console.php); Windows Task Scheduler runs `php artisan schedule:run` every minute |
-| Frontend test files | **149** | `frontend/src/**/*.test.ts(x)` |
-| Backend test files | **26** | `backend/tests/**/*Test.php` |
+| Frontend test files | **150** | `frontend/src/**/*.test.ts(x)` |
+| Backend test files | **27** | `backend/tests/**/*Test.php` |
 | Last recorded test run | Sunday, November 15, 2026 — 08:38 PHT at `397e000` | [Test runs](#test-runs) below |
-| Lines of code (non-blank) | frontend **69320** (`src`, tests included); backend **15531** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
+| Lines of code (non-blank) | frontend **70283** (`src`, tests included); backend **16353** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
 
 ## Test runs
 
