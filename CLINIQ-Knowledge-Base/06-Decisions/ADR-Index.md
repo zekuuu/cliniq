@@ -1,6 +1,6 @@
 # ADR index
 
-Every decision record, one line each. Generated Thursday, November 19, 2026 — 22:45 PHT by `npm run docs:adrs` from the ADR headers and [Decisions-Summary.md](Decisions-Summary.md); do not edit by hand. A later dated note at the top of an ADR changes what it says, and a later ADR can replace an earlier one: always read the record itself before quoting it. Plain-language summaries: [Decisions-Summary.md](Decisions-Summary.md). What changed since Project Plan revision 2.8: [Changes-Since-Project-Plan-2.8.md](Changes-Since-Project-Plan-2.8.md).
+Every decision record, one line each. Generated Friday, November 20, 2026 — 01:56 PHT by `npm run docs:adrs` from the ADR headers and [Decisions-Summary.md](Decisions-Summary.md); do not edit by hand. A later dated note at the top of an ADR changes what it says, and a later ADR can replace an earlier one: always read the record itself before quoting it. Plain-language summaries: [Decisions-Summary.md](Decisions-Summary.md). What changed since Project Plan revision 2.8: [Changes-Since-Project-Plan-2.8.md](Changes-Since-Project-Plan-2.8.md).
 
 | ADR | Title | Status | Date | Effect in one line | Changed |
 |---|---|---|---|---|---|

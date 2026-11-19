@@ -1,7 +1,7 @@
 # Facts sheet
 
-**Last regenerated:** Thursday, November 19, 2026 — 23:43 PHT
-**From commit:** `89fec35` on `main` (documents); frontend numbers from this working tree; backend numbers from this working tree
+**Last regenerated:** Friday, November 20, 2026 — 01:55 PHT
+**From commit:** `533df61` on `main` (documents); frontend numbers from this working tree; backend numbers from this working tree
 **Regenerate with:** `npm run docs:facts` from the repository root (add `-- --tests` to rerun both test suites). The script is [`docs-facts.mjs`](../04-Development/tools/docs-facts.mjs).
 
 Every README, requirement document, diagram caption, and the Project Plan and SRS quote their numbers from this sheet. If a document disagrees with this sheet, the document is wrong. If this sheet disagrees with the repository, regenerate it: the script reads the repository and nothing else. Do not edit the numbers by hand.
@@ -29,7 +29,7 @@ Every README, requirement document, diagram caption, and the Project Plan and SR
 | Frontend test files | **152** | `frontend/src/**/*.test.ts(x)` |
 | Backend test files | **27** | `backend/tests/**/*Test.php` |
 | Last recorded test run | Sunday, November 15, 2026 — 08:38 PHT at `397e000` | [Test runs](#test-runs) below |
-| Lines of code (non-blank) | frontend **70700** (`src`, tests included); backend **16359** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
+| Lines of code (non-blank) | frontend **70710** (`src`, tests included); backend **16359** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
 
 ## Test runs
 
@@ -43,7 +43,7 @@ Recorded Sunday, November 15, 2026 — 08:38 PHT at `397e000` by `docs-facts.mjs
 
 A frontend count that moves between runs comes from 5-second timeouts under full-suite load; the failing files pass when run alone. See the VERIFY entry "The full test suite fails more under CPU load" in [Frontend-Issues-and-TODOs](../08-Logs/Frontend-Issues-and-TODOs.md).
 
-**Newer recorded runs, not re-run for this sheet** (added by hand Tuesday, November 17, 2026 — 05:42 PHT; the script carries this section over unchanged): on `feat/connect-frontend`, Monday, November 16, 2026, from [`08-Logs/Load-Test-Nov16/NOTES.md`](../08-Logs/Load-Test-Nov16/NOTES.md): frontend **1250 passed** in 146 files (22:10 PHT); backend **231 passed**, Pint and Larastan pass (22:35 PHT, on the scratch database `cliniq_check_pest`). On `main`, Wednesday, November 18, 2026 — 18:13 PHT (backlog run, uncommitted working tree on `af1e02d`; added by hand): frontend **1254 passed** in 149 files, 0 failed; the backend was not run (no database commands in that run). On `main`, Wednesday, November 18, 2026 — 21:55 PHT (demo-seeder run, uncommitted; added by hand): backend **236 passed** (231 plus the 5 of `DemoSchoolSeederTest`), Pint and Larastan pass, on `cliniq_check_pest`. Quote these until `npm run docs:facts -- --tests` records a new run.
+**Newer recorded runs, not re-run for this sheet** (added by hand Tuesday, November 17, 2026 — 05:42 PHT; the script carries this section over unchanged): on `feat/connect-frontend`, Monday, November 16, 2026, from [`08-Logs/Load-Test-Nov16/NOTES.md`](../08-Logs/Load-Test-Nov16/NOTES.md): frontend **1250 passed** in 146 files (22:10 PHT); backend **231 passed**, Pint and Larastan pass (22:35 PHT, on the scratch database `cliniq_check_pest`). On `main`, Wednesday, November 18, 2026 — 18:13 PHT (backlog run, uncommitted working tree on `af1e02d`; added by hand): frontend **1254 passed** in 149 files, 0 failed; the backend was not run (no database commands in that run). On `main`, Wednesday, November 18, 2026 — 21:55 PHT (demo-seeder run, uncommitted; added by hand): backend **236 passed** (231 plus the 5 of `DemoSchoolSeederTest`), Pint and Larastan pass, on `cliniq_check_pest`. On `main`, Thursday, November 19, 2026 (added by hand Friday, November 20, 2026 — 01:54 PHT): backend **251 passed** (1,623 assertions), Pint and Larastan pass, on `cliniq_check_pest`, from [`2026-11-19-performance-server-paging.md`](../08-Logs/Agent-Sessions/2026-11-19-performance-server-paging.md); frontend **1277 passed** (1,277 of 1,277) at 23:01 PHT, from [`2026-11-19-toasts-follow-up-login-and-item-count.md`](../08-Logs/Agent-Sessions/2026-11-19-toasts-follow-up-login-and-item-count.md). Neither was re-run for this sheet. Quote these until `npm run docs:facts -- --tests` records a new run.
 
 ## Stack (installed versions)
 
@@ -57,6 +57,8 @@ A frontend count that moves between runs comes from 5-second timeouts under full
 | vitest | 5.0.2 | laravel/pint | 1.32.1 |
 | chart.js | 4.5.1 |  |  |
 | qrcode | 1.5.4 |  |  |
+| @tanstack/react-query | 5.108.0 |  |  |
+| sonner | 2.0.8 |  |  |
 
 Database: MariaDB 10.4 or later, as shipped with XAMPP (the schema's stated target). Node.js for development: 22.22.2 or a later 22.x, 24.15 or a later 24.x, or 26 or later ([setup-step.md](../../setup-step.md)). Versions are read from `package-lock.json` and `composer.lock`.
 
