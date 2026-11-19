@@ -1,5 +1,4 @@
 import {
-  getBackupStatus,
   getCalendarDays,
   getDashboardSummary,
   getHolidays,
@@ -8,7 +7,6 @@ import {
   listPendingExcuseLetters,
   type ClusterAlert,
   type SessionUser,
-  type BackupStatusView,
   type PendingExcuseLetter,
 } from '../../../lib/data'
 import type { ISODate } from '../../../types/entities'
@@ -59,11 +57,7 @@ export async function fetchPeriodEvents(
 }
 
 /** What the Staff Dashboard's backup indicator needs: the latest run and whether it still needs checking. */
-export type BackupIndicator = Pick<BackupStatusView, 'latest' | 'needsVerification'>
-
-export function fetchBackupIndicator(): Promise<BackupIndicator> {
-  return getBackupStatus()
-}
+export { fetchBackupIndicator, type BackupIndicator } from '../../backup/api/backupApi'
 
 /** Staff only: excuse-letter drafts saved with visits and still awaiting approval. Not range-filtered. */
 export function fetchPendingExcuseLetters(): Promise<PendingExcuseLetter[]> {

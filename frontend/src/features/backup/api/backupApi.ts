@@ -13,6 +13,8 @@ import {
   type BackupStatusView,
   type SessionUser,
 } from '../../../lib/data'
+import { http } from '../../../lib/api/client'
+import { routed } from '../../../lib/api/routed'
 
 /**
  * Backup Verification (#32). Which run is latest, and whether it still needs checking, are derived
@@ -32,6 +34,17 @@ async function announce(change: Promise<BackupStatusView>): Promise<BackupStatus
 export function fetchBackupStatus(): Promise<BackupStatusView> {
   return getBackupStatus()
 }
+
+/** What the sidebar's and the Dashboard's backup warning need: the latest run, and whether it needs checking. */
+export type BackupIndicator = Pick<BackupStatusView, 'latest' | 'needsVerification'>
+
+/** On the API, `?summary=1`: the latest run only, not every daily run since the start (ADR-082). */
+export const fetchBackupIndicator = routed(
+  'BACKUP',
+  (): Promise<BackupIndicator> => getBackupStatus(),
+  (): Promise<BackupIndicator> =>
+    http.get<BackupIndicator>('/backups/status', { query: { summary: 1 } }),
+)
 
 /** Recording a verification is an audited update. */
 export function verifyBackup(actor?: SessionUser): Promise<BackupStatusView> {

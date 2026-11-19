@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router'
 import { Icon, ShortcutHint } from '../components'
-import { BACKUP_CHANGED_EVENT, fetchBackupStatus } from '../features/backup/api/backupApi'
+import { BACKUP_CHANGED_EVENT, fetchBackupIndicator } from '../features/backup/api/backupApi'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { cn } from '../lib/cn'
 import { navGroupsFor, type NavKey } from './navigation'
@@ -50,7 +50,7 @@ export function Sidebar({
   user,
 }: SidebarProps) {
   const { data: backup, reload: reloadBackup } = useAsyncData('sidebar-backup-status', () =>
-    user.role === 'staff' ? fetchBackupStatus() : Promise.resolve(null),
+    user.role === 'staff' ? fetchBackupIndicator() : Promise.resolve(null),
   )
   useEffect(() => {
     window.addEventListener(BACKUP_CHANGED_EVENT, reloadBackup)
