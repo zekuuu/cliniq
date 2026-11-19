@@ -15,6 +15,15 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      // ADR-083: every toast goes through `lib/notify.ts`, so they all look and read the same.
+      'no-restricted-imports': [
+        'error',
+        { paths: [{ name: 'sonner', message: 'Use notify from lib/notify.ts instead.' }] },
+      ],
     },
+  },
+  {
+    files: ['src/lib/notify.ts', 'src/components/ui/Toaster.tsx'],
+    rules: { 'no-restricted-imports': 'off' },
   },
 )

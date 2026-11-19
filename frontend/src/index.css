@@ -328,3 +328,52 @@
     -webkit-print-color-adjust: exact;
   }
 }
+
+/*
+ * Toasts (ADR-083). Sonner injects its own CSS into <head> after this file, so each rule here starts
+ * with `:root` to outrank it. Every toast is the same white card with dark text (Zean, November 19,
+ * 2026: "make the toast bg color, only the progress bar changes"); Sonner's icon shape tells the kind
+ * apart. Only the line along the bottom carries the ADR-062 accent of its meaning, and it shrinks to
+ * nothing over the toast's time on screen (`--toast-ms`, set by `notify`). It pauses while the
+ * pointer is over the toasts, as Sonner's timer does, and stays full under reduced motion (Sonner
+ * turns animations off there).
+ */
+:root [data-sonner-toaster] {
+  font-family: inherit;
+}
+:root [data-sonner-toast][data-styled='true'] {
+  font-size: 0.875rem;
+}
+:root [data-sonner-toast][data-type='success'] {
+  --toast-accent: var(--color-success);
+}
+:root [data-sonner-toast][data-type='error'] {
+  --toast-accent: var(--color-error);
+}
+:root [data-sonner-toast][data-type='warning'] {
+  --toast-accent: var(--color-warning);
+}
+:root [data-sonner-toast][data-type='info'] {
+  --toast-accent: var(--color-info);
+}
+:root
+  [data-sonner-toast][data-styled='true']:is(
+    [data-type='success'],
+    [data-type='error'],
+    [data-type='warning'],
+    [data-type='info']
+  ):not([data-swipe-out='true']) {
+  background-image: linear-gradient(var(--toast-accent), var(--toast-accent));
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: 100% 4px;
+  animation: toast-countdown var(--toast-ms, 4s) linear forwards;
+}
+:root [data-sonner-toast][data-expanded='true'] {
+  animation-play-state: paused;
+}
+@keyframes toast-countdown {
+  to {
+    background-size: 0% 4px;
+  }
+}

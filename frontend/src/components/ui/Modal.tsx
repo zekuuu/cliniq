@@ -74,7 +74,11 @@ export function Modal({
   // The overlay scrolls, and the inner wrapper is at least viewport-tall, so a dialog taller than the screen
   // starts at its top (title and ✕ reachable) instead of being centred off both edges.
   return (
-    <div className="fixed inset-0 z-40 overflow-y-auto bg-text-primary/40" role="presentation">
+    <div
+      className="fixed inset-0 z-40 overflow-y-auto bg-text-primary/40"
+      role="presentation"
+      data-modal-overlay
+    >
       <div
         className="flex min-h-full items-center justify-center p-4"
         onMouseDown={(event) => {
