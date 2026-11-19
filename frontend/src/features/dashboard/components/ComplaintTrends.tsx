@@ -191,6 +191,9 @@ function TrendLineChart({ trends, clusters }: { trends: Trends; clusters: Cluste
       },
       y: {
         beginAtZero: true,
+        // Room above the highest point: the scale ends one gridline past it, so the line and its
+        // points never sit on the top edge (Zean, November 19, 2026).
+        grace: '5%',
         grid: { color: grid },
         border: { display: false },
         ticks: {
