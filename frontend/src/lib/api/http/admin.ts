@@ -13,6 +13,7 @@ import {
 } from '../../mock-db'
 import type { User } from '../../../types/entities'
 import { http } from '../client'
+import { queryClient } from '../../queryClient'
 import { mapped } from '../errors'
 
 /**
@@ -100,7 +101,19 @@ export function listIssueReports(): Promise<IssueReport[]> {
 // --- Reference lists: the screens stop reading the mock's constants on the API ---
 
 export function getVisitComplaintTypes(): Promise<ComplaintType[]> {
-  return http.get('/reference/visit-complaint-types')
+  return visitComplaintTypes<ComplaintType>()
+}
+
+/**
+ * One read of the visit complaint types shared by every caller for a minute (the inventory adapter
+ * reads them too). A fixed reference list; two reads on one screen were a waste (ADR-082).
+ */
+export function visitComplaintTypes<T>(): Promise<T[]> {
+  return queryClient.fetchQuery({
+    queryKey: ['reference', 'visit-complaint-types'],
+    queryFn: () => http.get<T[]>('/reference/visit-complaint-types'),
+    staleTime: 60_000,
+  })
 }
 
 export function getVisitComplaintSuggestions(): Promise<string[]> {

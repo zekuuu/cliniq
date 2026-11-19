@@ -10,6 +10,7 @@ import {
 } from '../../mock-db'
 import type { InventoryCategory, InventoryItem, ISODate } from '../../../types/entities'
 import { http } from '../client'
+import { visitComplaintTypes } from './admin'
 import { mapped, type ErrorMap } from '../errors'
 
 /**
@@ -28,9 +29,12 @@ interface ComplaintOption {
   label: string
 }
 
-/** The visit symptom options, read once per call (a short list). */
+/**
+ * The visit symptom options: one shared read with the forms' own (`getVisitComplaintTypes`), so New
+ * Visit no longer asks twice on opening (ADR-082).
+ */
 function complaintOptions(): Promise<ComplaintOption[]> {
-  return http.get('/reference/visit-complaint-types')
+  return visitComplaintTypes<ComplaintOption>()
 }
 
 async function withLabels<T extends { usedFor?: string[] }>(items: T[]): Promise<T[]> {
