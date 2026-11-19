@@ -14,6 +14,7 @@ All items below are **confirmed**, as of September 25, 2026 — the previously "
 | Database | **MariaDB (XAMPP), MySQL-compatible** | The database XAMPP installs; Laravel reaches it through its MySQL driver |
 | Local dev | **XAMPP**, standardized across all machines | Matches the client's production environment exactly; deliberately not mixing in Laravel Herd |
 | Dashboard charts | **Chart.js** (via `react-chartjs-2`) | Chosen over Recharts specifically for smaller bundle size and Canvas rendering — both matter more here than Recharts' nicer JSX composability, given the 4GB RAM target and the Dashboard's fairly simple chart needs (trend lines, a calendar heatmap, nothing exotic) |
+| Action feedback (toasts) | **Sonner** (`sonner` 2.0.8, MIT) | Added Thursday, November 19, 2026 (ADR-083, Zean's request): one bottom-right toast stack for every action's result. Small, no further dependencies, built for React 19, accessible live region and keyboard shortcut (Alt+T). Only `frontend/src/lib/notify.ts` imports it; components call `notify`. |
 | Testing | Pest (backend), Vitest + React Testing Library (frontend) | |
 | Deployment (current) | Hosted on the clinic's existing computer and used only there (`http://localhost`); no LAN access, no internet-facing hosting | ADR-029, ADR-079 |
 | Deployment (future) | Remote Server / Cloud | Documented future phase, not current work |
