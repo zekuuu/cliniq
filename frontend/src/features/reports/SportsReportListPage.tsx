@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { notify } from '../../lib/notify'
 import { Link, useNavigate } from 'react-router'
 import {
   BackButton,
@@ -34,16 +35,26 @@ export function SportsReportListPage({ viewer }: { viewer: SessionUser }) {
     reload,
   } = useAsyncData('sports-reports', () => fetchSportsReports(viewer))
   const [showArchived, setShowArchived] = useState(false)
-  const [notice, setNotice] = useState<string | null>(null)
 
   async function duplicate(report: SportsReportSummary) {
-    const copy = await copySportsReport(report.id, viewer)
-    navigate(paths.sportsReportEdit(copy.id))
+    try {
+      const copy = await copySportsReport(report.id, viewer)
+      notify.success('Sports report copied', { id: 'sports-report-copy' })
+      navigate(paths.sportsReportEdit(copy.id))
+    } catch (cause) {
+      notify.apiError(cause, 'The report was not copied. Please try again.')
+    }
   }
   async function setArchived(report: SportsReportSummary, archived: boolean) {
-    await archiveSportsReport(report.id, archived, viewer)
-    setNotice(`“${report.title}” ${archived ? 'archived' : 'restored'}.`)
-    reload()
+    try {
+      await archiveSportsReport(report.id, archived, viewer)
+      notify.success(`“${report.title}” ${archived ? 'archived' : 'restored'}`, {
+        id: `sports-report-${report.id}`,
+      })
+      reload()
+    } catch (cause) {
+      notify.apiError(cause, 'The report was not changed. Please try again.')
+    }
   }
 
   const header = (
@@ -203,14 +214,6 @@ export function SportsReportListPage({ viewer }: { viewer: SessionUser }) {
   return (
     <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
       {header}
-      {notice && (
-        <p
-          role="status"
-          className="rounded-md border border-success bg-success/10 px-3 py-2 text-sm font-semibold text-text-primary"
-        >
-          {notice}
-        </p>
-      )}
       {body}
     </div>
   )

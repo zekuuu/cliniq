@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { notify } from '../../lib/notify'
 import { flushSync } from 'react-dom'
 import { Link } from 'react-router'
 import {
@@ -32,6 +33,9 @@ import {
   withChosenEntries,
 } from './sportsReportContent'
 
+const NOTHING_TO_PRINT =
+  'This report has no students to print. Edit the report and add at least one active student.'
+
 /**
  * One Sports Report (ADR-034): the preview is the printout's own table, read from the visits and
  * incidents now. Print reads them again, so the paper is current to the minute, and the print is audited.
@@ -47,7 +51,6 @@ export function SportsReportPage({
     fetchSportsReportContent(reportId, viewer),
   )
   const [printed, setPrinted] = useState<SportsReportContent | null>(null)
-  const [printError, setPrintError] = useState<string | null>(null)
   // ADR-051: every entry starts ticked; the clinician unticks what should not be released.
   const [excluded, setExcluded] = useState<ReadonlySet<string>>(new Set())
   const toggle = (entryId: string) =>
@@ -60,19 +63,19 @@ export function SportsReportPage({
   const back = <BackButton fallback={paths.sportsReports} />
 
   async function print() {
-    if (!content?.rows.length) {
-      setPrintError(
-        'This report has no students to print. Edit the report and add at least one active student.',
+    if (!content?.rows.length) return notify.error(NOTHING_TO_PRINT, { id: 'sports-print' })
+    let fresh
+    try {
+      fresh = await fetchSportsReportContent(reportId, viewer)
+    } catch (cause) {
+      return notify.apiError(
+        cause,
+        'The report could not be prepared for printing. Please try again.',
       )
-      return
     }
-    setPrintError(null)
-    const fresh = await fetchSportsReportContent(reportId, viewer)
     if (!fresh.rows.length) {
       setPrinted(fresh)
-      setPrintError(
-        'This report has no students to print. Edit the report and add at least one active student.',
-      )
+      notify.error(NOTHING_TO_PRINT, { id: 'sports-print' })
       return
     }
     flushSync(() => setPrinted(fresh))
@@ -164,14 +167,6 @@ export function SportsReportPage({
             </Button>
           </div>
         </div>
-        {printError && (
-          <p
-            role="alert"
-            className="mt-4 rounded-md border border-error bg-error/10 px-3 py-2 text-sm font-semibold text-text-primary"
-          >
-            {printError}
-          </p>
-        )}
       </Card>
       <Card aria-labelledby="sports-report-preview">
         <CardHeader

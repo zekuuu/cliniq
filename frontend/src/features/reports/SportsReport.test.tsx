@@ -1,4 +1,5 @@
 import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { findToast } from '../../test/findToast'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -434,7 +435,7 @@ describe('Sports Report screens', () => {
     await userEvent.click(
       await screen.findByRole('button', { name: 'Print / Save as PDF' }, { timeout: 5000 }),
     )
-    expect(screen.getByRole('alert')).toHaveTextContent('This report has no students to print.')
+    expect(await findToast('This report has no students to print.')).toBeInTheDocument()
     expect(print).not.toHaveBeenCalled()
   })
 

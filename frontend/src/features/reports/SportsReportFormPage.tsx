@@ -1,4 +1,5 @@
 import { symptoms } from '../../lib/labels'
+import { notify } from '../../lib/notify'
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import {
@@ -216,8 +217,13 @@ function SportsReportForm({
     setSaving(true)
     try {
       const saved = await saveSportsReport(values, { reportId, viewer })
+      notify.success(reportId ? 'Sports report updated' : 'Sports report saved', {
+        id: 'sports-report-save',
+      })
       allowLeave()
       navigate(paths.sportsReport(saved.id), { replace: !reportId })
+    } catch (cause) {
+      notify.apiError(cause, 'The report was not saved. Please try again.')
     } finally {
       setSaving(false)
     }

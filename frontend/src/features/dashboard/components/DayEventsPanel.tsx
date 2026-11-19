@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { notify } from '../../../lib/notify'
 import { Link } from 'react-router'
 import { Button, DatePicker, Icon, Input, Modal } from '../../../components'
 import { DRILL_THROUGH_STATE } from '../../../hooks/useGoBack'
@@ -42,7 +43,6 @@ function EventForm({
   const [startDate, setStartDate] = useState<string>(event?.startDate ?? date)
   const [endDate, setEndDate] = useState<string>(event?.endDate ?? '')
   const [errors, setErrors] = useState<CalendarEventErrors>({})
-  const [failed, setFailed] = useState(false)
   const [saving, setSaving] = useState(false)
 
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -50,16 +50,19 @@ function EventForm({
     const input = { title, startDate, endDate }
     const found = validateCalendarEvent(input)
     setErrors(found)
-    setFailed(false)
-    if (Object.keys(found).length) return
+    if (Object.keys(found).length) return notify.checkFields()
     setSaving(true)
     try {
       if (event) await updateCalendarEvent(event.id, input)
       else await createCalendarEvent(input)
+      // The dialog goes back to the day's list; the toast shows above it (ADR-083).
+      notify.success(event ? 'Event updated' : 'Event added', { id: 'calendar-event' })
       onSaved()
     } catch (error) {
-      if (error instanceof CalendarEventValidationError) setErrors(error.errors)
-      else setFailed(true)
+      if (error instanceof CalendarEventValidationError) {
+        setErrors(error.errors)
+        notify.checkFields()
+      } else notify.apiError(error, 'The event could not be saved. Please try again.')
       setSaving(false)
     }
   }
@@ -97,11 +100,6 @@ function EventForm({
           error={errors.endDate}
         />
       </div>
-      {failed && (
-        <p role="alert" className="text-sm text-error">
-          The event could not be saved. Try again.
-        </p>
-      )}
       <div className="flex flex-wrap justify-end gap-2">
         <Button variant="neutral" onClick={onCancel} disabled={saving}>
           Cancel
@@ -124,15 +122,14 @@ function ConfirmDelete({
   onDeleted: () => void
 }) {
   const [deleting, setDeleting] = useState(false)
-  const [failed, setFailed] = useState(false)
   async function confirm() {
     setDeleting(true)
-    setFailed(false)
     try {
       await deleteCalendarEvent(event.id)
+      notify.success('Event deleted', { id: 'calendar-event' })
       onDeleted()
-    } catch {
-      setFailed(true)
+    } catch (cause) {
+      notify.apiError(cause, 'The event could not be deleted. Please try again.')
       setDeleting(false)
     }
   }
@@ -144,11 +141,6 @@ function ConfirmDelete({
         {event.endDate ? ` (${formatDateRange(event.startDate, event.endDate)})` : ''} will be
         removed from every day it covers. This can&apos;t be undone.
       </p>
-      {failed && (
-        <p role="alert" className="text-sm text-error">
-          The event could not be deleted. Try again.
-        </p>
-      )}
       <div className="flex flex-wrap justify-end gap-2">
         <Button variant="neutral" onClick={onCancel} disabled={deleting} data-autofocus>
           Keep Event
