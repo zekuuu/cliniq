@@ -1,6 +1,6 @@
 # frontend
 
-Last checked against the code on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`; `frontend/` unchanged since `6a94e3f`).
+Last checked against the code on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`; `frontend/` unchanged since `6a94e3f`).
 
 ## Purpose
 
@@ -8,7 +8,7 @@ The CLINIQ browser app: React + TypeScript, built with Vite and styled with Tail
 
 ## Current state
 
-**Built; runs on sample data or on the real API (ADR-080).** Every screen still runs on the shared mock-data layer in `src/lib/mock-db/` by default, and that layer is kept. Since Sunday, November 15, 2026 (built on `feat/connect-frontend`, on `main` since Wednesday, November 18, 2026, ADR-081) each module can run on the Laravel API instead, behind a switch: screens import `src/lib/data`, which sends each call to the mock or to its HTTP twin in `src/lib/api/http/`. The screens, and the features decided but not built yet, are listed in the root [README.md](../README.md#current-state).
+**Built; runs on sample data or on the real API (ADR-080).** Every screen still runs on the shared mock-data layer in `src/lib/mock-db/` by default, and that layer is kept. Since Sunday, November 15, 2026 (built on `feat/connect-frontend`, on `main` since Wednesday, November 18, 2026, ADR-081) each module can run on the Laravel API instead, behind a switch: screens import `src/lib/data`, which sends each call to the mock or to its HTTP twin in `src/lib/api/http/`. Since Thursday, November 19, 2026 (ADR-082) the long lists (Visit Log, Incident Log, Follow-Ups, Student List, Incomplete Records, Audit Log, Inventory Usage History) ask the server for one page at a time through `src/hooks/usePagedList.ts` and TanStack Query (`src/lib/queryClient.ts`); in mock mode the same hook pages the mock's list in memory. Run the tests from `D:` with a capital D (see [../COMMANDS.md](../COMMANDS.md)). The screens, and the features decided but not built yet, are listed in the root [README.md](../README.md#current-state).
 
 ## How to run
 

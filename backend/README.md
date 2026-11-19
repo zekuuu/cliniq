@@ -1,6 +1,6 @@
 # backend
 
-Last checked against the code on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). This code is on `main` since Wednesday, November 18, 2026 (ADR-081); before that it lived on the `backend` branch (ADR-056). Numbers: [Facts sheet](../CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
+Last checked against the code on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). This code is on `main` since Wednesday, November 18, 2026 (ADR-081); before that it lived on the `backend` branch (ADR-056). Numbers: [Facts sheet](../CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
 
 ## Purpose
 
@@ -106,7 +106,7 @@ Nothing here is done in the frontend yet.
 
 ## Production notes
 
-The clinic PC only (ADR-079): `APP_ENV=production`, `APP_DEBUG=false`, a generated `APP_KEY` that is never committed, `APP_URL` and `CORS_ALLOWED_ORIGINS` set to `http://localhost`, `SANCTUM_STATEFUL_DOMAINS=localhost`, `SESSION_DOMAIN` empty and `SESSION_SECURE_COOKIE=false` (plain HTTP on `localhost`; no HTTPS). Details: Environment Setup, "Clinic PC only".
+The clinic PC only (ADR-079): run `php artisan optimize` after every update and set OPcache, compression and MariaDB's buffer pool as Environment Setup, "Speed and reliability settings for the clinic PC" (ADR-082) says; then `APP_ENV=production`, `APP_DEBUG=false`, a generated `APP_KEY` that is never committed, `APP_URL` and `CORS_ALLOWED_ORIGINS` set to `http://localhost`, `SANCTUM_STATEFUL_DOMAINS=localhost`, `SESSION_DOMAIN` empty and `SESSION_SECURE_COOKIE=false` (plain HTTP on `localhost`; no HTTPS). Details: Environment Setup, "Clinic PC only".
 
 **Start-up check.** Outside the tests the app refuses to start when `SESSION_SECURE_COOKIE` does not match the scheme of `APP_URL` (true only for `https://`), or, outside `APP_ENV=local`, when `APP_DEBUG` is true or `DB_USERNAME` is `root` (`app/Shared/Support/ConfigurationCheck.php`). The idle sign-out minutes live in `system_settings` and are changed from the app; `CLINIQ_IDLE_SIGNOUT_MINUTES_STAFF` and `CLINIQ_IDLE_SIGNOUT_MINUTES_ADMIN` in `.env` are only the config defaults.
 

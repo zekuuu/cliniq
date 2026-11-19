@@ -144,6 +144,57 @@ Rewritten Sunday, November 08, 2026 — 18:35 PHT for ADR-079, which reinforces 
 
 **If the school later joins the PC to the main school network.** That needs a new decision. What would change: a hostname for the PC; a Windows Firewall rule that allows only approved addresses; HTTPS with a local certificate; and the environment values above (`APP_URL`, the CORS origin, the Sanctum stateful domain, `SESSION_SECURE_COOKIE=true`). Apache's `Listen` and `Require` lines change with them. No code changes.
 
+## Speed and reliability settings for the clinic PC (ADR-082)
+
+Added Thursday, November 19, 2026 — 12:18 PHT. Apply these on the clinic PC, **not** on a development machine. They were measured against the five-year load-test school (`backend/tools/load/`, 63 MB of data, about 100,000 audit entries) on Zean's machine. None of them changes what the system does.
+
+**1. Cache Laravel's configuration, routes, events and views.** Run this from `backend\` after every update and after any change to `.env`:
+
+```bat
+C:\xampp\php\php.exe artisan optimize
+```
+
+Before editing `.env`, run `C:\xampp\php\php.exe artisan optimize:clear`, then edit `.env`, then run `optimize` again. This is a reliability fix as well as a speed one. Without it, Laravel reads `.env` on every request, and under parallel requests Apache's threaded PHP sometimes saw no `.env` at all. The browser sends several requests at once for each screen. On Thursday, November 19, 2026 the load test recorded 16 requests answered 500 because `APP_ENV` read as `production` and 3 because `APP_KEY` was missing, all under parallel requests. A cached configuration is read once and does not have this problem.
+
+Never cache on a development machine. The load-test vhost's `SetEnv DB_DATABASE` would be ignored, and the cached `.env` points at `cliniq`.
+
+**2. OPcache.** XAMPP's PHP 8.5 has OPcache built in, and it is on by default. In `C:\xampp\php\php.ini`, under `[opcache]`, set:
+
+```ini
+opcache.enable=1
+opcache.memory_consumption=128
+opcache.interned_strings_buffer=16
+opcache.max_accelerated_files=20000
+opcache.validate_timestamps=1
+opcache.revalidate_freq=60
+```
+
+With `validate_timestamps=1`, an update is picked up within a minute. Restart Apache after an update to pick it up at once.
+
+**3. Compression and caching of the built frontend.** In `C:\xampp\apache\conf\httpd.conf`, uncomment `LoadModule deflate_module modules/mod_deflate.so` (`mod_headers` is already loaded). Then add the following inside CLINIQ's `<VirtualHost>`. The `assets/` files carry a content hash in their names, so the browser may keep them for a year. `index.html` is checked every time, so an update is seen at once.
+
+```apache
+AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+<LocationMatch "^/assets/">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+</LocationMatch>
+<Files "index.html">
+    Header set Cache-Control "no-cache"
+</Files>
+```
+
+The API's JSON is compressed too. A screen now receives one page of a list, a few kilobytes, so this mostly helps the first load of the frontend: about 1 MB of JavaScript, about 300 KB compressed.
+
+**4. MariaDB's buffer pool.** XAMPP ships `innodb_buffer_pool_size=16M`, but the five-year school is 63 MB. In `C:\xampp\mysql\bin\my.ini`, under `[mysqld]`, set:
+
+```ini
+innodb_buffer_pool_size=256M
+```
+
+Then restart MySQL from the XAMPP Control Panel. 256 MB holds the whole database with room to grow on a 4 GB PC. Check it with `SELECT @@innodb_buffer_pool_size/1048576;`.
+
+**5. PHP memory.** Keep `memory_limit=512M` in `php.ini`. The screens never read a whole list any more, but the Audit Log printout of every year still does (about 29 MB of answer for 100,000 entries).
+
 ## Scheduler on Windows
 
 Laravel's scheduler needs one task that runs every minute. Create it once the backend exists, as an account that can read the backup drives, with its password stored by Task Scheduler:
