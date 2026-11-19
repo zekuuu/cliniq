@@ -165,7 +165,7 @@ describe('"Commonly used for" on the item form (Staff)', () => {
     await user.click(within(group).getByRole('checkbox', { name: 'Fever' }))
     await user.click(within(group).getByRole('checkbox', { name: 'Allergic reaction' }))
     await user.click(screen.getByRole('button', { name: 'Save Changes' }))
-    expect(await screen.findByText(/updated successfully/)).toBeInTheDocument()
+    expect(await screen.findByText(/^Changes to .* saved$/)).toBeInTheDocument()
     expect((await getInventoryItem('item-0003')).usedFor).toEqual(['Fever', 'Allergic reaction'])
     const entry = getRecordedAuditEntries().at(-1)!
     expect(entry).toMatchObject({ actionType: 'update', summary: 'Updated commonly used for' })

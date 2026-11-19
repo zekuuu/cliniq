@@ -103,9 +103,12 @@ describe('Add Item expiry (IV-2, ADR-035, D10)', () => {
     await fill(screen.getByRole('combobox', { name: /^unit/i }), 'bottles')
     await fill(screen.getByLabelText(/low-stock threshold/i), '2')
     await user.click(screen.getByRole('button', { name: 'Add Item' }))
+    // Beside the fields, and the same words in the toast (ADR-083).
     expect(
-      screen.getByText('Choose an expiration date, or confirm this item has no expiration date.'),
-    ).toBeInTheDocument()
+      screen.getAllByText(
+        'Choose an expiration date, or confirm this item has no expiration date.',
+      ),
+    ).not.toHaveLength(0)
     await user.click(screen.getByLabelText(/this item has no expiration date/i))
     // "Commonly used for" is required (Zean, November 8, 2026); "Other" takes a symptom not in the list.
     await user.click(screen.getByRole('button', { name: 'Add Item' }))
@@ -115,7 +118,7 @@ describe('Add Item expiry (IV-2, ADR-035, D10)', () => {
     await user.click(screen.getByRole('checkbox', { name: 'Other' }))
     await fill(screen.getByRole('textbox', { name: /^Other/ }), 'eye irritation, ')
     await user.click(screen.getByRole('button', { name: 'Add Item' }))
-    expect(await screen.findByText('Saline solution was added successfully.')).toBeInTheDocument()
+    expect(await screen.findByText('Saline solution added')).toBeInTheDocument()
     expect(db().inventoryItems.find((i) => i.name === 'Saline solution')?.usedFor).toEqual([
       'eye irritation',
     ])

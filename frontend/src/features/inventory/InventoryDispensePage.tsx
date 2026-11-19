@@ -1,5 +1,4 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { Lrn } from '../../components/ui/MaskedLrn'
 import { Link } from 'react-router'
 import {
   BackButton,
@@ -24,6 +23,8 @@ import { allergyMatches, allergyWarningText } from '../../lib/itemsGiven'
 import { StockRuleError } from '../../lib/data'
 import { patientRefOf } from '../../lib/patients'
 import { paths } from '../../routes/paths'
+import { notify } from '../../lib/notify'
+import { scrollToTop } from '../../lib/scrollToTop'
 import type { PatientRef, PatientSearchResult } from '../../types/entities'
 import {
   dispenseInventoryItem,
@@ -85,7 +86,8 @@ export function InventoryDispensePage() {
     quantity?: string
     save?: string
   }>({})
-  const [success, setSuccess] = useState<ReactNode>('')
+  /** True after a recorded dispensation, for the button's done check; cleared by the next change. */
+  const [success, setSuccess] = useState(false)
   const [saving, setSaving] = useState(false)
   const { cancel, discardDialog } = useCancelNavigation(
     paths.inventory,
@@ -148,7 +150,7 @@ export function InventoryDispensePage() {
     setErrors(next)
     invalid.report(Object.keys(next).length)
     if (Object.keys(next).length || !item) return
-    setSuccess('')
+    setSuccess(false)
     setSaving(true)
     try {
       const result = await dispenseInventoryItem(
@@ -156,32 +158,35 @@ export function InventoryDispensePage() {
         amount,
         recipient === 'student' ? (patientRef ?? undefined) : undefined,
       )
-      // The masked LRN through the shared component, like every list (professor's consultation, November 6, 2026).
-      const forWhom = picked ? (
-        picked.kind === 'student' ? (
-          <>
-            LRN <Lrn lrn={picked.lrn} />
-          </>
-        ) : (
-          `Staff No. ${picked.staffNumber}`
-        )
-      ) : (
-        ''
+      // ADR-083: no medicine next to a person in a toast; the item is named only for general use.
+      const forPatient = recipient === 'student' && picked
+      notify.success(
+        forPatient
+          ? 'Dispensation recorded'
+          : `${amount} ${result.item.unit} of ${result.item.name} recorded for general use`,
+        { id: 'dispense', description: `Remaining stock: ${result.remainingStock}.` },
       )
-      setSuccess(
-        <>
-          {amount} {result.item.unit} of {result.item.name} recorded
-          {recipient === 'student' && picked ? <> for {forWhom}</> : ' for general use'}. Remaining
-          stock: {result.remainingStock}.
-          {result.belowZero ? ' Stock is now below zero; recount and restock.' : ''}
-        </>,
-      )
+      if (result.belowZero)
+        notify.warning('Stock is now below zero. Recount and restock.', {
+          id: 'dispense-below-zero',
+        })
+      setSuccess(true)
       setItemId('')
       setQuantity('1')
+      setRecipient('')
+      setPicked(null)
+      setPatientRef(null)
+      setErrors({})
+      scrollToTop()
       reload()
     } catch (caught) {
-      if (!(caught instanceof StockRuleError)) throw caught
+      if (!(caught instanceof StockRuleError)) {
+        notify.apiError(caught, 'Nothing was recorded. Please try again.')
+        return
+      }
+      // The reason names the item, so it stays here beside it, not in the toast (ADR-083 privacy).
       setErrors({ save: `${caught.message} Nothing was recorded.` })
+      notify.error('Nothing was recorded. See the reason above the button.', { id: 'dispense' })
       reload()
     } finally {
       setSaving(false)
@@ -190,7 +195,7 @@ export function InventoryDispensePage() {
 
   const clear = (field: keyof typeof errors) => {
     setErrors((current) => ({ ...current, [field]: undefined, save: undefined }))
-    setSuccess('')
+    setSuccess(false)
   }
 
   return (
@@ -368,11 +373,6 @@ export function InventoryDispensePage() {
                 {errors.save}
               </p>
             )}
-            {success && (
-              <p role="status" className="text-sm font-semibold text-success">
-                {success}
-              </p>
-            )}
             <div className="flex flex-wrap justify-end gap-2">
               <Button variant="neutral" onClick={cancel}>
                 Cancel
@@ -382,7 +382,7 @@ export function InventoryDispensePage() {
                 variant="primary"
                 icon="checkCircle"
                 loading={saving}
-                done={Boolean(success)}
+                done={success}
               >
                 Record Dispensation
               </Button>

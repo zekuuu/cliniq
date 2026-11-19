@@ -25,6 +25,7 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import { paths } from '../../routes/paths'
+import { notify } from '../../lib/notify'
 import { fetchInventory, type InventoryFilters, type InventoryItemView } from './api/inventoryApi'
 import { inventoryStatusSortValue } from './inventoryStatusSort'
 import { AdjustStockModal, BatchDetailsModal, RestockModal } from './StockModals'
@@ -139,7 +140,6 @@ export function InventoryListPage() {
     direction: 'ascending',
   })
   const [action, setAction] = useState<StockAction | null>(null)
-  const [message, setMessage] = useState('')
   const key = `${filters.search}|${filters.category}|${filters.hasExpiredStock}|${filters.attention}`
   // R26: paged like the other lists; a new search or filter starts again at page 1.
   const [pageSize, setPageSize] = usePageSize()
@@ -315,14 +315,6 @@ export function InventoryListPage() {
           <p className="text-sm text-text-secondary">
             Restock when new stock arrives. Adjust Stock to correct a count.
           </p>
-          {message && (
-            <p
-              role="status"
-              className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm font-semibold text-text-primary"
-            >
-              {message}
-            </p>
-          )}
           <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>
             {data.length ? (
               <>
@@ -368,7 +360,7 @@ export function InventoryListPage() {
               onClose={() => setAction(null)}
               onSaved={(text) => {
                 setAction(null)
-                setMessage(text)
+                notify.success(text, { id: 'stock-change' })
                 reload()
               }}
             />

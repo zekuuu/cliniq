@@ -5,13 +5,13 @@ import {
   getLargeWriteOffPercent,
   getMockToday,
   isLargeWriteOff,
-  StockRuleError,
   STAFF_ADJUSTMENT_REASONS,
   type StaffAdjustmentReason,
 } from '../../lib/data'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDate } from '../../lib/dates'
+import { notify } from '../../lib/notify'
 import {
   adjustStock,
   fetchInventoryHistory,
@@ -243,8 +243,8 @@ export function AdjustStockModal({
         `${item.name} adjusted (${ADJUSTMENT_REASON_LABELS[reason]}). Usable stock is now ${updated.currentStock} ${item.unit}.`,
       )
     } catch (caught) {
-      if (!(caught instanceof StockRuleError)) throw caught
-      setErrors({ save: caught.message })
+      // The dialog stays open with what was typed; the toast shows above it (ADR-083).
+      notify.apiError(caught, 'Stock was not changed. Please try again.', { id: 'stock-change' })
     } finally {
       setSaving(false)
     }
@@ -346,11 +346,6 @@ export function AdjustStockModal({
           dispose of an expired batch explicitly before restocking, which always creates a new
           batch.
         </p>
-        {errors.save && (
-          <p role="alert" className="text-sm font-semibold text-error">
-            {errors.save}
-          </p>
-        )}
         <FormActions onCancel={onClose} saving={saving} label="Save Adjustment" />
       </form>
     </Modal>
@@ -402,8 +397,8 @@ export function RestockModal({
         `${item.name} restocked with ${amount} ${item.unit}. Stock is now ${updated.currentStock} ${item.unit}.`,
       )
     } catch (caught) {
-      if (!(caught instanceof StockRuleError)) throw caught
-      setErrors({ save: caught.message })
+      // The dialog stays open with what was typed; the toast shows above it (ADR-083).
+      notify.apiError(caught, 'Stock was not changed. Please try again.', { id: 'stock-change' })
     } finally {
       setSaving(false)
     }
@@ -480,11 +475,6 @@ export function RestockModal({
             </span>
           </span>
         </label>
-        {errors.save && (
-          <p role="alert" className="text-sm font-semibold text-error">
-            {errors.save}
-          </p>
-        )}
         <FormActions onCancel={onClose} saving={saving} label="Save Restock" />
       </form>
     </Modal>

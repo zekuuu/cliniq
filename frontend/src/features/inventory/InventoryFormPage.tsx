@@ -22,6 +22,8 @@ import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { formatDate } from '../../lib/dates'
 import { symptoms } from '../../lib/labels'
 import { paths } from '../../routes/paths'
+import { notify } from '../../lib/notify'
+import { scrollToTop } from '../../lib/scrollToTop'
 import {
   fetchInventoryForm,
   findDuplicateItem,
@@ -29,7 +31,7 @@ import {
   unitSuggestions,
   type InventoryFormValues,
 } from './api/inventoryApi'
-import { getMockToday, StockRuleError, USED_FOR_REQUIRED } from '../../lib/data'
+import { getMockToday, USED_FOR_REQUIRED } from '../../lib/data'
 
 const BRAND_OPTIONS = [
   { value: '', label: 'Not specified' },
@@ -241,7 +243,8 @@ export function InventoryFormPage() {
       initial.currentStock === '' ||
       initial.lowStockThreshold === ''
     ) {
-      setError('Complete the item name, unit, stock, and low-stock threshold.')
+      const message = 'Complete the item name, unit, stock, and low-stock threshold.'
+      setError(message)
       invalid.report(
         [
           !initial.name.trim(),
@@ -249,18 +252,19 @@ export function InventoryFormPage() {
           initial.currentStock === '',
           initial.lowStockThreshold === '',
         ].filter(Boolean).length,
+        message,
       )
       return
     }
     if (Number(initial.currentStock) < 0 || Number(initial.lowStockThreshold) < 0) {
       setError('Stock and threshold cannot be negative.')
-      invalid.report(1)
+      invalid.report(1, 'Stock and threshold cannot be negative.')
       return
     }
     // ADR-035 on Add Item too (panel review IV-2): a date, or the explicit "no expiration" tick.
     if (!itemId && !initial.expirationDate && !initial.noExpirationConfirmed) {
       setError('Choose an expiration date, or confirm this item has no expiration date.')
-      invalid.report(1)
+      invalid.report(1, 'Choose an expiration date, or confirm this item has no expiration date.')
       return
     }
     if (!hasUsedFor(initial)) {
@@ -272,10 +276,17 @@ export function InventoryFormPage() {
     setSaving(true)
     try {
       const item = await saveInventoryItem(initial, { itemId })
-      setSaved(`${item.name} was ${itemId ? 'updated' : 'added'} successfully.`)
+      setSaved(item.name)
+      notify.success(itemId ? `Changes to ${item.name} saved` : `${item.name} added`, {
+        id: 'inventory-item',
+      })
+      // ADR-083: a new item starts a blank form; an edit keeps what was just saved.
+      if (!itemId) setValues(null)
+      setUsedForError('')
+      reload()
+      scrollToTop()
     } catch (caught) {
-      if (!(caught instanceof StockRuleError)) throw caught
-      setError(caught.message)
+      notify.apiError(caught, 'The item was not saved. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -478,11 +489,6 @@ export function InventoryFormPage() {
             {error && (
               <p role="alert" className="text-sm font-semibold text-error">
                 {error}
-              </p>
-            )}
-            {saved && (
-              <p role="status" className="text-sm font-semibold text-success">
-                {saved}
               </p>
             )}
             <div className={`flex flex-wrap justify-end gap-2 pt-4 ${FORM_DIVIDER}`}>
