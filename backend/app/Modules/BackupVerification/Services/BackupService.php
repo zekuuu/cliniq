@@ -31,17 +31,24 @@ final class BackupService
     public function __construct(private readonly AuditLogger $audit, private readonly SettingsService $settings) {}
 
     /** @return array<string, mixed> `BackupStatusView`: latest, needsVerification, recentFailure, history, verifiedByName */
-    public function status(): array
+    public function status(bool $summary = false): array
     {
+        // The summary (the sidebar's and the Dashboard's indicator) reads the latest run only: the full
+        // answer carries every daily run, about 106 KB after five years (ADR-082).
+        $logs = DB::table('backup_logs')->orderByDesc('ran_at')->orderByDesc('id')->when($summary, fn ($q) => $q->limit(1))->get();
         $names = DB::table('backup_location_results as r')->join('backup_locations as l', 'l.id', '=', 'r.backup_location_id')->orderBy('r.id')
+            ->when($summary, fn ($q) => $q->whereIn('r.backup_log_id', $logs->map(fn (object $b): int => (int) Row::int($b, 'id'))->all() ?: [0]))
             ->get(['r.backup_log_id', 'l.label'])->groupBy(fn (object $r): int => (int) Row::int($r, 'backup_log_id'));
-        $history = array_values(DB::table('backup_logs')->orderByDesc('ran_at')->orderByDesc('id')->get()->map(fn (object $b): array => [
+        $history = array_values($logs->map(fn (object $b): array => [
             'id' => (string) Row::int($b, 'id'), 'lastRun' => ClinicTime::iso(CarbonImmutable::parse((string) Row::str($b, 'ran_at'))),
             'fileSizeBytes' => (int) Row::int($b, 'file_size_bytes'), 'status' => (string) Row::str($b, 'status'),
             'verifiedByUserId' => Row::str($b, 'verified_by_user_id'),
             'locationNames' => array_values(array_map(fn (mixed $n): string => is_object($n) ? (string) Row::str($n, 'label') : '', ($names->get((int) Row::int($b, 'id')) ?? collect())->all())),
         ])->all());
         $latest = $history[0] ?? null;
+        if ($summary) {
+            return ['latest' => $latest, 'needsVerification' => $latest !== null && $latest['status'] === 'ok' && $latest['verifiedByUserId'] === null];
+        }
         $verifier = $latest === null || $latest['verifiedByUserId'] === null ? null : DB::table('users')->where('id', $latest['verifiedByUserId'])->value('name');
 
         return [

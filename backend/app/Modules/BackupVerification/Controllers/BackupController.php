@@ -14,9 +14,10 @@ final class BackupController
 {
     public function __construct(private readonly BackupService $backups) {}
 
-    public function status(): JsonResponse
+    /** `?summary=1`: only `latest` and `needsVerification`, for the sidebar and the Dashboard (ADR-082). */
+    public function status(Request $request): JsonResponse
     {
-        return response()->json(['data' => $this->backups->status()]);
+        return response()->json(['data' => $this->backups->status($request->boolean('summary'))]);
     }
 
     public function verifyLatest(Request $request): JsonResponse
