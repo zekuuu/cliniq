@@ -95,7 +95,7 @@ it('runs a backup to every enabled location without putting the password on the 
 
     $status = $this->postJson('/api/backups/run')->assertOk()->json('data');
     expect($status['latest']['status'])->toBe('ok')->and($status['latest']['locationNames'])->toBe(['USB drive', 'Gone drive'])->and($status['needsVerification'])->toBeTrue()
-        ->and(glob($good.'/.cliniq/backups/2026/11/cliniq-2026-11-10_0900.zip'))->toHaveCount(1)
+        ->and(glob($good.'/.cliniq/backups/2026/11/cliniq-2026-11-10_at_09-00.zip'))->toHaveCount(1)
         ->and(is_file($good.'/.cliniq/cliniq.json'))->toBeTrue()
         ->and(DB::table('backup_location_results')->orderBy('id')->pluck('status')->all())->toBe(['ok', 'failed'])
         ->and(DB::table('audit_logs')->where('target_type', 'backup')->value('summary'))->toBe('Backup started from the Backup page (2 locations)');

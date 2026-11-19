@@ -93,6 +93,7 @@ final class BackupService
         }
         $now = CarbonImmutable::now();
         $stamp = $now->format('Y-m-d_Hi');
+        $file = 'cliniq-'.$now->format('Y-m-d_\a\t_H-i').'.zip'; // cliniq-2026-11-19_at_20-19.zip: the date, then the time (Zean, November 19, 2026)
         $work = storage_path('app/backup-work/'.Str::random(16));
         @mkdir($work, 0700, true);
         $results = [];
@@ -102,7 +103,7 @@ final class BackupService
             $dump = $this->dump($work);
             $zip = $this->zip($work, $dump, $now);
             foreach ($locations as $location) {
-                $results[(int) Row::int($location, 'id')] = $this->copyTo((string) Row::str($location, 'path'), $zip, "cliniq-{$stamp}.zip", $now);
+                $results[(int) Row::int($location, 'id')] = $this->copyTo((string) Row::str($location, 'path'), $zip, $file, $now);
             }
         } catch (\Throwable $e) {
             $error = mb_substr($e->getMessage(), 0, 500);
@@ -112,9 +113,9 @@ final class BackupService
         }
         $ok = array_filter($results, fn (array $r): bool => $r['ok']) !== [];
 
-        DB::transaction(function () use ($results, $ok, $error, $zip, $stamp, $now, $userId, $role): void {
+        DB::transaction(function () use ($results, $ok, $error, $zip, $file, $stamp, $now, $userId, $role): void {
             $log = DB::table('backup_logs')->insertGetId([
-                'run_key' => $stamp.'-'.Str::lower(Str::random(6)), 'ran_at' => $now, 'file_name' => $zip === null ? null : "cliniq-{$stamp}.zip",
+                'run_key' => $stamp.'-'.Str::lower(Str::random(6)), 'ran_at' => $now, 'file_name' => $zip === null ? null : $file,
                 'file_size_bytes' => $zip === null ? null : (int) filesize($zip), 'sha256' => $zip === null ? null : hash_file('sha256', $zip),
                 'status' => $ok ? 'ok' : 'failed', 'error_message' => $ok ? null : ($error ?? 'No location could be written.'),
             ]);
@@ -235,7 +236,10 @@ final class BackupService
         @chmod($options, 0600);
         $dump = $work.DIRECTORY_SEPARATOR.'cliniq.sql';
         try {
-            $result = Process::timeout(600)->run([
+            // Without SystemRoot, Windows cannot open a socket ("Can't create TCP/IP socket (10106)"),
+            // and `php artisan serve` starts PHP with almost no environment.
+            $env = PHP_OS_FAMILY === 'Windows' ? ['SystemRoot' => getenv('SystemRoot') ?: (getenv('windir') ?: 'C:\\Windows')] : [];
+            $result = Process::timeout(600)->env($env)->run([
                 config()->string('cliniq.mysqldump_path'), '--defaults-extra-file='.$options, '--single-transaction', '--routines', '--triggers',
                 '--default-character-set=utf8mb4', '--result-file='.$dump, $c('database'),
             ]);
@@ -243,7 +247,9 @@ final class BackupService
             @unlink($options);
         }
         if (! $result->successful() || ! is_file($dump)) {
-            throw new \RuntimeException('mysqldump failed (exit '.$result->exitCode().').');
+            // mysqldump's own message (it never prints the password, which sits in the options file).
+            $why = trim(preg_replace('/\s+/', ' ', $result->errorOutput()) ?? '');
+            throw new \RuntimeException('mysqldump failed (exit '.$result->exitCode().')'.($why === '' ? '.' : ': '.$why));
         }
 
         return $dump;
