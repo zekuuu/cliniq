@@ -8,7 +8,7 @@ All items below are **confirmed**, as of September 25, 2026 — the previously "
 | Build tool | **Vite** | Confirmed as the 2026 default for new React SPAs — Create React App is deprecated, Vite is the "safest choice for most teams" |
 | Styling | Tailwind CSS | |
 | Routing | **React Router** (v7) | Path-based routes (`/{screen}`), one central route table (`routes/AppRoutes.tsx`) with role guards and lazy-loaded screens — see `ADR-012` |
-| Data fetching | Plain promise-based `useAsyncData` hook, feature-local `api/` modules | For the frontend-first and initial API-integration phases — see `ADR-013` |
+| Data fetching | Plain promise-based `useAsyncData` hook, feature-local `api/` modules; **TanStack Query** (`@tanstack/react-query` 5.108.0) for the seven server-paged lists, through `hooks/usePagedList.ts` | `ADR-013`; TanStack Query added Thursday, November 19, 2026 (ADR-082): one page at a time, cached, the next page prefetched |
 | Backend | Laravel (PHP) | |
 | Auth | **Laravel Sanctum** | SPA cookie mode (ADR-056), built specifically for a React+Laravel pairing — not plain "Laravel Authentication," which assumes Blade views |
 | Database | **MariaDB (XAMPP), MySQL-compatible** | The database XAMPP installs; Laravel reaches it through its MySQL driver |
