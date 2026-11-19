@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { notify } from '../../lib/notify'
 import { Link, useLocation } from 'react-router'
 import {
   BackButton,
@@ -22,7 +23,6 @@ import {
 } from '../../components'
 import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
-import { SaveFeedback } from '../../components/forms/SaveFeedback'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useSaveFeedback } from '../../hooks/useSaveFeedback'
 import { newestArchivedYear } from './newestArchivedYear'
@@ -534,8 +534,6 @@ function CurrentSchoolYearCard({
       <CardBody>
         <div className="flex flex-col gap-3">
           <p className="text-sm text-text-secondary">{when}</p>
-          <SaveFeedback result={feedback.result} />
-          {!editingDates && <SaveFeedback result={datesFeedback.result} />}
           <div className="flex flex-wrap justify-end gap-2">
             <Button variant="secondary" icon="calendar" onClick={() => setEditingDates(true)}>
               School year dates
@@ -626,7 +624,10 @@ function SchoolYearDatesDialog({
   async function submit(event: FormEvent) {
     event.preventDefault()
     const problem = schoolYearSettingsError(values)
-    if (problem) return setError(problem)
+    if (problem) {
+      notify.checkFields(problem)
+      return setError(problem)
+    }
     const result = await feedback.run(() => saveSchoolYearSettings(values, viewer), {
       saved:
         'School year dates saved. Archived records keep the school year they were filed under.',
@@ -688,7 +689,6 @@ function SchoolYearDatesDialog({
             {error}
           </p>
         )}
-        {feedback.result?.kind === 'failed' && <SaveFeedback result={feedback.result} />}
         <div className="flex justify-end gap-2">
           <Button variant="neutral" onClick={onClose}>
             {canEdit ? 'Cancel' : 'Close'}

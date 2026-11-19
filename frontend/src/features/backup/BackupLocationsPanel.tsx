@@ -1,8 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { notify } from '../../lib/notify'
 import { Badge, Button, Card, CardBody, CardHeader, Combobox, Icon, Modal } from '../../components'
 import { formatDateTime } from '../../lib/dates'
 import { useSaveFeedback } from '../../hooks/useSaveFeedback'
-import { SaveFeedback } from '../../components/forms/SaveFeedback'
 import type { BackupLocation, BackupLocationSettings, SessionUser } from '../../lib/data'
 import {
   fetchBackupFolders,
@@ -67,10 +67,11 @@ export function BackupLocationsPanel({
     event.preventDefault()
     if (!label.trim() || !path.trim()) {
       setError('Enter a label and choose a drive or folder.')
+      notify.checkFields('Enter a label and choose a drive or folder.')
       return
     }
     const result = await feedback.run(() => saveLocation({ label, path }, { actor: viewer }), {
-      saved: `${label.trim()} added. Backups now go there too.`,
+      saved: `${label.trim()} added. Backups now go there too`,
     })
     if (!result.ok) return
     setAdding(false)
@@ -78,8 +79,15 @@ export function BackupLocationsPanel({
   }
 
   async function toggle(location: BackupLocation) {
-    await setLocationEnabled(location.id, !location.enabled, viewer)
-    onChanged()
+    try {
+      await setLocationEnabled(location.id, !location.enabled, viewer)
+      notify.success(`${location.label} ${location.enabled ? 'disabled' : 'enabled'}`, {
+        id: `backup-location-${location.id}`,
+      })
+      onChanged()
+    } catch (cause) {
+      notify.apiError(cause, 'The location was not changed. Please try again.')
+    }
   }
 
   const typed = label.trim().toLowerCase()
@@ -99,8 +107,6 @@ export function BackupLocationsPanel({
         }
       />
       <CardBody className="flex flex-col gap-4">
-        {/* The modal closes on success, so the confirmation shows here; a failure shows in the modal. */}
-        {!adding && <SaveFeedback result={feedback.result} />}
         {!enabled.length && (
           <p
             role="alert"
@@ -210,7 +216,6 @@ export function BackupLocationsPanel({
             onChange={setPath}
             error={error && !path.trim() ? 'Choose a drive or folder.' : undefined}
           />
-          {feedback.result?.kind === 'failed' && <SaveFeedback result={feedback.result} />}
           <div className="flex flex-wrap justify-end gap-2">
             <Button variant="neutral" data-autofocus onClick={() => setAdding(false)}>
               Cancel

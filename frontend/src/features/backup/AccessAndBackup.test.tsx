@@ -108,7 +108,7 @@ describe('no password re-entry (Zean, Sunday, October 25, 2026)', () => {
     const user = userEvent.setup()
     renderWithRouter(<UserListPage viewer={ADMIN} />)
     await user.click(await screen.findByRole('button', { name: 'Disable Demo Clinician' }))
-    expect(await screen.findByText("Demo Clinician's account is disabled.")).toBeInTheDocument()
+    expect(await screen.findByText("Demo Clinician's account disabled")).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: "Confirm it's you" })).not.toBeInTheDocument()
     expect(getRecordedAuditEntries().map((e) => e.actionType)).toEqual(['update'])
   })

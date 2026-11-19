@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { notify } from '../../lib/notify'
 import {
   Badge,
   Button,
@@ -14,7 +15,7 @@ import {
 } from '../../components'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDateTime } from '../../lib/dates'
-import { getMockSessionUser, NoBackupLocationError } from '../../lib/data'
+import { getMockSessionUser } from '../../lib/data'
 import {
   backUpNow,
   fetchBackupLocations,
@@ -60,21 +61,25 @@ export function BackupStatusPage() {
   const [confirming, setConfirming] = useState(false)
   const [backingUp, setBackingUp] = useState(false)
   const [backedUp, setBackedUp] = useState(false)
-  const [backupError, setBackupError] = useState('')
   const locations = useAsyncData('backup-locations', fetchBackupLocations)
 
   // Panel review BK-2: either role can start a backup here. It runs to every enabled location (ADR-052).
   async function runBackup() {
     setBackingUp(true)
     setBackedUp(false)
-    setBackupError('')
+    // A backup can take a while; one toast says it is running, then turns into the result (ADR-083).
+    notify.loading('Backing up…', { id: 'backup-now' })
     try {
       setUpdated(await backUpNow(viewer))
       setBackedUp(true)
+      notify.success('Backup recorded', {
+        id: 'backup-now',
+        description:
+          "Each location's result is under Backup locations. Check the files, then mark it verified.",
+      })
       locations.reload()
     } catch (caught) {
-      if (!(caught instanceof NoBackupLocationError)) throw caught
-      setBackupError(caught.message)
+      notify.apiError(caught, 'The backup did not run. Please try again.', { id: 'backup-now' })
     } finally {
       setBackingUp(false)
     }
@@ -132,6 +137,11 @@ export function BackupStatusPage() {
       setUpdated(await verifyBackup(viewer))
       setBackedUp(false)
       setConfirming(false)
+      notify.success('Verification recorded in the audit trail', { id: 'backup-verify' })
+    } catch (caught) {
+      notify.apiError(caught, 'The verification was not recorded. Please try again.', {
+        id: 'backup-verify',
+      })
     } finally {
       setSaving(false)
     }
@@ -239,23 +249,6 @@ export function BackupStatusPage() {
               ))}
             </ol>
           </section>
-          {backedUp && (
-            <p
-              role="status"
-              className="rounded-md border border-success bg-success/10 px-3 py-2 text-sm font-semibold text-text-primary"
-            >
-              Backup recorded. Each location&apos;s result is under Backup locations below. Check
-              the files, then mark it verified.
-            </p>
-          )}
-          {backupError && (
-            <p
-              role="alert"
-              className="rounded-md border border-error bg-error/10 px-3 py-2 text-sm font-semibold text-text-primary"
-            >
-              {backupError}
-            </p>
-          )}
           <div className="flex flex-wrap justify-end gap-2">
             {backUpNowButton}
             <Button
@@ -286,14 +279,6 @@ export function BackupStatusPage() {
               </Button>
             </div>
           </Modal>
-          {updated && !backedUp && (
-            <p
-              role="status"
-              className="rounded-md border border-success bg-success/10 px-3 py-2 text-sm font-semibold text-text-primary"
-            >
-              Verification recorded in the audit trail.
-            </p>
-          )}
         </CardBody>
       </Card>
       {locationsPanel}

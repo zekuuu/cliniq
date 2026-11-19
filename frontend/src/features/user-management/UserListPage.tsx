@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { notify } from '../../lib/notify'
 import { Link } from 'react-router'
 import { formatDateTime } from '../../lib/dates'
 import {
@@ -22,7 +23,7 @@ import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/t
 import { getMockSessionUser, ROLE_LABELS, type SessionUser } from '../../lib/data'
 import { paths } from '../../routes/paths'
 import type { User } from '../../types/entities'
-import { changeUserStatus, fetchUsers, LastAdminError, resetPassword } from './api/userApi'
+import { changeUserStatus, fetchUsers, resetPassword } from './api/userApi'
 import { UserAvatar } from './UserAvatar'
 
 type UserSortKey = 'name' | 'username' | 'role' | 'status' | 'lastLogin'
@@ -97,7 +98,6 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
     key: 'lastLogin',
     direction: 'descending',
   })
-  const [notice, setNotice] = useState<{ tone: 'success' | 'error'; text: string } | null>(null)
   const [resetFor, setResetFor] = useState<User | null>(null)
   // Panel review AC-7: enabling, disabling and resetting a password ask for the Admin's password first.
 
@@ -105,14 +105,14 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
     const enable = Boolean(user.deactivatedAt)
     try {
       await changeUserStatus(user.id, enable, viewer)
-      setNotice({
-        tone: 'success',
-        text: `${user.name}'s account is ${enable ? 'enabled' : 'disabled'}.`,
+      notify.success(`${user.name}'s account ${enable ? 'enabled' : 'disabled'}`, {
+        id: `user-status-${user.id}`,
       })
       reload()
     } catch (cause) {
-      if (!(cause instanceof LastAdminError)) throw cause
-      setNotice({ tone: 'error', text: cause.message })
+      notify.apiError(cause, 'The account was not changed. Please try again.', {
+        id: `user-status-${user.id}`,
+      })
     }
   }
   if (status === 'error')
@@ -198,23 +198,14 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
           </Link>
         </div>
       </Card>
-      {notice && (
-        <p
-          role={notice.tone === 'error' ? 'alert' : 'status'}
-          className={`rounded-md border px-3 py-2 text-sm font-semibold text-text-primary ${notice.tone === 'error' ? 'border-error bg-error/10' : 'border-success bg-success/10'}`}
-        >
-          {notice.text}
-        </p>
-      )}
       <ResetPasswordDialog
         user={resetFor}
         viewer={viewer}
         onClose={() => setResetFor(null)}
         onDone={(user) => {
           setResetFor(null)
-          setNotice({
-            tone: 'success',
-            text: `${user.name} must change the temporary password at the next sign-in.`,
+          notify.success(`Password reset. ${user.name} must change it at the next sign-in.`, {
+            id: `user-reset-${user.id}`,
           })
           reload()
         }}
@@ -271,7 +262,10 @@ function ResetPasswordDialog({
   async function submit(event: FormEvent) {
     event.preventDefault()
     if (!user) return
-    if (password.trim().length < 8) return setError('Use at least 8 characters.')
+    if (password.trim().length < 8) {
+      notify.checkFields()
+      return setError('Use at least 8 characters.')
+    }
     setSaving(true)
     try {
       await resetPassword(user.id, password, viewer)
@@ -279,7 +273,7 @@ function ResetPasswordDialog({
       setError(undefined)
       onDone(user)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'The password could not be reset.')
+      notify.apiError(cause, 'The password could not be reset. Please try again.')
     } finally {
       setSaving(false)
     }

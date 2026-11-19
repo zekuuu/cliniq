@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
+import { notify } from '../../lib/notify'
+import { scrollToTop } from '../../lib/scrollToTop'
 import { Button, Card, ErrorState, Input, Skeleton } from '../../components'
-import { SaveFeedback } from '../../components/forms/SaveFeedback'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useSaveFeedback } from '../../hooks/useSaveFeedback'
 import {
@@ -79,12 +80,16 @@ function IdleSignoutForm({
     if (
       !validIdleMinutes(input.idleSignoutMinutesStaff) ||
       !validIdleMinutes(input.idleSignoutMinutesAdmin)
-    )
+    ) {
+      notify.checkFields(RANGE_MESSAGE)
       return setError(RANGE_MESSAGE)
-    await feedback.run(() => saveIdleSignoutSettings(input, viewer), {
-      saved: 'Sign-out times saved.',
+    }
+    const result = await feedback.run(() => saveIdleSignoutSettings(input, viewer), {
+      saved: 'Sign-out times saved',
       failed: (cause) => (cause instanceof IdleSignoutSettingsError ? cause.message : undefined),
     })
+    // ADR-083: the fields keep what was saved; the page goes back to the top.
+    if (result.ok) scrollToTop()
   }
 
   const set = (key: 'staff' | 'admin', value: string) => {
@@ -127,7 +132,6 @@ function IdleSignoutForm({
           {error}
         </p>
       )}
-      {feedback.result && <SaveFeedback result={feedback.result} />}
       {canEdit && (
         <div>
           <Button

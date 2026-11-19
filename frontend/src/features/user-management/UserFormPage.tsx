@@ -1,4 +1,5 @@
 import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { scrollToTop } from '../../lib/scrollToTop'
 import {
   BackButton,
   Button,
@@ -15,7 +16,6 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { useSaveFeedback } from '../../hooks/useSaveFeedback'
-import { SaveFeedback } from '../../components/forms/SaveFeedback'
 import { getMockSessionUser, type SessionUser } from '../../lib/data'
 import { paths } from '../../routes/paths'
 import type { UserRole } from '../../types/entities'
@@ -158,7 +158,7 @@ function UserForm({
           { userId, actor: viewer },
         ),
       {
-        saved: 'User saved and audit event recorded.',
+        saved: userId ? 'User account updated' : 'User account created',
         // These two are field errors, shown beside their fields.
         failed: (cause) => {
           if (cause instanceof DuplicateUsernameError)
@@ -173,7 +173,19 @@ function UserForm({
     )
     if (!result.ok) return
     setTemporaryPassword('')
-    setBaseline({ name, username, role, profilePicture })
+    setErrors({})
+    if (userId) setBaseline({ name, username, role, profilePicture })
+    else {
+      // ADR-083: a created account leaves a blank form for the next one, from the top.
+      setName('')
+      setUsername('')
+      setRole('')
+      setProfilePicture(null)
+      setPictureName('')
+      setPictureError(undefined)
+      if (pictureInputRef.current) pictureInputRef.current.value = ''
+    }
+    scrollToTop()
   }
   return (
     <div className="mx-auto flex max-w-page-narrow flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
@@ -346,7 +358,6 @@ function UserForm({
                 {userId ? 'Save Changes' : 'Create User'}
               </Button>
             </div>
-            <SaveFeedback result={feedback.result} />
           </form>
         </CardBody>
       </Card>
