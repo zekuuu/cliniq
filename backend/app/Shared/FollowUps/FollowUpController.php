@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Shared\FollowUps;
 
 use App\Modules\UserManagement\Controllers\AuthController;
+use App\Shared\Http\Paging;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,9 +16,17 @@ final class FollowUpController
 
     public function index(Request $request): JsonResponse
     {
-        $request->validate(['status' => ['nullable', 'in:pending,completed,missed,cancelled']]);
+        $request->validate(['status' => ['nullable', 'in:pending,completed,missed,cancelled'], 'patient' => ['nullable', 'in:everyone,students,staff']]);
+        if (! Paging::wanted($request)) {
+            return response()->json(['data' => $this->followUps->list($request->string('status')->value())]);
+        }
+        // One page (ADR-082); the Follow-Up List opens on Status, newest-due first.
+        [$sort, $direction] = Paging::sort($request, ['student', 'reason', 'due', 'status'], '-status');
+        [$rows, $meta] = Paging::sql($request, $this->followUps->listQuery(
+            $request->string('status')->value(), $request->string('patient')->value(), $sort, $direction,
+        ), $this->followUps->listRow(...));
 
-        return response()->json(['data' => $this->followUps->list($request->string('status')->value())]);
+        return response()->json(['data' => $rows, 'meta' => $meta]);
     }
 
     public function status(Request $request, int $id): JsonResponse

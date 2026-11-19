@@ -66,19 +66,49 @@ final class FollowUpService
     /** @return list<array<string, mixed>> `FollowUpView[]` by date, masked number, with `dueState` */
     public function list(string $status): array
     {
-        $rows = $this->rows(DB::table('follow_ups as f')->orderBy('f.follow_up_date')->orderBy('f.id'));
-        $out = [];
-        foreach ($rows as $f) {
-            if ($status !== '' && $f['status'] !== $status) {
-                continue;
-            }
-            if ($f['status'] === 'missed' && $this->hasLater($f)) {
-                continue;
-            }
-            $out[] = $f + ['dueState' => $this->dueState($f)];
-        }
+        return array_values($this->listQuery($status, 'everyone')->get()->map($this->listRow(...))->all());
+    }
 
-        return $out;
+    /**
+     * The Follow-Up List in SQL (ADR-082): the status as it reads (a pending follow-up more than the
+     * auto-close days past its date is Missed), and a Missed one with a later follow-up for the same
+     * patient, record and reason left out. One query, where each row used to ask its own (368 on the
+     * load-test school).
+     *
+     * @param  'asc'|'desc'  $direction
+     */
+    public function listQuery(string $status, string $patient, string $sort = 'due', string $direction = 'asc'): Builder
+    {
+        $effective = "CASE WHEN f.status = 'pending' AND DATEDIFF(?, f.follow_up_date) > ? THEN 'missed' ELSE f.status END";
+        $bindings = [ClinicTime::today(), $this->settings->int('follow_up_auto_close_days')];
+        $later = 'EXISTS (SELECT 1 FROM follow_ups l WHERE l.id > f.id AND l.reason = f.reason AND l.visit_id <=> f.visit_id'
+            .' AND l.incident_id <=> f.incident_id AND l.student_id <=> f.student_id AND l.personnel_id <=> f.personnel_id)';
+        $query = DB::table('follow_ups as f')
+            ->leftJoin('students as s', 's.id', '=', 'f.student_id')->leftJoin('personnel as p', 'p.id', '=', 'f.personnel_id')
+            ->select(['f.*', 's.lrn', 'p.staff_number'])
+            ->whereRaw("NOT (({$effective}) = 'missed' AND {$later})", $bindings)
+            ->when($status !== '', fn (Builder $q) => $q->whereRaw("({$effective}) = ?", [...$bindings, $status]))
+            ->when($patient === 'students', fn (Builder $q) => $q->whereNotNull('f.student_id'))
+            ->when($patient === 'staff', fn (Builder $q) => $q->whereNotNull('f.personnel_id'));
+
+        match ($sort) {
+            'student' => $query->orderByRaw("CASE WHEN f.student_id IS NOT NULL THEN 'student' ELSE 'personnel' END {$direction}")
+                ->orderByRaw("COALESCE(RIGHT(s.lrn, 4), p.staff_number) {$direction}"),
+            'reason' => $query->orderBy('f.reason', $direction),
+            'status' => $query->orderByRaw("({$effective}) {$direction}", $bindings),
+            default => $query->orderBy('f.follow_up_date', $direction),
+        };
+
+        // Equal values keep the list's own order: by date, then as recorded.
+        return $sort === 'due' ? $query->orderBy('f.id', $direction) : $query->orderBy('f.follow_up_date')->orderBy('f.id');
+    }
+
+    /** @return array<string, mixed> one `FollowUpView` of a page */
+    public function listRow(\stdClass $f): array
+    {
+        $row = $this->shape($f);
+
+        return $row + ['dueState' => $this->dueState($row)];
     }
 
     /** @return list<array<string, mixed>> a staff patient's follow-ups, newest date first (the history) */
@@ -176,32 +206,38 @@ final class FollowUpService
      */
     private function rows(Builder $query): array
     {
-        $days = $this->settings->int('follow_up_auto_close_days');
-        $today = ClinicTime::today();
         $rows = $query->leftJoin('students as s', 's.id', '=', 'f.student_id')->leftJoin('personnel as p', 'p.id', '=', 'f.personnel_id')
             ->get(['f.*', 's.lrn', 'p.staff_number']);
-        $out = [];
-        foreach ($rows as $f) {
-            $status = (string) Row::str($f, 'status');
-            $reason = Row::str($f, 'status_reason');
-            $date = (string) Row::str($f, 'follow_up_date');
-            if ($status === 'pending' && CarbonImmutable::parse($date)->diffInDays(CarbonImmutable::parse($today), false) > $days) {
-                [$status, $reason] = ['missed', self::autoClosedReason($days)];
-            }
-            $visit = Row::int($f, 'visit_id');
-            $out[] = [
-                'id' => (string) Row::int($f, 'id'), 'studentId' => Row::str($f, 'student_id'), 'personnelId' => Row::str($f, 'personnel_id'),
-                'relatedRecord' => ['type' => $visit !== null ? 'visit' : 'incident', 'id' => (string) ($visit ?? Row::int($f, 'incident_id'))],
-                'followUpDate' => $date, 'reason' => (string) Row::str($f, 'reason'), 'status' => $status, 'notes' => Row::str($f, 'notes'),
-                'createdByUserId' => (string) Row::int($f, 'created_by_user_id'), 'statusReason' => $reason,
-                'stayHomeUntilCleared' => Row::str($f, 'stay_home_until_cleared') === '1', 'stayHomeNote' => Row::str($f, 'stay_home_note'),
-                'patient' => Row::str($f, 'lrn') !== null
-                    ? ['kind' => 'student', 'number' => Lrn::mask((string) Row::str($f, 'lrn'))]
-                    : ['kind' => 'personnel', 'number' => (string) Row::str($f, 'staff_number')],
-            ];
-        }
 
-        return $out;
+        return array_values($rows->map(fn (\stdClass $f): array => $this->shape($f))->all());
+    }
+
+    /**
+     * One `FollowUp` row with the patient's masked number; the row carries `lrn` and `staff_number`.
+     *
+     * @return array<string, mixed>
+     */
+    private function shape(\stdClass $f): array
+    {
+        $days = $this->settings->int('follow_up_auto_close_days');
+        $status = (string) Row::str($f, 'status');
+        $reason = Row::str($f, 'status_reason');
+        $date = (string) Row::str($f, 'follow_up_date');
+        if ($status === 'pending' && CarbonImmutable::parse($date)->diffInDays(CarbonImmutable::parse(ClinicTime::today()), false) > $days) {
+            [$status, $reason] = ['missed', self::autoClosedReason($days)];
+        }
+        $visit = Row::int($f, 'visit_id');
+
+        return [
+            'id' => (string) Row::int($f, 'id'), 'studentId' => Row::str($f, 'student_id'), 'personnelId' => Row::str($f, 'personnel_id'),
+            'relatedRecord' => ['type' => $visit !== null ? 'visit' : 'incident', 'id' => (string) ($visit ?? Row::int($f, 'incident_id'))],
+            'followUpDate' => $date, 'reason' => (string) Row::str($f, 'reason'), 'status' => $status, 'notes' => Row::str($f, 'notes'),
+            'createdByUserId' => (string) Row::int($f, 'created_by_user_id'), 'statusReason' => $reason,
+            'stayHomeUntilCleared' => Row::str($f, 'stay_home_until_cleared') === '1', 'stayHomeNote' => Row::str($f, 'stay_home_note'),
+            'patient' => Row::str($f, 'lrn') !== null
+                ? ['kind' => 'student', 'number' => Lrn::mask((string) Row::str($f, 'lrn'))]
+                : ['kind' => 'personnel', 'number' => (string) Row::str($f, 'staff_number')],
+        ];
     }
 
     /** @param array<string, mixed> $f */
