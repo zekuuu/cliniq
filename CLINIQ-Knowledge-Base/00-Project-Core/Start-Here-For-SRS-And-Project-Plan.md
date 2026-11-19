@@ -87,7 +87,7 @@ Unchanged then: 131 API routes, 128 contract entries naming 129 endpoints (count
 | [`03-Design`](../03-Design/) | Design system, screen inventory, [screenshots](../03-Design/assets/screens/) |
 | [`04-Development`](../04-Development/) | Phases, API contract, set-up, the build manuals |
 | [`05-Testing`](../05-Testing/) | Test strategy and where the tests are |
-| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-082 and their indexes |
+| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-083 and their indexes |
 | [`09-References`](../09-References/) | Canonical documents, Privacy Policy |
 | `frontend/`, `backend/` | The code: the frontend and the backend, both on `main` (see [Where the code lives](#where-the-code-lives)) |
 
