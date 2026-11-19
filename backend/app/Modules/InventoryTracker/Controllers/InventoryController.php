@@ -55,10 +55,17 @@ final class InventoryController
     {
         $request->validate(['from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d'], 'itemId' => ['nullable', 'integer'], 'type' => ['nullable', 'in:opening,dispense,restock,adjustment']]);
 
-        return Paging::json($request, $this->inventory->movements(
+        $filters = [
             $request->filled('from') ? $request->string('from')->value() : null, $request->filled('to') ? $request->string('to')->value() : null,
             $request->filled('itemId') ? $request->integer('itemId') : null, $request->string('type')->value(),
-        ));
+        ];
+        if (! Paging::wanted($request)) {
+            return response()->json(['data' => $this->inventory->movements(...$filters)]);
+        }
+        // One page read in SQL (ADR-082), its batch allocations loaded once for the page.
+        [$rows, $meta] = Paging::sqlRows($request, $this->inventory->movementsQuery(...$filters));
+
+        return response()->json(['data' => $this->inventory->movementRows($rows), 'meta' => $meta]);
     }
 
     public function dispense(Request $request, int $id): JsonResponse

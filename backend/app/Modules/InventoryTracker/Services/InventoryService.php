@@ -15,6 +15,8 @@ use App\Shared\Support\ClinicTime;
 use App\Shared\Support\Lrn;
 use App\Shared\Support\Row;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -256,11 +258,25 @@ final class InventoryService
     /** @return list<array<string, mixed>> `InventoryMovementRow[]`, newest first; the patient is a masked number */
     public function movements(?string $from, ?string $to, ?int $itemId, string $type): array
     {
-        $rows = DB::table('inventory_transactions as t')->leftJoin('inventory_items as i', 'i.id', '=', 't.item_id')
+        return $this->movementRows($this->movementsQuery($from, $to, $itemId, $type)->get());
+    }
+
+    /** The movements, newest first, filtered in SQL; one page of it is read with `Paging::sqlRows` (ADR-082). */
+    public function movementsQuery(?string $from, ?string $to, ?int $itemId, string $type): Builder
+    {
+        return DB::table('inventory_transactions as t')->leftJoin('inventory_items as i', 'i.id', '=', 't.item_id')
             ->leftJoin('students as s', 's.id', '=', 't.student_id')->leftJoin('personnel as p', 'p.id', '=', 't.personnel_id')->leftJoin('users as u', 'u.id', '=', 't.user_id')
             ->when($from !== null, fn ($q) => $q->where('t.occurred_at', '>=', "{$from} 00:00:00"))->when($to !== null, fn ($q) => $q->where('t.occurred_at', '<=', "{$to} 23:59:59"))
             ->when($itemId !== null, fn ($q) => $q->where('t.item_id', $itemId))->when($type !== '', fn ($q) => $q->where('t.type', $type))
-            ->orderByDesc('t.occurred_at')->orderByDesc('t.id')->get(['t.*', 'i.name as item_name', 'i.unit', 's.lrn', 'p.staff_number', 'u.name as user_name']);
+            ->orderByDesc('t.occurred_at')->orderByDesc('t.id')->select(['t.*', 'i.name as item_name', 'i.unit', 's.lrn', 'p.staff_number', 'u.name as user_name']);
+    }
+
+    /**
+     * @param  Collection<int, \stdClass>  $rows
+     * @return list<array<string, mixed>> `InventoryMovementRow[]`; the patient is a masked number
+     */
+    public function movementRows(Collection $rows): array
+    {
         $allocations = $this->allocations($rows->map(fn (object $t): int => (int) Row::int($t, 'id'))->all());
 
         return array_values($rows->map(fn (object $t): array => [
