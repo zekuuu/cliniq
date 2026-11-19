@@ -1,6 +1,6 @@
 # ADR index
 
-Every decision record, one line each. Generated Thursday, November 19, 2026 — 12:19 PHT by `npm run docs:adrs` from the ADR headers and [Decisions-Summary.md](Decisions-Summary.md); do not edit by hand. A later dated note at the top of an ADR changes what it says, and a later ADR can replace an earlier one: always read the record itself before quoting it. Plain-language summaries: [Decisions-Summary.md](Decisions-Summary.md). What changed since Project Plan revision 2.8: [Changes-Since-Project-Plan-2.8.md](Changes-Since-Project-Plan-2.8.md).
+Every decision record, one line each. Generated Thursday, November 19, 2026 — 22:45 PHT by `npm run docs:adrs` from the ADR headers and [Decisions-Summary.md](Decisions-Summary.md); do not edit by hand. A later dated note at the top of an ADR changes what it says, and a later ADR can replace an earlier one: always read the record itself before quoting it. Plain-language summaries: [Decisions-Summary.md](Decisions-Summary.md). What changed since Project Plan revision 2.8: [Changes-Since-Project-Plan-2.8.md](Changes-Since-Project-Plan-2.8.md).
 
 | ADR | Title | Status | Date | Effect in one line | Changed |
 |---|---|---|---|---|---|
@@ -86,3 +86,4 @@ Every decision record, one line each. Generated Thursday, November 19, 2026 — 
 | [80](ADR-080-Frontend-Connects-To-The-API-Behind-A-Mode-Switch-Mock-Stays.md) | The frontend connects to the API behind a global and per-module switch; the mock layer stays | Accepted | November 15, 2026 |  | — |
 | [81](ADR-081-Backend-Merged-Into-Main-Main-Holds-The-Whole-System.md) | Backend merged into main; main holds the whole system | Accepted | November 18, 2026 | The backend and the connected frontend were merged into `main` on Wednesday, November 18, 2026 (merge commit `bc654dd`), because the project is moving to testing and deployment. | README, Start-Here-For-SRS-And-Project-Plan, Facts-Sheet |
 | [82](ADR-082-Server-Side-Pagination-Of-The-Long-Lists-And-TanStack-Query.md) | The long lists are paged by the server, one page at a time, through TanStack Query | Accepted | November 19, 2026 |  | — |
+| [83](ADR-083-Action-Feedback-In-Sonner-Toasts-Forms-Reset-And-Scroll-To-Top.md) | Every action's result is a Sonner toast at the bottom right; a successful form resets and goes back to the top | Accepted | November 19, 2026 | Every action's result (a save, a status change, a copy, a backup, sign out) shows as a toast at the bottom right, sent through `lib/notify.ts`, the only file that uses the Sonner library. | — |
