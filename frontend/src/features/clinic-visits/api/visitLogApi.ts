@@ -1,9 +1,66 @@
 import { getMockToday, listPersonnel, listStudents, listUsers, listVisits } from '../../../lib/data'
+import { requestPage } from '../../../lib/api/client'
+import { routed } from '../../../lib/api/routed'
+import { dispositionLabel } from '../../../lib/dispositions'
 import { lrnMatchesSearch } from '../../../lib/lrn'
+import { pageInMemory, sortParam, toPage, type Page, type PageRequest } from '../../../lib/paging'
 import { matchesPatientFilter, type PatientFilter, type PatientNumber } from '../../../lib/patients'
 import { todayISO } from '../../../lib/dates'
 import { rangeForPreset } from '../../../lib/dateRange'
 import type { Disposition, ISODate, ISODateTime } from '../../../types/entities'
+
+export type VisitLogSortKey = 'dateTime' | 'lrn' | 'record' | 'disposition'
+export const VISIT_LOG_SORT_KEYS: readonly VisitLogSortKey[] = [
+  'dateTime',
+  'lrn',
+  'record',
+  'disposition',
+]
+/** The Visit Log's filters; the search box and the page travel beside them (ADR-082). */
+export type VisitLogFilters = Omit<VisitLogQuery, 'search'>
+
+/** The screen's sort rule, kept for the mock's page so mock mode orders rows as before. */
+function visitLogValue(row: VisitLogRow, key: VisitLogSortKey): string {
+  if (key === 'dateTime') return row.dateTime
+  if (key === 'lrn') return `${row.patient.kind}|${row.patient.number}`
+  if (key === 'record') return row.complaint
+  return dispositionLabel(row.disposition, row.patient.kind)
+}
+
+async function mockVisitLogPage(
+  request: PageRequest<VisitLogFilters, VisitLogSortKey>,
+): Promise<Page<VisitLogRow>> {
+  const rows = await fetchVisitLog({ ...request.filters, search: request.search })
+  return pageInMemory(rows, request, visitLogValue)
+}
+
+/** `GET /api/visits/log`: one page, joined, filtered and sorted by the server (ADR-082). */
+async function httpVisitLogPage(
+  request: PageRequest<VisitLogFilters, VisitLogSortKey>,
+  signal?: AbortSignal,
+): Promise<Page<VisitLogRow>> {
+  const { filters } = request
+  const result = await requestPage<VisitLogRow[]>('/visits/log', {
+    query: {
+      from: filters.from,
+      to: filters.to,
+      disposition: filters.disposition,
+      letter: filters.letter,
+      inClinicNow: filters.inClinicNow ? 1 : undefined,
+      includeEnteredInError: filters.includeEnteredInError ? 1 : undefined,
+      patient: filters.patient,
+      search: request.search,
+      sort: sortParam(request.sort),
+      page: request.page,
+      perPage: request.perPage,
+    },
+    signal,
+  })
+  return toPage(result, request)
+}
+
+/** One page of the Visit Log. Mock mode pages the whole joined log in memory (ADR-080, ADR-082). */
+export const fetchVisitLogPage = routed('VISITS', mockVisitLogPage, httpVisitLogPage)
 
 export interface VisitLogQuery {
   from: ISODate

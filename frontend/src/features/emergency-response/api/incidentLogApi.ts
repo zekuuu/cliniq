@@ -1,4 +1,7 @@
 import { listIncidents, listPersonnel, listStudents, type SessionUser } from '../../../lib/data'
+import { requestPage } from '../../../lib/api/client'
+import { routed } from '../../../lib/api/routed'
+import { pageInMemory, sortParam, toPage, type Page, type PageRequest } from '../../../lib/paging'
 import { lrnMatchesSearch } from '../../../lib/lrn'
 import { matchesPatientFilter, type PatientFilter, type PatientNumber } from '../../../lib/patients'
 import { todayISO } from '../../../lib/dates'
@@ -84,3 +87,57 @@ export async function fetchIncidentLog(
       )
     })
 }
+
+export type IncidentSortKey = 'time' | 'student' | 'complaint' | 'status'
+export const INCIDENT_SORT_KEYS: readonly IncidentSortKey[] = [
+  'time',
+  'student',
+  'complaint',
+  'status',
+]
+/** The Incident Log's filters; the search box and the page travel beside them (ADR-082). */
+export type IncidentLogFilters = Omit<IncidentLogQuery, 'search'>
+
+/** The screen's sort rule, kept for the mock's page so mock mode orders rows as before. */
+function incidentLogValue(row: IncidentLogRow, key: IncidentSortKey): string {
+  if (key === 'time') return row.time
+  if (key === 'student') return `${row.patient.kind}|${row.patient.number}`
+  if (key === 'complaint') return row.complaint
+  return row.completion === 'needs_completion' ? 'Needs completion' : 'Complete'
+}
+
+async function mockIncidentLogPage(
+  request: PageRequest<IncidentLogFilters, IncidentSortKey>,
+  viewer?: SessionUser,
+  signal?: AbortSignal,
+): Promise<Page<IncidentLogRow>> {
+  const rows = await fetchIncidentLog({ ...request.filters, search: request.search }, viewer)
+  signal?.throwIfAborted() // a page no longer wanted is not cut
+  return pageInMemory(rows, request, incidentLogValue)
+}
+
+/** `GET /api/incidents/log`: one page; the server leaves staff incidents out for the Admin (ADR-043). */
+async function httpIncidentLogPage(
+  request: PageRequest<IncidentLogFilters, IncidentSortKey>,
+  _viewer?: SessionUser,
+  signal?: AbortSignal,
+): Promise<Page<IncidentLogRow>> {
+  const { filters } = request
+  const result = await requestPage<IncidentLogRow[]>('/incidents/log', {
+    query: {
+      from: filters.from,
+      to: filters.to,
+      completion: filters.completion,
+      patient: filters.patient,
+      search: request.search,
+      sort: sortParam(request.sort),
+      page: request.page,
+      perPage: request.perPage,
+    },
+    signal,
+  })
+  return toPage(result, request)
+}
+
+/** One page of the Incident Log (ADR-082). */
+export const fetchIncidentLogPage = routed('INCIDENTS', mockIncidentLogPage, httpIncidentLogPage)

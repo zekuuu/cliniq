@@ -22,26 +22,25 @@ import {
   type DataTableColumn,
 } from '../../components'
 import { SHORTCUT_KEYS } from '../../lib/shortcuts'
-import { useAsyncData } from '../../hooks/useAsyncData'
-import { usePageSize, type PageSize } from '../../hooks/usePageSize'
+import { usePagedList } from '../../hooks/usePagedList'
 import { useDateRangeEntryParams } from '../../hooks/useDateRangeEntryParams'
 import { formatDateTime } from '../../lib/dates'
 import type { DateRange } from '../../lib/dateRange'
-import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
+import { toggleTableSort } from '../../lib/tableSort'
 import { paths } from '../../routes/paths'
 import {
   defaultIncidentLogRange,
-  fetchIncidentLog,
+  fetchIncidentLogPage,
+  INCIDENT_SORT_KEYS,
   type IncidentCompletion,
   type IncidentLogRow,
+  type IncidentSortKey,
 } from './api/incidentLogApi'
 import { PatientFilterSelect, PatientNumber } from '../../components'
 import type { PatientFilter } from '../../lib/patients'
 import { getMockSessionUser, type SessionUser } from '../../lib/data'
 
 type CompletionFilter = IncidentCompletion | 'all'
-
-type IncidentSortKey = 'time' | 'student' | 'complaint' | 'status'
 
 const completionOptions = [
   { value: 'all', label: 'All' },
@@ -147,7 +146,6 @@ export function IncidentLogListPage({
   const defaultRange: DateRange = { preset: 'today', ...defaultIncidentLogRange() }
   const { initialRange, clearDateParams } = useDateRangeEntryParams(defaultRange)
   const [range, setRange] = useState<DateRange>(initialRange)
-  const [search, setSearch] = useState('')
   // The Dashboard's Unfinished incident records card opens the log on this filter.
   const [completion, setCompletion] = useState<CompletionFilter>(() =>
     new URLSearchParams(window.location.search).get('completion') === 'needs_completion'
@@ -158,39 +156,26 @@ export function IncidentLogListPage({
   // The Admin's log has no staff incidents (ADR-043, D15), so it keeps the LRN alone and no filter.
   const patient: PatientFilter = isStaff ? patientFilter : 'everyone'
   const numberHeader = isStaff ? 'LRN or Staff No.' : 'LRN'
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = usePageSize()
-  // A new page size starts again at page 1 (cliniq-pagination-patterns).
-  const changePageSize = (size: PageSize) => {
-    setPageSize(size)
-    setPage(1)
-  }
-  const [sort, setSort] = useState<TableSortState<IncidentSortKey>>({
-    key: 'time',
-    direction: 'descending',
-  })
   const { from, to } = range
-  const { data, status, isRefetching, reload } = useAsyncData(
-    `${from}|${to}|${search}|${completion}|${patient}`,
-    () => fetchIncidentLog({ from, to, search, completion, patient }, viewer),
-  )
-  // Filter changes reset to the first page in the same event (cliniq-pagination-patterns).
+  // One page at a time from the server; page, search and sort live in the address (ADR-082).
+  // A changed filter, search, sort or page size goes back to page 1 (cliniq-pagination-patterns).
+  const list = usePagedList({
+    key: `incident-log|${viewer.role}`,
+    filters: { from, to, completion, patient },
+    sortKeys: INCIDENT_SORT_KEYS,
+    defaultSort: { key: 'time', direction: 'descending' },
+    load: (request, signal) => fetchIncidentLogPage(request, viewer, signal),
+  })
+  const { page: data, status, isRefetching, reload, sort } = list
   function changeRange(next: DateRange) {
     setRange(next)
     clearDateParams()
-    setPage(1)
-  }
-  function changeSearch(next: string) {
-    setSearch(next)
-    setPage(1)
   }
   function changeCompletion(next: CompletionFilter) {
     setCompletion(next)
-    setPage(1)
   }
   function changePatient(next: PatientFilter) {
     setPatientFilter(next)
-    setPage(1)
   }
 
   // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
@@ -212,15 +197,8 @@ export function IncidentLogListPage({
       </>
     )
   function changeSort(key: IncidentSortKey) {
-    setSort((current) => toggleTableSort(current, key))
-    setPage(1)
+    list.setSort(toggleTableSort(sort, key))
   }
-  const sortedRows = sortTableRows(data, sort, (row, key) => {
-    if (key === 'time') return row.time
-    if (key === 'student') return `${row.patient.kind}|${row.patient.number}`
-    if (key === 'complaint') return row.complaint
-    return completionMeta[row.completion].label
-  })
   const sortColumn = (key: IncidentSortKey, label: string) => ({
     label,
     direction: sort.key === key ? sort.direction : undefined,
@@ -251,9 +229,6 @@ export function IncidentLogListPage({
     if (column.key === 'actions' && !isStaff) return { ...column, cell: viewReport }
     return column
   })
-  const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize))
-  const currentPage = Math.min(page, pageCount)
-  const pageRows = sortedRows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   return (
     <div className="mx-auto flex max-w-page-wide flex-col gap-4 px-4 pt-10 pb-8 sm:px-8">
@@ -287,7 +262,7 @@ export function IncidentLogListPage({
         <CardHeader
           titleId="incident-log-title"
           title="Incidents"
-          description={`${data.length.toLocaleString('en-PH')} record${data.length === 1 ? '' : 's'} shown`}
+          description={`${data.total.toLocaleString('en-PH')} record${data.total === 1 ? '' : 's'} shown`}
           icon={<Icon name="alertTriangle" />}
           actions={
             <SegmentedControl
@@ -303,11 +278,11 @@ export function IncidentLogListPage({
             <Input
               label="Search"
               type="search"
-              value={search}
+              value={list.searchInput}
               placeholder={
                 isStaff ? 'LRN, Staff No., reason or event' : 'LRN, grade, reason, or event'
               }
-              onChange={(event) => changeSearch(event.target.value)}
+              onChange={(event) => list.setSearch(event.target.value)}
               className="min-w-56 flex-1"
             />
             {isStaff && <PatientFilterSelect value={patient} onChange={changePatient} />}
@@ -321,24 +296,24 @@ export function IncidentLogListPage({
             />
           </div>
           <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>
-            {data.length ? (
+            {data.total ? (
               <>
                 <DataTable
                   caption="Clinic incident log"
                   columns={columns}
-                  rows={pageRows}
+                  rows={data.rows}
                   rowKey={(row) => row.id}
                   fixedLayout
                   minTableWidth="58rem"
                 />
                 <Pagination
-                  page={currentPage}
-                  pageCount={pageCount}
-                  total={data.length}
-                  pageSize={pageSize}
-                  onPageSizeChange={changePageSize}
+                  page={list.pageNumber}
+                  pageCount={data.lastPage}
+                  total={data.total}
+                  pageSize={list.pageSize}
+                  onPageSizeChange={list.setPageSize}
                   itemLabel="incidents"
-                  onPageChange={setPage}
+                  onPageChange={list.setPage}
                 />
               </>
             ) : (

@@ -26,22 +26,25 @@ import {
 } from '../../components'
 import { SHORTCUT_KEYS } from '../../lib/shortcuts'
 import { Link, useSearchParams } from 'react-router'
-import { useAsyncData } from '../../hooks/useAsyncData'
-import { usePageSize, type PageSize } from '../../hooks/usePageSize'
+import { usePagedList } from '../../hooks/usePagedList'
 import { useDateRangeEntryParams } from '../../hooks/useDateRangeEntryParams'
 import { formatDateTime } from '../../lib/dates'
 import { rangeForPreset, type DateRange } from '../../lib/dateRange'
-import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
+import { toggleTableSort } from '../../lib/tableSort'
 import { paths } from '../../routes/paths'
 import type { Disposition } from '../../types/entities'
-import { defaultVisitLogRange, fetchVisitLog, type VisitLogRow } from './api/visitLogApi'
+import {
+  defaultVisitLogRange,
+  fetchVisitLogPage,
+  VISIT_LOG_SORT_KEYS,
+  type VisitLogRow,
+  type VisitLogSortKey,
+} from './api/visitLogApi'
 import { patientNumberLabel, type PatientFilter } from '../../lib/patients'
 import { dispositionLabel, DISPOSITION_TONES } from '../../lib/dispositions'
 
 type DispositionFilter = Disposition | 'all'
 type LetterFilter = 'pending' | ''
-
-type VisitLogSortKey = 'dateTime' | 'lrn' | 'record' | 'disposition'
 
 const dispositionOptions = [
   { value: 'all', label: 'All' },
@@ -94,7 +97,6 @@ export function VisitLogListPage() {
   const { initialRange, clearDateParams } = useDateRangeEntryParams(defaultRange)
   // `?from=&to=` (e.g. the Dashboard calendar's "View visits") applies only on arrival.
   const [range, setRange] = useState<DateRange>(initialRange)
-  const [search, setSearch] = useState('')
   const [disposition, setDisposition] = useState<DispositionFilter>('all')
   // `?letter=pending` (the Dashboard's "Pending excuse letters" card) applies only on arrival.
   const [letter, setLetter] = useState<LetterFilter>(
@@ -108,65 +110,45 @@ export function VisitLogListPage() {
     ...(inClinicNow ? ['in-clinic-now'] : []),
     ...(includeEnteredInError ? ['include-entered-in-error'] : []),
   ]
-  const [sort, setSort] = useState<TableSortState<VisitLogSortKey>>({
-    key: 'dateTime',
-    direction: 'descending',
+  // One page at a time from the server; page, search and sort live in the address (ADR-082).
+  // A changed filter, search, sort or page size goes back to page 1 (cliniq-pagination-patterns).
+  const list = usePagedList({
+    key: 'visit-log',
+    filters: {
+      from: range.from,
+      to: range.to,
+      disposition,
+      letter,
+      inClinicNow,
+      includeEnteredInError,
+      patient,
+    },
+    sortKeys: VISIT_LOG_SORT_KEYS,
+    defaultSort: { key: 'dateTime', direction: 'descending' },
+    load: fetchVisitLogPage,
   })
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = usePageSize()
-  // A new page size starts again at page 1 (cliniq-pagination-patterns).
-  const changePageSize = (size: PageSize) => {
-    setPageSize(size)
-    setPage(1)
-  }
+  const { page: data, status, isRefetching, reload, sort } = list
 
-  const { data, status, isRefetching, reload } = useAsyncData(
-    `${range.from}|${range.to}|${search}|${disposition}|${letter}|${inClinicNow}|${includeEnteredInError}|${patient}`,
-    () =>
-      fetchVisitLog({
-        from: range.from,
-        to: range.to,
-        search,
-        disposition,
-        letter,
-        inClinicNow,
-        includeEnteredInError,
-        patient,
-      }),
-  )
-
-  // Filters reset to the first page in the same event, so a narrower result never lands on an
-  // empty later page (cliniq-pagination-patterns).
   function changeRange(next: DateRange) {
     setRange(next)
     clearDateParams()
-    setPage(1)
-  }
-  function changeSearch(next: string) {
-    setSearch(next)
-    setPage(1)
   }
   function changeDisposition(next: DispositionFilter) {
     setDisposition(next)
-    setPage(1)
   }
   function changePatient(next: PatientFilter) {
     setPatient(next)
-    setPage(1)
   }
   function changeLetter(next: string) {
     setLetter(next === 'pending' ? 'pending' : '')
-    setPage(1)
   }
   function changeVisitStatus(next: string[]) {
     setInClinicNow(next.includes('in-clinic-now'))
     setIncludeEnteredInError(next.includes('include-entered-in-error'))
-    setPage(1)
   }
 
   function toggleSort(key: VisitLogSortKey) {
-    setPage(1)
-    setSort((current) => toggleTableSort(current, key))
+    list.setSort(toggleTableSort(sort, key))
   }
 
   // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
@@ -190,23 +172,6 @@ export function VisitLogListPage() {
       </>
     )
   }
-
-  const sortedRows = sortTableRows(data, sort, (row, key) => {
-    switch (key) {
-      case 'dateTime':
-        return row.dateTime
-      case 'lrn':
-        return `${row.patient.kind}|${row.patient.number}`
-      case 'record':
-        return row.complaint
-      case 'disposition':
-        return dispositionMeta(row.disposition, row.patient.kind).label
-    }
-  })
-
-  const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize))
-  const currentPage = Math.min(page, pageCount)
-  const pageRows = sortedRows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   const sortColumn = (key: VisitLogSortKey, label: string) => ({
     label,
@@ -325,7 +290,7 @@ export function VisitLogListPage() {
         <CardHeader
           titleId="visit-log-title"
           title="Visits"
-          description={`${data.length.toLocaleString('en-PH')} record${data.length === 1 ? '' : 's'} shown`}
+          description={`${data.total.toLocaleString('en-PH')} record${data.total === 1 ? '' : 's'} shown`}
           icon={<Icon name="clipboardList" />}
           actions={
             <SegmentedControl
@@ -341,9 +306,9 @@ export function VisitLogListPage() {
             <Input
               label="Search"
               type="search"
-              value={search}
+              value={list.searchInput}
               placeholder={`LRN, Staff No., ${symptom} or event`}
-              onChange={(event) => changeSearch(event.target.value)}
+              onChange={(event) => list.setSearch(event.target.value)}
               className="min-w-56 flex-1"
             />
             <PatientFilterSelect value={patient} onChange={changePatient} />
@@ -378,24 +343,24 @@ export function VisitLogListPage() {
           </div>
 
           <div aria-busy={isRefetching} className={isRefetching ? 'opacity-60' : undefined}>
-            {data.length ? (
+            {data.total ? (
               <>
                 <DataTable
                   caption="Clinic visit log"
                   columns={columns}
-                  rows={pageRows}
+                  rows={data.rows}
                   rowKey={(row) => row.id}
                   fixedLayout
                   minTableWidth="56rem"
                 />
                 <Pagination
-                  page={currentPage}
-                  pageCount={pageCount}
-                  total={sortedRows.length}
-                  pageSize={pageSize}
-                  onPageSizeChange={changePageSize}
+                  page={list.pageNumber}
+                  pageCount={data.lastPage}
+                  total={data.total}
+                  pageSize={list.pageSize}
+                  onPageSizeChange={list.setPageSize}
                   itemLabel="visits"
-                  onPageChange={setPage}
+                  onPageChange={list.setPage}
                 />
               </>
             ) : (
