@@ -58,6 +58,26 @@ Tests (Pest, frozen clock with `travelTo`):
 
 The mock has no pagination: it returns whole lists and the screens page them. List endpoints do the same, with their filters as query parameters. Long lists also accept `page` and `perPage` and then add `meta: { page, perPage, total }` (Q19). These are visits, incidents, the audit log and inventory history (an item's history and the movements list). `perPage` defaults to 25 and is at most 100; without either parameter the whole list comes back (built Saturday, November 14, 2026 — 19:09 PHT).
 
+**Server-side paging of the long lists (ADR-082, Thursday, November 19, 2026 — 12:18 PHT).** The screens now ask for one page at a time. The shape is one for every paged list:
+
+- **Request:** `page` (from 1); `perPage` (the screen's page size: 10, 20, 50 or 100; default 25, at most 100); `search` (the search box, where the list has one); `sort` (a column key, with `-` in front for descending; an unknown key falls back to the list's default); and the list's own filters.
+- **Answer:** `data` with `meta: { page, perPage, total, lastPage }`. `lastPage` is new; it is at least 1. A page past the end answers 200 with an empty `data` and the same `meta`, not an error. Errors keep the usual format.
+- **Without `page` or `perPage`, the whole list comes back as before.** The printouts and exports read it on purpose, by an explicit call (the Audit Log's Print button, the Sports Report's student list).
+- **Filters, search and sort run in SQL** for the lists that grow with history (visits, incidents, follow-ups, stock movements, the audit log). The Student List and the Incomplete Records Queue are sorted and cut in memory, because their name match and record status are PHP rules; the school roll bounds them (about 1,200 rows with the archived).
+- **Searches see only what the list shows.** Typed digits find the last 4 of the masked LRN (ADR-080 item 7). A Staff No. matches by its start. The audit log's search matches its shown words only, never a hidden full LRN.
+
+| Endpoint | Paged since ADR-082 | Search | Sort keys (default first) | Extra |
+|---|---|---|---|---|
+| `GET /api/visits/log` (new, Staff) | always | LRN digits, Staff No., grade or staff type, complaint, event | `-dateTime`, `lrn`, `record`, `disposition` | Filters `from`, `to`, `disposition`, `letter=pending`, `inClinicNow`, `includeEnteredInError`, `patient`. Rows are `VisitLogRow` (masked number, grade at the time, logged by, `letterPending`, `inClinicNow`, `escalated`, `enteredInError`). |
+| `GET /api/incidents/log` (new, both roles) | always | as the Visit Log | `-time`, `student`, `complaint`, `status` | Filters `from`, `to`, `completion`, `patient`. Rows are `IncidentLogRow`. The Admin never sees a staff patient's incident (ADR-043). |
+| `GET /api/follow-ups` | with `page` | none | `-status`, `student`, `reason`, `due` | Filter `patient` added. One query: the status as it reads and the "later follow-up" rule are SQL. |
+| `GET /api/inventory/movements` | with `page` | none | newest first | Batch allocations are read for the page only. |
+| `GET /api/audit-log` | with `page`; `data: { rows, users }` | `search`: user, role, action, summary, module, record as shown | `-timestamp`, `user`, `action`, `module`, `record` | The Module filter (`targetTypes[]`) is SQL now, for the whole list too. |
+| `POST /api/students/query` | with `page` in the body | as before | `name`, `number`, `grade`, `status` | |
+| `GET /api/students/incomplete` | with `page` | name, LRN digits, grade | `-imported`, `student`, `grade`, `missing`, `status` | Filter `status` (`open`, the default; `resolved`; `all`). `meta.counts: { open, resolved }` counts the whole queue. `perPage=1&status=open` gives the Student List's count. |
+| `GET /api/visits`, `GET /api/incidents` | with `page` (Q19) | none | newest first | `GET /api/visits` with `page` now reads one page in SQL. |
+| `GET /api/backups/status?summary=1` | not a list | — | — | Only `latest` and `needsVerification`, for the sidebar and the Dashboard (the full answer carries every daily run, about 106 KB after five years). |
+
 ### Display privacy
 
 - **A response that lists several people carries the masked LRN and never a birthdate or an age** (ADR-004, ADR-040, ADR-054). The field stays `lrn` and holds `●●●●●●●●1234`. `maskLrn` gives the same text when applied again, so a screen needs no change. The mock sends the full LRN and masks on screen; this is a deliberate difference.
@@ -395,6 +415,14 @@ All read-only, no audit. Text-only lists, safe for both roles.
 - Response: `Student`. Errors: 404; 422 "Give the reason for archiving." (the mock's text; was "Choose a reason." here, corrected Saturday, November 14, 2026 — 19:09 PHT). Stores `archived_at`, `archive_reason` and `archived_school_year` (the current year's label). Audit: `archive student`.
 - Copies: `archiveStudent`; tests: `SportsReport`, `auditCoverage`, `ArchivePage`. A reason is now asked (ADR-072, replacing "no reason" of ADR-047). The yearly import stores "Not on the new list".
 
+#### `POST /api/students/{id}/emergency-contacts/{index}/verify`
+- Roles: S. Added Thursday, November 19, 2026 — 05:24 PHT (Module 2: "Mark each contact number as verified/unverified").
+- Request: `verified` (boolean, default `true`; `false` marks it unverified, added Thursday, November 19, 2026 — 05:38 PHT). `index` is the contact's place in the list, 0 being the primary.
+- Response: `Student`. Errors: 404 (no student, or no contact at that index).
+- Verified: stores `is_verified = 1`, `verified_at` and `verified_by_user_id`. Unverified: `is_verified = 0` and both cleared. Either way it adds an `emergency_contact_verifications` row with `result` `verified` or `unverified`. Audit: `update student`, summary "Marked an emergency contact verified." or "… unverified."
+- Saving the student (`POST`/`PUT /api/students`) keeps a contact's row, its verification state and its history while its number (digits only) is unchanged. A new or changed number starts unverified on an update; on a create the input's `verified` is used, and a verified contact gets its first history row.
+- Copies: `verifyStudentContact`; tests: `StudentRecordsTest`, `StudentProfilePage`. The Student Profile's "Mark verified" button calls it.
+
 #### `GET /api/students/{id}/history`
 - Roles: S, A.
 - Query: `limit` (default 8).
@@ -440,6 +468,10 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 #### `POST /api/personnel/{id}/archive`
 - Roles: S. Request: `reason` (required, up to 80 characters; ADR-072). Errors: 403, 404, 422. Stores the archive details as for students. Audit: `archive staff`.
 - Copies: `archivePersonnel`; tests: `personnel`, `ArchivePage`. The staff import archives nobody (ADR-069).
+
+#### `POST /api/personnel/{id}/emergency-contacts/{index}/verify`
+- Roles: S. Added Thursday, November 19, 2026 — 05:24 PHT. As for students (`verified`, default `true`), but it sets only `is_verified`: `personnel_emergency_contacts` has no `verified_at` column and no verification-history table. Errors: 403, 404. Audit: `update staff`, summary "Marked an emergency contact verified." or "… unverified."
+- Copies: `verifyPersonnelContact`; tests: `StaffPatientsTest`. The Staff Profile's "Mark verified" button calls it.
 
 #### `GET /api/personnel/{id}/history`
 - Roles: S. Query: `limit`. Response: `{ visits, incidents, followUps }`.
@@ -1091,5 +1123,5 @@ Answered by Zean, Sunday, November 1, 2026 — 01:23 PHT, or by the best approac
 | **Q16.** `dispenseInventoryItem` accepts a `visitId` with no patient. | 422. | `chk_txn_link_has_patient`. The screen always sends a patient. |
 | **Q17.** ADR-048 needs an email; `UserInput` has none. | Add `email?` with the reset work, not before. | ADR-048 item 3 is not built. `users.email` is ready. Closed Saturday, November 07, 2026 — 13:24 PHT: ADR-073 replaces the email reset, so no `email` is added. |
 | **Q18.** `recordPrint` stores a client-sent title. | A fixed document key plus record type and id. The server builds the title, into `target_label`. | ADR-017. The key list comes from `usePrinting` callers at B3. |
-| **Q19.** The mock has no server pagination. | Optional `page` and `perPage` on the four long lists; whole lists otherwise. | Keeps the mock's shape, and the Audit Log may reach 12,000 rows. |
+| **Q19.** The mock has no server pagination. | Optional `page` and `perPage` on the four long lists; whole lists otherwise. | Keeps the mock's shape, and the Audit Log may reach 12,000 rows. *Update Thursday, November 19, 2026 — 12:18 PHT (ADR-082):* the screens now read one page of the long lists; see "Filtering and pagination". |
 | **Q20.** How is the frontend served, and does the LAN get HTTPS? | Deferred to a deployment with real data. Plain HTTP on localhost for development. Origins, the `secure` flag and stateful domains stay in the environment. | Zean; ADR-057. *Update Sunday, November 08, 2026 — 18:35 PHT: CLINIQ runs on the clinic PC only at `http://localhost`, so the LAN needs no HTTPS (ADR-079; `Environment-Setup.md`, "Clinic PC only").* |

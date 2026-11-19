@@ -51,6 +51,9 @@ Useful combinations include:
 | `attention` | Inventory | `low_stock`, `expiry` | Opens Inventory filtered to low-stock items or items that are expired or expiring. Invalid values show all stock. | `/inventory?attention=expiry` |
 | `view` | Dashboard | `trends` | Opens Dashboard Trends. `calendar` is retained only as a legacy value and replaces to `/calendar`. | `/?view=trends` |
 | `sex`, `grade` | Dashboard | `sex`: `female`, `male`; `grade`: a grade level such as `Grade 7` | The Trends demographic filters. Set and cleared by the Dashboard itself. | `/?view=trends&sex=female` |
+| `page` | Visit Log, Incident Log, Follow-Ups, Student List, Incomplete Records, Audit Log, Inventory Usage History | A page number from 2 (page 1 leaves the address clean) | The page shown (ADR-082). A reload or Back opens the same page. A change of filter, search, sort or page size goes back to page 1, and a page past the end moves to the last one. Replace navigation. The page size is never in the address (Zean, November 17, 2026). | `/visits?page=3` |
+| `q` | the same lists | Any text (at least 2 characters; 1 on the Student List and Incomplete Records) | The search box, sent to the server after typing pauses for 250 ms (ADR-082). Replace navigation. | `/students?q=cruz` |
+| `sort` | the same lists | A column key, `-` in front for descending | The table's sort when it differs from the list's default. Unknown keys fall back to the default. Keys: Visit Log `dateTime`, `lrn`, `record`, `disposition`; Incident Log `time`, `student`, `complaint`, `status`; Follow-Ups `student`, `reason`, `due`, `status`; Student List `name`, `number`, `grade`, `status`; Incomplete Records `student`, `grade`, `missing`, `imported`, `status`; Audit Log `timestamp`, `user`, `action`, `module`, `record`. | `/audit-log?sort=-user` |
 
 
 ## Not active in the current router
@@ -104,6 +107,7 @@ but the current code does not read `dateRange`. It is not an active parameter ye
 - Route-level query handling: `frontend/src/routes/AppRoutes.tsx`
 - Shared date-entry handling: `frontend/src/hooks/useDateRangeEntryParams.ts`
 - Patient filter: `frontend/src/hooks/usePatientFilter.ts`
+- Page, search and sort of the paged lists: `frontend/src/hooks/usePagedList.ts` (ADR-082)
 - Other screen-state parameters: the page that reads them under `frontend/src/features/`
   (Visit Log, Report Incident, New Visit, Inventory, Excuse Letter, Dashboard)
 
