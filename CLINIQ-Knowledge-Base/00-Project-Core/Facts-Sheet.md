@@ -1,7 +1,7 @@
 # Facts sheet
 
-**Last regenerated:** Thursday, November 19, 2026 — 12:58 PHT
-**From commit:** `cd6e877` on `main` (documents); frontend numbers from this working tree; backend numbers from this working tree
+**Last regenerated:** Thursday, November 19, 2026 — 21:46 PHT
+**From commit:** `2819ead` on `main` (documents); frontend numbers from this working tree; backend numbers from this working tree
 **Regenerate with:** `npm run docs:facts` from the repository root (add `-- --tests` to rerun both test suites). The script is [`docs-facts.mjs`](../04-Development/tools/docs-facts.mjs).
 
 Every README, requirement document, diagram caption, and the Project Plan and SRS quote their numbers from this sheet. If a document disagrees with this sheet, the document is wrong. If this sheet disagrees with the repository, regenerate it: the script reads the repository and nothing else. Do not edit the numbers by hand.
@@ -26,10 +26,10 @@ Every README, requirement document, diagram caption, and the Project Plan and SR
 | API contract entries | **128** headings naming **129** endpoints | [API Contract](../04-Development/API-Contract.md) (`####` endpoint headings) |
 | API routes live in the backend | **131**: BackupVerification 7, ClinicVisits 13, Dashboard 8, EmergencyResponse 11, InventoryTracker 9, Laravel/Sanctum 1, ReportsGeneration 9, Shared/AuditLog 3, Shared/Feedback 2, Shared/FollowUps 3, Shared/Http 2, Shared/Settings 12, StaffPatients 12, StudentRecords 19, UserManagement 20 | `php artisan route:list` |
 | Scheduled jobs | **3**: `cliniq:close-missed-follow-ups` daily at 00:15; `cliniq:backup` daily at 18:00; `cliniq:sync-holidays` hourly from 7:00 to 18:00 | [`backend/routes/console.php`](../../backend/routes/console.php); Windows Task Scheduler runs `php artisan schedule:run` every minute |
-| Frontend test files | **150** | `frontend/src/**/*.test.ts(x)` |
+| Frontend test files | **151** | `frontend/src/**/*.test.ts(x)` |
 | Backend test files | **27** | `backend/tests/**/*Test.php` |
 | Last recorded test run | Sunday, November 15, 2026 — 08:38 PHT at `397e000` | [Test runs](#test-runs) below |
-| Lines of code (non-blank) | frontend **70283** (`src`, tests included); backend **16353** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
+| Lines of code (non-blank) | frontend **70312** (`src`, tests included); backend **16359** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
 
 ## Test runs
 
