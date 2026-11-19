@@ -22,20 +22,21 @@ import {
   DataTable,
   type DataTableColumn,
 } from '../../components'
-import { useAsyncData } from '../../hooks/useAsyncData'
-import { usePageSize, type PageSize } from '../../hooks/usePageSize'
+import { usePagedList } from '../../hooks/usePagedList'
 import { paths } from '../../routes/paths'
 import { getMockSessionUser } from '../../lib/data'
-import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
+import { toggleTableSort } from '../../lib/tableSort'
 import type { FollowUpStatus } from '../../types/entities'
 import {
-  fetchFollowUps,
+  fetchFollowUpPage,
+  FOLLOW_UP_SORT_KEYS,
   setNewFollowUpDate,
   updateFollowUpStatus,
   type FollowUpRow,
+  type FollowUpSortKey,
 } from './api/followUpApi'
 import { PatientFilterSelect, PatientNumber } from '../../components'
-import { matchesPatientFilter, patientNumberLabel } from '../../lib/patients'
+import { patientNumberLabel } from '../../lib/patients'
 
 function FollowUpSkeleton({ back }: { back: ReactNode }) {
   return (
@@ -77,8 +78,6 @@ const OUTCOME_OPTIONS = [
   { value: 'cancelled', label: 'Cancelled' },
 ]
 
-type FollowUpSortKey = 'student' | 'reason' | 'due' | 'status'
-
 /** Words for the confirmation message. */
 const FOLLOW_UP_STATUS_WORDS: Record<FollowUpStatus, string> = {
   completed: 'completed',
@@ -102,18 +101,16 @@ export function FollowUpListPage() {
   const [rescheduling, setRescheduling] = useState<null | FollowUpRow>(null)
   const [newDate, setNewDate] = useState('')
   const [scheduling, setScheduling] = useState(false)
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = usePageSize()
-  const changePageSize = (size: PageSize) => {
-    setPageSize(size)
-    setPage(1)
-  }
-  const [sort, setSort] = useState<TableSortState<FollowUpSortKey>>({
-    key: 'status',
-    direction: 'descending',
-  })
-  const { data, status, reload } = useAsyncData(statusFilter, () => fetchFollowUps(statusFilter))
   const [patientFilter, setPatientFilter] = usePatientFilter()
+  // One page at a time from the server; page and sort live in the address (ADR-082).
+  const list = usePagedList({
+    key: 'follow-ups',
+    filters: { status: statusFilter, patient: patientFilter },
+    sortKeys: FOLLOW_UP_SORT_KEYS,
+    defaultSort: { key: 'status', direction: 'descending' },
+    load: fetchFollowUpPage,
+  })
+  const { page: data, status, reload, sort } = list
   // A top-level list shows Back only when a drill-through link opened it (the Dashboard).
   const back = <BackButton fallback={paths.dashboard} drillThroughOnly />
   if (status === 'error')
@@ -132,23 +129,16 @@ export function FollowUpListPage() {
         <FollowUpSkeleton back={back} />
       </>
     )
-  const rows = data
-    .filter((item) => matchesPatientFilter(item.patient.kind, patientFilter))
-    .map((item) => ({ ...item, status: statusOverrides[item.id] ?? item.status }))
+  // The page's rows, with a just-changed status shown at once (the save confirms it).
+  const pageRows = data.rows.map((item) => ({
+    ...item,
+    status: statusOverrides[item.id] ?? item.status,
+  }))
   const sortColumn = (key: FollowUpSortKey, label: string) => ({
     label,
     direction: sort.key === key ? sort.direction : undefined,
-    onSort: () => setSort((current) => toggleTableSort(current, key)),
+    onSort: () => list.setSort(toggleTableSort(sort, key)),
   })
-  const sortedRows = sortTableRows(rows, sort, (item, key) => {
-    if (key === 'student') return `${item.patient.kind}|${item.patient.number}`
-    if (key === 'reason') return item.reason
-    if (key === 'due') return item.followUpDate
-    return item.status
-  })
-  const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize))
-  const currentPage = Math.min(page, pageCount)
-  const pageRows = sortedRows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   async function applyStatus(item: FollowUpRow, next: FollowUpStatus, why?: string) {
     // Optimistic: the row flips immediately; the data layer writes the status and its audit entry.
     setStatusOverrides((current) => ({ ...current, [item.id]: next }))
@@ -286,16 +276,13 @@ export function FollowUpListPage() {
         <CardHeader
           titleId="follow-up-list-title"
           title="Follow-up tasks"
-          description={`${rows.length} task${rows.length === 1 ? '' : 's'} shown`}
+          description={`${data.total} task${data.total === 1 ? '' : 's'} shown`}
           icon={<Icon name="calendarClock" />}
           actions={
             <div className="flex flex-wrap items-center gap-3">
               <PatientFilterSelect
                 value={patientFilter}
-                onChange={(next) => {
-                  setPatientFilter(next)
-                  setPage(1)
-                }}
+                onChange={setPatientFilter}
                 className="w-full sm:w-auto"
                 inline
               />
@@ -312,17 +299,14 @@ export function FollowUpListPage() {
                 ]}
                 placeholder="All statuses"
                 clearable
-                onChange={(value) => {
-                  setStatusFilter(value as '' | FollowUpStatus)
-                  setPage(1)
-                }}
+                onChange={(value) => setStatusFilter(value as '' | FollowUpStatus)}
               />
             </div>
           }
         />
         <CardBody>
           <SaveFeedback result={feedback.result} className="mb-3" />
-          {rows.length ? (
+          {data.total ? (
             <>
               <DataTable
                 caption="Follow-up tasks"
@@ -333,13 +317,13 @@ export function FollowUpListPage() {
                 minTableWidth="60rem"
               />
               <Pagination
-                page={currentPage}
-                pageCount={pageCount}
-                total={sortedRows.length}
-                pageSize={pageSize}
-                onPageSizeChange={changePageSize}
+                page={list.pageNumber}
+                pageCount={data.lastPage}
+                total={data.total}
+                pageSize={list.pageSize}
+                onPageSizeChange={list.setPageSize}
                 itemLabel="follow-ups"
-                onPageChange={setPage}
+                onPageChange={list.setPage}
               />
             </>
           ) : (
