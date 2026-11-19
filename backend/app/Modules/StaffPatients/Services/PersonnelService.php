@@ -177,6 +177,28 @@ final class PersonnelService
         return $this->find($id)->toArray();
     }
 
+    /**
+     * Marks one emergency contact verified or unverified; `$index` is its place in the list, 0 being the primary.
+     *
+     * @return array<string, mixed>
+     */
+    public function verifyContact(int $id, int $index, bool $verified, int $userId): array
+    {
+        $this->find($id);
+        $contactId = DB::table('personnel_emergency_contacts')->where('personnel_id', $id)->where('sort_order', $index)->value('id');
+        abort_if($contactId === null, 404);
+        DB::transaction(function () use ($id, $contactId, $verified, $userId): void {
+            $now = CarbonImmutable::now();
+            DB::table('personnel_emergency_contacts')->where('id', $contactId)->update(['is_verified' => $verified ? 1 : 0]);
+            $this->audit->record(new AuditEvent(
+                actorId: (string) $userId, actorRole: 'staff', action: AuditAction::Update, targetType: AuditTarget::Staff,
+                targetId: (string) $id, targetLabel: null, at: $now, subjectPersonnelId: (string) $id, summary: $verified ? 'Marked an emergency contact verified.' : 'Marked an emergency contact unverified.',
+            ));
+        });
+
+        return $this->find($id)->toArray();
+    }
+
     /** @return list<string> `personnel_types` in `reference_settings` */
     public function types(): array
     {

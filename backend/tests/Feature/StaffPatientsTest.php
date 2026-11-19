@@ -99,3 +99,21 @@ it('keeps staff patients from the Admin: 403 on the staff pages, 404 for one sta
     $this->getJson('/api/personnel')->assertForbidden();
     $this->postJson('/api/personnel', staffInput())->assertForbidden();
 });
+
+it('marks a staff emergency contact verified and audits it', function () {
+    signIn($this->staff);
+    $id = $this->postJson('/api/personnel', staffInput())->json('data.personnel.id');
+
+    $this->postJson("/api/personnel/{$id}/emergency-contacts/0/verify")->assertOk()->assertJsonPath('data.emergencyContacts.0.verified', true);
+    expect(DB::table('audit_logs')->where('target_type', 'staff')->where('summary', 'Marked an emergency contact verified.')->count())->toBe(1);
+    $this->postJson("/api/personnel/{$id}/emergency-contacts/1/verify")->assertNotFound();
+});
+
+it('marks a staff emergency contact unverified again', function () {
+    signIn($this->staff);
+    $id = $this->postJson('/api/personnel', staffInput())->json('data.personnel.id');
+    $this->postJson("/api/personnel/{$id}/emergency-contacts/0/verify")->assertOk();
+
+    $this->postJson("/api/personnel/{$id}/emergency-contacts/0/verify", ['verified' => false])->assertOk()->assertJsonPath('data.emergencyContacts.0.verified', false);
+    expect(DB::table('audit_logs')->where('summary', 'Marked an emergency contact unverified.')->count())->toBe(1);
+});
