@@ -23,7 +23,7 @@ const LABEL_SUGGESTIONS = ['Internal drive', 'External drive']
 const BACKUP_FOLDERS = [
   {
     name: 'Backups',
-    path: '.cliniq\\backups\\YYYY\\MM\\cliniq-YYYY-MM-DD_HHmm.zip',
+    path: '.cliniq\\backups\\YYYY\\MM\\cliniq-YYYY-MM-DD_at_HH-mm.zip',
     holds: 'Database, uploaded files, and a manifest with a checksum',
   },
   {
