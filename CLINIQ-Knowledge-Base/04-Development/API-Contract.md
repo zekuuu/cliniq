@@ -717,7 +717,7 @@ Every endpoint is Staff only. The database row lock of `ERD.md` section 9 replac
 - Response: `DispenseResult`.
 - Errors: 404; 409 `stock_rule` (`QUANTITY_RULE`, both patients, unknown patient or visit, no usable batch).
 - Audit: `submit inventory-dispensation`.
-- Copies: `dispenseInventoryItem` (`api.ts:1942`); tests: `ReportsDecisions`, `auditCoverage`, `inventoryApi`, `personnel` and 1 more. Below zero warns, never blocks (ADR-018).
+- Copies: `dispenseInventoryItem` (`api.ts:1942`); tests: `ReportsDecisions`, `auditCoverage`, `inventoryApi`, `personnel` and 1 more. A quantity above the usable stock is refused with 409 `stock_rule` (ADR-084; it replaced ADR-018's warn-but-allow rule).
 
 #### `POST /api/inventory/{id}/restock`
 - Roles: S.
@@ -1045,7 +1045,7 @@ Each one is business logic the backend must copy exactly, with its source. Tests
 | Stock is held per batch; totals are derived | `selectors.ts` `inventoryStatus` |
 | Low stock at or below the threshold; expired and nearing-expiry flags | `selectors.ts` `inventoryStatus` |
 | Dispense takes earliest-expiring usable batch first; no-expiry last; expiring today is usable | `api.ts:2099-2126` |
-| A shortfall stays negative on the last usable batch; warns, never blocks | `api.ts:2120` |
+| A quantity above the usable stock is refused, nothing written (ADR-084) | `api.ts:3785` `takeUsableBatches` |
 | Expired stock cannot be given | `api.ts:2108` |
 | One line per item; whole quantity of at least 1; instructions at most 120 | `api.ts:2164-2170` |
 | Lines keep name and unit snapshots | `api.ts:2212` |

@@ -106,7 +106,7 @@ Two-stage incident endpoints (Stage 1 minimal-fields save; Stage 2 completion). 
 **Status:** built and audited. Also the incident report's approval and trail, and a student's or staff patient's history.
 
 ### Phase B8 — Inventory API
-The stock-flow logic exactly as specified in `Modules-and-Features` §8: dispense decrements + auto threshold-check; stock is held in received batches, dispensed earliest-expiring usable batch first (ADR-030); restock is a separate action that adds a batch (ADR-035); a dispense that would go negative warns but does not block the save (a deliberate, already-decided behavior — don't "fix" this into a hard block).
+The stock-flow logic exactly as specified in `Modules-and-Features` §8: dispense decrements + auto threshold-check; stock is held in received batches, dispensed earliest-expiring usable batch first (ADR-030); restock is a separate action that adds a batch (ADR-035); a dispense beyond the usable stock is refused with `409 stock_rule` (ADR-084, Friday, November 20, 2026; it replaced ADR-018's warn-but-allow rule).
 
 **Status:** built and audited: items, batches, history, movements, Dispense, Restock and Adjust, on the stock service from B5.
 
