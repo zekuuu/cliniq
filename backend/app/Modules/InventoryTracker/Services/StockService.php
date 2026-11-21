@@ -18,9 +18,10 @@ use Illuminate\Support\Facades\DB;
 /**
  * Medicines and supplies given (ADR-018; the mock's `applyItemLines`). The Inventory module owns the
  * stock tables (ERD M-1); visits and incidents call this service inside their own transaction. The
- * earliest-expiring usable batch is taken first, under row locks; a shortfall stays a visible
- * negative on the last usable batch and is reported in `belowZero`. A new record dispenses; an edit
- * writes `visit_edited` adjustments and never rewrites a dispense.
+ * earliest-expiring usable batch is taken first, under row locks; giving more than the usable stock
+ * is refused (ADR-084, which replaces ADR-018's "below zero warns"). `belowZero` still reports stock
+ * that went negative before that rule. A new record dispenses; an edit writes `visit_edited`
+ * adjustments and never rewrites a dispense.
  *
  * @phpstan-type LineInput array{itemId: int, quantity: int, instructions: string|null}
  * @phpstan-type Link array{studentId: int|null, personnelId: int|null, visitId: int|null, incidentId: int|null}
@@ -109,7 +110,7 @@ final class StockService
     }
 
     /**
-     * The standalone Dispense page (`dispenseInventoryItem`): below zero warns, never blocks (ADR-018).
+     * The standalone Dispense page (`dispenseInventoryItem`): never more than the usable stock (ADR-084).
      *
      * @param  array{studentId: int|null, personnelId: int|null, visitId: int|null}  $link
      */
@@ -193,7 +194,7 @@ final class StockService
     }
 
     /**
-     * Earliest-expiring usable stock first, locked; a shortfall goes on the last usable batch.
+     * Earliest-expiring usable stock first, locked; more than the usable stock is refused (ADR-084).
      *
      * @return array<int, int> batch id => stock change (negative)
      */
@@ -205,6 +206,13 @@ final class StockService
         if ($batches->isEmpty()) {
             throw new BusinessRuleViolation('stock_rule', "{$name} has no usable batch and can't be given. Dispose of expired stock before restocking.");
         }
+        $available = (int) $batches->sum(fn (object $b): int => max((int) Row::int($b, 'quantity'), 0));
+        if ($available < $quantity) {
+            $unit = Row::text(DB::table('inventory_items')->where('id', $itemId)->value('unit'));
+            throw new BusinessRuleViolation('stock_rule', $available === 0
+                ? "{$name} is out of stock. Restock it before giving it."
+                : "Only {$available} {$unit} of {$name} in stock. Lower the quantity or restock first.");
+        }
         $left = $quantity;
         $moves = [];
         foreach ($batches as $b) {
@@ -213,10 +221,6 @@ final class StockService
                 $moves[(int) Row::int($b, 'id')] = -$taken;
                 $left -= $taken;
             }
-        }
-        if ($left > 0) {
-            $last = (int) Row::int($batches->last(), 'id'); // not empty: checked above
-            $moves[$last] = ($moves[$last] ?? 0) - $left;
         }
 
         return $moves;

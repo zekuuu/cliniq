@@ -67,10 +67,14 @@ it('refuses bad visits with the mock messages', function (Closure $over, int $st
     'unknown item' => [fn () => ['itemsGiven' => [['itemId' => '999999', 'quantity' => 1]]], 409, 'One of the items no longer exists in inventory.'],
 ]);
 
-it('lets stock fall below zero on the last usable batch and reports it (ADR-018); refuses an item with only expired stock', function () {
-    $this->postJson('/api/visits', visitInput(['itemsGiven' => [['itemId' => (string) $this->item, 'quantity' => 15]]]))->assertCreated()
-        ->assertJsonPath('data.belowZero', ['Paracetamol 500 mg']);
-    expect(batchQty($this->later))->toBe(-2);
+it('refuses more than the usable stock and leaves stock unchanged (ADR-084); refuses an item with only expired stock', function () {
+    $this->postJson('/api/visits', visitInput(['itemsGiven' => [['itemId' => (string) $this->item, 'quantity' => 14]]]))->assertConflict()
+        ->assertJsonPath('rule', 'stock_rule')->assertJsonPath('message', 'Only 13 tablet of Paracetamol 500 mg in stock. Lower the quantity or restock first.');
+    expect(batchQty($this->sooner) + batchQty($this->later))->toBe(13)->and(DB::table('visits')->count())->toBe(0);
+    $this->postJson('/api/visits', visitInput(['itemsGiven' => [['itemId' => (string) $this->item, 'quantity' => 13]]]))->assertCreated()
+        ->assertJsonPath('data.belowZero', []);
+    $this->postJson('/api/visits', visitInput(['itemsGiven' => [['itemId' => (string) $this->item, 'quantity' => 1]]]))->assertConflict()
+        ->assertJsonPath('message', 'Paracetamol 500 mg is out of stock. Restock it before giving it.');
 
     $expiredOnly = DB::table('inventory_items')->insertGetId(['name' => 'Old syrup', 'category' => 'medicine', 'unit' => 'bottle']);
     DB::table('inventory_batches')->insert(['item_id' => $expiredOnly, 'quantity' => 5, 'expiration_date' => '2026-01-01', 'received_date' => '2025-01-01']);
