@@ -1,5 +1,9 @@
 import '@testing-library/jest-dom/vitest'
-import { afterEach, beforeEach } from 'vitest'
+import { afterEach, beforeEach, vi } from 'vitest'
+
+// The pickers' typing pause (useDebouncedValue) is skipped so tests can pick right after typing;
+// useDebouncedValue.test.ts checks the pause itself.
+vi.mock('../hooks/useDebouncedValue', () => ({ useDebouncedValue: <T>(value: T) => value }))
 
 // The mock session remembers a previewed `?role=` per tab, and every write lands in the shared
 // in-memory store; don't let either leak between tests. The data layer is imported lazily so a test

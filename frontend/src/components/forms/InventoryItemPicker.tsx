@@ -1,4 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import { cn } from '../../lib/cn'
 import { complaintGroupKey } from '../../lib/complaints'
 import { symptoms as symptomsWord } from '../../lib/labels'
@@ -80,7 +81,10 @@ export function InventoryItemPicker({
   const [active, setActive] = useState(-1)
   const [showAll, setShowAll] = useState(false)
 
-  const search = query.trim().toLowerCase()
+  // The list filters only once typing pauses; until then it lists nothing, so Enter never picks a stale match.
+  const settled = useDebouncedValue(query)
+  const pending = settled !== query
+  const search = settled.trim().toLowerCase()
   const wanted = new Set((symptoms ?? []).map(complaintGroupKey).filter(Boolean))
   const isSuggested = (item: PickableItem) =>
     (item.usedFor ?? []).some((tag) => wanted.has(complaintGroupKey(tag)))
@@ -103,7 +107,7 @@ export function InventoryItemPicker({
           label: group.label,
           items: rest.filter((item) => item.category === group.category),
         }))),
-  ].filter((group) => group.items.length)
+  ].filter((group) => group.items.length && !pending)
   const flat = groups.flatMap((group) => group.items)
   /** The "Show all medicines" row is the last option, after every item. */
   const toggleIndex = hasToggle ? flat.length : -1
@@ -206,7 +210,7 @@ export function InventoryItemPicker({
           aria-label={label}
           className={cn(DROPDOWN_PANEL, 'fixed overflow-y-auto scrollbar-thin')}
         >
-          {groups.length === 0 && (
+          {groups.length === 0 && !pending && (
             <p className="px-2.5 py-1.5 text-sm text-text-secondary">
               No items match “{query.trim()}”.
             </p>

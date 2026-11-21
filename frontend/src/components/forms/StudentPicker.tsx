@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import { isLrn, normalizeLrn, STUDENT_SEARCH_MIN_LENGTH } from '../../lib/lrn'
 import { MaskedLrn } from '../ui/MaskedLrn'
 import type { StudentSearchResult } from '../../types/entities'
@@ -50,12 +51,15 @@ export function StudentPicker({
   const [query, setQuery] = useState('')
   const [focusSearch, setFocusSearch] = useState(false)
   const trimmed = query.trim()
+  // The server is asked only once typing pauses.
+  const settled = useDebouncedValue(trimmed)
   const ready = trimmed.length >= STUDENT_SEARCH_MIN_LENGTH
+  const settledReady = settled.length >= STUDENT_SEARCH_MIN_LENGTH
   const { data, status, isRefetching } = useAsyncData(
-    `student-search|${ready ? trimmed.toLowerCase() : ''}`,
-    () => (ready ? search(trimmed) : Promise.resolve([])),
+    `student-search|${settledReady ? settled.toLowerCase() : ''}`,
+    () => (settledReady ? search(settled) : Promise.resolve([])),
   )
-  const loading = ready && (status === 'loading' || isRefetching)
+  const loading = ready && (settled !== trimmed || status === 'loading' || isRefetching)
   const failed = ready && status === 'error'
   // While a new search runs, list nothing: Enter must never pick a stale result.
   const results = ready && !loading && !failed ? (data ?? []) : []
