@@ -15,13 +15,16 @@ use Illuminate\Support\Facades\Schema;
 use RuntimeException;
 
 /**
- * The fictional demo school (LoadGenerator), development only, built up to the real clock:
+ * The fictional demo school (LoadGenerator), development only, built up to Sunday, February 28, 2027:
  *   php artisan migrate:fresh --seeder="App\Shared\Database\DemoSchoolSeeder" --env=testing --force
  *
  * Options come from the environment (db:seed takes no custom flags): DEMO_SCHOOL_STUDENTS (900),
- * DEMO_SCHOOL_STAFF (60), DEMO_SCHOOL_YEARS (1), DEMO_SCHOOL_AUDIT (0), DEMO_SCHOOL_SEED (20261116),
- * DEMO_SCHOOL_UNTIL (now; a date means the end of that day, never later than now). Each school year
- * runs June 15 to April 14; the school stops at `until`, and a later reseed keeps every earlier row.
+ * DEMO_SCHOOL_STAFF (60), DEMO_SCHOOL_YEARS (5), DEMO_SCHOOL_AUDIT (0), DEMO_SCHOOL_SEED (20261116),
+ * DEMO_SCHOOL_UNTIL (DEFAULT_UNTIL; a date means the end of that day). Each school year runs June 15 to
+ * April 14; the school stops at `until`, and a later `until` keeps every earlier row. Rows after the
+ * real date are demo data (Zean, November 21, 2026: the screens always have data): the Backup page's
+ * "last backup" and the Audit Log show dates that have not happened yet, so user-acceptance writes go
+ * on a copy of the database.
  *
  * Refuses production, any database but cliniq_testing, cliniq_load and the cliniq_check_* scratch
  * databases, and a database that is not freshly migrated and empty. It never runs migrate:fresh itself.
@@ -29,6 +32,9 @@ use RuntimeException;
 final class DemoSchoolSeeder extends Seeder
 {
     public const ALLOWED = ['cliniq_testing', 'cliniq_load'];
+
+    /** The fixed end of the demo school: the last class day is Friday, February 26, 2027. */
+    public const DEFAULT_UNTIL = '2027-02-28';
 
     /** @param array{students: int, staff: int, years: int, audit: int, seed: int, until: CarbonImmutable}|null $options */
     public function run(?array $options = null): void
@@ -75,22 +81,18 @@ final class DemoSchoolSeeder extends Seeder
         $int = fn (string $k, int $d): int => is_numeric(getenv($k)) ? (int) getenv($k) : $d;
 
         return [
-            'students' => $int('DEMO_SCHOOL_STUDENTS', 900), 'staff' => $int('DEMO_SCHOOL_STAFF', 60), 'years' => $int('DEMO_SCHOOL_YEARS', 1),
+            'students' => $int('DEMO_SCHOOL_STUDENTS', 900), 'staff' => $int('DEMO_SCHOOL_STAFF', 60), 'years' => $int('DEMO_SCHOOL_YEARS', 5),
             'audit' => $int('DEMO_SCHOOL_AUDIT', 0), 'seed' => $int('DEMO_SCHOOL_SEED', 20261116), 'until' => self::until((string) getenv('DEMO_SCHOOL_UNTIL')),
         ];
     }
 
-    /** `until`: empty is now; a date is the end of that day; never later than now (no future rows). */
+    /** `until`: empty is DEFAULT_UNTIL; a date is the end of that day; a date and time is that minute. Future dates are accepted. */
     public static function until(string $value): CarbonImmutable
     {
-        $now = CarbonImmutable::now('Asia/Manila')->startOfMinute();
-        if (trim($value) === '') {
-            return $now;
-        }
+        $value = trim($value) === '' ? self::DEFAULT_UNTIL : trim($value);
         $until = CarbonImmutable::parse($value, 'Asia/Manila');
-        $until = preg_match('/\A\d{4}-\d{2}-\d{2}\z/', trim($value)) === 1 ? $until->endOfDay() : $until;
 
-        return $until->greaterThan($now) ? $now : $until;
+        return preg_match('/\A\d{4}-\d{2}-\d{2}\z/', $value) === 1 ? $until->endOfDay() : $until;
     }
 
     private static function hasForeignRows(): bool

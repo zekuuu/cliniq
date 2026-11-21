@@ -7,7 +7,7 @@ declare(strict_types=1);
  *   php tools/load/build.php --students=900 --staff=60 --years=5 [--audit=100000] [--seed=20261116] [--until=YYYY-MM-DD]
  *
  * The school itself is App\Shared\Database\DemoSchool\LoadGenerator, shared with DemoSchoolSeeder
- * (since Wednesday, November 18, 2026). --until stops it at the end of that day; the default is now.
+ * (since Wednesday, November 18, 2026). --until stops it at the end of that day; the default is DemoSchoolSeeder::DEFAULT_UNTIL (2027-02-28).
  *
  * Runs as the testing environment (.env.testing: the migration account). The database is
  * cliniq_testing unless DB_DATABASE names cliniq_load or a cliniq_check_* scratch database
