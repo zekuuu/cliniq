@@ -27,6 +27,7 @@ import { EditProfileDialog } from '../features/account/EditProfileDialog'
 import { AuthenticatorDialog } from '../features/account/AuthenticatorDialog'
 import { getAuthenticatorStatus } from '../lib/data'
 import { AccountMenu } from './AccountMenu'
+import { TopBarSearch } from './TopBarSearch'
 import { paths } from '../routes/paths'
 import { notify } from '../lib/notify'
 import { scrollToTop } from '../lib/scrollToTop'
@@ -37,8 +38,8 @@ import { scrollToTop } from '../lib/scrollToTop'
  *
  * Placed around each screen by `routes/AppRoutes.tsx`; `active` is the route's nav item (`null` on
  * the not-found page). Nav items for screens that exist link to their routes; the rest are marked
- * "Soon" and aren't clickable. No search box and no notification bell: neither exists as a feature
- * yet, and a dead control would mislead.
+ * "Soon" and aren't clickable. Staff get the student and staff search (`TopBarSearch`). No
+ * notification bell: it doesn't exist as a feature yet, and a dead control would mislead.
  */
 
 export interface AppShellProps {
@@ -196,6 +197,11 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
             <BrandLogo compact />
           </div>
           <LiveClock />
+          {user.role === 'staff' && (
+            <div className="hidden min-w-0 flex-1 justify-center px-4 xl:flex">
+              <TopBarSearch />
+            </div>
+          )}
           {/* The avatar, name and role are one button that opens the account menu (ADR-066): Edit profile,
               Change password, Keyboard shortcuts, Report an issue, Privacy Policy and Sign out. */}
           <div className="ml-auto flex shrink-0 items-center">

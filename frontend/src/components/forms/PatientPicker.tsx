@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import { isLrn, normalizeLrn, STUDENT_SEARCH_MIN_LENGTH } from '../../lib/lrn'
 import { type Patient, type PatientNumber as PatientNumberValue } from '../../lib/patients'
 import type { PatientSearchResult } from '../../types/entities'
@@ -13,6 +14,52 @@ const numberOf = (result: PatientSearchResult): PatientNumberValue =>
   result.kind === 'student'
     ? { kind: 'student', number: result.lrn }
     : { kind: 'personnel', number: result.staffNumber }
+
+/** Screen-reader text of a result: the full name, Student or Staff, and the masked number. */
+export const patientOptionLabel = (result: PatientSearchResult) =>
+  result.kind === 'student'
+    ? `${result.fullName}, student, LRN ending in ${result.lrn.slice(-4)}`
+    : `${result.fullName}, staff, ${result.staffNumber}`
+
+/** One result row: masked number, full name, grade or type, and the Student or Staff label. */
+export function PatientOption({ result }: { result: PatientSearchResult }) {
+  return (
+    <span className="flex w-full items-baseline gap-3">
+      <span className="text-text-secondary">
+        <PatientNumber patient={numberOf(result)} chip={false} />
+      </span>{' '}
+      <span className="font-semibold">{result.fullName}</span>{' '}
+      <span className="ml-auto flex items-baseline gap-2 pl-3 text-xs text-text-secondary">
+        {result.kind === 'student' ? result.gradeLevel : result.type}{' '}
+        <PatientKindBadge kind={result.kind} />
+      </span>
+    </span>
+  )
+}
+
+/**
+ * The patient search behind `PatientPicker` and the top bar's search: asks only once typing pauses,
+ * and lists nothing while a search is pending or running, so Enter never picks a stale result.
+ */
+export function usePatientSearch(
+  query: string,
+  search: (query: string) => Promise<PatientSearchResult[]>,
+) {
+  const trimmed = query.trim()
+  // The server is asked only once typing pauses.
+  const settled = useDebouncedValue(trimmed)
+  const ready = trimmed.length >= STUDENT_SEARCH_MIN_LENGTH
+  const settledReady = settled.length >= STUDENT_SEARCH_MIN_LENGTH
+  const { data, status, isRefetching } = useAsyncData(
+    `patient-search|${settledReady ? settled.toLowerCase() : ''}`,
+    () => (settledReady ? search(settled) : Promise.resolve([])),
+  )
+  const loading = ready && (settled !== trimmed || status === 'loading' || isRefetching)
+  const failed = ready && status === 'error'
+  const results = ready && !loading && !failed ? (data ?? []) : []
+  const noMatch = ready && !loading && !failed && results.length === 0
+  return { trimmed, results, loading, failed, noMatch }
+}
 
 /**
  * The one patient box on New Visit, New Incident and Dispense (ADR-043, D10): students by LRN or
@@ -50,17 +97,7 @@ export function PatientPicker({
 }) {
   const [query, setQuery] = useState('')
   const [focusSearch, setFocusSearch] = useState(false)
-  const trimmed = query.trim()
-  const ready = trimmed.length >= STUDENT_SEARCH_MIN_LENGTH
-  const { data, status, isRefetching } = useAsyncData(
-    `patient-search|${ready ? trimmed.toLowerCase() : ''}`,
-    () => (ready ? search(trimmed) : Promise.resolve([])),
-  )
-  const loading = ready && (status === 'loading' || isRefetching)
-  const failed = ready && status === 'error'
-  // While a new search runs, list nothing: Enter must never pick a stale result.
-  const results = ready && !loading && !failed ? (data ?? []) : []
-  const noMatch = ready && !loading && !failed && results.length === 0
+  const { trimmed, results, loading, failed, noMatch } = usePatientSearch(query, search)
 
   if (selected && onClear) {
     return (
@@ -111,23 +148,8 @@ export function PatientPicker({
         onValueChange={setQuery}
         options={results}
         optionKey={(result) => `${result.kind}:${result.id}`}
-        optionLabel={(result) =>
-          result.kind === 'student'
-            ? `${result.fullName}, student, LRN ending in ${result.lrn.slice(-4)}`
-            : `${result.fullName}, staff, ${result.staffNumber}`
-        }
-        renderOption={(result) => (
-          <span className="flex w-full items-baseline gap-3">
-            <span className="text-text-secondary">
-              <PatientNumber patient={numberOf(result)} chip={false} />
-            </span>{' '}
-            <span className="font-semibold">{result.fullName}</span>{' '}
-            <span className="ml-auto flex items-baseline gap-2 pl-3 text-xs text-text-secondary">
-              {result.kind === 'student' ? result.gradeLevel : result.type}{' '}
-              <PatientKindBadge kind={result.kind} />
-            </span>
-          </span>
-        )}
+        optionLabel={patientOptionLabel}
+        renderOption={(result) => <PatientOption result={result} />}
         onPick={(result) => {
           setQuery('')
           onSelect(result)

@@ -220,6 +220,12 @@ const paths = {
       <path d="M21 13v1a4 4 0 0 1-4 4H3" />
     </>
   ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-4.35-4.35" />
+    </>
+  ),
   table: (
     <>
       <rect x="3" y="3" width="18" height="18" rx="2" />

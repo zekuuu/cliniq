@@ -18,6 +18,8 @@ import { Icon, type IconName } from '../icons/Icon'
 
 export interface ComboboxProps<T> {
   label: string
+  /** Keeps the label for screen readers only, e.g. the top bar's search, where the icon and placeholder say it. */
+  hideLabel?: boolean
   /** Longer accessible name when the visible label leans on its group, e.g. "Primary emergency contact relationship". */
   'aria-label'?: string
   /** Decorative leading icon inside the field; the visible label still names it. */
@@ -71,6 +73,7 @@ export interface ComboboxProps<T> {
  */
 export function Combobox<T>({
   label,
+  hideLabel = false,
   'aria-label': ariaLabel,
   icon,
   value,
@@ -191,7 +194,10 @@ export function Combobox<T>({
 
   return (
     <div className={cn('flex flex-col gap-1', className)}>
-      <label htmlFor={inputId} className="text-sm font-semibold text-text-primary">
+      <label
+        htmlFor={inputId}
+        className={cn('text-sm font-semibold text-text-primary', hideLabel && 'sr-only')}
+      >
         {label}
         {required && (
           <span className="text-error" aria-hidden="true">
