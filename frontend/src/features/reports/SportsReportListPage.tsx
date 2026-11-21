@@ -48,9 +48,14 @@ export function SportsReportListPage({ viewer }: { viewer: SessionUser }) {
   async function setArchived(report: SportsReportSummary, archived: boolean) {
     try {
       await archiveSportsReport(report.id, archived, viewer)
-      notify.success(`“${report.title}” ${archived ? 'archived' : 'restored'}`, {
-        id: `sports-report-${report.id}`,
-      })
+      notify.undoable(
+        `“${report.title}” ${archived ? 'archived' : 'restored'}`,
+        () => archiveSportsReport(report.id, !archived, viewer),
+        {
+          undone: `Undone: “${report.title}” ${archived ? 'restored' : 'archived'} again`,
+          onUndone: reload,
+        },
+      )
       reload()
     } catch (cause) {
       notify.apiError(cause, 'The report was not changed. Please try again.')

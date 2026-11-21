@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { notify } from '../lib/notify'
 import type { EmergencyContact } from '../types/entities'
 import { Badge } from './ui/Badge'
 import { Button } from './ui/Button'
@@ -25,6 +26,14 @@ export function EmergencyContactList({
     setFailed(null)
     try {
       await onVerify(index, verified)
+      const word = (on: boolean) => (on ? 'verified' : 'unverified')
+      notify.undoable(
+        `Emergency contact marked ${word(verified)}`,
+        () => onVerify(index, !verified),
+        {
+          undone: `Undone: emergency contact marked ${word(!verified)} again`,
+        },
+      )
     } catch {
       setFailed(index)
     } finally {

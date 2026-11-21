@@ -28,7 +28,12 @@ import { complaintWithExtras, incidentCareSummary, visitCareSummary } from '../.
 import { getMockSessionUser, type SessionUser } from '../../lib/data'
 import type { FollowUp, Incident, Personnel, Visit } from '../../types/entities'
 import { paths } from '../../routes/paths'
-import { archiveStaffRecord, fetchStaffProfile, verifyStaffContact } from './api/staffApi'
+import {
+  archiveStaffRecord,
+  fetchStaffProfile,
+  restoreStaffRecord,
+  verifyStaffContact,
+} from './api/staffApi'
 
 const incidentStageMap = {
   1: { label: 'Needs completion', tone: 'unfinished', icon: 'alertTriangle', variant: 'soft' },
@@ -107,7 +112,10 @@ function Header({
     try {
       await archiveStaffRecord(person.id, viewer, reason)
       setConfirming(false)
-      notify.success('Staff record archived', { id: 'archive-record' })
+      notify.undoable('Staff record archived', () => restoreStaffRecord(person.id, viewer), {
+        undone: 'Undone: staff record restored',
+        onUndone: onArchived,
+      })
       onArchived()
     } catch (cause) {
       notify.apiError(cause, 'The record was not archived. Please try again.')

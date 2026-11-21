@@ -140,6 +140,10 @@ export function FollowUpListPage() {
     onSort: () => list.setSort(toggleTableSort(sort, key)),
   })
   async function applyStatus(item: FollowUpRow, next: FollowUpStatus, why?: string) {
+    const clearOverride = () =>
+      setStatusOverrides((current) =>
+        Object.fromEntries(Object.entries(current).filter(([id]) => id !== item.id)),
+      )
     // Optimistic: the row flips immediately; the data layer writes the status and its audit entry.
     setStatusOverrides((current) => ({ ...current, [item.id]: next }))
     setConfirming(null)
@@ -147,14 +151,24 @@ export function FollowUpListPage() {
       () => updateFollowUpStatus(item.id, next, getMockSessionUser(), why),
       {
         saved: `Follow-up marked ${FOLLOW_UP_STATUS_WORDS[next]}`,
+        undo: () => ({
+          run: () =>
+            updateFollowUpStatus(
+              item.id,
+              item.status,
+              getMockSessionUser(),
+              item.statusReason ?? undefined,
+            ),
+          undone: `Undone: follow-up ${FOLLOW_UP_STATUS_WORDS[item.status]} again`,
+          onUndone: () => {
+            clearOverride()
+            setRescheduling(null)
+            reload()
+          },
+        }),
       },
     )
-    if (!saved.ok) {
-      setStatusOverrides((current) =>
-        Object.fromEntries(Object.entries(current).filter(([id]) => id !== item.id)),
-      )
-      return
-    }
+    if (!saved.ok) return clearOverride()
     if (next === 'missed' || next === 'cancelled') reload()
     if (next === 'missed') offerNewDate(item)
   }

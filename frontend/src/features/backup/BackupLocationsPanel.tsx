@@ -101,9 +101,14 @@ export function BackupLocationsPanel({
   async function toggle(location: BackupLocation) {
     try {
       await setLocationEnabled(location.id, !location.enabled, viewer)
-      notify.success(`${location.label} ${location.enabled ? 'disabled' : 'enabled'}`, {
-        id: `backup-location-${location.id}`,
-      })
+      notify.undoable(
+        `${location.label} ${location.enabled ? 'disabled' : 'enabled'}`,
+        () => setLocationEnabled(location.id, location.enabled, viewer),
+        {
+          undone: `Undone: ${location.label} ${location.enabled ? 'enabled' : 'disabled'} again`,
+          onUndone: onChanged,
+        },
+      )
       onChanged()
     } catch (cause) {
       notify.apiError(cause, 'The location was not changed. Please try again.')

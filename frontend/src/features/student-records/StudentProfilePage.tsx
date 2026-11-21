@@ -47,6 +47,7 @@ import { paths } from '../../routes/paths'
 import {
   archiveStudentRecord,
   fetchStudentProfile,
+  restoreStudentRecord,
   type StudentProfileData,
   verifyStudentContactRecord,
 } from './api/studentProfileApi'
@@ -140,7 +141,10 @@ function ProfileHeader({
     try {
       await archiveStudentRecord(student.id, viewer, reason)
       setConfirmingArchive(false)
-      notify.success('Student record archived', { id: 'archive-record' })
+      notify.undoable('Student record archived', () => restoreStudentRecord(student.id, viewer), {
+        undone: 'Undone: student record restored',
+        onUndone: onArchived,
+      })
       onArchived()
     } catch (cause) {
       notify.apiError(cause, 'The record was not archived. Please try again.')

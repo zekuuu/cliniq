@@ -105,9 +105,14 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
     const enable = Boolean(user.deactivatedAt)
     try {
       await changeUserStatus(user.id, enable, viewer)
-      notify.success(`${user.name}'s account ${enable ? 'enabled' : 'disabled'}`, {
-        id: `user-status-${user.id}`,
-      })
+      notify.undoable(
+        `${user.name}'s account ${enable ? 'enabled' : 'disabled'}`,
+        () => changeUserStatus(user.id, !enable, viewer),
+        {
+          undone: `Undone: ${user.name}'s account ${enable ? 'disabled' : 'enabled'} again`,
+          onUndone: reload,
+        },
+      )
       reload()
     } catch (cause) {
       notify.apiError(cause, 'The account was not changed. Please try again.', {
