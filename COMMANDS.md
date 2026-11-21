@@ -25,7 +25,7 @@ Databases:
 | `npm run docs:adrs` | root | Regenerate the ADR index after an ADR change |
 | `set DB_DATABASE=cliniq_check_pest` then `composer check` | backend | Pint + PHPStan + Pest on a scratch database |
 | `composer test` / `composer check` | backend | ⚠ Without the line above, empties `cliniq_testing` |
-| `php artisan migrate:fresh --seeder="App\Shared\Database\DemoSchoolSeeder" --env=testing --force` | backend | ⚠ Wipe `cliniq_testing` and seed the demo school up to now |
+| `php artisan migrate:fresh --seeder="App\Shared\Database\DemoSchoolSeeder" --env=testing --force` | backend | ⚠ Wipe `cliniq_testing` and seed the demo school (five years, to February 28, 2027) |
 | `php artisan migrate:fresh` | backend | ⚠ Drop every table and migrate again |
 | `php artisan migrate:rollback` | backend | ⚠ Undo the last migration batch |
 | `php artisan cliniq:create-admin <username> --name="Full Name"` | backend | Create the first Admin with a one-time password |
@@ -93,10 +93,10 @@ Loads `Reference-Schema.sql` into `cliniq_check_ref`, migrates into `cliniq_chec
 ## Database
 
 ### `php artisan migrate:fresh --seeder="App\Shared\Database\DemoSchoolSeeder" --env=testing --force`
-Wipes the database and seeds the fictional demo school: 900 students, 60 staff, the current school year from June 15 up to the real clock.
-- **It replaces everything in `cliniq_testing`.** Use it after `composer test` or whenever the demo school should reach today.
-- Run again on a later day: earlier days come out the same (same ids); only new days are added.
-- About 40 s. It refuses production, `cliniq`, other databases, and a database that is not empty.
+Wipes the database and seeds the fictional demo school: 900+ students this year, 60 staff, five school years from June 15, 2022 up to Sunday, February 28, 2027 (since Saturday, November 21, 2026). Rows after the real date are demo data.
+- **It replaces everything in `cliniq_testing`.** Use it after `composer test`.
+- Same options, same rows; a later `DEMO_SCHOOL_UNTIL` only adds days (same ids before it).
+- About 5.5 min. It refuses production, `cliniq`, other databases, and a database that is not empty.
 - `set DB_DATABASE=cliniq_check_demo` first to try it on a scratch database.
 - Options (`DEMO_SCHOOL_YEARS`, `DEMO_SCHOOL_UNTIL` and the rest) and the accounts are in `backend/tools/load/README.md`.
 

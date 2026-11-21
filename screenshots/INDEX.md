@@ -50,7 +50,7 @@
 | 19_staff_new-incident-stage-1.png | staff | New incident, Stage 1 | `/incidents/new` | Empty fast-capture form | scrolling | 3072 × 2158 |
 | 20_staff_complete-incident-stage-2.png | staff | Complete incident, Stage 2 | `/incidents/673/complete` | Stage-1 record opened to complete, not saved | scrolling | 3072 × 4054 |
 | 21_staff_incident-report.png | staff | Incident report | `/incidents/677/report` | Completed, approved report | scrolling | 3072 × 2480 |
-| 22_staff_inventory-list.png | staff | Inventory list | `/inventory` | Default list; expired and "below zero" flags visible | scrolling | 3072 × 2156 |
+| 22_staff_inventory-list.png | staff | Inventory list | `/inventory` | Default list; expired and "below zero" flags visible (captured before ADR-084; the app now shows "Out of stock" instead) | scrolling | 3072 × 2156 |
 | 23_staff_dispense-log-usage.png | staff | Dispense / log usage | `/inventory/dispense` | Empty form | single | 3072 × 1920 |
 | 24_staff_monthly-report.png | staff | Monthly report | `/reports` | Monthly Report tab, November 2026 | scrolling | 3072 × 2698 |
 | 25_staff_sports-reports.png | staff | Sports reports | `/reports/sports` | Saved-reports list with one report (created for this set, see Notes) | single | 3072 × 1920 |

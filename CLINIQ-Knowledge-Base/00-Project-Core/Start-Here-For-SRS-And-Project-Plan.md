@@ -1,6 +1,6 @@
 # Start Here for the SRS and Project Plan
 
-Last checked against the code on Friday, November 20, 2026 — 01:54 PHT for the docs sync of `main` at `533df61` (ADR-082, ADR-083, the emergency-contact check, the demo seeder) and the Overview's frequent-visitor pager; on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). All of that code is on `main` since Wednesday, November 18, 2026 (ADR-081). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
+Last checked against the code on Sunday, November 22, 2026 — 00:52 PHT for the docs sync of `main` at `b9fd646` (ADR-084, the realistic five-year demo school to February 28, 2027); on Friday, November 20, 2026 — 01:54 PHT for the docs sync of `main` at `533df61` (ADR-082, ADR-083, the emergency-contact check, the demo seeder) and the Overview's frequent-visitor pager; on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). All of that code is on `main` since Wednesday, November 18, 2026 (ADR-081). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
 
 ## CLINIQ in five lines
 
@@ -23,6 +23,42 @@ Last checked against the code on Friday, November 20, 2026 — 01:54 PHT for the
 | [`CLINIQ-Knowledge-Base/`](../README.md) | Requirements, architecture, design, decisions (ADRs), testing, logs | this page, then the table [below](#srs-sections-and-what-to-read) |
 
 The branches `backend`, `feat/connect-frontend` and `feat/build-backend` are kept for history only and hold nothing that `main` lacks; the old frontend-only `main`, on sample data with no backend, is the tag [`checkpoint-frontend-only-2026-11-18`](https://github.com/zekuuu/cliniq/tree/checkpoint-frontend-only-2026-11-18) (`f250ab6`).
+
+## Changes since the last sync (Friday, November 20, 2026)
+
+For the Project Plan and the SRS. This covers `main` after `533df61` (Thursday, November 19, 2026 — 23:57 PHT) up to `b9fd646` (Saturday, November 21, 2026 — 20:50 PHT): 23 commits, of which 7 were the previous sync's own commits and the frequent-visitor pager. Synced Sunday, November 22, 2026 — 00:52 PHT.
+
+**Decisions added or amended**
+
+- **ADR-084, added** (Friday, November 20, 2026): [nothing is given beyond the stock on hand, and every action gets its own toast](../06-Decisions/ADR-084-No-Dispensing-Beyond-Stock-And-One-Toast-Per-Action.md). It replaces ADR-018's "below zero warns, never blocks" and ADR-083's merging of toasts with the same text.
+
+**Numbers that changed** (quote the [Facts sheet](Facts-Sheet.md) line named)
+
+| What | Before | After | Facts-sheet line or source |
+|---|---|---|---|
+| Decision records | was 83 (ADR-001 to ADR-083) | **84** (ADR-001 to ADR-084) | "Decision records (ADRs)" |
+| Backend tests passing | 251 (1,623 assertions) | **255** (1,648 assertions); Larastan fails on one pre-existing line (`BackupService.php:171`, logged as a FIX) | `08-Logs/Agent-Sessions/2026-11-21-backend-realistic-demo-school.md`, Saturday, November 21, 2026, not re-run |
+| Frontend tests passing | 1277 | **1278** | same session log, not re-run |
+| Lines of code (non-blank) | frontend 70710, backend 16359 | frontend **70826**, backend **17009** | "Lines of code" |
+
+Unchanged: 48 tables, 462 columns, 260 constraint tests, 50 migrations, 131 API routes, 34 screens, 152 frontend and 27 backend test files, 2 roles. The frontend router is unchanged too (the Facts-sheet line "Frontend routes").
+
+**Features added or changed**
+
+- **No dispensing beyond stock (ADR-084).** A visit, an incident or the Dispense page can no longer give more than the usable stock: the server refuses it (`409 stock_rule`), the quantity stepper stops at the stock with an error line, the item picker disables an out-of-stock item, and the Inventory list shows "Out of stock" instead of "Below zero" and a negative count.
+- **One toast per action (ADR-084).** Two actions with the same result text show two toasts, each with its own timer.
+- **Backup locations.** A backup location's folder path is checked by the server before it is saved; the error shows on the field.
+- **Authenticator warning.** The account menu warns when the authenticator app for password recovery is not set up.
+- **Demo school.** `DemoSchoolSeeder` now builds five school years, June 15, 2022 to Sunday, February 28, 2027, with realistic ages per grade, seasonal complaints, vitals in the settings' ranges, no medicine against a recorded allergy, and 17 realism checks (`backend/tools/load/README.md`). It is demo data for the screens, not a requirement; rows after the real date are invented.
+
+**Terms renamed:** "Below zero" is now "Out of stock" on the Inventory screens.
+
+**Statements in the Project Plan or the SRS that are now wrong** (logged in `08-Logs/Frontend-Issues-and-TODOs.md`):
+
+- Any line saying dispensing below zero warns but never blocks the save (Module 8, Inventory, and ADR-018): it is now refused (ADR-084).
+- Any line saying a repeated action shows one toast: each action shows its own (ADR-084).
+- Any line saying the frontend's data layer is plain `fetch` with no library (from the previous sync, still open in the Project Plan): TanStack Query pages the long lists (ADR-082).
+- Any backend test count before Saturday, November 21, 2026: quote 255 from the Facts sheet's "Newer recorded runs".
 
 ## Changes since the last sync (Wednesday, November 18, 2026)
 
@@ -129,7 +165,7 @@ Unchanged then: 131 API routes, 128 contract entries naming 129 endpoints (count
 | [`03-Design`](../03-Design/) | Design system, screen inventory, [screenshots](../03-Design/assets/screens/) |
 | [`04-Development`](../04-Development/) | Phases, API contract, set-up, the build manuals |
 | [`05-Testing`](../05-Testing/) | Test strategy and where the tests are |
-| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-083 and their indexes |
+| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-084 and their indexes |
 | [`09-References`](../09-References/) | Canonical documents, Privacy Policy |
 | `frontend/`, `backend/` | The code: the frontend and the backend, both on `main` (see [Where things live](#where-things-live)) |
 
