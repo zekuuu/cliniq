@@ -415,6 +415,12 @@ All read-only, no audit. Text-only lists, safe for both roles.
 - Response: `Student`. Errors: 404; 422 "Give the reason for archiving." (the mock's text; was "Choose a reason." here, corrected Saturday, November 14, 2026 — 19:09 PHT). Stores `archived_at`, `archive_reason` and `archived_school_year` (the current year's label). Audit: `archive student`.
 - Copies: `archiveStudent`; tests: `SportsReport`, `auditCoverage`, `ArchivePage`. A reason is now asked (ADR-072, replacing "no reason" of ADR-047). The yearly import stores "Not on the new list".
 
+#### `POST /api/students/{id}/restore`
+- Roles: S. Added Sunday, November 22, 2026 — 01:30 PHT (ADR-085, the Undo on the archive toast; ADR-047 "can be restored").
+- Request: none. Response: `Student`. Errors: 403, 404; 409 `not_archived` "This student record is not archived."
+- Clears `archived_at`, `archived_by_user_id`, `archive_reason` and `archived_school_year`. Audit: `update student`, summary "Restored from the archive".
+- Copies: `restoreStudent`; tests: `StudentRecordsTest`, `auditCoverage`, `records`.
+
 #### `POST /api/students/{id}/emergency-contacts/{index}/verify`
 - Roles: S. Added Thursday, November 19, 2026 — 05:24 PHT (Module 2: "Mark each contact number as verified/unverified").
 - Request: `verified` (boolean, default `true`; `false` marks it unverified, added Thursday, November 19, 2026 — 05:38 PHT). `index` is the contact's place in the list, 0 being the primary.
@@ -468,6 +474,10 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 #### `POST /api/personnel/{id}/archive`
 - Roles: S. Request: `reason` (required, up to 80 characters; ADR-072). Errors: 403, 404, 422. Stores the archive details as for students. Audit: `archive staff`.
 - Copies: `archivePersonnel`; tests: `personnel`, `ArchivePage`. The staff import archives nobody (ADR-069).
+
+#### `POST /api/personnel/{id}/restore`
+- Roles: S. Added Sunday, November 22, 2026 — 01:30 PHT (ADR-085). As for students: clears the archive details, 409 `not_archived` when not archived. Errors: 403, 404, 409. Audit: `update staff`, summary "Restored from the archive".
+- Copies: `restorePersonnel`; tests: `StaffPatientsTest`, `records`.
 
 #### `POST /api/personnel/{id}/emergency-contacts/{index}/verify`
 - Roles: S. Added Thursday, November 19, 2026 — 05:24 PHT. As for students (`verified`, default `true`), but it sets only `is_verified`: `personnel_emergency_contacts` has no `verified_at` column and no verification-history table. Errors: 403, 404. Audit: `update staff`, summary "Marked an emergency contact verified." or "… unverified."
@@ -573,7 +583,7 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 - Response: `FollowUp`.
 - Errors: 404; 422 no reason on Missed or Cancelled.
 - Audit: `update follow-up`, "Marked <status>"; no summary when unchanged.
-- Copies: `setFollowUpStatus` (`api.ts:1819`); tests: `ExcuseLettersAndFollowUps`, `auditCoverage`. The reason stays on the record, not in the audit.
+- Copies: `setFollowUpStatus` (`api.ts:1819`); tests: `ExcuseLettersAndFollowUps`, `auditCoverage`. The reason stays on the record, not in the audit. Since Sunday, November 22, 2026 — 01:30 PHT (ADR-085) Pending and Completed clear the reason, so the Undo of Missed or Cancelled leaves none behind.
 
 #### `POST /api/follow-ups/{id}/reschedule`
 - Roles: S.

@@ -68,7 +68,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 - View student profile/detail — *Staff*. When allergies or medical conditions are recorded, a compact banner at the top of the profile lists them; otherwise nothing extra shows (panel review ST-9)
 - View list of all students (masterlist, shown with full names) — *Staff*
 - Search/filter students (name, grade level, status, or LRN) — *Staff*
-- Archive/deactivate a student record (e.g., transferred or graduated) — *Staff*. Archived records are **not deleted** — they stay in the system for historical/audit continuity but are filtered out of default active-student lists, search results, and dropdowns unless a Staff member explicitly chooses to include archived records
+- Archive/deactivate a student record (e.g., transferred or graduated) — *Staff*. Archived records are **not deleted** — they stay in the system for historical/audit continuity but are filtered out of default active-student lists, search results, and dropdowns unless a Staff member explicitly chooses to include archived records. *Update (Sunday, November 22, 2026, ADR-085):* the archive toast offers Undo for 8 seconds, which restores the record (also for staff records); account, backup-location, Sports Report, contact-verification and follow-up status changes get the same Undo
 
 **Medical History Recording**
 - Add/update medical history entry (allergies, past illnesses, family history) — *Staff*
