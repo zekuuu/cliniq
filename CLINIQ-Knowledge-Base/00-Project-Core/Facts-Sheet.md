@@ -1,7 +1,7 @@
 # Facts sheet
 
-**Last regenerated:** Friday, November 20, 2026 — 01:55 PHT
-**From commit:** `533df61` on `main` (documents); frontend numbers from this working tree; backend numbers from this working tree
+**Last regenerated:** Saturday, November 21, 2026 — 18:37 PHT
+**From commit:** `20bf84c` on `main` (documents); frontend numbers from this working tree; backend numbers from this working tree
 **Regenerate with:** `npm run docs:facts` from the repository root (add `-- --tests` to rerun both test suites). The script is [`docs-facts.mjs`](../04-Development/tools/docs-facts.mjs).
 
 Every README, requirement document, diagram caption, and the Project Plan and SRS quote their numbers from this sheet. If a document disagrees with this sheet, the document is wrong. If this sheet disagrees with the repository, regenerate it: the script reads the repository and nothing else. Do not edit the numbers by hand.
@@ -10,7 +10,7 @@ Every README, requirement document, diagram caption, and the Project Plan and SR
 
 | Fact | Value | Source |
 |---|---|---|
-| Decision records (ADRs) | **83** (ADR-001 to ADR-083) | [`06-Decisions/`](../06-Decisions/), template not counted |
+| Decision records (ADRs) | **84** (ADR-001 to ADR-084) | [`06-Decisions/`](../06-Decisions/), template not counted |
 | Screens in the inventory | **34** numbered entries (numbers 1 to 42; removed numbers are not reused) | [Screen Inventory](../03-Design/Screen-Inventory.md) |
 | Frontend routes | **47** (45 signed-in routes plus Login and Force Password Change): 28 Staff only, 3 Admin only, 14 both | [`AppRoutes.tsx`](../../frontend/src/routes/AppRoutes.tsx) |
 | Roles | **2**: Staff (the School Clinician), Admin (the Principal) | `chk_users_role` in the schema; ADR-029, ADR-038 |
@@ -29,7 +29,7 @@ Every README, requirement document, diagram caption, and the Project Plan and SR
 | Frontend test files | **152** | `frontend/src/**/*.test.ts(x)` |
 | Backend test files | **27** | `backend/tests/**/*Test.php` |
 | Last recorded test run | Sunday, November 15, 2026 — 08:38 PHT at `397e000` | [Test runs](#test-runs) below |
-| Lines of code (non-blank) | frontend **70710** (`src`, tests included); backend **16359** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
+| Lines of code (non-blank) | frontend **70826** (`src`, tests included); backend **16997** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
 
 ## Test runs
 
