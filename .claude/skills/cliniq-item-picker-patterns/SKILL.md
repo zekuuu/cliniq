@@ -9,7 +9,7 @@ Use this with `cliniq-dropdown-patterns` (the panel look), `cliniq-input-pattern
 
 ## The picker (`InventoryItemPicker`)
 
-- A type-ahead search field, not a `Select`: inventory is long enough that typing beats scrolling. It's an ARIA 1.2 combobox: focus stays in the field, Up/Down move through options, Enter picks, Escape closes (or clears the search when already closed), Tab moves on. Enter never submits the surrounding form.
+- A type-ahead search field, not a `Select`: inventory is long enough that typing beats scrolling. It's an ARIA 1.2 combobox: focus stays in the field, Up/Down move through options, Enter picks, Escape closes (or clears the search when already closed), Tab moves on. Enter never submits the surrounding form. The list filters only once typing pauses for 250ms (`useDebouncedValue`, Zean, Sunday, November 22, 2026 — 01:32 PHT) and lists nothing while typing, so Up/Down and Enter never act on a stale list.
 - Options are grouped under **Medicines** and **Supplies**, sorted by name, and each shows its **current stock and unit** on the right. Stock at or below zero shows in `text-error` as 0, and the item is disabled with an "Out of stock" badge, like an expired one (ADR-084).
 - **Expired items stay visible but disabled**, with an `Expired` badge (`aria-disabled`, `cursor-not-allowed`). They can't be picked by click or keyboard.
 - **Nearing-expiry items stay pickable**, with a warning badge ("Expires in 11d"). Items with no expiration date are always pickable.

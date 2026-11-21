@@ -22,6 +22,7 @@ Use with `cliniq-button-feedback-patterns`, which keeps busy and done feedback o
 - **Confirmation dialogs stay dialogs**; only their result is a toast.
 - **One toast per action (ADR-084):** every call is its own toast, so repeated results stack; toasts are never merged by text or id. An `id` only pairs a slow action's `notify.loading(text, { id })` with its result sent under the same id, or use `notify.promise`.
 - **A next step rides on the toast:** `action: { label: 'Open record', onClick }`. Such a toast stays 8 s.
+- **Undo (ADR-085):** a reversible action's success goes through `notify.undoable(message, reverse, { undone: 'Undone: …', onUndone: reload })`, or `useSaveFeedback().run(action, { saved, undo: (value) => ({ run, undone, onUndone }) })`. Undo sends the reverse request (never a delayed save), so the audit keeps both entries. One-way actions (approvals, entered in error, school year, stock, backups, password reset) get no Undo; their dialogs say they can't be undone.
 - **Copy:** sentence case, one short sentence, past tense naming what ("Visit recorded", "Staff record archived"). No exclamation marks, no "successfully", no emoji. An error says what failed and what to do next.
 - **Privacy:** never a diagnosis, symptom, vitals, medicine or other health detail. Name a record by its number or the screen's own label, and a person only where the same screen already shows them. If a refusal's text names a medicine (a stock rule), show it beside the items and keep the toast plain.
 
