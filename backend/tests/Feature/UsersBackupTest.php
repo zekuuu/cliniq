@@ -91,7 +91,14 @@ it('runs a backup to every enabled location without putting the password on the 
     $this->postJson('/api/backups/run')->assertConflict()->assertJsonPath('rule', 'no_backup_location');
     $this->postJson('/api/backups/locations', ['label' => '', 'path' => ''])->assertUnprocessable();
     $this->postJson('/api/backups/locations', ['label' => 'USB drive', 'path' => $good])->assertCreated()->assertJsonPath('data.status', 'found');
-    $this->postJson('/api/backups/locations', ['label' => 'Gone drive', 'path' => $good.DIRECTORY_SEPARATOR.'missing'])->assertCreated()->assertJsonPath('data.status', 'not_found');
+    $this->postJson('/api/backups/locations', ['label' => 'Gone drive', 'path' => $good.DIRECTORY_SEPARATOR.'missing'])->assertUnprocessable()
+        ->assertJsonPath('errors.path.0', 'This folder was not found. Plug in the drive or choose another folder.');
+    $this->postJson('/api/backups/locations', ['label' => 'Same drive', 'path' => strtoupper($good).DIRECTORY_SEPARATOR])->assertUnprocessable()
+        ->assertJsonPath('errors.path.0', 'This folder is already a backup location. Enable it in the list instead.');
+    // A location that disappears after it was added still gets a failed result on the next run.
+    $gone = tempLocation();
+    $this->postJson('/api/backups/locations', ['label' => 'Gone drive', 'path' => $gone])->assertCreated();
+    rmdir($gone);
 
     $status = $this->postJson('/api/backups/run')->assertOk()->json('data');
     expect($status['latest']['status'])->toBe('ok')->and($status['latest']['locationNames'])->toBe(['USB drive', 'Gone drive'])->and($status['needsVerification'])->toBeTrue()

@@ -164,6 +164,18 @@ final class BackupService
         if ($path === '' || mb_strlen($path) > 255) {
             $errors['path'] = $path === '' ? 'Enter the folder or drive path.' : 'Keep the path to 255 characters or fewer.';
         }
+        if (! isset($errors['path'])) {
+            // Refused rather than added with a red status: a backup can never be written there (Zean, November 20, 2026).
+            $status = self::pathStatus($path);
+            $same = self::samePath($path);
+            if (DB::table('backup_locations')->pluck('path')->contains(fn (mixed $p): bool => self::samePath((string) $p) === $same)) {
+                $errors['path'] = 'This folder is already a backup location. Enable it in the list instead.';
+            } elseif ($status === 'not_found') {
+                $errors['path'] = 'This folder was not found. Plug in the drive or choose another folder.';
+            } elseif ($status === 'not_writable') {
+                $errors['path'] = 'CLINIQ cannot write to this folder. Choose another folder.';
+            }
+        }
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
         }
@@ -319,6 +331,14 @@ final class BackupService
         }
 
         return @is_writable($path) ? 'found' : 'not_writable';
+    }
+
+    /** One spelling per folder: `D:\Backups\`, `d:/backups` and `D:\Backups` are the same place on Windows. */
+    private static function samePath(string $path): string
+    {
+        $path = rtrim(str_replace('/', '\\', trim($path)), '\\');
+
+        return PHP_OS_FAMILY === 'Windows' ? mb_strtolower($path) : $path;
     }
 
     private static function removeTree(string $dir): void
