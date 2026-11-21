@@ -15,11 +15,13 @@ import {
   placeDropdownPanel,
 } from './dropdownClassName'
 import { Icon, type IconName } from '../icons/Icon'
-
 export interface ComboboxProps<T> {
   label: string
   /** Keeps the label for screen readers only, e.g. the top bar's search, where the icon and placeholder say it. */
   hideLabel?: boolean
+  /** A key that focuses the field from anywhere (the caller listens for it): set as `aria-keyshortcuts`
+   * and shown as a tip inside the field while it's empty and not focused. */
+  shortcut?: string
   /** Longer accessible name when the visible label leans on its group, e.g. "Primary emergency contact relationship". */
   'aria-label'?: string
   /** Decorative leading icon inside the field; the visible label still names it. */
@@ -74,6 +76,7 @@ export interface ComboboxProps<T> {
 export function Combobox<T>({
   label,
   hideLabel = false,
+  shortcut,
   'aria-label': ariaLabel,
   icon,
   value,
@@ -220,6 +223,7 @@ export function Combobox<T>({
           type="text"
           role="combobox"
           aria-label={ariaLabel}
+          aria-keyshortcuts={shortcut}
           value={value}
           placeholder={placeholder}
           maxLength={maxLength}
@@ -245,11 +249,22 @@ export function Combobox<T>({
             className:
               // No chevron: it would promise a list the field may not have yet (StudentPicker lists nothing on focus).
               cn(
-                'w-full cursor-text pr-9 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green',
+                'peer w-full cursor-text pr-9 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green',
                 icon && 'pl-9!',
               ),
           })}
         />
+        {shortcut && !value && (
+          // A key cap, not ShortcutHint's plain text: inside a field a bare "/" reads as typed text, and the
+          // square centres the glyph (Zean, November 22, 2026). Desktop only, like ShortcutHint; hidden from
+          // assistive tech, which reads aria-keyshortcuts.
+          <kbd
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 right-2.5 hidden h-5 min-w-5 -translate-y-1/2 items-center justify-center rounded border border-border bg-surface px-1 font-mono text-xs leading-none text-text-secondary peer-focus:invisible md:flex"
+          >
+            {shortcut}
+          </kbd>
+        )}
         {/* Clears the text, like every text field (Zean, November 5, 2026). */}
         {value && (
           <button
