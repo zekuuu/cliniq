@@ -1,5 +1,6 @@
 import {
   archivePersonnel,
+  restorePersonnel,
   verifyPersonnelContact,
   getPersonnel,
   getPersonnelDepartments,
@@ -57,6 +58,11 @@ export function archiveStaffRecord(
   reason: string,
 ): Promise<Personnel> {
   return archivePersonnel(personnelId, actor, reason)
+}
+
+/** Undo of an archive (ADR-085): the staff record is active again; audited. */
+export function restoreStaffRecord(personnelId: string, actor: SessionUser): Promise<Personnel> {
+  return restorePersonnel(personnelId, actor)
 }
 
 /** Marks one emergency contact verified or unverified (`index` 0 is the primary); audited. */

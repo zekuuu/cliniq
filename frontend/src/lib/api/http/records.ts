@@ -123,6 +123,11 @@ export function archiveStudent(
   return http.post(`/students/${encodeURIComponent(studentId)}/archive`, { reason })
 }
 
+/** Undo of an archive (ADR-085). */
+export function restoreStudent(studentId: string): Promise<Student> {
+  return http.post(`/students/${encodeURIComponent(studentId)}/restore`, {})
+}
+
 /** `index` is the contact's place in the list, 0 being the primary. */
 export function verifyStudentContact(
   studentId: string,
@@ -211,6 +216,11 @@ export function archivePersonnel(
     http.post(`/personnel/${encodeURIComponent(personnelId)}/archive`, { reason }),
     STAFF_ONLY,
   )
+}
+
+/** Undo of an archive (ADR-085). */
+export function restorePersonnel(personnelId: string): Promise<Personnel> {
+  return mapped(http.post(`/personnel/${encodeURIComponent(personnelId)}/restore`, {}), STAFF_ONLY)
 }
 
 export function verifyPersonnelContact(

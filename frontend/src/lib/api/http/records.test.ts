@@ -66,6 +66,13 @@ describe('STUDENTS in API mode (S2)', () => {
       body: { reason: 'Transferred' },
     })
   })
+
+  it('restores out of the archive (ADR-085)', async () => {
+    const calls = stubApi(() => ok({}))
+    await data.restoreStudent('7', staff)
+    await data.restorePersonnel('8', staff)
+    expect(calls.map((c) => c.url)).toEqual(['/api/students/7/restore', '/api/personnel/8/restore'])
+  })
 })
 
 describe('STAFF_PATIENTS in API mode (S2)', () => {

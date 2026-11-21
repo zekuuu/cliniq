@@ -115,6 +115,7 @@ export const checkStudentDuplicates = routed(
 )
 export const saveStudent = routed('STUDENTS', mock.saveStudent, records.saveStudent)
 export const archiveStudent = routed('STUDENTS', mock.archiveStudent, records.archiveStudent)
+export const restoreStudent = routed('STUDENTS', mock.restoreStudent, records.restoreStudent)
 export const verifyStudentContact = routed(
   'STUDENTS',
   mock.verifyStudentContact,
@@ -154,6 +155,11 @@ export const archivePersonnel = routed(
   'STAFF_PATIENTS',
   mock.archivePersonnel,
   records.archivePersonnel,
+)
+export const restorePersonnel = routed(
+  'STAFF_PATIENTS',
+  mock.restorePersonnel,
+  records.restorePersonnel,
 )
 export const verifyPersonnelContact = routed(
   'STAFF_PATIENTS',

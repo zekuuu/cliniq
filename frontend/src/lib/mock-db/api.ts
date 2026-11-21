@@ -1478,6 +1478,12 @@ function archiveDetails(
   }
 }
 
+/** Takes a record back out of the archive (ADR-085, the Undo on the archive toast; ADR-047). */
+function restoreDetails(record: { archived: boolean }) {
+  if (!record.archived) throw new Error('This record is not archived.')
+  return { archived: false, archivedAt: null, archiveReason: null, archivedSchoolYear: null }
+}
+
 /** Longest archive reason ("Other" specified). */
 export const ARCHIVE_REASON_MAX = 80
 
@@ -1500,6 +1506,16 @@ export function archiveStudent(
     const record = studentOf(s, studentId)
     Object.assign(record, archiveDetails(s, cleanReason(reason)))
     audit(s, actorOr(actor), 'archive', { type: 'student', id: record.id })
+    return toStudent(record)
+  })
+}
+
+/** Undo of an archive (ADR-085): the student is active again; audited as an update. */
+export function restoreStudent(studentId: string, actor: SessionUser | undefined): Promise<Student> {
+  return write('restore student', (s) => {
+    const record = studentOf(s, studentId)
+    Object.assign(record, restoreDetails(record))
+    audit(s, actorOr(actor), 'update', { type: 'student', id: record.id }, 'Restored from the archive')
     return toStudent(record)
   })
 }
@@ -2122,6 +2138,21 @@ export function archivePersonnel(
     const record = personnelOf(s, personnelId)
     Object.assign(record, archiveDetails(s, cleanReason(reason)))
     audit(s, by, 'archive', { type: 'staff', id: record.id })
+    return toPersonnel(record)
+  })
+}
+
+/** Undo of an archive (ADR-085): the staff record is active again; audited as an update. */
+export function restorePersonnel(
+  personnelId: string,
+  actor: SessionUser | undefined,
+): Promise<Personnel> {
+  return write('restore staff', (s) => {
+    const by = actorOr(actor)
+    requireClinician(by)
+    const record = personnelOf(s, personnelId)
+    Object.assign(record, restoreDetails(record))
+    audit(s, by, 'update', { type: 'staff', id: record.id }, 'Restored from the archive')
     return toPersonnel(record)
   })
 }
@@ -3250,7 +3281,8 @@ export function setFollowUpStatus(
       throw new Error(`Give the reason this follow-up is ${status}.`)
     const summary = followUp.status === status ? undefined : `Marked ${status}`
     followUp.status = status
-    if (status === 'missed' || status === 'cancelled') followUp.statusReason = why
+    // Pending and Completed clear the reason, so an Undo (ADR-085) leaves none behind.
+    followUp.statusReason = status === 'missed' || status === 'cancelled' ? why : null
     audit(s, actorOr(actor), 'update', { type: 'follow-up', id }, summary)
     return followUp
   })

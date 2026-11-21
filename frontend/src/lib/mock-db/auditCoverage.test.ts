@@ -5,6 +5,7 @@ import {
   approveExcuseLetter,
   approveIncidentReport,
   archiveStudent,
+  restoreStudent,
   authenticateMockUser,
   changeMockPassword,
   completeIncidentStageTwo,
@@ -131,10 +132,15 @@ describe('every audited event is written (AU-1)', () => {
       { studentId: created.student.id, actor: STAFF, nameCorrectionReason: 'Typo in the surname' },
     )
     await archiveStudent(created.student.id, STAFF, 'Transferred')
+    const restored = await restoreStudent(created.student.id, STAFF)
+    expect(restored.archived).toBe(false)
+    expect(restored.archiveReason).toBeNull()
+    await expect(restoreStudent(created.student.id, STAFF)).rejects.toThrow('not archived')
     expect(entries().map(([action, type]) => [action, type])).toEqual([
       ['create', 'student'],
       ['update', 'student'],
       ['archive', 'student'],
+      ['update', 'student'],
     ])
   })
 

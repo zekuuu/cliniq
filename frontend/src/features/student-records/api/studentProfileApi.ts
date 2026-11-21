@@ -1,5 +1,6 @@
 import {
   archiveStudent,
+  restoreStudent,
   verifyStudentContact,
   getDemoStudent,
   getStudent,
@@ -51,6 +52,11 @@ export function archiveStudentRecord(
   reason: string,
 ): Promise<Student> {
   return archiveStudent(studentId, actor, reason)
+}
+
+/** Undo of an archive (ADR-085): the student is active again; audited. */
+export function restoreStudentRecord(studentId: string, actor: SessionUser): Promise<Student> {
+  return restoreStudent(studentId, actor)
 }
 
 /** Marks one emergency contact verified or unverified (`index` 0 is the primary); audited. */
