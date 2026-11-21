@@ -1,5 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { notify } from '../../lib/notify'
+import { ApiError } from '../../lib/api/client'
+import { firstFieldErrors } from '../../lib/api/errors'
 import { Badge, Button, Card, CardBody, CardHeader, Combobox, Icon, Modal } from '../../components'
 import { formatDateTime } from '../../lib/dates'
 import { useSaveFeedback } from '../../hooks/useSaveFeedback'
@@ -53,6 +55,8 @@ export function BackupLocationsPanel({
   const [label, setLabel] = useState('')
   const [path, setPath] = useState('')
   const [error, setError] = useState('')
+  /** The server's refusal of the chosen folder: a duplicate, not found, or not writable. */
+  const [pathError, setPathError] = useState('')
   const feedback = useSaveFeedback()
   const enabled = settings.locations.filter((location) => location.enabled)
 
@@ -61,6 +65,7 @@ export function BackupLocationsPanel({
     setLabel('')
     setPath('')
     setError('')
+    setPathError('')
   }
 
   async function save(event: FormEvent) {
@@ -72,6 +77,21 @@ export function BackupLocationsPanel({
     }
     const result = await feedback.run(() => saveLocation({ label, path }, { actor: viewer }), {
       saved: `${label.trim()} added. Backups now go there too`,
+      failed: (cause) => {
+        const api =
+          cause instanceof ApiError
+            ? cause
+            : cause instanceof Error && cause.cause instanceof ApiError
+              ? cause.cause
+              : null
+        const message = api
+          ? firstFieldErrors(api).path
+          : cause instanceof Error
+            ? cause.message
+            : undefined
+        if (message) setPathError(message)
+        return message
+      },
     })
     if (!result.ok) return
     setAdding(false)
@@ -213,8 +233,11 @@ export function BackupLocationsPanel({
           />
           <FolderPicker
             value={path}
-            onChange={setPath}
-            error={error && !path.trim() ? 'Choose a drive or folder.' : undefined}
+            onChange={(next) => {
+              setPath(next)
+              setPathError('')
+            }}
+            error={pathError || (error && !path.trim() ? 'Choose a drive or folder.' : undefined)}
           />
           <div className="flex flex-wrap justify-end gap-2">
             <Button variant="neutral" data-autofocus onClick={() => setAdding(false)}>
