@@ -145,7 +145,10 @@ it('searches active students by LRN prefix first, then by every word of the name
 
     expect(collect($this->postJson('/api/students/search', ['q' => 'jose reyes'])->json('data'))->pluck('fullName')->all())->toBe(['José Reyes'])
         ->and($this->postJson('/api/students/search', ['q' => '2000'])->json('data.0.lrn'))->toBe('●●●●●●●●0001')
-        ->and($this->postJson('/api/students/search', ['q' => ''])->json('data'))->toBe([]);
+        ->and($this->postJson('/api/students/search', ['q' => ''])->json('data'))->toBe([])
+        // The shown last 4 find the student too (ADR-087); five digits or more match only the start.
+        ->and(collect($this->postJson('/api/students/search', ['q' => '0002'])->json('data'))->pluck('fullName')->all())->toBe(['Ana Abad'])
+        ->and($this->postJson('/api/students/search', ['q' => '00002'])->json('data'))->toBe([]);
     $this->postJson('/api/students/query', ['search' => 'reyes jo'])->assertJsonCount(1, 'data');
     $this->postJson('/api/students/query', ['search' => '1000'])->assertJsonPath('data.0.fullName', 'Ana Abad');
 

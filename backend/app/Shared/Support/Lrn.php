@@ -23,6 +23,16 @@ final class Lrn
         return '●●●●●●●●'.mb_substr($lrn, -4);
     }
 
+    /**
+     * Typed digits find a full LRN by its start, or, up to 4 digits, inside its shown last 4 (ADR-087;
+     * frontend `fullLrnMatchesSearch`).
+     */
+    public static function searchMatches(string $lrn, string $digits): bool
+    {
+        return str_starts_with($lrn, $digits)
+            || (strlen($digits) <= 4 && str_contains(substr($lrn, -4), $digits));
+    }
+
     public static function label(string $lrn): string
     {
         return 'LRN ending in '.mb_substr($lrn, -4);

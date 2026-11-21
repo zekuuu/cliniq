@@ -52,7 +52,7 @@ final class StudentService
     }
 
     /**
-     * Active students by LRN prefix first, then by name (every word, ADR-064); never a roster.
+     * Active students by LRN (its start, or its shown last 4, ADR-087) first, then by name (every word, ADR-064); never a roster.
      *
      * @return list<array{id: string, lrn: string, fullName: string, gradeLevel: string}>
      */
@@ -68,7 +68,7 @@ final class StudentService
         $digits = (string) preg_replace('/[\s-]/', '', $q);
         $lrnQuery = preg_match('/\A[\d\s-]+\z/', $q) === 1 && $digits !== '';
         $active = $this->records(fn (Builder $w) => $w->whereNull('s.archived_at'), withDetails: false);
-        $byLrn = $active->filter(fn (StudentRecord $s): bool => $lrnQuery && str_starts_with($s->lrn, $digits));
+        $byLrn = $active->filter(fn (StudentRecord $s): bool => $lrnQuery && Lrn::searchMatches($s->lrn, $digits));
 
         return $byLrn->merge($active->filter(fn (StudentRecord $s): bool => ! $byLrn->has($s->id) && PersonName::matches($s->fullName, $q)));
     }
