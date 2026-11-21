@@ -92,6 +92,31 @@ describe('notify', () => {
     expect(toast?.style.getPropertyValue('--toast-ms')).toBe('6000ms')
     expect(toast).toHaveAttribute('data-type', 'error')
   })
+
+  it('offers Undo for 8 s; Undo runs the reverse, then reports and reloads (ADR-085)', async () => {
+    const undo = vi.fn().mockResolvedValue(undefined)
+    const onUndone = vi.fn()
+    notify.undoable('Location disabled', undo, {
+      undone: 'Undone: location enabled again',
+      onUndone,
+    })
+    const toast = (await screen.findByText('Location disabled')).closest<HTMLElement>(
+      '[data-sonner-toast]',
+    )
+    expect(toast?.style.getPropertyValue('--toast-ms')).toBe('8000ms')
+    screen.getByRole('button', { name: 'Undo' }).click()
+    expect(await screen.findByText('Undone: location enabled again')).toBeInTheDocument()
+    expect(undo).toHaveBeenCalledOnce()
+    expect(onUndone).toHaveBeenCalledOnce()
+  })
+
+  it('says why an Undo failed', async () => {
+    notify.undoable('Account disabled', () => Promise.reject(new Error('The last Admin stays.')), {
+      undone: 'Undone',
+    })
+    ;(await screen.findByRole('button', { name: 'Undo' })).click()
+    expect(await screen.findByText('The last Admin stays.')).toBeInTheDocument()
+  })
 })
 
 describe('scrollToTop', () => {

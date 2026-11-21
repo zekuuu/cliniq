@@ -33,6 +33,8 @@ export function useSaveFeedback() {
       saved: string | ((value: T) => string)
       /** A message for this failure; `null` when the screen already shows it (a field error). */
       failed?: (cause: unknown) => string | null | undefined
+      /** An Undo on the success toast (ADR-085): the reverse request and its own result text. */
+      undo?: (value: T) => { run: () => Promise<unknown>; undone: string; onUndone?: () => void }
     },
   ): Promise<{ ok: true; value: T } | { ok: false }> {
     if (busy.current) return { ok: false }
@@ -43,7 +45,9 @@ export function useSaveFeedback() {
       const value = await action()
       const message = typeof messages.saved === 'function' ? messages.saved(value) : messages.saved
       setResult({ kind: 'saved', message })
-      notify.success(message)
+      const undo = messages.undo?.(value)
+      if (undo) notify.undoable(message, undo.run, undo)
+      else notify.success(message)
       return { ok: true, value }
     } catch (cause) {
       const failed = messages.failed?.(cause)

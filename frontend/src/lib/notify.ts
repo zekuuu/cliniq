@@ -44,6 +44,7 @@ const DEFAULT_MS: Record<Kind, number> = {
 
 /** Ids of `loading` toasts still waiting for their result. */
 const pending = new Set<string>()
+let undoCount = 0
 
 function show(kind: Kind, message: string, { id, ...options }: NotifyOptions = {}) {
   const duration = options.duration ?? (options.action ? ACTION_MS : DEFAULT_MS[kind])
@@ -135,6 +136,43 @@ export const notify = {
         throw cause
       },
     )
+  },
+  /**
+   * A result the user can take back while the toast shows (ADR-085): an Undo button for the toast's
+   * 8 seconds (ACTION_MS; hover pauses it). Undo sends the reverse request, so the audit log keeps
+   * both entries. Only for actions that have a reverse; one-way actions (approve, entered in error,
+   * school year, stock) never get it.
+   */
+  undoable(
+    message: string,
+    undo: () => Promise<unknown>,
+    options: { undone: string; onUndone?: () => void; failed?: string },
+  ) {
+    return show('success', message, {
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          const id = `undo-${++undoCount}`
+          notify.loading('Undoing…', { id })
+          undo().then(
+            () => {
+              show('success', options.undone, { id })
+              options.onUndone?.()
+            },
+            (cause: unknown) => {
+              show(
+                'error',
+                errorMessage(cause, options.failed ?? 'Could not undo. Please try again.'),
+                {
+                  id,
+                },
+              )
+              options.onUndone?.()
+            },
+          )
+        },
+      },
+    })
   },
   dismiss: (id?: string) => {
     if (id === undefined) pending.clear()
