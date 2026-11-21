@@ -66,10 +66,6 @@ Known Issues:
 Next Steps:
 ```
 
-## Commands
-
-- **`/update-docs`** (or "update docs"): docs-only sync of `main`. Follow [.claude/commands/update-docs.md](.claude/commands/update-docs.md) exactly.
-
 ## Source of Truth (conflict resolution)
 
 1. Canonical documents (Project Plan, Modules & Features, Frontend Context Brief, Frontend Design Reference, Related Systems Review) — authoritative for **what** the system should do
