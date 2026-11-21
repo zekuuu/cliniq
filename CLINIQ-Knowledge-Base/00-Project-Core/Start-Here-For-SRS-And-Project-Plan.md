@@ -1,6 +1,6 @@
 # Start Here for the SRS and Project Plan
 
-Last checked against the code on Sunday, November 22, 2026 — 00:52 PHT for the docs sync of `main` at `b9fd646` (ADR-084, the realistic five-year demo school to February 28, 2027); on Friday, November 20, 2026 — 01:54 PHT for the docs sync of `main` at `533df61` (ADR-082, ADR-083, the emergency-contact check, the demo seeder) and the Overview's frequent-visitor pager; on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). All of that code is on `main` since Wednesday, November 18, 2026 (ADR-081). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
+Last checked against the code on Sunday, November 22, 2026 — 02:22 PHT for the docs sync of `main` at `1c41f73` (ADR-085, ADR-086, ADR-087: Undo and restore, the top-bar search, the LRN last-4 search); on Sunday, November 22, 2026 — 00:52 PHT for the docs sync of `main` at `b9fd646` (ADR-084, the realistic five-year demo school to February 28, 2027); on Friday, November 20, 2026 — 01:54 PHT for the docs sync of `main` at `533df61` (ADR-082, ADR-083, the emergency-contact check, the demo seeder) and the Overview's frequent-visitor pager; on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). All of that code is on `main` since Wednesday, November 18, 2026 (ADR-081). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
 
 ## CLINIQ in five lines
 
@@ -23,6 +23,46 @@ Last checked against the code on Sunday, November 22, 2026 — 00:52 PHT for the
 | [`CLINIQ-Knowledge-Base/`](../README.md) | Requirements, architecture, design, decisions (ADRs), testing, logs | this page, then the table [below](#srs-sections-and-what-to-read) |
 
 The branches `backend`, `feat/connect-frontend` and `feat/build-backend` are kept for history only and hold nothing that `main` lacks; the old frontend-only `main`, on sample data with no backend, is the tag [`checkpoint-frontend-only-2026-11-18`](https://github.com/zekuuu/cliniq/tree/checkpoint-frontend-only-2026-11-18) (`f250ab6`).
+
+## Changes since the last sync (Sunday, November 22, 2026, 00:52)
+
+For the Project Plan and the SRS. This covers `main` after `b9fd646` (Saturday, November 21, 2026 — 20:50 PHT) up to `1c41f73` (Sunday, November 22, 2026 — 02:16 PHT): 27 commits, of which 5 were the previous sync's own. Synced Sunday, November 22, 2026 — 02:22 PHT.
+
+**Decisions added or amended**
+
+- **ADR-085, added** (Sunday, November 22, 2026): [an Undo on the toast of a reversible action, and archived records can be restored](../06-Decisions/ADR-085-Undo-On-Action-Toasts-And-Restore-Of-Archived-Records.md). It amends ADR-083 and ADR-084 and fulfils the "can be restored" of ADR-047, ADR-051 and ADR-069.
+- **ADR-086, added** (Sunday, November 22, 2026): [a search box in the top bar finds a student or staff member and opens the profile](../06-Decisions/ADR-086-Top-Bar-Search-For-Students-And-Staff.md), Staff only; "/" focuses it.
+- **ADR-087, added** (Sunday, November 22, 2026): [a student search by LRN also matches the shown last 4 digits](../06-Decisions/ADR-087-LRN-Search-Also-Matches-The-Shown-Last-4.md). It amends ADR-028's "search by LRN prefix".
+
+**Numbers that changed** (quote the [Facts sheet](Facts-Sheet.md) line named)
+
+| What | Before | After | Facts-sheet line or source |
+|---|---|---|---|
+| Decision records | was 84 (ADR-001 to ADR-084) | **87** (ADR-001 to ADR-087) | "Decision records (ADRs)" |
+| API routes | 131 | **133** (two restore routes, ADR-085) | "API routes live in the backend" |
+| API contract entries | 128 headings naming 129 endpoints | **130** naming **131** | "API contract entries" |
+| Frontend test files | 152 | **154** | "Frontend test files" |
+| Backend tests passing | 255 (1,648 assertions) | **257** (1,673 assertions) | `08-Logs/Agent-Sessions/2026-11-22-lrn-search-last-4.md`, Sunday, November 22, 2026, not re-run |
+| Frontend tests passing | 1278 | **1285** | `08-Logs/Agent-Sessions/2026-11-22-top-bar-search.md`, not re-run; 2 tests were added after it |
+| Lines of code (non-blank) | frontend 70826, backend 17009 | frontend **71265**, backend **17106** | "Lines of code" |
+
+Unchanged: 48 tables, 50 migrations, 34 screens, 27 backend test files, 2 roles. The frontend router is unchanged too (the Facts-sheet line "Frontend routes").
+
+**Features added or changed**
+
+- **Undo (ADR-085).** For 8 seconds, the toast of a reversible action (account and backup-location enable/disable, Sports Report archive, contact verified/unverified, follow-up status, student and staff archive) has an Undo that sends the reverse request; the Audit Log keeps both entries.
+- **Restore (ADR-085).** `POST /api/students/{id}/restore` and `POST /api/personnel/{id}/restore` (Staff only) bring an archived record back. A follow-up set back to Pending or Completed loses its old reason.
+- **Top-bar search (ADR-086).** Staff get a box in the top bar (from 1280 px wide) that finds active students by LRN or name and staff by Staff No. or name, at most 8, with masked numbers and nothing medical; picking one opens the profile. "/" focuses it, and the Keyboard shortcuts list names it. The Admin gets no box.
+- **Typing pause.** The student, patient and inventory pickers search only once typing pauses for 250 ms, as the list search boxes already did.
+- **LRN search (ADR-087).** Typed digits find a student by the start of the LRN or, up to 4 digits, the last 4 shown on screen.
+
+**Terms renamed:** none.
+
+**Statements in the Project Plan or the SRS that are now wrong** (logged in `08-Logs/Frontend-Issues-and-TODOs.md`):
+
+- Any line saying an archived student or staff record can't be restored, or that every action is final once saved: reversible actions have an Undo and archived records can be restored (ADR-085).
+- Any line saying students are searched only by name or LRN prefix: the shown last 4 digits find them too (ADR-087).
+- Any line describing the top bar as the clock and the account menu only: Staff also get the student and staff search (ADR-086).
 
 ## Changes since the last sync (Friday, November 20, 2026)
 
@@ -165,7 +205,7 @@ Unchanged then: 131 API routes, 128 contract entries naming 129 endpoints (count
 | [`03-Design`](../03-Design/) | Design system, screen inventory, [screenshots](../03-Design/assets/screens/) |
 | [`04-Development`](../04-Development/) | Phases, API contract, set-up, the build manuals |
 | [`05-Testing`](../05-Testing/) | Test strategy and where the tests are |
-| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-085 and their indexes |
+| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-087 and their indexes |
 | [`09-References`](../09-References/) | Canonical documents, Privacy Policy |
 | `frontend/`, `backend/` | The code: the frontend and the backend, both on `main` (see [Where things live](#where-things-live)) |
 

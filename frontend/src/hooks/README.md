@@ -11,4 +11,5 @@ Generic shared hooks not tied to one feature (e.g. auth state, session handling)
 - `usePageSize` holds the shared `Pagination`'s rows-per-page choice (10, 20, 50 or 100): 10 each time a list opens, never stored or put in the URL.
 - `useIdleSignOut` signs a person out after their role's idle setting (`config.idleSignoutMinutesStaff` 60, `idleSignoutMinutesAdmin` 30; ADR-048, ADR-078). It returns the seconds left during the last two minutes. Keys, pointer, scroll, touch and API calls (`lib/sessionActivity.ts`) count as activity; once the warning shows, only `stay` keeps the session.
 - `useCapsLock` warns when Caps Lock is on in a password field.
+- `useDebouncedValue` returns a value once it has stopped changing for 250 ms (`SEARCH_DEBOUNCE_MS`); the student, patient and inventory pickers search with it. The test setup replaces it with a pass-through.
 - `usePrinting` reports when the browser is printing, so print-only documents mount only then (ADR-026, `cliniq-print-patterns`).
