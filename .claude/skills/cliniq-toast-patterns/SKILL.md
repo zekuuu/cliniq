@@ -20,7 +20,7 @@ Use with `cliniq-button-feedback-patterns`, which keeps busy and done feedback o
 - **No inline result banners**, no `alert()`, no "Saved." line beside a button.
 - **What stays inline:** field validation beside its field. A failed submit calls `useFocusFirstInvalid().report(count, message?)`, which also sends one "Please check the highlighted fields" toast, or `message` for a form-level check with no field of its own. Page-load failures with Retry, empty states, skeletons, and on-screen states (Voided, Approved and stored, a duplicate warning) stay inline too.
 - **Confirmation dialogs stay dialogs**; only their result is a toast.
-- **One toast per action:** give it a stable `id` (`'visit-create'`) when the same action can repeat. A slow action uses `notify.loading(text, { id })`, then the result with the same id, or `notify.promise`.
+- **One toast per action (ADR-084):** every call is its own toast, so repeated results stack; toasts are never merged by text or id. An `id` only pairs a slow action's `notify.loading(text, { id })` with its result sent under the same id, or use `notify.promise`.
 - **A next step rides on the toast:** `action: { label: 'Open record', onClick }`. Such a toast stays 8 s.
 - **Copy:** sentence case, one short sentence, past tense naming what ("Visit recorded", "Staff record archived"). No exclamation marks, no "successfully", no emoji. An error says what failed and what to do next.
 - **Privacy:** never a diagnosis, symptom, vitals, medicine or other health detail. Name a record by its number or the screen's own label, and a person only where the same screen already shows them. If a refusal's text names a medicine (a stock rule), show it beside the items and keep the toast plain.
