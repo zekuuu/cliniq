@@ -36,14 +36,16 @@ const GROUPS = [
 
 type Group = { key: string; label: string; items: PickableItem[] }
 
+/** Expired or out of stock can't be given (ADR-018, ADR-084). */
 function isPickable(item: PickableItem): boolean {
-  return !item.flags.includes('expired')
+  return !item.flags.includes('expired') && item.currentStock > 0
 }
 
 /**
  * Searchable inventory picker (cliniq-item-picker-patterns): type to filter, items grouped into
- * Medicines and Supplies, each showing its current stock and unit. Expired items stay visible but
- * disabled with an "Expired" badge; nearing-expiry items stay pickable with a warning badge. It's an
+ * Medicines and Supplies, each showing its current stock and unit. Expired and out-of-stock items stay
+ * visible but disabled with an "Expired" or "Out of stock" badge (ADR-084); nearing-expiry items stay
+ * pickable with a warning badge. It's an
  * "add" control: picking calls `onPick` and clears the search, ready for the next item.
  *
  * ARIA 1.2 combobox: focus stays in the text field; Up/Down move through the options, Enter picks,
@@ -253,7 +255,7 @@ export function InventoryItemPicker({
                       )}
                       {disabled && (
                         <Badge tone="error" variant="soft">
-                          Expired
+                          {item.flags.includes('expired') ? 'Expired' : 'Out of stock'}
                         </Badge>
                       )}
                       {nearing && (

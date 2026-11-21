@@ -54,17 +54,20 @@ function InventorySkeleton({ back }: { back: ReactNode }) {
 
 /** Flags come computed from the data layer; this only chooses how to show them. */
 function stockBadges(item: InventoryItemView) {
+  // "Out of stock" replaces "Below zero" and "Low stock" at 0 or less (ADR-084).
+  const out = item.currentStock <= 0
+  const flags = out ? item.flags.filter((flag) => flag !== 'low_stock') : item.flags
   return (
     <div className="flex flex-wrap gap-1">
-      {item.belowZero && (
+      {out && (
         <Badge tone="error" variant="soft">
-          Below zero
+          Out of stock
         </Badge>
       )}
-      {item.flags.map((flag) => (
+      {flags.map((flag) => (
         <StatusBadge key={flag} status={flag} map={inventoryFlagMap} />
       ))}
-      {!item.belowZero && item.flags.length === 0 && (
+      {!out && flags.length === 0 && (
         <Badge tone="success" variant="soft">
           In stock
         </Badge>
@@ -77,7 +80,7 @@ function stockCell(item: InventoryItemView) {
   return (
     <div className="flex flex-col gap-1 tabular-nums">
       <span>
-        {item.currentStock} {item.unit} usable
+        {Math.max(item.currentStock, 0)} {item.unit} usable
       </span>
       {item.expiredStock > 0 && (
         <span

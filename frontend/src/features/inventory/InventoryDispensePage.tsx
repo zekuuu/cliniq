@@ -133,7 +133,13 @@ export function InventoryDispensePage() {
 
   const item = items.find((candidate) => candidate.id === itemId)
   const amount = Number(quantity)
-  const overStock = item && Number.isInteger(amount) && amount > item.currentStock
+  const inStock = item ? Math.max(item.currentStock, 0) : 0
+  const overStock = item && Number.isInteger(amount) && amount > inStock
+  const overStockMessage = item
+    ? inStock
+      ? `Only ${inStock} ${item.unit} in stock. Lower the quantity or restock first.`
+      : `${item.name} is out of stock. Restock it before giving it.`
+    : ''
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -147,6 +153,7 @@ export function InventoryDispensePage() {
     if (!item) next.item = 'Choose an item.'
     if (!Number.isInteger(amount) || amount < 1)
       next.quantity = 'Enter a whole-number quantity of at least 1.'
+    else if (overStock) next.quantity = overStockMessage
     setErrors(next)
     invalid.report(Object.keys(next).length)
     if (Object.keys(next).length || !item) return
@@ -166,10 +173,6 @@ export function InventoryDispensePage() {
           : `${amount} ${result.item.unit} of ${result.item.name} recorded for general use`,
         { id: 'dispense', description: `Remaining stock: ${result.remainingStock}.` },
       )
-      if (result.belowZero)
-        notify.warning('Stock is now below zero. Recount and restock.', {
-          id: 'dispense-below-zero',
-        })
       setSuccess(true)
       setItemId('')
       setQuantity('1')
@@ -343,11 +346,10 @@ export function InventoryDispensePage() {
                     clear('quantity')
                   }}
                 />
-                {overStock && (
-                  <p className="flex items-start gap-1 text-xs font-semibold text-warning-text">
+                {overStock && !errors.quantity && (
+                  <p className="flex items-start gap-1 text-xs font-semibold text-error-text">
                     <Icon name="alertTriangle" size={14} className="mt-px shrink-0" />
-                    Only {item.currentStock} {item.unit} in stock. Recording this takes stock below
-                    zero; recount and restock.
+                    {overStockMessage}
                   </p>
                 )}
               </div>

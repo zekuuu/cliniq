@@ -103,20 +103,19 @@ describe('New Visit: medicines and supplies given', () => {
     expect(screen.getByLabelText('Quantity of Adhesive Bandages')).toHaveValue('2')
   })
 
-  it('warns, without blocking, when the quantity is above current stock', async () => {
+  it('caps the quantity at the stock on hand and stops the plus there (ADR-084)', async () => {
     const user = userEvent.setup({ delay: null })
     await openNewVisit(user)
     await pick(user, 'para', /Paracetamol 500mg/)
     const quantity = screen.getByLabelText('Quantity of Paracetamol 500mg')
     await user.clear(quantity)
     await user.type(quantity, '15')
-    expect(screen.getByText(/Only 12 tablets in stock/)).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Save Visit' }))
-    // A warning toast without the medicine's name (ADR-083 privacy).
-    expect(
-      await screen.findByText('Some stock is now below zero. Recount and restock in Inventory.'),
-    ).toBeInTheDocument()
-    expect(await stock('item-0001')).toBe(-3)
+    expect(quantity).toHaveValue('12')
+    expect(screen.getByText("Only 12 tablets in stock. You can't give more.")).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Increase Paracetamol 500mg' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Decrease Paracetamol 500mg' }))
+    expect(screen.queryByText(/You can't give more/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Increase Paracetamol 500mg' })).toBeEnabled()
   })
 
   it("shows the student's recorded allergies beside the picker", async () => {

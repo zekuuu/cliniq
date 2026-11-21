@@ -28,5 +28,7 @@ export function stockQuantityText(
   unit: string,
   flags: ReadonlyArray<InventoryFlag>,
 ): string {
-  return flags.includes('expired') ? `${quantity} ${unit} (expired)` : `${quantity} ${unit}`
+  // Stock given before ADR-084 can still read below zero; "-3 tablets" only confused (Zean, November 20, 2026).
+  const shown = Math.max(quantity, 0)
+  return flags.includes('expired') ? `${shown} ${unit} (expired)` : `${shown} ${unit}`
 }

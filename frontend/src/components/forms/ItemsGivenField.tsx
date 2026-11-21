@@ -26,9 +26,10 @@ const iconButton =
 /**
  * "Medicines & supplies given" (cliniq-item-picker-patterns, ADR-018): repeatable lines picked from
  * inventory, each with a quantity stepper, the item's unit, optional instructions, and a remove
- * control. Picking an item already on a line adds one to that line. Stock problems warn but never
- * block; expired items can't be picked, and an expired item already on a saved record can be kept or
- * lowered but not raised. The data layer enforces the same rules.
+ * control. Picking an item already on a line adds one to that line. A line can't go past the stock
+ * on hand (ADR-084): the plus stops there and says so, and typing more is capped. Expired items can't
+ * be picked, and an expired item already on a saved record can be kept or lowered but not raised.
+ * The data layer enforces the same rules.
  *
  * The patient's recorded allergies sit next to the picker. An item's optional "avoid if allergic to"
  * words that the allergies mention add a warning there (ADR-049, D8); nothing is ever blocked.
@@ -60,9 +61,16 @@ export function ItemsGivenField({
     savedById.get(itemId)?.itemName ?? byId.get(itemId)?.name ?? 'Unknown item'
   const unitOf = (itemId: string) => savedById.get(itemId)?.unit ?? byId.get(itemId)?.unit ?? ''
   const expired = (itemId: string) => Boolean(byId.get(itemId)?.flags.includes('expired'))
+  /** What this line can reach: the stock on hand plus what the saved record already took. */
+  const available = (itemId: string) => {
+    const item = byId.get(itemId)
+    const saved = savedById.get(itemId)?.quantity ?? 0
+    return item ? Math.max(item.currentStock, 0) + saved : saved
+  }
   /** Raising past what's already saved takes new stock, which an expired item can't give. */
   const canRaise = (line: ItemLineDraft) =>
-    !expired(line.itemId) || line.quantity < (savedById.get(line.itemId)?.quantity ?? 0)
+    line.quantity < available(line.itemId) &&
+    (!expired(line.itemId) || line.quantity < (savedById.get(line.itemId)?.quantity ?? 0))
   const allergyWarnings = [
     ...new Set(
       lines.flatMap((line) => allergyMatches(byId.get(line.itemId) ?? {}, allergies ?? [])),
@@ -76,7 +84,12 @@ export function ItemsGivenField({
   function pick(itemId: string) {
     const existing = lines.find((line) => line.itemId === itemId)
     if (existing) {
-      if (!canRaise(existing)) return
+      if (!canRaise(existing)) {
+        setAnnouncement(
+          `Only ${available(itemId)} ${unitOf(itemId)} of ${nameOf(itemId)} in stock.`,
+        )
+        return
+      }
       update(itemId, { quantity: existing.quantity + 1 })
       setAnnouncement(`${nameOf(itemId)} quantity is now ${existing.quantity + 1}.`)
     } else {
@@ -151,10 +164,8 @@ export function ItemsGivenField({
               const unit = unitOf(line.itemId)
               const item = byId.get(line.itemId)
               const isExpired = expired(line.itemId)
-              const available = item
-                ? item.currentStock + (savedById.get(line.itemId)?.quantity ?? 0)
-                : null
-              const overStock = available !== null && line.quantity > available
+              const max = available(line.itemId)
+              const atMax = !isExpired && line.quantity >= max
               return (
                 <li
                   key={line.itemId}
@@ -192,7 +203,9 @@ export function ItemsGivenField({
                         value={line.quantity || ''}
                         onChange={(event) => {
                           const digits = event.target.value.replace(/\D/g, '')
-                          update(line.itemId, { quantity: digits ? Number(digits) : 0 })
+                          update(line.itemId, {
+                            quantity: digits ? Math.min(Number(digits), Math.max(max, 1)) : 0,
+                          })
                         }}
                         onBlur={() => {
                           if (line.quantity < 1) update(line.itemId, { quantity: 1 })
@@ -228,11 +241,12 @@ export function ItemsGivenField({
                   >
                     <Icon name="xCircle" />
                   </button>
-                  {overStock && (
-                    <p className="order-5 col-span-full flex items-start gap-1 text-xs font-semibold text-warning-text sm:order-none">
+                  {atMax && (
+                    <p className="order-5 col-span-full flex items-start gap-1 text-xs font-semibold text-error-text sm:order-none">
                       <Icon name="alertTriangle" size={14} className="mt-px shrink-0" />
-                      Only {available} {unit} in stock. Saving takes stock below zero; recount and
-                      restock.
+                      {max
+                        ? `Only ${max} ${unit} in stock. You can't give more.`
+                        : `${name} is out of stock. Remove it or restock first.`}
                     </p>
                   )}
                   {isExpired && (

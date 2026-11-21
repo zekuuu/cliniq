@@ -3539,7 +3539,7 @@ export function saveInventoryItem(
 export interface DispenseResult {
   item: InventoryItemView
   remainingStock: number
-  /** Module 8: dispensing below zero warns but never blocks recording that care was given. */
+  /** Stock that went negative before ADR-084 refused it; new dispenses never do. */
   belowZero: boolean
 }
 
@@ -3781,7 +3781,7 @@ function usableBatches(s: DbState, item: InventoryItem): InventoryBatch[] {
     )
 }
 
-/** Takes earliest-expiring usable stock first. A shortfall stays a visible negative on the last usable batch. */
+/** Takes earliest-expiring usable stock first. More than the usable stock is refused (ADR-084). */
 function takeUsableBatches(
   s: DbState,
   item: InventoryItem,
@@ -3791,6 +3791,13 @@ function takeUsableBatches(
   if (!batches.length)
     throw new StockRuleError(
       `${item.name} has no usable batch and can't be given. Dispose of expired stock before restocking.`,
+    )
+  const available = batches.reduce((sum, batch) => sum + Math.max(batch.quantity, 0), 0)
+  if (available < quantity)
+    throw new StockRuleError(
+      available
+        ? `Only ${available} ${item.unit} of ${item.name} in stock. Lower the quantity or restock first.`
+        : `${item.name} is out of stock. Restock it before giving it.`,
     )
   let left = quantity
   const allocations: InventoryBatchAllocation[] = []
@@ -3802,11 +3809,6 @@ function takeUsableBatches(
       allocations.push({ batchId: batch.id, quantity: taken })
       left -= taken
     }
-  }
-  if (left) {
-    const last = batches[batches.length - 1]
-    last.quantity -= left
-    allocations.push({ batchId: last.id, quantity: left })
   }
   return allocations
 }
@@ -4403,6 +4405,10 @@ export function saveBackupLocation(
   return write('save backup location', (s) => {
     const by = actorOr(options.actor)
     const fields = cleanLocation(input)
+    // The backend also refuses a folder it can't find or write to; a browser can't check that.
+    const same = (path: string) => path.replace(/[\\/]+$/, '').toLowerCase()
+    if (s.frontendOnly.backupLocations.some((l) => same(l.path) === same(fields.path)))
+      throw new Error('This folder is already a backup location. Enable it in the list instead.')
     const location: BackupLocation = {
       id: nextId('backup-location', s.frontendOnly.backupLocations),
       ...fields,

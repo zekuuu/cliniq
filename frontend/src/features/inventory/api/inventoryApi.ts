@@ -147,7 +147,7 @@ export function saveInventoryItem(
   )
 }
 
-/** Decrements stock; going below zero warns but never blocks recording care (Module 8). */
+/** Decrements stock; never more than the usable stock (ADR-084). */
 export function dispenseInventoryItem(
   itemId: string,
   quantity: number,

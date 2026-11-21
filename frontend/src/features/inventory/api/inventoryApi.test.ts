@@ -19,18 +19,19 @@ describe('inventory API', () => {
     expect(expired.every((item) => item.expiredStock > 0)).toBe(true)
   })
 
-  it('records a dispensation and allows stock to cross below zero with a warning result', async () => {
+  it('records a dispensation, and refuses more than the stock on hand (ADR-084)', async () => {
     const [item] = await fetchInventory({ search: 'Paracetamol', category: '' })
-    const result = await dispenseInventoryItem(item.id, item.currentStock + 8, {
-      studentId: 'student-0001',
-      personnelId: null,
-    })
-    expect(result.remainingStock).toBe(-8)
-    expect(result.belowZero).toBe(true)
+    const patient = { studentId: 'student-0001', personnelId: null }
+    await expect(dispenseInventoryItem(item.id, item.currentStock + 8, patient)).rejects.toThrow(
+      /in stock\. Lower the quantity or restock first\./,
+    )
+    const result = await dispenseInventoryItem(item.id, item.currentStock, patient)
+    expect(result.remainingStock).toBe(0)
+    expect(result.belowZero).toBe(false)
     expect(getRecordedAuditEntries().map((entry) => entry.actionType)).toEqual(['submit'])
     // The write is real: the list now shows the new stock and its derived flags.
     const [after] = await fetchInventory({ search: 'Paracetamol', category: '' })
-    expect(after.currentStock).toBe(-8)
+    expect(after.currentStock).toBe(0)
     expect(after.flags).toContain('low_stock')
   })
 })

@@ -133,14 +133,25 @@ describe('recording a visit with medicines and supplies', () => {
     await expect(newVisit([{ itemId: GAUZE, quantity: 1 }])).resolves.toBeTruthy()
   })
 
-  it('allows nearing-expiry items, and quantity over stock with a below-zero warning', async () => {
+  it('allows nearing-expiry items, and refuses more than the stock on hand (ADR-084)', async () => {
+    await expect(
+      newVisit([
+        { itemId: CETIRIZINE, quantity: 1 },
+        { itemId: PARACETAMOL, quantity: 15 },
+      ]),
+    ).rejects.toThrow('Only 12 tablets of Paracetamol 500mg in stock.')
+    expect(await stock(CETIRIZINE)).toBe(9)
+    expect(await stock(PARACETAMOL)).toBe(12)
     const { belowZero } = await newVisit([
       { itemId: CETIRIZINE, quantity: 1 },
-      { itemId: PARACETAMOL, quantity: 15 },
+      { itemId: PARACETAMOL, quantity: 12 },
     ])
     expect(await stock(CETIRIZINE)).toBe(8)
-    expect(await stock(PARACETAMOL)).toBe(-3)
-    expect(belowZero).toEqual(['Paracetamol 500mg'])
+    expect(await stock(PARACETAMOL)).toBe(0)
+    expect(belowZero).toEqual([])
+    await expect(dispenseInventoryItem(PARACETAMOL, 1)).rejects.toThrow(
+      'Paracetamol 500mg is out of stock. Restock it before giving it.',
+    )
   })
 
   it('rejects an expired item on the standalone dispense too', async () => {
