@@ -9,6 +9,7 @@ const SHORTCUTS = [
   ['Alt + I', 'Open Report Incident'],
   ['Alt + K', 'Open Student Search'],
   ['Alt + D', 'Open Dashboard'],
+  ['/', 'Search students and staff (top bar)'],
   ['Shift + Alt + N', 'Save current visit and prepare another'],
 ] as const
 

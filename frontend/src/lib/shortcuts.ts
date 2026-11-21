@@ -5,6 +5,7 @@ export const SHORTCUT_KEYS = {
   studentSearch: 'Alt+K',
   dashboard: 'Alt+D',
   shortcutsList: '?',
+  topBarSearch: '/',
 } as const
 
 /** Window event that opens the keyboard-shortcuts list (`components/KeyboardShortcuts.tsx` listens). */

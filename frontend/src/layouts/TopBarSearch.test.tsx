@@ -45,6 +45,22 @@ describe('top bar search', () => {
     expect(await screen.findByText(/^Student profile /)).toBeInTheDocument()
   })
 
+  it('"/" jumps to the box, but types normally inside the box', async () => {
+    const user = userEvent.setup()
+    renderShell('staff')
+    const box = screen.getByRole('combobox', { name: 'Search students and staff' })
+    expect(box).not.toHaveFocus()
+    expect(box).toHaveAttribute('aria-keyshortcuts', '/')
+    // The tip shows in the empty box; hidden from screen readers, which read aria-keyshortcuts.
+    expect(box.parentElement?.querySelector('kbd')).toHaveTextContent('/')
+    await user.keyboard('/')
+    expect(box).toHaveFocus()
+    expect(box).toHaveValue('')
+    await user.keyboard('a/b')
+    expect(box).toHaveValue('a/b')
+    expect(box.parentElement?.querySelector('kbd')).toBeNull()
+  })
+
   it('is not shown to the Admin, who has no patient search', () => {
     renderShell('admin')
     expect(
