@@ -15,6 +15,8 @@ type MenuItem = {
   group: number
   shortcut?: string
   danger?: boolean
+  /** Needs attention: a small warning mark at the row's end. */
+  warn?: boolean
 } & ({ to: string } | { onSelect: () => void })
 
 /** Keyboard help belongs to the desktop workstation, as the header's Shortcuts button did (shown from `md`). */
@@ -36,7 +38,7 @@ export function AccountMenu({
   signingOut,
   onEditProfile,
   onAuthenticator,
-  authenticatorEnabled = false,
+  authenticatorEnabled,
   onShortcuts,
   onReportIssue,
   onSignOut,
@@ -47,6 +49,7 @@ export function AccountMenu({
   onEditProfile: () => void
   /** Password recovery with an authenticator app (ADR-072). */
   onAuthenticator: () => void
+  /** `undefined` while loading, so the "not set up" mark never flashes. */
   authenticatorEnabled?: boolean
   onShortcuts: () => void
   onReportIssue: () => void
@@ -60,6 +63,7 @@ export function AccountMenu({
   const itemRefs = useRef<Array<HTMLElement | null>>([])
   const menuId = useId()
   const name = account?.name ?? user.name
+  const needsAuthenticator = authenticatorEnabled === false
 
   const items: MenuItem[] = [
     // Grouped by purpose, a divider between groups: the account, help, then Sign out.
@@ -70,6 +74,7 @@ export function AccountMenu({
       label: authenticatorEnabled ? 'Authenticator app: Enabled' : 'Set up authenticator app',
       icon: 'shieldPlus',
       group: 0,
+      warn: needsAuthenticator,
       onSelect: onAuthenticator,
     },
     ...(desktop
@@ -194,7 +199,15 @@ export function AccountMenu({
         onKeyDown={onButtonKeyDown}
         className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md pr-3 pl-1.5 transition-colors md:w-full hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark motion-reduce:transition-none"
       >
-        <UserAvatar name={name} picture={account?.profilePicture} />
+        <span className="relative shrink-0">
+          <UserAvatar name={name} picture={account?.profilePicture} />
+          {needsAuthenticator && (
+            <span
+              aria-hidden="true"
+              className="absolute -top-0.5 -right-0.5 size-3 rounded-full bg-warning ring-2 ring-background"
+            />
+          )}
+        </span>
         <span className="hidden min-w-0 flex-col text-left leading-tight sm:flex">
           <span className="truncate text-sm font-semibold text-text-primary">{name}</span>
           <span className="text-xs text-text-secondary">{ROLE_LABELS[user.role]}</span>
@@ -245,6 +258,14 @@ export function AccountMenu({
                   <Icon name={item.icon} size={16} className="shrink-0" />
                   {item.label}
                   {item.shortcut && <ShortcutHint keys={item.shortcut} />}
+                  {item.warn && (
+                    <Icon
+                      name="alertTriangle"
+                      size={16}
+                      label="Not set up"
+                      className="ml-auto shrink-0 text-warning-text"
+                    />
+                  )}
                 </>
               )
               const ref = (node: HTMLElement | null) => {

@@ -205,7 +205,7 @@ export function AppShell({ user, active, children, onLogout }: AppShellProps) {
               signingOut={isLoggingOut}
               onEditProfile={() => setIsEditingProfile(true)}
               onAuthenticator={() => setIsAuthenticatorOpen(true)}
-              authenticatorEnabled={authenticator.data?.enabled ?? false}
+              authenticatorEnabled={authenticator.data?.enabled}
               onShortcuts={showKeyboardShortcuts}
               onReportIssue={openReportIssue}
               onSignOut={() => setIsConfirmingSignOut(true)}

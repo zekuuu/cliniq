@@ -167,12 +167,21 @@ export function AuthenticatorDialog({
   }
 
   const enabled = status.data?.enabled ?? false
-  const adminNote = viewer.role === 'admin' && (
-    <p className="rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary">
-      As the Administrator, set this up and keep the recovery codes safe: nobody else can reset your
-      password.
+  const warning = (text: string) => (
+    <p className="flex items-start gap-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-sm text-text-primary">
+      <Icon name="alertTriangle" className="mt-0.5 shrink-0 text-warning-text" />
+      {text}
     </p>
   )
+  // Not set up yet: say what is at stake (Zean, November 20, 2026: "warning for authenticator").
+  const adminNote =
+    viewer.role === 'admin'
+      ? warning(
+          'As the Administrator, set this up and keep the recovery codes safe: nobody else can reset your password.',
+        )
+      : !enabled &&
+        status.data &&
+        warning('Not set up yet. If you forget your password, only the Administrator can reset it.')
   const errorLine = error && (
     <p role="alert" className="text-sm font-semibold text-error">
       {error}
@@ -262,11 +271,15 @@ export function AuthenticatorDialog({
             {useRecoveryCode
               ? 'Enter one of your recovery codes. Each works once.'
               : 'Enter the 6-digit code the authenticator app shows for CLINIQ.'}{' '}
-            {step.then === 'replace'
-              ? 'You then get a new setup key and new recovery codes.'
-              : 'After this, only the Administrator can reset your password.'}
+            {step.then === 'replace' && 'You then get a new setup key and new recovery codes.'}
           </p>
         </div>
+        {step.then === 'off' &&
+          warning(
+            viewer.role === 'admin'
+              ? 'Disabling it leaves no way to reset your password: nobody else can reset the Administrator’s. Your recovery codes stop working too.'
+              : 'Disabling it means only the Administrator can reset your password. Your recovery codes stop working too.',
+          )}
         <CodeOrRecoveryField
           recovery={useRecoveryCode}
           onRecoveryChange={(value) => {
