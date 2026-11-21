@@ -16,7 +16,7 @@ import { ListItemLink } from '../ui/ListItemLink'
  * deliberate single lookup, where the full name is correct (cliniq-display-privacy).
  *
  * The query is left as typed. Typed LRN digits match the start of the full LRN even though the list
- * shows it masked; spaces and dashes are ignored, and a complete 12-digit LRN highlights its match, so
+ * shows it masked, or, up to 4 digits, the shown last 4 (ADR-087); spaces and dashes are ignored, and a complete 12-digit LRN highlights its match, so
  * typing it and pressing Enter works (ADR-028).
  * `search` is the feature's own `api/` function (ADR-013), so the backend can replace it.
  *

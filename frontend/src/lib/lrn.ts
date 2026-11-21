@@ -34,6 +34,15 @@ export function lrnLabel(lrn: string): string {
 export const STUDENT_SEARCH_MIN_LENGTH = 1
 
 /**
+ * Whether typed digits (spaces and dashes already removed) find a full LRN in a student or patient
+ * search: they match its start (the masked part), or, up to 4 digits, are found in its last 4, the
+ * digits every list shows (Zean, Sunday, November 22, 2026, ADR-087). Backend twin: `Lrn::searchMatches`.
+ */
+export function fullLrnMatchesSearch(lrn: string, digits: string): boolean {
+  return lrn.startsWith(digits) || (digits.length <= 4 && lrn.slice(-4).includes(digits))
+}
+
+/**
  * Whether typed digits find a student's LRN on a log. A full LRN (mock mode) matches by its prefix,
  * as before. A masked LRN (API mode, ADR-040: lists never carry the full one) shows only its last
  * 4 digits, so typed digits match those: a few digits found in them, or a longer entry that ends

@@ -2,7 +2,7 @@ import { SYMPTOM } from '../labels'
 import type { FollowUpDueState } from '../../components/status/followUp'
 import type { InventoryFlag } from '../../components/status/inventory'
 import { addDays, diffDays, formatDateTime, isWithin } from '../dates'
-import { maskLrn, STUDENT_SEARCH_MIN_LENGTH } from '../lrn'
+import { fullLrnMatchesSearch, maskLrn, STUDENT_SEARCH_MIN_LENGTH } from '../lrn'
 import { compareByLastName, formatPersonName, nameMatches, type NameParts } from '../personName'
 import type {
   AuditActionType,
@@ -325,9 +325,9 @@ export function activeStudents(state: DbState): SeedStudent[] {
 }
 
 /**
- * Active students whose LRN starts with the typed digits or whose name contains the query, ignoring
- * case. Spaces and dashes in a typed LRN are ignored. LRN matches come first, then by name. Capped,
- * so a search never reads as a roster (ADR-028).
+ * Active students whose LRN starts with the typed digits or shows them in its last 4 (ADR-087), or
+ * whose name contains the query, ignoring case. Spaces and dashes in a typed LRN are ignored. LRN
+ * matches come first, then by name. Capped, so a search never reads as a roster (ADR-028).
  */
 export function searchStudents(state: DbState, query: string, limit = 8): StudentSearchResult[] {
   const q = query.trim().toLowerCase()
@@ -336,7 +336,7 @@ export function searchStudents(state: DbState, query: string, limit = 8): Studen
   // Only a query of digits, spaces and dashes can be an LRN; "an-" stays a name search.
   const lrnQuery = /^[\d\s-]+$/.test(q) && digits.length > 0
   return activeStudents(state)
-    .map((s) => ({ s, byLrn: lrnQuery && s.lrn.startsWith(digits) }))
+    .map((s) => ({ s, byLrn: lrnQuery && fullLrnMatchesSearch(s.lrn, digits) }))
     .filter(({ s, byLrn }) => byLrn || nameMatches(formatPersonName(s), q))
     .sort((a, b) => Number(b.byLrn) - Number(a.byLrn) || compareByLastName(a.s, b.s))
     .slice(0, limit)

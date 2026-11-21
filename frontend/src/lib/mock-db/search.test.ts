@@ -32,6 +32,15 @@ describe('student search', () => {
     expect((await searchStudents('an')).length).toBe(8)
   })
 
+  it('also finds the visible last 4 of the LRN, up to 4 digits (ADR-087)', async () => {
+    // Gian Quizon's LRN ends 0001: the last 4 every list shows.
+    expect((await searchStudents('0001')).map((s) => s.fullName)).toContain('Gian Quizon')
+    for (const s of await searchStudents('0001'))
+      expect(s.lrn.startsWith('0001') || s.lrn.slice(-4).includes('0001')).toBe(true)
+    // Five digits or more match only the start of the LRN.
+    expect(await searchStudents('60001')).toEqual([])
+  })
+
   it('returns active students only, with no medical fields', async () => {
     expect(await searchStudents('Hannah Umali')).toEqual([])
     const [first] = await searchStudents('000000260001')
