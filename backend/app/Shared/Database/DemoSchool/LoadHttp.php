@@ -10,6 +10,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\Concerns\InteractsWithAuthentication;
 use Illuminate\Foundation\Testing\Concerns\InteractsWithSession;
 use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
+use Illuminate\Routing\Middleware\ThrottleRequests;
+use Illuminate\Routing\Middleware\ThrottleRequestsWithRedis;
 use RuntimeException;
 
 /** Calls the real routes in-process (routing, middleware, validation, controller), as the Pest tests do. */
@@ -17,7 +19,13 @@ final class LoadHttp
 {
     use InteractsWithAuthentication, InteractsWithSession, MakesHttpRequests;
 
-    public function __construct(public Application $app) {}
+    public function __construct(public Application $app)
+    {
+        // Rate limits are not what the seed tests: their counters live in the shared file cache, keyed by user id,
+        // so a dev app signed in as the same id (or an earlier run) made the seed's own calls answer 429
+        // (Zean, Saturday, November 21, 2026). Every other middleware still runs. Seed process only.
+        $this->withoutMiddleware([ThrottleRequests::class, ThrottleRequestsWithRedis::class]);
+    }
 
     public function as(User $user): self
     {
