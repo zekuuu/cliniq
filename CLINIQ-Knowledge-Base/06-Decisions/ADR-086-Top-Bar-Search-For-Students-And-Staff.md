@@ -15,6 +15,7 @@
 4. **The Admin gets no box**: the patient search is a Staff-only route (`role:staff`), and the Admin's screens don't show patient records.
 5. **It shows from the `xl` width (1280 px) up**, where the top bar has room beside the clock and the account menu. Below that every list keeps its own search.
 6. **No new API route and no backend change.**
+7. **"/" jumps to the box** (Zean, Sunday, November 22, 2026 — 02:05 PHT), except while typing in a field or with a dialog open, and only while the box is shown. Listed in the Keyboard shortcuts dialog.
 
 ## Consequences
 - Archived records are not found here (the patient search lists active people only); they stay on the Archive screen.

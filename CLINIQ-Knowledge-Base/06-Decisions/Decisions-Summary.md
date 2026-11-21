@@ -337,3 +337,7 @@ A reversible action's success toast carries an Undo button for its 8 seconds: ac
 ### ADR-086: A search box in the top bar finds a student or staff member and opens the profile
 
 Staff get a search box in the top bar (from 1280 px wide) that finds active students by LRN or name and staff by Staff No. or name, using New Visit's patient search (8 results, masked numbers, nothing medical, 250 ms typing pause). Picking a result opens the profile. The Admin gets no box. No API change. Sunday, November 22, 2026 — 01:59 PHT. [ADR-086](ADR-086-Top-Bar-Search-For-Students-And-Staff.md)
+
+### ADR-087: A student search by LRN also matches the shown last 4 digits
+
+Typed digits find a student by the start of the full LRN, or, up to 4 digits, inside the last 4 that every list shows. Five digits or more match only the start. One rule in the mock (`fullLrnMatchesSearch`) and the backend (`Lrn::searchMatches`), behind the pickers, the top-bar search and the Student List. Sunday, November 22, 2026 — 02:15 PHT. [ADR-087](ADR-087-LRN-Search-Also-Matches-The-Shown-Last-4.md)
