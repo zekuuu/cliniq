@@ -122,6 +122,79 @@ function loadChecks(): int
     }
     $check('no generated person shares a surname with the project\'s real people', $hits === 0, count(array_unique($surnames))." surnames read from the KB, {$hits} matches");
 
+    return $failed + loadRealism();
+}
+
+/**
+ * Does the school look like a school? Read-only, in the same ok / FAIL style (added Saturday, November 21,
+ * 2026, with the realistic demo school). Thresholds come from the product's own settings.
+ *
+ * @return int number of failed checks
+ */
+function loadRealism(): int
+{
+    $failed = 0;
+    $check = function (string $name, int $bad, string $detail = '') use (&$failed): void {
+        $failed += $bad === 0 ? 0 : 1;
+        printf("  %-4s %s  (%d%s)\n", $bad === 0 ? 'ok' : 'FAIL', $name, $bad, $detail === '' ? '' : ", {$detail}");
+    };
+    $one = fn (string $sql): int => (int) (array_values((array) (DB::selectOne($sql) ?? ['n' => 0]))[0] ?? 0);
+    $setting = fn (string $key): array => (array) json_decode((string) DB::table('reference_settings')->where('setting_key', $key)->value('setting_value'), true);
+    $usual = $setting('vitals_usual_ranges');
+    $fever = (float) ($setting('vitals_warning_ranges')['feverFromC'] ?? 37);
+    $noClass = "(DAYOFWEEK(%s) IN (1, 7) OR %s IN (SELECT holiday_date FROM holidays WHERE kind <> 'special-working'))";
+    $off = fn (string $col): string => sprintf($noClass, $col, $col);
+    echo "\nRealism checks\n";
+
+    // People: a Grade g student is 5 + g on August 31 of the school year (the cut-off), so bands never overlap.
+    $y = (int) substr((string) DB::table('school_years')->max('label'), 0, 4);
+    $check('every active student\'s age fits the grade by the August 31 cut-off', $y === 0 ? 0 : $one("SELECT COUNT(*) FROM students s JOIN grade_levels g ON g.id = s.grade_level_id
+        WHERE s.archived_at IS NULL AND s.birth_date IS NOT NULL AND TIMESTAMPDIFF(YEAR, s.birth_date, '{$y}-08-31') <> g.sort_order + 5"), "school year {$y}");
+    $check('birth dates after 1990 and before the school year', $one("SELECT COUNT(*) FROM students WHERE birth_date < '1990-01-01' OR birth_date > '".($y ?: 2100)."-06-15'"));
+    $check('twins and same-birthday students share a grade', $one('SELECT COUNT(*) FROM (SELECT birth_date FROM students WHERE archived_at IS NULL AND birth_date IS NOT NULL GROUP BY birth_date HAVING COUNT(DISTINCT grade_level_id) > 1) x'));
+
+    // Visits: who, when, how long.
+    $check('menstrual cramps only for female students aged 10 and up, and female staff', $one("SELECT COUNT(*) FROM visits v LEFT JOIN students s ON s.id = v.student_id LEFT JOIN personnel p ON p.id = v.personnel_id
+        WHERE v.complaint = 'Menstrual cramps' AND ((s.id IS NOT NULL AND (s.sex IS NULL OR s.sex <> 'female' OR TIMESTAMPDIFF(YEAR, s.birth_date, v.visited_at) < 10
+        OR (s.birth_date IS NULL AND v.grade_level_at_time IN ('Kinder', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4')))) OR (p.id IS NOT NULL AND p.sex <> 'female'))"));
+    $check('visits on school days, 07:00 to 17:00', $one("SELECT COUNT(*) FROM visits WHERE TIME(visited_at) < '07:00' OR TIME(visited_at) > '17:00' OR ".$off('DATE(visited_at)')));
+    $check('time out after time in', $one('SELECT COUNT(*) FROM visits WHERE time_out IS NOT NULL AND time_out < TIME(visited_at)'));
+    $check('excuse letters dated on or after their visit', $one('SELECT COUNT(*) FROM excuse_letters e JOIN visits v ON v.id = e.visit_id WHERE e.created_at < v.visited_at OR e.excused_from < DATE(v.visited_at) OR e.excused_until < e.excused_from'));
+    $check('follow-ups due on a school day, after they were set', $one('SELECT COUNT(*) FROM follow_ups WHERE '.$off('follow_up_date').' OR follow_up_date < DATE(created_at)'));
+    $check('created_at on the record\'s own clock (visits), never after updated_at', $one('SELECT COUNT(*) FROM visits WHERE DATE(created_at) <> DATE(visited_at) OR created_at > updated_at'));
+
+    // Vitals against the settings: a fever reads at or above feverFromC; a wound or a sprain does not run a fever.
+    $check("a Fever visit reads {$fever} °C or more; a wound, sprain or toothache under ".($fever + 0.5).' °C', $one("SELECT COUNT(*) FROM visits WHERE (complaint = 'Fever' AND temperature_c < {$fever})
+        OR (complaint IN ('Minor wound', 'Sprain', 'Toothache', 'Eye irritation', 'Nosebleed', 'Itchy skin') AND temperature_c >= ".($fever + 0.5).')'));
+    // Injury incidents: pulse and systolic inside the age group's usual range, with a tolerance of 20 bpm and 10 mmHg for pain.
+    $bad = 0;
+    $injuries = "'Fall injury', 'Head bump during PE', 'Hit by a ball', 'Ankle sprain during PE', 'Deep cut'";
+    foreach (DB::select("SELECT i.grade_level_at_time g, i.personnel_id p, r.pulse_bpm pulse, r.blood_pressure bp FROM incident_vital_readings r JOIN incidents i ON i.id = r.incident_id WHERE i.complaint IN ({$injuries})") as $r) {
+        $group = $r->p !== null ? 'adult' : match ($r->g) {
+            'Kinder' => 'kinder', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6' => 'grades1to6', default => 'grades7to12',
+        };
+        $u = (array) ($usual['byAgeGroup'][$group] ?? []);
+        $sys = (int) explode('/', (string) $r->bp)[0];
+        $bad += $r->pulse !== null && ($r->pulse < ($u['pulseBpm']['min'] ?? 0) - 20 || $r->pulse > ($u['pulseBpm']['max'] ?? 999) + 20) ? 1 : 0;
+        $bad += $r->bp !== null && ($sys < ($u['systolic']['min'] ?? 0) - 10 || $sys > ($u['systolic']['max'] ?? 999) + 10) ? 1 : 0;
+    }
+    $check('injury incident vitals inside the age group\'s usual range (+/- 20 bpm, 10 mmHg)', $bad);
+
+    // Stock: nothing given against a recorded allergy (the item's allergy words or its name), nothing negative, sane expiry dates.
+    $check('no item given to a student allergic to it', $one("SELECT COUNT(*) FROM inventory_transactions t JOIN inventory_items i ON i.id = t.item_id
+        JOIN student_health_entries h ON h.student_id = t.student_id AND h.kind = 'allergy'
+        WHERE t.type = 'dispense' AND (LOCATE(LOWER(h.label), LOWER(i.name)) > 0
+        OR EXISTS (SELECT 1 FROM inventory_item_allergy_words w WHERE w.item_id = t.item_id AND (LOCATE(LOWER(w.word), LOWER(h.label)) > 0 OR LOCATE(LOWER(h.label), LOWER(w.word)) > 0)))"));
+    $check('stock never negative', $one('SELECT (SELECT COUNT(*) FROM inventory_batches WHERE quantity < 0) + (SELECT COUNT(*) FROM inventory_transactions WHERE stock_after < 0)'));
+    $check('expiry dates 12 to 36 months after receipt', $one('SELECT COUNT(*) FROM inventory_batches WHERE expiration_date IS NOT NULL AND TIMESTAMPDIFF(MONTH, received_date, expiration_date) NOT BETWEEN 12 AND 36'));
+
+    // Calendar and contacts.
+    $check('calendar events start and end on school days', $one('SELECT COUNT(*) FROM calendar_events WHERE '.$off('start_date').' OR '.$off('last_date')));
+    $check('contact numbers are 09XXXXXXXXX', $one("SELECT (SELECT COUNT(*) FROM emergency_contacts WHERE phone NOT REGEXP '^09[0-9]{9}$')
+        + (SELECT COUNT(*) FROM personnel_emergency_contacts WHERE phone NOT REGEXP '^09[0-9]{9}$') + (SELECT COUNT(*) FROM personnel WHERE contact_number NOT REGEXP '^09[0-9]{9}$')"));
+    $check('no number shared by unrelated families', $one('SELECT COUNT(*) FROM (SELECT c.phone FROM emergency_contacts c JOIN students s ON s.id = c.student_id GROUP BY c.phone HAVING COUNT(DISTINCT s.last_name) > 1) x')
+        + $one('SELECT COUNT(*) FROM emergency_contacts c JOIN personnel_emergency_contacts p ON p.phone = c.phone'));
+
     return $failed;
 }
 
