@@ -76,7 +76,7 @@ Every feature in this project — down to individual UI decisions like *which sc
 </tr>
 </table>
 
-> Every feature above is built in the frontend and runs on sample (mock) data by default. The backend behind it is built too (phases B0 to B10, 131 routes, 255 tests passing on Saturday, November 21, 2026) and saves to MariaDB, and the screens can run on it behind a mock/API switch (ADR-080). That code is on `main` since Wednesday, November 18, 2026 (ADR-081, [where the code lives](./README.md#where-things-live)). What is decided but not built is listed in [README.md](./README.md#decided-not-built).
+> Every feature above is built in the frontend and runs on sample (mock) data by default. The backend behind it is built too (phases B0 to B10, 133 routes, 255 tests passing on Saturday, November 21, 2026) and saves to MariaDB, and the screens can run on it behind a mock/API switch (ADR-080). That code is on `main` since Wednesday, November 18, 2026 (ADR-081, [where the code lives](./README.md#where-things-live)). What is decided but not built is listed in [README.md](./README.md#decided-not-built).
 
 <br/>
 
