@@ -133,7 +133,10 @@ final class FollowUpService
         return $row;
     }
 
-    /** Cancelled needs a reason; Missed's is optional. The reason stays on the record, not in the audit. */
+    /**
+     * Cancelled needs a reason; Missed's is optional. The reason stays on the record, not in the audit.
+     * Pending and Completed clear it, so an Undo of Missed or Cancelled (ADR-085) leaves no stale reason.
+     */
     /** @return array<string, mixed> */
     public function setStatus(int $id, string $status, ?string $reason, int $userId): array
     {
@@ -145,7 +148,7 @@ final class FollowUpService
         $now = CarbonImmutable::now();
         DB::transaction(function () use ($id, $status, $why, $userId, $now, $current): void {
             DB::table('follow_ups')->where('id', $id)->update(['status' => $status, 'status_updated_at' => $now, 'status_updated_by_user_id' => $userId]
-                + (in_array($status, ['missed', 'cancelled'], true) ? ['status_reason' => $why === '' ? null : mb_substr($why, 0, 340)] : []));
+                + ['status_reason' => in_array($status, ['missed', 'cancelled'], true) && $why !== '' ? mb_substr($why, 0, 340) : null]);
             $this->record($userId, $id, $current['status'] === $status ? null : "Marked {$status}", $now, AuditAction::Update);
         });
 

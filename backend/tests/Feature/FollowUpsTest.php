@@ -39,6 +39,12 @@ it('sets a status, needing a reason to cancel, and audits only a change', functi
     expect(DB::table('audit_logs')->orderBy('id')->pluck('summary')->all())->toBe(['Marked completed', null]);
 });
 
+it('undoes a Cancelled back to Pending with no reason left behind (ADR-085)', function () {
+    $this->putJson("/api/follow-ups/{$this->today}/status", ['status' => 'cancelled', 'reason' => 'Parent asked'])->assertOk()->assertJsonPath('data.statusReason', 'Parent asked');
+    $this->putJson("/api/follow-ups/{$this->today}/status", ['status' => 'pending'])->assertOk()
+        ->assertJsonPath('data.status', 'pending')->assertJsonPath('data.statusReason', null);
+});
+
 it('reschedules a missed follow-up once, writing it Missed, and hides it from the list', function () {
     $this->postJson("/api/follow-ups/{$this->today}/reschedule", ['followUpDate' => '2026-11-20'])->assertConflict()->assertJsonPath('rule', 'follow_up_state');
     $this->postJson("/api/follow-ups/{$this->stale}/reschedule", ['followUpDate' => '2026-11-09'])->assertUnprocessable();
