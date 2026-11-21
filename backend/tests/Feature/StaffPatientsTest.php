@@ -70,6 +70,11 @@ it('archives staff with a reason, lists and searches active staff by number or n
     $this->getJson('/api/personnel')->assertJsonCount(1, 'data');
     $this->getJson('/api/personnel?includeArchived=1')->assertJsonCount(2, 'data');
     expect(DB::table('audit_logs')->where('action_type', 'archive')->value('target_type'))->toBe('staff');
+
+    $this->postJson("/api/personnel/{$id}/restore")->assertOk()->assertJsonPath('data.archived', false);
+    $this->getJson('/api/personnel')->assertJsonCount(2, 'data');
+    expect(DB::table('audit_logs')->where('summary', 'Restored from the archive')->value('target_type'))->toBe('staff');
+    $this->postJson("/api/personnel/{$id}/restore")->assertConflict()->assertJsonPath('rule', 'not_archived');
 });
 
 it('searches students and staff in one box, labelled and in last-name order', function () {

@@ -113,6 +113,14 @@ final class StudentController
         return response()->json(['data' => $this->students->archive($id, $request->string('reason')->value(), $user->id, $user->role)]);
     }
 
+    /** Undo of an archive (ADR-085). */
+    public function restore(Request $request, int $id): JsonResponse
+    {
+        $user = AuthController::user($request);
+
+        return response()->json(['data' => $this->students->restore($id, $user->id, $user->role)]);
+    }
+
     public function verifyContact(Request $request, int $id, int $index): JsonResponse
     {
         $request->validate(['verified' => ['boolean']]);

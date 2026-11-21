@@ -183,6 +183,7 @@ Route::middleware(['auth:sanctum', 'session.fixed', 'session.idle', 'account.act
         Route::post('students/import', [StudentController::class, 'import']);
         Route::put('students/{id}', [StudentController::class, 'update'])->whereNumber('id');
         Route::post('students/{id}/archive', [StudentController::class, 'archive'])->whereNumber('id');
+        Route::post('students/{id}/restore', [StudentController::class, 'restore'])->whereNumber('id');
         Route::post('students/{id}/emergency-contacts/{index}/verify', [StudentController::class, 'verifyContact'])->whereNumber(['id', 'index']);
 
         // Staff patients: the Staff role only (ADR-043 item 9).
@@ -195,6 +196,7 @@ Route::middleware(['auth:sanctum', 'session.fixed', 'session.idle', 'account.act
         Route::get('personnel/{id}', [PersonnelController::class, 'show'])->whereNumber('id');
         Route::put('personnel/{id}', [PersonnelController::class, 'update'])->whereNumber('id');
         Route::post('personnel/{id}/archive', [PersonnelController::class, 'archive'])->whereNumber('id');
+        Route::post('personnel/{id}/restore', [PersonnelController::class, 'restore'])->whereNumber('id');
         Route::post('personnel/{id}/emergency-contacts/{index}/verify', [PersonnelController::class, 'verifyContact'])->whereNumber(['id', 'index']);
         Route::post('patients/search', [PersonnelController::class, 'searchPatients']);
         Route::get('archive/staff', [ArchiveController::class, 'staff']);

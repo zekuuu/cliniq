@@ -9,6 +9,7 @@ use App\Shared\AuditLog\AuditEvent;
 use App\Shared\AuditLog\AuditLogger;
 use App\Shared\AuditLog\AuditTarget;
 use App\Shared\AuditLog\DatabaseAuditLogger;
+use App\Shared\Http\BusinessRuleViolation;
 use App\Shared\Sequences\Sequences;
 use App\Shared\Support\ClinicTime;
 use App\Shared\Support\PatientFields;
@@ -171,6 +172,30 @@ final class PersonnelService
             $this->audit->record(new AuditEvent(
                 actorId: (string) $userId, actorRole: 'staff', action: AuditAction::Archive, targetType: AuditTarget::Staff,
                 targetId: (string) $id, targetLabel: null, at: $now, subjectPersonnelId: (string) $id,
+            ));
+        });
+
+        return $this->find($id)->toArray();
+    }
+
+    /**
+     * Takes a staff record back out of the archive (ADR-085, the Undo on the archive toast; ADR-069).
+     * Audited as an update, so the log keeps the archive and the restore.
+     *
+     * @return array<string, mixed>
+     */
+    public function restore(int $id, int $userId): array
+    {
+        if (DB::table('personnel')->where('id', $id)->value('archived_at') === null) {
+            $this->find($id);
+            throw new BusinessRuleViolation('not_archived', 'This staff record is not archived.');
+        }
+        DB::transaction(function () use ($id, $userId): void {
+            DB::table('personnel')->where('id', $id)->update(['archived_at' => null, 'archived_by_user_id' => null, 'archive_reason' => null, 'archived_school_year' => null]);
+            $this->audit->record(new AuditEvent(
+                actorId: (string) $userId, actorRole: 'staff', action: AuditAction::Update, targetType: AuditTarget::Staff,
+                targetId: (string) $id, targetLabel: null, at: CarbonImmutable::now(), subjectPersonnelId: (string) $id,
+                summary: 'Restored from the archive',
             ));
         });
 

@@ -232,6 +232,30 @@ final class StudentService
     }
 
     /**
+     * Takes a student back out of the archive (ADR-085, the Undo on the archive toast; ADR-047 "can be
+     * restored"). Audited as an update, so the log keeps the archive and the restore.
+     *
+     * @return array<string, mixed>
+     */
+    public function restore(int $id, int $userId, string $role): array
+    {
+        if (DB::table('students')->where('id', $id)->value('archived_at') === null) {
+            $this->find($id);
+            throw new BusinessRuleViolation('not_archived', 'This student record is not archived.');
+        }
+        DB::transaction(function () use ($id, $userId, $role): void {
+            DB::table('students')->where('id', $id)->update(['archived_at' => null, 'archived_by_user_id' => null, 'archive_reason' => null, 'archived_school_year' => null]);
+            $this->audit->record(new AuditEvent(
+                actorId: (string) $userId, actorRole: $role, action: AuditAction::Update, targetType: AuditTarget::Student,
+                targetId: (string) $id, targetLabel: null, at: CarbonImmutable::now(), subjectStudentId: (string) $id,
+                summary: 'Restored from the archive',
+            ));
+        });
+
+        return $this->show($id);
+    }
+
+    /**
      * Marks one emergency contact verified or unverified (Module 2: "Mark each contact number as verified/unverified").
      * `$index` is the contact's place in the list, 0 being the primary.
      *

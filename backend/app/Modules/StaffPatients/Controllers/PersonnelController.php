@@ -89,6 +89,12 @@ final class PersonnelController
         return response()->json(['data' => $this->personnel->archive($id, $request->string('reason')->value(), AuthController::user($request)->id)]);
     }
 
+    /** Undo of an archive (ADR-085). */
+    public function restore(Request $request, int $id): JsonResponse
+    {
+        return response()->json(['data' => $this->personnel->restore($id, AuthController::user($request)->id)]);
+    }
+
     public function verifyContact(Request $request, int $id, int $index): JsonResponse
     {
         $request->validate(['verified' => ['boolean']]);

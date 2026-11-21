@@ -122,6 +122,22 @@ it('archives with a reason and the school year, never deleting', function () {
     expect(DB::table('audit_logs')->where('action_type', 'archive')->count())->toBe(1);
 });
 
+it('restores an archived student (the Undo, ADR-085), audited as an update; refuses one not archived', function () {
+    signIn($this->staff);
+    $id = createStudent();
+    $this->postJson("/api/students/{$id}/restore")->assertConflict()->assertJsonPath('rule', 'not_archived');
+    $this->postJson("/api/students/{$id}/archive", ['reason' => 'Transferred'])->assertOk();
+
+    $this->postJson("/api/students/{$id}/restore")->assertOk()->assertJsonPath('data.archived', false)
+        ->assertJsonPath('data.archiveReason', null)->assertJsonPath('data.archivedSchoolYear', null);
+    $this->postJson('/api/students/query', [])->assertJsonCount(1, 'data');
+    expect(DB::table('audit_logs')->where('action_type', 'update')->value('summary'))->toBe('Restored from the archive')
+        ->and(DB::table('audit_logs')->where('action_type', 'archive')->count())->toBe(1);
+
+    signIn($this->admin);
+    $this->postJson("/api/students/{$id}/restore")->assertForbidden();
+});
+
 it('searches active students by LRN prefix first, then by every word of the name', function () {
     signIn($this->staff);
     createStudent(['lrn' => '200000000001', 'firstName' => 'José', 'lastName' => 'Reyes']);
