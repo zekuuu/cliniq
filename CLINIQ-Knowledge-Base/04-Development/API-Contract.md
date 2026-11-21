@@ -368,7 +368,7 @@ All read-only, no audit. Text-only lists, safe for both roles.
 - Roles: S, A. A read, sent as `POST` because `search` can hold LRN digits.
 - Request: `search`, `gradeLevel`, `includeArchived`, `limit`.
 - Response: `StudentListRow[]`, by last, first and middle name (ADR-064); masked LRN; no birthdate, no health fields, no contacts (Q2).
-- Copies: `listStudents` (`api.ts:633`); tests: `AppRoutes`, `AuditLogPage`, `Birthdate`, `ClinicRulesDecisions` and 2 more. Every word of the search in the full name (ADR-064), or an all-digit search matches the LRN prefix.
+- Copies: `listStudents` (`api.ts:633`); tests: `AppRoutes`, `AuditLogPage`, `Birthdate`, `ClinicRulesDecisions` and 2 more. Every word of the search in the full name (ADR-064), or an all-digit search matches the LRN prefix or, up to 4 digits, the LRN's last 4 (ADR-087).
 
 #### `POST /api/students/search`
 - Roles: S.
@@ -999,7 +999,7 @@ Each one is business logic the backend must copy exactly, with its source. Tests
 | Age in whole years, never stored; usual age for a grade; soft note | `lib/age.ts` |
 | Record complete: name, grade, sex, at least one contact with name, relationship and phone | `selectors.ts` `missingRequiredFields` |
 | Completing a flagged record resolves its review and credits the saver | `api.ts:815-824` |
-| Student search: LRN prefix first, every word in the full name, capped, active only | `selectors.ts` `searchStudents` |
+| Student search: LRN prefix or shown last 4 (ADR-087) first, every word in the full name, capped, active only | `selectors.ts` `searchStudents` |
 | Staff search: Staff No. or its digits; a query with no digit is a name search | `selectors.ts` `searchPersonnel` |
 | Names: first, last, optional middle; full name built on read; sort by last, first, middle; search by every word (ADR-064) | `lib/personName.ts` |
 | Combined patient search | `selectors.ts` `searchPatients` |
