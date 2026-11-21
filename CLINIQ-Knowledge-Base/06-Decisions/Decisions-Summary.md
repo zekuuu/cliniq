@@ -329,3 +329,11 @@ Every action's result (a save, a status change, a copy, a backup, sign out) show
 ### ADR-084: Nothing is given beyond the stock on hand, and every action gets its own toast
 
 A visit, an incident or the Dispense page can no longer give more than the usable stock: the server refuses it, the medicines-given stepper stops at the stock with an error line, and the picker disables out-of-stock items. Inventory shows "Out of stock" instead of "Below zero" and never a negative count. This replaces ADR-018's "below zero warns, never blocks". Toasts are no longer merged by their text, so each action stacks its own toast and closes on time; an id only turns a loading toast into its result. This replaces that sentence of ADR-083. Friday, November 20, 2026 — 20:03 PHT. [ADR-084](ADR-084-No-Dispensing-Beyond-Stock-And-One-Toast-Per-Action.md)
+
+### ADR-085: An Undo on the toast for reversible actions, and archived records can be restored
+
+A reversible action's success toast carries an Undo button for its 8 seconds: account and backup-location enable/disable, Sports Report archive, emergency contact verify/unverify, follow-up status, and student and staff archive. Undo sends the reverse request, so the audit log keeps both entries. New Staff-only routes restore an archived student or staff record ("Restored from the archive"). A follow-up set back to Pending or Completed loses its old reason. One-way actions (approvals, entered in error, school year, stock, backups) get no Undo.
+
+### ADR-086: A search box in the top bar finds a student or staff member and opens the profile
+
+Staff get a search box in the top bar (from 1280 px wide) that finds active students by LRN or name and staff by Staff No. or name, using New Visit's patient search (8 results, masked numbers, nothing medical, 250 ms typing pause). Picking a result opens the profile. The Admin gets no box. No API change. Sunday, November 22, 2026 — 01:59 PHT. [ADR-086](ADR-086-Top-Bar-Search-For-Students-And-Staff.md)
