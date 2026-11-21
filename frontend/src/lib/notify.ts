@@ -23,7 +23,11 @@ export const ERROR_MS = 6000
 export const ACTION_MS = 8000
 
 export interface NotifyOptions {
-  /** One toast per id: pressing a button three times shows one toast. Defaults to the message. */
+  /**
+   * Turns the `loading` toast with this id into the result. Otherwise ignored: every action gets its
+   * own toast, so results stack (ADR-084; ADR-083 merged toasts by id and text, which hid repeated
+   * results and kept a merged toast on screen after its countdown line ran out).
+   */
   id?: string
   description?: string
   action?: { label: string; onClick: () => void }
@@ -38,11 +42,15 @@ const DEFAULT_MS: Record<Kind, number> = {
   warning: ERROR_MS,
 }
 
-function show(kind: Kind, message: string, options: NotifyOptions = {}) {
+/** Ids of `loading` toasts still waiting for their result. */
+const pending = new Set<string>()
+
+function show(kind: Kind, message: string, { id, ...options }: NotifyOptions = {}) {
   const duration = options.duration ?? (options.action ? ACTION_MS : DEFAULT_MS[kind])
+  const result = id !== undefined && pending.delete(id)
   return toast[kind](message, {
     ...options,
-    id: options.id ?? `${kind}:${message}`,
+    ...(result ? { id } : {}),
     duration,
     // The coloured line along the bottom runs for exactly this long (index.css, "Toasts").
     style: { '--toast-ms': `${duration}ms` } as CSSProperties,
@@ -98,10 +106,12 @@ export const notify = {
   apiError: (error: unknown, fallback: string, options?: NotifyOptions) =>
     show('error', errorMessage(error, fallback), options),
   /** Validation that stopped a submit; the field messages stay inline. */
-  checkFields: (message = 'Please check the highlighted fields.') =>
-    show('error', message, { id: 'check-fields' }),
+  checkFields: (message = 'Please check the highlighted fields.') => show('error', message),
   /** A slow action. Pass the same `id` to `success`/`error` afterwards to turn it into the result. */
-  loading: (message: string, options: { id: string }) => toast.loading(message, options),
+  loading: (message: string, options: { id: string }) => {
+    pending.add(options.id)
+    return toast.loading(message, options)
+  },
   /** Loading, then the result, in one toast. */
   promise<T>(
     promise: Promise<T>,
@@ -112,7 +122,7 @@ export const notify = {
       error: string
     },
   ): Promise<T> {
-    toast.loading(messages.loading, { id: messages.id })
+    notify.loading(messages.loading, { id: messages.id })
     return promise.then(
       (value) => {
         const text =
@@ -126,5 +136,9 @@ export const notify = {
       },
     )
   },
-  dismiss: (id?: string) => toast.dismiss(id),
+  dismiss: (id?: string) => {
+    if (id === undefined) pending.clear()
+    else pending.delete(id)
+    return toast.dismiss(id)
+  },
 }

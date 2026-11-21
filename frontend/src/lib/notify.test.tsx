@@ -58,12 +58,19 @@ describe('errorMessage (ADR-083)', () => {
 })
 
 describe('notify', () => {
-  it('shows one toast per id, however often the action repeats', async () => {
+  it('stacks one toast per action, even with the same text or id (ADR-084)', async () => {
     notify.success('Visit recorded', { id: 'visit-create' })
     notify.success('Visit recorded', { id: 'visit-create' })
     notify.success('Visit recorded')
-    notify.success('Visit recorded')
-    await waitFor(() => expect(screen.getAllByText('Visit recorded')).toHaveLength(2))
+    await waitFor(() => expect(screen.getAllByText('Visit recorded')).toHaveLength(3))
+  })
+
+  it('closes each toast on its own after its time on screen', async () => {
+    notify.success('Item restocked', { duration: 300 })
+    expect(await screen.findByText('Item restocked')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('Item restocked')).not.toBeInTheDocument(), {
+      timeout: 2000,
+    })
   })
 
   it('turns the loading toast into the result, by the same id', async () => {
