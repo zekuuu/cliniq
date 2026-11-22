@@ -204,7 +204,7 @@ function anchors(text) {
     [/Backend:? (is )?not (started|built)|backend \(planned\)/i, 'backend not started'],
   ]
   const HISTORY = /\b(no|not|never|removed|replaced|replaces|dropped|instead|was|were|formerly|old|older|earlier|no longer|superseded|reversed|rejected|out of scope|ADR-0(27|28|73|74|79))\b/i
-  const skip = (p) => p.includes('/06-Decisions/') || p.includes('/09-References/Canonical-Documents/CLINIQ_Review_of_Related_Systems') || p.startsWith('.claude/')
+  const skip = (p) => p.includes('/06-Decisions/') || p.includes('/09-References/Canonical-Documents/CLINIQ_Review_of_Related_Systems') || p.includes('/10-Project-Documents/') || p.startsWith('.claude/')
   const bad = []
   for (const file of tracked.filter((p) => !skip(p))) {
     prose(read(file)).forEach((l, i) => {

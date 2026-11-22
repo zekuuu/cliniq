@@ -9,7 +9,8 @@
         "docs:check": "node CLINIQ-Knowledge-Base/04-Development/tools/docs-check.mjs",
         "docs:trace": "node CLINIQ-Knowledge-Base/04-Development/tools/docs-trace.mjs",
         "docs:diagrams": "node CLINIQ-Knowledge-Base/04-Development/tools/docs-diagrams.mjs",
-        "docs:adrs": "node CLINIQ-Knowledge-Base/04-Development/tools/docs-adr-index.mjs"
+        "docs:adrs": "node CLINIQ-Knowledge-Base/04-Development/tools/docs-adr-index.mjs",
+        "docs:documents": "node CLINIQ-Knowledge-Base/04-Development/tools/docs-documents-build.mjs"
     },
     "keywords": [],
     "author": "",
