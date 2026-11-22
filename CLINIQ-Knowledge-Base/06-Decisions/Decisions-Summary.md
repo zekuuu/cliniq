@@ -224,6 +224,8 @@ The weekly breakdown now follows the Activity calendar: Sunday to Saturday, clip
 
 ### ADR-056: Backend preparation: Sanctum SPA cookie mode, a separate `backend` branch, nothing wired to the frontend, and no migrations before the ERD is approved
 
+**Current status (Wednesday, November 18, 2026 — ADR-081):** this is historical preparation context. `main` now holds the backend and its connected frontend; new work uses a short `feat/*` branch from `main`. The approved ERD released the migrations, and the backend implements the API Contract.
+
 The backend signs the browser app in with Sanctum's cookie mode (7-day session, CORS from one explicit origin with credentials). All backend work happens on a branch called `backend`, changes only `backend/`, and is not connected to the frontend yet. The first round is the foundation only (scaffold, modular folders, configuration, CORS, middleware, one error format, the audit-log service contract, a health route, tests); the ERD is reviewed first and no migration is built until the team approves it. Zean, in chat, Saturday, October 31, 2026 — 18:10 PHT. [ADR-056](ADR-056-Backend-Preparation-Sanctum-SPA-Cookie-Mode-Own-Branch-Nothing-Wired-No-Migrations-Before-ERD-Approval.md)
 
 ### ADR-057: Backend answers: fixed 7-day session, new error codes, deferred HTTPS, masked LRN, retention, and the ERD approved
