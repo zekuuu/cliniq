@@ -1680,7 +1680,11 @@ The following data validation rules are established for CLINIQ, which will be ap
 <tr><td><b>DR-012</b></td><td>Birthdate shall be optional and shall not be in the future. The student’s age shall be calculated from the birthdate and not stored. The system shall hold no personal phone number for the student.</td></tr>
 <tr><td><b>DR-013</b></td><td>When a birthdate is entered, the system shall show a non-blocking note if the student’s age is far from the usual age for the grade. The distance is a configurable number of years; the starting value is 3.</td></tr>
 <tr><td><b>DR-014</b></td><td>Allergy and condition fields shall be free text. An empty field shall display “None recorded”, and the system shall not infer that a student has no allergies or conditions.</td></tr>
-<tr><td><b>DR-015</b></td><td>Student search shall match name words across the name parts, ignoring case and accents and tolerating spacing differences, and shall sort by last, first, and middle name. A search that could contain an LRN shall not place it in a URL.</td></tr>
+<tr><td><b>DR-015</b></td><td>
+
+Student search shall match name words across the name parts, ignoring case and accents and tolerating spacing differences, and shall sort by last, first, and middle name. **$\textcolor{green}{\text{Typed LRN digits shall match the start of the LRN or, for up to four digits, its last four digits.}}$** A search that could contain an LRN shall not place it in a URL.
+
+</td></tr>
 </table>
 
 **Staff patient records**
@@ -1733,7 +1737,11 @@ The following data validation rules are established for CLINIQ, which will be ap
 <table>
 <tr><th>ID</th><th>Requirement</th></tr>
 <tr><td><b>DR-042</b></td><td>Each inventory item shall carry a name, category, unit, low-stock threshold, and the stock received in batches. Each batch shall carry its quantity, received date, and an expiration date or an explicit no-expiry confirmation. The item’s stock shall be derived from its batches.</td></tr>
-<tr><td><b>DR-043</b></td><td>Dispensing shall decrease stock by the entered quantity, using the usable batch with the earliest expiration date first, and log the item, quantity, batch allocation, linked visit or incident (if any), staff member, and timestamp. An item with only expired stock shall not be dispensable. If the usable batches cannot cover the quantity, the system shall warn and book the shortfall to the last usable batch.</td></tr>
+<tr><td><b>DR-043</b></td><td>
+
+Dispensing shall decrease stock by the entered quantity, using the usable batch with the earliest expiration date first, and log the item, quantity, batch allocation, linked visit or incident (if any), staff member, and timestamp. An item with only expired stock shall not be dispensable. If the usable batches cannot cover the quantity, the system shall ~~$\textcolor{red}{\text{warn and book the shortfall to the last usable batch}}$~~ **$\textcolor{green}{\text{refuse the dispense and record nothing}}$**.
+
+</td></tr>
 <tr><td><b>DR-044</b></td><td>Restocking shall be a separate, manually initiated action that records a positive quantity and adds a new batch with its own received date and expiration date. Editing an item shall not overwrite batch dates or stock.</td></tr>
 <!-- p.63 -->
 <tr><td><b>DR-045</b></td><td>The system shall show usable, expired, and total stock separately. An item shall be flagged low when its usable stock is at or below its low-stock threshold. The near-expiry and expired checks shall run independently, and the flags shall be shown as distinct badges.</td></tr>
@@ -1927,7 +1935,11 @@ Maintains student and staff patient records, imports, archiving, and the school 
 <tr><td><b>FR-011</b></td><td>The system shall refuse an LRN that is not exactly 12 digits or that duplicates another student’s LRN, and shall state which rule failed. An existing LRN shall not be editable in the normal edit form.</td></tr>
 <tr><td><b>FR-012</b></td><td>On saving a student with the same name and grade as an existing record, the system shall warn and let the School Clinician confirm or cancel. A name correction shall require a reason.</td></tr>
 <tr><td><b>FR-013</b></td><td>When a birthdate is entered, the system shall show the non-blocking note described in DR-013.</td></tr>
-<tr><td><b>FR-014</b></td><td>The School Clinician shall be able to look up a student by LRN or name, using a search that tolerates case, accents, and spacing, and shall be able to view the student list.</td></tr>
+<tr><td><b>FR-014</b></td><td>
+
+The School Clinician shall be able to look up a student by LRN or name, using a search that tolerates case, accents, and spacing, and shall be able to view the student list. **$\textcolor{green}{\text{A search field in the top bar shall find an active student or staff patient and open the profile.}}$**
+
+</td></tr>
 <!-- p.72 -->
 <tr><td><b>FR-015</b></td><td>The School Clinician shall be able to record and order emergency contacts, mark each as verified or unverified, and record allergies and conditions. After an unreachable call, the system shall re-flag the contact for verification.</td></tr>
 <tr><td><b>FR-016</b></td><td>The system shall list student and staff records that need review in incomplete-records queues, and shall let the School Clinician resolve each item, logging who resolved it and when.</td></tr>
@@ -1935,7 +1947,11 @@ Maintains student and staff patient records, imports, archiving, and the school 
 <tr><td><b>FR-018</b></td><td>The system shall provide one patient picker offering students and staff patients wherever a visit, incident, or dispensing record needs a patient.</td></tr>
 <tr><td><b>FR-019</b></td><td>The School Clinician and the Admin shall be able to open a student profile, which shows the visit history read-only; the Admin shall see it without links to visit details. Only the School Clinician shall be able to open a staff profile.</td></tr>
 <tr><td><b>FR-020</b></td><td>The School Clinician shall be able to print the Student Health Record.</td></tr>
-<tr><td><b>FR-021</b></td><td>The School Clinician shall be able to archive a student or staff record with a reason. The system shall refuse to archive without a reason and shall exclude archived records from active lists unless they are explicitly included.</td></tr>
+<tr><td><b>FR-021</b></td><td>
+
+The School Clinician shall be able to archive a student or staff record with a reason. The system shall refuse to archive without a reason and shall exclude archived records from active lists unless they are explicitly included. **$\textcolor{green}{\text{For eight seconds after an archive, the system shall offer an Undo that restores the record.}}$**
+
+</td></tr>
 <tr><td><b>FR-022</b></td><td>The Archive shall provide a read-only, school-year-indexed view of Students, Staff (School Clinician only), Reports by month, and the Audit Log.</td></tr>
 <tr><td><b>FR-023</b></td><td>The School Clinician shall be able to import the yearly student list by selecting a CSV file, mapping columns, previewing, and applying. Before applying, the system shall show the students missing from the list, and on applying it shall archive them with the import reason.</td></tr>
 <tr><td><b>FR-024</b></td><td>The School Clinician shall be able to import a staff list the same way. The system shall flag and skip unknown Staff Nos., ambiguous matches, and repeated rows, and shall audit the applied changes as counts.</td></tr>
@@ -1977,7 +1993,11 @@ Tracks medicine and supply stock in batches and links usage to clinical records.
 <tr><th>ID</th><th>Requirement</th></tr>
 <tr><td><b>FR-042</b></td><td>The School Clinician shall be able to add, edit, archive, search, and filter inventory items, and open an item’s detail.</td></tr>
 <tr><td><b>FR-043</b></td><td>The School Clinician shall be able to restock an item by adding a batch. The system shall refuse a quantity that is not positive and a batch with neither an expiration date nor an explicit no-expiry confirmation.</td></tr>
-<tr><td><b>FR-044</b></td><td>The School Clinician shall be able to dispense an item from the Dispense screen or from a visit or incident. The system shall refuse to dispense an item that has only expired stock, and shall warn when usable batches cannot cover the quantity.</td></tr>
+<tr><td><b>FR-044</b></td><td>
+
+The School Clinician shall be able to dispense an item from the Dispense screen or from a visit or incident. The system shall refuse to dispense an item that has only expired stock, and shall ~~$\textcolor{red}{\text{warn when usable batches cannot cover the quantity}}$~~ **$\textcolor{green}{\text{refuse a quantity that its usable batches cannot cover}}$**.
+
+</td></tr>
 <tr><td><b>FR-045</b></td><td>The School Clinician shall be able to adjust stock for a correction or disposal. The system shall refuse an adjustment without a <!-- p.75 --> reason or one that takes a batch below zero, and shall flag a large write-off in the audit log.</td></tr>
 <tr><td><b>FR-046</b></td><td>The system shall show usable, expired, and total stock separately, and shall flag low, near-expiry, and expired stock with separate indicators and list filters.</td></tr>
 <tr><td><b>FR-047</b></td><td>The system shall provide a stock movement history showing the transaction, actor, time, and clinical link.</td></tr>

@@ -1,6 +1,46 @@
 # What changed
 
-Last updated: Sunday, November 22, 2026 — 10:44 PHT · `main` cf4ea9c
+Last updated: Sunday, November 22, 2026 — 15:16 PHT · `main` 9da38fa
+
+## Sunday, November 22, 2026 — 15:16 PHT · main 9da38fa
+
+### Project Plan
+
+**5.1 Requirements, FR-07 Inventory** (p. 26). Because: ADR-084 (no dispensing beyond the usable stock), ADR-068 (the Adjust Stock note is optional).
+
+> ~~$\textcolor{red}{\text{Warn, but do not block, a dispense that would take stock below zero}}$~~ **$\textcolor{green}{\text{Refuse a dispense beyond the usable stock}}$**; lock the medicines of a completed incident; add a new batch on restock; and ~~$\textcolor{red}{\text{require a written note for}}$~~ **$\textcolor{green}{\text{flag}}$** a large write-off.
+
+### SRS
+
+**DR-015 Student search** (p. 59). Because: ADR-087 (an LRN search also matches the shown last 4).
+
+> Student search shall match name words across the name parts, ignoring case and accents and tolerating spacing differences, and shall sort by last, first, and middle name. **$\textcolor{green}{\text{Typed LRN digits shall match the start of the LRN or, for up to four digits, its last four digits.}}$** A search that could contain an LRN shall not place it in a URL.
+
+**DR-043 Dispensing** (p. 62). Because: ADR-084.
+
+> If the usable batches cannot cover the quantity, the system shall ~~$\textcolor{red}{\text{warn and book the shortfall to the last usable batch}}$~~ **$\textcolor{green}{\text{refuse the dispense and record nothing}}$**.
+
+**FR-014 Student lookup** (p. 71). Because: ADR-086 (top-bar search for students and staff).
+
+> The School Clinician shall be able to look up a student by LRN or name, using a search that tolerates case, accents, and spacing, and shall be able to view the student list. **$\textcolor{green}{\text{A search field in the top bar shall find an active student or staff patient and open the profile.}}$**
+
+**FR-021 Archive** (p. 72). Because: ADR-085 (Undo on the archive toast restores the record).
+
+> The School Clinician shall be able to archive a student or staff record with a reason. The system shall refuse to archive without a reason and shall exclude archived records from active lists unless they are explicitly included. **$\textcolor{green}{\text{For eight seconds after an archive, the system shall offer an Undo that restores the record.}}$**
+
+**FR-044 Dispense** (p. 74). Because: ADR-084.
+
+> The School Clinician shall be able to dispense an item from the Dispense screen or from a visit or incident. The system shall refuse to dispense an item that has only expired stock, and shall ~~$\textcolor{red}{\text{warn when usable batches cannot cover the quantity}}$~~ **$\textcolor{green}{\text{refuse a quantity that its usable batches cannot cover}}$**.
+
+## Sunday, November 22, 2026 — 14:29 PHT · main 9da38fa
+
+### Project Plan
+
+No changes.
+
+### SRS
+
+No changes.
 
 ## Sunday, November 22, 2026 — 10:44 PHT · Baseline
 
