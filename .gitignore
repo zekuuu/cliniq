@@ -45,3 +45,7 @@ service-account*.json
 .npmrc
 .pypirc
 token.json
+
+# Others
+*.log
+/frontend/public/sources
