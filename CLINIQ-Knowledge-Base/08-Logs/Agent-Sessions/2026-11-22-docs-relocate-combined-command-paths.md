@@ -1,0 +1,11 @@
+Date/Day/Time: Sunday, November 22, 2026 — 14:14 PHT
+Agent: Codex (GPT-5)
+Task: Relocate generated Project Plan and SRS copies and align the live documentation commands.
+Status: Completed
+Prompt/Request: "refactor Project-Plan.md and SRS.md move to its folder then number 00- then add Combined at the start. Then revise the instructions in all /update-docs and /apply-docs to change paths and the names"; later: "Apply all command edits to all commands available across agents" and "remove the /project-documents-markdown".
+Files Modified: `04-Development/tools/docs-documents-build.mjs`; `10-Project-Documents/README.md`; renamed `10-Project-Documents/Project-Plan.md` to `Project-Plan/00-Combined-Project-Plan.md`; renamed `10-Project-Documents/SRS.md` to `SRS/00-Combined-SRS.md`; `08-Logs/Main-Sync-Log.md`; `08-Logs/Frontend-Changelog.md`; this session log. Outside the repository: all live `/apply-docs` and `/update-docs` copies under `.agents`, `.codex`, and `.claude`; deleted the requested obsolete `.agents` `/update-docs` backup and all live `/project-documents-markdown` command folders.
+Changes Made: Combined files now live with their source sections under the `00-Combined-*` names. The builder excludes its own generated output from section input, emits the new paths, and leaves asset paths relative to their document folder. Apply/Update Docs instructions name the new generated locations; the three Apply Docs copies are byte-identical. The Convert command was removed on request.
+Reason: Keep generated-document paths and all currently available agent instructions aligned, while preventing the builder from consuming its own output.
+Testing Performed: `npm run docs:documents`; `npm run docs:documents -- --check` (both documents pass); `npm run docs:check` (all checks pass); command-root search confirmed no live `/project-documents-markdown` command remains; Apply Docs SHA-256 hashes match; `git diff --check` passed.
+Known Issues: Claude retains a synced-plugin `/update-docs` copy in addition to the newly installed primary copy; a future plugin sync may replace the synced copy. The pre-existing untracked `.claude/settings.local.json` was not touched.
+Next Steps: Review and commit the repository changes if desired; re-check the Claude-synced copy after future plugin updates.

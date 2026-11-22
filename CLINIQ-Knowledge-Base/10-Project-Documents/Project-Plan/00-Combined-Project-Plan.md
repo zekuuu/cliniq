@@ -206,7 +206,7 @@ The project does not cover;
 
 Cavite State University, through the College of Engineering and Information Technology (CEIT), supervises the project as the parent organization, and the clinic of Mendez Christian Academy uses the system as the customer. The team answers to the School Clinician for requirements and acceptance and to the course adviser for academic milestones. Figure 1 and Table 1 show the external parties. Figure 2 shows the Organizational structure of Mendez Christian Academy.
 
-![Figure 1. External Interface](Project-Plan/assets/figure-01-external-interface.png)
+![Figure 1. External Interface](assets/figure-01-external-interface.png)
 
 Figure 1. External Interface
 
@@ -261,7 +261,7 @@ flowchart TB
 <tr><td>Outsourced IT provider</td><td>Maintains the clinic workstation and network. Partners in quarterly backup-recovery testing and major hardware issues.</td></tr>
 </table>
 
-![Figure 2. Organizational structure of Mendez Christian Academy](Project-Plan/assets/figure-02-organizational-structure.png)
+![Figure 2. Organizational structure of Mendez Christian Academy](assets/figure-02-organizational-structure.png)
 
 Figure 2. Organizational structure of Mendez Christian Academy
 
@@ -269,7 +269,7 @@ Figure 2. Organizational structure of Mendez Christian Academy
 
 The team has three members: Ghenly B. Tinapay (Project Manager and client liaison), Christian John C. Lugami (System Analyst), and Zean Kurt G. Balboa (Developer/Tester). The structure mirrors the clinic’s own limited manpower and enforces clear roles, no duplicated effort, and standardized handoffs. All members report jointly to the client and to the course adviser, with no separate management layer between the developers and the client.
 
-![Figure 3. Team hierarchy of the CLINIQ project](Project-Plan/assets/figure-03-team-hierarchy.png)
+![Figure 3. Team hierarchy of the CLINIQ project](assets/figure-03-team-hierarchy.png)
 
 Figure 3. Team hierarchy of the CLINIQ project
 
@@ -399,7 +399,7 @@ CLINIQ is developed through evolutionary iterative prototyping (Pressman & Maxim
 
 Each iteration plans the modules from the best-understood or most important requirements, quick-designs their screens, data, and rules, builds or refines them on the previous version with unit and regression tests, demonstrates the result to the School Clinician and staff with sample data, classifies the feedback as fix now, next iteration, or later, and refines the version and requirements. The cycle repeats until the clinic staff accept the prototype (Figure 4).
 
-![Figure 4. Evolutionary iterative prototyping process used for CLINIQ](Project-Plan/assets/figure-04-evolutionary-iterative-prototyping.png)
+![Figure 4. Evolutionary iterative prototyping process used for CLINIQ](assets/figure-04-evolutionary-iterative-prototyping.png)
 
 Figure 4. Evolutionary iterative prototyping process used for CLINIQ
 
@@ -553,7 +553,7 @@ The design of CLINIQ is described through its architecture and wireframe. Figure
 
 The architecture has three tiers: a React and TypeScript single-page application, a Laravel REST API that holds the business rules and sign-in, and a MariaDB database. In development, the frontend runs on the Vite server. In production, the built frontend is copied into the Laravel public folder, and Apache serves everything from one origin, http://localhost. Because the frontend reaches the backend only through the API, moving the backend to a remote host later is a deployment change and not a rewrite.
 
-![Figure 5. System Architecture of the CLINIQ](Project-Plan/assets/figure-05-system-architecture.png)
+![Figure 5. System Architecture of the CLINIQ](assets/figure-05-system-architecture.png)
 
 Figure 5. System Architecture of the CLINIQ
 
@@ -609,163 +609,163 @@ flowchart LR
 
 The figures below are screenshots of the working prototype, built on sample data and reviewed with the client. The interface follows a design system built from the school’s brand colors, a green (#039935) paired with a gold (#EAEA09). Figures 5 to 32 show the Staff screens and Figures 33 to 38 show the Admin/Principal screens. The two longest screens (Incomplete Records and Student Profile) are cropped to their top portion.
 
-![Figure 6. Login screen](Project-Plan/assets/figure-06-login-screen.png)
+![Figure 6. Login screen](assets/figure-06-login-screen.png)
 
 Figure 6. Login screen
 
-![Figure 7. Staff dashboard: Overview](Project-Plan/assets/figure-07-staff-dashboard-overview.png)
+![Figure 7. Staff dashboard: Overview](assets/figure-07-staff-dashboard-overview.png)
 
 Figure 7. Staff dashboard: Overview
 
 <!-- p.32 -->
 
-![Figure 8. Staff dashboard: Trends](Project-Plan/assets/figure-08-staff-dashboard-trends.png)
+![Figure 8. Staff dashboard: Trends](assets/figure-08-staff-dashboard-trends.png)
 
 Figure 8. Staff dashboard: Trends
 
-![Figure 9. Activity calendar](Project-Plan/assets/figure-09-activity-calendar.png)
+![Figure 9. Activity calendar](assets/figure-09-activity-calendar.png)
 
 Figure 9. Activity calendar
 
-![Figure 10. Student list](Project-Plan/assets/figure-10-student-list.png)
+![Figure 10. Student list](assets/figure-10-student-list.png)
 
 Figure 10. Student list
 
 <!-- p.33 -->
 
-![Figure 11. Add student](Project-Plan/assets/figure-11-add-student.png)
+![Figure 11. Add student](assets/figure-11-add-student.png)
 
 Figure 11. Add student
 
-![Figure 12. Student profile (top portion)](Project-Plan/assets/figure-12-student-profile.png)
+![Figure 12. Student profile (top portion)](assets/figure-12-student-profile.png)
 
 Figure 12. Student profile (top portion)
 
 <!-- p.34 -->
 
-![Figure 13. Incomplete student records (top portion)](Project-Plan/assets/figure-13-incomplete-student-records.png)
+![Figure 13. Incomplete student records (top portion)](assets/figure-13-incomplete-student-records.png)
 
 Figure 13. Incomplete student records (top portion)
 
-![Figure 14. Import student list](Project-Plan/assets/figure-14-import-student-list.png)
+![Figure 14. Import student list](assets/figure-14-import-student-list.png)
 
 Figure 14. Import student list
 
-![Figure 15. Staff list](Project-Plan/assets/figure-15-staff-list.png)
+![Figure 15. Staff list](assets/figure-15-staff-list.png)
 
 Figure 15. Staff list
 
 <!-- p.35 -->
 
-![Figure 16. Staff profile](Project-Plan/assets/figure-16-staff-profile.png)
+![Figure 16. Staff profile](assets/figure-16-staff-profile.png)
 
 Figure 16. Staff profile
 
-![Figure 17. Visit log](Project-Plan/assets/figure-17-visit-log.png)
+![Figure 17. Visit log](assets/figure-17-visit-log.png)
 
 Figure 17. Visit log
 
 <!-- p.36 -->
 
-![Figure 18. New visit](Project-Plan/assets/figure-18-new-visit.png)
+![Figure 18. New visit](assets/figure-18-new-visit.png)
 
 Figure 18. New visit
 
-![Figure 19. Visit details](Project-Plan/assets/figure-19-visit-details.png)
+![Figure 19. Visit details](assets/figure-19-visit-details.png)
 
 Figure 19. Visit details
 
 <!-- p.37 -->
 
-![Figure 20. Excuse letter](Project-Plan/assets/figure-20-excuse-letter.png)
+![Figure 20. Excuse letter](assets/figure-20-excuse-letter.png)
 
 Figure 20. Excuse letter
 
-![Figure 21. PE/Sports injury referral](Project-Plan/assets/figure-21-pe-sports-injury-referral.png)
+![Figure 21. PE/Sports injury referral](assets/figure-21-pe-sports-injury-referral.png)
 
 Figure 21. PE/Sports injury referral
 
 <!-- p.38 -->
 
-![Figure 22. Follow-ups](Project-Plan/assets/figure-22-follow-ups.png)
+![Figure 22. Follow-ups](assets/figure-22-follow-ups.png)
 
 Figure 22. Follow-ups
 
-![Figure 23. Incident log](Project-Plan/assets/figure-23-incident-log.png)
+![Figure 23. Incident log](assets/figure-23-incident-log.png)
 
 Figure 23. Incident log
 
-![Figure 24. Report incident: Stage 1](Project-Plan/assets/figure-24-report-incident-stage-1.png)
+![Figure 24. Report incident: Stage 1](assets/figure-24-report-incident-stage-1.png)
 
 Figure 24. Report incident: Stage 1
 
 <!-- p.39 -->
 
-![Figure 25. Complete incident record: Stage 2](Project-Plan/assets/figure-25-complete-incident-record-stage-2.png)
+![Figure 25. Complete incident record: Stage 2](assets/figure-25-complete-incident-record-stage-2.png)
 
 Figure 25. Complete incident record: Stage 2
 
-![Figure 26. Incident report](Project-Plan/assets/figure-26-incident-report.png)
+![Figure 26. Incident report](assets/figure-26-incident-report.png)
 
 Figure 26. Incident report
 
-![Figure 27. Inventory list](Project-Plan/assets/figure-27-inventory-list.png)
+![Figure 27. Inventory list](assets/figure-27-inventory-list.png)
 
 Figure 27. Inventory list
 
 <!-- p.40 -->
 
-![Figure 28. Dispense log (usage history)](Project-Plan/assets/figure-28-dispense-log.png)
+![Figure 28. Dispense log (usage history)](assets/figure-28-dispense-log.png)
 
 Figure 28. Dispense log (usage history)
 
-![Figure 29. Monthly report](Project-Plan/assets/figure-29-monthly-report.png)
+![Figure 29. Monthly report](assets/figure-29-monthly-report.png)
 
 Figure 29. Monthly report
 
-![Figure 30. Sports reports](Project-Plan/assets/figure-30-sports-reports.png)
+![Figure 30. Sports reports](assets/figure-30-sports-reports.png)
 
 Figure 30. Sports reports
 
 <!-- p.41 -->
 
-![Figure 31. Backup verification](Project-Plan/assets/figure-31-backup-verification.png)
+![Figure 31. Backup verification](assets/figure-31-backup-verification.png)
 
 Figure 31. Backup verification
 
-![Figure 32. Audit log](Project-Plan/assets/figure-32-audit-log.png)
+![Figure 32. Audit log](assets/figure-32-audit-log.png)
 
 Figure 32. Audit log
 
-![Figure 33. Settings](Project-Plan/assets/figure-33-settings.png)
+![Figure 33. Settings](assets/figure-33-settings.png)
 
 Figure 33. Settings
 
 <!-- p.42 -->
 
-![Figure 34. Admin dashboard](Project-Plan/assets/figure-34-admin-dashboard.png)
+![Figure 34. Admin dashboard](assets/figure-34-admin-dashboard.png)
 
 Figure 34. Admin dashboard
 
-![Figure 35. Admin: Student list (read-only)](Project-Plan/assets/figure-35-admin-student-list.png)
+![Figure 35. Admin: Student list (read-only)](assets/figure-35-admin-student-list.png)
 
 Figure 35. Admin: Student list (read-only)
 
-![Figure 36. Admin: Reports](Project-Plan/assets/figure-36-admin-reports.png)
+![Figure 36. Admin: Reports](assets/figure-36-admin-reports.png)
 
 Figure 36. Admin: Reports
 
 <!-- p.43 -->
 
-![Figure 37. Admin: User accounts (top portion)](Project-Plan/assets/figure-37-admin-user-accounts.png)
+![Figure 37. Admin: User accounts (top portion)](assets/figure-37-admin-user-accounts.png)
 
 Figure 37. Admin: User accounts (top portion)
 
-![Figure 38. Admin: Add user](Project-Plan/assets/figure-38-admin-add-user.png)
+![Figure 38. Admin: Add user](assets/figure-38-admin-add-user.png)
 
 Figure 38. Admin: Add user
 
-![Figure 38. Admin: Archive](Project-Plan/assets/figure-38-admin-archive.png)
+![Figure 38. Admin: Archive](assets/figure-38-admin-archive.png)
 
 Figure 38. Admin: Archive
 
@@ -777,11 +777,11 @@ Figure 38. Admin: Archive
 
 Figures 39 and 40 show the Gantt chart of the project for Software Engineering I and Software Engineering II.
 
-![Figure 39. Gantt chart: Software Engineering I](Project-Plan/assets/figure-39-gantt-chart-software-engineering-i.png)
+![Figure 39. Gantt chart: Software Engineering I](assets/figure-39-gantt-chart-software-engineering-i.png)
 
 Figure 39. Gantt chart: Software Engineering I
 
-![Figure 40. Gantt chart: Software Engineering II](Project-Plan/assets/figure-40-gantt-chart-software-engineering-ii.png)
+![Figure 40. Gantt chart: Software Engineering II](assets/figure-40-gantt-chart-software-engineering-ii.png)
 
 Figure 40. Gantt chart: Software Engineering II
 

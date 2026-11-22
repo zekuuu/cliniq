@@ -382,7 +382,7 @@ REQ-1:<br>REQ-2:
 
 <!-- p.14 -->
 
-<p><img src="SRS/assets/logo-cvsu.png" alt="Cavite State University logo" height="80"> <img src="SRS/assets/logo-healware.png" alt="HealWare logo" height="80"></p>
+<p><img src="assets/logo-cvsu.png" alt="Cavite State University logo" height="80"> <img src="assets/logo-healware.png" alt="HealWare logo" height="80"></p>
 
 Republic of the Philippines<br>**CAVITE STATE UNIVERSITY**<br>College of Engineering and Information Technology<br>Don Severino delas Alas Campus, Indang, Cavite
 
@@ -558,7 +558,7 @@ DATE: 09/21/2026
 
 <!-- p.21 -->
 
-<p><img src="SRS/assets/logo-cvsu-large.png" alt="Cavite State University logo" height="80"> <img src="SRS/assets/logo-healware.png" alt="HealWare logo" height="80"></p>
+<p><img src="assets/logo-cvsu-large.png" alt="Cavite State University logo" height="80"> <img src="assets/logo-healware.png" alt="HealWare logo" height="80"></p>
 
 Republic of the Philippines<br>**CAVITE STATE UNIVERSITY**<br>College of Engineering and Information Technology<br>Don Severino delas Alas Campus, Indang, Cavite
 
@@ -692,7 +692,7 @@ DATE: 09/21/2026
 
 <!-- p.26 -->
 
-<p><img src="SRS/assets/logo-cvsu.png" alt="Cavite State University logo" height="80"> <img src="SRS/assets/logo-healware.png" alt="HealWare logo" height="80"></p>
+<p><img src="assets/logo-cvsu.png" alt="Cavite State University logo" height="80"> <img src="assets/logo-healware.png" alt="HealWare logo" height="80"></p>
 
 Republic of the Philippines<br>**CAVITE STATE UNIVERSITY**<br>College of Engineering and Information Technology<br>Don Severino delas Alas Campus, Indang, Cavite
 
@@ -854,7 +854,7 @@ CLINIQ interacts with Mendez Christian Academy’s stakeholders as follows:
 
 <!-- p.32 -->
 
-![Figure 1. CLINIQ Components Interconnections.](SRS/assets/figure-01-components-interconnections-draft-1.0.png)
+![Figure 1. CLINIQ Components Interconnections.](assets/figure-01-components-interconnections-draft-1.0.png)
 
 *Figure 1. CLINIQ Components Interconnections.*
 
@@ -1257,7 +1257,7 @@ CLINIQ handles student health information and these requirements protect it in l
 
 <!-- p.45 -->
 
-<p><img src="SRS/assets/logo-cvsu.png" alt="Cavite State University logo" height="80"> <img src="SRS/assets/logo-healware.png" alt="HealWare logo" height="80"></p>
+<p><img src="assets/logo-cvsu.png" alt="Cavite State University logo" height="80"> <img src="assets/logo-healware.png" alt="HealWare logo" height="80"></p>
 
 Republic of the Philippines<br>**CAVITE STATE UNIVERSITY**<br>College of Engineering and Information Technology<br>Don Severino delas Alas Campus, Indang, Cavite
 
@@ -1426,7 +1426,7 @@ CLINIQ interacts with Mendez Christian Academy’s stakeholders as follows:
 
 <!-- p.52 -->
 
-![Figure 1. CLINIQ Components Interconnections.](SRS/assets/figure-01-components-interconnections.png)
+![Figure 1. CLINIQ Components Interconnections.](assets/figure-01-components-interconnections.png)
 
 *Figure 1. CLINIQ Components Interconnections.*
 

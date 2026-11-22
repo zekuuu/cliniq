@@ -1,5 +1,7 @@
 # Changelog
 
+| Sunday, November 22, 2026 — 14:14 PHT | Documentation-tooling refactor: generated Project Plan and SRS copies now live beside their sections as `00-Combined-Project-Plan.md` and `00-Combined-SRS.md`; the builder excludes generated output and keeps asset paths local. Every live `/apply-docs` and `/update-docs` copy across Agents, Codex, and Claude now names the new files. The live `/project-documents-markdown` commands and an obsolete `/update-docs` backup were removed on Zean's request. `docs:documents -- --check`, `docs:check`, and `git diff --check` pass. Not committed. | [session](Agent-Sessions/2026-11-22-docs-relocate-combined-command-paths.md) |
+
 **Backend changes are logged in [`Backend-Changelog.md`](./Backend-Changelog.md), not here** (ADR-056); this file covers the frontend, the documents and the project.
 
 | Sunday, November 22, 2026 — 02:24 PHT | Docs sync of `main` at `1c41f73` (27 commits since `b9fd646`): Start Here digest for ADR-085 to ADR-087; counts 87 ADRs, 133 routes, 154 frontend test files, 257 backend tests (from session logs); Module-Overview, READMEs and the hooks and layouts READMEs; one approved Context Brief line (ADR-085); `docs:check` all pass. Not committed. | `Agent-Sessions/2026-11-22-docs-main-sync-2.md`, `Main-Sync-2026-11-22-2/NOTES.md` |

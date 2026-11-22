@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Builds the combined Project-Plan.md and SRS.md in 10-Project-Documents/ by joining each document's
+// Builds each document's 00-Combined-<document>.md in its section folder by joining its
 // section files (NN-*.md) in order. Deterministic: the same section files always give the same output.
 //
 //   npm run docs:documents               # rebuild the combined files
@@ -19,23 +19,25 @@ import { fileURLToPath } from 'node:url'
 const DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '10-Project-Documents')
 const DOCS = ['Project-Plan', 'SRS']
 const args = process.argv.slice(2)
+const combinedName = (doc) => `00-Combined-${doc}.md`
 
 const sections = (doc) =>
   readdirSync(join(DIR, doc))
-    .filter((f) => /^\d\d-.+\.md$/.test(f))
+    .filter((f) => /^\d\d-.+\.md$/.test(f) && f !== combinedName(doc))
     .sort()
     .map((f) => [f, readFileSync(join(DIR, doc, f), 'utf8').replace(/\r\n/g, '\n').trim()])
 
 function combined(doc) {
   const body = sections(doc)
-    .map(([, text]) => text.replace(/(\]\(|src=")assets\//g, `$1${doc}/assets/`))
+    .map(([, text]) => text)
     .join('\n\n')
   return `<!-- Built from the section files in ${doc}/ by docs-documents-build.mjs. Do not edit. -->\n\n${body}\n`
 }
 
 let failed = 0
 for (const doc of DOCS) {
-  const file = join(DIR, `${doc}.md`)
+  const relativeFile = `${doc}/${combinedName(doc)}`
+  const file = join(DIR, doc, combinedName(doc))
   const want = combined(doc)
   if (args.includes('--check')) {
     let have = ''
@@ -43,11 +45,11 @@ for (const doc of DOCS) {
       have = readFileSync(file, 'utf8').replace(/\r\n/g, '\n')
     } catch {}
     const ok = have === want
-    console.log(`${ok ? 'PASS' : 'FAIL'}  ${doc}.md ${ok ? 'matches its section files' : 'differs from its section files (run npm run docs:documents)'}`)
+    console.log(`${ok ? 'PASS' : 'FAIL'}  ${relativeFile} ${ok ? 'matches its section files' : 'differs from its section files (run npm run docs:documents)'}`)
     if (!ok) failed++
   } else {
     writeFileSync(file, want)
-    console.log(`built ${doc}.md (${sections(doc).length} sections)`)
+    console.log(`built ${relativeFile} (${sections(doc).length} sections)`)
   }
 }
 
