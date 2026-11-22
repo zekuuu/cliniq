@@ -47,7 +47,7 @@ Modules 1 to 5 are the baseline (from the Software Engineering I Technical Docum
 - Prevent reuse of last 5 passwords
 - Enforce minimum 8-character password length
 - Recover a forgotten password with an authenticator app: the username, then a 6-digit code or one of 8 recovery codes, then a new password; the Admin's temporary-password reset is the fallback; no account has an email address (ADR-073, which replaced the email reset of ADR-048)
-- Disabling an account ends its open sessions (ADR-048). **Not built yet** (backend)
+- Disabling an account ends its open sessions (ADR-048): the `EnsureActiveAccount` middleware re-reads the account on every request and refuses a disabled one at once (checked Sunday, November 22, 2026)
 
 **Role-Based Access** *(Admin/Principal only)*
 - Assign role (Staff / Admin-Principal). Add Account starts with **no role selected** ("Select a role", required), so the smallest role needed is chosen on purpose (panel review AC-4)

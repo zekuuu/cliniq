@@ -97,7 +97,7 @@ If your viewer does not draw Mermaid, the same picture is exported as an image: 
 | Student Records, visits, incidents | Sports Report | The students the clinician picks and their visits and incidents in the chosen window; the Admin cannot open it | ADR-034 |
 | User Management | every module | Accounts and roles decide who may see and do what; each role is signed out after its own idle minutes (Staff 60, Admin / Principal 30, both settings) | ADR-033, ADR-038, ADR-048, ADR-078 |
 | every module | Audit Log | Every save, approval, print and opened profile or incident report is recorded with who and when; Staff and the Admin read it | Audit Trail section, ADR-016 |
-| Backup | the whole database | Copies it to each backup location chosen in the system; local only, no cloud. In the frontend phase the mock only records the run | ADR-039, ADR-052 |
+| Backup | the whole database | Copies it to each backup location chosen in the system; local only, no cloud. In mock mode the frontend records a sample run; in API mode it runs the local backend backup flow | ADR-039, ADR-052, ADR-080 |
 
 ## What is not connected, on purpose
 
