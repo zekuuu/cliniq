@@ -26,6 +26,7 @@ _read-first
 .pinpoint/
 # Design tool cache (impeccable)
 .impeccable/
+.claude/settings.local.json
 
 # Database dumps and backups (real data never goes in the repository)
 *.dump
