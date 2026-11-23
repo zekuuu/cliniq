@@ -23,6 +23,8 @@ Databases:
 | `npm run docs:facts` | root | Regenerate the Facts sheet |
 | `npm run docs:check` | root | Check docs: numbers, links, dates, stale features |
 | `npm run docs:adrs` | root | Regenerate the ADR index after an ADR change |
+| `npm run docs:documents` | root | Rebuild the combined Project Plan and SRS copies (markers stripped) |
+| `npm run docs:clear-markers` | root | Clear the reviewed change markers from the Project Plan and SRS section files |
 | `set DB_DATABASE=cliniq_check_pest` then `composer check` | backend | Pint + PHPStan + Pest on a scratch database |
 | `composer test` / `composer check` | backend | ⚠ Without the line above, empties `cliniq_testing` |
 | `php artisan migrate:fresh --seeder="App\Shared\Database\DemoSchoolSeeder" --env=testing --force` | backend | ⚠ Wipe `cliniq_testing` and seed the demo school (five years, to February 28, 2027) |
@@ -72,6 +74,12 @@ Checks the README numbers against a fresh Facts sheet, every Markdown link and a
 
 ### `npm run docs:adrs`
 Regenerates `06-Decisions/ADR-Index.md`. Run it after adding or changing an ADR.
+
+### `npm run docs:documents`
+Rebuilds `00-Combined-Project-Plan.md` and `00-Combined-SRS.md` from the section files in `CLINIQ-Knowledge-Base/10-Project-Documents/`, without the red/green change markers. `-- --check` fails if a combined copy is out of date; `-- --diagrams` redraws the Mermaid figures.
+
+### `npm run docs:clear-markers`
+Removes the red/green change markers from the Project Plan and SRS section files (red words deleted, green words kept). Run it only after the groupmate has reviewed them; the `/clear-doc-markers` command runs it with its checks and logs. `-- --check` fails if any marker is left.
 
 ---
 

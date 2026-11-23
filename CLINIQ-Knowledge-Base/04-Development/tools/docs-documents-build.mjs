@@ -15,6 +15,7 @@ import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { stripMarkers } from './docs-markers.mjs'
 
 const DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '10-Project-Documents')
 const DOCS = ['Project-Plan', 'SRS']
@@ -27,9 +28,10 @@ const sections = (doc) =>
     .sort()
     .map((f) => [f, readFileSync(join(DIR, doc, f), 'utf8').replace(/\r\n/g, '\n').trim()])
 
+// Section files keep /update-docs change markers for review; the combined copies never do.
 function combined(doc) {
   const body = sections(doc)
-    .map(([, text]) => text)
+    .map(([, text]) => stripMarkers(text))
     .join('\n\n')
   return `<!-- Built from the section files in ${doc}/ by docs-documents-build.mjs. Do not edit. -->\n\n${body}\n`
 }
