@@ -70,7 +70,15 @@ Table 9 divides each phase of the Gantt chart into tasks and uses the same numbe
 <tr><td colspan="6"><b>13.Project Plan V.2</b></td></tr>
 <tr><td>13.1</td><td>Finalize most of the paper</td><td>ALL</td><td>Nov 6, 2026</td><td>Nov 19, 2026</td><td>In Progress</td></tr>
 <tr><td colspan="6"><b>14.System Development - Backend</b></td></tr>
-<tr><td>14.1</td><td>Backend Development (API, database migrations on MariaDB, sign-in and audit, module endpoints, reports, and backup; not yet connected to the frontend)</td><td>QA</td><td>Nov 9, 2026</td><td>Nov 20, 2026</td><td>In Progress</td></tr>
+<tr><td>14.1</td><td>
+
+Backend Development (API, database migrations on MariaDB, sign-in and audit, module endpoints, reports, and backup; ~~$\textcolor{red}{\text{not yet connected to the frontend}}$~~ **$\textcolor{green}{\text{connected to the frontend through a mock/API switch, ADR-080}}$**)
+
+</td><td>QA</td><td>Nov 9, 2026</td><td>Nov 20, 2026</td><td>
+
+~~$\textcolor{red}{\text{In Progress}}$~~ **$\textcolor{green}{\text{Completed}}$**
+
+</td></tr>
 <tr><td colspan="6"><b>15.User Acceptance Testing (UAT)</b></td></tr>
 <tr><td>15.1</td><td>Test Preparation and Scenarios (including a baseline measurement of the current documentation time)</td><td>QA</td><td></td><td></td><td>Not started</td></tr>
 <tr><td>15.2</td><td>UAT Execution (the School Clinician tests all modules under real clinic conditions and answers the ISO/IEC 25010 questionnaire)</td><td>QA</td><td></td><td></td><td>Not started</td></tr>

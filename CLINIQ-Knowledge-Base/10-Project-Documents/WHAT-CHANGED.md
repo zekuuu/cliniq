@@ -1,6 +1,35 @@
 # What changed
 
-Last updated: Sunday, November 22, 2026 — 15:16 PHT · `main` 9da38fa
+Last updated: Monday, November 23, 2026 — 18:28 PHT · `main` 0a178b0
+
+## Monday, November 23, 2026 — 18:28 PHT · main 0a178b0
+
+Legend: 🟢 added · 🔴 removed · 🟡 edited · 🔵 diagram changed · 🟣 renumbered or moved · ⚪ needs decision
+
+### Project Plan
+
+🟡 **5.3.1 System Architecture, backend bullet** (p. 30). Because: ADR-080 (mock/API switch), ADR-081 (backend merged into `main`).
+
+```diff
+- The backend has eleven modules, shared services, and three scheduled jobs (backup, holiday sync,
+- and follow-up closing). It is built and tested but not yet connected to the frontend.
++ The backend has eleven modules, shared services, and three scheduled jobs (backup, holiday sync,
++ and follow-up closing). It is built and tested, and the frontend connects to it through a
++ mock/API switch (ADR-080); everything is on `main` (ADR-081).
+```
+
+🟡 **14. System Development — Backend, row 14.1** (p. 47, timeline table). Because: ADR-080, ADR-081.
+
+```diff
+- Backend Development (API, database migrations on MariaDB, sign-in and audit, module endpoints,
+- reports, and backup; not yet connected to the frontend) … In Progress
++ Backend Development (API, database migrations on MariaDB, sign-in and audit, module endpoints,
++ reports, and backup; connected to the frontend through a mock/API switch, ADR-080) … Completed
+```
+
+### SRS
+
+No changes.
 
 ## Sunday, November 22, 2026 — 15:16 PHT · main 9da38fa
 

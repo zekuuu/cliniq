@@ -17,11 +17,7 @@ Each requirement states one behavior that the team can verify through testing. T
 <tr><td>FR-05</td><td><b>Emergency incidents.</b> Support two-stage incident logging, with the essential fields captured first and the details completed afterward. Track hospital referrals, and log each parent-notification attempt with a timestamp and an outcome.</td></tr>
 <!-- p.26 -->
 <tr><td>FR-06</td><td><b>Follow-ups.</b> Manage follow-ups with Pending, Completed, Missed, and Cancelled status, without SMS or push services. Mark a follow-up overdue after three days and close it automatically after seven; these starting values are settings that the School Clinician confirms.</td></tr>
-<tr><td>FR-07</td><td>
-
-<b>Inventory.</b> Deduct medicines and supplies from received batches, earliest-expiring first, with low-stock and near-expiry alerts and explicit disposal of expired stock. ~~$\textcolor{red}{\text{Warn, but do not block, a dispense that would take stock below zero}}$~~ **$\textcolor{green}{\text{Refuse a dispense beyond the usable stock}}$**; lock the medicines of a completed incident; add a new batch on restock; and ~~$\textcolor{red}{\text{require a written note for}}$~~ **$\textcolor{green}{\text{flag}}$** a large write-off. Suggest items tagged for the selected symptom first, without blocking other items.
-
-</td></tr>
+<tr><td>FR-07</td><td><b>Inventory.</b> Deduct medicines and supplies from received batches, earliest-expiring first, with low-stock and near-expiry alerts and explicit disposal of expired stock. Refuse a dispense beyond the usable stock; lock the medicines of a completed incident; add a new batch on restock; and flag a large write-off. Suggest items tagged for the selected symptom first, without blocking other items.</td></tr>
 <tr><td>FR-08</td><td><b>Reports.</b> Generate monthly reports with a weekly breakdown, incident reports, symptom summaries, a monthly inventory sheet, and Sports Reports, each as an A4 printout. The School Clinician prints a report or saves it as a PDF from the print window and sends the Monthly Report to the Principal. The Admin/Principal sees a view-only month list of reports, without printing.</td></tr>
 <tr><td>FR-09</td><td><b>Privacy display.</b> Show only the masked LRN (last four digits), never a name, on multi-student lists and dashboards. Show full identifiers on single-student screens and printouts, and allow full-LRN printouts for Staff only.</td></tr>
 <tr><td>FR-10</td><td><b>Dashboard and calendar.</b> Provide a clinic dashboard with Overview and Trends views (counts, pending records, health trends, a possible-cluster alert, frequent-visitor warnings, and due follow-ups) and a separate activity calendar with school events added by Staff and Admin and national holidays. A monthly holiday sync keeps the holidays current and warns when it is stale. The starting alert values are a frequent visitor at three visits in 14 days and a possible cluster of three students with the same complaint and grade within three days; the School Clinician confirms these values.</td></tr>
@@ -124,7 +120,7 @@ flowchart LR
 
 - Business rules (allergy checks, stock deduction, and approvals) live on the server, so they cannot be bypassed from the browser. Sign-in uses Laravel Sanctum in SPA cookie mode, so the browser stores no API token.
 - Windows Task Scheduler runs the Laravel scheduler every minute, and the daily backup writes a zip file to the locations chosen in the system. MariaDB uses a limited application account that can only insert and read the audit log.
-- The backend has eleven modules, shared services, and three scheduled jobs (backup, holiday sync, and follow-up closing). It is built and tested but not yet connected to the frontend.
+- The backend has eleven modules, shared services, and three scheduled jobs (backup, holiday sync, and follow-up closing). It is built and tested~~$\textcolor{red}{\text{ but not yet connected to the frontend}}$~~ **$\textcolor{green}{\text{, and the frontend connects to it through a mock/API switch (ADR-080); everything is on main (ADR-081)}}$**.
 - If the clinic workstation ever joins the school network, a new decision on hostname, firewall rule, and HTTPS is required; no code change is expected.
 
 #### 5.3.2. Wireframe/Prototype
