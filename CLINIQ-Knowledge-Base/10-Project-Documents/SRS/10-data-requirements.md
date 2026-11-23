@@ -27,11 +27,7 @@ The following data validation rules are established for CLINIQ, which will be ap
 <tr><td><b>DR-012</b></td><td>Birthdate shall be optional and shall not be in the future. The student’s age shall be calculated from the birthdate and not stored. The system shall hold no personal phone number for the student.</td></tr>
 <tr><td><b>DR-013</b></td><td>When a birthdate is entered, the system shall show a non-blocking note if the student’s age is far from the usual age for the grade. The distance is a configurable number of years; the starting value is 3.</td></tr>
 <tr><td><b>DR-014</b></td><td>Allergy and condition fields shall be free text. An empty field shall display “None recorded”, and the system shall not infer that a student has no allergies or conditions.</td></tr>
-<tr><td><b>DR-015</b></td><td>
-
-Student search shall match name words across the name parts, ignoring case and accents and tolerating spacing differences, and shall sort by last, first, and middle name. **$\textcolor{green}{\text{Typed LRN digits shall match the start of the LRN or, for up to four digits, its last four digits.}}$** A search that could contain an LRN shall not place it in a URL.
-
-</td></tr>
+<tr><td><b>DR-015</b></td><td>Student search shall match name words across the name parts, ignoring case and accents and tolerating spacing differences, and shall sort by last, first, and middle name. Typed LRN digits shall match the start of the LRN or, for up to four digits, its last four digits. A search that could contain an LRN shall not place it in a URL.</td></tr>
 </table>
 
 **Staff patient records**
@@ -84,11 +80,7 @@ Student search shall match name words across the name parts, ignoring case and a
 <table>
 <tr><th>ID</th><th>Requirement</th></tr>
 <tr><td><b>DR-042</b></td><td>Each inventory item shall carry a name, category, unit, low-stock threshold, and the stock received in batches. Each batch shall carry its quantity, received date, and an expiration date or an explicit no-expiry confirmation. The item’s stock shall be derived from its batches.</td></tr>
-<tr><td><b>DR-043</b></td><td>
-
-Dispensing shall decrease stock by the entered quantity, using the usable batch with the earliest expiration date first, and log the item, quantity, batch allocation, linked visit or incident (if any), staff member, and timestamp. An item with only expired stock shall not be dispensable. If the usable batches cannot cover the quantity, the system shall ~~$\textcolor{red}{\text{warn and book the shortfall to the last usable batch}}$~~ **$\textcolor{green}{\text{refuse the dispense and record nothing}}$**.
-
-</td></tr>
+<tr><td><b>DR-043</b></td><td>Dispensing shall decrease stock by the entered quantity, using the usable batch with the earliest expiration date first, and log the item, quantity, batch allocation, linked visit or incident (if any), staff member, and timestamp. An item with only expired stock shall not be dispensable. If the usable batches cannot cover the quantity, the system shall refuse the dispense and record nothing.</td></tr>
 <tr><td><b>DR-044</b></td><td>Restocking shall be a separate, manually initiated action that records a positive quantity and adds a new batch with its own received date and expiration date. Editing an item shall not overwrite batch dates or stock.</td></tr>
 <!-- p.63 -->
 <tr><td><b>DR-045</b></td><td>The system shall show usable, expired, and total stock separately. An item shall be flagged low when its usable stock is at or below its low-stock threshold. The near-expiry and expired checks shall run independently, and the flags shall be shown as distinct badges.</td></tr>
