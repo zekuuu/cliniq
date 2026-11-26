@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { notify } from '../../lib/notify'
 import { Link, useNavigate } from 'react-router'
 import {
+  ActionMenu,
   BackButton,
   Badge,
-  Button,
   Card,
   CardBody,
   CardHeader,
@@ -145,32 +145,32 @@ export function SportsReportListPage({ viewer }: { viewer: SessionUser }) {
       {
         key: 'actions',
         header: 'Actions',
+        align: 'right',
         cell: (report) => (
-          <span className="flex flex-wrap gap-2">
-            <Link
-              className={buttonClassName({ variant: 'secondary', size: 'sm' })}
-              to={paths.sportsReportEdit(report.id)}
-              aria-label={`Edit ${report.title}`}
-            >
-              Edit
-            </Link>
-            <Button
-              size="sm"
-              variant="neutral"
-              onClick={() => void duplicate(report)}
-              aria-label={`Duplicate ${report.title}`}
-            >
-              Duplicate
-            </Button>
-            <Button
-              size="sm"
-              variant="neutral"
-              onClick={() => void setArchived(report, !report.archived)}
-              aria-label={`${report.archived ? 'Restore' : 'Archive'} ${report.title}`}
-            >
-              {report.archived ? 'Restore' : 'Archive'}
-            </Button>
-          </span>
+          <ActionMenu
+            label={`More actions for ${report.title}`}
+            items={[
+              {
+                key: 'edit',
+                label: 'Edit',
+                icon: 'pencil',
+                href: paths.sportsReportEdit(report.id),
+              },
+              {
+                key: 'duplicate',
+                label: 'Duplicate',
+                icon: 'repeat',
+                onSelect: () => duplicate(report),
+              },
+              {
+                key: 'archive',
+                label: report.archived ? 'Restore' : 'Archive',
+                icon: report.archived ? 'refresh' : 'archive',
+                variant: report.archived ? 'default' : 'destructive',
+                onSelect: () => setArchived(report, !report.archived),
+              },
+            ]}
+          />
         ),
       },
     ]
