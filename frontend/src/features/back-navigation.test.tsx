@@ -48,7 +48,7 @@ const back = () => screen.getByRole('button', { name: 'Back' })
 describe('Back after a save never returns to the submitted form', () => {
   beforeEach(() => resetMockDb())
 
-  it('New Visit: Save, Review excuse letter, Back skips the submitted form', async () => {
+  it('New Visit: Save and approve, Open letter, Back skips the submitted form', async () => {
     const user = userEvent.setup({ delay: null })
     renderAfterPrevious('/visits/new', <NewVisitEntryPage />)
     await pickStudent(user, STUDENT_LRN)
@@ -60,9 +60,9 @@ describe('Back after a save never returns to the submitted form', () => {
       screen.getByRole('button', { name: /^Excused until/ }),
       addDays(todayISO(), 1),
     )
-    await user.click(screen.getByRole('button', { name: 'Save Visit' }))
-    // The success toast carries the letter as its action (ADR-083).
-    await user.click(await screen.findByRole('button', { name: 'Review letter' }))
+    await user.click(screen.getByRole('button', { name: 'Save and approve now' }))
+    // Approved letters keep the Open letter action; draft visits offer Undo (ADR-089).
+    await user.click(await screen.findByRole('button', { name: 'Open letter' }))
     await screen.findByRole('heading', { name: 'Excuse Letter' })
 
     await user.click(back())
@@ -137,8 +137,6 @@ describe('Back after a save never returns to the submitted form', () => {
     await pickStudent(user, STUDENT_LRN)
     await screen.findByRole('heading', { name: 'Report Incident' })
     await selectOption(user, screen.getByLabelText(/^emergency symptom/i), 'Fainting')
-    await user.type(screen.getByLabelText(/temperature/i), '37.2')
-    await user.type(screen.getByLabelText(/pulse/i), '92')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
     await screen.findByRole('heading', { name: 'Stage 2 completion' })
 

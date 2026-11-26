@@ -17,7 +17,7 @@ vi.mock('react-chartjs-2', () => {
 })
 
 const USERS: Record<UserRole, SessionUser> = {
-  staff: { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' },
+  staff: { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' },
   admin: { id: 'usr-principal', name: 'Principal', role: 'admin' },
 }
 

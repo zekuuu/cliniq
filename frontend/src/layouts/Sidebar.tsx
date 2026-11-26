@@ -18,7 +18,7 @@ export function BrandLogo({ compact = false }: { compact?: boolean }) {
   return (
     <span className="flex items-center gap-2.5">
       <img
-        src="/MCA_Logo.png"
+        src="/brand/mca-logo.webp"
         alt="Mendez Christian Academy logo"
         className={cn('shrink-0 object-contain', compact ? 'size-9' : 'size-11')}
       />
@@ -109,7 +109,7 @@ export function Sidebar({
               aria-hidden="true"
               className="absolute inset-0 flex items-center justify-center transition-[opacity,transform] duration-200 ease-out group-hover:scale-75 group-hover:opacity-0 group-focus-visible:scale-75 group-focus-visible:opacity-0 motion-reduce:transition-none"
             >
-              <img src="/MCA_Logo.png" alt="" className="size-10 object-contain" />
+              <img src="/brand/mca-logo.webp" alt="" className="size-10 object-contain" />
             </span>
             <span
               aria-hidden="true"
@@ -242,7 +242,7 @@ export function Sidebar({
       <div className={cn('mt-auto w-full pt-3', collapsed ? 'flex flex-col items-center' : '')}>
         {!collapsed && (
           <p className="mb-1 flex items-center gap-1 px-1 text-xs text-text-secondary">
-            <img src="/Healware_Logo.png" alt="" className="size-4 shrink-0 object-contain" />
+            <img src="/brand/healware-logo.webp" alt="" className="size-4 shrink-0 object-contain" />
             Powered by HealWare™
           </p>
         )}
