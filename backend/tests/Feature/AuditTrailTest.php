@@ -112,6 +112,26 @@ it('gives Staff the full LRN for the printout and records the print; the Admin g
     signIn($this->admin)->getJson(auditLog(['fullLrn' => 1]))->assertForbidden();
 });
 
+it('streams the complete filtered A4 audit print once, with full LRNs and escaped labels', function () {
+    logAt('2026-11-05 10:00:00', $this->staff, AuditAction::Update, AuditTarget::Student, (string) $this->studentId,
+        ['fields' => ['allergies'], 'student' => (string) $this->studentId]);
+    logAt('2026-11-06 11:00:00', $this->staff, AuditAction::Create, AuditTarget::Inventory, '17',
+        ['label' => '<script>alert(1)</script>']);
+    $this->actingAs($this->staff);
+    $response = $this->get('/api/audit-log/print?from=2026-11-01&to=2026-11-30');
+    $response->assertOk()->assertHeader('Content-Type', 'text/html; charset=UTF-8');
+    expect($response->headers->get('Content-Security-Policy'))->toContain("default-src 'none'", "script-src 'nonce-");
+    $html = $response->streamedContent();
+    expect($html)->toContain('<title>CLINIQ Audit Log</title>', '2 entries', '000000250009', '&lt;script&gt;alert(1)&lt;/script&gt;')
+        ->not->toContain('<script>alert(1)</script>')
+        ->and(substr_count($html, '<tr><td>'))->toBe(2)
+        ->and(DB::table('audit_logs')->where('action_type', 'print')->count())->toBe(1);
+
+    $filtered = $this->get('/api/audit-log/print?from=2026-11-01&to=2026-11-30&targetTypes[]=student&search=allergies');
+    expect($filtered->streamedContent())->toContain('1 entry', '000000250009')->not->toContain('&lt;script&gt;');
+    signIn($this->admin)->get('/api/audit-log/print?from=2026-11-01&to=2026-11-30')->assertForbidden();
+});
+
 it('records a profile view once per record per session', function (string $who) {
     signIn($this->{$who})->postJson('/api/audit/views', ['type' => 'student', 'id' => $this->studentId])->assertNoContent();
     $this->postJson('/api/audit/views', ['type' => 'student', 'id' => $this->studentId])->assertNoContent();

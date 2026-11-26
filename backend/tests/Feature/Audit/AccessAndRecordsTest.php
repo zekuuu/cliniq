@@ -27,7 +27,7 @@ const ADMIN_MAY = [
     // own sign-in and account (ADR-066, ADR-073)
     'POST api/auth/logout', 'GET api/auth/me', 'POST api/auth/password', 'GET api/auth/profile', 'PUT api/auth/profile',
     'GET api/auth/authenticator', 'POST api/auth/authenticator/setup', 'POST api/auth/authenticator/confirm', 'DELETE api/auth/authenticator',
-    'POST api/session/keepalive', 'GET api/settings/idle-signout',
+    'POST api/session/keepalive', 'GET api/settings/idle-signout', 'GET api/settings/operational',
     // accounts (ADR-033)
     'GET api/users', 'GET api/users/principal-name', 'GET api/users/{id}', 'POST api/users', 'PUT api/users/{id}', 'PUT api/users/{id}/active', 'POST api/users/{id}/reset-password',
     // student list and profile, read (ADR-038)
@@ -36,7 +36,7 @@ const ADMIN_MAY = [
     'GET api/incidents', 'GET api/incidents/log', 'GET api/incidents/{id}', 'GET api/incidents/approved-ids', 'GET api/incidents/{id}/trail',
     // reports, view only (ADR-077), Dashboard and calendar (ADR-042 writes events)
     'GET api/reports/monthly', 'GET api/reports/latest-month', 'GET api/dashboard/summary', 'GET api/dashboard/cluster-alerts',
-    'GET api/calendar/days', 'GET api/calendar/holidays', 'GET api/calendar/events', 'POST api/calendar/events', 'PUT api/calendar/events/{id}', 'DELETE api/calendar/events/{id}',
+    'GET api/calendar/days', 'GET api/calendar/holidays', 'GET api/calendar/events', 'POST api/calendar/events', 'PUT api/calendar/events/{id}', 'DELETE api/calendar/events/{id}', 'POST api/calendar/events/{id}/restore',
     // school years and the Archive, read (ADR-072, ADR-075)
     'GET api/school-years', 'GET api/school-years/reminder', 'GET api/archive/years', 'GET api/archive/students',
     // backups, full (ADR-037); audit log, view; issue reports (Q12)
@@ -55,7 +55,7 @@ function everyRoute(): array
         if (in_array($uri, PUBLIC_ROUTES, true)) {
             continue;
         }
-        $out[] = [$method, $uri, '/'.str_replace(['{id}', '{kind}', '{index}'], ['999999', 'student', '0'], $uri)];
+        $out[] = [$method, $uri, '/'.str_replace(['{id}', '{kind}', '{index}', '{transactionId}'], ['999999', 'student', '0', '999999'], $uri)];
     }
 
     return $out;
