@@ -74,6 +74,39 @@ describe('Visit Log', () => {
     )
   })
 
+  it('shows letter state instead of an empty Actions column', async () => {
+    const range = rangeForPreset('all', defaultVisitLogRange().to)
+    const rows = await fetchVisitLog({ ...range, search: '', disposition: 'all' })
+    const approved = rows.find((row) => row.letterStatus === 'approved')
+    const noLetter = rows.find(
+      (row) =>
+        row.letterStatus === 'none' &&
+        row.patient.kind === 'student' &&
+        row.disposition === 'sent_home',
+    )
+    expect(approved).toBeDefined()
+    expect(noLetter).toBeDefined()
+
+    const approvedDay = approved!.dateTime.slice(0, 10)
+    const view = renderWithRouter(<VisitLogListPage />, {
+      route: `/visits?from=${approvedDay}&to=${approvedDay}`,
+    })
+    expect(await screen.findByRole('columnheader', { name: 'Excuse letter' })).toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: 'Actions' })).not.toBeInTheDocument()
+    expect(
+      await screen.findByRole('link', {
+        name: `View approved letter for ${lrnLabel(approved!.patient.number)}`,
+      }),
+    ).toHaveAttribute('href', `/visits/${approved!.id}/excuse-letter`)
+
+    view.unmount()
+    const noLetterDay = noLetter!.dateTime.slice(0, 10)
+    renderWithRouter(<VisitLogListPage />, {
+      route: `/visits?from=${noLetterDay}&to=${noLetterDay}`,
+    })
+    expect((await screen.findAllByText('Not prepared')).length).toBeGreaterThan(0)
+  })
+
   it.each([
     ['/visits?from=2026-02-30&to=2026-03-01', 'an invalid date'],
     ['/visits?from=2026-03-01', 'a partial range'],

@@ -241,21 +241,38 @@ export function VisitLogListPage() {
       ),
     },
     {
-      key: 'actions',
-      header: 'Actions',
-      cell: (row) => (
-        <div className="flex flex-wrap gap-2">
-          {row.letterPending && (
-            <Link
-              to={paths.excuseLetter(row.id)}
-              aria-label={`Review Letter for ${patientNumberLabel(row.patient)}`}
-              className={buttonClassName({ size: 'sm' })}
-            >
-              Review Letter
-            </Link>
-          )}
-        </div>
-      ),
+      key: 'letter',
+      header: 'Excuse letter',
+      width: '12rem',
+      cell: (row) =>
+        row.letterPending ? (
+          <Link
+            to={paths.excuseLetter(row.id)}
+            aria-label={`Review Letter for ${patientNumberLabel(row.patient)}`}
+            className={buttonClassName({ size: 'sm' })}
+          >
+            Review Letter
+          </Link>
+        ) : row.letterStatus === 'approved' ? (
+          <Link
+            to={paths.excuseLetter(row.id)}
+            aria-label={`View approved letter for ${patientNumberLabel(row.patient)}`}
+            className="font-semibold text-brand-green-dark underline underline-offset-2 hover:text-brand-green focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green"
+          >
+            Approved · View
+          </Link>
+        ) : (
+          <span className="text-text-secondary">
+            {row.letterStatus === 'voided'
+              ? 'Voided'
+              : row.letterStatus === 'draft'
+                ? 'Draft · unavailable'
+                : row.patient.kind === 'personnel' ||
+                    !['sent_home', 'referred_to_hospital'].includes(row.disposition)
+                  ? 'Not applicable'
+                  : 'Not prepared'}
+          </span>
+        ),
     },
   ]
 
