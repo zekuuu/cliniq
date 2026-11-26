@@ -29,8 +29,10 @@ import type { PatientRef, PatientSearchResult } from '../../types/entities'
 import {
   dispenseInventoryItem,
   fetchInventory,
+  fetchInventoryHistory,
   findDispensePatient,
   searchDispensePatients,
+  undoInventoryMovement,
 } from './api/inventoryApi'
 
 type Recipient = '' | 'student' | 'general'
@@ -167,12 +169,22 @@ export function InventoryDispensePage() {
       )
       // ADR-083: no medicine next to a person in a toast; the item is named only for general use.
       const forPatient = recipient === 'student' && picked
-      notify.success(
-        forPatient
-          ? 'Dispensation recorded'
-          : `${amount} ${result.item.unit} of ${result.item.name} recorded for general use`,
-        { id: 'dispense', description: `Remaining stock: ${result.remainingStock}.` },
-      )
+      const message = forPatient
+        ? 'Dispensation recorded'
+        : `${amount} ${result.item.unit} of ${result.item.name} recorded for general use`
+      if (result.transactionId)
+        notify.undoable(message, () => undoInventoryMovement(item.id, result.transactionId), {
+          undone: 'Undone: dispensation reversed',
+          checkCurrent: async () =>
+            (await fetchInventoryHistory(item.id))[0]?.id === result.transactionId,
+          onUndone: reload,
+          onFailed: reload,
+        })
+      else
+        notify.success(message, {
+          id: 'dispense',
+          description: `Remaining stock: ${result.remainingStock}.`,
+        })
       setSuccess(true)
       setItemId('')
       setQuantity('1')

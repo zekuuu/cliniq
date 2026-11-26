@@ -26,7 +26,13 @@ import { usePageSize, type PageSize } from '../../hooks/usePageSize'
 import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/tableSort'
 import { paths } from '../../routes/paths'
 import { notify } from '../../lib/notify'
-import { fetchInventory, type InventoryFilters, type InventoryItemView } from './api/inventoryApi'
+import {
+  fetchInventory,
+  fetchInventoryHistory,
+  undoInventoryMovement,
+  type InventoryFilters,
+  type InventoryItemView,
+} from './api/inventoryApi'
 import { inventoryStatusSortValue } from './inventoryStatusSort'
 import { AdjustStockModal, BatchDetailsModal, RestockModal } from './StockModals'
 
@@ -361,9 +367,21 @@ export function InventoryListPage() {
             <Dialog
               item={action.item}
               onClose={() => setAction(null)}
-              onSaved={(text) => {
+              onSaved={(text, transactionId) => {
                 setAction(null)
-                notify.success(text, { id: 'stock-change' })
+                if (transactionId)
+                  notify.undoable(
+                    text,
+                    () => undoInventoryMovement(action.item.id, transactionId),
+                    {
+                      undone: 'Undone: stock change reversed',
+                      checkCurrent: async () =>
+                        (await fetchInventoryHistory(action.item.id))[0]?.id === transactionId,
+                      onUndone: reload,
+                      onFailed: reload,
+                    },
+                  )
+                else notify.success(text, { id: 'stock-change' })
                 reload()
               }}
             />
