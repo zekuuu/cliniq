@@ -168,7 +168,7 @@ final class BackupService
             // Refused rather than added with a red status: a backup can never be written there (Zean, November 20, 2026).
             $status = self::pathStatus($path);
             $same = self::samePath($path);
-            if (DB::table('backup_locations')->pluck('path')->contains(fn (mixed $p): bool => self::samePath((string) $p) === $same)) {
+            if (DB::table('backup_locations')->pluck('path')->contains(fn (mixed $p): bool => self::samePath(Row::text($p)) === $same)) {
                 $errors['path'] = 'This folder is already a backup location. Enable it in the list instead.';
             } elseif ($status === 'not_found') {
                 $errors['path'] = 'This folder was not found. Plug in the drive or choose another folder.';

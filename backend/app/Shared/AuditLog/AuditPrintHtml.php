@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shared\AuditLog;
 
+use App\Shared\Support\Row;
 use Carbon\CarbonImmutable;
 
 /** The Audit Log's streamed print document; all record text is escaped before entering HTML. */
@@ -47,20 +48,20 @@ HTML;
     /** @param array<string, mixed> $row */
     public static function row(array $row): string
     {
-        $dateTime = (string) ($row['dateTime'] ?? '');
+        $dateTime = Row::text($row['dateTime'] ?? '');
         $date = self::h($dateTime === '' ? '' : CarbonImmutable::parse($dateTime)->format('M j, Y g:i A'));
-        $who = self::h((string) ($row['userName'] ?? 'Unknown user'));
+        $who = self::h(Row::text($row['userName'] ?? 'Unknown user'));
         $role = match ($row['userRole'] ?? null) {
             'staff' => 'School Clinician', 'admin' => 'Admin / Principal', default => '',
         };
         $action = self::h(match ($row['actionType'] ?? null) {
             'login' => 'Login', 'logout' => 'Logout', 'submit' => 'Submit', 'approve' => 'Approve',
             'create' => 'Create', 'update' => 'Update', 'delete' => 'Delete', 'archive' => 'Archive',
-            'print' => 'Print / Save as PDF', 'view' => 'Viewed a record', default => (string) ($row['actionType'] ?? ''),
+            'print' => 'Print / Save as PDF', 'view' => 'Viewed a record', default => Row::text($row['actionType'] ?? ''),
         });
-        $summary = self::h((string) ($row['summary'] ?? ''));
+        $summary = self::h(Row::text($row['summary'] ?? ''));
         $target = is_array($row['target'] ?? null) ? $row['target'] : [];
-        $record = self::h(trim(implode(' · ', array_filter([(string) ($target['kind'] ?? ''), (string) ($target['label'] ?? '')]))));
+        $record = self::h(trim(implode(' · ', array_filter([Row::text($target['kind'] ?? ''), Row::text($target['label'] ?? '')]))));
         if ($record === '') {
             $record = 'No record';
         }

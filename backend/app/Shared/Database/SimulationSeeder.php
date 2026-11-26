@@ -14,6 +14,7 @@ use App\Modules\StaffPatients\Services\PersonnelService;
 use App\Modules\StudentRecords\Services\StudentService;
 use App\Modules\UserManagement\Models\User;
 use App\Shared\FollowUps\FollowUpService;
+use App\Shared\Support\Row;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -99,67 +100,81 @@ final class SimulationSeeder extends Seeder
             return;
         }
 
-        $fixture = json_decode((string) file_get_contents(base_path('../frontend/src/lib/mock-db/mock-db.json')), true, flags: JSON_THROW_ON_ERROR);
-        if (! is_array($fixture)) {
-            throw new RuntimeException('The fictional development fixture is unavailable.');
-        }
+        $fixture = self::record(json_decode((string) file_get_contents(base_path('../frontend/src/lib/mock-db/mock-db.json')), true, flags: JSON_THROW_ON_ERROR));
+        $fixtureUsers = self::records($fixture['users'] ?? null);
+        $fixtureStudents = self::records($fixture['students'] ?? null);
+        $fixturePersonnel = self::records($fixture['personnel'] ?? null);
+        $frontendOnly = self::record($fixture['frontendOnly'] ?? null);
         DB::beginTransaction();
         try {
-            $accounts = collect($fixture['frontendOnly']['devAccounts'] ?? [])->keyBy('userId');
+            $accounts = [];
+            foreach (self::records($frontendOnly['devAccounts'] ?? null) as $account) {
+                $accounts[self::requiredString($account, 'userId')] = $account;
+            }
             $users = [];
-            foreach ($fixture['users'] as $record) {
-                $account = $accounts->get($record['id']);
+            foreach ($fixtureUsers as $record) {
+                $userId = self::requiredString($record, 'id');
+                $account = $accounts[$userId] ?? null;
                 if (! is_array($account) || ! is_string($account['password'] ?? null) || $account['password'] === '') {
                     throw new RuntimeException('A fictional development account is missing its fixture credentials.');
                 }
-                $users[$record['id']] = (int) User::query()->forceCreate([
-                    'name' => $record['name'], 'username' => $record['username'], 'role' => $record['role'],
+                $users[$userId] = (int) User::query()->forceCreate([
+                    'name' => self::requiredString($record, 'name'),
+                    'username' => self::requiredString($record, 'username'),
+                    'role' => self::requiredString($record, 'role'),
                     'password_hash' => Hash::make($account['password']),
                     'must_change_password' => (bool) ($account['mustChangePassword'] ?? false),
                 ])->id;
             }
-            $nurse = $users['user-staff-01'];
+            $nurse = $users['user-staff-01'] ?? throw new RuntimeException('The fictional clinician account is missing.');
             $students = [];
             $personnel = [];
             $contacts = [];
             foreach (self::STUDENT_SAMPLES as $i => $sample) {
-                $s = $fixture['students'][$sample['fixture']];
+                $s = self::record($fixtureStudents[$sample['fixture']] ?? null);
+                $studentContacts = self::records($s['emergencyContacts'] ?? null);
+                if ($studentContacts === []) {
+                    throw new RuntimeException('A fictional student has no emergency contact.');
+                }
                 $s['lrn'] = '999900'.str_pad((string) ($i + 1), 6, '0', STR_PAD_LEFT);
-                $s['emergencyContacts'][0]['phone'] = self::CONTACT_NUMBERS[$i];
+                $studentContacts[0]['phone'] = self::CONTACT_NUMBERS[$i];
                 if ($i === 1) {
                     $s['allergies'] = ['Penicillin'];
                 }
                 if ($i === 2) {
                     // A registrar record can be saved before the birthdate is supplied.
                     $s['birthDate'] = '';
-                    $s['emergencyContacts'][0]['relationship'] = 'Uncle';
+                    $studentContacts[0]['relationship'] = 'Uncle';
                 } elseif ($i === 3) {
                     $s['medicalConditions'] = ['Asthma'];
-                    $s['emergencyContacts'][0]['relationship'] = 'Grandfather';
+                    $studentContacts[0]['relationship'] = 'Grandfather';
                 }
-                $contacts[$i] = $s['emergencyContacts'][0];
+                $s['emergencyContacts'] = $studentContacts;
+                $contacts[$i] = $studentContacts[0];
                 $saved = app(StudentService::class)->save(array_intersect_key($s, array_flip([
                     'lrn', 'firstName', 'lastName', 'middleName', 'gradeLevel', 'birthDate', 'allergies', 'medicalConditions', 'emergencyContacts',
                 ])) + ['section' => null, 'sex' => $sample['sex']], null, true, null, $nurse, 'staff');
-                $students[] = (int) $saved['student']['id'];
+                $students[] = self::savedId($saved, 'student');
 
-                $p = $fixture['personnel'][$i];
+                $p = self::record($fixturePersonnel[$i] ?? null);
                 $p['type'] = ['Teacher', 'Non-teaching staff', 'Utility worker', 'Other', 'Teacher'][$i];
                 $p['contactInfo'] = self::PERSONNEL_NUMBERS[$i];
-                if ($p['emergencyContacts'] !== []) {
-                    $p['emergencyContacts'][0]['phone'] = self::PERSONNEL_CONTACT_NUMBERS[$i];
+                $personnelContacts = self::records($p['emergencyContacts'] ?? null);
+                if ($personnelContacts !== []) {
+                    $personnelContacts[0]['phone'] = self::PERSONNEL_CONTACT_NUMBERS[$i];
                 }
+                $p['emergencyContacts'] = $personnelContacts;
                 $saved = app(PersonnelService::class)->save(array_intersect_key($p, array_flip([
                     'firstName', 'lastName', 'middleName', 'sex', 'type', 'department', 'contactInfo', 'allergies', 'medicalConditions', 'emergencyContacts',
                 ])), null, $nurse);
-                $personnel[] = (int) $saved['personnel']['id'];
+                $personnel[] = self::savedId($saved, 'personnel');
             }
 
             $now = CarbonImmutable::now('Asia/Manila');
             $symptoms = DB::table('complaint_types')->pluck('id', 'label');
             $inventory = [];
             foreach (self::ITEMS as $i => $item) {
-                $usedFor = array_map(fn (string $label): int => (int) ($symptoms->get($label) ?? throw new RuntimeException("Missing complaint type: {$label}")), $item['usedFor']);
+                $usedFor = array_map(fn (string $label): int => Row::toInt($symptoms->get($label)) ?? throw new RuntimeException("Missing complaint type: {$label}"), $item['usedFor']);
                 $saved = app(InventoryService::class)->save([
                     'name' => $item['name'], 'category' => $item['category'], 'unit' => $item['unit'],
                     'lowStockThreshold' => $item['threshold'], 'currentStock' => $item['stock'],
@@ -168,7 +183,7 @@ final class SimulationSeeder extends Seeder
                     'usedFor' => $usedFor, 'avoidIfAllergicTo' => $i === 0 ? ['Paracetamol'] : [],
                     'brand' => $i === 0 ? 'generic' : null,
                 ], null, $nurse);
-                $inventory[$i] = (int) $saved['id'];
+                $inventory[$i] = self::savedId($saved);
                 if (($item['expired'] ?? false) === true) {
                     // Opening stock is valid when received; move only this fictional batch's date into the past.
                     DB::table('inventory_batches')->where('item_id', $inventory[$i])
@@ -207,7 +222,7 @@ final class SimulationSeeder extends Seeder
                     'timeOut' => $collectedAt, 'parentGuardian' => $contact['name'],
                     'excuseLetterDraft' => ['excusedFrom' => $visitDate, 'excusedUntil' => $visitDate, 'note' => 'Excused from class after a clinic visit.'],
                 ], $nurse);
-                $visitId = (int) $visit['visit']['id'];
+                $visitId = self::savedId($visit, 'visit');
                 $followUp = app(FollowUpService::class)->create(['studentId' => $studentId, 'personnelId' => null], 'visit', $visitId, [
                     'followUpDate' => in_array($i, [1, 2], true)
                         ? $now->subWeekdays($i === 1 ? 3 : 2)->format('Y-m-d')
@@ -215,12 +230,13 @@ final class SimulationSeeder extends Seeder
                     'reason' => $case['followUp'], 'notes' => 'Confirm the student is ready to return to class.',
                     'stayHomeUntilCleared' => false, 'stayHomeNote' => null,
                 ], $nurse, $now);
+                $followUpId = self::savedId($followUp);
                 if ($i === 1) {
-                    app(FollowUpService::class)->setStatus((int) $followUp['id'], 'completed', null, $nurse);
+                    app(FollowUpService::class)->setStatus($followUpId, 'completed', null, $nurse);
                 } elseif ($i === 2) {
-                    app(FollowUpService::class)->setStatus((int) $followUp['id'], 'missed', 'Student was absent on the follow-up day.', $nurse);
+                    app(FollowUpService::class)->setStatus($followUpId, 'missed', 'Student was absent on the follow-up day.', $nurse);
                 } elseif ($i === 3) {
-                    app(FollowUpService::class)->setStatus((int) $followUp['id'], 'cancelled', 'Guardian confirmed the symptoms had resolved.', $nurse);
+                    app(FollowUpService::class)->setStatus($followUpId, 'cancelled', 'Guardian confirmed the symptoms had resolved.', $nurse);
                 }
                 if ($i === 0 || $i === 2) {
                     app(ExcuseLetterService::class)->approve($visitId, [
@@ -239,6 +255,7 @@ final class SimulationSeeder extends Seeder
                     'time' => $occurredAt->toIso8601String(), 'complaint' => $case['complaint'],
                     'generalNotes' => $case['notes'], 'vitals' => [],
                 ], $nurse);
+                $incidentId = self::savedId($incident);
                 if ($case['treatment'] !== null) {
                     $stageTwo = [
                         'complaint' => $case['complaint'], 'bodyPart' => $case['bodyPart'],
@@ -253,10 +270,10 @@ final class SimulationSeeder extends Seeder
                             'departureTime' => $occurredAt->addMinutes(45)->toIso8601String(),
                         ];
                     }
-                    app(IncidentService::class)->stageTwo((int) $incident['id'], $stageTwo, $nurse);
+                    app(IncidentService::class)->stageTwo($incidentId, $stageTwo, $nurse);
                 }
                 $contact = $contacts[$i];
-                app(IncidentService::class)->addNotification((int) $incident['id'], [
+                app(IncidentService::class)->addNotification($incidentId, [
                     'outcome' => $case['outcome'],
                     'calledContact' => [
                         'name' => $contact['name'], 'relationship' => $contact['relationship'],
@@ -264,7 +281,7 @@ final class SimulationSeeder extends Seeder
                     ],
                 ], $nurse);
                 if ($i === 0) {
-                    app(IncidentService::class)->approve((int) $incident['id'], $nurse);
+                    app(IncidentService::class)->approve($incidentId, $nurse);
                 }
             }
 
@@ -290,5 +307,59 @@ final class SimulationSeeder extends Seeder
             throw $error;
         }
         $this->command?->info('Simulation seeded: 3 fictional accounts; five linked records per daily-use list with varied stock and workflow states, plus Philippine holidays.');
+    }
+
+    /** @return array<string, mixed> */
+    private static function record(mixed $value): array
+    {
+        if (! is_array($value)) {
+            throw new RuntimeException('The fictional development fixture has an invalid record.');
+        }
+        $record = [];
+        foreach ($value as $key => $field) {
+            if (! is_string($key)) {
+                throw new RuntimeException('The fictional development fixture has an invalid record key.');
+            }
+            $record[$key] = $field;
+        }
+
+        return $record;
+    }
+
+    /** @return list<array<string, mixed>> */
+    private static function records(mixed $value): array
+    {
+        if (! is_array($value) || ! array_is_list($value)) {
+            throw new RuntimeException('The fictional development fixture has an invalid record list.');
+        }
+        $records = [];
+        foreach ($value as $record) {
+            $records[] = self::record($record);
+        }
+
+        return $records;
+    }
+
+    /** @param array<string, mixed> $record */
+    private static function requiredString(array $record, string $key): string
+    {
+        $value = $record[$key] ?? null;
+        if (! is_string($value) || $value === '') {
+            throw new RuntimeException("The fictional development fixture is missing {$key}.");
+        }
+
+        return $value;
+    }
+
+    /** @param array<string, mixed> $saved */
+    private static function savedId(array $saved, ?string $wrapper = null): int
+    {
+        $record = $wrapper === null ? $saved : self::record($saved[$wrapper] ?? null);
+        $id = Row::toInt($record['id'] ?? null);
+        if ($id === null || $id <= 0) {
+            throw new RuntimeException('The fictional simulation could not save a record.');
+        }
+
+        return $id;
     }
 }

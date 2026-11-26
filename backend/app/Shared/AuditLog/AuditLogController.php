@@ -8,6 +8,7 @@ use App\Shared\Auth\ClinicUser;
 use App\Shared\Http\Paging;
 use App\Shared\Support\ClinicTime;
 use App\Shared\Support\Lrn;
+use App\Shared\Support\Row;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
@@ -162,7 +163,7 @@ final class AuditLogController
         $query = $this->filteredQuery($request);
         // Freeze the result before writing its own audit entry, so the new print does not appear
         // halfway through the document or change the count while chunks are being read.
-        $lastId = (int) DB::table('audit_logs')->max('id');
+        $lastId = Row::toInt(DB::table('audit_logs')->max('id')) ?? 0;
         $query->where('a.id', '<=', $lastId);
         $total = (clone $query)->count();
         [$sort, $direction] = Paging::sort($request, ['timestamp', 'user', 'action', 'module', 'record'], '-timestamp');
@@ -208,7 +209,7 @@ final class AuditLogController
         $parts = [
             'Dates '.$request->string('from')->value().' to '.$request->string('to')->value(),
             $request->filled('userId')
-                ? 'user '.(string) (DB::table('users')->where('id', $request->integer('userId'))->value('name') ?? 'Unknown user')
+                ? 'user '.Row::text(DB::table('users')->where('id', $request->integer('userId'))->value('name') ?? 'Unknown user')
                 : 'all users',
             $request->array('actionTypes') === [] ? 'all actions' : 'actions '.implode(', ', self::strings($request->array('actionTypes'))),
             $request->array('targetTypes') === [] ? 'all targets' : 'targets '.implode(', ', self::strings($request->array('targetTypes'))),

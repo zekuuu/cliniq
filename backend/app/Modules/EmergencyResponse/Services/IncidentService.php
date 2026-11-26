@@ -190,7 +190,7 @@ final class IncidentService
         $vitals = self::vitals($in['vitals'] ?? []);
         $approved = DB::table('incident_report_approvals')->where('incident_id', $id)->exists();
         $nowForValidation = CarbonImmutable::now();
-        $at = is_string($in['time'] ?? null) && $in['time'] !== '' ? self::parseTime($in['time'], 'time') : self::parseTime($before['time'], 'time');
+        $at = is_string($in['time'] ?? null) && $in['time'] !== '' ? self::parseTime($in['time'], 'time') : self::parseTime(Row::text($before['time'] ?? null), 'time');
         if ($at->greaterThan($nowForValidation)) {
             throw ValidationException::withMessages(['time' => "The incident time can't be in the future."]);
         }
@@ -208,12 +208,12 @@ final class IncidentService
             }
             $readingTimes[$key] = $readingAt;
         }
-        $timeChanged = $at->format('Y-m-d H:i') !== self::parseTime($before['time'], 'time')->format('Y-m-d H:i');
-        $arrivalChanged = ($arrival?->format('Y-m-d H:i:s')) !== ($before['arrivedAtClinic'] === null ? null : self::parseTime($before['arrivedAtClinic'], 'arrivedAtClinic')->format('Y-m-d H:i:s'));
+        $timeChanged = $at->format('Y-m-d H:i') !== self::parseTime(Row::text($before['time'] ?? null), 'time')->format('Y-m-d H:i');
+        $arrivalChanged = ($arrival?->format('Y-m-d H:i:s')) !== ($before['arrivedAtClinic'] === null ? null : self::parseTime(Row::text($before['arrivedAtClinic']), 'arrivedAtClinic')->format('Y-m-d H:i:s'));
         if (! $timeChanged) {
-            $at = self::parseTime($before['time'], 'time');
+            $at = self::parseTime(Row::text($before['time'] ?? null), 'time');
         }
-        if ($approved && ($timeChanged || $arrivalChanged || $vitals['readings'] !== [] || $readingTimes !== [])) {
+        if ($approved && ($timeChanged || $arrivalChanged || $vitals['readings'] !== [])) {
             throw new BusinessRuleViolation('incident_approved', 'This incident report is approved, so its event times and readings can no longer be changed.');
         }
         $notes = array_key_exists('generalNotes', $in) ? (trim(Row::text($in['generalNotes'])) ?: null) : $before['generalNotes'];
@@ -402,7 +402,10 @@ final class IncidentService
         return ['readings' => $readings, 'treatmentNotes' => trim(Row::text($v['treatmentNotes'] ?? '')) ?: null];
     }
 
-    /** @param array<string, string|float|int> $readings */
+    /**
+     * @param  array<string, string|float|int>  $readings
+     * @param  array<string, CarbonImmutable>  $times
+     */
     private function saveReading(int $id, int $stage, array $readings, int $userId, CarbonImmutable $now, array $times = []): void
     {
         if ($readings === []) {
