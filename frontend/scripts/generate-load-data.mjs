@@ -127,7 +127,6 @@ export function expandState(
           name: `${pick(FIRST)} ${last}`,
           relationship: 'Mother',
           phone: `0918-${pad(i % 1000, 3)}-${pad(i, 4)}`,
-          verified: true,
         },
       ],
       archived: false,

@@ -206,9 +206,20 @@ final class DevelopmentSeeder extends Seeder
             $vitals = self::list($i, 'vitals');
             $start = self::at(self::list($i, 'time'));
             $this->later($start, 1, function () use ($service, $i, $mockId, $vitals): void {
-                $saved = $service->stageOne($this->patient($i) + ['complaint' => $i['complaint'], 'eventTag' => $i['eventTag'] ?? null,
-                    'vitals' => array_intersect_key($vitals, array_flip(['temperatureC', 'pulseBpm', 'bloodPressure', 'oxygenSaturationPct']))], $this->nurse());
+                $saved = $service->stageOne($this->patient($i) + ['complaint' => $i['complaint'], 'eventTag' => $i['eventTag'] ?? null], $this->nurse());
                 $this->ids[$mockId] = (int) Row::toInt($saved['id'] ?? null);
+                // Preserve the old mock fixture's Stage 1 readings as historical data. New Stage 1
+                // requests cannot create them (ADR-094), but existing incidents still display them.
+                $columns = ['temperatureC' => 'temperature_c', 'pulseBpm' => 'pulse_bpm', 'bloodPressure' => 'blood_pressure', 'oxygenSaturationPct' => 'spo2_percent'];
+                foreach ($columns as $key => $column) {
+                    if (! isset($vitals[$key])) {
+                        continue;
+                    }
+                    DB::table('incident_vital_readings')->insert([
+                        'incident_id' => $this->ids[$mockId], 'stage' => 1, 'recorded_at' => self::at(self::list($i, 'time')),
+                        'recorded_by_user_id' => $this->nurse(), $column => $vitals[$key],
+                    ]);
+                }
             });
             if (($i['stage'] ?? 1) !== 2) {
                 continue;

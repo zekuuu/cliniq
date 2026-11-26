@@ -14,6 +14,10 @@ require_once __DIR__.'/../../tools/load/checks.php';
 /** A tiny school: one year, two weeks of class (June 15 to 26, 2026), stopping at noon on the last day (or at $until). */
 function tinySchool(string $until = '2026-06-26 12:00'): array
 {
+    // A Pest process reuses the app after HTTP tests; a CLI seed starts with a fresh request/cache.
+    app('cache')->setDefaultDriver('array');
+    cache()->flush();
+    request()->attributes->remove('cliniq.system_settings');
     (new DemoSchoolSeeder)->run(['students' => 20, 'staff' => 3, 'years' => 1, 'audit' => 0, 'seed' => 20261116, 'until' => CarbonImmutable::parse($until, 'Asia/Manila')]);
     $counts = [];
     foreach (DB::select('SELECT table_name t FROM information_schema.tables WHERE table_schema = ? ORDER BY table_name', [DB::getDatabaseName()]) as $r) {

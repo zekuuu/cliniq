@@ -567,7 +567,7 @@ final class LoadGenerator
         $this->admin = $make('Gilan Avelida', 'demo.principal', 'admin', 0, 'demo-admin');
         $this->nurse = $make('Jennesse Baas', 'demo.nurse', 'staff', $this->admin->id, 'demo-nurse');
         // As in the mock: a temporary password, changed at the first sign-in.
-        $users->save(['name' => 'Grace Tolentino', 'username' => 'demo.new', 'role' => 'staff', 'temporaryPassword' => 'demo-change'], null, $this->admin->id);
+        $users->save(['name' => 'Ghenly Tinapay', 'username' => 'demo.new', 'role' => 'staff', 'temporaryPassword' => 'demo-change'], null, $this->admin->id);
         $this->staffUsers = [$this->nurse];
         foreach ([1, 2, 3] as $n) {
             $this->staffUsers[] = $make("Covering Staff {$n}", "load.cover{$n}", 'staff', $this->admin->id);
@@ -1005,7 +1005,7 @@ final class LoadGenerator
             'lrn' => $s['lrn'], 'firstName' => $s['firstName'], 'lastName' => $s['lastName'], 'middleName' => $s['middleName'] ?: null,
             'gradeLevel' => self::GRADES[min(12, $s['grade'])], 'section' => $s['section'] ?: null, 'sex' => $s['noSex'] ? null : $s['sex'],
             'birthDate' => $s['birthDate'] ?: null, 'allergies' => $s['allergies'], 'medicalConditions' => $s['conditions'],
-            'emergencyContacts' => $withContacts && ! $s['stayIncomplete'] ? [['name' => $f['name'], 'relationship' => $f['relationship'], 'phone' => $f['phone'], 'verified' => false]] : [],
+            'emergencyContacts' => $withContacts && ! $s['stayIncomplete'] ? [['name' => $f['name'], 'relationship' => $f['relationship'], 'phone' => $f['phone']]] : [],
         ];
     }
 
@@ -1380,7 +1380,7 @@ final class LoadGenerator
         $grade = $patient['grade'] ?? self::ADULT;
         $service = app(IncidentService::class);
         $who = ['studentId' => $patient !== null ? (string) $patient['id'] : null, 'personnelId' => $staffId !== null ? (string) $staffId : null];
-        $saved = $service->stageOne($who + ['complaint' => $complaint, 'eventTag' => null, 'vitals' => $this->vitals($complaint, $grade, 1.0)], $nurse->id);
+        $saved = $service->stageOne($who + ['complaint' => $complaint, 'eventTag' => null], $nurse->id);
         $id = (int) $saved['id'];
         $start = CarbonImmutable::now();
         // Calls to the parent (or the staff member's contact), 3 to 15 minutes apart, until someone answers.
