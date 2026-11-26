@@ -336,8 +336,8 @@ describe('New Visit: disposition-specific fields', () => {
       },
     })
     expect(await getExcuseLetterApproval(visit.id)).toBeNull()
-    // The success toast offers the letter as its action (ADR-083).
-    expect(screen.getByRole('button', { name: 'Review letter' })).toBeInTheDocument()
+    // A new visit can be marked entered in error from its Undo toast (ADR-089).
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument()
   })
 
   it('stores no draft when "Prepare an excuse letter" is unticked', async () => {

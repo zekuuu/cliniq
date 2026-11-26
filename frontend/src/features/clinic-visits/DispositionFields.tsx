@@ -84,7 +84,7 @@ export function DispositionFields({
       {collected}
       <fieldset className="rounded-md border border-border p-4">
         <legend className="px-1 text-sm font-semibold text-text-primary">Excuse letter</legend>
-        <label className="mt-2 flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
+        <label className="mt-2 flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors motion-reduce:transition-none">
           <input
             type="checkbox"
             checked={values.prepareLetter}

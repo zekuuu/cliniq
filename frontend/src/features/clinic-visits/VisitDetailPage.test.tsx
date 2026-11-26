@@ -155,7 +155,7 @@ describe('Visit Details: excuse letter and disposition fields', () => {
     renderWithRouter(
       <VisitDetailPage
         visitId="visit-0139"
-        viewer={{ id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }}
+        viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }}
       />,
     )
     expect(screen.getByText('Staff access required.')).toBeInTheDocument()

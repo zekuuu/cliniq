@@ -93,7 +93,7 @@ function PrintableLetter({
       {/* A draft never prints (ADR-038 item 6), so the watermark and box are screen-only. 6% keeps the text's contrast. */}
       {!approved && (
         <img
-          src="/MCA_Logo.png"
+          src="/brand/mca-logo.webp"
           alt=""
           aria-hidden="true"
           data-testid="draft-watermark"
@@ -483,7 +483,7 @@ function ExcuseLetterEditor({
               This tool generates clinic excuse letters only. It must not be used as a medical
               certificate.
             </div>
-            <label className="flex cursor-pointer items-start gap-2 rounded-md border border-border bg-surface p-3 text-sm text-text-primary transition-colors hover:bg-background">
+            <label className="flex items-start gap-2 rounded-md border border-border bg-surface p-3 text-sm text-text-primary transition-colors ">
               <input
                 type="checkbox"
                 checked={checked}

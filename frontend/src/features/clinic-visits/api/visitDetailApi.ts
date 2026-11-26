@@ -8,6 +8,7 @@ import {
   getVitalsWarningRanges,
   listInventory,
   markVisitEnteredInError,
+  undoVisitEnteredInError,
   updateVisit,
   type ExcuseLetterApproval,
   type InventoryItemView,
@@ -162,6 +163,11 @@ export async function markEnteredInError(
   actor?: SessionUser,
 ): Promise<VisitDetail> {
   await markVisitEnteredInError(visitId, reason, actor)
+  return fetchVisitDetail(visitId)
+}
+
+export async function undoEnteredInError(visitId: string): Promise<VisitDetail> {
+  await undoVisitEnteredInError(visitId)
   return fetchVisitDetail(visitId)
 }
 

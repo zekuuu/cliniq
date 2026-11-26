@@ -41,6 +41,8 @@ import { addDays, todayISO } from '../../lib/dates'
 import {
   getMockSessionUser,
   LATE_ENTRY_MINUTES,
+  getVisit,
+  markVisitEnteredInError,
   StockRuleError,
   type ComplaintType,
   type InventoryItemView,
@@ -215,7 +217,7 @@ function TriagePanel({
       <ul className="mt-3 flex flex-col gap-2">
         {selected.triageSteps.map((step) => (
           <li key={step}>
-            <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
+            <label className="flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors motion-reduce:transition-none">
               <input
                 type="checkbox"
                 checked={checked.includes(step)}
@@ -510,18 +512,27 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
             ? 'Letter draft saved'
             : '',
       ].filter(Boolean)
-      const hasLetter = approveNow || result.visit.excuseLetterDraft !== null
-      notify.success('Visit recorded', {
-        id: 'visit-create',
-        description: details.join(' · ') || undefined,
-        action: hasLetter
-          ? {
-              label: approveNow ? 'Open letter' : 'Review letter',
-              // Replaces the submitted form in history, so Back from the letter can't reopen it.
-              onClick: () => navigate(paths.excuseLetter(result.visit.id), { replace: true }),
-            }
-          : undefined,
-      })
+      if (approveNow)
+        notify.success('Visit recorded', {
+          id: 'visit-create',
+          description: details.join(' · ') || undefined,
+          action: {
+            label: 'Open letter',
+            // Replaces the submitted form in history, so Back from the letter can't reopen it.
+            onClick: () => navigate(paths.excuseLetter(result.visit.id), { replace: true }),
+          },
+        })
+      else
+        notify.undoable(
+          'Visit recorded',
+          () => markVisitEnteredInError(result.visit.id, 'Undo visit creation'),
+          {
+            undone: 'Undone: new visit marked as entered in error',
+            description: details.join(' · ') || undefined,
+            checkCurrent: async () =>
+              JSON.stringify(await getVisit(result.visit.id)) === JSON.stringify(result.visit),
+          },
+        )
       if (result.belowZero.length)
         notify.warning('Some stock is now below zero. Recount and restock in Inventory.', {
           id: 'visit-below-zero',
@@ -810,7 +821,7 @@ export function NewVisitEntryPage({ viewer = getMockSessionUser() }: { viewer?: 
                 <legend className="px-1 text-sm font-semibold text-text-primary">
                   Follow-up prompt
                 </legend>
-                <label className="mt-2 flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
+                <label className="mt-2 flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors motion-reduce:transition-none">
                   <input
                     type="checkbox"
                     checked={needsFollowUp}
