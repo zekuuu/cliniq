@@ -60,7 +60,7 @@ export function NameFields({
             disabled={noMiddle}
             {...field('middleName')}
           />
-          <label className="inline-flex cursor-pointer items-center gap-2 self-start text-sm text-text-primary">
+          <label className="inline-flex items-center gap-2 self-start text-sm text-text-primary">
             <input
               type="checkbox"
               checked={noMiddle}

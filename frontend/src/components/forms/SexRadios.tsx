@@ -37,7 +37,7 @@ export function SexRadios({
         {OPTIONS.map((option) => (
           <label
             key={option.value}
-            className="inline-flex min-h-10 cursor-pointer items-center gap-2 text-sm font-semibold text-text-primary"
+            className="inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-text-primary"
           >
             <input
               type="radio"
