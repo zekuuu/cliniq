@@ -68,7 +68,7 @@ The mock has no pagination: it returns whole lists and the screens page them. Li
 
 | Endpoint | Paged since ADR-082 | Search | Sort keys (default first) | Extra |
 |---|---|---|---|---|
-| `GET /api/visits/log` (new, Staff) | always | LRN digits, Staff No., grade or staff type, complaint, event | `-dateTime`, `lrn`, `record`, `disposition` | Filters `from`, `to`, `disposition`, `letter=pending`, `inClinicNow`, `includeEnteredInError`, `patient`. Rows are `VisitLogRow` (masked number, grade at the time, logged by, `letterPending`, `inClinicNow`, `escalated`, `enteredInError`). |
+| `GET /api/visits/log` (new, Staff) | always | LRN digits, Staff No., grade or staff type, complaint, event | `-dateTime`, `lrn`, `record`, `disposition` | Filters `from`, `to`, `disposition`, `letter=pending`, `inClinicNow`, `includeEnteredInError`, `patient`. Rows are `VisitLogRow` (masked number, grade at the time, logged by, `letterPending`, `letterStatus` (`none`, `draft`, `approved`, `voided`), `inClinicNow`, `escalated`, `enteredInError`). |
 | `GET /api/incidents/log` (new, both roles) | always | as the Visit Log | `-time`, `student`, `complaint`, `status` | Filters `from`, `to`, `completion`, `patient`. Rows are `IncidentLogRow`. The Admin never sees a staff patient's incident (ADR-043). |
 | `GET /api/follow-ups` | with `page` | none | `-status`, `student`, `reason`, `due` | Filter `patient` added. One query: the status as it reads and the "later follow-up" rule are SQL. |
 | `GET /api/inventory/movements` | with `page` | none | newest first | Batch allocations are read for the page only. |
