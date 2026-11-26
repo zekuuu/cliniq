@@ -1,8 +1,9 @@
 import { useState, type ReactNode } from 'react'
 import { formatDate } from '../../lib/dates'
-import { Link, useNavigate, useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import {
   BackButton,
+  ActionMenu,
   Badge,
   Button,
   Card,
@@ -126,17 +127,9 @@ const baseColumns: Array<DataTableColumn<InventoryItemView>> = [
 
 type StockAction = { kind: 'adjust' | 'restock' | 'batches'; item: InventoryItemView }
 
-const MANAGE_OPTIONS = [
-  { value: 'adjust', label: 'Adjust Stock' },
-  { value: 'batches', label: 'Batches' },
-  { value: 'history', label: 'Usage history' },
-  { value: 'edit', label: 'Edit' },
-]
-
 export function InventoryListPage() {
   const [searchParams] = useSearchParams()
   const attention = searchParams.get('attention')
-  const navigate = useNavigate()
   const [filters, setFilters] = useState<InventoryFilters>(() => ({
     // `?search=` (Add Item's duplicate warning) applies only on arrival.
     search: searchParams.get('search') ?? '',
@@ -188,32 +181,44 @@ export function InventoryListPage() {
       return {
         ...column,
         cell: (item: InventoryItemView) => (
-          // Panel review IV-1: Restock is the one visible action; the rest sit under Manage (one row select,
-          // cliniq-dropdown-patterns), the same actions and dialogs as before.
+          // Restock remains the row's direct action; the other operations share the action menu.
           <div className="flex flex-wrap items-center gap-1.5">
             <Button
               size="sm"
-              variant="secondary"
+              variant="primary"
               aria-label={`Restock ${item.name}`}
               onClick={() => setAction({ kind: 'restock', item })}
             >
               Restock
             </Button>
-            <Select
-              className="w-32"
-              size="sm"
-              hideLabel
-              label={`Manage ${item.name}`}
-              value=""
-              placeholder="Manage"
-              options={MANAGE_OPTIONS}
-              onChange={(value) => {
-                if (value === 'edit')
-                  navigate(`${paths.inventoryNew}?item=${encodeURIComponent(item.id)}`)
-                else if (value === 'history')
-                  navigate(`${paths.inventoryHistory}?item=${encodeURIComponent(item.id)}`)
-                else if (value === 'adjust' || value === 'batches') setAction({ kind: value, item })
-              }}
+            <ActionMenu
+              label={`More actions for ${item.name}`}
+              items={[
+                {
+                  key: 'adjust',
+                  label: 'Adjust Stock',
+                  icon: 'pencil',
+                  onSelect: () => setAction({ kind: 'adjust', item }),
+                },
+                {
+                  key: 'batches',
+                  label: 'Batches',
+                  icon: 'package',
+                  onSelect: () => setAction({ kind: 'batches', item }),
+                },
+                {
+                  key: 'history',
+                  label: 'Usage history',
+                  icon: 'clipboardList',
+                  href: `${paths.inventoryHistory}?item=${encodeURIComponent(item.id)}`,
+                },
+                {
+                  key: 'edit',
+                  label: 'Edit',
+                  icon: 'pencil',
+                  href: `${paths.inventoryNew}?item=${encodeURIComponent(item.id)}`,
+                },
+              ]}
             />
           </div>
         ),
@@ -245,18 +250,22 @@ export function InventoryListPage() {
               <Icon name="clipboardList" />
               Usage history
             </Link>
-            <Link
-              className={buttonClassName({ variant: 'secondary' })}
-              to={paths.reports}
-              state={{ reportView: 'inventory' }}
-            >
-              <Icon name="fileText" />
-              Monthly inventory sheet
-            </Link>
             <Link className={buttonClassName({ variant: 'primary' })} to={paths.inventoryNew}>
               <Icon name="package" />
               Add Item
             </Link>
+            <ActionMenu
+              label="More actions for Inventory"
+              items={[
+                {
+                  key: 'sheet',
+                  label: 'Monthly inventory sheet',
+                  icon: 'fileText',
+                  href: paths.reports,
+                  state: { reportView: 'inventory' },
+                },
+              ]}
+            />
           </div>
         </div>
       </Card>

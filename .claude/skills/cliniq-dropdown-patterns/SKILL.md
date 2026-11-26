@@ -5,6 +5,8 @@ description: Apply when building or changing a CLINIQ dropdown, select, listbox,
 
 # CLINIQ Dropdown Patterns
 
+This skill covers choosing a value. A menu of operations uses `cliniq-action-menu-patterns` (ADR-095): it shares the panel look but uses `role="menu"` and an icon with each action label.
+
 Use this alongside `cliniq-interactive-states` whenever a dropdown's trigger or option list is created or changed.
 
 ## One look: the Dashboard's date-range control

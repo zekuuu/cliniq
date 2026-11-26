@@ -2,6 +2,7 @@ import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { PATIENT_KIND_LABELS, patientGroup, patientIdText, patientLine } from '../../lib/patients'
 import { Link, useNavigate } from 'react-router'
 import {
+  ActionMenu,
   BackButton,
   Badge,
   Button,
@@ -518,16 +519,22 @@ function VisitDetailEditor({
               </Button>
             )}
             {!locked && (
-              <Button
-                variant="neutral"
-                onClick={() => {
-                  setErrorReason('')
-                  setErrorReasonMessage('')
-                  setMarkingError(true)
-                }}
-              >
-                Entered in error
-              </Button>
+              <ActionMenu
+                label={`More actions for ${visit.student.fullName}'s visit`}
+                items={[
+                  {
+                    key: 'error',
+                    label: 'Entered in error',
+                    icon: 'alertTriangle',
+                    variant: 'destructive',
+                    onSelect: () => {
+                      setErrorReason('')
+                      setErrorReasonMessage('')
+                      setMarkingError(true)
+                    },
+                  },
+                ]}
+              />
             )}
           </div>
         )}

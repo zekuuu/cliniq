@@ -367,3 +367,7 @@ Staff get a search box in the top bar (from 1280 px wide) that finds active stud
 ### ADR-087: A student search by LRN also matches the shown last 4 digits
 
 Typed digits find a student by the start of the full LRN, or, up to 4 digits, inside the last 4 that every list shows. Five digits or more match only the start. One rule in the mock (`fullLrnMatchesSearch`) and the backend (`Lrn::searchMatches`), behind the pickers, the top-bar search and the Student List. Sunday, November 22, 2026 — 02:15 PHT. [ADR-087](ADR-087-LRN-Search-Also-Matches-The-Shown-Last-4.md)
+
+### ADR-095: Action menus for crowded secondary actions
+
+Rows and headers keep a direct primary action, Print, and emergency actions. Applicable secondary operations use one right-end, keyboard-accessible ⋮ menu with icon-and-label items; destructive actions are last, while existing confirmations, toasts, Undo, and audit handlers stay. Visit and excuse-letter rows use their titles as direct navigation links instead of menuing View links. Thursday, November 26, 2026 — 19:48 PHT. [ADR-095](ADR-095-Action-Menus-For-Crowded-Secondary-Actions.md)

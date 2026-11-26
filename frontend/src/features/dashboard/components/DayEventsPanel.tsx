@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { notify } from '../../../lib/notify'
 import { Link } from 'react-router'
-import { Button, DatePicker, Icon, Input, Modal } from '../../../components'
+import { ActionMenu, Button, DatePicker, Icon, Input, Modal } from '../../../components'
 import { DRILL_THROUGH_STATE } from '../../../hooks/useGoBack'
 import { cn } from '../../../lib/cn'
 import { formatDate, formatDateRange } from '../../../lib/dates'
@@ -313,14 +313,18 @@ export function DayEventsPanel({
                       >
                         <Icon name="pencil" size={18} />
                       </button>
-                      <button
-                        type="button"
-                        aria-label={`Delete ${event.title}`}
-                        onClick={() => go({ kind: 'confirm', event })}
-                        className={cn(iconAction, 'hover:text-error')}
-                      >
-                        <Icon name="trash" size={18} />
-                      </button>
+                      <ActionMenu
+                        label={`More actions for ${event.title}`}
+                        items={[
+                          {
+                            key: 'delete',
+                            label: 'Delete',
+                            icon: 'trash',
+                            variant: 'destructive',
+                            onSelect: () => go({ kind: 'confirm', event }),
+                          },
+                        ]}
+                      />
                     </li>
                   ))}
                 </ul>

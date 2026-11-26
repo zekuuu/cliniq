@@ -66,9 +66,11 @@ describe('Admin read-only access (ADR-038)', () => {
   })
 
   it('Student Profile: Staff keeps Edit, Archive and an enabled Print', async () => {
+    const user = userEvent.setup()
     renderWithRouter(<StudentProfilePage viewer={STAFF} studentId="student-0001" />)
-    expect(await screen.findByRole('link', { name: 'Edit' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Archive' })).toBeInTheDocument()
+    await user.click(await screen.findByRole('button', { name: /More actions for/ }))
+    expect(screen.getByRole('menuitem', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Archive' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /print/i })).not.toHaveAttribute('aria-disabled')
   })
 

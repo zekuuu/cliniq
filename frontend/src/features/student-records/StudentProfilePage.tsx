@@ -3,6 +3,7 @@ import { notify } from '../../lib/notify'
 import { Lrn } from '../../components/ui/MaskedLrn'
 import { SYMPTOM } from '../../lib/labels'
 import {
+  ActionMenu,
   BackButton,
   Badge,
   Button,
@@ -14,6 +15,7 @@ import {
   EmergencyContactList,
   ErrorState,
   Icon,
+  ListItemLink,
   ListRow,
   Modal,
   PrintButton,
@@ -190,16 +192,26 @@ function ProfileHeader({
               </Link>
             </>
           )}
-          {staffCanAct && (
+          {staffCanAct && student.archived && (
             <Link to={paths.studentEdit(student.id)} className={buttonClassName()}>
               Edit
             </Link>
           )}
           <PrintButton viewer={viewer} />
           {staffCanAct && !student.archived && (
-            <Button variant="neutral" onClick={() => setConfirmingArchive(true)}>
-              Archive
-            </Button>
+            <ActionMenu
+              label={`More actions for ${student.fullName}`}
+              items={[
+                { key: 'edit', label: 'Edit', icon: 'pencil', href: paths.studentEdit(student.id) },
+                {
+                  key: 'archive',
+                  label: 'Archive',
+                  icon: 'archive',
+                  variant: 'destructive',
+                  onSelect: () => setConfirmingArchive(true),
+                },
+              ]}
+            />
           )}
         </div>
       </div>
@@ -398,19 +410,23 @@ function ExcuseLettersCard({ letters }: { letters: StudentExcuseLetter[] }) {
           {letters.map((letter) => (
             <ListRow
               key={letter.id}
-              primary={`${formatDateRange(letter.excusedFrom, letter.excusedUntil)} · ${dispositionLabel[letter.disposition]}`}
+              primary={
+                <ListItemLink
+                  to={
+                    letter.status === 'pending' || letter.status === 'approved'
+                      ? paths.excuseLetter(letter.visitId)
+                      : paths.excuseLetterVersion(letter.visitId, letter.id)
+                  }
+                >
+                  {`${formatDateRange(letter.excusedFrom, letter.excusedUntil)} · ${dispositionLabel[letter.disposition]}`}
+                </ListItemLink>
+              }
               trailing={
                 letter.status === 'pending' ? (
                   <div className="flex flex-wrap items-center justify-end gap-2">
                     <Badge tone="warning" variant="soft">
                       Pending approval
                     </Badge>
-                    <Link
-                      to={paths.excuseLetter(letter.visitId)}
-                      className={buttonClassName({ size: 'sm' })}
-                    >
-                      Review letter
-                    </Link>
                   </div>
                 ) : (
                   <div className="flex flex-wrap items-center justify-end gap-2">
@@ -423,15 +439,6 @@ function ExcuseLettersCard({ letters }: { letters: StudentExcuseLetter[] }) {
                       <Badge tone={letter.status === 'voided' ? 'error' : 'neutral'} variant="soft">
                         {LETTER_STATUS[letter.status]}
                       </Badge>
-                    )}
-                    {/* A stored letter (superseded or voided) opens on its own, marked not valid. */}
-                    {letter.status !== 'approved' && !letter.id.startsWith('draft-') && (
-                      <Link
-                        to={paths.excuseLetterVersion(letter.visitId, letter.id)}
-                        className={buttonClassName({ size: 'sm' })}
-                      >
-                        View letter
-                      </Link>
                     )}
                     <Link
                       to={paths.visitDetail(letter.visitId)}

@@ -107,7 +107,8 @@ describe('no password re-entry (Zean, Sunday, October 25, 2026)', () => {
   it('disables an account at once, with no password dialog', async () => {
     const user = userEvent.setup()
     renderWithRouter(<UserListPage viewer={ADMIN} />)
-    await user.click(await screen.findByRole('button', { name: 'Disable Jennesse Baas' }))
+    await user.click(await screen.findByRole('button', { name: 'More actions for Jennesse Baas' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Disable' }))
     expect(await screen.findByText("Jennesse Baas's account disabled")).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: "Confirm it's you" })).not.toBeInTheDocument()
     expect(getRecordedAuditEntries().map((e) => e.actionType)).toEqual(['update'])

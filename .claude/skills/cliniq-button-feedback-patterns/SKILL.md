@@ -5,6 +5,8 @@ description: Apply when building or changing a CLINIQ button that runs an action
 
 # CLINIQ Button Feedback Patterns
 
+**Actions inside a menu (ADR-095):** use `ActionMenu` for the trigger's busy state while an asynchronous item runs. The item closes the menu first; the original handler still sends the result toast and any Undo. Keep this feedback on the trigger rather than adding a second result message inside the menu.
+
 Use this with `cliniq-interactive-states`, which covers cursor, hover and focus. The shared component is `frontend/src/components/ui/Button.tsx`.
 
 ## Busy: `loading`

@@ -122,7 +122,8 @@ describe('entered in error (VS-9, EX-3, D2)', () => {
     const user = userEvent.setup()
     const { visit } = await recordVisit({ ...base, disposition: 'returned_to_class' })
     renderWithRouter(<VisitDetailPage visitId={visit.id} />)
-    await user.click(await screen.findByRole('button', { name: 'Entered in error' }))
+    await user.click(await screen.findByRole('button', { name: /More actions for .*visit/ }))
+    await user.click(screen.getByRole('menuitem', { name: 'Entered in error' }))
     const dialog = screen.getByRole('dialog', { name: 'Mark this visit as entered in error?' })
     await user.click(within(dialog).getByRole('button', { name: 'Mark entered in error' }))
     expect(

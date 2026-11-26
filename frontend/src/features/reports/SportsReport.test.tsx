@@ -28,6 +28,7 @@ import {
 import { addDays } from '../../lib/dates'
 import { AppRoutes } from '../../routes/AppRoutes'
 import { SportsReportFormPage } from './SportsReportFormPage'
+import { SportsReportListPage } from './SportsReportListPage'
 import { SportsReportPage } from './SportsReportPage'
 
 vi.mock('react-chartjs-2', () => {
@@ -273,6 +274,30 @@ describe('Sports Report data rules (ADR-034)', () => {
 })
 
 describe('Sports Report screens', () => {
+  it('keeps the report title as the direct link and puts secondary actions in a keyboard menu', async () => {
+    const report = await createSportsReport(input([]), STAFF)
+    render(
+      <MemoryRouter>
+        <SportsReportListPage viewer={STAFF} />
+      </MemoryRouter>,
+    )
+    const title = await screen.findByRole('link', { name: report.title })
+    expect(title).toHaveAttribute('href', `/reports/sports/${report.id}`)
+    expect(screen.queryByRole('link', { name: 'View' })).not.toBeInTheDocument()
+
+    const menu = screen.getByRole('button', { name: `More actions for ${report.title}` })
+    menu.focus()
+    await userEvent.keyboard('{Enter}')
+    expect(screen.getByRole('menuitem', { name: 'Edit' })).toHaveAttribute(
+      'href',
+      `/reports/sports/${report.id}/edit`,
+    )
+    expect(screen.getByRole('menuitem', { name: 'Duplicate' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Archive' })).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    expect(menu).toHaveFocus()
+  })
+
   it('keeps every Sports Report route from the Admin/Principal, and the Reports entry is Staff only', async () => {
     const report = await createSportsReport(input([]), STAFF)
     for (const path of [

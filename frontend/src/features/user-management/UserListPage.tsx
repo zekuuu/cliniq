@@ -3,6 +3,7 @@ import { notify } from '../../lib/notify'
 import { Link } from 'react-router'
 import { formatDateTime } from '../../lib/dates'
 import {
+  ActionMenu,
   Badge,
   Button,
   Card,
@@ -157,27 +158,29 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
     cell: (user) => (
       <span className="flex flex-wrap gap-2">
         <Link
-          className={buttonClassName({ variant: 'secondary', size: 'sm' })}
+          className={buttonClassName({ variant: 'primary', size: 'sm' })}
           to={paths.userEdit(user.id)}
         >
           Edit
         </Link>
-        <Button
-          size="sm"
-          variant="neutral"
-          onClick={() => void toggleStatus(user)}
-          aria-label={`${user.deactivatedAt ? 'Enable' : 'Disable'} ${user.name}`}
-        >
-          {user.deactivatedAt ? 'Enable' : 'Disable'}
-        </Button>
-        <Button
-          size="sm"
-          variant="neutral"
-          onClick={() => setResetFor(user)}
-          aria-label={`Reset password for ${user.name}`}
-        >
-          Reset Password
-        </Button>
+        <ActionMenu
+          label={`More actions for ${user.name}`}
+          items={[
+            {
+              key: 'status',
+              label: user.deactivatedAt ? 'Enable' : 'Disable',
+              icon: user.deactivatedAt ? 'checkCircle' : 'xCircle',
+              onSelect: () => toggleStatus(user),
+            },
+            {
+              key: 'reset',
+              label: 'Reset Password',
+              icon: 'lock',
+              variant: 'destructive',
+              onSelect: () => setResetFor(user),
+            },
+          ]}
+        />
       </span>
     ),
   })

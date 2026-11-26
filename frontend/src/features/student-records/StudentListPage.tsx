@@ -3,6 +3,7 @@ import { DRILL_THROUGH_STATE } from '../../hooks/useGoBack'
 import { fetchArchiveCount } from '../archive/archiveCount'
 import { Link, useLocation, useSearchParams } from 'react-router'
 import {
+  ActionMenu,
   BackButton,
   Badge,
   buttonClassName,
@@ -226,14 +227,16 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
             </p>
           </div>
           <div className="ml-auto flex flex-wrap justify-end gap-2">
-            <Link
-              className={buttonClassName({ variant: 'secondary' })}
-              to={paths.archive}
-              state={{ ...DRILL_THROUGH_STATE, section: 'students' }}
-            >
-              <Icon name="archive" />
-              Archive{archiveCount !== undefined ? ` (${archiveCount})` : ''}
-            </Link>
+            {viewer.role === 'admin' && (
+              <Link
+                className={buttonClassName({ variant: 'secondary' })}
+                to={paths.archive}
+                state={{ ...DRILL_THROUGH_STATE, section: 'students' }}
+              >
+                <Icon name="archive" />
+                Archive{archiveCount !== undefined ? ` (${archiveCount})` : ''}
+              </Link>
+            )}
             {viewer.role === 'staff' && (
               <>
                 {incompleteCount !== undefined && (
@@ -245,17 +248,28 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
                     Incomplete records ({incompleteCount})
                   </Link>
                 )}
-                <Link
-                  className={buttonClassName({ variant: 'secondary' })}
-                  to={paths.studentImport}
-                >
-                  <Icon name="fileText" />
-                  Import List
-                </Link>
                 <Link className={buttonClassName({ variant: 'primary' })} to={paths.studentNew}>
                   <Icon name="plus" />
                   Add Student
                 </Link>
+                <ActionMenu
+                  label="More actions for Student List"
+                  items={[
+                    {
+                      key: 'import',
+                      label: 'Import List',
+                      icon: 'fileText',
+                      href: paths.studentImport,
+                    },
+                    {
+                      key: 'archive',
+                      label: `Archive${archiveCount !== undefined ? ` (${archiveCount})` : ''}`,
+                      icon: 'archive',
+                      href: paths.archive,
+                      state: { ...DRILL_THROUGH_STATE, section: 'students' },
+                    },
+                  ]}
+                />
               </>
             )}
           </div>

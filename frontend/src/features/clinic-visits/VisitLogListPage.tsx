@@ -13,6 +13,7 @@ import {
   EmptyState,
   ErrorState,
   Icon,
+  ListItemLink,
   ShortcutHint,
   Input,
   MultiSelect,
@@ -185,7 +186,9 @@ export function VisitLogListPage() {
       header: 'Date and time',
       rowHeader: true,
       sort: sortColumn('dateTime', 'Date and time'),
-      cell: (row) => formatDateTime(row.dateTime),
+      cell: (row) => (
+        <ListItemLink to={paths.visitDetail(row.id)}>{formatDateTime(row.dateTime)}</ListItemLink>
+      ),
     },
     {
       key: 'student',
@@ -242,10 +245,6 @@ export function VisitLogListPage() {
       header: 'Actions',
       cell: (row) => (
         <div className="flex flex-wrap gap-2">
-          <Link to={paths.visitDetail(row.id)} className={buttonClassName({ size: 'sm' })}>
-            <Icon name="fileText" />
-            View Details
-          </Link>
           {row.letterPending && (
             <Link
               to={paths.excuseLetter(row.id)}

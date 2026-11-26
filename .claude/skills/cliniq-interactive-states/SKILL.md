@@ -5,6 +5,8 @@ description: Apply whenever building or reviewing any button, link, dropdown/sel
 
 # CLINIQ Interactive States
 
+**Action-menu trigger exception (ADR-095):** the vertical ⋮ button in `ActionMenu` is a ghost control with a minimum 44px touch target, visible hover and focus. It is larger than the bare glyph-sized icon actions described below because it opens a group of row actions on both desktop and phone.
+
 This skill exists because the first real build (the Dashboard) shipped without cursor states, without hover feedback, and with native unstyled dropdowns — despite hover already being listed as a required state in the design system. The requirement wasn't new; it was just too vague to actually verify against. This skill makes it concrete and checkable.
 
 ## The rule, per element type

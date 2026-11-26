@@ -3,6 +3,7 @@ import { DRILL_THROUGH_STATE } from '../../hooks/useGoBack'
 import { fetchArchiveCount } from '../archive/archiveCount'
 import { Link } from 'react-router'
 import {
+  ActionMenu,
   BackButton,
   Badge,
   buttonClassName,
@@ -284,28 +285,29 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           </div>
           {/* ml-auto: when the actions wrap under the description they stay right-aligned, as on the Student List. */}
           <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
-            <Link
-              className={buttonClassName({ variant: 'secondary' })}
-              to={paths.archive}
-              state={{ ...DRILL_THROUGH_STATE, section: 'staff' }}
-            >
-              <Icon name="archive" />
-              Archive{archive.data !== undefined ? ` (${archive.data})` : ''}
-            </Link>
             {/* ADR-067: the staff Incomplete Records page, as the Student List's button opens the student queue. */}
             <Link className={buttonClassName({ variant: 'secondary' })} to={paths.staffIncomplete}>
               <Icon name="alertTriangle" />
               Incomplete records ({incompleteCount})
             </Link>
             {/* ADR-069, as on the Student List. */}
-            <Link className={buttonClassName({ variant: 'secondary' })} to={paths.staffImport}>
-              <Icon name="fileText" />
-              Import List
-            </Link>
             <Link className={buttonClassName({ variant: 'primary' })} to={paths.staffNew}>
               <Icon name="plus" />
               Add Staff
             </Link>
+            <ActionMenu
+              label="More actions for Staff List"
+              items={[
+                { key: 'import', label: 'Import List', icon: 'fileText', href: paths.staffImport },
+                {
+                  key: 'archive',
+                  label: `Archive${archive.data !== undefined ? ` (${archive.data})` : ''}`,
+                  icon: 'archive',
+                  href: paths.archive,
+                  state: { ...DRILL_THROUGH_STATE, section: 'staff' },
+                },
+              ]}
+            />
           </div>
         </div>
       </Card>

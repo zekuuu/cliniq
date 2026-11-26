@@ -44,7 +44,8 @@ describe('UI/UX review regressions', () => {
     const user = userEvent.setup()
     renderWithRouter(<StudentProfilePage studentId="student-0001" />)
 
-    await user.click(await screen.findByRole('button', { name: 'Archive' }))
+    await user.click(await screen.findByRole('button', { name: /More actions for/ }))
+    await user.click(screen.getByRole('menuitem', { name: 'Archive' }))
     const dialog = screen.getByRole('dialog', { name: 'Archive this student record?' })
     expect(recordedWrites()).toEqual([])
 

@@ -93,7 +93,8 @@ describe('After Edit Student saves (C6)', () => {
       </MemoryRouter>,
     )
     await user.click(screen.getByRole('link', { name: 'Open profile' }))
-    await user.click(await screen.findByRole('link', { name: /edit/i }))
+    await user.click(await screen.findByRole('button', { name: /More actions for/ }))
+    await user.click(screen.getByRole('menuitem', { name: 'Edit' }))
     await screen.findByRole('heading', { name: 'Edit Student' })
     await user.click(
       screen.getByRole('radio', { name: student.sex === 'female' ? 'Male' : 'Female' }),

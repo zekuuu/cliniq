@@ -1,5 +1,6 @@
 import { renderWithRouter } from '../../test/renderWithRouter'
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { addDays, formatDateRange } from '../../lib/dates'
 import { getMockToday } from '../../lib/mock-db'
@@ -21,16 +22,18 @@ describe('Student Profile', () => {
   })
 
   it('shows Staff actions, including print', async () => {
+    const user = userEvent.setup()
     const print = vi.spyOn(window, 'print').mockImplementation(() => {})
     renderWithRouter(<StudentProfilePage />)
 
-    expect(await screen.findByRole('link', { name: 'Edit' })).toHaveAttribute(
+    await user.click(await screen.findByRole('button', { name: /More actions for/ }))
+    expect(screen.getByRole('menuitem', { name: 'Edit' })).toHaveAttribute(
       'href',
       expect.stringMatching(/^\/students\/student-\d{4}\/edit$/),
     )
+    expect(screen.getByRole('menuitem', { name: 'Archive' })).toBeInTheDocument()
     screen.getByRole('button', { name: 'Print / Save as PDF' }).click()
     expect(print).toHaveBeenCalledOnce()
-    expect(screen.getByRole('button', { name: 'Archive' })).toBeInTheDocument()
   })
 
   it('lists every emergency contact with its primary state', async () => {
@@ -74,9 +77,8 @@ describe('Student Profile', () => {
 
     expect(await screen.findByRole('heading', { name: 'Excuse Letters' })).toBeInTheDocument()
     expect(screen.getByText('Pending approval')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Review letter' })).toHaveAttribute(
-      'href',
-      '/visits/visit-0151/excuse-letter',
-    )
+    expect(
+      within(screen.getByRole('list', { name: 'Excuse Letters' })).getByRole('link'),
+    ).toHaveAttribute('href', '/visits/visit-0151/excuse-letter')
   })
 })
