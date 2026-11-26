@@ -153,18 +153,18 @@ describe('duplicate warning and unit suggestions (IV-3, D9)', () => {
   })
 })
 
-describe('one main row action and a Manage menu (IV-1), Add or Remove (IV-7)', () => {
+describe('one main row action and an action menu (IV-1), Add or Remove (IV-7)', () => {
   beforeEach(() => resetMockDb())
 
-  it('keeps Restock visible and puts Adjust Stock, Batches and Edit under Manage', async () => {
+  it('keeps Restock visible and puts Adjust Stock, Batches and Edit in the action menu', async () => {
     const user = userEvent.setup()
     renderWithRouter(<InventoryListPage />)
     expect(await screen.findByRole('button', { name: 'Restock Gauze Pads' })).toBeInTheDocument()
     expect(
       screen.getByText('Restock when new stock arrives. Adjust Stock to correct a count.'),
     ).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /^Manage Gauze Pads/ }))
-    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+    await user.click(screen.getByRole('button', { name: 'More actions for Gauze Pads' }))
+    expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
       'Adjust Stock',
       'Batches',
       'Usage history',
@@ -175,11 +175,8 @@ describe('one main row action and a Manage menu (IV-1), Add or Remove (IV-7)', (
   it('adds a positive quantity with Add and shows the result before saving', async () => {
     const user = userEvent.setup()
     renderWithRouter(<InventoryListPage />)
-    await selectOption(
-      user,
-      await screen.findByRole('button', { name: /^Manage Gauze Pads/ }),
-      'Adjust Stock',
-    )
+    await user.click(await screen.findByRole('button', { name: 'More actions for Gauze Pads' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Adjust Stock' }))
     const dialog = screen.getByRole('dialog', { name: 'Adjust Stock: Gauze Pads' })
     await user.click(within(dialog).getByRole('radio', { name: 'Add' }))
     await user.type(within(dialog).getByLabelText(/quantity to add/i), '5')
@@ -194,11 +191,8 @@ describe('one main row action and a Manage menu (IV-1), Add or Remove (IV-7)', (
   it('refuses a minus sign or zero: the quantity is always positive', async () => {
     const user = userEvent.setup()
     renderWithRouter(<InventoryListPage />)
-    await selectOption(
-      user,
-      await screen.findByRole('button', { name: /^Manage Gauze Pads/ }),
-      'Adjust Stock',
-    )
+    await user.click(await screen.findByRole('button', { name: 'More actions for Gauze Pads' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Adjust Stock' }))
     const dialog = screen.getByRole('dialog', { name: 'Adjust Stock: Gauze Pads' })
     await user.type(within(dialog).getByLabelText(/quantity to remove/i), '0')
     await selectOption(user, within(dialog).getByLabelText(/^reason/i), 'Miscount correction')

@@ -35,12 +35,9 @@ describe('Adjust Stock', () => {
   async function openAdjust(itemName: string) {
     const user = userEvent.setup()
     renderWithRouter(<InventoryListPage />)
-    // Panel review IV-1: Adjust Stock sits under the row's Manage menu.
-    await selectOption(
-      user,
-      await screen.findByRole('button', { name: new RegExp(`^Manage ${itemName}`) }),
-      'Adjust Stock',
-    )
+    // Panel review IV-1: Adjust Stock sits in the row's action menu.
+    await user.click(await screen.findByRole('button', { name: `More actions for ${itemName}` }))
+    await user.click(screen.getByRole('menuitem', { name: 'Adjust Stock' }))
     return { user, dialog: screen.getByRole('dialog', { name: `Adjust Stock: ${itemName}` }) }
   }
 
@@ -290,11 +287,8 @@ describe('Large write-off rule (panel review IV-7)', () => {
     const user = userEvent.setup()
     db().config.largeWriteOffPercent = 1
     renderWithRouter(<InventoryListPage />)
-    await selectOption(
-      user,
-      await screen.findByRole('button', { name: /^Manage Gauze Pads/ }),
-      'Adjust Stock',
-    )
+    await user.click(await screen.findByRole('button', { name: 'More actions for Gauze Pads' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Adjust Stock' }))
     const dialog = screen.getByRole('dialog', { name: 'Adjust Stock: Gauze Pads' })
     await user.type(within(dialog).getByLabelText(/quantity to remove/i), '1')
     expect(
