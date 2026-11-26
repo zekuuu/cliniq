@@ -6,5 +6,5 @@ export function stripMarkers(text) {
   return text
     .replace(/~~\$\\textcolor\{red\}\{\\text\{[^}]*\}\}\$~~ ?/g, '')
     .replace(/\*\*\$\\textcolor\{green\}\{\\text\{([^}]*)\}\}\$\*\*/g, '$1')
-    .replace(/<td>\n\n([^<\n]+)\n\n<\/td>/g, (_, c) => `<td>${c.trim()}</td>`)
+    .replace(/<td>\n\n([^\n]+)\n\n<\/td>/g, (_, c) => `<td>${c.trim()}</td>`)
 }

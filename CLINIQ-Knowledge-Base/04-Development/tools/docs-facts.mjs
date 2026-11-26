@@ -128,7 +128,9 @@ export function computeFacts() {
   f.constraintTests = count(ct, /^CALL t_(accepts|rejects|count)\(/gm)
   const migs = beFiles('backend/app').filter((p) => /Database\/Migrations\/.+\.php$/.test(p))
   f.migrations = migs.length
-  f.tableMigrations = migs.filter((p) => /CREATE TABLE/.test(beRead(p))).length
+  f.tableMigrations = migs.filter((p) => /_create_.*_table\.php$/.test(p)).length
+  f.schemaChangeMigrations = migs.filter((p) => /_(add|remove)_.*\.php$/.test(p)).length
+  f.dataMigrations = migs.filter((p) => /_insert_.*\.php$/.test(p)).length
 
   // API
   const contract = read('CLINIQ-Knowledge-Base/04-Development/API-Contract.md')
@@ -269,7 +271,7 @@ Every README, requirement document, diagram caption, and the Project Plan and SR
 | Database columns | **${f.columns}** | same |
 | \`CHECK\` / \`UNIQUE\` / foreign keys | **${f.checks}** / **${f.uniques}** / **${f.foreignKeys}** | same |
 | Constraint test cases | **${f.constraintTests}** | [\`Checks/constraint-tests.sql\`](../02-Architecture/Database/Checks/constraint-tests.sql) |
-| Laravel migrations on disk | **${f.migrations}**: ${f.tableMigrations} create a table (one per table), ${f.migrations - f.tableMigrations} ship product data (defaults, symptom lists) | \`backend/app/**/Database/Migrations/\` |
+| Laravel migrations on disk | **${f.migrations}**: ${f.tableMigrations} create a table, ${f.schemaChangeMigrations} alter the schema, ${f.dataMigrations} ship product data | \`backend/app/**/Database/Migrations/\` |
 | API contract entries | **${f.contractEntries}** headings naming **${f.contractEndpoints}** endpoints | [API Contract](../04-Development/API-Contract.md) (\`####\` endpoint headings) |
 | API routes live in the backend | **${f.liveRoutes.length}**${f.routesByModule ? `: ${Object.entries(f.routesByModule).sort((a, b) => a[0].localeCompare(b[0])).map(([k, n]) => `${k} ${n}`).join(', ')}` : ''} | ${f.liveRoutesSource} |
 | Scheduled jobs | **${f.scheduledJobs.length}**: ${f.scheduledJobs.join('; ')} | [\`backend/routes/console.php\`](${rel('backend/routes/console.php')}); Windows Task Scheduler runs \`php artisan schedule:run\` every minute |
