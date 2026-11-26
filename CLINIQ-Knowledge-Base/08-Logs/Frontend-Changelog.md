@@ -1,5 +1,17 @@
 # Changelog
 
+| Thursday, November 26, 2026 — 22:56:48 PHT | Accounts columns now fit likely content lengths and leave room for names; Accounts and Inventory Actions headers align with their first buttons, with menus near the table edge. Focused tests (11), typecheck and whitespace check passed. | [session](Agent-Sessions/2026-11-26-actions-header-button-alignment.md) |
+
+| Thursday, November 26, 2026 — 22:48 PHT | ADR-096 follow-up: regenerated the live Facts sheet for 96 ADRs and updated the current count references in the knowledge-base README and Start Here guide. Documentation checks now pass. | [session](Agent-Sessions/2026-11-26-adr-096-docs-count-follow-up.md) |
+
+| Thursday, November 26, 2026 — 22:47:16 PHT | Corrected the Inventory Actions header from centered to left-aligned after the user's clarification; focused tests (3) and typecheck passed. | [session](Agent-Sessions/2026-11-26-inventory-actions-header-left.md) |
+
+| Thursday, November 26, 2026 — 22:44 PHT | Centered the authenticator setup QR code and key. Result toasts now use light semantic fills and accent borders under ADR-096, replacing the white-card rule; shared skill and Design System updated. Focused 31 tests, lint and production build passed. | [session](Agent-Sessions/2026-11-26-authenticator-qr-and-toast-colors.md) |
+
+| Thursday, November 26, 2026 — 22:43:36 PHT | Centered the Inventory Actions header over its row controls; focused Inventory tests (3) and typecheck passed. | [session](Agent-Sessions/2026-11-26-inventory-header-alignment.md) |
+
+| Thursday, November 26, 2026 — 22:17 PHT | Inventory List widths now give item names more room and keep Restock plus the ⋮ menu at the right edge of a compact Actions column. A structural test was added; visual verification is pending. The staging documentation sync updated READMEs, Facts Sheet, Plan/SRS Markdown copies and the groupmate digest. | [inventory session](Agent-Sessions/2026-11-26-inventory-table-layout.md), [docs session](Agent-Sessions/2026-11-26-docs-main-sync-staging.md) |
+
 | Thursday, November 26, 2026 — 21:35 PHT | Merged `feat/action-menu-visibility` into `staging` without conflicts, preserving the green ⋮ trigger and Incident Log row-menu work. The feature branch's 20 focused tests, build, lint and browser checks passed before merge. | [session](Agent-Sessions/2026-11-26-action-menu-visibility-staging-merge.md) |
 | Thursday, November 26, 2026 — 21:15 PHT | Incident Log unfinished Staff rows now keep Complete Stage 2 directly visible and put View Report in the shared ⋮ menu, replacing the two-button stack. Completed and Admin rows keep their direct report link. The menu trigger cannot shrink in table flex rows. Focused 20 tests, build, lint, desktop/phone Chromium, and docs checks passed. | [session](Agent-Sessions/2026-11-26-incident-log-action-menu.md) |
 | Thursday, November 26, 2026 — 21:04 PHT | Refined the shared ⋮ action-menu trigger after Zean's visual feedback: borderless, slightly larger solid dark-green dots with more vertical space, 40px beside desktop buttons and 44px on phones. Updated ADR-095 and the shared pattern. Focused tests, typecheck, lint, build, and Chromium mock-mode desktop/phone checks passed. | [session](Agent-Sessions/2026-11-26-action-menu-trigger-visibility.md) |

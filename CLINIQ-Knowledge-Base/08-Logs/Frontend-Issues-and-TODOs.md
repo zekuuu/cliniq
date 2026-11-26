@@ -17,7 +17,9 @@
 
 ## Open work at a glance
 
-Open: FIX 0 · AUDIT 0 · DOC 23 · DECIDE 2 · LATER 15 | Notes: NOTE 82 · VERIFY 29 | Done: 521 (all in Issues-Done-Archive.md) (recounted Thursday, November 26, 2026 — 21:15 PHT: the Incident Log action stack was resolved).
+Open: FIX 0 · AUDIT 0 · DOC 24 · DECIDE 2 · LATER 15 | Notes: NOTE 82 · VERIFY 29 | Done: 521 (all in Issues-Done-Archive.md) (recounted Thursday, November 26, 2026 — 22:43 PHT: ADR-096 canonical-document review added).
+
+- [ ] **[DOC]** **Canonical toast visuals need ADR-096 review** (logged Thursday, November 26, 2026 — 22:43 PHT). The Frontend Context Brief and Frontend Design Reference should replace their white-toast description with light semantic fills and accent borders. The knowledge-base Design System and shared toast skill are updated. Session: [2026-11-26-authenticator-qr-and-toast-colors](Agent-Sessions/2026-11-26-authenticator-qr-and-toast-colors.md).
 
 **Open `FIX` items:** none.
 
@@ -34,7 +36,7 @@ Open: FIX 0 · AUDIT 0 · DOC 23 · DECIDE 2 · LATER 15 | Notes: NOTE 82 · VER
 **Why the rest stay open (triage of November 18, 2026):** the `DECIDE` and most `LATER` items wait on a person (the nurse, the school, the team, or Zean: the absent-nurse question, the Login photo, the help page, the Dashboard sections, the badge, print on other lists, QR, the referral age, the Chrome print check on the clinic PC); the printed reference number needs the backend; the `DOC` items are capstone writing for a separate prompt (privacy agreement, outage plan, defense documents and answers, testing evidence, question files, school facts, the comparison, the inventory study, the course stack documents, the SRS checks), team tasks (the consultation sheet, the Revision 2.8 review), or Zean's call (the UTC timestamps).
 
 - **AUDIT** (0): none. The final audit of the frontend clean-up, Part 3, superseded all ten.
-- **DOC** (23): Canonical review for ADR-095 action-menu links and layouts; ADR-094 incident timing; ADR-093 Audit Log print; ADR-090 through ADR-092; feedback documents for ADR-089; emergency-contact verification in groupmate-owned SRS/Markdown copies; other open documentation requests below.
+- **DOC** (24): Canonical review for ADR-096 toast fills; ADR-095 action-menu links and layouts; ADR-094 incident timing; ADR-093 Audit Log print; ADR-090 through ADR-092; feedback documents for ADR-089; emergency-contact verification in groupmate-owned SRS/Markdown copies; other open documentation requests below.
 - **DECIDE** (2): Toasts and form reset (ADR-083); Open decisions, waiting on someone outside the dev team
 - **LATER** (15): Restore button on the Archive screen (ADR-085); Remove the temporary "Test toasts" panel; Server-side paging leftovers (the mock layer in the API build, the Incident Report whole list, detail prefetch, vendor chunks); Reported UI/UX follow-ups; Open FIX and styling DECIDE sweep; Dashboard view tabs (ADR-025); Purpose-built A4 printouts (ADR-026); Professor consultation and team meeting, October 16; System review fixes; Birthdate instead of the student's own number
 - **VERIFY** (boxed, 1): Frontend review round 2, Parts 2 and 3 (axe and Login done November 18; the keyboard walk and three print previews remain)
