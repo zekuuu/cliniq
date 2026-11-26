@@ -38,20 +38,18 @@ describe('Incident Log', () => {
     expect(screen.queryByRole('columnheader', { name: /full name/i })).not.toBeInTheDocument()
   })
 
-  it('keeps Stage 2 direct and opens the report from the row menu', async () => {
-    const user = userEvent.setup()
+  it('opens reports from the date and keeps Stage 2 visible without a duplicate badge', async () => {
     renderWithRouter(<IncidentLogListPage />)
 
     const complete = (await screen.findAllByRole('link', { name: 'Complete Stage 2' }))[0]
     const row = complete.closest('tr')
     expect(row).not.toBeNull()
-    expect(within(row!).queryByRole('link', { name: 'View Report' })).not.toBeInTheDocument()
-
-    await user.click(within(row!).getByRole('button', { name: /More actions for incident on/ }))
-    expect(screen.getByRole('menuitem', { name: 'View Report' })).toHaveAttribute(
+    expect(within(within(row!).getByRole('rowheader')).getByRole('link')).toHaveAttribute(
       'href',
       complete.getAttribute('href')?.replace('/complete', '/report'),
     )
+    expect(within(row!).queryByText('Needs completion')).not.toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: 'Actions' })).not.toBeInTheDocument()
     expect(complete).toBeVisible()
   })
 

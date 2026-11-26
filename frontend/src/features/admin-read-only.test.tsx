@@ -74,13 +74,16 @@ describe('Admin read-only access (ADR-038)', () => {
     expect(screen.getByRole('button', { name: /print/i })).not.toHaveAttribute('aria-disabled')
   })
 
-  it('Incident Log: View Report only, no New Incident or Stage 2', async () => {
+  it('Incident Log: date opens the report, with no New Incident or Stage 2', async () => {
     renderWithRouter(<IncidentLogListPage viewer={ADMIN} />)
     await screen.findByRole('heading', { name: 'Incident Log' })
     expectNoWriteControls()
-    expect(
-      screen.queryByRole('button', { name: /More actions for incident on/ }),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: 'Actions' })).not.toBeInTheDocument()
+    const [date] = await screen.findAllByRole('rowheader')
+    expect(within(date).getByRole('link')).toHaveAttribute(
+      'href',
+      expect.stringMatching(/\/incidents\/[^/]+\/report$/),
+    )
   })
 
   it('Incident Report: no Approve, no visit link, Print disabled', async () => {

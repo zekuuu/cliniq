@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react'
 import { usePatientFilter } from '../../hooks/usePatientFilter'
 import { Link } from 'react-router'
 import {
-  ActionMenu,
   BackButton,
   Badge,
   buttonClassName,
@@ -14,6 +13,7 @@ import {
   EmptyState,
   ErrorState,
   Icon,
+  ListItemLink,
   ShortcutHint,
   Input,
   Pagination,
@@ -77,19 +77,14 @@ function IncidentLogSkeleton({ back }: { back: ReactNode }) {
   )
 }
 
-const viewReport = (row: IncidentLogRow) => (
-  <Link to={paths.incidentReport(row.id)} className={buttonClassName({ size: 'sm' })}>
-    <Icon name="fileText" />
-    View Report
-  </Link>
-)
-
 const baseColumns: Array<DataTableColumn<IncidentLogRow>> = [
   {
     key: 'time',
     header: 'Date and time',
     rowHeader: true,
-    cell: (row) => formatDateTime(row.time),
+    cell: (row) => (
+      <ListItemLink to={paths.incidentReport(row.id)}>{formatDateTime(row.time)}</ListItemLink>
+    ),
   },
   {
     key: 'student',
@@ -116,42 +111,16 @@ const baseColumns: Array<DataTableColumn<IncidentLogRow>> = [
   {
     key: 'status',
     header: 'Status',
+    width: '12rem',
     cell: (row) => (
       <Badge tone={completionMeta[row.completion].tone} variant="soft">
         {completionMeta[row.completion].label}
       </Badge>
     ),
   },
-  {
-    key: 'actions',
-    header: 'Actions',
-    width: '15rem',
-    cell: (row) =>
-      row.completion === 'needs_completion' ? (
-        <div className="flex items-center gap-1.5">
-          <Link to={paths.incidentComplete(row.id)} className={buttonClassName({ size: 'sm' })}>
-            <Icon name="clipboardList" />
-            Complete Stage 2
-          </Link>
-          <ActionMenu
-            label={`More actions for incident on ${formatDateTime(row.time)}`}
-            items={[
-              {
-                key: 'report',
-                label: 'View Report',
-                icon: 'fileText',
-                href: paths.incidentReport(row.id),
-              },
-            ]}
-          />
-        </div>
-      ) : (
-        viewReport(row)
-      ),
-  },
 ]
 
-/** The Admin reads the log (ADR-038): View Report only, no New Incident or Stage 2. */
+/** The Admin opens reports from the date/time link, with no New Incident or Stage 2 action. */
 export function IncidentLogListPage({
   viewer = getMockSessionUser(),
 }: { viewer?: SessionUser } = {}) {
@@ -238,8 +207,22 @@ export function IncidentLogListPage({
       }
     if (column.key === 'complaint')
       return { ...column, sort: sortColumn('complaint', 'Reason / description') }
-    if (column.key === 'status') return { ...column, sort: sortColumn('status', 'Status') }
-    if (column.key === 'actions' && !isStaff) return { ...column, cell: viewReport }
+    if (column.key === 'status')
+      return {
+        ...column,
+        sort: sortColumn('status', 'Status'),
+        cell: (row: IncidentLogRow) =>
+          isStaff && row.completion === 'needs_completion' ? (
+            <Link to={paths.incidentComplete(row.id)} className={buttonClassName({ size: 'sm' })}>
+              <Icon name="clipboardList" />
+              Complete Stage 2
+            </Link>
+          ) : (
+            <Badge tone={completionMeta[row.completion].tone} variant="soft">
+              {completionMeta[row.completion].label}
+            </Badge>
+          ),
+      }
     return column
   })
 
