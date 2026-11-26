@@ -42,4 +42,9 @@ final class FollowUpController
 
         return response()->json(['data' => $this->followUps->reschedule($id, $request->string('followUpDate')->value(), AuthController::user($request)->id)], 201);
     }
+
+    public function undoReschedule(Request $request, int $id): JsonResponse
+    {
+        return response()->json(['data' => $this->followUps->undoReschedule($id, AuthController::user($request)->id)]);
+    }
 }

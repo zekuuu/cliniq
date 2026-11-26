@@ -186,6 +186,33 @@ final class FollowUpService
         });
     }
 
+    /** Undo a reschedule by cancelling only its new row; the missed source remains intact.
+     * @return array<string, mixed>
+     */
+    public function undoReschedule(int $id, int $userId): array
+    {
+        DB::transaction(function () use ($id, $userId): void {
+            $current = DB::table('follow_ups')->where('id', $id)->lockForUpdate()->first();
+            abort_if($current === null, 404);
+            abort_if(Row::str($current, 'status') !== 'pending' || Row::str($current, 'status_updated_at') !== null, 409, 'This follow-up changed after the new date was set.');
+            $sourceColumn = Row::int($current, 'visit_id') !== null ? 'visit_id' : 'incident_id';
+            $sourceId = Row::int($current, $sourceColumn);
+            $earlier = DB::table('follow_ups')->where('id', '<', $id)->where($sourceColumn, $sourceId)
+                ->where('reason', Row::str($current, 'reason'))->where('status', 'missed')->orderByDesc('id')->first();
+            abort_if($earlier === null, 409, 'This follow-up was not made by setting a new date.');
+            $later = DB::table('follow_ups')->where('id', '>', $id)->where($sourceColumn, $sourceId)
+                ->where('reason', Row::str($current, 'reason'))->whereNot(function (Builder $query): void {
+                    $query->where('status', 'cancelled')->where('status_reason', 'Undo reschedule');
+                })->exists();
+            abort_if($later, 409, 'A newer follow-up exists for this record.');
+            $now = CarbonImmutable::now();
+            DB::table('follow_ups')->where('id', $id)->update(['status' => 'cancelled', 'status_reason' => 'Undo reschedule', 'status_updated_at' => $now, 'status_updated_by_user_id' => $userId]);
+            $this->record($userId, $id, 'Cancelled new date after Undo', $now, AuditAction::Update);
+        });
+
+        return $this->find($id);
+    }
+
     /** A visit entered in error cancels its pending follow-ups with the reason. */
     public function cancelForVisit(int $visitId, string $reason, int $userId, CarbonImmutable $now): void
     {
@@ -270,7 +297,10 @@ final class FollowUpService
 
         return DB::table('follow_ups')->where('id', '>', (int) Row::toInt($f['id']))->where('reason', $f['reason'])
             ->where(($source['type'] ?? '') === 'visit' ? 'visit_id' : 'incident_id', $source['id'] ?? 0)
-            ->where('student_id', $f['studentId'])->where('personnel_id', $f['personnelId'])->exists();
+            ->where('student_id', $f['studentId'])->where('personnel_id', $f['personnelId'])
+            ->whereNot(function (Builder $query): void {
+                $query->where('status', 'cancelled')->where('status_reason', 'Undo reschedule');
+            })->exists();
     }
 
     private function record(int $userId, int $id, ?string $summary, CarbonImmutable $now, AuditAction $action): void
