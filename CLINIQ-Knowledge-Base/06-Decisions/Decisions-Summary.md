@@ -371,3 +371,7 @@ Typed digits find a student by the start of the full LRN, or, up to 4 digits, in
 ### ADR-095: Action menus for crowded secondary actions
 
 Rows and headers keep a direct primary action, Print, and emergency actions. Applicable secondary operations use one right-end, keyboard-accessible ⋮ menu with icon-and-label items; destructive actions are last, while existing confirmations, toasts, Undo, and audit handlers stay. Visit and excuse-letter rows use their titles as direct navigation links instead of menuing View links. Thursday, November 26, 2026 — 19:48 PHT. [ADR-095](ADR-095-Action-Menus-For-Crowded-Secondary-Actions.md)
+
+### ADR-096: Light semantic backgrounds for result toasts
+
+Result toasts use existing light semantic fills and matching accent borders: green for success, red for error, amber for warning, blue for info. This replaces the earlier white-card rule; dark text, outline icons, countdown lines and Undo styling remain. Thursday, November 26, 2026 — 22:43 PHT. [ADR-096](ADR-096-Light-Semantic-Toast-Backgrounds.md)

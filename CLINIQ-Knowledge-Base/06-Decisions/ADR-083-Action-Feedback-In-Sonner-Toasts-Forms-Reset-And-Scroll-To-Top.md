@@ -7,6 +7,8 @@
 
 **Note Thursday, November 19, 2026 — 23:43 PHT (Zean: "change also the color of the icons"):** the toast icons are the app's own outline icons (`checkCircle`, `xCircle`, `alertTriangle`, `info`), each in its meaning's text shade (ADR-062), instead of Sonner's filled icons. Outline was chosen because every other icon in CLINIQ is outline. The card stays white. Session: [2026-11-19-toast-icons](../08-Logs/Agent-Sessions/2026-11-19-toast-icons.md)
 
+**Note Thursday, November 26, 2026 — 22:41 PHT (Zean):** the white cards blend into the system, so result toasts now use light semantic fills and matching accent borders ([ADR-096](ADR-096-Light-Semantic-Toast-Backgrounds.md)). The November 19 white-card note above records the earlier rule.
+
 ## Context
 Before this decision, each screen reported a result in its own way. The ways were: a `SaveFeedback` banner beside the button (6 screens), hand-made green and red panels at the top of a form (about 15 screens), one home-made corner notice in the shell (profile saved, issue submitted), and a message passed to the next screen through `lib/savedMessage.ts`. Several actions said nothing at all: sign out, the backup location toggle, archiving a record, copying the recovery codes, approving a letter or an incident report, and the calendar's event saves. Some failures were thrown and never shown. Forms were inconsistent after a save. New Visit, Add Student and Dispense cleared; the PE referral said it cleared but kept everything. Add Item and Add User kept the typed values, and none of them went back to the top. The app had no scroll reset on a route change, so a save that moved to another screen could land halfway down it.
 
