@@ -28,12 +28,7 @@ import { complaintWithExtras, incidentCareSummary, visitCareSummary } from '../.
 import { getMockSessionUser, type SessionUser } from '../../lib/data'
 import type { FollowUp, Incident, Personnel, Visit } from '../../types/entities'
 import { paths } from '../../routes/paths'
-import {
-  archiveStaffRecord,
-  fetchStaffProfile,
-  restoreStaffRecord,
-  verifyStaffContact,
-} from './api/staffApi'
+import { archiveStaffRecord, fetchStaffProfile, restoreStaffRecord } from './api/staffApi'
 
 const incidentStageMap = {
   1: { label: 'Needs completion', tone: 'unfinished', icon: 'alertTriangle', variant: 'soft' },
@@ -114,7 +109,10 @@ function Header({
       setConfirming(false)
       notify.undoable('Staff record archived', () => restoreStaffRecord(person.id, viewer), {
         undone: 'Undone: staff record restored',
+        checkCurrent: async () =>
+          Boolean((await fetchStaffProfile(person.id)).personnel.archivedAt),
         onUndone: onArchived,
+        onFailed: onArchived,
       })
       onArchived()
     } catch (cause) {
@@ -242,13 +240,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function Overview({
-  person,
-  onVerifyContact,
-}: {
-  person: Personnel
-  onVerifyContact?: (index: number, verified: boolean) => Promise<unknown>
-}) {
+function Overview({ person }: { person: Personnel }) {
   return (
     <Card aria-labelledby="staff-overview">
       <CardHeader titleId="staff-overview" title="Overview" icon={<Icon name="user" />} />
@@ -265,7 +257,7 @@ function Overview({
         <div className="sm:col-span-2">
           <p className="text-xs font-semibold text-text-secondary">Emergency contacts</p>
           {person.emergencyContacts.length ? (
-            <EmergencyContactList contacts={person.emergencyContacts} onVerify={onVerifyContact} />
+            <EmergencyContactList contacts={person.emergencyContacts} />
           ) : (
             <p className="text-sm text-text-secondary">No emergency contact recorded.</p>
           )}
@@ -450,15 +442,7 @@ export function StaffProfilePage({
       {back}
       <Header person={data.personnel} viewer={viewer} onArchived={reload} />
       <AllergyBanner person={data.personnel} />
-      <Overview
-        person={data.personnel}
-        onVerifyContact={
-          data.personnel.archived
-            ? undefined
-            : (index, verified) =>
-                verifyStaffContact(data.personnel.id, index, verified, viewer).then(reload)
-        }
-      />
+      <Overview person={data.personnel} />
       <Medical person={data.personnel} />
       <Visits visits={data.visits} />
       <Incidents incidents={data.incidents} />

@@ -23,13 +23,14 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { useCancelNavigation } from '../../hooks/useCancelNavigation'
 import { useFocusFirstInvalid } from '../../hooks/useFocusFirstInvalid'
 import { isPhilippinePhone, PHONE_ERROR } from '../../lib/phone'
-import { getMockSessionUser, type SessionUser } from '../../lib/data'
+import { getMockSessionUser, getPersonnel, type SessionUser } from '../../lib/data'
 import { paths } from '../../routes/paths'
 import { NONE_RECORDED } from '../../lib/patients'
 import { STARTER_ALLERGIES, STARTER_CONDITIONS } from '../../config/healthStarterList'
 import { notify } from '../../lib/notify'
 import type { Personnel } from '../../types/entities'
 import {
+  archiveStaffRecord,
   fetchStaffFormContext,
   submitStaffForm,
   type StaffFormContext,
@@ -45,7 +46,7 @@ const RELATIONSHIP_SUGGESTIONS = [
   'Son or daughter',
   'Relative',
 ]
-const EMPTY_CONTACT = { name: '', relationship: '', phone: '', verified: false }
+const EMPTY_CONTACT = { name: '', relationship: '', phone: '' }
 
 type Errors = Partial<Record<string, string>>
 
@@ -72,11 +73,10 @@ function valuesFrom(person: Personnel | null): StaffFormValues {
     department: person.department ?? '',
     contactInfo: person.contactInfo,
     emergencyContacts: person.emergencyContacts.length
-      ? person.emergencyContacts.map(({ name, relationship, phone, verified }) => ({
+      ? person.emergencyContacts.map(({ name, relationship, phone }) => ({
           name,
           relationship,
           phone,
-          verified,
         }))
       : [EMPTY_CONTACT],
     allergies: person.allergies.length ? person.allergies.join(', ') : NONE_RECORDED,
@@ -182,9 +182,7 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
       ...current,
       emergencyContacts: current.emergencyContacts.map((contact, i) =>
         // A changed number needs verifying again.
-        i === index
-          ? { ...contact, [field]: value, ...(field === 'phone' && { verified: false }) }
-          : contact,
+        i === index ? { ...contact, [field]: value } : contact,
       ),
     }))
     setErrors((current) => ({ ...current, [contactKey(index, field)]: undefined }))
@@ -205,15 +203,32 @@ function Editor({ data, viewer }: { data: StaffFormContext; viewer: SessionUser 
     invalid.report(Object.keys(next).length)
     if (Object.keys(next).length) return
     setSaving(true)
+    const previous = data.personnel
     try {
       const { personnel, action } = await submitStaffForm(values, {
         personnelId: data.personnel?.id,
         actor: viewer,
       })
       // The toast stays across the move to the profile, which starts at the top (ADR-083).
-      notify.success(`Staff record ${action === 'create' ? 'created' : 'updated'}`, {
-        id: 'staff-save',
-      })
+      notify.undoable(
+        `Staff record ${action === 'create' ? 'created' : 'updated'}`,
+        async () => {
+          if (action === 'create') return archiveStaffRecord(personnel.id, viewer, 'Undo creation')
+          if (!previous) throw new Error('The earlier staff record is unavailable.')
+          return submitStaffForm(valuesFrom(previous), { personnelId: personnel.id, actor: viewer })
+        },
+        {
+          undone:
+            action === 'create' ? 'Undone: staff record archived' : 'Undone: staff record restored',
+          checkCurrent: async () => {
+            const current = await getPersonnel(personnel.id)
+            return (
+              JSON.stringify(valuesFrom(current)) === JSON.stringify(valuesFrom(personnel)) &&
+              !current.archived
+            )
+          },
+        },
+      )
       // An edit returns through history, so the next Back leaves the profile instead of showing it again.
       allowLeave()
       // From the staff Incomplete Records page: back there, as on the student queue (ADR-067).
