@@ -317,9 +317,9 @@ export function AuthenticatorDialog({
           <li>Or type the setup key by hand: it is a time-based key for CLINIQ.</li>
           <li>Enter the 6-digit code the app shows.</li>
         </ol>
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-col items-center gap-4">
           <QrCode uri={step.uri} />
-          <div className="min-w-0">
+          <div className="min-w-0 max-w-full text-center">
             <p className="text-xs font-semibold text-text-secondary">Setup key</p>
             <p className="font-mono text-sm break-all text-text-primary">{grouped(step.secret)}</p>
           </div>
