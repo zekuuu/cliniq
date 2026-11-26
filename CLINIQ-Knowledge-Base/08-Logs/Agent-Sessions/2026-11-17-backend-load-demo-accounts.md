@@ -18,12 +18,12 @@ Changes Made:
 |---|---|---|---|---|
 | `demo.principal` | Demo Admin | Admin | `demo-admin` | `load.principal`, "Principal Load Test", `Load-Test-Only-2026` |
 | `demo.nurse` | Demo Clinician | Staff | `demo-nurse` | `load.nurse`, "Nurse Load Test", `Load-Test-Only-2026` |
-| `demo.new` | Grace Tolentino | Staff | `demo-change`, must change at first sign-in | did not exist |
+| `demo.new` | Ghenly Tinapay | Staff | `demo-change`, must change at first sign-in | did not exist |
 | `load.cover1`-`3`, `load.former`, `load.bench01`-`20` | unchanged | Staff | `Load-Test-Only-2026` | unchanged |
 
 The names and passwords are those in `frontend/src/lib/mock-db/mock-db.json` (`users` and `frontendOnly.devAccounts`). `demo.new` is created through `UserService::save` with a temporary password, so `must_change_password` is 1, as in the mock. The other two accounts get their password through `AuthService::setPassword`, as before.
 
-Why `checks.php` changed: its "no real surnames" check treats the mock's non-"Demo" user names as possibly real people. The copied "Grace Tolentino" account would fail it, so the check now skips the three demo usernames. Generated students and staff are still checked against every surname, including Tolentino.
+Why `checks.php` changed: its "no real surnames" check treats the mock's non-"Demo" user names as possibly real people. The copied "Ghenly Tinapay" account would fail it, so the check now skips the three demo usernames. Generated students and staff are still checked against every surname, including Tolentino.
 
 Left alone: `screenshots/_capture/config.json` and `screenshots/INDEX.md` still name `load.nurse` and `load.principal`. They record how the existing images were taken. The capture script reads one password for both roles, and the demo accounts now have different passwords. A recapture needs `config.json` set to `demo.nurse`/`demo.principal` and a password per role. `08-Logs/Load-Test-Nov16/NOTES.md` and the earlier session log describe the original run and are history, not edited.
 
