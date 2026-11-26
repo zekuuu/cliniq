@@ -119,7 +119,8 @@ describe('Staff Profile', () => {
   it('archives after a confirmation and logs it', async () => {
     const user = userEvent.setup()
     renderAt('/staff/personnel-0003')
-    await user.click(await screen.findByRole('button', { name: 'Archive' }))
+    await user.click(await screen.findByRole('button', { name: /More actions for/ }))
+    await user.click(screen.getByRole('menuitem', { name: 'Archive' }))
     const dialog = screen.getByRole('dialog', { name: 'Archive this staff record?' })
     // "Other" asks which reason, and the typed one is stored.
     await selectOption(user, within(dialog).getByLabelText(/^Reason/), 'Other (type your own)')

@@ -3,6 +3,7 @@ import { notify } from '../../lib/notify'
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import {
+  ActionMenu,
   BackButton,
   Badge,
   Button,
@@ -157,13 +158,24 @@ function Header({
               </Link>
             </>
           )}
-          <Link to={paths.staffEdit(person.id)} className={buttonClassName()}>
-            Edit
-          </Link>
-          {!person.archived && (
-            <Button variant="neutral" onClick={() => setConfirming(true)}>
-              Archive
-            </Button>
+          {person.archived ? (
+            <Link to={paths.staffEdit(person.id)} className={buttonClassName()}>
+              Edit
+            </Link>
+          ) : (
+            <ActionMenu
+              label={`More actions for ${person.fullName}`}
+              items={[
+                { key: 'edit', label: 'Edit', icon: 'pencil', href: paths.staffEdit(person.id) },
+                {
+                  key: 'archive',
+                  label: 'Archive',
+                  icon: 'archive',
+                  variant: 'destructive',
+                  onSelect: () => setConfirming(true),
+                },
+              ]}
+            />
           )}
         </div>
       </div>
