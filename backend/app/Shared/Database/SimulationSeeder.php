@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shared\Database;
 
+use App\Modules\ClinicVisits\Services\ExcuseLetterService;
 use App\Modules\ClinicVisits\Services\VisitService;
 use App\Modules\Dashboard\Services\CalendarService;
 use App\Modules\EmergencyResponse\Services\IncidentService;
@@ -39,11 +40,11 @@ final class SimulationSeeder extends Seeder
     private const PERSONNEL_CONTACT_NUMBERS = ['0917-555-0301', '0918-555-0302', '0927-555-0303', '0939-555-0304', '0995-555-0305'];
 
     private const ITEMS = [
-        ['name' => 'Paracetamol 500 mg tablets', 'category' => 'medicine', 'unit' => 'tablet', 'stock' => 48, 'threshold' => 12, 'expiresInMonths' => 18, 'usedFor' => ['Headache', 'Fever']],
-        ['name' => 'Sterile gauze pads 10 cm x 10 cm', 'category' => 'supply', 'unit' => 'piece', 'stock' => 60, 'threshold' => 15, 'expiresInMonths' => 24, 'usedFor' => ['Minor wound']],
-        ['name' => 'Adhesive bandages', 'category' => 'supply', 'unit' => 'piece', 'stock' => 80, 'threshold' => 20, 'expiresInMonths' => 24, 'usedFor' => ['Minor wound']],
-        ['name' => 'Disposable nitrile gloves', 'category' => 'supply', 'unit' => 'pair', 'stock' => 100, 'threshold' => 25, 'expiresInMonths' => 24, 'usedFor' => ['Minor wound']],
-        ['name' => 'Reusable cold packs', 'category' => 'supply', 'unit' => 'pack', 'stock' => 8, 'threshold' => 2, 'expiresInMonths' => null, 'usedFor' => ['Sprain']],
+        ['name' => 'Paracetamol 500 mg tablets', 'category' => 'medicine', 'unit' => 'tablet', 'stock' => 48, 'threshold' => 12, 'expiresInDays' => 540, 'usedFor' => ['Headache', 'Fever']],
+        ['name' => 'Sterile gauze pads 10 cm x 10 cm', 'category' => 'supply', 'unit' => 'piece', 'stock' => 9, 'threshold' => 15, 'expiresInDays' => 365, 'usedFor' => ['Minor wound']],
+        ['name' => 'Adhesive bandages', 'category' => 'supply', 'unit' => 'piece', 'stock' => 80, 'threshold' => 20, 'expiresInDays' => 14, 'usedFor' => ['Minor wound']],
+        ['name' => 'Disposable nitrile gloves', 'category' => 'supply', 'unit' => 'pair', 'stock' => 24, 'threshold' => 12, 'expiresInDays' => 1, 'expired' => true, 'usedFor' => ['Minor wound']],
+        ['name' => 'Reusable cold packs', 'category' => 'supply', 'unit' => 'pack', 'stock' => 8, 'threshold' => 2, 'expiresInDays' => null, 'usedFor' => ['Sprain']],
     ];
 
     private const EVENTS = [
@@ -125,9 +126,15 @@ final class SimulationSeeder extends Seeder
                 $s = $fixture['students'][$sample['fixture']];
                 $s['lrn'] = '999900'.str_pad((string) ($i + 1), 6, '0', STR_PAD_LEFT);
                 $s['emergencyContacts'][0]['phone'] = self::CONTACT_NUMBERS[$i];
+                if ($i === 1) {
+                    $s['allergies'] = ['Penicillin'];
+                }
                 if ($i === 2) {
+                    // A registrar record can be saved before the birthdate is supplied.
+                    $s['birthDate'] = '';
                     $s['emergencyContacts'][0]['relationship'] = 'Uncle';
                 } elseif ($i === 3) {
+                    $s['medicalConditions'] = ['Asthma'];
                     $s['emergencyContacts'][0]['relationship'] = 'Grandfather';
                 }
                 $contacts[$i] = $s['emergencyContacts'][0];
@@ -137,6 +144,7 @@ final class SimulationSeeder extends Seeder
                 $students[] = (int) $saved['student']['id'];
 
                 $p = $fixture['personnel'][$i];
+                $p['type'] = ['Teacher', 'Non-teaching staff', 'Utility worker', 'Other', 'Teacher'][$i];
                 $p['contactInfo'] = self::PERSONNEL_NUMBERS[$i];
                 if ($p['emergencyContacts'] !== []) {
                     $p['emergencyContacts'][0]['phone'] = self::PERSONNEL_CONTACT_NUMBERS[$i];
@@ -155,14 +163,30 @@ final class SimulationSeeder extends Seeder
                 $saved = app(InventoryService::class)->save([
                     'name' => $item['name'], 'category' => $item['category'], 'unit' => $item['unit'],
                     'lowStockThreshold' => $item['threshold'], 'currentStock' => $item['stock'],
-                    'expirationDate' => $item['expiresInMonths'] === null ? null : $now->addMonthsNoOverflow($item['expiresInMonths'])->format('Y-m-d'),
-                    'noExpirationConfirmed' => $item['expiresInMonths'] === null,
+                    'expirationDate' => $item['expiresInDays'] === null ? null : $now->addDays($item['expiresInDays'])->format('Y-m-d'),
+                    'noExpirationConfirmed' => $item['expiresInDays'] === null,
                     'usedFor' => $usedFor, 'avoidIfAllergicTo' => $i === 0 ? ['Paracetamol'] : [],
                     'brand' => $i === 0 ? 'generic' : null,
                 ], null, $nurse);
                 $inventory[$i] = (int) $saved['id'];
-                $day = $now->addWeekdays($i + 1)->format('Y-m-d');
-                app(CalendarService::class)->save(['title' => self::EVENTS[$i], 'startDate' => $day, 'endDate' => $day], null, $nurse, 'staff');
+                if (($item['expired'] ?? false) === true) {
+                    // Opening stock is valid when received; move only this fictional batch's date into the past.
+                    DB::table('inventory_batches')->where('item_id', $inventory[$i])
+                        ->update([
+                            'received_date' => $now->subDays(90)->format('Y-m-d'),
+                            'expiration_date' => $now->subDays(3)->format('Y-m-d'),
+                        ]);
+                }
+                $day = $now->addWeekdays([-8, -2, 1, 4, 8][$i]);
+                app(CalendarService::class)->save([
+                    'title' => self::EVENTS[$i], 'startDate' => $day->format('Y-m-d'),
+                    'endDate' => $i === 2 ? $day->addDay()->format('Y-m-d') : $day->format('Y-m-d'),
+                ], null, $nurse, 'staff');
+            }
+
+            $holidayFile = base_path('../frontend/src/lib/mock-db/holidays-ph.json');
+            if (app(CalendarService::class)->sync(true, $holidayFile)['status'] !== 'ok') {
+                throw new RuntimeException('The bundled Philippine holiday list could not be seeded.');
             }
 
             foreach (self::VISITS as $i => $case) {
@@ -175,17 +199,36 @@ final class SimulationSeeder extends Seeder
                     'studentId' => (string) $studentId, 'personnelId' => null, 'dateTime' => $visitAt->format('Y-m-d\TH:i'),
                     'lateEntryReason' => 'Entered from the clinic paper logbook',
                     'complaint' => $case['complaint'], 'temperatureC' => $case['temperature'],
-                    'treatment' => $case['treatment'], 'disposition' => 'sent_home', 'itemsGiven' => [],
+                    'treatment' => $case['treatment'], 'disposition' => 'sent_home',
+                    'itemsGiven' => in_array($i, [0, 2], true)
+                        ? [['itemId' => $inventory[0], 'quantity' => 1, 'instructions' => 'Given during the clinic visit']]
+                        : [],
                     'collectedBy' => ['name' => $contact['name'], 'relationship' => $contact['relationship'], 'time' => $collectedAt],
                     'timeOut' => $collectedAt, 'parentGuardian' => $contact['name'],
                     'excuseLetterDraft' => ['excusedFrom' => $visitDate, 'excusedUntil' => $visitDate, 'note' => 'Excused from class after a clinic visit.'],
                 ], $nurse);
                 $visitId = (int) $visit['visit']['id'];
-                app(FollowUpService::class)->create(['studentId' => $studentId, 'personnelId' => null], 'visit', $visitId, [
-                    'followUpDate' => $now->addWeekdays($i + 1)->format('Y-m-d'),
+                $followUp = app(FollowUpService::class)->create(['studentId' => $studentId, 'personnelId' => null], 'visit', $visitId, [
+                    'followUpDate' => in_array($i, [1, 2], true)
+                        ? $now->subWeekdays($i === 1 ? 3 : 2)->format('Y-m-d')
+                        : $now->addWeekdays($i + 1)->format('Y-m-d'),
                     'reason' => $case['followUp'], 'notes' => 'Confirm the student is ready to return to class.',
                     'stayHomeUntilCleared' => false, 'stayHomeNote' => null,
                 ], $nurse, $now);
+                if ($i === 1) {
+                    app(FollowUpService::class)->setStatus((int) $followUp['id'], 'completed', null, $nurse);
+                } elseif ($i === 2) {
+                    app(FollowUpService::class)->setStatus((int) $followUp['id'], 'missed', 'Student was absent on the follow-up day.', $nurse);
+                } elseif ($i === 3) {
+                    app(FollowUpService::class)->setStatus((int) $followUp['id'], 'cancelled', 'Guardian confirmed the symptoms had resolved.', $nurse);
+                }
+                if ($i === 0 || $i === 2) {
+                    app(ExcuseLetterService::class)->approve($visitId, [
+                        'excusedFrom' => $visitDate, 'excusedUntil' => $visitDate,
+                        'body' => '', 'note' => '', 'stayHomeUntilCleared' => false,
+                        'stayHomeNote' => null, 'recipient' => '',
+                    ], $nurse);
+                }
             }
 
             foreach (self::INCIDENTS as $i => $case) {
@@ -220,6 +263,9 @@ final class SimulationSeeder extends Seeder
                         'phone' => $contact['phone'], 'source' => 'emergency_contact',
                     ],
                 ], $nurse);
+                if ($i === 0) {
+                    app(IncidentService::class)->approve((int) $incident['id'], $nurse);
+                }
             }
 
             foreach (self::REPORTS as $i => $report) {
@@ -243,6 +289,6 @@ final class SimulationSeeder extends Seeder
             DB::rollBack();
             throw $error;
         }
-        $this->command?->info('Simulation seeded: 3 fictional accounts; five students, staff patients, supplies, calendar events, visits, excuse-letter drafts, follow-ups, incidents with contact attempts, sports reports, and issue reports.');
+        $this->command?->info('Simulation seeded: 3 fictional accounts; five linked records per daily-use list with varied stock and workflow states, plus Philippine holidays.');
     }
 }
