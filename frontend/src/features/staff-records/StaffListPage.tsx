@@ -122,7 +122,7 @@ const baseColumns: Array<DataTableColumn<Personnel>> = [
     key: 'actions',
     header: 'Actions',
     width: '15%',
-    align: 'right',
+    align: 'left',
     cell: (person) => (
       <Link to={paths.staffProfile(person.id)} className={buttonClassName({ size: 'sm' })}>
         View Profile
@@ -235,7 +235,7 @@ export function StaffListPage({ viewer = getMockSessionUser() }: { viewer?: Sess
           key: 'actions',
           header: 'Actions',
           width: '15%',
-          align: 'right',
+          align: 'left',
           cell: (person) => (
             <Link
               to={paths.staffEdit(person.id)}
