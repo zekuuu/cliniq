@@ -188,6 +188,13 @@ const paths = {
       <path d="M4 7h16M4 12h16M4 17h16" />
     </>
   ),
+  moreVertical: (
+    <>
+      <circle cx="12" cy="5" r="1" />
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="12" cy="19" r="1" />
+    </>
+  ),
   package: (
     <>
       <path d="m7.5 4.3 9 5.1" />
