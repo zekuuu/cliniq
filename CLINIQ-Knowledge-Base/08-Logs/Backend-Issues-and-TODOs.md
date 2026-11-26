@@ -6,7 +6,7 @@ Everything open about the backend lives here: the Laravel API, the database buil
 
 ## Open work at a glance
 
-Open: FIX 1 · AUDIT 0 · DOC 0 · DECIDE 1 · LATER 30 · FIX-FRONTEND 0 | Notes: NOTE 21 · VERIFY 0 | Done: 23 (recounted Thursday, November 26, 2026 — 14:37 PHT: ADR-094 clinic-arrival confirmation added; earlier recounts remain below)
+Open: FIX 1 · AUDIT 0 · DOC 0 · DECIDE 1 · LATER 30 · FIX-FRONTEND 0 | Notes: NOTE 21 · VERIFY 0 | Done: 24 (recounted Thursday, November 26, 2026 — 22:41 PHT: default-seed student situations added; earlier recounts remain below)
 
 **Open `FIX` items:** `composer check` fails on Larastan `cast.string` at `BackupService.php:171` (pre-existing, commit `1524331`; see "Realistic demo school").
 
@@ -105,6 +105,8 @@ Backend entries that were logged in the frontend file, moved here unchanged. Ses
 - **[NOTE]** **Dev servers share the rate-limit cache** (logged Saturday, November 21, 2026 — 18:36 PHT). A second API on the same `backend/storage` (here the test API on 8001) answered `429` on `/api/auth/me` after five requests, because the file cache's throttle key (`user:<id>`) is shared with another running dev app whose user has the same id. The live check ran its throwaway API with `CACHE_STORE=array`. Development only; the clinic PC runs one app. Session: [2026-11-21-backend-realistic-demo-school](Agent-Sessions/2026-11-21-backend-realistic-demo-school.md)
 
 ## Done
+
+- [x] **[DONE]** **Default-seed students lacked varied record states** (logged and resolved Thursday, November 26, 2026 — 22:41 PHT). The five students previously differed mainly by grade, sex, and contacts. One now appears as incomplete due to a missing birthdate, while separate students demonstrate an allergy, asthma, and allergic rhinitis. Student list and incomplete queue assertions added. Verified Thursday, November 26, 2026 — 22:47 PHT: focused Pest test passed with 61 assertions and the default fresh-seed command passed on separate disposable databases. Sessions: [implementation](Agent-Sessions/2026-11-26-backend-varied-students.md), [verification](Agent-Sessions/2026-11-26-backend-varied-seed-verification.md).
 
 - [x] **[DONE]** **Default fresh-seed command omitted the testing environment** (logged and resolved Thursday, November 26, 2026 — 09:34 PHT). The unqualified command connected to `cliniq_testing` as `cliniq_app` and failed with MariaDB 1142 when it tried to drop `audit_logs`. The command guides now specify `--env=testing --force` and a read-only target/account check. The corrected migration and seed passed; the user confirmed success. Session: [2026-11-26-testing-seed-migration-account](Agent-Sessions/2026-11-26-testing-seed-migration-account.md).
 
