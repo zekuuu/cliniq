@@ -193,15 +193,19 @@ export function ActionMenu({ label, items, busy = false, className }: ActionMenu
         className={buttonClassName({
           variant: 'neutral',
           className: cn(
-            'size-11 min-h-11 min-w-11 !border-0 !bg-transparent !p-0 shadow-none hover:!bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark print:hidden',
+            'shrink-0 !h-11 !w-11 md:!h-10 md:!w-10 !border-0 !bg-transparent !p-0 shadow-none hover:!bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green-dark print:hidden',
             className,
           ),
         })}
       >
         <Icon
           name={busy || internalBusy ? 'refresh' : 'moreVertical'}
-          size={20}
-          className={busy || internalBusy ? 'animate-spin motion-reduce:animate-none' : undefined}
+          size={24}
+          className={
+            busy || internalBusy
+              ? 'animate-spin motion-reduce:animate-none'
+              : 'text-brand-green-dark'
+          }
         />
       </button>
       {open &&
