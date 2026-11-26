@@ -1,7 +1,7 @@
 # Facts sheet
 
-**Last regenerated:** Thursday, November 26, 2026 — 23:50 PHT
-**From commit:** `516099d3` on `main` (documents); frontend numbers from this working tree; backend numbers from this working tree
+**Last regenerated:** Friday, November 27, 2026 — 07:28 PHT
+**From commit:** `aae7dd72` on `main` (documents); frontend numbers from this working tree; backend numbers from this working tree
 **Regenerate with:** `npm run docs:facts` from the repository root (add `-- --tests` to rerun both test suites). The script is [`docs-facts.mjs`](../04-Development/tools/docs-facts.mjs).
 
 Every README, requirement document, diagram caption, and the Project Plan and SRS quote their numbers from this sheet. If a document disagrees with this sheet, the document is wrong. If this sheet disagrees with the repository, regenerate it: the script reads the repository and nothing else. Do not edit the numbers by hand.
@@ -16,7 +16,7 @@ Every README, requirement document, diagram caption, and the Project Plan and SR
 | Roles | **2**: Staff (the School Clinician), Admin (the Principal) | `chk_users_role` in the schema; ADR-029, ADR-038 |
 | Backend modules | **11**: AuditLogViewer, BackupVerification, ClinicVisits, Dashboard, EmergencyResponse, FirstAidChecklist, InventoryTracker, ReportsGeneration, StaffPatients, StudentRecords, UserManagement. With no routes of their own: AuditLogViewer, FirstAidChecklist | [`backend/app/Modules/`](../../backend/app/Modules) |
 | Backend shared services | **10**: AuditLog, Auth, Database, Feedback, FollowUps, Http, Logging, Sequences, Settings, Support | [`backend/app/Shared/`](../../backend/app/Shared) |
-| Mock API (sample data layer) | **141** functions, **20** constants, **21** error classes | [`mock-db/api.ts`](../../frontend/src/lib/mock-db/api.ts) |
+| Mock API (sample data layer) | **142** functions, **20** constants, **21** error classes | [`mock-db/api.ts`](../../frontend/src/lib/mock-db/api.ts) |
 | Mock entity types | **37** | [`mock-db/types.ts`](../../frontend/src/lib/mock-db/types.ts) |
 | Database tables (approved schema) | **47** | [`Reference-Schema.sql`](../02-Architecture/Database/Reference-Schema.sql); ADR-057 |
 | Database columns | **453** | same |
@@ -29,7 +29,7 @@ Every README, requirement document, diagram caption, and the Project Plan and SR
 | Frontend test files | **158** | `frontend/src/**/*.test.ts(x)` |
 | Backend test files | **28** | `backend/tests/**/*Test.php` |
 | Last recorded test run | Sunday, November 15, 2026 — 08:38 PHT at `397e000` | [Test runs](#test-runs) below |
-| Lines of code (non-blank) | frontend **73031** (`src`, tests included); backend **18152** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
+| Lines of code (non-blank) | frontend **73089** (`src`, tests included); backend **18180** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
 
 ## Test runs
 
