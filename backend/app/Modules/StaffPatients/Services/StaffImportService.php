@@ -70,7 +70,7 @@ final class StaffImportService
                     DB::table('personnel')->where('id', $id)->update($plan['fields'] + ['archived_at' => null, 'archived_by_user_id' => null, 'archive_reason' => null, 'archived_school_year' => null]);
                 }
                 if ($plan['contact'] !== null) {
-                    DB::table('personnel_emergency_contacts')->insert(['personnel_id' => $id, 'is_primary' => 1, 'sort_order' => 0, 'is_verified' => 0] + $plan['contact']);
+                    DB::table('personnel_emergency_contacts')->insert(['personnel_id' => $id, 'is_primary' => 1, 'sort_order' => 0] + $plan['contact']);
                 }
                 $this->personnel->syncReview($id, $this->personnel->find($id)->missingFields !== [], $userId, $now);
             }
