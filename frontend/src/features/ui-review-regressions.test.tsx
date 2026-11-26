@@ -177,7 +177,7 @@ describe('UI/UX review follow-up fixes', () => {
   it('rejects a username another account already uses, case-insensitively', async () => {
     const user = userEvent.setup()
     renderWithRouter(
-      <UserFormPage viewer={{ id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }} />,
+      <UserFormPage viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }} />,
     )
 
     await screen.findByRole('heading', { level: 1, name: 'Add User' })
@@ -218,7 +218,7 @@ describe('UI/UX review follow-up fixes', () => {
   it('does not expose sidebar nav groups as landmark regions', () => {
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -237,7 +237,7 @@ describe('UI/UX review Group B decisions', () => {
 
   it('gives Staff a New Visit shortcut on the Dashboard, and Admin none; a healthy backup raises no chip', async () => {
     const staff = renderWithRouter(
-      <DashboardPage viewer={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }} />,
+      <DashboardPage viewer={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} />,
     )
     expect(await screen.findByRole('link', { name: 'New Visit' })).toHaveAttribute(
       'href',
@@ -249,7 +249,7 @@ describe('UI/UX review Group B decisions', () => {
     staff.unmount()
 
     renderWithRouter(
-      <DashboardPage viewer={{ id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }} />,
+      <DashboardPage viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }} />,
     )
     await screen.findByRole('heading', { name: 'Clinic Overview' })
     expect(screen.queryByRole('link', { name: /backup/i })).not.toBeInTheDocument()
@@ -305,7 +305,7 @@ describe('UI/UX review Group B decisions', () => {
 
   it('never shows an internal record id in the Audit Log', async () => {
     renderWithRouter(
-      <AuditLogPage viewer={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }} />,
+      <AuditLogPage viewer={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }} />,
     )
 
     const table = await screen.findByRole('table', { name: 'Filtered audit log' })
