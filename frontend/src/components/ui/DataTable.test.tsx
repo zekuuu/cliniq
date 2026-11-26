@@ -107,4 +107,5 @@ describe('DataTable sortable headers', () => {
       'scroll-px-1.5',
     )
   })
+
 })
