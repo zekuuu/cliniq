@@ -34,7 +34,13 @@ export function useSaveFeedback() {
       /** A message for this failure; `null` when the screen already shows it (a field error). */
       failed?: (cause: unknown) => string | null | undefined
       /** An Undo on the success toast (ADR-085): the reverse request and its own result text. */
-      undo?: (value: T) => { run: () => Promise<unknown>; undone: string; onUndone?: () => void }
+      undo?: (value: T) => {
+        run: () => Promise<unknown>
+        undone: string
+        onUndone?: () => void
+        onFailed?: () => void
+        checkCurrent?: () => Promise<boolean>
+      }
     },
   ): Promise<{ ok: true; value: T } | { ok: false }> {
     if (busy.current) return { ok: false }
