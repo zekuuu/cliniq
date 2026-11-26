@@ -390,7 +390,6 @@ describe('incident Stage 2', () => {
     const stageOne = await saveIncidentStageOne({
       studentId: student.id,
       complaint: 'Fall injury',
-      vitals: { temperatureC: 36.8 },
     })
 
     const { incident } = await completeIncidentStageTwo({
@@ -421,7 +420,6 @@ describe('incident Stage 2', () => {
     const stageOne = await saveIncidentStageOne({
       studentId: student.id,
       complaint: 'Fall injury',
-      vitals: { temperatureC: 36.8 },
     })
     expect(stageOne.itemsGiven).toEqual([])
     const input = {
@@ -458,7 +456,6 @@ describe('incident Stage 2', () => {
     const stageOne = await saveIncidentStageOne({
       studentId: student.id,
       complaint: 'Fall injury',
-      vitals: {},
     })
     await expect(
       completeIncidentStageTwo({

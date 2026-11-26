@@ -51,8 +51,8 @@ import { addDays } from '../dates'
  * and, where one is written, the summary.
  */
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
-const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }
 const last = () => getRecordedAuditEntries().at(-1)!
 const entries = () =>
   getRecordedAuditEntries().map((e) => [
@@ -173,7 +173,6 @@ describe('every audited event is written (AU-1)', () => {
     await saveIncidentStageOne({
       studentId: base.studentId,
       complaint: 'Fainting',
-      vitals: {},
       sourceVisitId: escalate.visit.id,
     })
     expect(getRecordedAuditEntries().at(-2)).toMatchObject({
@@ -234,7 +233,6 @@ describe('every audited event is written (AU-1)', () => {
     const incident = await saveIncidentStageOne({
       studentId: 'student-0001',
       complaint: 'Fainting',
-      vitals: {},
     })
     await completeIncidentStageTwo({
       incidentId: incident.id,
