@@ -5,7 +5,7 @@ import { Icon } from '../icons/Icon'
  * The one toast stack (ADR-083), mounted once in `App`. Toasts are sent with `notify` (`lib/notify.ts`),
  * never with `sonner` directly. Bottom right, above the "Scroll to top" button (16px from the edge,
  * 40px tall), so a toast never hides it. Sonner's own z-index sits above every Modal (z-40).
- * Every toast is the same white card; the shrinking line along the bottom (`index.css`, "Toasts")
+ * Result toasts use light semantic fills and accent borders. The shrinking line (`index.css`, "Toasts")
  * and the icon are coloured by kind. The icons are the app's own outline set, in each meaning's
  * text shade (ADR-062), so they match every other icon in CLINIQ (Zean, November 19, 2026).
  */

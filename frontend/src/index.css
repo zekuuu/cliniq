@@ -336,10 +336,9 @@ label {
 
 /*
  * Toasts (ADR-083). Sonner injects its own CSS into <head> after this file, so each rule here starts
- * with `:root` to outrank it. Every toast is the same white card with dark text (Zean, November 19,
- * 2026: "make the toast bg color, only the progress bar changes"); Sonner's icon shape tells the kind
- * apart. Only the line along the bottom carries the ADR-062 accent of its meaning, and it shrinks to
- * nothing over the toast's time on screen (`--toast-ms`, set by `notify`). It pauses while the
+ * with `:root` to outrank it. Each result toast uses a light ADR-062 semantic fill and accent border.
+ * Dark text and the outline icon identify its meaning. The line along the bottom carries the accent
+ * and shrinks to nothing over the toast's time on screen (`--toast-ms`, set by `notify`). It pauses while the
  * pointer is over the toasts, as Sonner's timer does, and stays full under reduced motion (Sonner
  * turns animations off there).
  */
@@ -351,15 +350,23 @@ label {
 }
 :root [data-sonner-toast][data-type='success'] {
   --toast-accent: var(--color-success);
+  --normal-bg: var(--color-brand-green-fill);
+  --normal-border: var(--color-success);
 }
 :root [data-sonner-toast][data-type='error'] {
   --toast-accent: var(--color-error);
+  --normal-bg: var(--color-error-fill);
+  --normal-border: var(--color-error);
 }
 :root [data-sonner-toast][data-type='warning'] {
   --toast-accent: var(--color-warning);
+  --normal-bg: var(--color-warning-fill);
+  --normal-border: var(--color-warning);
 }
 :root [data-sonner-toast][data-type='info'] {
   --toast-accent: var(--color-info);
+  --normal-bg: var(--color-info-fill);
+  --normal-border: var(--color-info);
 }
 :root
   [data-sonner-toast][data-styled='true']:is(
