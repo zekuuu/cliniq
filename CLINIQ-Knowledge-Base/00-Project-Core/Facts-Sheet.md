@@ -1,7 +1,7 @@
 # Facts sheet
 
-**Last regenerated:** Thursday, November 26, 2026 — 23:15 PHT
-**From commit:** `60a9d17f` on `main` (documents); frontend numbers from this working tree; backend numbers from this working tree
+**Last regenerated:** Thursday, November 26, 2026 — 23:50 PHT
+**From commit:** `516099d3` on `main` (documents); frontend numbers from this working tree; backend numbers from this working tree
 **Regenerate with:** `npm run docs:facts` from the repository root (add `-- --tests` to rerun both test suites). The script is [`docs-facts.mjs`](../04-Development/tools/docs-facts.mjs).
 
 Every README, requirement document, diagram caption, and the Project Plan and SRS quote their numbers from this sheet. If a document disagrees with this sheet, the document is wrong. If this sheet disagrees with the repository, regenerate it: the script reads the repository and nothing else. Do not edit the numbers by hand.
@@ -29,7 +29,7 @@ Every README, requirement document, diagram caption, and the Project Plan and SR
 | Frontend test files | **158** | `frontend/src/**/*.test.ts(x)` |
 | Backend test files | **28** | `backend/tests/**/*Test.php` |
 | Last recorded test run | Sunday, November 15, 2026 — 08:38 PHT at `397e000` | [Test runs](#test-runs) below |
-| Lines of code (non-blank) | frontend **73031** (`src`, tests included); backend **18084** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
+| Lines of code (non-blank) | frontend **73031** (`src`, tests included); backend **18152** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
 
 ## Test runs
 
