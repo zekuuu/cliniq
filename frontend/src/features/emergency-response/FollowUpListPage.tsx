@@ -29,8 +29,10 @@ import { toggleTableSort } from '../../lib/tableSort'
 import type { FollowUpStatus } from '../../types/entities'
 import {
   fetchFollowUpPage,
+  fetchFollowUps,
   FOLLOW_UP_SORT_KEYS,
   setNewFollowUpDate,
+  undoNewFollowUpDate,
   updateFollowUpStatus,
   type FollowUpRow,
   type FollowUpSortKey,
@@ -160,6 +162,8 @@ export function FollowUpListPage() {
               item.statusReason ?? undefined,
             ),
           undone: `Undone: follow-up ${FOLLOW_UP_STATUS_WORDS[item.status]} again`,
+          checkCurrent: async () =>
+            (await fetchFollowUps('')).find((current) => current.id === item.id)?.status === next,
           onUndone: () => {
             clearOverride()
             setRescheduling(null)
@@ -189,9 +193,21 @@ export function FollowUpListPage() {
     if (!rescheduling || !newDate) return
     setScheduling(true)
     try {
-      await setNewFollowUpDate(rescheduling.id, newDate, getMockSessionUser())
+      const created = await setNewFollowUpDate(rescheduling.id, newDate, getMockSessionUser())
       setRescheduling(null)
-      notify.success('New follow-up date set', { id: 'follow-up-date' })
+      notify.undoable(
+        'New follow-up date set',
+        () => undoNewFollowUpDate(created.id, getMockSessionUser()),
+        {
+          undone: 'Undone: new follow-up date cancelled',
+          checkCurrent: async () => {
+            const current = (await fetchFollowUps('')).find((item) => item.id === created.id)
+            return current?.status === 'pending' && current.followUpDate === created.followUpDate
+          },
+          onUndone: reload,
+          onFailed: reload,
+        },
+      )
       reload()
     } catch (cause) {
       notify.apiError(cause, 'The new date was not set. Please try again.', {

@@ -38,7 +38,7 @@ import { paths } from '../../routes/paths'
 import { notify } from '../../lib/notify'
 import { scrollToTop } from '../../lib/scrollToTop'
 import { CHOOSE_STUDENT_MESSAGE, useIdentifiedStudent } from '../../hooks/useIdentifiedStudent'
-import { addDays, formatTime, todayISO } from '../../lib/dates'
+import { addDays, formatDateTime, formatTime, todayISO } from '../../lib/dates'
 import { draftsFrom, formatItemGiven } from '../../lib/itemsGiven'
 import {
   ageGroupOf,
@@ -114,6 +114,8 @@ const BODY_PART_SUGGESTIONS = [
 
 interface Errors extends CalledContactErrors {
   complaint?: string
+  incidentTime?: string
+  arrivedAtClinic?: string
   oxygenSaturationPct?: string
   itemsGiven?: string
   referralDestination?: string
@@ -198,10 +200,26 @@ function readingErrors(readings: ReadingValues): Errors {
   return {}
 }
 
-function validateStageOne(complaint: string, readings: ReadingValues): Errors {
-  const next = readingErrors(readings)
+function validateStageOne(complaint: string): Errors {
+  const next: Errors = {}
   if (!cleanComplaint(complaint)) next.complaint = `Choose the emergency ${symptom}.`
   return next
+}
+
+function localNow(): string {
+  return new Date()
+    .toLocaleString('sv-SE', { timeZone: 'Asia/Manila', hour12: false })
+    .replace(' ', 'T')
+    .slice(0, 16)
+}
+
+function eventIso(date: string, clock: string): string {
+  return `${date}T${clock}:00+08:00`
+}
+
+function isFuture(value: string): boolean {
+  const parsed = Date.parse(value)
+  return !Number.isFinite(parsed) || parsed > Date.now()
 }
 
 /** The readings saved on a record, for the Stage 2 summary: "37.2 °C · 98%", or none taken. */
@@ -213,7 +231,7 @@ function readingSummary(vitals: Incident['vitals']): string {
 }
 
 /**
- * The four optional readings, the same at both stages, in the logbook's order. Never collapsed: in an
+ * The four optional Stage 2 readings, in the logbook's order. Never collapsed: in an
  * emergency they are the main data. Temperature and pulse keep the non-blocking unusual-value warning;
  * the oximeter has none until the clinician gives a range (`vitalsWarningRanges.oxygenSaturationPct`).
  */
@@ -223,6 +241,9 @@ function ReadingsFields({
   error,
   ranges,
   ageGroup,
+  times,
+  onTimeChange,
+  today,
 }: {
   values: ReadingValues
   onChange: (key: ReadingKey, value: string) => void
@@ -230,7 +251,29 @@ function ReadingsFields({
   ranges: VitalsWarningRanges
   /** For the usual-range note (ADR-051); null until the patient is picked. */
   ageGroup: AgeGroup | null
+  times: Partial<Record<ReadingKey, string>>
+  onTimeChange: (key: ReadingKey, value: string) => void
+  today: string
 }) {
+  const timeFields = (key: ReadingKey, name: string) =>
+    values[key].trim() ? (
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:col-span-2">
+        <DatePicker
+          label={`${name} taken on`}
+          value={times[key]?.slice(0, 10) ?? today}
+          max={today}
+          onChange={(date) => onTimeChange(key, `${date}T${times[key]?.slice(11, 16) ?? '00:00'}`)}
+        />
+        <Input
+          type="time"
+          label={`${name} taken at`}
+          value={times[key]?.slice(11, 16) ?? ''}
+          onChange={(event) =>
+            onTimeChange(key, `${times[key]?.slice(0, 10) ?? today}T${event.target.value}`)
+          }
+        />
+      </div>
+    ) : null
   return (
     <fieldset className="flex flex-col gap-3">
       <legend className="mb-1 text-sm font-semibold text-text-primary">
@@ -248,6 +291,7 @@ function ReadingsFields({
           value={values.temperatureC}
           onChange={(event) => onChange('temperatureC', event.target.value)}
         />
+        {timeFields('temperatureC', 'Temperature')}
         <Input
           type="number"
           inputMode="numeric"
@@ -255,11 +299,13 @@ function ReadingsFields({
           value={values.pulseBpm}
           onChange={(event) => onChange('pulseBpm', event.target.value)}
         />
+        {timeFields('pulseBpm', 'Pulse')}
         <Input
           label="Blood pressure (mmHg)"
           value={values.bloodPressure}
           onChange={(event) => onChange('bloodPressure', event.target.value)}
         />
+        {timeFields('bloodPressure', 'Blood pressure')}
         <Input
           type="number"
           step="1"
@@ -271,6 +317,7 @@ function ReadingsFields({
           onChange={(event) => onChange('oxygenSaturationPct', event.target.value)}
           error={error}
         />
+        {timeFields('oxygenSaturationPct', 'Oxygen saturation')}
       </div>
       <VitalsWarning readings={values} ranges={ranges} ageGroup={ageGroup} />
     </fieldset>
@@ -278,8 +325,8 @@ function ReadingsFields({
 }
 
 /**
- * Incident Entry (Screen #16 / #16b, Reference 5). Stage 1 needs only the complaint, plus whichever
- * readings the case needs; Stage 2 completes the same incident with readings, treatment, referral,
+ * Incident Entry (Screen #16 / #16b, Reference 5). Stage 1 needs only the patient and complaint;
+ * Stage 2 completes the same incident with readings, treatment, referral,
  * notifications, and an optional follow-up.
  */
 export function IncidentEntryPage({
@@ -374,14 +421,34 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const [stage, setStage] = useState<ScreenStage>(existing ? 'stage2' : 'stage1')
   const [incident, setIncident] = useState<Incident | null>(existing)
   const [completed, setCompleted] = useState(existing?.stage === 2)
+  const [initialEvent] = useState(() => existing?.time ?? data.escalation?.time ?? localNow())
+  const [eventDate, setEventDate] = useState(initialEvent.slice(0, 10))
+  const [eventClock, setEventClock] = useState(initialEvent.slice(11, 16))
+  const [arrivalDate, setArrivalDate] = useState(existing?.arrivedAtClinic?.slice(0, 10) ?? '')
+  const [arrivalClock, setArrivalClock] = useState(existing?.arrivedAtClinic?.slice(11, 16) ?? '')
+  const [readingTimes, setReadingTimes] = useState<Partial<Record<ReadingKey, string>>>(() =>
+    Object.fromEntries(
+      (['temperatureC', 'pulseBpm', 'bloodPressure', 'oxygenSaturationPct'] as ReadingKey[]).map(
+        (key) => [
+          key,
+          (
+            existing?.readingTimes?.[key] ??
+            (existing?.vitals[key] !== undefined ? existing.time : localNow())
+          ).slice(0, 16),
+        ],
+      ),
+    ),
+  )
   // The vitals note reads the age on the incident's own day (ADR-054), not today's.
-  const incidentDate = (incident?.time ?? data.escalation?.time)?.slice(0, 10) ?? today
+  const incidentDate = eventDate
   const [complaint, setComplaint] = useState(existing?.complaint ?? start.complaint)
   const [readings, setReadings] = useState<ReadingValues>(() =>
     existing
       ? savedReadings(existing)
       : { ...savedReadings(null), temperatureC: start.temperatureC },
   )
+  const occurredAt = eventIso(eventDate, eventClock)
+  const arrivedAtClinic = arrivalDate && arrivalClock ? eventIso(arrivalDate, arrivalClock) : null
   const [generalNotes, setGeneralNotes] = useState(existing?.generalNotes ?? start.notes)
   const [treatmentNotes, setTreatmentNotes] = useState(vital(existing, 'treatmentNotes'))
   const savedReferral = existing?.hospitalReferral ?? null
@@ -443,13 +510,16 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
   const stageOneDirty =
     !incident &&
     (complaint !== '' ||
-      readingsChanged(null) ||
+      occurredAt.slice(0, 16) !== initialEvent.slice(0, 16) ||
       generalNotes.trim() !== '' ||
       Boolean(data.escalation))
   const stageTwoDirty =
     incident !== null &&
     !completed &&
     (readingsChanged(incident) ||
+      occurredAt.slice(0, 16) !== incident.time.slice(0, 16) ||
+      (arrivedAtClinic?.slice(0, 16) ?? null) !==
+        (incident.arrivedAtClinic?.slice(0, 16) ?? null) ||
       treatmentNotes !== vital(incident, 'treatmentNotes') ||
       referToHospital ||
       notifications.length > 0 ||
@@ -482,7 +552,9 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
     event.preventDefault()
     // Stage 1 is saved once; a second submit would create a duplicate incident.
     if (incident) return
-    const nextErrors = validateStageOne(complaint, readings)
+    const nextErrors = validateStageOne(complaint)
+    if (!eventDate || !eventClock || isFuture(occurredAt))
+      nextErrors.incidentTime = 'Enter a date and time that is not in the future.'
     const studentOk = identified.validate()
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length || !studentOk)
@@ -498,9 +570,9 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
         {
           ...patientRefOf(target),
           complaint: cleanComplaint(complaint),
-          readings,
           generalNotes,
-          time: data.escalation?.time,
+          time: occurredAt.slice(0, 16) === initialEvent.slice(0, 16) ? initialEvent : occurredAt,
+          carriedTemperatureC: data.escalation?.temperatureC,
           // Linked only to a saved visit of the same patient (the data layer checks).
           sourceVisitId:
             data.escalation?.visitId &&
@@ -511,6 +583,12 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
         viewer,
       )
       setIncident(saved)
+      setReadingTimes((current) => ({
+        ...current,
+        ...Object.fromEntries(
+          Object.entries(saved.readingTimes ?? {}).map(([key, value]) => [key, value.slice(0, 16)]),
+        ),
+      }))
       setStage('stage2')
       notify.success('Incident Stage 1 saved', {
         id: 'incident-stage-1',
@@ -556,6 +634,25 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
 
   function validateStageTwo(): Errors {
     const next = readingErrors(readings)
+    if (!eventDate || !eventClock || isFuture(occurredAt))
+      next.incidentTime = 'Enter a date and time that is not in the future.'
+    if (
+      (arrivalDate && !arrivalClock) ||
+      (!arrivalDate && arrivalClock) ||
+      (arrivedAtClinic && isFuture(arrivedAtClinic))
+    )
+      next.arrivedAtClinic =
+        'Enter a complete clinic arrival date and time that is not in the future.'
+    for (const [key, value] of Object.entries(readings)) {
+      if (!value.trim()) continue
+      const takenAt = readingTimes[key as ReadingKey]
+      if (
+        !takenAt ||
+        takenAt.length < 16 ||
+        isFuture(eventIso(takenAt.slice(0, 10), takenAt.slice(11, 16)))
+      )
+        next.oxygenSaturationPct = 'Check the time each reading was taken.'
+    }
     if (referToHospital && !referralDestination.trim()) {
       next.referralDestination = 'Enter the hospital or clinic destination.'
     }
@@ -591,7 +688,30 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
         {
           incidentId: incident.id,
           complaint: cleanComplaint(complaint),
-          readings,
+          time:
+            data.approved || occurredAt.slice(0, 16) === incident.time.slice(0, 16)
+              ? incident.time
+              : occurredAt,
+          arrivedAtClinic:
+            data.approved ||
+            (arrivedAtClinic?.slice(0, 16) ?? null) ===
+              (incident.arrivedAtClinic?.slice(0, 16) ?? null)
+              ? (incident.arrivedAtClinic ?? null)
+              : arrivedAtClinic,
+          readingTimes: data.approved
+            ? {}
+            : Object.fromEntries(
+                Object.entries(readingTimes).map(([key, value]) => {
+                  const original = incident.readingTimes?.[key as ReadingKey]
+                  return [
+                    key,
+                    original?.slice(0, 16) === value
+                      ? original
+                      : eventIso(value.slice(0, 10), value.slice(11, 16)),
+                  ]
+                }),
+              ),
+          readings: data.approved ? savedReadings(null) : readings,
           treatmentNotes,
           hospitalReferral,
           parentNotifications: notifications.map((item) => ({
@@ -732,15 +852,22 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                 hint={`The ${symptom} only. Don't include names.`}
                 error={errors.complaint}
               />
-              <ReadingsFields
-                values={readings}
-                onChange={setReading}
-                error={errors.oxygenSaturationPct}
-                ranges={data.vitalsRanges}
-                ageGroup={
-                  student ? ageGroupOf(student, incidentDate, data.vitalsRanges.usual) : null
-                }
-              />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <DatePicker
+                  label="When it happened — date"
+                  value={eventDate}
+                  max={today}
+                  clearable={false}
+                  onChange={setEventDate}
+                />
+                <Input
+                  type="time"
+                  label="When it happened — time"
+                  value={eventClock}
+                  onChange={(event) => setEventClock(event.target.value)}
+                  error={errors.incidentTime}
+                />
+              </div>
               <TextareaField
                 label="Additional notes"
                 placeholder="Optional"
@@ -757,7 +884,8 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                   variant="primary"
                   loading={savingStageOne}
                   disabled={Boolean(incident)}
-                  className="h-11 bg-warning text-text-primary hover:bg-warning hover:brightness-90"
+                  className="h-11 bg-warning hover:bg-warning hover:brightness-90"
+                  style={{ color: 'var(--color-text-primary)' }}
                 >
                   Save Stage 1
                 </Button>
@@ -796,6 +924,9 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                       <p className="text-xs text-text-secondary">
                         {readingSummary(incident.vitals)}
                       </p>
+                      <p className="mt-2 text-xs text-text-secondary">
+                        Recorded at: {formatDateTime(incident.recordedAt ?? incident.time)}
+                      </p>
                       {data.approved && incident.generalNotes && (
                         <p className="mt-2 text-sm whitespace-pre-line text-text-primary">
                           <span className="text-xs font-semibold text-text-secondary">
@@ -805,6 +936,56 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                         </p>
                       )}
                     </div>
+                    {!data.approved && (
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <DatePicker
+                          label="When it happened — date"
+                          value={eventDate}
+                          max={today}
+                          clearable={false}
+                          onChange={setEventDate}
+                        />
+                        <Input
+                          type="time"
+                          label="When it happened — time"
+                          value={eventClock}
+                          onChange={(event) => setEventClock(event.target.value)}
+                          error={errors.incidentTime}
+                        />
+                      </div>
+                    )}
+                    {data.approved && (
+                      <p className="text-sm text-text-secondary">
+                        When it happened: {incident.time}
+                      </p>
+                    )}
+                    {!data.approved && (
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <DatePicker
+                          label="Arrived at the clinic — date"
+                          value={arrivalDate}
+                          max={today}
+                          onChange={setArrivalDate}
+                        />
+                        <Input
+                          type="time"
+                          label="Arrived at the clinic — time"
+                          value={arrivalClock}
+                          onChange={(event) => setArrivalClock(event.target.value)}
+                          error={errors.arrivedAtClinic}
+                        />
+                      </div>
+                    )}
+                    {data.approved && incident.arrivedAtClinic && (
+                      <p className="text-sm text-text-secondary">
+                        Arrived at the clinic: {incident.arrivedAtClinic}
+                      </p>
+                    )}
+                    {arrivedAtClinic && Date.parse(arrivedAtClinic) < Date.parse(occurredAt) && (
+                      <p role="status" className="text-sm text-warning">
+                        Clinic arrival is before the incident time. Check the times before saving.
+                      </p>
+                    )}
                     {/* ADR-049: correctable until the report is approved; each change is an audited edit. */}
                     {!data.approved && (
                       <TextareaField
@@ -828,15 +1009,37 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     title="Readings and care"
                     description="Any further readings, what was done, and medicines or supplies used."
                   >
-                    <ReadingsFields
-                      values={readings}
-                      onChange={setReading}
-                      error={errors.oxygenSaturationPct}
-                      ranges={data.vitalsRanges}
-                      ageGroup={
-                        student ? ageGroupOf(student, incidentDate, data.vitalsRanges.usual) : null
-                      }
-                    />
+                    {!data.approved ? (
+                      <ReadingsFields
+                        values={readings}
+                        onChange={setReading}
+                        error={errors.oxygenSaturationPct}
+                        ranges={data.vitalsRanges}
+                        ageGroup={
+                          student
+                            ? ageGroupOf(student, incidentDate, data.vitalsRanges.usual)
+                            : null
+                        }
+                        times={readingTimes}
+                        onTimeChange={(key, value) =>
+                          setReadingTimes((current) => ({ ...current, [key]: value }))
+                        }
+                        today={today}
+                      />
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {takenReadings(incident.vitals).map(([key, value]) => (
+                          <p key={key} className="text-sm text-text-primary">
+                            {readingText(key, value)}
+                            {incident.readingTimes?.[key] && (
+                              <span className="block text-xs text-text-secondary">
+                                Taken {formatDateTime(incident.readingTimes[key])}
+                              </span>
+                            )}
+                          </p>
+                        ))}
+                      </div>
+                    )}
                     <TextareaField
                       label="Treatment notes"
                       value={treatmentNotes}
@@ -907,7 +1110,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     title="Hospital referral"
                     description="Only when the patient was taken to a hospital or another clinic."
                   >
-                    <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
+                    <label className="flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors motion-reduce:transition-none">
                       <input
                         type="checkbox"
                         checked={referToHospital}
@@ -956,6 +1159,17 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                         />
                       </div>
                     )}
+                    {referToHospital &&
+                      arrivedAtClinic &&
+                      departureDate &&
+                      departureClock &&
+                      Date.parse(eventIso(departureDate, departureClock)) <
+                        Date.parse(arrivedAtClinic) && (
+                        <p role="status" className="text-sm text-warning">
+                          Hospital departure is before clinic arrival. Check the times before
+                          saving.
+                        </p>
+                      )}
                   </FormSection>
 
                   <FormSection
@@ -1072,7 +1286,7 @@ function IncidentEntryForm({ viewer, data }: { viewer: SessionUser; data: Incide
                     title="Follow-up prompt"
                     description="Plan a recheck after the incident."
                   >
-                    <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
+                    <label className="flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors motion-reduce:transition-none">
                       <input
                         type="checkbox"
                         checked={needsFollowUp}
