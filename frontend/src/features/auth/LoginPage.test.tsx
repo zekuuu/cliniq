@@ -28,7 +28,7 @@ describe('LoginPage', () => {
     expect(screen.queryByText(/clinic account/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/all rights reserved/i)).not.toBeInTheDocument()
     for (const logo of screen.getAllByAltText('Mendez Christian Academy logo'))
-      expect(logo).toHaveAttribute('src', '/MCA_Logo.png')
+      expect(logo).toHaveAttribute('src', '/brand/mca-logo.webp')
   })
 
   it('focuses the first invalid field after a failed submit', async () => {
@@ -120,7 +120,7 @@ describe('LoginPage', () => {
       '/privacy-policy',
     )
     const attribution = screen.getByText('Powered by HealWare™')
-    expect(attribution.querySelector('img')).toHaveAttribute('src', '/Healware_Logo.png')
+    expect(attribution.querySelector('img')).toHaveAttribute('src', '/brand/healware-logo.webp')
     // Attribution comes first, then the Privacy Policy link.
     expect(
       attribution.compareDocumentPosition(screen.getByRole('link', { name: 'Privacy Policy' })),
