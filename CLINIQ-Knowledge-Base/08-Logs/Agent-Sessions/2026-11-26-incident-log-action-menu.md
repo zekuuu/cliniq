@@ -1,0 +1,11 @@
+Date/Day/Time: Thursday, November 26, 2026 — 21:15 PHT
+Agent: Codex
+Task: Replace stacked Incident Log row buttons with a direct clinical action and shared action menu.
+Status: Completed
+Prompt/Request: Zean: “Also apply kebab menu to stacking actions buttons, something like this,” with a screenshot of an unfinished Incident Log row showing Complete Stage 2 and View Report stacked in the Actions column.
+Files Modified: frontend/src/features/emergency-response/IncidentLogListPage.tsx and its test; frontend/src/features/admin-read-only.test.tsx; frontend/src/components/ui/ActionMenu.tsx; .claude/skills/cliniq-action-menu-patterns/SKILL.md; Design-System.md; Screen-Inventory.md; Skills-Setup.md; ADR-095; Frontend-Changelog.md; Frontend-Issues-and-TODOs.md; Issues-Done-Archive.md; Facts-Sheet.md; this session log.
+Changes Made: Audited list Actions columns. The Incident Log was the remaining two-button row that wrapped. Unfinished Staff rows retain direct Complete Stage 2 and offer View Report in a ⋮ menu; completed and Admin rows retain direct View Report. Widened the Actions column enough for the two controls and stopped the shared menu trigger from flex-shrinking. Updated the shared action-menu rule, design guidance, screen inventory, and ADR-095. Skill difference, old → new: one secondary action stayed direct even when it stacked below a clinical action → the secondary action goes into the menu in that narrow-table case; the clinical action stays direct.
+Reason: Reduce tall row actions while keeping the urgent Stage 2 path immediate and Admin access read-only.
+Testing Performed: Focused Vitest: 3 files / 20 tests passed, including the direct Stage 2 and menu report link and an Admin no-menu assertion. TypeScript typecheck, ESLint, production build, and targeted Prettier passed; ESLint retained three existing Fast Refresh warnings and the build retained its large-chunk advisory. Playwright Chromium in mock mode showed both controls on one line at desktop width, a 40px menu trigger there, and a 44px phone trigger; View Report was available as a menu item at both sizes. `git diff --check` passed.
+Known Issues: No new issue found. Canonical document and Project Plan screenshot drift recorded for ADR-095 remains open.
+Next Steps: Review the Incident Log row in the app and complete the existing canonical-document follow-up for ADR-095.

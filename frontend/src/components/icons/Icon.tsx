@@ -189,11 +189,11 @@ const paths = {
     </>
   ),
   moreVertical: (
-    <>
-      <circle cx="12" cy="5" r="1" />
-      <circle cx="12" cy="12" r="1" />
-      <circle cx="12" cy="19" r="1" />
-    </>
+    <g fill="currentColor" stroke="none">
+      <circle cx="12" cy="4.5" r="2" />
+      <circle cx="12" cy="12" r="2" />
+      <circle cx="12" cy="19.5" r="2" />
+    </g>
   ),
   package: (
     <>

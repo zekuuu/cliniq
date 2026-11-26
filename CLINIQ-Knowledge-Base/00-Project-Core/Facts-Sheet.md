@@ -1,7 +1,7 @@
 # Facts sheet
 
-**Last regenerated:** Thursday, November 26, 2026 — 20:32 PHT
-**From commit:** `9f855275` on `staging` (documents); frontend numbers from this working tree; backend numbers from this working tree
+**Last regenerated:** Thursday, November 26, 2026 — 21:16 PHT
+**From commit:** `5ba81b5a` on `feat/action-menu-visibility` (documents); frontend numbers from this working tree; backend numbers from this working tree
 **Regenerate with:** `npm run docs:facts` from the repository root (add `-- --tests` to rerun both test suites). The script is [`docs-facts.mjs`](../04-Development/tools/docs-facts.mjs).
 
 Every README, requirement document, diagram caption, and the Project Plan and SRS quote their numbers from this sheet. If a document disagrees with this sheet, the document is wrong. If this sheet disagrees with the repository, regenerate it: the script reads the repository and nothing else. Do not edit the numbers by hand.
@@ -24,12 +24,12 @@ Every README, requirement document, diagram caption, and the Project Plan and SR
 | Constraint test cases | **259** | [`Checks/constraint-tests.sql`](../02-Architecture/Database/Checks/constraint-tests.sql) |
 | Laravel migrations on disk | **54**: 49 create a table (one per table), 5 ship product data (defaults, symptom lists) | `backend/app/**/Database/Migrations/` |
 | API contract entries | **135** headings naming **137** endpoints | [API Contract](../04-Development/API-Contract.md) (`####` endpoint headings) |
-| API routes live in the backend | **139**: BackupVerification 7, ClinicVisits 14, Dashboard 9, EmergencyResponse 11, InventoryTracker 11, Laravel/Sanctum 1, ReportsGeneration 9, Shared/AuditLog 4, Shared/Feedback 2, Shared/FollowUps 4, Shared/Http 2, Shared/Settings 14, StaffPatients 12, StudentRecords 19, UserManagement 20 | `backend/routes/api.php` (each route's controller, by its `use` line) plus Sanctum's CSRF route; `php artisan route:list` did not run here |
+| API routes live in the backend | **139**: BackupVerification 7, ClinicVisits 14, Dashboard 9, EmergencyResponse 11, InventoryTracker 11, Laravel/Sanctum 1, ReportsGeneration 9, Shared/AuditLog 4, Shared/Feedback 2, Shared/FollowUps 4, Shared/Http 2, Shared/Settings 14, StaffPatients 12, StudentRecords 19, UserManagement 20 | `php artisan route:list` |
 | Scheduled jobs | **3**: `cliniq:close-missed-follow-ups` daily at 00:15; `cliniq:backup` daily at 18:00; `cliniq:sync-holidays` hourly from 7:00 to 18:00 | [`backend/routes/console.php`](../../backend/routes/console.php); Windows Task Scheduler runs `php artisan schedule:run` every minute |
 | Frontend test files | **157** | `frontend/src/**/*.test.ts(x)` |
 | Backend test files | **28** | `backend/tests/**/*Test.php` |
 | Last recorded test run | Sunday, November 15, 2026 — 08:38 PHT at `397e000` | [Test runs](#test-runs) below |
-| Lines of code (non-blank) | frontend **72954** (`src`, tests included); backend **18011** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
+| Lines of code (non-blank) | frontend **72988** (`src`, tests included); backend **18011** (`app`, `config`, `routes`, `database`, `tests`, `bootstrap`) | counted by the script |
 
 ## Test runs
 

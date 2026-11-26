@@ -78,6 +78,9 @@ describe('Admin read-only access (ADR-038)', () => {
     renderWithRouter(<IncidentLogListPage viewer={ADMIN} />)
     await screen.findByRole('heading', { name: 'Incident Log' })
     expectNoWriteControls()
+    expect(
+      screen.queryByRole('button', { name: /More actions for incident on/ }),
+    ).not.toBeInTheDocument()
   })
 
   it('Incident Report: no Approve, no visit link, Print disabled', async () => {

@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { usePatientFilter } from '../../hooks/usePatientFilter'
 import { Link } from 'react-router'
 import {
+  ActionMenu,
   BackButton,
   Badge,
   buttonClassName,
@@ -124,17 +125,29 @@ const baseColumns: Array<DataTableColumn<IncidentLogRow>> = [
   {
     key: 'actions',
     header: 'Actions',
-    cell: (row) => (
-      <div className="flex flex-wrap gap-2">
-        {row.completion === 'needs_completion' && (
+    width: '15rem',
+    cell: (row) =>
+      row.completion === 'needs_completion' ? (
+        <div className="flex items-center gap-1.5">
           <Link to={paths.incidentComplete(row.id)} className={buttonClassName({ size: 'sm' })}>
             <Icon name="clipboardList" />
             Complete Stage 2
           </Link>
-        )}
-        {viewReport(row)}
-      </div>
-    ),
+          <ActionMenu
+            label={`More actions for incident on ${formatDateTime(row.time)}`}
+            items={[
+              {
+                key: 'report',
+                label: 'View Report',
+                icon: 'fileText',
+                href: paths.incidentReport(row.id),
+              },
+            ]}
+          />
+        </div>
+      ) : (
+        viewReport(row)
+      ),
   },
 ]
 
