@@ -32,6 +32,8 @@ Design these five in full detail first. Everything else in the system should be 
 ---
 
 ### Reference 1b — Activity Calendar
+
+**Action layout (ADR-095):** each event row keeps Edit directly available and puts Delete in a right-end ⋮ menu; the same delete confirmation and Undo still apply.
 *(Staff and Admin/Principal; its own top-level screen, not a Dashboard tab — ADR-032; renamed from "Calendar" by ADR-050)*
 
 A Weekly / Monthly / Yearly switch and a Calendar / Table switch with their own state; a calendar grid showing visit-plus-incident count intensity per day (heatmap-style shading); free-text event tags from visits and incidents as small text on their day; school events as yellow chips (up to 2 per day, then "+N more"), and nationwide Philippine holidays as gray "Holiday" chips (a no-class holiday with no visits gets faint stripes). Clicking any day opens its panel: counts (past and today only), its events with edit and delete, Add event (title up to 60 characters, a start date, an optional end date), and for Staff only a "View visits" link. Staff and the Admin/Principal both keep events (ADR-019, 042). A line under the calendar says when the holiday list was updated. **States:** loading skeleton, empty month, error with retry.
@@ -113,6 +115,8 @@ The QR Scan/Lookup Hub reference screen was removed with the QR feature (ADR-027
 | Any other data-entry form (Add/Edit Student, Add/Edit Staff, Add/Edit Inventory Item, Add/Edit User, Follow-Up entry, Sports Report builder, Yearly list import) | **Reference 2** (New Visit Entry) |
 | Any other detail/single-record view (Staff Profile, Inventory Item Batches, Incident Detail, Visit Detail) | **Reference 3** (Student Profile). There is no separate follow-up detail screen |
 | Any other list view (Visit Log List, Incident Log List, Follow-Up List, Inventory List, User List) | The list-row + status-badge pattern from **Reference 1**'s alerts section |
+
+**Action layout (ADR-095):** a crowded row uses the shared `ActionMenu` for secondary actions. Inventory keeps Restock visible; User Accounts keeps Edit visible; Sports Reports uses its clickable title instead of a separate View button. In the Visit Log, the date/time links to Visit Details and pending Review Letter stays visible. Student Profile letter dates link directly to the letter, while View visit stays visible. Student and Staff Profile headers keep visit and incident actions visible, with Edit and Archive in the menu for active records; Student Profile also keeps Print visible.
 | Login, Force Password Change | Simplest form treatment from **Reference 2**, no dynamic panels needed. Login is its own composition ("layout B"): a full-height white panel on the left holding the lockup at the top and the Sign In form centered, with a small footer line (Privacy Policy, version), beside the blurred school photo; no card, no overlap, no shadow |
 | Reports (Monthly, Incident register, Complaint summary, Sports Reports) and print layouts | **Reference 3**'s sectioned-content pattern, adapted for print (no action buttons, no interactive elements) |
 | Backup Status screen, including the Backup locations list (ADR-052) | **Reference 5**'s status-badge concept (backup status is also a lifecycle: last run → verified → needs attention); each location row uses the list-row pattern with a found / not found / not writable badge |
