@@ -114,15 +114,15 @@ const baseColumns: Array<DataTableColumn<InventoryItemView>> = [
     width: '8rem',
     cell: (item) => (item.category === 'medicine' ? 'Medicine' : 'Supply'),
   },
-  { key: 'stock', header: 'Stock', width: '13.5rem', cell: stockCell },
+  { key: 'stock', header: 'Stock', width: '12rem', cell: stockCell },
   {
     key: 'expiry',
     header: 'Next usable expiry',
-    width: '9rem',
+    width: '11rem',
     cell: (item) => (item.expirationDate ? formatDate(item.expirationDate) : 'No expiration'),
   },
-  { key: 'status', header: 'Status', width: '10.5rem', cell: stockBadges },
-  { key: 'actions', header: 'Actions', width: '15rem', cell: () => null },
+  { key: 'status', header: 'Status', width: '11rem', cell: stockBadges },
+  { key: 'actions', header: 'Actions', width: '9rem', align: 'left', cell: () => null },
 ]
 
 type StockAction = { kind: 'adjust' | 'restock' | 'batches'; item: InventoryItemView }
@@ -182,7 +182,7 @@ export function InventoryListPage() {
         ...column,
         cell: (item: InventoryItemView) => (
           // Restock remains the row's direct action; the other operations share the action menu.
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex items-center justify-start gap-1">
             <Button
               size="sm"
               variant="primary"

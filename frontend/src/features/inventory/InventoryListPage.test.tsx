@@ -27,6 +27,19 @@ describe('Inventory List', () => {
     )
     expect(screen.getAllByRole('rowheader').map((cell) => cell.textContent)).toEqual(expectedNames)
   })
+
+  it('keeps stock details grouped and the menu at the right end of a compact Actions column', async () => {
+    renderWithRouter(<InventoryListPage />)
+    const table = await screen.findByRole('table', { name: 'Inventory items' })
+    expect(
+      [...table.querySelectorAll('thead th')].map((cell) => cell.textContent?.trim()),
+    ).toEqual(['Item', 'Category', 'Stock', 'Next usable expiry', 'Status', 'Actions'])
+    expect((table.querySelectorAll('col')[5] as HTMLTableColElement).style.width).toBe('9rem')
+    expect(table.querySelectorAll('thead th')[5]).toHaveClass('text-left')
+    const actions = table.querySelector('tbody tr td:last-child div')
+    expect(actions).toHaveClass('justify-start')
+    expect(actions?.lastElementChild).toHaveAttribute('aria-haspopup', 'menu')
+  })
 })
 
 describe('Inventory List: expired stock', () => {
