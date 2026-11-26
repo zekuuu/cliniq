@@ -37,8 +37,8 @@ vi.mock('react-chartjs-2', () => {
   return { Bar: Stub, Line: Stub, Doughnut: Stub }
 })
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
-const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }
 const TODAY = '2026-10-07'
 
 function input(
@@ -182,7 +182,7 @@ describe('Sports Report data rules (ADR-034)', () => {
     const report = await createSportsReport(input([student.id]), STAFF)
     expect((await getSportsReportContent(report.id, STAFF)).rows[0].entries).toEqual([])
     const complaint = (await listIncidents())[0].complaint
-    await saveIncidentStageOne({ studentId: student.id, complaint, vitals: {} }, STAFF)
+    await saveIncidentStageOne({ studentId: student.id, complaint }, STAFF)
     const [row] = (await getSportsReportContent(report.id, STAFF)).rows
     expect(row.entries).toHaveLength(1)
     expect(row.entries[0]).toMatchObject({

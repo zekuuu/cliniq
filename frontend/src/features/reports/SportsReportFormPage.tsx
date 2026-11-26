@@ -33,6 +33,7 @@ import {
 import { paths } from '../../routes/paths'
 import type { StudentSearchResult } from '../../types/entities'
 import {
+  archiveSportsReport,
   fetchGradeLevels,
   fetchGradeStudents,
   fetchSportsReport,
@@ -217,9 +218,32 @@ function SportsReportForm({
     setSaving(true)
     try {
       const saved = await saveSportsReport(values, { reportId, viewer })
-      notify.success(reportId ? 'Sports report updated' : 'Sports report saved', {
-        id: 'sports-report-save',
-      })
+      notify.undoable(
+        reportId ? 'Sports report updated' : 'Sports report saved',
+        () =>
+          reportId
+            ? saveSportsReport(initialValues, { reportId, viewer })
+            : archiveSportsReport(saved.id, true, viewer),
+        {
+          undone: reportId
+            ? 'Undone: sports report restored'
+            : 'Undone: new sports report archived',
+          checkCurrent: async () => {
+            const current = await fetchSportsReport(saved.id, viewer)
+            return (
+              current.title === saved.title &&
+              current.activity === saved.activity &&
+              current.requestedBy === saved.requestedBy &&
+              current.window === saved.window &&
+              current.includeConditions === saved.includeConditions &&
+              JSON.stringify(current.students.map(({ studentId }) => studentId)) ===
+                JSON.stringify(saved.students.map(({ studentId }) => studentId)) &&
+              current.archived === saved.archived
+            )
+          },
+          onUndone: () => navigate(paths.sportsReports),
+        },
+      )
       allowLeave()
       navigate(paths.sportsReport(saved.id), { replace: !reportId })
     } catch (cause) {
@@ -290,7 +314,7 @@ function SportsReportForm({
                 }
               />
             </div>
-            <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none">
+            <label className="flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors motion-reduce:transition-none">
               <input
                 type="checkbox"
                 checked={includeConditions}

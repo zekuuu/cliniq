@@ -21,7 +21,12 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { formatDateTime } from '../../lib/dates'
 import type { SessionUser, SportsReportSummary } from '../../lib/data'
 import { paths } from '../../routes/paths'
-import { archiveSportsReport, copySportsReport, fetchSportsReports } from './api/sportsReportApi'
+import {
+  archiveSportsReport,
+  copySportsReport,
+  fetchSportsReport,
+  fetchSportsReports,
+} from './api/sportsReportApi'
 
 /**
  * Saved Sports Reports (ADR-034): lists of students the clinician prints for a PE or sports
@@ -39,7 +44,14 @@ export function SportsReportListPage({ viewer }: { viewer: SessionUser }) {
   async function duplicate(report: SportsReportSummary) {
     try {
       const copy = await copySportsReport(report.id, viewer)
-      notify.success('Sports report copied', { id: 'sports-report-copy' })
+      notify.undoable('Sports report copied', () => archiveSportsReport(copy.id, true, viewer), {
+        undone: 'Undone: copied report archived',
+        checkCurrent: async () => !(await fetchSportsReport(copy.id, viewer)).archived,
+        onUndone: () => {
+          reload()
+          navigate(paths.sportsReports)
+        },
+      })
       navigate(paths.sportsReportEdit(copy.id))
     } catch (cause) {
       notify.apiError(cause, 'The report was not copied. Please try again.')
@@ -53,7 +65,10 @@ export function SportsReportListPage({ viewer }: { viewer: SessionUser }) {
         () => archiveSportsReport(report.id, !archived, viewer),
         {
           undone: `Undone: “${report.title}” ${archived ? 'restored' : 'archived'} again`,
+          checkCurrent: async () =>
+            (await fetchSportsReport(report.id, viewer)).archived === archived,
           onUndone: reload,
+          onFailed: reload,
         },
       )
       reload()
@@ -183,7 +198,7 @@ export function SportsReportListPage({ viewer }: { viewer: SessionUser }) {
           icon={<Icon name="clipboardList" />}
         />
         <CardBody>
-          <label className="mb-4 flex w-fit cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm font-semibold text-text-primary transition-colors hover:bg-surface motion-reduce:transition-none">
+          <label className="mb-4 flex w-fit items-center gap-2 rounded-md px-2 py-1.5 text-sm font-semibold text-text-primary transition-colors motion-reduce:transition-none">
             <input
               type="checkbox"
               checked={showArchived}
