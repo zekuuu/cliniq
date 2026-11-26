@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { notify } from '../../lib/notify'
 import { scrollToTop } from '../../lib/scrollToTop'
 import {
@@ -62,6 +62,7 @@ function EmptyStep({
 }
 
 export function StudentImportPage({ viewer = getMockSessionUser() }: { viewer?: SessionUser }) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [fileName, setFileName] = useState('')
   const [dragging, setDragging] = useState(false)
   const [csv, setCsv] = useState<string[][] | null>(null)
@@ -173,9 +174,8 @@ export function StudentImportPage({ viewer = getMockSessionUser() }: { viewer?: 
           icon={<Icon name="fileText" />}
         />
         <CardBody className="flex flex-col gap-2">
-          {/* A drop zone (Zean, November 3, 2026): drop the file, or click anywhere in it to browse. The input stays
-              in the label, visually hidden, so Tab reaches it; its aria-label names it. */}
-          <label
+          {/* The drop zone accepts a dropped CSV; Browse files is its only click target. */}
+          <div
             data-testid="import-drop-zone"
             onDragOver={(event) => {
               event.preventDefault()
@@ -187,12 +187,14 @@ export function StudentImportPage({ viewer = getMockSessionUser() }: { viewer?: 
               setDragging(false)
               void chooseFile(event.dataTransfer.files[0])
             }}
-            className={`flex cursor-pointer flex-col items-center gap-1 rounded-md border-2 border-dashed px-4 py-8 text-center transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-green motion-reduce:transition-none ${dragging ? 'border-brand-green bg-brand-green/5' : 'border-border hover:border-brand-green hover:bg-surface'}`}
+            className={`flex flex-col items-center gap-1 rounded-md border-2 border-dashed px-4 py-8 text-center transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-green motion-reduce:transition-none ${dragging ? 'border-brand-green bg-brand-green/5' : 'border-border'}`}
           >
             <input
+              ref={fileInputRef}
               type="file"
               aria-label="Student list (CSV)"
               accept=".csv,text/csv"
+              tabIndex={-1}
               onChange={(event) => {
                 void chooseFile(event.target.files?.[0])
                 // Cleared, so the same file can be chosen again after a reset (ADR-083).
@@ -205,11 +207,15 @@ export function StudentImportPage({ viewer = getMockSessionUser() }: { viewer?: 
               Drag and drop the CSV here
             </span>
             <span className="text-xs text-text-secondary">or</span>
-            <span className="text-sm font-semibold text-brand-green-dark underline-offset-2 hover:underline">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="cursor-pointer rounded-sm text-sm font-semibold text-brand-green-dark underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green"
+            >
               Browse files
-            </span>
+            </button>
             {fileName && <span className="mt-2 text-xs text-text-secondary">{fileName}</span>}
-          </label>
+          </div>
           <p className="text-xs text-text-secondary">Accepted file type: .csv only</p>
           {error && (
             <p role="alert" className="text-sm font-semibold text-error">
@@ -451,7 +457,7 @@ export function StudentImportPage({ viewer = getMockSessionUser() }: { viewer?: 
                   {shownMissing.map((student) => (
                     <label
                       key={student.id}
-                      className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_6rem_8rem] items-center gap-3 px-3 py-2 text-sm text-text-primary transition-colors hover:bg-surface motion-reduce:transition-none"
+                      className="grid grid-cols-[auto_minmax(0,1fr)_6rem_8rem] items-center gap-3 px-3 py-2 text-sm text-text-primary transition-colors motion-reduce:transition-none"
                     >
                       <input
                         type="checkbox"

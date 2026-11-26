@@ -37,7 +37,7 @@ export interface StudentFormValues {
   sex: StudentSex | ''
   /** `YYYY-MM-DD`, or '' when not given. Optional (ADR-054). */
   birthDate: string
-  emergencyContacts: Array<Pick<EmergencyContact, 'name' | 'relationship' | 'phone' | 'verified'>>
+  emergencyContacts: Array<Pick<EmergencyContact, 'name' | 'relationship' | 'phone'>>
   allergies: string
   medicalConditions: string
 }
@@ -108,7 +108,6 @@ export async function submitStudentForm(
           name: contact.name.trim(),
           relationship: contact.relationship.trim(),
           phone: contact.phone.trim(),
-          verified: contact.verified,
         })),
     },
     {

@@ -21,7 +21,7 @@ import { renderWithRouter } from '../../test/renderWithRouter'
 import SAMPLE from '../../../sample-data/student-list-sample.csv?raw'
 import { StudentImportPage } from './StudentImportPage'
 
-const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' } as const
+const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
 const ADMIN = { id: 'user-admin-01', name: 'Principal', role: 'admin' } as const
 
 const sampleRows = () => {

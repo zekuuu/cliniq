@@ -288,7 +288,7 @@ export function StudentListPage({ viewer = getMockSessionUser() }: { viewer?: Se
               options={recordStatusOptions}
               onChange={(value) => setRecordStatus(value as RecordStatusFilter)}
             />
-            <label className="flex min-h-10 cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-text-primary shadow-card transition-colors hover:bg-surface">
+            <label className="flex min-h-10 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-text-primary shadow-card transition-colors ">
               <input
                 type="checkbox"
                 checked={includeArchived}
