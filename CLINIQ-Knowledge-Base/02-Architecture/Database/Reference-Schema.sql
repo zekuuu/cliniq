@@ -288,9 +288,6 @@ CREATE TABLE emergency_contacts (
   phone               VARCHAR(30)     NOT NULL,
   is_primary          TINYINT(1)      NOT NULL DEFAULT 1,
   sort_order          SMALLINT        NOT NULL DEFAULT 0,
-  is_verified         TINYINT(1)      NOT NULL DEFAULT 0,
-  verified_at         DATETIME        NULL,
-  verified_by_user_id BIGINT UNSIGNED NULL,
   created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   -- At most one primary contact per student (NULL for non-primary rows is ignored by UNIQUE).
@@ -298,9 +295,7 @@ CREATE TABLE emergency_contacts (
   PRIMARY KEY (id),
   UNIQUE KEY uq_contacts_one_primary (primary_student_id),
   KEY idx_contacts_student (student_id),
-  CONSTRAINT chk_contacts_verified CHECK (is_verified = 0 OR verified_at IS NOT NULL),
-  CONSTRAINT fk_contacts_student FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE,
-  CONSTRAINT fk_contacts_verified_by FOREIGN KEY (verified_by_user_id) REFERENCES users (id)
+  CONSTRAINT fk_contacts_student FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE student_record_reviews (
@@ -381,7 +376,6 @@ CREATE TABLE personnel_emergency_contacts (
   phone               VARCHAR(30)     NOT NULL,
   is_primary          TINYINT(1)      NOT NULL DEFAULT 1,
   sort_order          SMALLINT        NOT NULL DEFAULT 0,
-  is_verified         TINYINT(1)      NOT NULL DEFAULT 0,
   created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   primary_personnel_id BIGINT UNSIGNED GENERATED ALWAYS AS (IF(is_primary = 1, personnel_id, NULL)) STORED,
@@ -500,6 +494,7 @@ CREATE TABLE visits (
   entered_in_error_at DATETIME        NULL,
   entered_in_error_by_user_id BIGINT UNSIGNED NULL,
   entered_in_error_reason VARCHAR(300) NULL,
+  entered_error_undo_snapshot LONGTEXT NULL,
   escalated_incident_id BIGINT UNSIGNED NULL,
   logged_by_user_id   BIGINT UNSIGNED NOT NULL,
   updated_by_user_id  BIGINT UNSIGNED NULL,
@@ -606,6 +601,7 @@ CREATE TABLE incidents (
   grade_level_at_time   VARCHAR(40)     NULL,
   section_at_time       VARCHAR(60)     NULL,
   occurred_at           DATETIME        NOT NULL,
+  arrived_at_clinic_at  DATETIME        NULL,
   complaint             VARCHAR(150)    NOT NULL,
   stage                 TINYINT         NOT NULL DEFAULT 1,
   treatment_notes       TEXT            NULL,
@@ -694,23 +690,6 @@ CREATE TABLE parent_notification_attempts (
   CONSTRAINT chk_notifications_source CHECK (called_source IS NULL OR called_source IN ('emergency_contact','other')),
   CONSTRAINT fk_notifications_incident FOREIGN KEY (incident_id) REFERENCES incidents (id) ON DELETE CASCADE,
   CONSTRAINT fk_notifications_user FOREIGN KEY (logged_by_user_id) REFERENCES users (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE emergency_contact_verifications (
-  id                   BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  contact_id           BIGINT UNSIGNED NOT NULL,
-  result               VARCHAR(10)     NOT NULL,
-  verified_with        VARCHAR(100)    NULL,
-  reason               VARCHAR(255)    NULL,
-  incident_id          BIGINT UNSIGNED NULL,
-  recorded_by_user_id  BIGINT UNSIGNED NOT NULL,
-  recorded_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY idx_verifications_contact (contact_id, recorded_at),
-  CONSTRAINT chk_verifications_result CHECK (result IN ('verified','unverified')),
-  CONSTRAINT fk_verifications_contact FOREIGN KEY (contact_id) REFERENCES emergency_contacts (id) ON DELETE CASCADE,
-  CONSTRAINT fk_verifications_incident FOREIGN KEY (incident_id) REFERENCES incidents (id),
-  CONSTRAINT fk_verifications_user FOREIGN KEY (recorded_by_user_id) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE incident_report_approvals (
@@ -995,6 +974,7 @@ CREATE TABLE calendar_events (
   created_by_user_id  BIGINT UNSIGNED NOT NULL,
   created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at          DATETIME        NULL,
   last_date           DATE GENERATED ALWAYS AS (COALESCE(end_date, start_date)) STORED,
   PRIMARY KEY (id),
   KEY idx_events_range (start_date, last_date),

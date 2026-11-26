@@ -1,5 +1,7 @@
 # Data Dictionary
 
+**Updated Wednesday, November 25, 2026 — 10:33 PHT, following [ADR-088](../../06-Decisions/ADR-088-Remove-Emergency-Contact-Verification.md):** student and staff emergency-contact verification columns and the student verification-history table are removed. Backup verification is unchanged.
+
 **Status: Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057); changes after this go through a new decision.** Generated Friday, October 09, 2026 — 02:11 PHT from the reference schema (`Reference-Schema.sql`). Purposes, mappings and notes are hand-written. If you change the schema, change this file with it.
 
 **Updated Sunday, November 08, 2026 — 18:35 PHT, following ADR-078:** the idle sign-out settings of `system_settings` (see that table). No new table or column.
@@ -31,7 +33,6 @@ How to read it: **Tier** is `Core` (a built screen or the mock already needs it)
 | 9 | [`students`](#students) | StudentRecords | Core | The student record. |
 | 10 | [`student_health_entries`](#student_health_entries) | StudentRecords | Core | Allergies, food restrictions, conditions, past illnesses and family history, one row each. |
 | 11 | [`emergency_contacts`](#emergency_contacts) | StudentRecords | Core | Guardians to call in an emergency. |
-| 12 | [`emergency_contact_verifications`](#emergency_contact_verifications) | StudentRecords | Spec | History of verifying a contact number with the class adviser or Registrar, and of re-flagging it when unreachable in an emergency (Module 2, Parent Contact Validation). |
 | 13 | [`student_record_reviews`](#student_record_reviews) | StudentRecords | Core | The Incomplete Records review queue: who flagged a record, from which import, who resolved it. |
 | 14 | [`inventory_items`](#inventory_items) | InventoryTracker | Core | Medicines and supplies with a maintained stock count. |
 | 15 | [`visits`](#visits) | ClinicVisits | Core | A routine clinic visit. |
@@ -377,7 +378,7 @@ Allergies, food restrictions, conditions, past illnesses and family history, one
 
 Guardians to call in an emergency. The requirements and mock have one; the table allows several with exactly one primary.
 
-**Frontend:** `Student.emergencyContact` (name, relationship, phone, verified): the API returns the primary contact.
+**Frontend:** `Student.emergencyContacts` (name, relationship, phone): the API returns the ordered contact list.
 
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
@@ -388,47 +389,13 @@ Guardians to call in an emergency. The requirements and mock have one; the table
 | `phone` | `varchar(30)` | no |  | Required. A contact with no phone counts as incomplete. |
 | `is_primary` | `tinyint(1)` | no | 1 | At most one primary per student, enforced by the generated column `primary_student_id` + unique index. |
 | `sort_order` | `smallint` | no | 0 | Keeps the order of the list (G5, G6). |
-| `is_verified` | `tinyint(1)` | no | 0 | Denormalized latest state, maintained only by the verification service together with an `emergency_contact_verifications` row. |
-| `verified_at` | `datetime` | yes | NULL |  |
-| `verified_by_user_id` | `bigint unsigned` | yes | NULL |  |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
 | `primary_student_id` | `bigint unsigned` generated | yes | = if(`is_primary` = 1,`student_id`,NULL) |  |
 
 **Indexes:** `idx_contacts_student` (`student_id`); UNIQUE `uq_contacts_one_primary` (`primary_student_id`)
 
-**Foreign keys:** `student_id` -> `students`(`id`) ON DELETE CASCADE; `verified_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
-
-**Checks:**
-
-- `chk_contacts_verified`: `is_verified = 0 or verified_at is not null`
-
-## emergency_contact_verifications
-
-**Module:** StudentRecords  |  **Tier:** Spec
-
-History of verifying a contact number with the class adviser or Registrar, and of re-flagging it when unreachable in an emergency (Module 2, Parent Contact Validation).
-
-**Frontend:** Not in the mock (it only has `verified: boolean`).
-
-| Column | Type | Null | Default | Notes |
-|---|---|---|---|---|
-| `id` **PK** | `bigint unsigned` | no |  |  |
-| `contact_id` | `bigint unsigned` | no |  |  |
-| `result` | `varchar(10)` | no |  |  |
-| `verified_with` | `varchar(100)` | yes | NULL | Free text: who confirmed it (e.g. the adviser's name or "Registrar"). |
-| `reason` | `varchar(255)` | yes | NULL |  |
-| `incident_id` | `bigint unsigned` | yes | NULL | Set when an unreachable call during an incident caused the re-flag. |
-| `recorded_by_user_id` | `bigint unsigned` | no |  |  |
-| `recorded_at` | `datetime` | no | current_timestamp() |  |
-
-**Indexes:** `idx_verifications_contact` (`contact_id`, `recorded_at`)
-
-**Foreign keys:** `contact_id` -> `emergency_contacts`(`id`) ON DELETE CASCADE; `incident_id` -> `incidents`(`id`) ON DELETE RESTRICT; `recorded_by_user_id` -> `users`(`id`) ON DELETE RESTRICT
-
-**Checks:**
-
-- `chk_verifications_result`: `result in ('verified','unverified')`
+**Foreign keys:** `student_id` -> `students`(`id`) ON DELETE CASCADE
 
 ## student_record_reviews
 
@@ -523,6 +490,7 @@ A routine clinic visit, about a student or a staff patient, exactly one (ADR-043
 | `entered_in_error_at` | `datetime` | yes | NULL | PROVISIONAL. Set by "Entered in error"; the row is kept and excluded from lists, counts and reports. |
 | `entered_in_error_by_user_id` | `bigint unsigned` | yes | NULL | PROVISIONAL. |
 | `entered_in_error_reason` | `varchar(300)` | yes | NULL | PROVISIONAL. Required with `entered_in_error_at`. |
+| `entered_error_undo_snapshot` | `longtext` | yes | NULL | Captures medicine lines, letter status, pending follow-ups, and stock movement IDs for transactional Undo; cleared when reinstated (ADR-089). |
 | `escalated_incident_id` | `bigint unsigned` | yes | NULL | PROVISIONAL (ADR-036). The incident this visit was escalated to; the event then counts once, as the incident. |
 | `logged_by_user_id` | `bigint unsigned` | no |  |  |
 | `updated_by_user_id` | `bigint unsigned` | yes | NULL | Last editor, for the audit summary and conflict messages. |
@@ -625,7 +593,8 @@ An emergency incident, captured in two stages. Stage 1 is the fast save; Stage 2
 | `personnel_id` | `bigint unsigned` | yes | NULL | A staff patient (ADR-043). Exactly one of `student_id` and `personnel_id`. |
 | `grade_level_at_time` | `varchar(40)` | yes | NULL | The grade when Stage 1 was saved (ADR-047). |
 | `section_at_time` | `varchar(60)` | yes | NULL | The section at the same moment (ADR-047). |
-| `occurred_at` | `datetime` | no |  | When it happened (Philippine time). |
+| `occurred_at` | `datetime` | no |  | When it happened (Philippine time), editable through Stage 2 until report approval (ADR-094). |
+| `arrived_at_clinic_at` | `datetime` | yes | NULL | Optional Stage 2 clinic arrival, pending the nurse's confirmation (ADR-094). Event ordering warns but does not block. |
 | `complaint` | `varchar(150)` | no |  |  |
 | `stage` | `tinyint` | no | 1 | 1 = fast capture, 2 = complete. CHECK: stage 2 requires `completed_at` and `completed_by_user_id`. |
 | `treatment_notes` | `text` | yes | NULL | Optional. In the mock this text hides inside the vitals object. |
@@ -637,7 +606,7 @@ An emergency incident, captured in two stages. Stage 1 is the fast save; Stage 2
 | `created_by_user_id` | `bigint unsigned` | no |  |  |
 | `completed_by_user_id` | `bigint unsigned` | yes | NULL |  |
 | `completed_at` | `datetime` | yes | NULL |  |
-| `created_at` | `datetime` | no | current_timestamp() |  |
+| `created_at` | `datetime` | no | current_timestamp() | Immutable time the incident was entered, separate from `occurred_at` (ADR-094). |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
 
 **Indexes:** `idx_incidents_stage` (`stage`, `occurred_at`); `idx_incidents_student_time` (`student_id`, `occurred_at`); `idx_incidents_time` (`occurred_at`); UNIQUE `uq_incidents_id_student` (`id`, `student_id`)
@@ -656,7 +625,7 @@ An emergency incident, captured in two stages. Stage 1 is the fast save; Stage 2
 
 **Module:** EmergencyResponse  |  **Tier:** Core
 
-Timestamped vital-sign readings. Any reading may be left out at either stage; a recheck is another row. A reading out of the usual range warns and saves (ADR-051), so the database only refuses what cannot be a reading.
+Timestamped vital-sign readings. Stage 1 does not accept typed readings; a temperature carried from an escalated visit remains. Stage 2 offers all four readings, each optional with its actual taken time in `recorded_at`. Earlier readings stay visible, and a correction appends another row. A reading out of the usual range warns and saves (ADR-051, ADR-094).
 
 **Frontend:** `Incident.vitals` (`temperatureC`, `pulseBpm`, `bloodPressure` "110/70", `oxygenSaturationPct` 98). The API merges the latest value of each into the existing object.
 
@@ -1048,6 +1017,7 @@ School events that Staff maintain on the Dashboard calendar (ADR-019).
 | `created_by_user_id` | `bigint unsigned` | no |  |  |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
+| `deleted_at` | `datetime` | yes | NULL | Soft deletion preserves the event ID for Undo; calendar queries exclude deleted rows (ADR-089). |
 | `last_date` | `date` generated | yes | = coalesce(`end_date`,`start_date`) | Generated: end_date or start_date. Makes "events overlapping this range" a plain index range scan. |
 
 **Indexes:** `idx_events_range` (`start_date`, `last_date`)
@@ -1205,7 +1175,6 @@ A staff patient's emergency contacts, ordered; may be empty.
 | `phone` | `varchar(30)` | no |  |  |
 | `is_primary` | `tinyint(1)` | no | 1 |  |
 | `sort_order` | `smallint` | no | 0 | Keeps the order of the list (G5, G6). |
-| `is_verified` | `tinyint(1)` | no | 0 |  |
 | `created_at` | `datetime` | no | current_timestamp() |  |
 | `updated_at` | `datetime` | no | current_timestamp() |  |
 | `primary_personnel_id` | `bigint unsigned` | yes | generated |  |
