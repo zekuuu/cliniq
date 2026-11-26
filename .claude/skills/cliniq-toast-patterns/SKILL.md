@@ -10,9 +10,9 @@ Use with `cliniq-button-feedback-patterns`, which keeps busy and done feedback o
 ## Where it lives
 
 - `frontend/src/lib/notify.ts`: the only module that imports `sonner` (an ESLint rule refuses it anywhere else). Durations, ids, the error mapper and the copy rules are there.
-- `frontend/src/components/ui/Toaster.tsx`: the one `<Toaster>`, mounted once in `App`. Bottom right, rich colours, close button, three at a time.
+- `frontend/src/components/ui/Toaster.tsx`: the one `<Toaster>`, mounted once in `App`. Bottom right, light result colours, close button, three at a time.
 - `frontend/src/lib/scrollToTop.ts`: back to the top after a success (the window, or the open dialog's overlay), with focus on the main content.
-- `frontend/src/index.css`, "Toasts": every toast is the same white card; only the shrinking line along its bottom takes the kind's ADR-062 accent (Zean, Thursday, November 19, 2026: "make the toast bg color, only the progress bar changes"). Don't add `richColors` or a tinted fill. The icons are the app's outline `Icon`s in each meaning's text shade, set once in `Toaster.tsx` (never Sonner's filled ones).
+- `frontend/src/index.css`, "Toasts": result toasts use the light ADR-062 fill for their kind (success: brand-green-fill, error: error-fill, warning: warning-fill, info: info-fill) and its accent border. The shrinking bottom line keeps that accent. This changes the November 19 white-card rule at Zean's request (ADR-096). Keep dark text and the app's outline `Icon`s in each meaning's text shade, set once in `Toaster.tsx` (never Sonner's filled ones).
 
 ## The rules
 
@@ -23,7 +23,7 @@ Use with `cliniq-button-feedback-patterns`, which keeps busy and done feedback o
 - **One toast per action (ADR-084):** every call is its own toast, so repeated results stack; toasts are never merged by text or id. An `id` only pairs a slow action's `notify.loading(text, { id })` with its result sent under the same id, or use `notify.promise`.
 - **A next step rides on the toast:** `action: { label: 'Open record', onClick }`. Such a toast stays 8 s.
 - **Undo (ADR-085, amended by ADR-089):** every mutation with a supported, safe reverse offers an eight-second Undo through `notify.undoable(message, reverse, { undone: 'Undone: …', checkCurrent, onUndone: reload })`, or `useSaveFeedback().run(action, { saved, undo: (value) => ({ run, checkCurrent, undone, onUndone }) })`. Edits capture prior editable values before saving and check the current state before reversing; refuse a stale Undo. Undo sends the reverse request (never a delayed save), so the audit keeps both entries. Previously one-way actions await an explicit per-action reversal decision.
-- **Undo action look:** on the white toast, use the shared dark green text, a visible focus ring, hover and pressed feedback; do not leave Sonner's default black action fill.
+- **Undo action look:** on the light success toast, use the shared dark green text, a visible focus ring, hover and pressed feedback; do not leave Sonner's default black action fill.
 - **Copy:** sentence case, one short sentence, past tense naming what ("Visit recorded", "Staff record archived"). No exclamation marks, no "successfully", no emoji. An error says what failed and what to do next.
 - **Privacy:** never a diagnosis, symptom, vitals, medicine or other health detail. Name a record by its number or the screen's own label, and a person only where the same screen already shows them. If a refusal's text names a medicine (a stock rule), show it beside the items and keep the toast plain.
 
