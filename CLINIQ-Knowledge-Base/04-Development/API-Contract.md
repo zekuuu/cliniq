@@ -62,7 +62,7 @@ The mock has no pagination: it returns whole lists and the screens page them. Li
 
 - **Request:** `page` (from 1); `perPage` (the screen's page size: 10, 20, 50 or 100; default 25, at most 100); `search` (the search box, where the list has one); `sort` (a column key, with `-` in front for descending; an unknown key falls back to the list's default); and the list's own filters.
 - **Answer:** `data` with `meta: { page, perPage, total, lastPage }`. `lastPage` is new; it is at least 1. A page past the end answers 200 with an empty `data` and the same `meta`, not an error. Errors keep the usual format.
-- **Without `page` or `perPage`, the whole list comes back as before.** The printouts and exports read it on purpose, by an explicit call (the Audit Log's Print button, the Sports Report's student list).
+- **Without `page` or `perPage`, the whole list comes back as before.** Some small printouts and exports read it on purpose. The Audit Log's API-mode Print button uses the streamed HTML route in ADR-093 instead of downloading its whole JSON list.
 - **Filters, search and sort run in SQL** for the lists that grow with history (visits, incidents, follow-ups, stock movements, the audit log). The Student List and the Incomplete Records Queue are sorted and cut in memory, because their name match and record status are PHP rules; the school roll bounds them (about 1,200 rows with the archived).
 - **Searches see only what the list shows.** Typed digits find the last 4 of the masked LRN (ADR-080 item 7). A Staff No. matches by its start. The audit log's search matches its shown words only, never a hidden full LRN.
 
@@ -265,6 +265,12 @@ The three recovery routes are unauthenticated. They sit behind the CSRF cookie o
 - Messages: 403 "Only the clinic staff can change the sign-out times."; 422 "Enter whole minutes from 10 to 240."
 - Copies: `saveIdleSignoutSettings` (`api.ts:335`) and its range check `validIdleMinutes` (`api.ts:321`, a helper, no endpoint of its own); tests: `idle-signout`.
 
+#### `GET /api/settings/operational` and `PUT /api/settings/operational`
+- Roles: Staff and Admin read; Staff write. Response: `{ upcomingFollowUpDays, expiryWarningDays }`.
+- PUT requires both whole-day values: upcoming follow-ups 1–30; supply expiry warning 1–180. Invalid values return 422; Admin writes return 403.
+- The existing `upcoming_follow_up_days` and `expiry_warning_days` rows in `system_settings` are updated. The settings cache is cleared. An update audit entry names only changed fields, with `target_label` `settings/operational`; values are omitted.
+- Mock/API names: `getOperationalSettings`, `saveOperationalSettings`. The Settings page offers Undo by restoring the previous pair through the same PUT after a stale-state check (ADR-089, ADR-091).
+
 #### `GET /api/auth/profile`
 - **Added Saturday, November 07, 2026 — 13:33 PHT (counter-check C-5).** Roles: S, A (the signed-in account only, ADR-066). Response: `OwnAccount` (`name`, `username`, `role`, `profilePicture`, `lastLogin`).
 - Errors: 403 for a disabled account.
@@ -421,14 +427,6 @@ All read-only, no audit. Text-only lists, safe for both roles.
 - Clears `archived_at`, `archived_by_user_id`, `archive_reason` and `archived_school_year`. Audit: `update student`, summary "Restored from the archive".
 - Copies: `restoreStudent`; tests: `StudentRecordsTest`, `auditCoverage`, `records`.
 
-#### `POST /api/students/{id}/emergency-contacts/{index}/verify`
-- Roles: S. Added Thursday, November 19, 2026 — 05:24 PHT (Module 2: "Mark each contact number as verified/unverified").
-- Request: `verified` (boolean, default `true`; `false` marks it unverified, added Thursday, November 19, 2026 — 05:38 PHT). `index` is the contact's place in the list, 0 being the primary.
-- Response: `Student`. Errors: 404 (no student, or no contact at that index).
-- Verified: stores `is_verified = 1`, `verified_at` and `verified_by_user_id`. Unverified: `is_verified = 0` and both cleared. Either way it adds an `emergency_contact_verifications` row with `result` `verified` or `unverified`. Audit: `update student`, summary "Marked an emergency contact verified." or "… unverified."
-- Saving the student (`POST`/`PUT /api/students`) keeps a contact's row, its verification state and its history while its number (digits only) is unchanged. A new or changed number starts unverified on an update; on a create the input's `verified` is used, and a verified contact gets its first history row.
-- Copies: `verifyStudentContact`; tests: `StudentRecordsTest`, `StudentProfilePage`. The Student Profile's "Mark verified" button calls it.
-
 #### `GET /api/students/{id}/history`
 - Roles: S, A.
 - Query: `limit` (default 8).
@@ -479,10 +477,6 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 - Roles: S. Added Sunday, November 22, 2026 — 01:30 PHT (ADR-085). As for students: clears the archive details, 409 `not_archived` when not archived. Errors: 403, 404, 409. Audit: `update staff`, summary "Restored from the archive".
 - Copies: `restorePersonnel`; tests: `StaffPatientsTest`, `records`.
 
-#### `POST /api/personnel/{id}/emergency-contacts/{index}/verify`
-- Roles: S. Added Thursday, November 19, 2026 — 05:24 PHT. As for students (`verified`, default `true`), but it sets only `is_verified`: `personnel_emergency_contacts` has no `verified_at` column and no verification-history table. Errors: 403, 404. Audit: `update staff`, summary "Marked an emergency contact verified." or "… unverified."
-- Copies: `verifyPersonnelContact`; tests: `StaffPatientsTest`. The Staff Profile's "Mark verified" button calls it.
-
 #### `GET /api/personnel/{id}/history`
 - Roles: S. Query: `limit`. Response: `{ visits, incidents, followUps }`.
 - Copies: `getPersonnelHistory` (`api.ts:904`); tests: `personnel`.
@@ -531,6 +525,10 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 - Errors: 404; 422 no reason; 409 `visit_entered_in_error` already marked.
 - Audit: `update visit` "Marked entered in error"; `update excuse-letter` "Voided: visit entered in error"; `update follow-up` "Marked cancelled: visit entered in error"; `submit inventory-adjustment` per line. Never the reason.
 - Copies: `markVisitEnteredInError` (`api.ts:1323`); tests: `ExcuseLetterPage`, `ExcuseLettersAndFollowUps`, `VisitLogic`, `auditCoverage`. Stock returns; the letter is voided; pending follow-ups are cancelled with `Visit entered in error: <reason>`.
+
+#### `POST /api/visits/{id}/entered-in-error/undo`
+- Roles: S. Response: reinstated `Visit`. Errors: 404; 409 if the visit or dependent stock, letter, or follow-up changed after the correction.
+- Restores medicine lines through compensating stock movements, the letter's previous draft or approved status, and follow-ups cancelled by the correction in one transaction. The original audit entries remain; restoration is audited (ADR-089).
 
 #### `GET /api/visits/{id}/excuse-letter`
 - Roles: S. Response: `ExcuseLetterApproval` or null; the current letter, never a superseded one.
@@ -593,6 +591,10 @@ The Staff role only (ADR-043 item 9). Every endpoint answers 403 to the Admin, e
 - Audit: `create follow-up`.
 - Copies: `rescheduleFollowUp` (`api.ts:1833`); tests: `ExcuseLettersAndFollowUps`. Keeps patient, record, reason and notes. A follow-up that reads as Missed can be rescheduled, and it is written Missed at that moment (Q7). The stay-home flag and its note carry over to the new follow-up until the clinician clears them (Q7b).
 
+#### `POST /api/follow-ups/{id}/undo-reschedule`
+- Roles: S. Here `{id}` is the new follow-up's ID. Response: the new row, now cancelled. Errors: 404; 409 if it changed or a newer follow-up exists.
+- The original missed row remains. The new row and its audit history remain with status `cancelled`, reason `Undo reschedule`; this special cancellation no longer blocks a new reschedule of the missed row (ADR-089).
+
 ## Emergency Response (Module 4)
 
 Every read applies `visibleTo`: staff patients' incidents do not exist for the Admin.
@@ -605,11 +607,11 @@ Every read applies `visibleTo`: staff patients' incidents do not exist for the A
 
 #### `POST /api/incidents`
 - Roles: S.
-- Request: `StageOneInput`.
+- Request: `StageOneInput` with one patient, required complaint, optional `time` (defaults to now), optional `generalNotes`, optional `sourceVisitId`; `carriedTemperatureC` is only for the unsaved-visit escalation shortcut. No typed `vitals`.
 - Response: 201 `Incident`.
-- Errors: 422 patient, future time; 404 patient or visit; 409 `wrong_patient`; 409 `visit_entered_in_error`; 409 `incident_stage` already escalated.
+- Errors: 422 patient, future time or submitted Stage 1 `vitals`; 404 patient or visit; 409 `wrong_patient`; 409 `visit_entered_in_error`; 409 `incident_stage` already escalated.
 - Audit: `submit incident-stage-1`, "Included additional notes" if any; `update visit`, "Escalated to incident".
-- Copies: `saveIncidentStageOne` (`api.ts:1573`); tests: `RecordsDecisions`, `SportsReport`, `StaffComplaintsBackupDecisions`, `StudentSection` and 5 more. Saves with only a complaint plus the readings taken.
+- Copies: `saveIncidentStageOne`; tests: `IncidentsTest`, `IncidentEntryPage` and patient/visit suites. A linked visit's temperature is carried without clinician entry (ADR-094).
 
 #### `GET /api/incidents/{id}`
 - Roles: S, A. Errors: 404. Opening the report also calls `POST /api/audit/views`.
@@ -617,9 +619,9 @@ Every read applies `visibleTo`: staff patients' incidents do not exist for the A
 
 #### `PUT /api/incidents/{id}/stage-two`
 - Roles: S.
-- Request: `StageTwoInput` without `incidentId`.
+- Request: `StageTwoInput` without `incidentId`; optional `time`, `arrivedAtClinic`, `vitals` (all four readings optional) and `readingTimes` keyed by reading name. Omitted reading times default to the save time. `recordedAt` in the response is the immutable entry time (`incidents.created_at`).
 - Response: `{ incident, followUp, belowZero }`.
-- Errors: 404; 409 `incident_approved`; 409 `stock_rule` "Medicines on a completed incident can't be changed." Every Stage 2 field is optional: there is no completion blocker (ADR-065; corrected Saturday, November 07, 2026 — 13:33 PHT, counter-check C-3).
+- Errors: 404; 422 for future or invalid event/arrival/reading time; 409 `incident_approved` for timing/readings/notes after approval; 409 `stock_rule` "Medicines on a completed incident can't be changed." Arrival before event and departure before arrival are nonblocking warnings. Every Stage 2 field remains optional (ADR-065, ADR-094).
 - Audit: `update incident-stage-2` "Completed Stage 2 details" with named fields; `create parent-notification` per attempt; `submit inventory-dispensation` per line; `create follow-up`.
 - Copies: `completeIncidentStageTwo` (`api.ts:1641`); tests: `RecordsDecisions`, `auditCoverage`, `stock`. Medicines dispense only on the first completion.
 
@@ -724,7 +726,7 @@ Every endpoint is Staff only. The database row lock of `ERD.md` section 9 replac
 #### `POST /api/inventory/{id}/dispense`
 - Roles: S.
 - Request: `quantity`, `studentId?`, `personnelId?`, `visitId?`.
-- Response: `DispenseResult`.
+- Response: `DispenseResult`, including the exact `transactionId` for Undo.
 - Errors: 404; 409 `stock_rule` (`QUANTITY_RULE`, both patients, unknown patient or visit, no usable batch).
 - Audit: `submit inventory-dispensation`.
 - Copies: `dispenseInventoryItem` (`api.ts:1942`); tests: `ReportsDecisions`, `auditCoverage`, `inventoryApi`, `personnel` and 1 more. A quantity above the usable stock is refused with 409 `stock_rule` (ADR-084; it replaced ADR-018's warn-but-allow rule).
@@ -732,7 +734,7 @@ Every endpoint is Staff only. The database row lock of `ERD.md` section 9 replac
 #### `POST /api/inventory/{id}/restock`
 - Roles: S.
 - Request: `quantity`, `expirationDate`, `noExpirationConfirmed?`.
-- Response: `InventoryItemView`.
+- Response: `InventoryItemView` with `transactionId` for Undo.
 - Errors: 404; 409 `stock_rule`.
 - Audit: `submit inventory-restock`.
 - Copies: `restockInventoryItem` (`api.ts:1979`); tests: `InventoryPanelReview`, `ReportsDecisions`, `auditCoverage`, `stock`. Adds a batch; never overwrites one.
@@ -740,10 +742,18 @@ Every endpoint is Staff only. The database row lock of `ERD.md` section 9 replac
 #### `POST /api/inventory/{id}/adjust`
 - Roles: S.
 - Request: `StockAdjustmentInput`.
-- Response: `InventoryItemView`.
+- Response: `InventoryItemView` with `transactionId` for Undo.
 - Errors: 404; 409 `stock_rule`.
 - Audit: `submit inventory-adjustment`, the reason's label, plus " · Large write-off" when the removal is `large_write_off_percent` (25%) or more of the item on hand, or empties it (ADR-061).
 - Copies: `adjustInventoryStock`; tests: `auditCoverage`, `stock`. Staff cannot choose `visit_edited`. A batch cannot go below 0. The `note` is optional for every reason, Other and a large write-off included (ADR-068; corrected Saturday, November 07, 2026 — 13:33 PHT, counter-check C-4).
+
+#### `POST /api/inventory/{id}/transactions/{transactionId}/undo`
+- Roles: S. Response: `InventoryItemView`. Errors: 404; 409 when the movement is no longer the item's latest, is opening stock, or its reversal would make a batch negative.
+- Appends compensating adjustment transactions per affected batch, with the original transaction ID in the note and audit summary. The original movement remains immutable (ADR-089).
+
+#### `POST /api/inventory/{id}/archive-new`
+- Roles: S. Response: 204. Errors: 404; 409 if already archived, edited, or used in a stock movement since creation.
+- Archives a newly added item when its creation is undone; its opening stock and audit history remain (ADR-089).
 
 ## Reports (Module 5)
 
@@ -882,7 +892,10 @@ The Archive's **Audit log** tab is `GET /api/audit-log` with `from` and `to` set
 
 #### `DELETE /api/calendar/events/{id}`
 - Roles: S, A. Response: 204. Errors: 404. Audit: `delete calendar-event`.
-- Copies: `deleteCalendarEvent` (`api.ts:2667`); tests: `auditCoverage`, `calendarEvents`. The one real delete in the system: an event is not a health record.
+- Copies: `deleteCalendarEvent` (`api.ts:2667`); tests: `auditCoverage`, `calendarEvents`. The event is soft-deleted so Undo can restore its original ID (ADR-089).
+
+#### `POST /api/calendar/events/{id}/restore`
+- Roles: S, A. Response: the restored `CalendarEvent` with its original ID. Errors: 404 unknown event; 409 already active. Audit: `update calendar-event` "Restored deleted event". The deleted event row is retained and excluded from normal reads until restored (ADR-089).
 
 ## Backup Verification (Module 10)
 
@@ -937,6 +950,14 @@ Both roles, the same abilities (ADR-037).
 - Response: `AuditLogList`. A student-related target carries the **masked** LRN, never the name; with `fullLrn=1` (Staff only, for the Audit Log printout) the full LRN, and that request writes a `print` entry (Zean, November 7, 2026, `2026-11-07-audit-log-masked-lrn`; notes on ADR-040 and ADR-044; changed Saturday, November 07, 2026 — 13:24 PHT, before it was full on screen too, R33). Writes no entry (ADR-016). No route updates or deletes an entry.
 - Staff-record entries (`staff`, `staff-import`) carry the Staff No. as the record label, never the name. The Admin sees them listed but cannot open the record (ADR-043; counter-check C-8, Saturday, November 07, 2026 — 16:12 PHT).
 - Copies: `listAuditLog` (`api.ts:2986`); tests: `print-documents`.
+- Since ADR-093, API-mode printing uses `GET /api/audit-log/print` below. The whole-list `fullLrn=1` JSON response remains for compatibility but is no longer called by the Print button.
+
+#### `GET /api/audit-log/print`
+- Roles: S only; the Admin gets 403.
+- Query: required `from`, `to`; optional `userId`, `actionTypes[]`, `targetTypes[]`, `search` and `sort` (`timestamp`, `user`, `action`, `module`, `record`, with `-` for descending). The filters and visible-text search match `GET /api/audit-log`.
+- Response: `text/html; charset=UTF-8`, `Cache-Control: no-store, private`: one complete A4 print document, streamed in bounded chunks. It has the entry count and scope, school letterhead, repeated table headers and page numbers. Student-related targets carry the full LRN on this Staff printout only; the screen stays masked. The highest audit id is frozen before streaming so the document's own print entry does not enter its rows. No internal record id is printed.
+- Audit: exactly one `print` entry naming Audit Log. The page calls `window.print()` when complete and retains an explicit print button if that is blocked. Ctrl+P on the Audit Log screen still prints only the visible page.
+- Copies: `auditLogPrintUrl` in the frontend data layer; tests: `AuditTrailTest.php`, `AuditLogPage.test.tsx`, Chromium print run (ADR-093).
 
 #### `POST /api/audit/views`
 - Roles: S, A.
@@ -1039,7 +1060,7 @@ Each one is business logic the backend must copy exactly, with its source. Tests
 
 | Rule | Source |
 |---|---|
-| Stage 1 saves with a complaint and any readings | `api.ts:1573` |
+| Stage 1 saves patient, complaint, event time and optional notes; typed readings are rejected (ADR-094) | `IncidentService::stageOne` |
 | Escalation: same patient, not in error, once; time from the visit; counted once as the incident | `api.ts:1578-1584`, ADR-036, `selectors.ts` `countedVisits` |
 | Completion needs one of: treatment notes, a medicine, a notification, a referral, a no-further-action reason | `lib/itemsGiven.ts` `incidentCompletionBlocker` |
 | Medicines fixed after Stage 2; notes fixed after approval | `api.ts:1661-1669` |
