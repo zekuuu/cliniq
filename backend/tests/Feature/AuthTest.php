@@ -149,6 +149,26 @@ it('lets Staff save the idle sign-out minutes, audited by field name, and the Ad
         ->and(DB::table('audit_logs')->where('target_label', 'settings/idle-signout')->value('summary'))->toBe('Updated Staff idle sign-out minutes');
 });
 
+it('lets Staff edit warning periods with validation and an audit entry while Admin can only read', function () {
+    User::factory()->admin()->create(['username' => 'principal']);
+    User::factory()->create(['username' => 'nurse']);
+
+    login('principal')->assertOk();
+    asSpa()->getJson('/api/settings/operational')->assertExactJson(['data' => ['upcomingFollowUpDays' => 7, 'expiryWarningDays' => 30]]);
+    asSpa()->putJson('/api/settings/operational', ['upcomingFollowUpDays' => 10, 'expiryWarningDays' => 45])->assertForbidden();
+    asSpa()->postJson('/api/auth/logout')->assertNoContent();
+    $this->app['auth']->forgetGuards();
+
+    login('nurse')->assertOk();
+    foreach ([0, 31, 1.5] as $bad) {
+        asSpa()->putJson('/api/settings/operational', ['upcomingFollowUpDays' => $bad, 'expiryWarningDays' => 45])->assertUnprocessable();
+    }
+    asSpa()->putJson('/api/settings/operational', ['upcomingFollowUpDays' => 10, 'expiryWarningDays' => 45])
+        ->assertOk()->assertJsonPath('data.upcomingFollowUpDays', 10)->assertJsonPath('data.expiryWarningDays', 45);
+    expect(DB::table('audit_logs')->where('target_label', 'settings/operational')->value('summary'))
+        ->toBe('Updated Upcoming follow-up days and Expiry warning days');
+});
+
 it('ends a session whose password was changed elsewhere, and keeps the session that changed it', function () {
     $user = User::factory()->create(['username' => 'nurse']);
     login('nurse')->assertOk();
