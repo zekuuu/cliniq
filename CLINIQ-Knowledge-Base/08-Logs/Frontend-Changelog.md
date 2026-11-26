@@ -1,5 +1,7 @@
 # Changelog
 
+| Friday, November 27, 2026 — 07:19 PHT | Visit and Incident dates now open their records consistently. Visit rows show letter state instead of empty Actions; unfinished Incident rows show only Complete Stage 2 in Status. Focused UI and backend tests passed; see the backend changelog for the API row. | [session](Agent-Sessions/2026-11-27-visit-incident-list-navigation.md) |
+
 | Thursday, November 26, 2026 — 23:22:40 PHT | Local `main` fast-forwarded to `staging` at `60a9d17f` without conflicts; 1,299 frontend tests, 262 backend tests and docs checks passed. Remote push awaits explicit authorization after automatic approval review rejected it; PHPStan findings are in Backend-Issues-and-TODOs. | [session](Agent-Sessions/2026-11-26-main-merge-staging.md) |
 
 | Thursday, November 26, 2026 — 23:22:40 PHT | Local `main` fast-forwarded to `staging` at `60a9d17f` without conflicts; 1,299 frontend tests, 262 backend tests and docs checks passed. Remote push awaits explicit authorization after automatic approval review rejected it; PHPStan findings are in Backend-Issues-and-TODOs. | [session](Agent-Sessions/2026-11-26-main-merge-staging.md) |

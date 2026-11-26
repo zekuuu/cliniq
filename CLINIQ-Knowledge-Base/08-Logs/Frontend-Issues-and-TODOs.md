@@ -17,7 +17,7 @@
 
 ## Open work at a glance
 
-Open: FIX 0 · AUDIT 0 · DOC 24 · DECIDE 2 · LATER 15 | Notes: NOTE 82 · VERIFY 29 | Done: 521 (all in Issues-Done-Archive.md) (recounted Thursday, November 26, 2026 — 22:43 PHT: ADR-096 canonical-document review added).
+Open: FIX 0 · AUDIT 0 · DOC 24 · DECIDE 2 · LATER 15 | Notes: NOTE 82 · VERIFY 29 | Done: 522 (all in Issues-Done-Archive.md) (recounted Friday, November 27, 2026 — 07:26 PHT: Visit and Incident list navigation issue resolved).
 
 - [ ] **[DOC]** **Canonical toast visuals need ADR-096 review** (logged Thursday, November 26, 2026 — 22:43 PHT). The Frontend Context Brief and Frontend Design Reference should replace their white-toast description with light semantic fills and accent borders. The knowledge-base Design System and shared toast skill are updated. Session: [2026-11-26-authenticator-qr-and-toast-colors](Agent-Sessions/2026-11-26-authenticator-qr-and-toast-colors.md).
 
