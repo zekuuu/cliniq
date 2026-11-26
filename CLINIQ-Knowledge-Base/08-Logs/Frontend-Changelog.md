@@ -1,5 +1,9 @@
 # Changelog
 
+| Thursday, November 26, 2026 — 23:22:40 PHT | Local `main` fast-forwarded to `staging` at `60a9d17f` without conflicts; 1,299 frontend tests, 262 backend tests and docs checks passed. Remote push awaits explicit authorization after automatic approval review rejected it; PHPStan findings are in Backend-Issues-and-TODOs. | [session](Agent-Sessions/2026-11-26-main-merge-staging.md) |
+
+| Thursday, November 26, 2026 — 23:22:40 PHT | Local `main` fast-forwarded to `staging` at `60a9d17f` without conflicts; 1,299 frontend tests, 262 backend tests and docs checks passed. Remote push awaits explicit authorization after automatic approval review rejected it; PHPStan findings are in Backend-Issues-and-TODOs. | [session](Agent-Sessions/2026-11-26-main-merge-staging.md) |
+
 | Thursday, November 26, 2026 — 22:56:48 PHT | Accounts columns now fit likely content lengths and leave room for names; Accounts and Inventory Actions headers align with their first buttons, with menus near the table edge. Focused tests (11), typecheck and whitespace check passed. | [session](Agent-Sessions/2026-11-26-actions-header-button-alignment.md) |
 
 | Thursday, November 26, 2026 — 22:48 PHT | ADR-096 follow-up: regenerated the live Facts sheet for 96 ADRs and updated the current count references in the knowledge-base README and Start Here guide. Documentation checks now pass. | [session](Agent-Sessions/2026-11-26-adr-096-docs-count-follow-up.md) |
