@@ -99,8 +99,22 @@ export async function saveInventoryItem(
   return withLabel(await mapped(save, STOCK_ERRORS))
 }
 
+export async function archiveNewInventoryItem(itemId: string): Promise<void> {
+  await http.post(`/inventory/${encodeURIComponent(itemId)}/archive-new`, {})
+}
+
 export function listInventoryHistory(itemId: string): Promise<InventoryHistoryRow[]> {
   return http.get(`/inventory/${encodeURIComponent(itemId)}/history`)
+}
+
+export function undoInventoryMovement(
+  itemId: string,
+  transactionId: string,
+): Promise<InventoryItemView> {
+  return http.post(
+    `/inventory/${encodeURIComponent(itemId)}/transactions/${encodeURIComponent(transactionId)}/undo`,
+    {},
+  )
 }
 
 export function listInventoryMovements(

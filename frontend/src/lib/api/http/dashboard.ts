@@ -76,6 +76,10 @@ export async function deleteCalendarEvent(id: string): Promise<void> {
   await http.delete(`/calendar/events/${encodeURIComponent(id)}`)
 }
 
+export function restoreCalendarEvent(event: CalendarDayEvent): Promise<CalendarEvent> {
+  return http.post(`/calendar/events/${encodeURIComponent(event.id)}/restore`, {})
+}
+
 // --- Reports ---
 
 export function getMonthlyReport(month: string): Promise<MonthlyReportData> {
