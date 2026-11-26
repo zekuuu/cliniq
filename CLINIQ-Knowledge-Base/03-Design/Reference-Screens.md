@@ -89,13 +89,13 @@ The QR Scan/Lookup Hub reference screen was removed with the QR feature (ADR-027
 
 **Layout — Stage 1 (fast capture):**
 1. **Student header** (picked on the form)
-2. **Complaint field** and a **minimal readings group** (temperature, pulse, blood pressure, oximeter — all optional; a reading outside the common range for the student's age group warns and never blocks, ADR-051) — deliberately short; once the student is picked, a read-only card shows allergies, conditions and emergency contacts ("None recorded" when empty)
+2. **Complaint field**, editable **When it happened** (defaults to now), and optional **Additional notes** — deliberately short. No typed reading group in Stage 1. An escalated visit carries its temperature. The patient card shows allergies, conditions and emergency contacts ("None recorded" when empty; ADR-094)
 3. **Save button** — styled with urgency in mind (bigger, higher-contrast, `warning`-adjacent treatment) since speed matters more than anything else on this screen
 4. **Post-save** — a clear "Needs completion" status badge/banner, not just a generic success toast
 
 **Layout — Stage 2 (complete later, same record reopened):**
-1. Stage 1 fields shown filled-in (editable or read-only, designer's call), status badge now showing "In progress"
-2. **Additional fields unlocked:** full vitals, treatment notes, hospital referral group (destination, transport mode, departure time)
+1. Stage 1 fields shown filled-in; **When it happened** remains editable until report approval, **Arrived at the clinic** is optional and pending nurse confirmation, and the immutable **Recorded at** entry time is separate (ADR-094). Status badge shows "In progress"
+2. **Additional fields unlocked:** four optional readings with an actual taken time for each and nonblocking age-range warnings, treatment notes, hospital referral group (destination, transport mode, departure time)
 3. **Parent Notification log** — a repeatable list of attempts, each with an outcome (Reached / No answer / Left message or voicemail / Wrong number), who was called, and a timestamp — this is a multi-attempt log pattern, not a single field
 4. Status badge changes to "Complete" once Stage 2 is saved; nothing on Stage 2 is required (ADR-065)
 5. The Incident Report screen is read-only for the Admin/Principal; the Principal signs the printed report by hand (ADR-060)
