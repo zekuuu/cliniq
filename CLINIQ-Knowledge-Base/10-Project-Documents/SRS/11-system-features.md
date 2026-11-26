@@ -34,7 +34,11 @@ Maintains student and staff patient records, imports, archiving, and the school 
 <tr><td><b>FR-013</b></td><td>When a birthdate is entered, the system shall show the non-blocking note described in DR-013.</td></tr>
 <tr><td><b>FR-014</b></td><td>The School Clinician shall be able to look up a student by LRN or name, using a search that tolerates case, accents, and spacing, and shall be able to view the student list. A search field in the top bar shall find an active student or staff patient and open the profile.</td></tr>
 <!-- p.72 -->
-<tr><td><b>FR-015</b></td><td>The School Clinician shall be able to record and order emergency contacts, mark each as verified or unverified, and record allergies and conditions. After an unreachable call, the system shall re-flag the contact for verification.</td></tr>
+<tr><td><b>FR-015</b></td><td>
+
+The School Clinician shall be able to record and order emergency contacts~~$\textcolor{red}{\text{, mark each as verified or unverified, and}}$~~**$\textcolor{green}{\text{ and}}$** record allergies and conditions. ~~$\textcolor{red}{\text{After an unreachable call, the system shall re-flag the contact for verification.}}$~~
+
+</td></tr>
 <tr><td><b>FR-016</b></td><td>The system shall list student and staff records that need review in incomplete-records queues, and shall let the School Clinician resolve each item, logging who resolved it and when.</td></tr>
 <tr><td><b>FR-017</b></td><td>The School Clinician shall be able to add, edit, list, search, and open staff patient records. The system shall generate each Staff No. and shall refuse to save a staff record without first name, last name, sex, and type.</td></tr>
 <tr><td><b>FR-018</b></td><td>The system shall provide one patient picker offering students and staff patients wherever a visit, incident, or dispensing record needs a patient.</td></tr>
@@ -66,7 +70,11 @@ Records routine visits, first-aid prompts, emergency incidents, letters, referra
 <tr><td><b>FR-034</b></td><td>The School Clinician shall be able to log a PE/Sports referral received from an instructor, with assessment and disposition, and to escalate it to an incident.</td></tr>
 <tr><td><b>FR-035</b></td><td>The School Clinician shall be able to escalate a visit to an incident, or open Incident Stage 1 directly from a New Visit shortcut. The system may show a non-blocking hint when an emergency-type symptom is selected.</td></tr>
 <!-- p.74 -->
-<tr><td><b>FR-036</b></td><td>The School Clinician shall be able to save Stage 1 of an incident with the patient and main symptom, with the patient’s allergies, conditions, and contacts shown, and to return later to complete Stage 2. Incident lists shall show each incident’s stage.</td></tr>
+<tr><td><b>FR-036</b></td><td>
+
+The School Clinician shall be able to save Stage 1 of an incident with the patient and main symptom, with the patient’s allergies, conditions, and contacts shown, and to return later to complete Stage 2. **$\textcolor{green}{\text{Stage 1 shall capture an editable event time and optional notes without entered readings. Stage 2 shall allow optional timed readings and an event-time correction before report approval.}}$** Incident lists shall show each incident’s stage.
+
+</td></tr>
 <tr><td><b>FR-037</b></td><td>The School Clinician shall be able to record a hospital referral and to log each contact attempt, with the person called, number, relationship, time, and outcome, and view the attempt history.</td></tr>
 <tr><td><b>FR-038</b></td><td>The School Clinician shall be able to approve a completed incident and print its report for the Principal’s handwritten signature. The system shall refuse approval before Stage 2 is completed and shall warn before approving an empty Stage 2.</td></tr>
 <tr><td><b>FR-039</b></td><td>The Admin shall be able to view the student Incident Log and incident reports. The system shall not show staff patient incidents to the Admin.</td></tr>
@@ -119,8 +127,17 @@ Runs and monitors local backups, records and displays the audit trail, and colle
 <tr><td><b>FR-061</b></td><td>The School Clinician and the Admin shall be able to add backup locations and enable or disable them. The system shall refuse to edit an existing location and shall refuse to disable the last enabled location.</td></tr>
 <tr><td><b>FR-062</b></td><td>The system shall show a guided recovery checklist.</td></tr>
 <tr><td><b>FR-063</b></td><td>The system shall record the events listed in DR-073 and DR-074, with a record open logged once per record per sign-in session.</td></tr>
-<tr><td><b>FR-064</b></td><td>The Audit Log Viewer shall be read-only, shall let both roles filter entries by date, actor, action, and target, and shall let the School Clinician print the filtered entries.</td></tr>
+<tr><td><b>FR-064</b></td><td>
+
+The Audit Log Viewer shall be read-only, shall let both roles filter entries by date, actor, action, and target, and shall let the School Clinician print ~~$\textcolor{red}{\text{the filtered entries}}$~~**$\textcolor{green}{\text{all entries matching the filters, including those beyond the current screen page}}$**.
+
+</td></tr>
 <tr><td><b>FR-065</b></td><td>A user of either role shall be able to report an issue from a “Report an issue” window available on every screen. The system shall record the report as described in DR-051.</td></tr>
+<tr><td><b>FR-066</b></td><td>
+
+**$\textcolor{green}{\text{For a successful reversible change, the system shall offer Undo for eight seconds. Before reversing, it shall refuse a stale Undo when the record has changed again, and it shall retain both the original and reversing actions in the audit trail. Supported reversals include restoring a deleted calendar event, reinstating an eligible entered-in-error visit, and compensating stock movements without rewriting the original ledger.}}$**
+
+</td></tr>
 </table>
 
 **Placeholders and proposals**

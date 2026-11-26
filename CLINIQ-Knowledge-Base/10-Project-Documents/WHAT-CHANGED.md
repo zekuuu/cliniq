@@ -1,6 +1,48 @@
 # What changed
 
-Last updated: Monday, November 23, 2026 — 18:28 PHT · `main` 0a178b0
+Last updated: Thursday, November 26, 2026 — 22:20 PHT · `staging` 9400024d
+
+## Thursday, November 26, 2026 — 21:47 PHT · staging 9400024d
+
+### Project Plan
+
+**5.1 FR-05 Emergency incidents** (p. 25). Because: ADR-094 and the current [Module Overview](../01-Requirements/Features/Module-Overview.md).
+
+> **Emergency incidents.** Support two-stage incident logging, with the essential fields captured first and the details completed afterward. **$\textcolor{green}{\text{Record when the incident happened separately from the immutable entry time; accept optional, individually timed readings during Stage 2.}}$** Track hospital referrals, and log each parent-notification attempt with a timestamp and an outcome.
+
+### SRS
+
+**DR-007 Student contacts** (p. 58). Because: ADR-088 and the current [Data Dictionary](../02-Architecture/Database/Data-Dictionary.md).
+
+> The system shall hold a student’s emergency contacts in order, with the first contact as the primary contact. ~~$\textcolor{red}{\text{When a contact is saved, the system shall prompt the School Clinician to verify the contact number before it is used for emergency notification, and shall let the School Clinician mark a contact number as verified or unverified.}}$~~
+
+**DR-008 Unreachable contact** (p. 59). Because: ADR-088 and the current [Module Overview](../01-Requirements/Features/Module-Overview.md).
+
+> If a contact number proves unreachable during an emergency, the system shall ~~$\textcolor{red}{\text{re-flag the record and prompt the School Clinician to verify the number with the class adviser or Registrar’s Office; the verification shall be logged.}}$~~**$\textcolor{green}{\text{record the person contacted, number dialed, time, and call outcome without creating a re-verification flag.}}$**
+
+**DR-028 Incident stages** (p. 61). Because: ADR-094 and the current [Module Overview](../01-Requirements/Features/Module-Overview.md).
+
+> For an emergency incident, Stage 1 shall require only the patient and the main symptom, with ~~$\textcolor{red}{\text{vital readings and notes optional}}$~~**$\textcolor{green}{\text{an editable “When it happened” time defaulting to now and optional notes; Stage 1 shall not accept entered vital readings}}$**, and shall save immediately. The record shall remain marked as an incomplete Stage 1 record until the School Clinician completes Stage 2, and incident lists shall show each incident’s stage. Every Stage 2 field shall be optional, and a completed Stage 2 left empty may still be approved after a no-treatment warning. **$\textcolor{green}{\text{Stage 2 readings shall each have their own clinician-entered time; the system shall retain the immutable entry time separately.}}$**
+
+**DR-049 Operational settings** (p. 63). Because: ADR-091 and the current [Module Overview](../01-Requirements/Features/Module-Overview.md).
+
+> Starting values (frequent visitor, cluster alert, follow-up windows, near-expiry window, top symptoms, vital-sign ranges, and similar) shall be stored as settings. ~~$\textcolor{red}{\text{Only the idle sign-out minutes have a Settings screen; the other values are changed in the database by the developer or the IT provider.}}$~~**$\textcolor{green}{\text{Staff may edit idle sign-out minutes, the upcoming follow-up window (1–30 days, default 7), and the approaching inventory-expiry window (1–180 days, default 30) on Settings; the Admin may view them. School-year dates remain editable on Archive; clinical and security limits remain fixed.}}$**
+
+**FR-015 Emergency contacts** (p. 72). Because: ADR-088 and the current [Functional Requirements](../01-Requirements/Functional-Requirements.md).
+
+> The School Clinician shall be able to record and order emergency contacts~~$\textcolor{red}{\text{, mark each as verified or unverified, and}}$~~**$\textcolor{green}{\text{ and}}$** record allergies and conditions. ~~$\textcolor{red}{\text{After an unreachable call, the system shall re-flag the contact for verification.}}$~~
+
+**FR-036 Incident Stage 1 and Stage 2** (p. 73). Because: ADR-094 and the current [Module Overview](../01-Requirements/Features/Module-Overview.md).
+
+> The School Clinician shall be able to save Stage 1 of an incident with the patient and main symptom, with the patient’s allergies, conditions, and contacts shown, and to return later to complete Stage 2. **$\textcolor{green}{\text{Stage 1 shall capture an editable event time and optional notes without entered readings. Stage 2 shall allow optional timed readings and an event-time correction before report approval.}}$** Incident lists shall show each incident’s stage.
+
+**FR-064 Audit Log print** (p. 76). Because: ADR-093, [API Contract](../04-Development/API-Contract.md), and `backend/app/Shared/AuditLog/AuditLogController.php`.
+
+> The Audit Log Viewer shall be read-only, shall let both roles filter entries by date, actor, action, and target, and shall let the School Clinician print ~~$\textcolor{red}{\text{the filtered entries}}$~~**$\textcolor{green}{\text{all entries matching the filters, including those beyond the current screen page}}$**.
+
+**FR-066 Reversible changes** (p. 76). Because: ADR-089 and the current [Functional Requirements](../01-Requirements/Functional-Requirements.md).
+
+> **$\textcolor{green}{\text{For a successful reversible change, the system shall offer Undo for eight seconds. Before reversing, it shall refuse a stale Undo when the record has changed again, and it shall retain both the original and reversing actions in the audit trail. Supported reversals include restoring a deleted calendar event, reinstating an eligible entered-in-error visit, and compensating stock movements without rewriting the original ledger.}}$**
 
 ## Monday, November 23, 2026 — 18:28 PHT · main 0a178b0
 

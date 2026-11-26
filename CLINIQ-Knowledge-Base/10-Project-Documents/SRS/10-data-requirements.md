@@ -18,9 +18,17 @@ The following data validation rules are established for CLINIQ, which will be ap
 <tr><td><b>DR-004</b></td><td>On saving a new student, the system shall check existing records for a full-name and grade-level match. If a potential match exists, the system shall show a warning and require the School Clinician to confirm or cancel before a new entry is created.</td></tr>
 <tr><td><b>DR-005</b></td><td>The system shall automatically flag a student record that has no emergency contact as Incomplete, list it in the incomplete-records review queue, and log which School Clinician resolved each flag and when. A missing birthdate, section, allergy, or condition shall not make a record incomplete.</td></tr>
 <tr><td><b>DR-006</b></td><td>A record flagged Incomplete shall remain usable in clinic visits and incident records. The system shall keep the record in the review queue until the missing information is supplied, and missing information shall not by itself deny routine care.</td></tr>
-<tr><td><b>DR-007</b></td><td>The system shall hold a student’s emergency contacts in order, with the first contact as the primary contact. When a contact is saved, the system shall prompt the School Clinician to verify the contact number before it is used for emergency notification, and shall let the School Clinician mark a contact number as verified or unverified.</td></tr>
+<tr><td><b>DR-007</b></td><td>
+
+The system shall hold a student’s emergency contacts in order, with the first contact as the primary contact. ~~$\textcolor{red}{\text{When a contact is saved, the system shall prompt the School Clinician to verify the contact number before it is used for emergency notification, and shall let the School Clinician mark a contact number as verified or unverified.}}$~~
+
+</td></tr>
 <!-- p.59 -->
-<tr><td><b>DR-008</b></td><td>If a contact number proves unreachable during an emergency, the system shall re-flag the record and prompt the School Clinician to verify the number with the class adviser or Registrar’s Office; the verification shall be logged.</td></tr>
+<tr><td><b>DR-008</b></td><td>
+
+If a contact number proves unreachable during an emergency, the system shall ~~$\textcolor{red}{\text{re-flag the record and prompt the School Clinician to verify the number with the class adviser or Registrar’s Office; the verification shall be logged.}}$~~**$\textcolor{green}{\text{record the person contacted, number dialed, time, and call outcome without creating a re-verification flag.}}$**
+
+</td></tr>
 <tr><td><b>DR-009</b></td><td>The system shall archive or deactivate a student record instead of deleting it. Archived records shall be excluded from default active-student lists, search results, and dropdowns unless the School Clinician explicitly includes them. A manual archive shall require a reason, and an archived record shall keep its archive date, reason, and school year.</td></tr>
 <tr><td><b>DR-010</b></td><td>An existing LRN shall be locked against change in the normal edit form. An authorized correction process outside the normal edit form is TBD.</td></tr>
 <tr><td><b>DR-011</b></td><td>A student’s name shall be stored as a first name (maximum 50 characters), a last name (maximum 50 characters), and an optional middle name (maximum 40 characters); the display name shall be derived from these parts. A correction to a name shall require a reason.</td></tr>
@@ -59,7 +67,11 @@ The following data validation rules are established for CLINIQ, which will be ap
 <table>
 <tr><th>ID</th><th>Requirement</th></tr>
 <tr><td><b>DR-027</b></td><td>The system shall enforce mandatory fields on clinic-visit and incident records and shall not save a record until its required fields <!-- p.61 --> are complete, except for the Stage 1 emergency capture in the next requirement. A visit shall require a patient and a main symptom.</td></tr>
-<tr><td><b>DR-028</b></td><td>For an emergency incident, Stage 1 shall require only the patient and the main symptom, with vital readings and notes optional, and shall save immediately. The record shall remain marked as an incomplete Stage 1 record until the School Clinician completes Stage 2, and incident lists shall show each incident’s stage. Every Stage 2 field shall be optional, and a completed Stage 2 left empty may still be approved after a no-treatment warning.</td></tr>
+<tr><td><b>DR-028</b></td><td>
+
+For an emergency incident, Stage 1 shall require only the patient and the main symptom, with ~~$\textcolor{red}{\text{vital readings and notes optional}}$~~**$\textcolor{green}{\text{an editable “When it happened” time defaulting to now and optional notes; Stage 1 shall not accept entered vital readings}}$**, and shall save immediately. The record shall remain marked as an incomplete Stage 1 record until the School Clinician completes Stage 2, and incident lists shall show each incident’s stage. Every Stage 2 field shall be optional, and a completed Stage 2 left empty may still be approved after a no-treatment warning. **$\textcolor{green}{\text{Stage 2 readings shall each have their own clinician-entered time; the system shall retain the immutable entry time separately.}}$**
+
+</td></tr>
 <tr><td><b>DR-029</b></td><td>A visit or PE/Sports referral disposition shall be one of: returned to class, resting in clinic, sent home, or referred to hospital. For a staff patient, the first shall read “Returned to work”.</td></tr>
 <tr><td><b>DR-030</b></td><td>A hospital referral shall record destination, mode of transport, and departure time.</td></tr>
 <tr><td><b>DR-031</b></td><td>Each parent/guardian notification attempt shall be timestamped, tied to its incident record, and recorded with the person called, the number dialed, the relationship, and an outcome of exactly one of: Reached, No answer, Left message or voicemail, or Wrong number. For an incident involving a staff patient, the staff patient’s emergency contact shall be called.</td></tr>
@@ -93,7 +105,11 @@ The following data validation rules are established for CLINIQ, which will be ap
 <table>
 <tr><th>ID</th><th>Requirement</th></tr>
 <tr><td><b>DR-048</b></td><td>Selection lists shall be read from stored reference settings: complaint types, vital-sign ranges, the number of days after which a medical-certificate warning appears, the unusual-age distance, the large write-off percent, grade levels, staff types, and staff departments.</td></tr>
-<tr><td><b>DR-049</b></td><td>Starting values (frequent visitor, cluster alert, follow-up windows, near-expiry window, top symptoms, vital-sign ranges, and similar) shall be stored as settings. Only the idle sign-out minutes have a Settings screen; the other values are changed in the database by the developer or the IT provider.</td></tr>
+<tr><td><b>DR-049</b></td><td>
+
+Starting values (frequent visitor, cluster alert, follow-up windows, near-expiry window, top symptoms, vital-sign ranges, and similar) shall be stored as settings. ~~$\textcolor{red}{\text{Only the idle sign-out minutes have a Settings screen; the other values are changed in the database by the developer or the IT provider.}}$~~**$\textcolor{green}{\text{Staff may edit idle sign-out minutes, the upcoming follow-up window (1–30 days, default 7), and the approaching inventory-expiry window (1–180 days, default 30) on Settings; the Admin may view them. School-year dates remain editable on Archive; clinical and security limits remain fixed.}}$**
+
+</td></tr>
 <tr><td><b>DR-050</b></td><td>The holiday list shall be refreshed monthly by a scheduled job that needs internet access. If a refresh fails, the system shall keep the last good list. The system shall warn when the last good refresh is older than 45 days, or when next year’s list is missing in December.</td></tr>
 <tr><td><b>DR-051</b></td><td>An issue report shall record its description, the screen it was reported from, and the role of the person who reported it.</td></tr>
 </table>
