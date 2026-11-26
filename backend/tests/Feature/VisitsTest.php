@@ -112,6 +112,31 @@ it('marks a visit entered in error: stock returns, the letter is voided, follow-
         ->and(DB::table('audit_logs')->pluck('summary')->implode(' '))->not->toContain('Wrong student');
     $this->getJson('/api/visits')->assertJsonCount(0, 'data');
     $this->getJson('/api/visits?includeEnteredInError=1')->assertJsonCount(1, 'data');
+
+    $this->postJson("/api/visits/{$id}/entered-in-error/undo")->assertOk()->assertJsonPath('data.enteredInError', null)
+        ->assertJsonPath('data.itemsGiven.0.quantity', 4);
+    expect(batchQty($this->sooner) + batchQty($this->later))->toBe(9)
+        ->and(DB::table('excuse_letters')->value('status'))->toBe('draft')
+        ->and(DB::table('follow_ups')->value('status'))->toBe('pending');
+    $this->postJson("/api/visits/{$id}/entered-in-error/undo")->assertStatus(409);
+    $this->getJson('/api/visits')->assertJsonCount(1, 'data');
+});
+
+it('reinstates an approved letter only when its visit and stock are unchanged', function () {
+    $id = $this->postJson('/api/visits', visitInput([
+        'disposition' => 'sent_home', 'itemsGiven' => [['itemId' => (string) $this->item, 'quantity' => 2]],
+        'excuseLetterDraft' => ['excusedFrom' => '2026-11-10', 'excusedUntil' => '2026-11-11'],
+    ]))->assertCreated()->json('data.visit.id');
+    $letter = $this->postJson("/api/visits/{$id}/excuse-letter/approve", ['excusedFrom' => '2026-11-10', 'excusedUntil' => '2026-11-11'])->assertCreated()->json('data');
+    $this->postJson("/api/visits/{$id}/entered-in-error", ['reason' => 'Wrong record'])->assertOk();
+    $this->postJson("/api/visits/{$id}/entered-in-error/undo")->assertOk();
+    expect(DB::table('excuse_letters')->value('status'))->toBe('approved')
+        ->and(DB::table('excuse_letters')->value('reference_no'))->toBe($letter['referenceNo']);
+
+    $this->postJson("/api/visits/{$id}/entered-in-error", ['reason' => 'Wrong record again'])->assertOk();
+    $this->postJson("/api/inventory/{$this->item}/restock", ['quantity' => 1, 'expirationDate' => '2027-01-01'])->assertOk();
+    $this->postJson("/api/visits/{$id}/entered-in-error/undo")->assertStatus(409);
+    expect(DB::table('visits')->where('id', $id)->value('entered_in_error_at'))->not->toBeNull();
 });
 
 it('approves a letter with its wording stored, fixes its period, and replaces it', function () {
