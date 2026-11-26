@@ -114,23 +114,25 @@ final class StockService
      *
      * @param  array{studentId: int|null, personnelId: int|null, visitId: int|null}  $link
      */
-    public function dispense(int $itemId, int $quantity, array $link, int $userId): void
+    public function dispense(int $itemId, int $quantity, array $link, int $userId): int
     {
         $name = Row::text(DB::table('inventory_items')->where('id', $itemId)->value('name'));
-        $this->move($itemId, 'dispense', $this->take($itemId, $name, $quantity), $link + ['incidentId' => null], null, null, $userId, AuditTarget::InventoryDispensation, null);
+
+        return $this->move($itemId, 'dispense', $this->take($itemId, $name, $quantity), $link + ['incidentId' => null], null, null, $userId, AuditTarget::InventoryDispensation, null);
     }
 
     /** Restock adds its own batch; it never overwrites one. */
-    public function restock(int $itemId, int $quantity, ?string $expirationDate, int $userId): void
+    public function restock(int $itemId, int $quantity, ?string $expirationDate, int $userId): int
     {
         $batch = DB::table('inventory_batches')->insertGetId(['item_id' => $itemId, 'quantity' => $quantity, 'expiration_date' => $expirationDate, 'received_date' => ClinicTime::today()]);
-        $this->move($itemId, 'restock', [$batch => $quantity], [], null, null, $userId, AuditTarget::InventoryRestock, null, applyToBatches: false);
+
+        return $this->move($itemId, 'restock', [$batch => $quantity], [], null, null, $userId, AuditTarget::InventoryRestock, null, applyToBatches: false);
     }
 
     /** One batch's adjustment; the batch never goes below 0 (checked by the caller under the lock). */
-    public function adjust(int $itemId, int $batchId, int $change, string $reason, ?string $note, string $summary, int $userId): void
+    public function adjust(int $itemId, int $batchId, int $change, string $reason, ?string $note, string $summary, int $userId): int
     {
-        $this->move($itemId, 'adjustment', [$batchId => $change], [], $reason, $note, $userId, AuditTarget::InventoryAdjustment, $summary);
+        return $this->move($itemId, 'adjustment', [$batchId => $change], [], $reason, $note, $userId, AuditTarget::InventoryAdjustment, $summary);
     }
 
     /**
@@ -139,7 +141,7 @@ final class StockService
      * @param  array<int, int>  $moves  batch id => stock change
      * @param  array{studentId?: int|null, personnelId?: int|null, visitId?: int|null, incidentId?: int|null}  $link
      */
-    private function move(int $itemId, string $type, array $moves, array $link, ?string $reason, ?string $note, int $userId, AuditTarget $target, ?string $summary, bool $applyToBatches = true): void
+    private function move(int $itemId, string $type, array $moves, array $link, ?string $reason, ?string $note, int $userId, AuditTarget $target, ?string $summary, bool $applyToBatches = true): int
     {
         $now = CarbonImmutable::now();
         if ($applyToBatches) {
@@ -160,6 +162,8 @@ final class StockService
             actorId: (string) $userId, actorRole: 'staff', action: AuditAction::Submit, targetType: $target,
             targetId: (string) $txn, targetLabel: null, at: $now, summary: $summary,
         ));
+
+        return $txn;
     }
 
     /**

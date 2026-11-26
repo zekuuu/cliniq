@@ -94,6 +94,36 @@ it('adjusts one batch, never below 0, marking a large write-off; expired disposa
         ->toBe(['Miscount correction · Large write-off', 'Other · Large write-off']);
 });
 
+it('undoes stock movements with compensating ledger entries and refuses stale reversals', function () {
+    $id = $this->postJson('/api/inventory', itemInput(['currentStock' => 3]))->json('data.id');
+    $this->postJson("/api/inventory/{$id}/restock", ['quantity' => 5, 'expirationDate' => '2027-01-02'])->assertOk();
+    $restock = DB::table('inventory_transactions')->where('item_id', $id)->max('id');
+    $this->postJson("/api/inventory/{$id}/transactions/{$restock}/undo")->assertOk()->assertJsonPath('data.currentStock', 3);
+    $this->postJson("/api/inventory/{$id}/transactions/{$restock}/undo")->assertStatus(409);
+
+    $this->postJson("/api/inventory/{$id}/dispense", ['quantity' => 2])->assertOk();
+    $dispense = DB::table('inventory_transactions')->where('item_id', $id)->max('id');
+    $this->postJson("/api/inventory/{$id}/transactions/{$dispense}/undo")->assertOk()->assertJsonPath('data.currentStock', 3);
+    expect(DB::table('inventory_transactions')->where('item_id', $id)->orderByDesc('id')->value('note'))->toBe('Undo transaction '.$dispense);
+
+    $batch = DB::table('inventory_batches')->where('item_id', $id)->orderBy('id')->value('id');
+    $this->postJson("/api/inventory/{$id}/adjust", ['batchId' => $batch, 'change' => -1, 'reason' => 'other'])->assertOk();
+    $adjustment = DB::table('inventory_transactions')->where('item_id', $id)->max('id');
+    $this->postJson("/api/inventory/{$id}/transactions/{$adjustment}/undo")->assertOk()->assertJsonPath('data.currentStock', 3);
+});
+
+it('archives a newly added item on Undo but refuses one used afterward', function () {
+    $id = $this->postJson('/api/inventory', itemInput(['name' => 'New gauze']))->assertCreated()->json('data.id');
+    $this->postJson("/api/inventory/{$id}/archive-new")->assertNoContent();
+    $this->getJson('/api/inventory')->assertJsonCount(0, 'data');
+    $this->postJson("/api/inventory/{$id}/archive-new")->assertStatus(409);
+
+    $used = $this->postJson('/api/inventory', itemInput(['name' => 'Used gauze']))->assertCreated()->json('data.id');
+    $this->postJson("/api/inventory/{$used}/dispense", ['quantity' => 1])->assertOk();
+    $this->postJson("/api/inventory/{$used}/archive-new")->assertStatus(409);
+    expect(DB::table('inventory_items')->where('id', $used)->value('archived_at'))->toBeNull();
+});
+
 it('flags expired and nearing-expiration stock separately from low stock', function () {
     $id = $this->postJson('/api/inventory', itemInput(['currentStock' => 2, 'expirationDate' => '2026-11-20']))->json('data.id');
     DB::table('inventory_batches')->insert(['item_id' => $id, 'quantity' => 4, 'expiration_date' => '2026-10-01', 'received_date' => '2026-01-01']);
