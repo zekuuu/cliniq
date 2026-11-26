@@ -17,8 +17,6 @@ export interface EmergencyContact {
   /** PROVISIONAL: §5 only says "emergency contact". */
   relationship: string
   phone: string
-  /** Module 2: a contact number can be marked verified/unverified. */
-  verified: boolean
 }
 
 export interface Student {
@@ -284,6 +282,11 @@ export interface HospitalReferral {
 export interface Incident extends PatientRef {
   id: string
   time: ISODateTime
+  /** Entry time is immutable; older mock fixtures may omit it. */
+  recordedAt?: ISODateTime
+  arrivedAtClinic?: ISODateTime | null
+  /** Actual time of the latest value of each reading. */
+  readingTimes?: Record<string, ISODateTime>
   complaint: string
   /**
    * PROVISIONAL: §5 says "vitals" without listing fields. Pending the ERD. Every reading is optional
@@ -363,6 +366,7 @@ export const ITEM_BRAND_LABELS: Record<ItemBrand, string> = {
 
 export interface InventoryItem {
   id: string
+  archivedAt?: ISODateTime | null
   name: string
   category: InventoryCategory
   unit: string

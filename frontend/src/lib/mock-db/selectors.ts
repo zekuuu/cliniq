@@ -599,7 +599,8 @@ export function hasLaterFollowUp(followUps: FollowUp[], followUp: FollowUp): boo
       f.studentId === followUp.studentId &&
       f.personnelId === followUp.personnelId &&
       f.relatedRecord?.type === followUp.relatedRecord?.type &&
-      f.relatedRecord?.id === followUp.relatedRecord?.id,
+      f.relatedRecord?.id === followUp.relatedRecord?.id &&
+      !(f.status === 'cancelled' && f.statusReason === 'Undo reschedule'),
   )
 }
 

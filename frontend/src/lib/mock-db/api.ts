@@ -267,6 +267,8 @@ function audit(
 }
 
 const FIELD_LABELS: Record<string, string> = {
+  upcomingFollowUpDays: 'Upcoming follow-up days',
+  expiryWarningDays: 'Expiry warning days',
   idleSignoutMinutesStaff: 'Staff idle sign-out minutes',
   idleSignoutMinutesAdmin: 'Admin idle sign-out minutes',
   lrn: 'LRN',
@@ -395,6 +397,48 @@ export function validIdleMinutes(value: number): boolean {
 
 export function getIdleSignoutSettings(): Promise<IdleSignoutSettings> {
   return read('idle sign-out settings', idleSettingsOf)
+}
+
+export interface OperationalSettings {
+  upcomingFollowUpDays: number
+  expiryWarningDays: number
+}
+
+export class OperationalSettingsError extends Error {}
+
+function operationalSettingsOf(s: DbState): OperationalSettings {
+  return {
+    upcomingFollowUpDays: s.config.upcomingFollowUpDays,
+    expiryWarningDays: s.config.expiryWarningDays,
+  }
+}
+
+export function getOperationalSettings(): Promise<OperationalSettings> {
+  return read('operational settings', operationalSettingsOf)
+}
+
+export function saveOperationalSettings(
+  input: OperationalSettings,
+  actor?: SessionUser,
+): Promise<OperationalSettings> {
+  return write('save operational settings', (s) => {
+    const by = actorOr(actor)
+    if (by.role !== 'staff')
+      throw new OperationalSettingsError('Only the clinic staff can change warning periods.')
+    if (
+      !Number.isInteger(input.upcomingFollowUpDays) ||
+      input.upcomingFollowUpDays < 1 ||
+      input.upcomingFollowUpDays > 30 ||
+      !Number.isInteger(input.expiryWarningDays) ||
+      input.expiryWarningDays < 1 ||
+      input.expiryWarningDays > 180
+    )
+      throw new OperationalSettingsError('Enter whole days: follow-ups 1–30; expiry 1–180.')
+    const summary = changedSummary(operationalSettingsOf(s), input)
+    Object.assign(s.config, input)
+    if (summary) audit(s, by, 'update', { type: 'settings', id: 'operational' }, summary)
+    return operationalSettingsOf(s)
+  })
 }
 
 /** Minutes of inactivity before this role is signed out (ADR-048, ADR-078). */
@@ -1511,33 +1555,19 @@ export function archiveStudent(
 }
 
 /** Undo of an archive (ADR-085): the student is active again; audited as an update. */
-export function restoreStudent(studentId: string, actor: SessionUser | undefined): Promise<Student> {
+export function restoreStudent(
+  studentId: string,
+  actor: SessionUser | undefined,
+): Promise<Student> {
   return write('restore student', (s) => {
     const record = studentOf(s, studentId)
     Object.assign(record, restoreDetails(record))
-    audit(s, actorOr(actor), 'update', { type: 'student', id: record.id }, 'Restored from the archive')
-    return toStudent(record)
-  })
-}
-
-/** Module 2: mark one emergency contact verified or unverified; `index` 0 is the primary. */
-export function verifyStudentContact(
-  studentId: string,
-  index: number,
-  verified: boolean,
-  actor: SessionUser | undefined,
-): Promise<Student> {
-  return write('verify student contact', (s) => {
-    const record = studentOf(s, studentId)
-    const contact = record.emergencyContacts[index]
-    if (!contact) throw new Error('That emergency contact was not found.')
-    contact.verified = verified
     audit(
       s,
       actorOr(actor),
       'update',
       { type: 'student', id: record.id },
-      `Marked an emergency contact ${verified ? 'verified' : 'unverified'}.`,
+      'Restored from the archive',
     )
     return toStudent(record)
   })
@@ -1868,7 +1898,6 @@ function planStaffImport(s: DbState, rows: StaffImportRow[]) {
                   name: row.contactName,
                   relationship: row.contactRelationship,
                   phone: row.contactPhone,
-                  verified: false,
                 },
               ],
             }
@@ -2153,30 +2182,6 @@ export function restorePersonnel(
     const record = personnelOf(s, personnelId)
     Object.assign(record, restoreDetails(record))
     audit(s, by, 'update', { type: 'staff', id: record.id }, 'Restored from the archive')
-    return toPersonnel(record)
-  })
-}
-
-export function verifyPersonnelContact(
-  personnelId: string,
-  index: number,
-  verified: boolean,
-  actor: SessionUser | undefined,
-): Promise<Personnel> {
-  return write('verify staff contact', (s) => {
-    const by = actorOr(actor)
-    requireClinician(by)
-    const record = personnelOf(s, personnelId)
-    const contact = record.emergencyContacts[index]
-    if (!contact) throw new Error('That emergency contact was not found.')
-    contact.verified = verified
-    audit(
-      s,
-      by,
-      'update',
-      { type: 'staff', id: record.id },
-      `Marked an emergency contact ${verified ? 'verified' : 'unverified'}.`,
-    )
     return toPersonnel(record)
   })
 }
@@ -2601,6 +2606,11 @@ export function updateVisit(
  * every list and count, its medicines go back to stock through the same `visit_edited` adjustment
  * transactions an edit uses (ADR-018), and its excuse letter, draft or approved, is voided.
  */
+const visitErrorUndo = new Map<
+  string,
+  { followUpIds: string[]; approvalId: string | null; lastStock: Record<string, string> }
+>()
+
 export function markVisitEnteredInError(
   id: string,
   reason: string,
@@ -2616,6 +2626,15 @@ export function markVisitEnteredInError(
     if (!why) throw new Error('Give the reason this visit was entered in error.')
     if (visit.enteredInError) throw new Error('This visit is already marked entered in error.')
     const marked = { reason: why, at: now(s), byUserId: by.id }
+    const followUpIds = s.followUps
+      .filter(
+        (followUp) =>
+          followUp.status === 'pending' &&
+          followUp.relatedRecord.type === 'visit' &&
+          followUp.relatedRecord.id === id,
+      )
+      .map((followUp) => followUp.id)
+    const approvalId = activeApproval(s, id)?.id ?? null
     applyItemLines(
       s,
       by,
@@ -2662,6 +2681,90 @@ export function markVisitEnteredInError(
           'Marked cancelled: visit entered in error',
         )
       }
+    const lastStock = Object.fromEntries(
+      visit.itemsGiven.map((line) => [
+        line.itemId,
+        [...s.frontendOnly.inventoryTransactions]
+          .reverse()
+          .find((txn) => txn.itemId === line.itemId)?.id ?? '',
+      ]),
+    )
+    visitErrorUndo.set(id, { followUpIds, approvalId, lastStock })
+    return visit
+  })
+}
+
+export function undoVisitEnteredInError(id: string, actor?: SessionUser): Promise<Visit> {
+  return write('reinstate visit entered in error', (s) => {
+    const by = actorOr(actor)
+    const visit = must(
+      s.visits.find((candidate) => candidate.id === id),
+      'Visit',
+    )
+    const snapshot = visitErrorUndo.get(id)
+    if (!visit.enteredInError || !snapshot) throw new Error('This visit cannot be reinstated.')
+    for (const [itemId, lastId] of Object.entries(snapshot.lastStock))
+      if (
+        [...s.frontendOnly.inventoryTransactions].reverse().find((txn) => txn.itemId === itemId)
+          ?.id !== lastId
+      )
+        throw new Error('Stock changed after this visit was marked. Recount it before reinstating.')
+    const approval = snapshot.approvalId
+      ? s.frontendOnly.excuseLetterApprovals.find(
+          (candidate) => candidate.id === snapshot.approvalId,
+        )
+      : null
+    if (
+      snapshot.approvalId &&
+      (!approval?.voided || approval.voided.at !== visit.enteredInError.at)
+    )
+      throw new Error('The excuse letter changed after this visit was marked.')
+    for (const followUpId of snapshot.followUpIds) {
+      const followUp = s.followUps.find((candidate) => candidate.id === followUpId)
+      if (
+        !followUp ||
+        followUp.status !== 'cancelled' ||
+        followUp.statusReason !== `Visit entered in error: ${visit.enteredInError.reason}`
+      )
+        throw new Error('A follow-up changed after this visit was marked.')
+    }
+    const restored = applyItemLines(
+      s,
+      by,
+      { studentId: visit.studentId, personnelId: visit.personnelId, visitId: id },
+      [],
+      visit.itemsGiven,
+      'adjust',
+    )
+    visit.itemsGiven = restored.lines
+    visit.enteredInError = null
+    audit(s, by, 'update', { type: 'visit', id }, 'Reinstated visit entered in error')
+    if (approval) {
+      approval.voided = null
+      audit(
+        s,
+        by,
+        'update',
+        { type: 'excuse-letter', id: approval.id },
+        'Restored after visit reinstatement',
+      )
+    }
+    for (const followUpId of snapshot.followUpIds) {
+      const followUp = must(
+        s.followUps.find((candidate) => candidate.id === followUpId),
+        'Follow-up',
+      )
+      followUp.status = 'pending'
+      followUp.statusReason = null
+      audit(
+        s,
+        by,
+        'update',
+        { type: 'follow-up', id: followUpId },
+        'Restored after visit reinstatement',
+      )
+    }
+    visitErrorUndo.delete(id)
     return visit
   })
 }
@@ -2973,7 +3076,7 @@ export interface StageOneInput {
   studentId?: string | null
   personnelId?: string | null
   complaint: string
-  vitals: Incident['vitals']
+  carriedTemperatureC?: number | null
   /** Optional; blank is saved as null. PROVISIONAL (Incident.generalNotes). */
   generalNotes?: string
   /** When it happened, if not now: the escalated visit's time (ADR-036). ISO, never in the future. */
@@ -2982,13 +3085,18 @@ export interface StageOneInput {
   sourceVisitId?: string
 }
 
-/** Stage 1 fast capture: saves with only the complaint plus whichever readings were taken (Activity Diagram 2). */
+/** Stage 1 fast capture: readings are deferred to Stage 2, except a visit's carried temperature. */
 export function saveIncidentStageOne(input: StageOneInput, actor?: SessionUser): Promise<Incident> {
   return write('save incident stage 1', (s) => {
     const by = actorOr(actor)
     const patient = patientOf(s, input)
     const saved = now(s)
-    if (input.time && input.time > saved)
+    if ('vitals' in input && input.vitals && Object.keys(input.vitals).length)
+      throw new Error('Record readings in Stage 2.')
+    if (
+      input.time &&
+      (!Number.isFinite(Date.parse(input.time)) || Date.parse(input.time) > Date.parse(saved))
+    )
       throw new Error("The incident time can't be in the future.")
     const source = input.sourceVisitId
       ? must(
@@ -3003,13 +3111,18 @@ export function saveIncidentStageOne(input: StageOneInput, actor?: SessionUser):
       if (source.escalatedIncidentId)
         throw new Error('This visit was already escalated to an incident.')
     }
+    const carriedTemperature = source?.temperatureC ?? input.carriedTemperatureC ?? null
     const incident: Incident = {
       id: nextId('incident', s.incidents),
       ...patient,
       ...gradeAtTime(s, patient),
-      time: input.time ?? saved,
+      time: input.time ?? source?.dateTime ?? saved,
       complaint: input.complaint,
-      vitals: input.vitals,
+      vitals: carriedTemperature == null ? {} : { temperatureC: carriedTemperature },
+      readingTimes:
+        carriedTemperature == null ? {} : { temperatureC: input.time ?? source?.dateTime ?? saved },
+      recordedAt: saved,
+      arrivedAtClinic: null,
       hospitalReferral: null,
       parentNotifications: [],
       stage: 1,
@@ -3038,6 +3151,9 @@ export function saveIncidentStageOne(input: StageOneInput, actor?: SessionUser):
 export interface StageTwoInput {
   incidentId: string
   complaint: string
+  time?: string
+  arrivedAtClinic?: string | null
+  readingTimes?: Record<string, string>
   vitals: Incident['vitals']
   hospitalReferral: HospitalReferral | null
   /** Attempts logged while completing Stage 2 (appended to the incident's log). */
@@ -3055,8 +3171,10 @@ export interface StageTwoInput {
 
 /** ADR-049: Additional notes can be corrected until the incident report is approved. */
 export class IncidentApprovedError extends Error {
-  constructor() {
-    super('This incident report is approved, so its Additional notes can no longer be changed.')
+  constructor(
+    message = 'This incident report is approved, so its Additional notes can no longer be changed.',
+  ) {
+    super(message)
   }
 }
 
@@ -3089,6 +3207,49 @@ export function completeIncidentStageTwo(
         : input.generalNotes.trim() || null
     const notesChanged = notes !== (incident.generalNotes ?? null)
     if (notesChanged && incidentApproved(s, incident.id)) throw new IncidentApprovedError()
+    const eventTime = input.time ?? incident.time
+    const timeChanged = eventTime !== incident.time
+    const arrival =
+      input.arrivedAtClinic === undefined
+        ? (incident.arrivedAtClinic ?? null)
+        : input.arrivedAtClinic
+    const savedAt = now(s)
+    if (!Number.isFinite(Date.parse(eventTime)) || Date.parse(eventTime) > Date.parse(savedAt))
+      throw new Error("The incident time can't be in the future.")
+    if (
+      arrival &&
+      (!Number.isFinite(Date.parse(arrival)) || Date.parse(arrival) > Date.parse(savedAt))
+    )
+      throw new Error("The clinic arrival time can't be in the future.")
+    const nextReadings = Object.fromEntries(
+      Object.entries(input.vitals).filter(
+        ([key, value]) =>
+          key !== 'treatmentNotes' && value !== '' && value !== null && value !== undefined,
+      ),
+    )
+    const readingTimes = { ...incident.readingTimes }
+    for (const key of Object.keys(nextReadings)) {
+      const takenAt =
+        input.readingTimes?.[key] ?? readingTimes?.[key as keyof typeof readingTimes] ?? savedAt
+      if (!Number.isFinite(Date.parse(takenAt)) || Date.parse(takenAt) > Date.parse(savedAt))
+        throw new Error("The reading time can't be in the future.")
+      readingTimes[key as keyof typeof readingTimes] = takenAt
+    }
+    const mergedVitals = {
+      ...incident.vitals,
+      ...nextReadings,
+      treatmentNotes: input.vitals.treatmentNotes ?? incident.vitals.treatmentNotes,
+    }
+    if (
+      incidentApproved(s, incident.id) &&
+      (eventTime !== incident.time ||
+        arrival !== (incident.arrivedAtClinic ?? null) ||
+        JSON.stringify(mergedVitals) !== JSON.stringify(incident.vitals) ||
+        JSON.stringify(readingTimes) !== JSON.stringify(incident.readingTimes ?? {}))
+    )
+      throw new IncidentApprovedError(
+        'This incident report is approved, so its event times and readings can no longer be changed.',
+      )
     let belowZero: string[] = []
     // ponytail: medicines are fixed once Stage 2 is complete; changing them later needs an
     // incident-edit adjustment rule that hasn't been decided (Frontend-Issues-and-TODOs).
@@ -3118,7 +3279,10 @@ export function completeIncidentStageTwo(
     }
     Object.assign(incident, {
       complaint: input.complaint,
-      vitals: input.vitals,
+      time: eventTime,
+      arrivedAtClinic: arrival,
+      readingTimes,
+      vitals: mergedVitals,
       hospitalReferral: input.hospitalReferral,
       stage: 2 as const,
       bodyPart: input.bodyPart?.trim() || null,
@@ -3138,7 +3302,7 @@ export function completeIncidentStageTwo(
       by,
       'update',
       { type: 'incident-stage-2', id: incident.id },
-      `Completed Stage 2 details${named ? `; included ${named}` : ''}`,
+      `Completed Stage 2 details${named ? `; included ${named}` : ''}${timeChanged ? '; corrected when it happened' : ''}`,
     )
     for (const attempt of input.newParentNotifications) {
       incident.parentNotifications.push(attempt)
@@ -3320,9 +3484,38 @@ export function rescheduleFollowUp(
   })
 }
 
+export function undoFollowUpReschedule(id: string, actor?: SessionUser): Promise<FollowUp> {
+  return write('undo follow-up reschedule', (s) => {
+    const by = actorOr(actor)
+    const current = must(
+      s.followUps.find((candidate) => candidate.id === id),
+      'Follow-up',
+    )
+    if (current.status !== 'pending')
+      throw new Error('This follow-up changed after the new date was set.')
+    const earlier = s.followUps.find(
+      (candidate) =>
+        candidate.id !== id &&
+        candidate.reason === current.reason &&
+        candidate.studentId === current.studentId &&
+        candidate.personnelId === current.personnelId &&
+        candidate.relatedRecord.type === current.relatedRecord.type &&
+        candidate.relatedRecord.id === current.relatedRecord.id &&
+        candidate.status === 'missed',
+    )
+    if (!earlier) throw new Error('This follow-up was not made by setting a new date.')
+    if (hasLaterFollowUp(s.followUps, current))
+      throw new Error('A newer follow-up exists for this record.')
+    current.status = 'cancelled'
+    current.statusReason = 'Undo reschedule'
+    audit(s, by, 'update', { type: 'follow-up', id }, 'Cancelled new date after Undo')
+    return current
+  })
+}
+
 // ---- inventory -------------------------------------------------------------------------------
 
-export type InventoryItemView = InventoryItem & InventoryStatus
+export type InventoryItemView = InventoryItem & InventoryStatus & { transactionId?: string }
 
 function inventoryView(s: DbState, item: InventoryItem): InventoryItemView {
   return { ...item, ...inventoryStatusFor(s, item) }
@@ -3342,6 +3535,7 @@ export function listInventory(
   return read('inventory', (s) => {
     const search = query.search?.trim().toLowerCase() ?? ''
     return s.inventoryItems
+      .filter((i) => !i.archivedAt)
       .filter((i) => !search || i.name.toLowerCase().includes(search))
       .filter((i) => !query.category || i.category === query.category)
       .map((i) => inventoryView(s, i))
@@ -3387,6 +3581,60 @@ export function listInventoryHistory(itemId: string): Promise<InventoryHistoryRo
         batchAllocations: transaction.batchAllocations ?? [],
       })),
   )
+}
+
+/** The original movement stays in history; Undo adds compensating adjustments. */
+export function undoInventoryMovement(
+  itemId: string,
+  transactionId: string,
+  actor?: SessionUser,
+): Promise<InventoryItemView> {
+  return write('undo inventory movement', (s) => {
+    const by = actorOr(actor)
+    if (by.role !== 'staff') throw new StockRuleError('Only the School Clinician adjusts stock.')
+    const item = must(
+      s.inventoryItems.find((candidate) => candidate.id === itemId),
+      'Inventory item',
+    )
+    const latest = [...s.frontendOnly.inventoryTransactions]
+      .reverse()
+      .find((txn) => txn.itemId === itemId)
+    if (!latest || latest.id !== transactionId)
+      throw new StockRuleError('Stock changed after this action. Reload and try again.')
+    for (const allocation of latest.batchAllocations ?? []) {
+      const batch = must(
+        item.batches.find((candidate) => candidate.id === allocation.batchId),
+        'Batch',
+      )
+      const reverse = latest.type === 'dispense' ? allocation.quantity : -allocation.quantity
+      if (batch.quantity + reverse < 0)
+        throw new StockRuleError('Stock was used after this action. Recount and adjust it instead.')
+      batch.quantity += reverse
+      const id = nextId('txn', s.frontendOnly.inventoryTransactions)
+      s.frontendOnly.inventoryTransactions.push({
+        id,
+        itemId,
+        type: 'adjustment',
+        quantity: reverse,
+        timestamp: now(s),
+        userId: by.id,
+        studentId: null,
+        personnelId: null,
+        visitId: null,
+        reason: 'other',
+        note: `Undo transaction ${transactionId}`,
+        batchAllocations: [{ batchId: batch.id, quantity: reverse }],
+      })
+      audit(
+        s,
+        by,
+        'submit',
+        { type: 'inventory-adjustment', id },
+        `Undid transaction ${transactionId}`,
+      )
+    }
+    return inventoryView(s, item)
+  })
 }
 
 /** One stock movement on Inventory Usage History (Module 8). The patient is a masked number, never a name (ADR-004, ADR-018). */
@@ -3544,7 +3792,11 @@ export function saveInventoryItem(
       throw new StockRuleError(PAST_EXPIRY_RULE)
     // API contract Q11: two items of one name split the stock and confuse dispensing.
     const name = fields.name.trim().toLowerCase()
-    if (s.inventoryItems.some((i) => i !== existing && i.name.trim().toLowerCase() === name))
+    if (
+      s.inventoryItems.some(
+        (i) => i !== existing && !i.archivedAt && i.name.trim().toLowerCase() === name,
+      )
+    )
       throw new DuplicateItemNameError()
     const summary = existing ? changedSummary(existing, fields) : undefined
     const item = existing
@@ -3568,9 +3820,32 @@ export function saveInventoryItem(
   })
 }
 
+export function archiveNewInventoryItem(itemId: string, actor?: SessionUser): Promise<void> {
+  return write('archive new inventory item', (s) => {
+    const by = actorOr(actor)
+    if (by.role !== 'staff')
+      throw new StockRuleError('Only the School Clinician changes inventory.')
+    const item = must(
+      s.inventoryItems.find((candidate) => candidate.id === itemId),
+      'Inventory item',
+    )
+    if (item.archivedAt) throw new StockRuleError('This item is already archived.')
+    if (s.frontendOnly.inventoryTransactions.some((transaction) => transaction.itemId === itemId))
+      throw new StockRuleError('This item changed after it was added.')
+    const latest = [...s.auditLog]
+      .reverse()
+      .find((entry) => entry.targetRecord?.type === 'inventory' && entry.targetRecord.id === itemId)
+    if (latest?.actionType !== 'create')
+      throw new StockRuleError('This item changed after it was added.')
+    item.archivedAt = now(s)
+    audit(s, by, 'update', { type: 'inventory', id: itemId }, 'Archived new item after Undo')
+  })
+}
+
 export interface DispenseResult {
   item: InventoryItemView
   remainingStock: number
+  transactionId: string
   /** Stock that went negative before ADR-084 refused it; new dispenses never do. */
   belowZero: boolean
 }
@@ -3616,6 +3891,7 @@ export function dispenseInventoryItem(
       item: { ...item, ...status },
       remainingStock: status.currentStock,
       belowZero: status.belowZero,
+      transactionId: txn.id,
     }
   })
 }
@@ -3665,7 +3941,7 @@ export function restockInventoryItem(
       batchAllocations: [{ batchId: batch.id, quantity }],
     })
     audit(s, by, 'submit', { type: 'inventory-restock', id })
-    return inventoryView(s, item)
+    return { ...inventoryView(s, item), transactionId: id }
   })
 }
 
@@ -3772,7 +4048,7 @@ export function adjustInventoryStock(
       { type: 'inventory-adjustment', id: txn.id },
       `${ADJUSTMENT_REASON_LABELS[input.reason]}${large ? ' · Large write-off' : ''}`,
     )
-    return inventoryView(s, item)
+    return { ...inventoryView(s, item), transactionId: txn.id }
   })
 }
 
@@ -4649,13 +4925,32 @@ export function updateCalendarEvent(
   })
 }
 
+const removedCalendarEvents = new Map<string, CalendarEvent>()
+
 export function deleteCalendarEvent(id: string, actor?: SessionUser): Promise<void> {
   return write('delete calendar event', (s) => {
     const by = actorOr(actor)
     const index = s.frontendOnly.calendarEvents.findIndex((e) => e.id === id)
     must(index >= 0 ? s.frontendOnly.calendarEvents[index] : undefined, 'Calendar event')
+    removedCalendarEvents.set(id, { ...s.frontendOnly.calendarEvents[index] })
     s.frontendOnly.calendarEvents.splice(index, 1)
     audit(s, by, 'delete', { type: 'calendar-event', id })
+  })
+}
+
+export function restoreCalendarEvent(
+  event: CalendarDayEvent,
+  actor?: SessionUser,
+): Promise<CalendarEvent> {
+  return write('restore calendar event', (s) => {
+    const by = actorOr(actor)
+    const removed = must(removedCalendarEvents.get(event.id), 'Deleted calendar event')
+    if (s.frontendOnly.calendarEvents.some((current) => current.id === event.id))
+      throw new Error('This event is already active.')
+    s.frontendOnly.calendarEvents.push({ ...removed, updatedAt: now(s) })
+    removedCalendarEvents.delete(event.id)
+    audit(s, by, 'update', { type: 'calendar-event', id: event.id }, 'Restored deleted event')
+    return removed
   })
 }
 
