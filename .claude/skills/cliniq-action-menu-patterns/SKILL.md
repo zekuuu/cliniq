@@ -10,8 +10,8 @@ Use alongside `cliniq-interactive-states`, `cliniq-button-feedback-patterns`, `c
 ## When to use
 
 - Keep one primary next-step action visible. Never menu Save/Submit, Cancel, Back, a modal footer, an emergency-flow action (Stage 1, Escalate to incident, Complete Stage 2, Complete Incident), or Print / Save as PDF.
-- A row or card with two or more actions uses an action menu where the direct primary action and record link remain clear. A page header keeps its primary plus at most one ordinary secondary action; from three actions, menu the rest. A single action stays visible. When a direct clinical action and one secondary action stack in a narrow table cell, keep the clinical action visible and menu that secondary action, even when it is the menu's only item; the Incident Log is the example.
-- If a row or card already has a clickable title, remove a separate View/Open button. Otherwise keep one direct View/Open link. For the Visit Log and Student Profile letters, the record title itself is the direct link (ADR-095).
+- When a row or card has a primary action plus multiple secondary actions, put the secondary actions in an action menu while the direct primary action and record link remain clear. A page header keeps its primary plus at most one ordinary secondary action; from three actions, menu the rest. A single action stays visible. A record-opening link in an identifying cell does not need a duplicate View/Open action; place a single clinical next step in its relevant status cell when that reads more clearly.
+- If a row or card already has a clickable title, remove a separate View/Open button. Otherwise keep one direct View/Open link. The Visit and Incident Log date/time opens the record; the Student Profile letter date range opens its letter (ADR-095).
 - Hide actions that the role never has. When an action is temporarily unavailable because of record state, show it disabled with a short reason in the item description. Do not render an empty menu.
 - Put destructive or hard-to-reverse actions last, after a divider, in error colour. Keep the original confirmation dialog, toast and Undo, and audit behavior.
 
