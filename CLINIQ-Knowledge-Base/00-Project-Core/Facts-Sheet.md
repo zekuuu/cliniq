@@ -1,7 +1,7 @@
 # Facts sheet
 
-**Last regenerated:** Thursday, November 26, 2026 — 21:16 PHT
-**From commit:** `5ba81b5a` on `feat/action-menu-visibility` (documents); frontend numbers from this working tree; backend numbers from this working tree
+**Last regenerated:** Thursday, November 26, 2026 — 21:35 PHT
+**From commit:** `cce185b2` on `staging` (documents); frontend numbers from this working tree; backend numbers from this working tree
 **Regenerate with:** `npm run docs:facts` from the repository root (add `-- --tests` to rerun both test suites). The script is [`docs-facts.mjs`](../04-Development/tools/docs-facts.mjs).
 
 Every README, requirement document, diagram caption, and the Project Plan and SRS quote their numbers from this sheet. If a document disagrees with this sheet, the document is wrong. If this sheet disagrees with the repository, regenerate it: the script reads the repository and nothing else. Do not edit the numbers by hand.
