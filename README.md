@@ -2,7 +2,7 @@
 
 Last checked against the code on Thursday, November 26, 2026 — 14:40 PHT (ADR-088 through ADR-094, including incident event timing).
 
-**Last synced:** Monday, November 23, 2026 — 18:07 PHT, describing `main` at `0a178b0`.
+**Last synced:** Thursday, November 26, 2026 — 22:20 PHT, describing `staging` at `9400024d` and the current working tree.
 
 **Everything is on `main`** since Wednesday, November 18, 2026 — 10:07 PHT: the documents, the frontend and the backend ([where things live](#where-things-live), ADR-081).
 
@@ -23,11 +23,30 @@ CLINIQ is an intelligent clinic tracking and monitoring system for Mendez Christ
 
 | Folder | What it holds | How to run or read it |
 |---|---|---|
+| [`.claude/`](./.claude/) | Project agent skills and commands | [Skills setup](./CLINIQ-Knowledge-Base/04-Development/Skills-Setup.md) |
+| [`.github/`](./.github/) | Repository and GitHub configuration | [Repository guidance](./AGENTS.md) |
 | [`frontend/`](./frontend) | The React app: every screen, on sample data by default ([`src/lib/mock-db`](./frontend/src/lib/mock-db/README.md)) or on the real API behind a mock/API switch ([`src/lib/data`](./frontend/src/lib/data), [`src/lib/api`](./frontend/src/lib/api), ADR-080) | `cd frontend`, `npm ci`, `npm run dev` ([frontend/README.md](./frontend/README.md)) |
 | [`backend/`](./backend) | The Laravel API: [`app/Modules`](./backend/app/Modules), [`routes/api.php`](./backend/routes/api.php), the migrations, the backend tests | XAMPP's MariaDB and PHP, then `composer install`, `php artisan serve` ([backend/README.md](./backend/README.md)) |
 | [`backend/tools/load/`](./backend/tools/load/README.md) | The demo-school generator and the load and speed tools | [its README](./backend/tools/load/README.md), [COMMANDS.md](./COMMANDS.md) |
 | [`screenshots/`](./screenshots/INDEX.md) | 34 screenshots of the major screens | [INDEX.md](./screenshots/INDEX.md) |
 | [`CLINIQ-Knowledge-Base/`](./CLINIQ-Knowledge-Base/README.md) | Requirements, architecture, design, decisions (ADRs), testing, logs | [Start Here for the SRS and Project Plan](./CLINIQ-Knowledge-Base/00-Project-Core/Start-Here-For-SRS-And-Project-Plan.md) |
+
+Inside `CLINIQ-Knowledge-Base/`:
+
+| Folder | What it holds |
+|---|---|
+| [`.obsidian/`](./CLINIQ-Knowledge-Base/.obsidian/) | Vault configuration |
+| [`00-Project-Core/`](./CLINIQ-Knowledge-Base/00-Project-Core/) | Overview, scope and facts |
+| [`01-Requirements/`](./CLINIQ-Knowledge-Base/01-Requirements/) | Requirements and modules |
+| [`02-Architecture/`](./CLINIQ-Knowledge-Base/02-Architecture/) | Architecture and database design |
+| [`03-Design/`](./CLINIQ-Knowledge-Base/03-Design/) | Design system and screens |
+| [`04-Development/`](./CLINIQ-Knowledge-Base/04-Development/) | Development guides and API contract |
+| [`05-Testing/`](./CLINIQ-Knowledge-Base/05-Testing/) | Test strategy and cases |
+| [`06-Decisions/`](./CLINIQ-Knowledge-Base/06-Decisions/) | Decision records |
+| [`07-AI-Agents/`](./CLINIQ-Knowledge-Base/07-AI-Agents/) | Agent workflow |
+| [`08-Logs/`](./CLINIQ-Knowledge-Base/08-Logs/) | Session, issue and test history |
+| [`09-References/`](./CLINIQ-Knowledge-Base/09-References/) | Canonical documents and references |
+| [`10-Project-Documents/`](./CLINIQ-Knowledge-Base/10-Project-Documents/) | Markdown Plan and SRS copies |
 
 The branches `backend`, `feat/connect-frontend` and `feat/build-backend` are kept for history only and hold nothing that `main` lacks; the last frontend-only `main`, on sample data, is the tag [`checkpoint-frontend-only-2026-11-18`](https://github.com/zekuuu/cliniq/tree/checkpoint-frontend-only-2026-11-18) (`f250ab6`). New work goes on short `feat/*` branches merged into `main`.
 
@@ -73,7 +92,7 @@ Checked against the router (`frontend/src/routes/AppRoutes.tsx`) on Sunday, Nove
 | Audit Log | Read-only, filterable | Both (ADR-016, ADR-037) |
 | Accounts | User List, Add / Edit User | Admin (ADR-033) |
 | Backup | Backup status, guided recovery checklist, Back up now, backup locations (add and disable) | Both (ADR-037). On sample data the screen shows sample records; on the API (ADR-080) it shows and runs the backend's real backups. |
-| Settings | Idle sign-out minutes per role | Both (Staff edit, Admin reads, ADR-078) |
+| Settings | Idle sign-out minutes per role, upcoming follow-up days, approaching inventory-expiry days | Both (Staff edit, Admin reads, ADR-078, ADR-091) |
 
 The Admin does not print (ADR-038). Every printout is a purpose-built A4 document (ADR-026). The Dashboard prints nothing (ADR-074).
 
@@ -120,7 +139,7 @@ php artisan db:seed --class="App\Shared\Database\DevelopmentSeeder"   # developm
 php artisan serve           # http://127.0.0.1:8000/api/health
 composer check              # Pint, Larastan and Pest (needs the cliniq_testing database)
 php tools/db-checks.php     # schema parity with Reference-Schema.sql and the 259 constraint tests
-php artisan route:list      # the 133 live routes
+php artisan route:list      # the 139 live routes
 ```
 
 **Documentation checks** (from the repository root):

@@ -23,6 +23,8 @@ Databases:
 | `npm run docs:facts` | root | Regenerate the Facts sheet |
 | `npm run docs:check` | root | Check docs: numbers, links, dates, stale features |
 | `npm run docs:adrs` | root | Regenerate the ADR index after an ADR change |
+| `npm run docs:trace` | root | Regenerate the requirements traceability table without database access |
+| `npm run docs:diagrams` | root | Regenerate Mermaid diagram exports |
 | `npm run docs:documents` | root | Rebuild the combined Project Plan and SRS copies (markers stripped) |
 | `npm run docs:clear-markers` | root | Clear the reviewed change markers from the Project Plan and SRS section files |
 | `set DB_DATABASE=cliniq_check_pest` then `composer check` | backend | Pint + PHPStan + Pest on a scratch database |
@@ -95,7 +97,7 @@ composer check
 `composer check` runs Pint, then PHPStan, then Pest, and stops at the first failure. One file: `vendor/bin/pest tests/Feature/SomeTest.php`; by name: `vendor/bin/pest --filter="creates a visit"` (same warning).
 
 ### `php tools/db-checks.php`
-Loads `Reference-Schema.sql` into `cliniq_check_ref`, migrates into `cliniq_check_mig`, compares tables, columns, indexes and CHECK constraints (expects 47 tables, 452 columns), and runs the constraint tests. Uses `.env.testing` and drops both scratch databases at the end.
+Loads `Reference-Schema.sql` into `cliniq_check_ref`, migrates into `cliniq_check_mig`, compares tables, columns, indexes and CHECK constraints (expects 47 tables, 453 columns), and runs the constraint tests. Uses `.env.testing` and drops both scratch databases at the end.
 
 ---
 
@@ -113,7 +115,7 @@ Wipes the database and seeds the fictional demo school: 900+ students this year,
 `migrate:fresh` **drops every table** in the database `.env` points to, then migrates from the start. `migrate:rollback` undoes the last batch (`--step=1` for one migration). Never run either on real clinic data. Check with `php artisan db:show` which database is connected first.
 
 ### `php artisan migrate:fresh --seed --env=testing --force`
-Run from `backend/`. With `--env=testing`, Laravel loads the migration account from the testing environment; the normal local environment uses `cliniq_app`, which has no `DROP` privilege on `audit_logs` and fails at the first step. On the disposable `cliniq_testing` database, the command wipes tables and calls `SimulationSeeder` by default (ADR-092): three fictional development accounts and five linked records for each daily-use list. For `cliniq_load` or `cliniq_check_*`, set `DB_DATABASE` explicitly. Before running, check the selected database and account with `php artisan tinker --env=testing --execute="dump(DB::getDatabaseName(), DB::connection()->getConfig('username'));"`; use the result only if it names the intended disposable database and `cliniq_migrate`. The seeder refuses production, but Laravel drops tables **before** the seeder guard runs. Never point this command at clinic data.
+Run from `backend/`. With `--env=testing`, Laravel loads the migration account from the testing environment; the normal local environment uses `cliniq_app`, which has no `DROP` privilege on `audit_logs` and fails at the first step. On the disposable `cliniq_testing` database, the command wipes tables and calls `SimulationSeeder` by default (ADR-092): three fictional development accounts, five linked records for each daily-use list with varied stock and workflow states, and the bundled Philippine holidays for the Activity Calendar. For `cliniq_load` or `cliniq_check_*`, set `DB_DATABASE` explicitly. Before running, check the selected database and account with `php artisan tinker --env=testing --execute="dump(DB::getDatabaseName(), DB::connection()->getConfig('username'));"`; use the result only if it names the intended disposable database and `cliniq_migrate`. The seeder refuses production, but Laravel drops tables **before** the seeder guard runs. Never point this command at clinic data.
 
 ### `php artisan tinker`
 Anything you write in it changes the real database.

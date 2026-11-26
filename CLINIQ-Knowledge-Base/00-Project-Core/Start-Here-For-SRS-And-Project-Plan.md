@@ -1,6 +1,6 @@
 # Start Here for the SRS and Project Plan
 
-Last checked against the staging code on Thursday, November 26, 2026 — 20:31 PHT for the integration of ADR-088 through ADR-095.
+Last checked against the staging code on Thursday, November 26, 2026 — 22:20 PHT for the documentation sync at `9400024d` and the current working tree.
 
 Last checked against the code on Thursday, November 26, 2026 — 14:40 PHT (ADR-088 through ADR-094, including incident event timing).
 
@@ -21,12 +21,41 @@ Earlier checked against the code on Monday, November 23, 2026 — 18:07 PHT for 
 | Folder | What it holds | How to run or read it |
 |---|---|---|
 | [`frontend/`](../../frontend) | The React app: every screen, on sample data by default ([`src/lib/mock-db`](../../frontend/src/lib/mock-db/README.md)) or on the real API behind a mock/API switch ([`src/lib/data`](../../frontend/src/lib/data), [`src/lib/api`](../../frontend/src/lib/api), ADR-080) | `cd frontend`, `npm ci`, `npm run dev` ([frontend/README.md](../../frontend/README.md)) |
-| [`backend/`](../../backend) | The Laravel API: [`app/Modules`](../../backend/app/Modules), [`routes/api.php`](../../backend/routes/api.php), the 50 migrations, the backend tests | XAMPP's MariaDB and PHP, then `composer install`, `php artisan serve` ([backend/README.md](../../backend/README.md)) |
+| [`.claude/`](../../.claude/) | Project agent skills and commands | [Skills setup](../04-Development/Skills-Setup.md) |
+| [`.github/`](../../.github/) | Repository and GitHub configuration | [Repository guidance](../../AGENTS.md) |
+| [`backend/`](../../backend) | The Laravel API: [`app/Modules`](../../backend/app/Modules), [`routes/api.php`](../../backend/routes/api.php), the 54 migrations, the backend tests | XAMPP's MariaDB and PHP, then `composer install`, `php artisan serve` ([backend/README.md](../../backend/README.md)) |
 | [`backend/tools/load/`](../../backend/tools/load/README.md) | The demo-school generator and the load and speed tools | [its README](../../backend/tools/load/README.md), [COMMANDS.md](../../COMMANDS.md) |
 | [`screenshots/`](../../screenshots/INDEX.md) | 34 screenshots of the major screens | [INDEX.md](../../screenshots/INDEX.md) |
 | [`CLINIQ-Knowledge-Base/`](../README.md) | Requirements, architecture, design, decisions (ADRs), testing, logs | this page, then the table [below](#srs-sections-and-what-to-read) |
 
+Inside `CLINIQ-Knowledge-Base/`:
+
+| Folder | What it holds |
+|---|---|
+| [`.obsidian/`](../.obsidian/) | Vault configuration |
+| [`00-Project-Core/`](../00-Project-Core/) | Overview, scope and facts |
+| [`01-Requirements/`](../01-Requirements/) | Requirements and modules |
+| [`02-Architecture/`](../02-Architecture/) | Architecture and database design |
+| [`03-Design/`](../03-Design/) | Design system and screens |
+| [`04-Development/`](../04-Development/) | Development guides and API contract |
+| [`05-Testing/`](../05-Testing/) | Test strategy and cases |
+| [`06-Decisions/`](../06-Decisions/) | Decision records |
+| [`07-AI-Agents/`](../07-AI-Agents/) | Agent workflow |
+| [`08-Logs/`](../08-Logs/) | Session, issue and test history |
+| [`09-References/`](../09-References/) | Canonical documents and references |
+| [`10-Project-Documents/`](../10-Project-Documents/) | Markdown Plan and SRS copies |
+
 The branches `backend`, `feat/connect-frontend` and `feat/build-backend` are kept for history only and hold nothing that `main` lacks; the old frontend-only `main`, on sample data with no backend, is the tag [`checkpoint-frontend-only-2026-11-18`](https://github.com/zekuuu/cliniq/tree/checkpoint-frontend-only-2026-11-18) (`f250ab6`).
+
+## Changes since the last sync (Monday, November 23, 2026 — 18:28 PHT)
+
+For the Project Plan and SRS: `staging` at `9400024d` contains 72 commits after `0a178b0`, including ADR-088 through ADR-095. Synced Thursday, November 26, 2026 — 22:20 PHT. The [Facts sheet](Facts-Sheet.md#numbers) supplies the current counts.
+
+- **Newest decisions:** ADR-095 puts crowded secondary actions in an accessible ⋮ menu; ADR-094 separates incident event, reading and immutable entry times; ADR-093 streams the full filtered Audit Log print; ADR-092 makes a small fictional dataset the default disposable testing seed; ADR-091 exposes two operational warning periods on Settings; ADR-090 keeps labels from activating their controls; ADR-089 expands Undo to supported reversals; ADR-088 removes student and staff contact verification while keeping backup verification.
+- **Numbers:** ADRs 87 → **95**; approved tables 48 → **47**; columns 462 → **453**; constraint cases 260 → **259**; migrations 50 → **54** (48 create, 4 alter, 2 data); API routes 133 → **139**; API contract headings/endpoints 130/131 → **135/137**; frontend/backend test files 154/27 → **157/28**. Frontend routes remain **47** and inventory screens remain **34**.
+- **Feature impact:** Incident Stage 1 saves the patient, main symptom, event time and optional notes; entered readings belong in Stage 2. Safe Undo refuses stale changes; stock reversals add a compensating entry. School contacts no longer have verification controls or a re-verification flag. On the Incident Log, Complete Stage 2 stays visible while View Report moves into a ⋮ menu when both would stack.
+- **Default local seed and Inventory table:** `migrate:fresh --seed --env=testing --force` now includes healthy, low, near-expiry, expired and no-expiry stock, mixed workflow statuses, school events across past and future dates, and the bundled Philippine holidays. The Inventory table gives Item room for names, fits the other columns to their contents and places the ⋮ menu at the right edge of Actions.
+- **Project documents changed:** see [WHAT-CHANGED.md](../10-Project-Documents/WHAT-CHANGED.md) (Project Plan 1 edit; SRS 8 edits). The separate canonical documents still need the group's review of ADR-088 through ADR-095, as listed in the [frontend issues](../08-Logs/Frontend-Issues-and-TODOs.md).
 
 ## Changes since the last sync (Sunday, November 22, 2026 — 14:29 PHT)
 
@@ -224,7 +253,7 @@ Unchanged then: 131 API routes, 128 contract entries naming 129 endpoints (count
 | [`03-Design`](../03-Design/) | Design system, screen inventory, [screenshots](../03-Design/assets/screens/) |
 | [`04-Development`](../04-Development/) | Phases, API contract, set-up, the build manuals |
 | [`05-Testing`](../05-Testing/) | Test strategy and where the tests are |
-| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-095 (95 records) and their indexes |
+| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-096 (96 records) and their indexes |
 | [`09-References`](../09-References/) | Canonical documents, Privacy Policy |
 | `frontend/`, `backend/` | The code: the frontend and the backend, both on `main` (see [Where things live](#where-things-live)) |
 

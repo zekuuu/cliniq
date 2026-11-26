@@ -1,6 +1,6 @@
 # frontend
 
-Last checked for ADR-095 frontend scope on Thursday, November 26, 2026 — 20:31 PHT; the earlier branch checks are recorded below.
+Last checked against `staging` on Thursday, November 26, 2026 — 22:13 PHT, including the Inventory Actions column; the earlier branch checks are recorded below.
 
 Last checked against the code on Thursday, November 26, 2026 — 08:41 PHT (ADR-088 through ADR-093, performance and streamed Audit Log print).
 
