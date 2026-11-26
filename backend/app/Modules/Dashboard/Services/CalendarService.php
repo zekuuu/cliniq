@@ -31,7 +31,7 @@ final class CalendarService
     /** @return list<array{id: string, title: string, startDate: string, endDate: string|null}> events overlapping the period, earliest first */
     public function events(string $from, string $to): array
     {
-        return array_values(DB::table('calendar_events')->where('start_date', '<=', $to)->where('last_date', '>=', $from)->orderBy('start_date')->orderBy('title')->get()
+        return array_values(DB::table('calendar_events')->whereNull('deleted_at')->where('start_date', '<=', $to)->where('last_date', '>=', $from)->orderBy('start_date')->orderBy('title')->get()
             ->map(fn (object $e): array => ['id' => (string) Row::int($e, 'id'), 'title' => (string) Row::str($e, 'title'), 'startDate' => (string) Row::str($e, 'start_date'), 'endDate' => Row::str($e, 'end_date')])->all());
     }
 
@@ -58,13 +58,27 @@ final class CalendarService
         });
     }
 
-    /** The one real delete in the system: an event is not a health record. */
+    /** Keep a deleted event for the short Undo window and its audit history (ADR-089). */
     public function delete(int $id, int $userId, string $role): void
     {
         $this->find($id);
         DB::transaction(function () use ($id, $userId, $role): void {
-            DB::table('calendar_events')->where('id', $id)->delete();
+            DB::table('calendar_events')->where('id', $id)->update(['deleted_at' => CarbonImmutable::now()]);
             $this->log($userId, $role, AuditAction::Delete, $id, null);
+        });
+    }
+
+    /** @return array<string, mixed> */
+    public function restore(int $id, int $userId, string $role): array
+    {
+        return DB::transaction(function () use ($id, $userId, $role): array {
+            $row = DB::table('calendar_events')->where('id', $id)->lockForUpdate()->first();
+            abort_if($row === null, 404);
+            abort_if($row->deleted_at === null, 409, 'This event is already active.');
+            DB::table('calendar_events')->where('id', $id)->update(['deleted_at' => null]);
+            $this->log($userId, $role, AuditAction::Update, $id, 'Restored deleted event');
+
+            return $this->find($id);
         });
     }
 
@@ -144,7 +158,7 @@ final class CalendarService
     /** @return array<string, mixed> */
     private function find(int $id): array
     {
-        $e = DB::table('calendar_events')->where('id', $id)->first();
+        $e = DB::table('calendar_events')->where('id', $id)->whereNull('deleted_at')->first();
         abort_if($e === null, 404);
         $at = fn (string $c): string => ClinicTime::iso(CarbonImmutable::parse((string) Row::str($e, $c)));
 
