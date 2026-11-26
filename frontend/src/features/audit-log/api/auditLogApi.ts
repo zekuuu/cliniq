@@ -6,7 +6,7 @@ import {
   type AuditLogQuery,
   type AuditLogRow,
 } from '../../../lib/data'
-import { requestPage } from '../../../lib/api/client'
+import { apiBaseUrl, requestPage } from '../../../lib/api/client'
 import { routed } from '../../../lib/api/routed'
 import { pageInMemory, sortParam, toPage, type Page, type PageRequest } from '../../../lib/paging'
 import { sortTableRows, type TableSortState } from '../../../lib/tableSort'
@@ -22,6 +22,20 @@ export function fetchAuditLog(query: AuditLogQuery): Promise<AuditLogList> {
 /** The same entries with full LRNs, for the Staff printout only (ADR-044, ADR-080). */
 export function fetchAuditLogForPrint(query: AuditLogQuery): Promise<AuditLogList> {
   return listAuditLogForPrint(query)
+}
+
+/** One Staff-only HTML stream: the server writes a complete A4 document in bounded chunks. */
+export function auditLogPrintUrl(
+  query: AuditLogQuery,
+  search: string,
+  sort: TableSortState<AuditSortKey>,
+): string {
+  const params = new URLSearchParams({ from: query.from, to: query.to, sort: sortParam(sort) })
+  if (query.userId) params.set('userId', query.userId)
+  if (search.trim()) params.set('search', search.trim())
+  query.actionTypes.forEach((value) => params.append('actionTypes[]', value))
+  query.targetTypes.forEach((value) => params.append('targetTypes[]', value))
+  return `${apiBaseUrl()}/audit-log/print?${params.toString()}`
 }
 
 /** The Action column's words; the server's search and sort use the same ones (ADR-082). */

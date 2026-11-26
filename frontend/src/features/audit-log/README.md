@@ -17,11 +17,11 @@ Module 11: a read-only, filterable record of who did what in CLINIQ, for RA 1017
 
 ## Data and API files
 
-`api/auditLogApi.ts`, which reads through `src/lib/mock-db/` during the frontend-first phase.
+`api/auditLogApi.ts` uses mock data by default and the Laravel Audit Log API in API mode.
 
 ## Printouts and tests
 
-Print produces an A4 compliance document: the filters in words, the entry count, and every matching entry (ADR-026). The School Clinician prints; the Admin / Principal does not (ADR-038). Tests: `AuditLogPage.test.tsx`.
+Print produces an A4 compliance document: the filters in words, the entry count, and every matching entry (ADR-026). In API mode, the Staff button opens the server-streamed print document (ADR-093); Ctrl+P on the screen prints its visible page only. Mock mode keeps its in-app document. The School Clinician prints; the Admin / Principal does not (ADR-038). Tests: `AuditLogPage.test.tsx`.
 
 ## Not built yet
 
