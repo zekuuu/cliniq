@@ -124,7 +124,7 @@ describe('idle sign-out in the running app (ADR-078)', () => {
     const { startMockSession } = await import('./lib/mock-db')
     vi.useFakeTimers()
     try {
-      startMockSession({ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' })
+      startMockSession({ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' })
       openAt('/settings')
       await act(() => vi.advanceTimersByTimeAsync(2_000))
       await act(() => vi.advanceTimersByTimeAsync(60 * 60_000 + 2_000))

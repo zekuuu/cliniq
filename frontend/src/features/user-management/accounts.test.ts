@@ -13,8 +13,8 @@ import {
 } from '../../lib/mock-db'
 
 /** Account management belongs to the Admin/Principal (ADR-033); these rules hold in the data layer. */
-const ADMIN = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' } as const
-const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' } as const
+const ADMIN = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' } as const
+const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
 
 describe('account management (ADR-033)', () => {
   beforeEach(() => {

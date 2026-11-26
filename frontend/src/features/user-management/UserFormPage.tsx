@@ -19,7 +19,13 @@ import { useSaveFeedback } from '../../hooks/useSaveFeedback'
 import { getMockSessionUser, type SessionUser } from '../../lib/data'
 import { paths } from '../../routes/paths'
 import type { UserRole } from '../../types/entities'
-import { DuplicateUsernameError, fetchUser, LastAdminError, submitUser } from './api/userApi'
+import {
+  changeUserStatus,
+  DuplicateUsernameError,
+  fetchUser,
+  LastAdminError,
+  submitUser,
+} from './api/userApi'
 import { profilePictureError, resizeProfilePicture, PROFILE_PICTURE_ACCEPT } from './profilePicture'
 import { UserAvatar } from './UserAvatar'
 
@@ -146,8 +152,9 @@ function UserForm({
 
   async function save(chosenRole: UserRole) {
     const result = await feedback.run(
-      () =>
-        submitUser(
+      async () => {
+        const previous = userId ? await fetchUser(userId) : null
+        const saved = await submitUser(
           {
             name,
             username,
@@ -156,9 +163,49 @@ function UserForm({
             temporaryPassword: userId ? undefined : temporaryPassword,
           },
           { userId, actor: viewer },
-        ),
+        )
+        return { saved, previous }
+      },
       {
         saved: userId ? 'User account updated' : 'User account created',
+        undo: ({ saved, previous }) => ({
+          run: () =>
+            previous
+              ? submitUser(
+                  {
+                    name: previous.name,
+                    username: previous.username,
+                    role: previous.role,
+                    profilePicture: previous.profilePicture,
+                  },
+                  { userId: saved.id, actor: viewer },
+                )
+              : changeUserStatus(saved.id, false, viewer),
+          undone: previous ? 'Undone: account details restored' : 'Undone: new account disabled',
+          checkCurrent: async () => {
+            const current = await fetchUser(saved.id)
+            return (
+              current.name === saved.name &&
+              current.username === saved.username &&
+              current.role === saved.role &&
+              current.profilePicture === saved.profilePicture &&
+              current.deactivatedAt === saved.deactivatedAt
+            )
+          },
+          onUndone: () => {
+            if (!previous) return
+            setName(previous.name)
+            setUsername(previous.username)
+            setRole(previous.role)
+            setProfilePicture(previous.profilePicture ?? null)
+            setBaseline({
+              name: previous.name,
+              username: previous.username,
+              role: previous.role,
+              profilePicture: previous.profilePicture ?? null,
+            })
+          },
+        }),
         // These two are field errors, shown beside their fields.
         failed: (cause) => {
           if (cause instanceof DuplicateUsernameError)

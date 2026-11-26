@@ -388,7 +388,7 @@ export function AuthenticatorDialog({
         <span role="status" className="sr-only">
           {copied ? 'Codes copied.' : ''}
         </span>
-        <label className="flex cursor-pointer items-start gap-2 text-sm text-text-primary">
+        <label className="flex items-start gap-2 text-sm text-text-primary">
           <input
             type="checkbox"
             checked={saved}
