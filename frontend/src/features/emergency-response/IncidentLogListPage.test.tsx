@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { renderWithRouter } from '../../test/renderWithRouter'
@@ -36,6 +36,23 @@ describe('Incident Log', () => {
     expect(screen.getByRole('columnheader', { name: 'Reason / description' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Status' })).toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: /full name/i })).not.toBeInTheDocument()
+  })
+
+  it('keeps Stage 2 direct and opens the report from the row menu', async () => {
+    const user = userEvent.setup()
+    renderWithRouter(<IncidentLogListPage />)
+
+    const complete = (await screen.findAllByRole('link', { name: 'Complete Stage 2' }))[0]
+    const row = complete.closest('tr')
+    expect(row).not.toBeNull()
+    expect(within(row!).queryByRole('link', { name: 'View Report' })).not.toBeInTheDocument()
+
+    await user.click(within(row!).getByRole('button', { name: /More actions for incident on/ }))
+    expect(screen.getByRole('menuitem', { name: 'View Report' })).toHaveAttribute(
+      'href',
+      complete.getAttribute('href')?.replace('/complete', '/report'),
+    )
+    expect(complete).toBeVisible()
   })
 
   it('searches incidents by actual LRN', async () => {
