@@ -105,7 +105,7 @@ final class IncidentService
     }
 
     /**
-     * Stage 1: saves with only the complaint plus whichever readings were taken.
+     * Stage 1: save the patient, complaint, event time and optional notes quickly.
      *
      * @param  array<string, mixed>  $in
      * @return array<string, mixed>
@@ -123,13 +123,13 @@ final class IncidentService
         $at = $now;
         if (is_string($in['time'] ?? null) && $in['time'] !== '') {
             $at = self::parseTime($in['time'], 'time');
-            if ($at->greaterThan($now)) {
-                throw ValidationException::withMessages(['time' => "The incident time can't be in the future."]);
-            }
         }
-        $vitals = self::vitals($in['vitals'] ?? []);
+        if (is_array($in['vitals'] ?? null) && $in['vitals'] !== []) {
+            throw ValidationException::withMessages(['vitals' => 'Record readings in Stage 2.']);
+        }
         $notes = trim(Row::text($in['generalNotes'] ?? '')) ?: null;
         $sourceId = Row::toInt($in['sourceVisitId'] ?? null);
+        $carriedTemperature = $in['carriedTemperatureC'] ?? null;
         if ($sourceId !== null) {
             $source = DB::table('visits')->where('id', $sourceId)->first();
             abort_if($source === null, 404);
@@ -142,16 +142,31 @@ final class IncidentService
             if (Row::str($source, 'escalated_incident_id') !== null) {
                 throw new BusinessRuleViolation('incident_stage', 'This visit was already escalated to an incident.');
             }
+            $carriedTemperature = Row::str($source, 'temperature_c');
+            if (! is_string($in['time'] ?? null) || $in['time'] === '') {
+                $at = self::parseTime((string) Row::str($source, 'visited_at'), 'time');
+            }
         }
 
-        return DB::transaction(function () use ($student, $personnel, $complaint, $at, $vitals, $notes, $sourceId, $userId, $now): array {
+        if ($at->greaterThan($now)) {
+            throw ValidationException::withMessages(['time' => "The incident time can't be in the future."]);
+        }
+
+        if ($carriedTemperature !== null && (! is_numeric($carriedTemperature) || (float) $carriedTemperature < 0 || (float) $carriedTemperature >= 1000)) {
+            throw ValidationException::withMessages(['carriedTemperatureC' => 'Check the carried temperature.']);
+        }
+
+        return DB::transaction(function () use ($student, $personnel, $complaint, $at, $carriedTemperature, $notes, $sourceId, $userId, $now): array {
             $grade = $student === null ? null : DB::table('students as s')->leftJoin('grade_levels as g', 'g.id', '=', 's.grade_level_id')->where('s.id', $student)->first(['g.name', 's.section']);
             $id = DB::table('incidents')->insertGetId([
                 'student_id' => $student, 'personnel_id' => $personnel, 'occurred_at' => $at->format('Y-m-d H:i:s'), 'complaint' => $complaint,
-                'treatment_notes' => $vitals['treatmentNotes'], 'general_notes' => $notes, 'source_visit_id' => $sourceId, 'created_by_user_id' => $userId,
+                'treatment_notes' => null, 'general_notes' => $notes, 'source_visit_id' => $sourceId, 'created_by_user_id' => $userId,
                 'grade_level_at_time' => $grade === null ? null : Row::str($grade, 'name'), 'section_at_time' => $grade === null ? null : Row::str($grade, 'section'),
+                'created_at' => $now, 'updated_at' => $now,
             ]);
-            $this->saveReading($id, 1, $vitals['readings'], $userId, $now);
+            if ($carriedTemperature !== null) {
+                $this->saveReading($id, 1, ['temperatureC' => round((float) $carriedTemperature, 2)], $userId, $at);
+            }
             if ($sourceId !== null) {
                 $this->visits->markEscalated($sourceId, $id, $userId, $now);
             }
@@ -174,6 +189,33 @@ final class IncidentService
         $complaint = self::complaint($in);
         $vitals = self::vitals($in['vitals'] ?? []);
         $approved = DB::table('incident_report_approvals')->where('incident_id', $id)->exists();
+        $nowForValidation = CarbonImmutable::now();
+        $at = is_string($in['time'] ?? null) && $in['time'] !== '' ? self::parseTime($in['time'], 'time') : self::parseTime($before['time'], 'time');
+        if ($at->greaterThan($nowForValidation)) {
+            throw ValidationException::withMessages(['time' => "The incident time can't be in the future."]);
+        }
+        $arrivalValue = array_key_exists('arrivedAtClinic', $in) ? $in['arrivedAtClinic'] : $before['arrivedAtClinic'];
+        $arrival = is_string($arrivalValue) && $arrivalValue !== '' ? self::parseTime($arrivalValue, 'arrivedAtClinic') : null;
+        if ($arrival?->greaterThan($nowForValidation)) {
+            throw ValidationException::withMessages(['arrivedAtClinic' => "The clinic arrival time can't be in the future."]);
+        }
+        $readingTimes = [];
+        foreach ($vitals['readings'] as $key => $_) {
+            $value = is_array($in['readingTimes'] ?? null) ? ($in['readingTimes'][$key] ?? null) : null;
+            $readingAt = is_string($value) && $value !== '' ? self::parseTime($value, "readingTimes.{$key}") : $nowForValidation;
+            if ($readingAt->greaterThan($nowForValidation)) {
+                throw ValidationException::withMessages(["readingTimes.{$key}" => "The reading time can't be in the future."]);
+            }
+            $readingTimes[$key] = $readingAt;
+        }
+        $timeChanged = $at->format('Y-m-d H:i') !== self::parseTime($before['time'], 'time')->format('Y-m-d H:i');
+        $arrivalChanged = ($arrival?->format('Y-m-d H:i:s')) !== ($before['arrivedAtClinic'] === null ? null : self::parseTime($before['arrivedAtClinic'], 'arrivedAtClinic')->format('Y-m-d H:i:s'));
+        if (! $timeChanged) {
+            $at = self::parseTime($before['time'], 'time');
+        }
+        if ($approved && ($timeChanged || $arrivalChanged || $vitals['readings'] !== [] || $readingTimes !== [])) {
+            throw new BusinessRuleViolation('incident_approved', 'This incident report is approved, so its event times and readings can no longer be changed.');
+        }
         $notes = array_key_exists('generalNotes', $in) ? (trim(Row::text($in['generalNotes'])) ?: null) : $before['generalNotes'];
         $notesChanged = $notes !== $before['generalNotes'];
         if ($notesChanged && $approved) {
@@ -208,14 +250,15 @@ final class IncidentService
         $nothingFurther = mb_substr(trim(Row::text($in['noFurtherActionReason'] ?? '')), 0, 200) ?: null;
         $patient = ['studentId' => Row::toInt($before['studentId']), 'personnelId' => Row::toInt($before['personnelId'])];
 
-        return DB::transaction(function () use ($id, $before, $complaint, $vitals, $notes, $notesChanged, $lines, $referral, $departed, $attempts, $followUp, $bodyPart, $nothingFurther, $patient, $userId): array {
+        return DB::transaction(function () use ($id, $before, $complaint, $vitals, $readingTimes, $at, $arrival, $timeChanged, $arrivalChanged, $notes, $notesChanged, $lines, $referral, $departed, $attempts, $followUp, $bodyPart, $nothingFurther, $patient, $userId): array {
             $now = CarbonImmutable::now();
             $first = $before['stage'] === 1;
             DB::table('incidents')->where('id', $id)->update([
                 'complaint' => $complaint, 'treatment_notes' => $vitals['treatmentNotes'], 'stage' => 2, 'body_part' => $bodyPart,
                 'no_further_action_reason' => $nothingFurther, 'general_notes' => $notes,
+                'occurred_at' => $at->format('Y-m-d H:i:s'), 'arrived_at_clinic_at' => $arrival?->format('Y-m-d H:i:s'),
             ] + ($first ? ['completed_by_user_id' => $userId, 'completed_at' => $now] : []));
-            $this->saveReading($id, 2, $vitals['readings'], $userId, $now);
+            $this->saveReading($id, 2, $vitals['readings'], $userId, $now, $readingTimes);
             DB::table('hospital_referrals')->where('incident_id', $id)->delete();
             if ($referral !== null) {
                 DB::table('hospital_referrals')->insert([
@@ -228,6 +271,9 @@ final class IncidentService
             $named = implode(' and ', array_filter([
                 $bodyPart !== null ? 'body part affected' : null, $nothingFurther !== null ? 'nothing further was needed or done' : null,
                 $notesChanged ? 'corrected additional notes' : null,
+                $timeChanged ? 'corrected when it happened' : null,
+                $arrivalChanged ? 'updated clinic arrival time' : null,
+                $vitals['readings'] !== [] ? 'recorded readings and their times' : null,
             ]));
             $this->log($userId, AuditAction::Update, AuditTarget::IncidentStageTwo, (string) $id, 'Completed Stage 2 details'.($named !== '' ? "; included {$named}" : ''), $now);
             foreach ($attempts as $attempt) {
@@ -357,16 +403,17 @@ final class IncidentService
     }
 
     /** @param array<string, string|float|int> $readings */
-    private function saveReading(int $id, int $stage, array $readings, int $userId, CarbonImmutable $now): void
+    private function saveReading(int $id, int $stage, array $readings, int $userId, CarbonImmutable $now, array $times = []): void
     {
         if ($readings === []) {
             return;
         }
-        $row = ['incident_id' => $id, 'stage' => $stage, 'recorded_at' => $now, 'recorded_by_user_id' => $userId];
         foreach ($readings as $key => $value) {
-            $row[self::VITALS[$key]] = $value;
+            DB::table('incident_vital_readings')->insert([
+                'incident_id' => $id, 'stage' => $stage, 'recorded_at' => $times[$key] ?? $now,
+                'recorded_by_user_id' => $userId, self::VITALS[$key] => $value,
+            ]);
         }
-        DB::table('incident_vital_readings')->insert($row);
     }
 
     /**
@@ -415,13 +462,14 @@ final class IncidentService
         $ids = array_values(array_map(fn (object $r): int => (int) Row::int($r, 'id'), $rows));
         $in = $ids === [] ? [0] : $ids;
         $lines = $this->stock->linesFor('incident_id', $ids);
-        $readings = DB::table('incident_vital_readings')->whereIn('incident_id', $in)->orderBy('recorded_at')->orderBy('id')->get();
+        $readings = DB::table('incident_vital_readings')->whereIn('incident_id', $in)->orderBy('id')->get();
         $referrals = DB::table('hospital_referrals')->whereIn('incident_id', $in)->get()->keyBy(fn (object $r): int => (int) Row::int($r, 'incident_id'));
         $calls = DB::table('parent_notification_attempts')->whereIn('incident_id', $in)->orderBy('id')->get();
         $out = [];
         foreach ($rows as $r) {
             $id = (int) Row::int($r, 'id');
             $vitals = [];
+            $readingTimes = [];
             foreach ($readings as $reading) {
                 if (Row::int($reading, 'incident_id') !== $id) {
                     continue;
@@ -430,6 +478,7 @@ final class IncidentService
                     $v = Row::str($reading, $col);
                     if ($v !== null) {
                         $vitals[$key] = $key === 'bloodPressure' ? $v : ($key === 'temperatureC' ? (float) $v : (int) $v);
+                        $readingTimes[$key] = ClinicTime::iso(CarbonImmutable::parse((string) Row::str($reading, 'recorded_at')));
                     }
                 }
             }
@@ -440,6 +489,9 @@ final class IncidentService
             $out[] = [
                 'id' => (string) $id, 'studentId' => Row::str($r, 'student_id'), 'personnelId' => Row::str($r, 'personnel_id'),
                 'time' => ClinicTime::iso(CarbonImmutable::parse((string) Row::str($r, 'occurred_at'))), 'complaint' => (string) Row::str($r, 'complaint'),
+                'recordedAt' => ClinicTime::iso(CarbonImmutable::parse((string) Row::str($r, 'created_at'))),
+                'arrivedAtClinic' => Row::str($r, 'arrived_at_clinic_at') === null ? null : ClinicTime::iso(CarbonImmutable::parse((string) Row::str($r, 'arrived_at_clinic_at'))),
+                'readingTimes' => (object) $readingTimes,
                 'vitals' => (object) $vitals,
                 'hospitalReferral' => $ref === null ? null : [
                     'destination' => (string) Row::str($ref, 'destination'), 'transportMode' => (string) Row::str($ref, 'transport_mode'),
