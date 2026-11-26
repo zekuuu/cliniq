@@ -84,7 +84,8 @@ final class VisitService
         $query = PatientLog::join(DB::table('visits as v'), 'v')->leftJoin('users as u', 'u.id', '=', 'v.logged_by_user_id')
             ->select(['v.id', 'v.visited_at', 'v.complaint', 'v.disposition', 'v.event_tag', 'v.time_out', 'v.escalated_incident_id', 'v.entered_in_error_at', 'v.student_id', 's.lrn', 's.archived_at', 'p.staff_number', 'u.name as logged_by'])
             ->selectRaw(PatientLog::gradeSql('v').' AS grade')
-            ->selectRaw("EXISTS (SELECT 1 FROM excuse_letters e WHERE e.visit_id = v.id AND e.status = 'draft') AS has_draft")
+            ->selectSub(DB::table('excuse_letters as e')->select('e.status')->whereColumn('e.visit_id', 'v.id')
+                ->whereIn('e.status', ['draft', 'approved', 'voided'])->orderByDesc('e.id')->limit(1), 'letter_status')
             ->when($f['from'] !== null, fn ($q) => $q->where('v.visited_at', '>=', "{$f['from']} 00:00:00"))
             ->when($f['to'] !== null, fn ($q) => $q->where('v.visited_at', '<=', "{$f['to']} 23:59:59"))
             ->when(! $f['includeEnteredInError'], fn ($q) => $q->whereNull('v.entered_in_error_at'))
@@ -120,7 +121,8 @@ final class VisitService
             'id' => (string) Row::int($r, 'id'), 'patient' => PatientLog::number($r), 'gradeLevel' => (string) Row::str($r, 'grade'),
             'dateTime' => ClinicTime::iso($at), 'complaint' => (string) Row::str($r, 'complaint'), 'disposition' => (string) Row::str($r, 'disposition'),
             'eventTag' => Row::str($r, 'event_tag'), 'loggedBy' => Row::str($r, 'logged_by') ?? 'Unknown user',
-            'letterPending' => Row::str($r, 'has_draft') === '1' && Row::str($r, 'student_id') !== null && Row::str($r, 'archived_at') === null && ! $error,
+            'letterStatus' => Row::str($r, 'letter_status') ?? 'none',
+            'letterPending' => Row::str($r, 'letter_status') === 'draft' && Row::str($r, 'student_id') !== null && Row::str($r, 'archived_at') === null && ! $error,
             'inClinicNow' => Row::str($r, 'disposition') === 'resting_in_clinic' && Row::str($r, 'time_out') === null && $at->format('Y-m-d') === $today && ! $error,
             'escalated' => Row::str($r, 'escalated_incident_id') !== null, 'enteredInError' => $error,
         ];

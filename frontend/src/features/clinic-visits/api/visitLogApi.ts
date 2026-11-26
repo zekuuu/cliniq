@@ -1,4 +1,11 @@
-import { getMockToday, listPersonnel, listStudents, listUsers, listVisits } from '../../../lib/data'
+import {
+  getMockToday,
+  listCurrentExcuseLetterStatuses,
+  listPersonnel,
+  listStudents,
+  listUsers,
+  listVisits,
+} from '../../../lib/data'
 import { requestPage } from '../../../lib/api/client'
 import { routed } from '../../../lib/api/routed'
 import { dispositionLabel } from '../../../lib/dispositions'
@@ -91,6 +98,7 @@ export interface VisitLogRow {
   loggedBy: string
   /** Same rule as the Dashboard's "Pending excuse letters" count: a draft, for a student not archived. */
   letterPending: boolean
+  letterStatus: 'none' | 'draft' | 'approved' | 'voided'
   /** Resting in clinic today with no Time out: same rule as the Dashboard's "In clinic now". */
   inClinicNow: boolean
   escalated: boolean
@@ -102,7 +110,7 @@ export function defaultVisitLogRange(today = todayISO()): { from: ISODate; to: I
 }
 
 export async function fetchVisitLog(query: VisitLogQuery): Promise<VisitLogRow[]> {
-  const [visits, students, personnel, users] = await Promise.all([
+  const [visits, students, personnel, users, letterStatuses] = await Promise.all([
     listVisits(
       { from: query.from, to: query.to },
       { includeEnteredInError: query.includeEnteredInError },
@@ -110,6 +118,7 @@ export async function fetchVisitLog(query: VisitLogQuery): Promise<VisitLogRow[]
     listStudents({ includeArchived: true, fullLrn: true }),
     listPersonnel({ includeArchived: true }),
     listUsers(),
+    listCurrentExcuseLetterStatuses(),
   ])
   const studentsById = new Map(students.map((student) => [student.id, student]))
   const personnelById = new Map(personnel.map((person) => [person.id, person]))
@@ -143,6 +152,12 @@ export async function fetchVisitLog(query: VisitLogQuery): Promise<VisitLogRow[]
                 Boolean(visit.excuseLetterDraft) &&
                 Boolean(student && !student.archived) &&
                 !visit.enteredInError,
+              letterStatus:
+                visit.enteredInError && (visit.excuseLetterDraft || letterStatuses[visit.id])
+                  ? 'voided'
+                  : visit.excuseLetterDraft
+                    ? 'draft'
+                    : (letterStatuses[visit.id] ?? 'none'),
               inClinicNow:
                 visit.disposition === 'resting_in_clinic' &&
                 !visit.timeOut &&

@@ -2780,6 +2780,17 @@ export function getExcuseLetterApproval(visitId: string): Promise<ExcuseLetterAp
   return read('excuse letter', (s) => activeApproval(s, visitId) ?? null, true)
 }
 
+/** Current approved or voided letter state for the mock Visit Log, read in one pass. */
+export function listCurrentExcuseLetterStatuses(): Promise<Record<string, 'approved' | 'voided'>> {
+  return read('excuse letters', (s) =>
+    Object.fromEntries(
+      s.frontendOnly.excuseLetterApprovals
+        .filter((approval) => !approval.superseded)
+        .map((approval) => [approval.visitId, approval.voided ? 'voided' : 'approved']),
+    ),
+  )
+}
+
 /**
  * One stored letter by its id, whatever its state (current, superseded, or voided with its visit), so
  * an old letter can be opened and reprinted from the student's record, clearly marked not valid.

@@ -72,6 +72,34 @@ it('pages the Visit Log in SQL with the masked number, the filters, the search a
         ->and($this->getJson('/api/visits/log?page=1&perPage=1&sort=record')->json('data.0.complaint'))->toBe('Fever');
 });
 
+it('returns the current excuse-letter state for every Visit Log row', function () {
+    signIn($this->staff);
+    [$draft, $approved, $voided] = DB::table('visits')->where('disposition', 'sent_home')->orderBy('id')->limit(3)->pluck('id')->all();
+    $letter = ['excused_from' => '2026-11-10', 'excused_until' => '2026-11-10', 'prepared_by_user_id' => $this->staff->id];
+    DB::table('excuse_letters')->insert($letter + ['visit_id' => $draft, 'status' => 'draft']);
+    DB::table('excuse_letters')->insert($letter + [
+        'visit_id' => $approved, 'status' => 'approved', 'approved_at' => '2026-11-10 08:00:00',
+        'approved_by_user_id' => $this->staff->id, 'reference_no' => 'EL-2026-TEST1', 'snapshot_text' => 'Approved letter',
+    ]);
+    DB::table('visits')->where('id', $voided)->update([
+        'entered_in_error_at' => '2026-11-10 08:30:00', 'entered_in_error_by_user_id' => $this->staff->id,
+        'entered_in_error_reason' => 'Wrong patient',
+    ]);
+    DB::table('excuse_letters')->insert($letter + [
+        'visit_id' => $voided, 'status' => 'voided', 'voided_at' => '2026-11-10 08:30:00',
+        'voided_by_user_id' => $this->staff->id, 'voided_reason' => 'Wrong patient',
+    ]);
+
+    $rows = collect($this->getJson('/api/visits/log?perPage=50&includeEnteredInError=1')->assertOk()->json('data'))->keyBy('id');
+    expect($rows[(string) $draft]['letterStatus'])->toBe('draft')
+        ->and($rows[(string) $draft]['letterPending'])->toBeTrue()
+        ->and($rows[(string) $approved]['letterStatus'])->toBe('approved')
+        ->and($rows[(string) $approved]['letterPending'])->toBeFalse()
+        ->and($rows[(string) $voided]['letterStatus'])->toBe('voided')
+        ->and($rows[(string) $voided]['letterPending'])->toBeFalse()
+        ->and(collect($rows)->where('letterStatus', 'none')->count())->toBeGreaterThan(0);
+});
+
 it('keeps the Visit Log Staff only and the Incident Log without staff patients for the Admin', function () {
     signIn($this->admin);
     $this->getJson('/api/visits/log?page=1')->assertForbidden();
