@@ -41,7 +41,7 @@ const baseColumns: Array<DataTableColumn<User>> = [
       </span>
     ),
   },
-  { key: 'username', header: 'Username', cell: (user) => user.username },
+  { key: 'username', header: 'Username', width: '12rem', cell: (user) => user.username },
   {
     key: 'role',
     header: 'Role',
@@ -70,7 +70,7 @@ const baseColumns: Array<DataTableColumn<User>> = [
   {
     key: 'lastLogin',
     header: 'Last login',
-    width: '11.5rem',
+    width: '13.5rem',
     cell: (user) => (user.lastLogin ? formatDateTime(user.lastLogin) : 'Never'),
   },
 ]
@@ -155,8 +155,10 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
   columns.push({
     key: 'actions',
     header: 'Actions',
+    width: '7.5rem',
+    align: 'left',
     cell: (user) => (
-      <span className="flex flex-wrap gap-2">
+      <span className="flex items-center justify-start gap-1">
         <Link
           className={buttonClassName({ variant: 'primary', size: 'sm' })}
           to={paths.userEdit(user.id)}
@@ -235,7 +237,7 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
               rows={sortedUsers}
               rowKey={(user) => user.id}
               fixedLayout
-              minTableWidth="60rem"
+              minTableWidth="64rem"
             />
           ) : (
             <EmptyState
