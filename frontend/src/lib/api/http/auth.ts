@@ -2,8 +2,10 @@ import {
   clearMockSession,
   RecoveryError,
   IdleSignoutSettingsError,
+  OperationalSettingsError,
   startMockSession as startBridgedMockSession,
   type IdleSignoutSettings,
+  type OperationalSettings,
   type MockAuthResult,
   type OwnAccount,
   type SessionUser,
@@ -170,6 +172,17 @@ export async function keepAlive(force = false): Promise<number | null> {
 
 export function getIdleSignoutSettings(): Promise<IdleSignoutSettings> {
   return http.get<IdleSignoutSettings>('/settings/idle-signout')
+}
+
+export function getOperationalSettings(): Promise<OperationalSettings> {
+  return http.get<OperationalSettings>('/settings/operational')
+}
+
+export function saveOperationalSettings(input: OperationalSettings): Promise<OperationalSettings> {
+  return mapped(http.put<OperationalSettings>('/settings/operational', input), {
+    validation: (message) => new OperationalSettingsError(message),
+    forbidden: (message) => new OperationalSettingsError(message),
+  })
 }
 
 export async function getIdleSignoutMinutes(role: SessionUser['role']): Promise<number> {

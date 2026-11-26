@@ -65,6 +65,7 @@ import {
 import {
   fetchVisitDetail,
   markEnteredInError,
+  undoEnteredInError,
   updateVisitDetail,
   valuesFromVisit,
   type VisitDetail,
@@ -307,10 +308,24 @@ function VisitDetailEditor({
     }
     setMarkingSaving(true)
     try {
-      setVisit(await markEnteredInError(visit.id, errorReason))
+      const marked = await markEnteredInError(visit.id, errorReason)
+      setVisit(marked)
       setMarkingError(false)
       setSaved(null)
-      notify.success('Visit marked as entered in error')
+      notify.undoable(
+        'Visit marked as entered in error',
+        async () => {
+          const restored = await undoEnteredInError(visit.id)
+          setVisit(restored)
+          setValues(valuesFromVisit(restored))
+          setLines(draftsFrom(restored.itemsGiven))
+        },
+        {
+          undone: 'Undone: visit reinstated',
+          checkCurrent: async () =>
+            (await fetchVisitDetail(visit.id)).enteredInError?.at === marked.enteredInError?.at,
+        },
+      )
       scrollToTop()
     } catch (cause) {
       notify.apiError(cause, 'The visit was not marked. Please try again.')
@@ -377,6 +392,7 @@ function VisitDetailEditor({
     setSaved(null)
     setSaving(true)
     try {
+      const before = visit
       const { visit: updated, belowZero } = await updateVisitDetail(
         visit,
         values,
@@ -394,7 +410,39 @@ function VisitDetailEditor({
       setEditing(false)
       setSaved({ belowZero })
       // ADR-083: the form shows what was saved, from the top.
-      notify.success('Visit updated', { id: 'visit-update' })
+      if (approveNow)
+        notify.success('Visit updated and excuse letter approved', { id: 'visit-update' })
+      else
+        notify.undoable(
+          'Visit updated',
+          async () => {
+            const { visit: restored } = await updateVisitDetail(
+              before,
+              valuesFromVisit(before),
+              before.itemsGiven.map((line) => ({
+                itemId: line.itemId,
+                quantity: line.quantity,
+                instructions: line.instructions,
+              })),
+            )
+            setVisit(restored)
+            setValues(valuesFromVisit(restored))
+            setLines(draftsFrom(restored.itemsGiven))
+          },
+          {
+            undone: 'Undone: visit details restored',
+            checkCurrent: async () => {
+              const current = await fetchVisitDetail(updated.id)
+              return (
+                JSON.stringify(valuesFromVisit(current)) ===
+                  JSON.stringify(valuesFromVisit(updated)) &&
+                JSON.stringify(draftsFrom(current.itemsGiven)) ===
+                  JSON.stringify(draftsFrom(updated.itemsGiven)) &&
+                current.enteredInError === null
+              )
+            },
+          },
+        )
       if (belowZero.length)
         notify.warning('Some stock is now below zero. Recount and restock in Inventory.', {
           id: 'visit-below-zero',
@@ -847,8 +895,8 @@ function VisitDetailEditor({
       >
         <p className="text-sm text-text-secondary">
           Nothing is deleted. The visit leaves every list and count, its medicines go back to stock,
-          and its excuse letter is voided. It can't be edited afterwards, and this can't be undone
-          from this screen.
+          and its excuse letter is voided. It can't be edited afterwards. You can undo from the
+          result message. from this screen.
         </p>
         <Textarea
           className="mt-4"

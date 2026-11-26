@@ -55,7 +55,7 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
     <PrintDocument
       title="Incident Report"
       viewer={viewer}
-      scope={`${student.fullName} (${patientIdText(student)}), ${patientGroup(student).value}. Incident recorded ${formatDateTime(incident.time)}.`}
+      scope={`${student.fullName} (${patientIdText(student)}), ${patientGroup(student).value}. Incident happened ${formatDateTime(incident.time)}.`}
     >
       {incident.stage === 1 && (
         <p className="mb-[4mm] border-2 border-text-primary px-[3mm] py-[2mm] text-[11pt] font-bold">
@@ -73,7 +73,16 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
                 value: `${student.fullName} · ${patientIdText(student)}`,
               },
               patientGroup(student),
-              { label: 'Date and time', value: formatDateTime(incident.time) },
+              { label: 'When it happened', value: formatDateTime(incident.time) },
+              ...(incident.arrivedAtClinic
+                ? [
+                    {
+                      label: 'Arrived at the clinic',
+                      value: formatDateTime(incident.arrivedAtClinic),
+                    },
+                  ]
+                : []),
+              { label: 'Recorded at', value: formatDateTime(incident.recordedAt ?? incident.time) },
               { label: SYMPTOM, value: incident.complaint },
               {
                 label: 'Record status',
@@ -95,7 +104,7 @@ function IncidentReportPrint({ record, viewer }: { record: IncidentRecord; viewe
               columns={4}
               fields={vitals.map(([key, value]) => ({
                 label: READING_LABELS[key]?.label ?? key,
-                value: readingText(key, value),
+                value: `${readingText(key, value)}${incident.readingTimes?.[key] ? ` · Taken ${formatDateTime(incident.readingTimes[key])}` : ''}`,
               }))}
             />
           ) : (
@@ -415,7 +424,15 @@ export function IncidentReportPage({
                 {student.fullName} · {patientIdText(student)}
               </span>
             </Field>
-            <Field label="Recorded">{formatDateTime(incident.time)}</Field>
+            <Field label="When it happened">{formatDateTime(incident.time)}</Field>
+            {incident.arrivedAtClinic && (
+              <Field label="Arrived at the clinic">
+                {formatDateTime(incident.arrivedAtClinic)}
+              </Field>
+            )}
+            <Field label="Recorded at">
+              {formatDateTime(incident.recordedAt ?? incident.time)}
+            </Field>
             <Field label={SYMPTOM}>{incident.complaint}</Field>
             {incident.bodyPart && <Field label="Body part affected">{incident.bodyPart}</Field>}
             <Field label="Sign-off">{approved ? 'Approved' : 'Pending sign-off'}</Field>
@@ -438,6 +455,11 @@ export function IncidentReportPage({
                     <p className="mt-1 text-sm font-semibold text-text-primary">
                       {readingText(key, value)}
                     </p>
+                    {incident.readingTimes?.[key] && (
+                      <p className="mt-1 text-xs text-text-secondary">
+                        Taken {formatDateTime(incident.readingTimes[key])}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>

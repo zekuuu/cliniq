@@ -26,8 +26,8 @@ import type { MockDbSeed } from './types'
 
 /** Staff patients, the data layer only (ADR-043 part 1). */
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
-const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }
 const PARACETAMOL = 'item-0001'
 const STAFF_MEMBER = 'personnel-0002'
 
@@ -76,7 +76,7 @@ describe('exactly one patient on every clinical record', () => {
     ).rejects.toThrow(/Choose one patient/)
     await expect(recordVisit(visit, STAFF)).rejects.toThrow(/Choose one patient/)
     await expect(
-      saveIncidentStageOne({ complaint: 'Fainting', vitals: {} }, STAFF),
+      saveIncidentStageOne({ complaint: 'Fainting' }, STAFF),
     ).rejects.toThrow(/Choose one patient/)
     expect(db().visits.length).toBe(before)
   })

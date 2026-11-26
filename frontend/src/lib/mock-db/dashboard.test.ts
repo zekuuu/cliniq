@@ -91,9 +91,7 @@ const student = (id: string, n: string, extra: Partial<SeedStudent> = {}): SeedS
   birthDate: '2015-06-01',
   allergies: [],
   medicalConditions: [],
-  emergencyContacts: [
-    { name: 'Guardian', relationship: 'Parent', phone: '0900-111-0000', verified: true },
-  ],
+  emergencyContacts: [{ name: 'Guardian', relationship: 'Parent', phone: '0900-111-0000' }],
   archived: false,
   ...extra,
 })

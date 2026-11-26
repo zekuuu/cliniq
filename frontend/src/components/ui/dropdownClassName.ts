@@ -82,7 +82,5 @@ export function placeDropdownPanel(trigger: HTMLElement, panel: HTMLElement) {
 }
 
 /** One checkbox row of a multi-select panel; the checkbox itself carries the selected state. */
-export const DROPDOWN_CHECK_ROW = cn(
-  OPTION_ROW,
-  'items-center gap-2 text-text-primary hover:bg-surface',
-)
+export const DROPDOWN_CHECK_ROW =
+  'flex w-full items-center gap-2 whitespace-nowrap rounded-sm px-2.5 py-1.5 text-left text-sm text-text-primary'

@@ -236,8 +236,6 @@ CALL t_rejects('chk_health_kind', "INSERT INTO student_health_entries (student_i
 CALL t_rejects('uq_health_entry', "INSERT INTO student_health_entries (student_id, kind, label) VALUES (1, 'allergy', 'peanuts')");
 CALL t_rejects('uq_contacts_one_primary', "INSERT INTO emergency_contacts (student_id, name, phone) VALUES (1, 'B', '1')");
 CALL t_accepts('a second contact that is not primary', "INSERT INTO emergency_contacts (student_id, name, phone, is_primary, sort_order) VALUES (1, 'B', '1', 0, 1)");
-CALL t_rejects('chk_contacts_verified', "UPDATE emergency_contacts SET is_verified = 1 WHERE id = 1");
-CALL t_rejects('chk_verifications_result', "INSERT INTO emergency_contact_verifications (contact_id, result, recorded_by_user_id) VALUES (1, 'maybe', 1)");
 CALL t_rejects('chk_reviews_source', "INSERT INTO student_record_reviews (student_id, source) VALUES (1, 'other')");
 CALL t_rejects('chk_reviews_resolved', "INSERT INTO student_record_reviews (student_id, source, resolved_at) VALUES (1, 'flagged_in_clinic', NOW())");
 CALL t_rejects('uq_reviews_one_open', "INSERT INTO student_record_reviews (student_id, source) VALUES (1, 'flagged_in_clinic'), (1, 'registrar_import')");
@@ -322,6 +320,8 @@ CALL t_rejects('chk_incidents_completed', CONCAT(@i, "(1, NULL, ", @now, ", 'A',
 CALL t_rejects('chk_incidents_complaint', CONCAT(@i, "(1, NULL, ", @now, ", ' ', 1, NULL, NULL, 1)"));
 CALL t_rejects('chk_incidents_one_patient', CONCAT(@i, "(1, 1, ", @now, ", 'A', 1, NULL, NULL, 1)"));
 CALL t_rejects('chk_incidents_one_patient', CONCAT(@i, "(NULL, NULL, ", @now, ", 'A', 1, NULL, NULL, 1)"));
+CALL t_accepts('clinic arrival may be before incident time; the app warns', 'UPDATE incidents SET arrived_at_clinic_at = occurred_at - INTERVAL 1 HOUR WHERE id = 1');
+CALL t_accepts('clinic arrival remains optional', 'UPDATE incidents SET arrived_at_clinic_at = NULL WHERE id = 1');
 CALL t_rejects('chk_vitals_stage', CONCAT(@r, "(1, 3, ", @now, ", 1, NULL, NULL, NULL, NULL)"));
 CALL t_rejects('chk_vitals_temp', CONCAT(@r, "(1, 1, ", @now, ", 1, -0.1, NULL, NULL, NULL)"));
 CALL t_rejects('chk_vitals_spo2', CONCAT(@r, "(1, 1, ", @now, ", 1, NULL, NULL, NULL, 101)"));
@@ -445,7 +445,6 @@ INSERT INTO incident_vital_readings (incident_id, stage, recorded_at, recorded_b
 INSERT INTO hospital_referrals (incident_id, destination, transport_mode, departed_at, created_by_user_id) VALUES (4, 'H', 'Car', NOW(), 1);
 INSERT INTO parent_notification_attempts (incident_id, outcome, attempted_at, logged_by_user_id) VALUES (4, 'reached', NOW(), 1), (5, 'reached', NOW(), 1);
 INSERT INTO incident_report_approvals (incident_id, reference_no, approved_by_user_id, approved_at) VALUES (4, 'IR-2026-00004', 1, NOW());
-INSERT INTO emergency_contact_verifications (contact_id, result, incident_id, recorded_by_user_id) VALUES (3, 'verified', 4, 1);
 INSERT INTO student_record_reviews (student_id, source) VALUES (3, 'flagged_in_clinic');
 INSERT INTO staff_record_reviews (staff_id) VALUES (2);
 INSERT INTO follow_ups (student_id, visit_id, follow_up_date, reason, created_by_user_id) VALUES (3, 4, '2026-10-05', 'A', 1);
@@ -486,7 +485,6 @@ CALL t_count('purge: extra complaints gone', '', 'visit_extra_complaints', 0);
 CALL t_count('purge: triage checks gone', '', 'triage_checks', 0);
 CALL t_count('purge: profile parts gone', '', 'student_health_entries WHERE student_id = 3', 0);
 CALL t_count('purge: contacts gone', '', 'emergency_contacts WHERE student_id = 3', 0);
-CALL t_count('purge: verifications gone', '', 'emergency_contact_verifications', 0);
 CALL t_count('purge: reviews gone', '', 'student_record_reviews', 0);
 CALL t_count('purge: staff contacts gone', '', 'personnel_emergency_contacts WHERE personnel_id = 2', 0);
 CALL t_count('purge: staff health gone', '', 'personnel_health_entries WHERE personnel_id = 2', 0);

@@ -22,6 +22,7 @@ use App\Shared\FollowUps\FollowUpController;
 use App\Shared\Http\HealthController;
 use App\Shared\Http\KeepAliveController;
 use App\Shared\Settings\IdleSignoutSettingsController;
+use App\Shared\Settings\OperationalSettingsController;
 use App\Shared\Settings\ReferenceController;
 use Illuminate\Support\Facades\Route;
 
@@ -57,6 +58,8 @@ Route::middleware(['auth:sanctum', 'session.fixed', 'session.idle', 'account.act
         Route::get('settings/idle-signout', [IdleSignoutSettingsController::class, 'show']);
         // Staff only; the controller answers the Admin with the mock's message.
         Route::put('settings/idle-signout', [IdleSignoutSettingsController::class, 'update']);
+        Route::get('settings/operational', [OperationalSettingsController::class, 'show']);
+        Route::put('settings/operational', [OperationalSettingsController::class, 'update']);
 
         Route::get('audit-log', [AuditLogController::class, 'index']);
         Route::post('audit/views', [AuditLogController::class, 'view']);
@@ -96,6 +99,7 @@ Route::middleware(['auth:sanctum', 'session.fixed', 'session.idle', 'account.act
         Route::post('calendar/events', [DashboardController::class, 'storeEvent']);
         Route::put('calendar/events/{id}', [DashboardController::class, 'updateEvent'])->whereNumber('id');
         Route::delete('calendar/events/{id}', [DashboardController::class, 'deleteEvent'])->whereNumber('id');
+        Route::post('calendar/events/{id}/restore', [DashboardController::class, 'restoreEvent'])->whereNumber('id');
 
         // Reports (ADR-074, ADR-077): the Admin views the monthly reports; Sports Reports answer the Admin 403 in the controller (ADR-034).
         Route::get('reports/monthly', [ReportController::class, 'monthly']);
@@ -128,6 +132,7 @@ Route::middleware(['auth:sanctum', 'session.fixed', 'session.idle', 'account.act
     });
 
     Route::middleware('role:staff')->group(function (): void {
+        Route::get('audit-log/print', [AuditLogController::class, 'printDocument']);
         Route::post('audit/prints', [AuditLogController::class, 'print']);
 
         // Reference data: read only, Staff (grade levels are for both roles, above).
@@ -148,6 +153,7 @@ Route::middleware(['auth:sanctum', 'session.fixed', 'session.idle', 'account.act
         Route::get('visits/{id}', [VisitController::class, 'show'])->whereNumber('id');
         Route::put('visits/{id}', [VisitController::class, 'update'])->whereNumber('id');
         Route::post('visits/{id}/entered-in-error', [VisitController::class, 'enteredInError'])->whereNumber('id');
+        Route::post('visits/{id}/entered-in-error/undo', [VisitController::class, 'undoEnteredInError'])->whereNumber('id');
         Route::get('visits/{id}/excuse-letter', [VisitController::class, 'letter'])->whereNumber('id');
         Route::post('visits/{id}/excuse-letter/approve', [VisitController::class, 'approveLetter'])->whereNumber('id');
         Route::post('visits/{id}/excuse-letter/replacement', [VisitController::class, 'replaceLetter'])->whereNumber('id');
@@ -172,8 +178,11 @@ Route::middleware(['auth:sanctum', 'session.fixed', 'session.idle', 'account.act
         Route::post('inventory/{id}/dispense', [InventoryController::class, 'dispense'])->whereNumber('id');
         Route::post('inventory/{id}/restock', [InventoryController::class, 'restock'])->whereNumber('id');
         Route::post('inventory/{id}/adjust', [InventoryController::class, 'adjust'])->whereNumber('id');
+        Route::post('inventory/{id}/transactions/{transactionId}/undo', [InventoryController::class, 'undoMovement'])->whereNumber('id')->whereNumber('transactionId');
+        Route::post('inventory/{id}/archive-new', [InventoryController::class, 'archiveNewItem'])->whereNumber('id');
         Route::put('follow-ups/{id}/status', [FollowUpController::class, 'status'])->whereNumber('id');
         Route::post('follow-ups/{id}/reschedule', [FollowUpController::class, 'reschedule'])->whereNumber('id');
+        Route::post('follow-ups/{id}/undo-reschedule', [FollowUpController::class, 'undoReschedule'])->whereNumber('id');
 
         Route::post('students/search', [StudentController::class, 'search']);
         Route::post('students/check-duplicates', [StudentController::class, 'checkDuplicates']);
@@ -184,7 +193,6 @@ Route::middleware(['auth:sanctum', 'session.fixed', 'session.idle', 'account.act
         Route::put('students/{id}', [StudentController::class, 'update'])->whereNumber('id');
         Route::post('students/{id}/archive', [StudentController::class, 'archive'])->whereNumber('id');
         Route::post('students/{id}/restore', [StudentController::class, 'restore'])->whereNumber('id');
-        Route::post('students/{id}/emergency-contacts/{index}/verify', [StudentController::class, 'verifyContact'])->whereNumber(['id', 'index']);
 
         // Staff patients: the Staff role only (ADR-043 item 9).
         Route::get('personnel', [PersonnelController::class, 'index']);
@@ -197,7 +205,6 @@ Route::middleware(['auth:sanctum', 'session.fixed', 'session.idle', 'account.act
         Route::put('personnel/{id}', [PersonnelController::class, 'update'])->whereNumber('id');
         Route::post('personnel/{id}/archive', [PersonnelController::class, 'archive'])->whereNumber('id');
         Route::post('personnel/{id}/restore', [PersonnelController::class, 'restore'])->whereNumber('id');
-        Route::post('personnel/{id}/emergency-contacts/{index}/verify', [PersonnelController::class, 'verifyContact'])->whereNumber(['id', 'index']);
         Route::post('patients/search', [PersonnelController::class, 'searchPatients']);
         Route::get('archive/staff', [ArchiveController::class, 'staff']);
     });

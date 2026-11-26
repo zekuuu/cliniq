@@ -35,7 +35,7 @@ vi.mock('react-chartjs-2', () => {
   return { Bar: Stub, Doughnut: Stub, Line: Stub }
 })
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
 const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Principal', role: 'admin' }
 const ALL = rangeForPreset('all', db().today)
 
@@ -293,7 +293,7 @@ describe('R5: staff patients record sex (ADR-063)', () => {
       admin: await getDashboardSummary({ range: ALL }, ADMIN),
     }
     await saveIncidentStageOne(
-      { personnelId: 'personnel-0002', complaint: 'Fainting', vitals: db().incidents[0].vitals },
+      { personnelId: 'personnel-0002', complaint: 'Fainting' },
       STAFF,
     )
     const staffTotal = (s: DashboardSummary) =>

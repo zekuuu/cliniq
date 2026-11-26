@@ -6,8 +6,31 @@ import { getRecordedAuditEntries, getStudent, recordPrint } from '../../lib/mock
 import { selectOption } from '../../test/selectOption'
 import { AuditLogPage } from './AuditLogPage'
 import { maskLrn } from '../../lib/lrn'
+import { auditLogPrintUrl } from './api/auditLogApi'
 
-const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' } as const
+const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
+
+it('passes the applied audit filters and sort to the streamed print route', () => {
+  const url = new URL(
+    auditLogPrintUrl(
+      {
+        from: '2026-11-01',
+        to: '2026-11-30',
+        userId: '7',
+        actionTypes: ['update', 'archive'],
+        targetTypes: ['student'],
+      },
+      'allergies',
+      { key: 'user', direction: 'ascending' },
+    ),
+    'http://localhost',
+  )
+  expect(url.pathname).toBe('/api/audit-log/print')
+  expect(url.searchParams.get('search')).toBe('allergies')
+  expect(url.searchParams.get('sort')).toBe('user')
+  expect(url.searchParams.getAll('actionTypes[]')).toEqual(['update', 'archive'])
+  expect(url.searchParams.getAll('targetTypes[]')).toEqual(['student'])
+})
 
 function renderPage() {
   return render(
@@ -46,7 +69,7 @@ describe('Audit Log', () => {
 
     await screen.findByText(/7 entries shown/)
     const [table] = screen.getAllByRole('table', { name: 'Filtered audit log' })
-    expect(within(table).getAllByText('Demo Admin')).toHaveLength(7)
+    expect(within(table).getAllByText('Gilan Avelida')).toHaveLength(7)
   })
 
   it('searches the visible user, action, and target text and clears with the other filters', async () => {

@@ -25,7 +25,9 @@ import { paths } from '../../routes/paths'
 import { notify } from '../../lib/notify'
 import { scrollToTop } from '../../lib/scrollToTop'
 import {
+  archiveNewInventoryItem,
   fetchInventoryForm,
+  fetchInventoryItem,
   findDuplicateItem,
   saveInventoryItem,
   unitSuggestions,
@@ -88,7 +90,7 @@ function UsedForField({
   const errorId = useId()
   const box = 'size-4 cursor-pointer accent-brand-green-dark'
   const row =
-    'flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-text-primary transition-colors hover:bg-surface motion-reduce:transition-none'
+    'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-text-primary'
   return (
     <fieldset aria-describedby={error ? `${hintId} ${errorId}` : hintId} className="md:col-span-2">
       <legend className="text-sm font-semibold text-text-primary">
@@ -275,11 +277,63 @@ export function InventoryFormPage() {
     setSaved('')
     setSaving(true)
     try {
+      const before = itemId ? await fetchInventoryItem(itemId) : null
       const item = await saveInventoryItem(initial, { itemId })
       setSaved(item.name)
-      notify.success(itemId ? `Changes to ${item.name} saved` : `${item.name} added`, {
-        id: 'inventory-item',
-      })
+      if (before && itemId) {
+        const symptomOptions = data?.symptomOptions ?? []
+        notify.undoable(
+          `Changes to ${item.name} saved`,
+          () =>
+            saveInventoryItem(
+              {
+                name: before.name,
+                category: before.category,
+                currentStock: String(before.currentStock),
+                unit: before.unit,
+                expirationDate: before.expirationDate ?? '',
+                lowStockThreshold: String(before.lowStockThreshold),
+                noExpirationConfirmed: false,
+                brand: before.brand ?? '',
+                avoidIfAllergicTo: (before.avoidIfAllergicTo ?? []).join(', '),
+                usedFor: (before.usedFor ?? []).filter((tag) => symptomOptions.includes(tag)),
+                usedForOther: otherOf(before.usedFor ?? [], symptomOptions),
+              },
+              { itemId },
+            ),
+          {
+            undone: 'Undone: inventory item restored',
+            checkCurrent: async () => {
+              const current = await fetchInventoryItem(itemId)
+              return (
+                current.name === item.name &&
+                current.category === item.category &&
+                current.unit === item.unit &&
+                current.lowStockThreshold === item.lowStockThreshold &&
+                current.brand === item.brand &&
+                JSON.stringify(current.avoidIfAllergicTo) ===
+                  JSON.stringify(item.avoidIfAllergicTo) &&
+                JSON.stringify(current.usedFor) === JSON.stringify(item.usedFor)
+              )
+            },
+            onUndone: reload,
+            onFailed: reload,
+          },
+        )
+      } else
+        notify.undoable(`${item.name} added`, () => archiveNewInventoryItem(item.id), {
+          undone: 'Undone: new inventory item archived',
+          checkCurrent: async () => {
+            const current = await fetchInventoryItem(item.id)
+            return (
+              !current.archivedAt &&
+              current.name === item.name &&
+              current.batches.length === item.batches.length &&
+              current.currentStock === item.currentStock
+            )
+          },
+          onUndone: reload,
+        })
       // ADR-083: a new item starts a blank form; an edit keeps what was just saved.
       if (!itemId) setValues(null)
       setUsedForError('')
@@ -442,7 +496,7 @@ export function InventoryFormPage() {
                           : undefined
                       }
                     />
-                    <label className="flex cursor-pointer items-start gap-2 rounded-md border border-border bg-surface px-3 py-2.5 text-sm text-text-primary transition-colors hover:bg-background motion-reduce:transition-none">
+                    <label className="flex items-start gap-2 rounded-md border border-border bg-surface px-3 py-2.5 text-sm text-text-primary transition-colors motion-reduce:transition-none">
                       <input
                         type="checkbox"
                         checked={initial.noExpirationConfirmed}

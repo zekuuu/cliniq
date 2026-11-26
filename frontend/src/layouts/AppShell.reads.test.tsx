@@ -17,7 +17,7 @@ vi.mock('../lib/data', async (importOriginal) => {
   }
 })
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
 // The shell's own reads: the account, the idle limit (ADR-078) and the reminders.
 const SHELL_READS = [
   data.getOwnAccount,

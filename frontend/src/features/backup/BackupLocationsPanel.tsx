@@ -8,6 +8,7 @@ import { useSaveFeedback } from '../../hooks/useSaveFeedback'
 import type { BackupLocation, BackupLocationSettings, SessionUser } from '../../lib/data'
 import {
   fetchBackupFolders,
+  fetchBackupLocations,
   saveLocation,
   setLocationEnabled,
   type BackupDrive,
@@ -77,6 +78,22 @@ export function BackupLocationsPanel({
     }
     const result = await feedback.run(() => saveLocation({ label, path }, { actor: viewer }), {
       saved: `${label.trim()} added. Backups now go there too`,
+      undo: (location) => ({
+        run: () => setLocationEnabled(location.id, false, viewer),
+        undone: `Undone: ${location.label} disabled`,
+        checkCurrent: async () => {
+          const current = (await fetchBackupLocations()).locations.find(
+            (candidate) => candidate.id === location.id,
+          )
+          return (
+            current?.enabled === true &&
+            current.label === location.label &&
+            current.path === location.path
+          )
+        },
+        onUndone: onChanged,
+        onFailed: onChanged,
+      }),
       failed: (cause) => {
         const api =
           cause instanceof ApiError
@@ -106,7 +123,12 @@ export function BackupLocationsPanel({
         () => setLocationEnabled(location.id, location.enabled, viewer),
         {
           undone: `Undone: ${location.label} ${location.enabled ? 'enabled' : 'disabled'} again`,
+          checkCurrent: async () =>
+            (await fetchBackupLocations()).locations.some(
+              (current) => current.id === location.id && current.enabled === !location.enabled,
+            ),
           onUndone: onChanged,
+          onFailed: onChanged,
         },
       )
       onChanged()

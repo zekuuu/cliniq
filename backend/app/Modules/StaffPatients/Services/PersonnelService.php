@@ -202,28 +202,6 @@ final class PersonnelService
         return $this->find($id)->toArray();
     }
 
-    /**
-     * Marks one emergency contact verified or unverified; `$index` is its place in the list, 0 being the primary.
-     *
-     * @return array<string, mixed>
-     */
-    public function verifyContact(int $id, int $index, bool $verified, int $userId): array
-    {
-        $this->find($id);
-        $contactId = DB::table('personnel_emergency_contacts')->where('personnel_id', $id)->where('sort_order', $index)->value('id');
-        abort_if($contactId === null, 404);
-        DB::transaction(function () use ($id, $contactId, $verified, $userId): void {
-            $now = CarbonImmutable::now();
-            DB::table('personnel_emergency_contacts')->where('id', $contactId)->update(['is_verified' => $verified ? 1 : 0]);
-            $this->audit->record(new AuditEvent(
-                actorId: (string) $userId, actorRole: 'staff', action: AuditAction::Update, targetType: AuditTarget::Staff,
-                targetId: (string) $id, targetLabel: null, at: $now, subjectPersonnelId: (string) $id, summary: $verified ? 'Marked an emergency contact verified.' : 'Marked an emergency contact unverified.',
-            ));
-        });
-
-        return $this->find($id)->toArray();
-    }
-
     /** @return list<string> `personnel_types` in `reference_settings` */
     public function types(): array
     {
@@ -254,7 +232,7 @@ final class PersonnelService
             $mine = array_values($contacts->filter(fn (object $c): bool => Row::int($c, 'personnel_id') === $id)
                 ->map(fn (object $c): array => [
                     'name' => (string) Row::str($c, 'name'), 'relationship' => Row::str($c, 'relationship') ?? '',
-                    'phone' => (string) Row::str($c, 'phone'), 'verified' => Row::str($c, 'is_verified') === '1',
+                    'phone' => (string) Row::str($c, 'phone'),
                 ])->all());
 
             return [$id => PersonnelRecord::fromRow($r, $labels('allergy'), $labels('condition'), $mine)];
@@ -263,7 +241,7 @@ final class PersonnelService
 
     /**
      * @param  array<string, list<string>>  $health
-     * @param  list<array{name: string, relationship: string, phone: string, verified: bool}>  $contacts
+     * @param  list<array{name: string, relationship: string, phone: string}>  $contacts
      */
     private function writeDetails(int $id, array $health, array $contacts, int $userId): void
     {
@@ -277,7 +255,7 @@ final class PersonnelService
         foreach ($contacts as $i => $c) {
             DB::table('personnel_emergency_contacts')->insert([
                 'personnel_id' => $id, 'name' => $c['name'], 'relationship' => $c['relationship'] === '' ? null : $c['relationship'],
-                'phone' => $c['phone'], 'is_primary' => $i === 0 ? 1 : 0, 'sort_order' => $i, 'is_verified' => $c['verified'] ? 1 : 0,
+                'phone' => $c['phone'], 'is_primary' => $i === 0 ? 1 : 0, 'sort_order' => $i,
             ]);
         }
     }

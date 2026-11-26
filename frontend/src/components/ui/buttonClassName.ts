@@ -109,7 +109,6 @@ const DONE_VERBS: Record<string, string> = {
   set: 'Set',
   submit: 'Submitted',
   update: 'Updated',
-  verify: 'Verified',
 }
 
 /**

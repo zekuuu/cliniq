@@ -49,6 +49,10 @@ Added Sunday, November 15, 2026 — 23:26 PHT for ADR-080. Two servers: the API 
 
 **The clinic-PC build.** Build the frontend with `VITE_API_MODE=api` and no `VITE_API_URL`: it then calls the relative `/api`, served beside it at `http://localhost` (see "Clinic PC only" below), with no CORS needed.
 
+**Small local Simulation data (ADR-092).** On a disposable `cliniq_testing`, `cliniq_load` or `cliniq_check_*` database only, `php artisan migrate:fresh --seed --env=testing --force` builds five linked fictional records per daily-use list and the three fictional development accounts. The testing environment selects `cliniq_migrate`; the default local environment selects `cliniq_app`, which cannot drop `audit_logs`. Verify both the database and account before running (see `COMMANDS.md`). `migrate:fresh` drops tables before the seeder's production/database guard can run, so never use this command on the clinic database. A second `php artisan db:seed --env=testing` skips a database that already has users or patient records.
+
+The small seed shows realistic fictional labels and varied cases across grades, visits, incidents, supplies, calendar events and reports. Its internal class and console output still say “Simulation.” Existing seeded rows are not rewritten by a code update; use a verified disposable database for a fresh seed.
+
 ## MariaDB hardening
 
 Do this once on Zean's own machine. XAMPP's MariaDB ships listening on the network, with a blank `root` password. Run the SQL with `C:\xampp\mysql\bin\mysql.exe -u root`.
@@ -147,6 +151,8 @@ Rewritten Sunday, November 08, 2026 — 18:35 PHT for ADR-079, which reinforces 
 ## Speed and reliability settings for the clinic PC (ADR-082)
 
 Added Thursday, November 19, 2026 — 12:18 PHT. Apply these on the clinic PC, **not** on a development machine. They were measured against the five-year load-test school (`backend/tools/load/`, 63 MB of data, about 100,000 audit entries) on Zean's machine. None of them changes what the system does.
+
+Follow-up measurement (Wednesday, November 25, 2026 — 22:54 PHT): the cold Login painted in 2,412 ms through Vite dev and 272 ms through a production preview on this computer, without loading student data. Use the built frontend and the Apache/PHP settings below for the clinic PC; do not judge its page speed from `npm run dev` or `php artisan serve`. The four-size API and browser numbers, with their limits, are in [November 25 performance notes](../08-Logs/Load-Test-Nov25/NOTES.md).
 
 **1. Cache Laravel's configuration, routes, events and views.** Run this from `backend\` after every update and after any change to `.env`:
 

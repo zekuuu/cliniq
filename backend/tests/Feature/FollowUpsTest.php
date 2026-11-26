@@ -55,6 +55,14 @@ it('reschedules a missed follow-up once, writing it Missed, and hides it from th
     expect(collect($this->getJson('/api/follow-ups')->json('data'))->where('reason', 'Stale')->pluck('status')->all())->toBe(['pending']);
 });
 
+it('undoes a new follow-up date by cancelling its row and allows a new reschedule', function () {
+    $newId = $this->postJson("/api/follow-ups/{$this->stale}/reschedule", ['followUpDate' => '2026-11-20'])->assertCreated()->json('data.id');
+    $this->postJson("/api/follow-ups/{$newId}/undo-reschedule")->assertOk()->assertJsonPath('data.status', 'cancelled');
+    $this->postJson("/api/follow-ups/{$newId}/undo-reschedule")->assertStatus(409);
+    expect(DB::table('follow_ups')->where('id', $this->stale)->value('status'))->toBe('missed');
+    $this->postJson("/api/follow-ups/{$this->stale}/reschedule", ['followUpDate' => '2026-11-21'])->assertCreated();
+});
+
 it('closes stale follow-ups as Missed with the daily command', function () {
     $this->artisan('cliniq:close-missed-follow-ups')->expectsOutput('1 follow-ups closed as missed.')->assertSuccessful();
     expect(DB::table('follow_ups')->where('id', $this->stale)->value('status'))->toBe('missed')

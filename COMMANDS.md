@@ -28,6 +28,7 @@ Databases:
 | `set DB_DATABASE=cliniq_check_pest` then `composer check` | backend | Pint + PHPStan + Pest on a scratch database |
 | `composer test` / `composer check` | backend | ⚠ Without the line above, empties `cliniq_testing` |
 | `php artisan migrate:fresh --seeder="App\Shared\Database\DemoSchoolSeeder" --env=testing --force` | backend | ⚠ Wipe `cliniq_testing` and seed the demo school (five years, to February 28, 2027) |
+| `php artisan migrate:fresh --seed --env=testing --force` | backend | ⚠ Wipe `cliniq_testing` with the migration account, then seed five linked fictional records per daily-use list |
 | `php artisan migrate:fresh` | backend | ⚠ Drop every table and migrate again |
 | `php artisan migrate:rollback` | backend | ⚠ Undo the last migration batch |
 | `php artisan cliniq:create-admin <username> --name="Full Name"` | backend | Create the first Admin with a one-time password |
@@ -94,7 +95,7 @@ composer check
 `composer check` runs Pint, then PHPStan, then Pest, and stops at the first failure. One file: `vendor/bin/pest tests/Feature/SomeTest.php`; by name: `vendor/bin/pest --filter="creates a visit"` (same warning).
 
 ### `php tools/db-checks.php`
-Loads `Reference-Schema.sql` into `cliniq_check_ref`, migrates into `cliniq_check_mig`, compares tables, columns, indexes and CHECK constraints (expects 48 tables, 462 columns), and runs the constraint tests. Uses `.env.testing` and drops both scratch databases at the end.
+Loads `Reference-Schema.sql` into `cliniq_check_ref`, migrates into `cliniq_check_mig`, compares tables, columns, indexes and CHECK constraints (expects 47 tables, 452 columns), and runs the constraint tests. Uses `.env.testing` and drops both scratch databases at the end.
 
 ---
 
@@ -110,6 +111,9 @@ Wipes the database and seeds the fictional demo school: 900+ students this year,
 
 ### `php artisan migrate:fresh` / `migrate:rollback`
 `migrate:fresh` **drops every table** in the database `.env` points to, then migrates from the start. `migrate:rollback` undoes the last batch (`--step=1` for one migration). Never run either on real clinic data. Check with `php artisan db:show` which database is connected first.
+
+### `php artisan migrate:fresh --seed --env=testing --force`
+Run from `backend/`. With `--env=testing`, Laravel loads the migration account from the testing environment; the normal local environment uses `cliniq_app`, which has no `DROP` privilege on `audit_logs` and fails at the first step. On the disposable `cliniq_testing` database, the command wipes tables and calls `SimulationSeeder` by default (ADR-092): three fictional development accounts and five linked records for each daily-use list. For `cliniq_load` or `cliniq_check_*`, set `DB_DATABASE` explicitly. Before running, check the selected database and account with `php artisan tinker --env=testing --execute="dump(DB::getDatabaseName(), DB::connection()->getConfig('username'));"`; use the result only if it names the intended disposable database and `cliniq_migrate`. The seeder refuses production, but Laravel drops tables **before** the seeder guard runs. Never point this command at clinic data.
 
 ### `php artisan tinker`
 Anything you write in it changes the real database.
@@ -155,6 +159,8 @@ Run it after editing `.env` if the change does not take effect.
 
 ### `php artisan optimize`
 Clinic PC only (ADR-082): caches the configuration, routes, events and views. Run it after every update and after any `.env` change (`optimize:clear` first, edit, then `optimize` again). Never on a development machine: the cached configuration ignores the load-test vhost's `SetEnv DB_DATABASE`. Details: Environment-Setup.md, "Speed and reliability settings for the clinic PC".
+
+The [November 25 four-size check](CLINIQ-Knowledge-Base/08-Logs/Load-Test-Nov25/NOTES.md) found that Vite dev's cold Login took 2,412 ms to first paint versus 272 ms in a production preview on this computer. For clinic speed checks, build the frontend (`npm run build` in `frontend/`) and use the documented Apache setup. Those numbers are local measurements, not a clinic PC guarantee.
 
 ---
 

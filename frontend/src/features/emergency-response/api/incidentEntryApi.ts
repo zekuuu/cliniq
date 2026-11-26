@@ -62,17 +62,20 @@ export interface EscalationPrefill extends Partial<PatientRef> {
 
 export interface StageOneIncidentInput extends PatientRef {
   complaint: string
-  /** All optional; only the readings taken are saved. */
-  readings: ReadingValues
   generalNotes?: string
-  /** The escalated visit's time (ADR-036). */
+  /** Actual incident time; defaults to now in the form. */
   time?: string
+  /** Only a visit escalation carries a temperature into Stage 1. */
+  carriedTemperatureC?: number | null
   sourceVisitId?: string
 }
 
 export interface StageTwoIncidentInput {
   incidentId: string
   complaint: string
+  time: string
+  arrivedAtClinic: string | null
+  readingTimes: Partial<Record<keyof ReadingValues, string>>
   /** All optional; only the readings taken are saved. */
   readings: ReadingValues
   treatmentNotes: string
@@ -170,7 +173,7 @@ export function findIncidentPatient(ref: PatientRef): Promise<Patient> {
   return getPatient(ref)
 }
 
-/** Stage 1 needs only the complaint, plus whichever readings were taken; the layer logs it as its own event. */
+/** Stage 1 saves the patient, complaint, actual event time and optional notes. */
 export function saveStageOneIncident(
   input: StageOneIncidentInput,
   user: SessionUser,
@@ -180,9 +183,9 @@ export function saveStageOneIncident(
       studentId: input.studentId,
       personnelId: input.personnelId,
       complaint: input.complaint,
-      vitals: storedReadings(input.readings),
       generalNotes: input.generalNotes,
       time: input.time,
+      carriedTemperatureC: input.carriedTemperatureC,
       sourceVisitId: input.sourceVisitId,
     },
     user,
@@ -197,6 +200,9 @@ export function completeStageTwoIncident(
     {
       incidentId: input.incidentId,
       complaint: input.complaint,
+      time: input.time,
+      arrivedAtClinic: input.arrivedAtClinic,
+      readingTimes: input.readingTimes,
       vitals: { ...storedReadings(input.readings), treatmentNotes: input.treatmentNotes },
       hospitalReferral: input.hospitalReferral,
       newParentNotifications: input.parentNotifications,

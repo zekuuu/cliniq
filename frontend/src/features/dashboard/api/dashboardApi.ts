@@ -78,6 +78,7 @@ export {
   CalendarEventValidationError,
   createCalendarEvent,
   deleteCalendarEvent,
+  restoreCalendarEvent,
   updateCalendarEvent,
   validateCalendarEvent,
   type CalendarEventErrors,

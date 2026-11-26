@@ -1,6 +1,8 @@
 # Start Here for the SRS and Project Plan
 
-Last checked against the code on Monday, November 23, 2026 — 18:07 PHT for the docs-only sync of `main` at `0a178b0` (9 documentation commits committed; no product behavior, ADR, route, or number changes); on Sunday, November 22, 2026 — 14:29 PHT for the docs-only sync of `main` at `9da38fa` (the generated Project Plan and SRS copies now live in their section folders; no product behavior or Facts-sheet number changed); on Sunday, November 22, 2026 — 02:22 PHT for the docs sync of `main` at `1c41f73` (ADR-085, ADR-086, ADR-087: Undo and restore, the top-bar search, the LRN last-4 search); on Sunday, November 22, 2026 — 00:52 PHT for the docs sync of `main` at `b9fd646` (ADR-084, the realistic five-year demo school to February 28, 2027); on Friday, November 20, 2026 — 01:54 PHT for the docs sync of `main` at `533df61` (ADR-082, ADR-083, the emergency-contact check, the demo seeder) and the Overview's frequent-visitor pager; on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). All of that code is on `main` since Wednesday, November 18, 2026 (ADR-081). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
+Last checked against the code on Thursday, November 26, 2026 — 14:40 PHT (ADR-088 through ADR-094, including incident event timing).
+
+Earlier checked against the code on Monday, November 23, 2026 — 18:07 PHT for the docs-only sync of `main` at `0a178b0` (9 documentation commits committed; no product behavior, ADR, route, or number changes); on Sunday, November 22, 2026 — 14:29 PHT for the docs-only sync of `main` at `9da38fa` (the generated Project Plan and SRS copies now live in their section folders; no product behavior or Facts-sheet number changed); on Sunday, November 22, 2026 — 02:22 PHT for the docs sync of `main` at `1c41f73` (ADR-085, ADR-086, ADR-087: Undo and restore, the top-bar search, the LRN last-4 search); on Sunday, November 22, 2026 — 00:52 PHT for the docs sync of `main` at `b9fd646` (ADR-084, the realistic five-year demo school to February 28, 2027); on Friday, November 20, 2026 — 01:54 PHT for the docs sync of `main` at `533df61` (ADR-082, ADR-083, the emergency-contact check, the demo seeder) and the Overview's frequent-visitor pager; on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). All of that code is on `main` since Wednesday, November 18, 2026 (ADR-081). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
 
 ## CLINIQ in five lines
 
@@ -61,7 +63,7 @@ For the Project Plan and the SRS. This covers `main` after `b9fd646` (Saturday, 
 | Frontend tests passing | 1278 | **1285** | `08-Logs/Agent-Sessions/2026-11-22-top-bar-search.md`, not re-run; 2 tests were added after it |
 | Lines of code (non-blank) | frontend 70826, backend 17009 | frontend **71265**, backend **17106** | "Lines of code" |
 
-Unchanged: 48 tables, 50 migrations, 34 screens, 27 backend test files, 2 roles. The frontend router is unchanged too (the Facts-sheet line "Frontend routes").
+Unchanged: 47 tables, 34 screens, 27 backend test files, 2 roles. The frontend router is unchanged too (the Facts-sheet line "Frontend routes").
 
 **Features added or changed**
 
@@ -96,7 +98,7 @@ For the Project Plan and the SRS. This covers `main` after `533df61` (Thursday, 
 | Frontend tests passing | 1277 | **1278** | same session log, not re-run |
 | Lines of code (non-blank) | frontend 70710, backend 16359 | frontend **70826**, backend **17009** | "Lines of code" |
 
-Unchanged: 48 tables, 462 columns, 260 constraint tests, 50 migrations, 131 API routes, 34 screens, 152 frontend and 27 backend test files, 2 roles. The frontend router is unchanged too (the Facts-sheet line "Frontend routes").
+Unchanged at that historical sync: 47 tables, 462 columns, 257 schema constraint cases, 131 API routes, 34 screens, 152 frontend and 27 backend test files, 2 roles. The frontend router was unchanged too (the Facts-sheet line "Frontend routes").
 
 **Features added or changed**
 
@@ -138,13 +140,13 @@ For the Project Plan and the SRS. This covers `main` after `6ab8d95` (Wednesday,
 | Backend tests passing | 236 (Wednesday, November 18) | **251** (1,623 assertions) | `08-Logs/Agent-Sessions/2026-11-19-performance-server-paging.md`, Thursday, November 19, 2026, not re-run |
 | Lines of code (non-blank) | frontend 69270, backend 14562 | frontend **70710**, backend **16359** | "Lines of code" |
 
-Unchanged: 48 tables, 462 columns, 260 constraint tests, 50 migrations, 34 screens, 11 backend modules, 3 scheduled jobs, 2 roles. The frontend router is unchanged too (47, the Facts-sheet line "Frontend routes").
+Unchanged at that historical sync: 47 tables, 462 columns, 257 schema constraint cases, 34 screens, 11 backend modules, 3 scheduled jobs, 2 roles. The frontend router was unchanged too (47, the Facts-sheet line "Frontend routes").
 
 **Features added or changed**
 
 - **Server paging (ADR-082).** The Visit Log, Incident Log, Follow-Ups, Student List, Incomplete Records, Audit Log and Usage History fetch one page at a time; search, filters and sorting run on the server over every record. A printout still loads every matching record. Measured on the one-year demo school: the Visit Log's first page went from about 2.1 s to 105–148 ms and the Audit Log's from 9.5 s to 96–140 ms (`2026-11-19-performance-server-paging.md`).
 - **Toasts and form reset (ADR-083).** Every save, status change, copy, backup and sign-out reports in one bottom-right toast with a shrinking time line; field errors stay beside the fields; a successful new-record form clears and scrolls to the top. Toasts carry no health detail.
-- **Emergency contacts.** A contact can be marked verified, or unverified, with one click on the Student and Staff profiles.
+- **Emergency contacts.** Student and staff emergency contacts record only the person, relationship and phone. Their former in-app verification state was removed by ADR-088; backup verification is unchanged.
 - **Demo school seeder.** `DemoSchoolSeeder` rebuilds the fictional demo school up to the current day with one command, the same every time (`backend/tools/load/README.md`).
 - **Smaller changes.** Dashboard chips with a count of 0 are hidden; the backup file names are clearer and "Back up now" works under `php artisan serve`; a larger school logo on Login; a contrast fix on the import steps and the shortcut tips.
 
@@ -159,7 +161,7 @@ Unchanged: 48 tables, 462 columns, 260 constraint tests, 50 migrations, 34 scree
 ## Changes on Wednesday, November 18, 2026: everything merged into `main`
 
 - **Where the code is.** Everything is on `main` now: the frontend, the backend and the connection between them. Read `main`; the other branches are kept for history only.
-- **Numbers.** Quote the [Facts sheet](Facts-Sheet.md), regenerated on the merged `main`. Unchanged: 48 tables, 462 columns, 260 constraint tests, 127 API routes, 50 migration files. Changed only because they are now counted from the connected frontend: frontend test files **148**, frontend lines **69270**; decision records **81**.
+- **Numbers at the November 18 sync.** Quote the [Facts sheet](Facts-Sheet.md) for current counts. At that sync: 47 tables, 462 columns, 257 schema constraint cases and 131 API routes. Counts changed then because they were taken from the connected frontend: frontend test files **148**, frontend lines **69270**; decision records **81**.
 - **Decision added.** [ADR-081](../06-Decisions/ADR-081-Backend-Merged-Into-Main-Main-Holds-The-Whole-System.md): the backend is merged into `main`; it replaces only ADR-056's own-branch rule.
 - **Statements that are now wrong:** any sentence saying the backend is not on `main`, or that the frontend and backend are not connected.
 - **The old state.** The frontend-only `main` (sample data, no backend) is the tag [`checkpoint-frontend-only-2026-11-18`](https://github.com/zekuuu/cliniq/tree/checkpoint-frontend-only-2026-11-18).
@@ -220,7 +222,7 @@ Unchanged then: 131 API routes, 128 contract entries naming 129 endpoints (count
 | [`03-Design`](../03-Design/) | Design system, screen inventory, [screenshots](../03-Design/assets/screens/) |
 | [`04-Development`](../04-Development/) | Phases, API contract, set-up, the build manuals |
 | [`05-Testing`](../05-Testing/) | Test strategy and where the tests are |
-| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-087 and their indexes |
+| [`06-Decisions`](../06-Decisions/) | ADR-001 to ADR-094 and their indexes |
 | [`09-References`](../09-References/) | Canonical documents, Privacy Policy |
 | `frontend/`, `backend/` | The code: the frontend and the backend, both on `main` (see [Where things live](#where-things-live)) |
 
@@ -281,7 +283,7 @@ Unchanged then: 131 API routes, 128 contract entries naming 129 endpoints (count
 
 ## Decided but not built, and built but not tested on real hardware
 
-**Built:** every screen ([screenshots](../03-Design/assets/screens/)), on sample data by default and on the real API behind a mock/API switch (ADR-080; each module checked in a real browser). The backend, phases B0 to B10, on `main`: real sign-in with lock-out and password recovery, saving to the database, the audit log in the database, real backups and three scheduled jobs; 133 routes, 231 tests pass. A deterministic 900-student test school and a load bench (`backend/tools/load/`, on `feat/connect-frontend`); the measurements are not finished. The 50 migrations (48 create a table, 2 ship product data) run on MariaDB and match the approved schema; its 260 constraint tests pass. Numbers: [Facts sheet](Facts-Sheet.md).
+**Built:** every screen ([screenshots](../03-Design/assets/screens/)), on sample data by default and on the real API behind a mock/API switch (ADR-080; each module checked in a real browser). The backend, phases B0 to B10, on `main`: real sign-in with lock-out and password recovery, saving to the database, the audit log in the database, real backups and three scheduled jobs; 139 routes, 262 tests pass. A deterministic 900-student test school and a load bench (`backend/tools/load/`, on `feat/connect-frontend`); the measurements are in [the performance notes](../08-Logs/Load-Test-Nov25/NOTES.md). The migrations run on MariaDB and match the approved schema; its 259 remaining constraint tests pass. Numbers: [Facts sheet](Facts-Sheet.md).
 
 **Decided, not built:** a written restore procedure.
 

@@ -2,12 +2,12 @@
 
 > **STATUS: Approved by Zean, Sunday, November 1, 2026 — 01:39 PHT (ADR-057); changes after this go through a new decision.** Drafted Friday, October 09, 2026 — 00:29 PHT. Migrations are built from it in phase B1, in the order of section 13.
 >
-> Editable overview in Lucidchart (same 48 tables, 53 relationships): [CLINIQ ERD (APPROVED, 48 tables) — Overview](https://lucid.app/lucidchart/65191fd0-5a22-4b15-820f-f48f75dcedad/edit). [`Reference-Schema.sql`](./Reference-Schema.sql) is the source of truth; the Lucid copy is for viewing and editing the picture only.
+> Editable overview in Lucidchart (a pre-ADR-088 snapshot): [CLINIQ ERD (APPROVED, 48 tables) — Overview](https://lucid.app/lucidchart/65191fd0-5a22-4b15-820f-f48f75dcedad/edit). [`Reference-Schema.sql`](./Reference-Schema.sql) is the source of truth; the Lucid copy needs the ADR-088 update before it is used for editing.
 >
 
 > **Updated Sunday, November 08, 2026 — 18:35 PHT, following ADR-078, which amends ADR-015, ADR-048 and ADR-057:** `system_settings` replaces `admin_idle_minutes` with two keys, `idle_signout_minutes_staff` (60) and `idle_signout_minutes_admin` (30), each 10 to 240 by `chk_settings_idle_signout`. Staff edit them; the Admin reads. No new table or column. 260 constraint tests pass.
 >
-> **Updated Saturday, November 07, 2026 — 16:12 PHT, following this approved ERD through [ADR-076](../../06-Decisions/ADR-076-Staff-Record-Reviews-In-Their-Own-Table.md):** a new table `staff_record_reviews` holds the staff Incomplete Records queue (ADR-067), mirroring `student_record_reviews` without the import columns. 48 tables; 254 constraint tests pass on MariaDB 10.11.16; the overview diagram is regenerated. Settles counter-check C-1.
+> **Updated Wednesday, November 25, 2026 — 10:33 PHT, through [ADR-088](../../06-Decisions/ADR-088-Remove-Emergency-Contact-Verification.md):** student and staff emergency-contact verification and its history table are removed. The approved schema now has 47 tables; backup verification is unchanged.
 >
 > **Updated Saturday, November 07, 2026 — 13:24 PHT, following this approved ERD through [ADR-071](../../06-Decisions/ADR-071-Suggested-Medicines-From-Item-Tags.md), [ADR-072](../../06-Decisions/ADR-072-Archive-By-School-Year.md), [ADR-073](../../06-Decisions/ADR-073-Password-Recovery-With-An-Authenticator-App.md) and [ADR-075](../../06-Decisions/ADR-075-School-Year-Started-By-Hand.md) (with their dated amendments):** three new tables, **47** in all: `inventory_item_symptom_tags` (an item's "Commonly used for" symptoms), `school_years` (years started and ended by hand) and `recovery_codes` (authenticator recovery). New columns: `users.totp_secret`, `totp_confirmed_at`, `last_totp_step`; `students` and `personnel` `archive_reason` and `archived_school_year`. Removed: `users.email` and `uq_users_email`, since the email reset of ADR-048 is replaced by ADR-073. Five school-year settings in `system_settings`. No Clinic Overview printout exists any more ([ADR-074](../../06-Decisions/ADR-074-No-Clinic-Overview-Printout.md)); nothing in the schema depended on it. Loaded into MariaDB 10.11.16; the constraint tests pass (247 of 247).
 >
@@ -66,16 +66,16 @@ Important fact worth stating early: **XAMPP ships MariaDB.** Laravel connects to
 
 **History and derived data**
 
-- **L-1.** Event history is append-only: `inventory_transactions`, `audit_logs`, `incident_vital_readings`, `parent_notification_attempts`, `emergency_contact_verifications`. A correction is a new row.
+- **L-1.** Event history is append-only: `inventory_transactions`, `audit_logs`, `incident_vital_readings` and `parent_notification_attempts`. A correction is a new row.
 - **L-2.** Permanent documents carry a **snapshot** (`excuse_letters.snapshot_text`, `incident_report_approvals.snapshot_text`; item name and unit on `treatment_item_lines`) so a later rename or grade change cannot rewrite them.
-- **L-3.** **Derived values are never stored**: record-complete, low-stock, nearing-expiry, expired, below-zero, follow-up due state, frequent visitor, symptom cluster, report data, calendar counts. The mock already works this way (`integrity.ts` rejects stored derived fields) and so should the API. The only denormalized values are `inventory_batches.quantity`, `emergency_contacts.is_verified` and `inventory_transactions.stock_after`, each maintained by one service and checkable by a nightly job (section 8).
+- **L-3.** **Derived values are never stored**: record-complete, low-stock, nearing-expiry, expired, below-zero, follow-up due state, frequent visitor, symptom cluster, report data and calendar counts. The mock already works this way (`integrity.ts` rejects stored derived fields) and so should the API. The only denormalized values are `inventory_batches.quantity` and `inventory_transactions.stock_after`, each maintained by one service and checkable by a nightly job (section 8).
 
 **Foreign keys and deletes**
 
-- **F-1.** Shared references are `ON DELETE RESTRICT`. `CASCADE` is used only for rows that cannot exist without their parent: profile parts (`student_health_entries`, `emergency_contacts`, `student_record_reviews`, `emergency_contact_verifications`, `personnel_health_entries`, `personnel_emergency_contacts`, `staff_record_reviews`, `inventory_item_allergy_words`, a student's line on `sports_report_students`), `password_histories`, and the parts of a visit, an incident or a ledger row (section 5). No route deletes those parents, so the only thing that fires these cascades is the purge of section 7.
+- **F-1.** Shared references are `ON DELETE RESTRICT`. `CASCADE` is used only for rows that cannot exist without their parent: profile parts (`student_health_entries`, `emergency_contacts`, `student_record_reviews`, `personnel_health_entries`, `personnel_emergency_contacts`, `staff_record_reviews`, `inventory_item_allergy_words`, a student's line on `sports_report_students`), `password_histories`, and the parts of a visit, an incident or a ledger row (section 5). No route deletes those parents, so the only thing that fires these cascades is the purge of section 7.
 - **F-2.** The target engine is MariaDB. `fk_lines_visit` and `fk_lines_incident` use CASCADE on columns that `chk_lines_one_source` reads, which MySQL 8 refuses (error 3823). Moving to MySQL 8 means keeping those two as RESTRICT, and deleting the lines first in the purge.
 - **F-3.** **Exactly one patient, and composite foreign keys guarantee "same patient".** `visits`, `incidents` and `follow_ups` set `student_id` or `personnel_id`, exactly one (a CHECK, ADR-043); `inventory_transactions` sets at most one. `visits` and `incidents` have `UNIQUE (id, student_id)` and `UNIQUE (id, personnel_id)`, a composite key is skipped when one of its columns is NULL, so each patient kind has its own pair, and `follow_ups`, `pe_referrals` and `inventory_transactions` reference `(visit_id, student_id)` / `(incident_id, student_id)`. The database itself then refuses a follow-up or medicine dispense that points at another student's visit.
-- **F-4.** No global soft-delete. Domain archiving is explicit: `students.archived_at`, `personnel.archived_at`, `inventory_items.archived_at`, `users.deactivated_at`. Visits and incidents are never deleted. A visit recorded by mistake is marked "Entered in error" (`entered_in_error_at`, its reason and who): the row stays, leaves lists and counts, and its stock returns through adjustments (ADR-018).
+- **F-4.** No global soft-delete. Domain archiving is explicit: `students.archived_at`, `personnel.archived_at`, `inventory_items.archived_at`, `users.deactivated_at`; calendar events use `deleted_at` so Undo restores the same event (ADR-089). Visits and incidents are never deleted. A visit recorded by mistake is marked "Entered in error" (`entered_in_error_at`, its reason and who): the row stays, leaves lists and counts, and its stock returns through adjustments (ADR-018). Reinstatement restores dependent state transactionally when it has not changed since the correction (ADR-089).
 
 **Validation layering**
 
@@ -100,7 +100,7 @@ Rendered images live in `Diagrams/` (PNG to view, SVG to zoom, `ERD-Overview.dot
 
 | Image | What it shows |
 |---|---|
-| `Diagrams/ERD-Overview.png` / `.svg` | All 48 tables and their relationships, grouped by module. Regenerated Saturday, November 07, 2026 — 16:12 PHT from `ERD-Overview.dot` (Graphviz compiled to WebAssembly, run outside the repository). |
+| `Diagrams/ERD-Overview.png` / `.svg` | All 47 tables and their relationships, grouped by module. Regenerated from `ERD-Overview.dot`; see the generated diagram date. |
 | `Diagrams/ERD-3.2-Students.png` | Students, grade levels, health entries, contacts, reviews (with `staff_record_reviews`) |
 | `Diagrams/ERD-3.3-Visits.png` | Visits, excuse letters, triage, follow-ups, PE referrals |
 | `Diagrams/ERD-3.4-Emergency.png` | Incidents, vitals, referrals, call attempts, sign-off |
@@ -109,7 +109,7 @@ Rendered images live in `Diagrams/` (PNG to view, SVG to zoom, `ERD-Overview.dot
 
 The five module images (3.2 to 3.6) were regenerated Tuesday, November 10, 2026 — 17:27 PHT (3.2, 3.5 and 3.6 again Saturday, November 14, 2026 — 23:00 PHT, with Chrome) from the Mermaid blocks below, which are now their source; the overview's SVG and PNG were regenerated from `ERD-Overview.dot` at the same time. Command: `npm run docs:diagrams` (see the [diagram index](Diagrams/README.md)).
 
-### 3.1 Overview (all 48 tables)
+### 3.1 Overview (all 47 tables)
 
 ```mermaid
 erDiagram
@@ -118,7 +118,6 @@ erDiagram
     student_import_batches |o--o{ student_record_reviews : "flagged by"
     students ||--o{ student_health_entries : has
     students ||--o{ emergency_contacts : has
-    emergency_contacts ||--o{ emergency_contact_verifications : "verification log"
     students ||--o{ student_record_reviews : "review queue"
     students |o--o{ visits : has
     students |o--o{ incidents : has
@@ -251,14 +250,6 @@ erDiagram
         varchar name
         varchar phone
         tinyint is_primary "one per student"
-        tinyint is_verified
-    }
-    emergency_contact_verifications {
-        bigint id PK
-        bigint contact_id FK
-        varchar result "verified, unverified"
-        varchar verified_with
-        bigint incident_id FK
     }
     student_record_reviews {
         bigint id PK
@@ -278,7 +269,6 @@ erDiagram
     student_import_batches |o--o{ student_record_reviews : "flagged by"
     students ||--o{ student_health_entries : has
     students ||--o{ emergency_contacts : has
-    emergency_contacts ||--o{ emergency_contact_verifications : "verification log"
     students ||--o{ student_record_reviews : "review queue"
     personnel ||--o{ staff_record_reviews : "review queue"
 ```
@@ -326,6 +316,7 @@ erDiagram
         time collected_by_time "ADR-049"
         tinyint late_entry "PROVISIONAL"
         datetime entered_in_error_at "PROVISIONAL, row kept"
+        text entered_error_undo_snapshot "Undo dependent state"
         bigint escalated_incident_id FK "PROVISIONAL, ADR-036"
     }
     excuse_letters {
@@ -401,6 +392,7 @@ erDiagram
         bigint id PK
         bigint student_id FK
         datetime occurred_at
+        datetime arrived_at_clinic_at "optional, pending nurse confirmation"
         varchar complaint
         tinyint stage "1 fast capture, 2 complete"
         text treatment_notes "optional"
@@ -603,6 +595,7 @@ erDiagram
         date start_date
         date end_date
         date last_date "generated"
+        datetime deleted_at "Undo restoration"
     }
     holidays {
         bigint id PK
@@ -693,7 +686,7 @@ erDiagram
 
 ## 4. Table inventory
 
-48 tables. **Core** = a built screen or the mock already needs it; **Spec** = the requirements ask for it but the frontend contract does not carry it yet (build it in that module's phase). Worst-case rows are the stress assumptions used for the performance test, not forecasts.
+47 tables. **Core** = a built screen or the mock already needs it; **Spec** = the requirements ask for it but the frontend contract does not carry it yet (build it in that module's phase). Worst-case rows are the stress assumptions used for the performance test, not forecasts.
 
 | # | Table | Owning module | Tier | Worst-case rows |
 |---|---|---|---|---|
@@ -708,7 +701,6 @@ erDiagram
 | 9 | `students` | StudentRecords | Core | about 2,500 (900 active + 5 years archived) |
 | 10 | `student_health_entries` | StudentRecords | Core | about 5,000 |
 | 11 | `emergency_contacts` | StudentRecords | Core | about 3,000 |
-| 12 | `emergency_contact_verifications` | StudentRecords | Spec | thousands |
 | 13 | `student_record_reviews` | StudentRecords | Core | thousands |
 | 14 | `inventory_items` | InventoryTracker | Core | hundreds |
 | 15 | `visits` | ClinicVisits | Core | 150,000 |
@@ -756,12 +748,11 @@ erDiagram
 |---|---|---|---|
 | `students`, `personnel` | `visits`, `incidents`, `follow_ups`, `inventory_transactions` (and `pe_referrals`, students only) | RESTRICT | Clinical records never vanish by accident; the purge procedure removes them in order. |
 | `students` | `student_health_entries`, `emergency_contacts`, `student_record_reviews`, `sports_report_students` | CASCADE | Parts with no life of their own. A Sports Report keeps its other students. |
-| `emergency_contacts` | `emergency_contact_verifications` | CASCADE | Same. |
 | `personnel` | `personnel_health_entries`, `personnel_emergency_contacts`, `staff_record_reviews` | CASCADE | Same. |
 | `visits` | `excuse_letters`, `treatment_item_lines`, `triage_checks`, `visit_extra_complaints` | CASCADE | Owned by the visit. No route deletes a visit; only the purge does. |
 | `visits` | `follow_ups`, `pe_referrals`, `inventory_transactions`, `incidents.source_visit_id` | RESTRICT | The purge clears these links first, in order. |
 | `incidents` | `incident_vital_readings`, `hospital_referrals`, `parent_notification_attempts`, `incident_report_approvals`, `treatment_item_lines` | CASCADE | Owned by the incident. |
-| `incidents` | `follow_ups`, `pe_referrals`, `inventory_transactions`, `emergency_contact_verifications`, `visits.escalated_incident_id` | RESTRICT | Same as for visits. |
+| `incidents` | `follow_ups`, `pe_referrals`, `inventory_transactions`, `visits.escalated_incident_id` | RESTRICT | Same as for visits. |
 | `inventory_items` | `inventory_transactions`, `treatment_item_lines`, `inventory_batches` | RESTRICT | Items are archived, never deleted. |
 | `inventory_transactions` | `inventory_transaction_batches` | CASCADE | The allocations belong to the ledger row. Ledger rows are never deleted. |
 | `inventory_batches` | `inventory_transaction_batches` | RESTRICT | The ledger stays whole. |
@@ -782,7 +773,7 @@ erDiagram
 
 An approved letter can be replaced: the old row becomes `superseded`, and a visit entered in error makes its letter `voided`. Both stay, and only one `draft` or `approved` letter can be live per visit.
 
-**Incident.** Stage 1 row (complaint + a stage-1 vital reading) → Stage 2 completes the same row (`stage = 2`, `completed_at/by`, a stage-2 reading, optional hospital referral, notification attempts, medicine lines) → optional report sign-off in `incident_report_approvals`.
+**Incident.** Stage 1 row (patient, complaint, actual event time, optional notes; only an escalated visit can carry a temperature) → Stage 2 completes the same row (`stage = 2`, `completed_at/by`, optional timestamped readings, optional clinic arrival, hospital referral, notification attempts, medicine lines) → optional report sign-off in `incident_report_approvals`. `created_at` remains the immutable entry time (ADR-094).
 
 **Follow-up.** `pending` → `completed` / `missed` / `cancelled`; changes are stamped with who and when. "Due today" and "overdue" are derived from the date and status. Overdue starts 3 days after the date, and 7 days after it a pending follow-up closes as Missed (ADR-051).
 
@@ -802,7 +793,7 @@ Policy (`Data-Retention-Policy.md`): archived students and staff patients are ke
 
 A `retention:purge` command (off until the team turns it on, and run only after a verified backup) works through patients whose `archived_at` is older than `retention_years_after_archive`, one transaction per patient. It runs under its own database account. In this order:
 
-1. Delete the student's `emergency_contacts`. Their `emergency_contact_verifications` go with them, which frees the incident link.
+1. Delete the student's `emergency_contacts`.
 2. Clear the two-way link: set `visits.escalated_incident_id` and `incidents.source_visit_id` to NULL for the patient (ADR-036).
 3. Anonymize `inventory_transactions`: set `student_id`, `personnel_id`, `visit_id` and `incident_id` to NULL and replace any `note`. The stock history stays, the person link goes, and the ledger still sums.
 4. Delete the patient's `follow_ups` and `pe_referrals`.
@@ -826,7 +817,6 @@ Cheap queries that prove the denormalized values and cross-table rules hold. The
 - For each item, the sum of `inventory_batches.quantity` = `SUM(quantity_delta)`, and the latest `stock_after` equals that sum. For each ledger row, its `inventory_transaction_batches` rows add up to the size of the movement.
 - For each `treatment_item_lines` row: `quantity` = `SUM(dispense)` minus `SUM(visit_edited adjustments)` for that visit/incident and item (a negative delta nets out; ADR-018).
 - A student with an approved `excuse_letters` row has no draft left on that visit (`uq_letters_live_visit` enforces this).
-- Every `emergency_contacts.is_verified = 1` has `verified_at`; its latest `emergency_contact_verifications` row agrees.
 - ~~Every stage-2 incident has at least one stage-2 vital reading~~ *(dropped Tuesday, October 20, 2026: no reading is required at either stage any more, "don't force all 4"; an incident may have no reading rows. See section 12, "Incident readings")*.
 - Every `number_sequences.last_value` is at least the largest used number for that scope.
 - No active student lacks a primary contact *(report, do not fail: incomplete records are allowed and flagged)*.
@@ -854,7 +844,7 @@ Each row is a real situation and where the design handles it. "DB" = enforced by
 | Same masterlist file imported twice | `source_file_sha256` is unique, so the second apply is refused (DB). |
 | Student has no allergies vs. was never asked | Both read "None recorded" and neither makes a record incomplete (ADR-049, ADR-051). |
 | Several guardians | Many `emergency_contacts`, exactly one primary (DB, tested). The API shows the primary until the UI needs more. |
-| Guardian unreachable during an emergency | A `no_answer` attempt row, plus a `unverified` verification event linked to the incident; `is_verified` flips to 0 (App). |
+| Guardian unreachable during an emergency | A `no_answer` attempt row records the selected contact and outcome; contact details are not re-flagged (App). |
 | Student archived while follow-ups or letters are pending | Rows stay; dashboards and pending lists hide archived students, as the mock does (App). |
 | Grade promotion at year end | Update `grade_level_id`; an optional history table is described in section 12 (waiting on the client's answer). |
 | Search by allergy to find students with a restriction | `idx_health_kind (kind, label)` (DB). |
@@ -1016,7 +1006,7 @@ These are deliberate, and came with the approval (ADR-057).
 | Settings | Constants in the mock config | `system_settings`, and `reference_settings` for text and structured values | The requirements call these open decisions. |
 | Reference numbers | Internal ids on printouts (known issue) | `reference_no` from the same counter table | Closes the Frontend-Issues-and-TODOs item. |
 | Visit logbook fields | `Visit` has five optional fields from the clinic's daily logbook | Columns on `visits`: `temperature_c`, `time_out`, `assisted_by`, `parent_guardian`, `remarks` | Same shape. |
-| Incident readings (Tuesday, October 20, 2026) | `Incident.vitals` holds only the readings taken, any of `temperatureC`, `pulseBpm`, `bloodPressure`, `oxygenSaturationPct`; none is required at either stage. | `incident_vital_readings` has nullable columns; `spo2_percent` is 0 to 100, as the mock. | "Don't force all 4 if not relevant to the case." |
+| Incident readings (amended by ADR-094, Thursday, November 26, 2026) | `Incident.vitals` holds only readings taken; typed readings begin in Stage 2, except a temperature carried from a visit. | `incident_vital_readings.recorded_at` stores each actual reading time; `spo2_percent` is 0 to 100. No reading is required. | "Don't force all 4 if not relevant to the case." |
 
 **Extension points, deliberately not built.** Each is an additive change if the need appears.
 
@@ -1029,7 +1019,7 @@ These are deliberate, and came with the approval (ADR-057).
 
 ## 13. Laravel implementation notes
 
-- **Migration order** (matches `Reference-Schema.sql`): `users`, `password_histories`, `recovery_codes`, `system_settings`, `reference_settings`, `number_sequences`, `school_years`, `grade_levels`, `complaint_types`, `triage_steps`, `student_import_batches`, `students`, `student_health_entries`, `emergency_contacts`, `student_record_reviews`, `personnel`, `personnel_health_entries`, `personnel_emergency_contacts`, `staff_record_reviews`, `inventory_items`, `inventory_batches`, `inventory_item_allergy_words`, `inventory_item_symptom_tags`, `visits`, `visit_extra_complaints`, `excuse_letters`, `triage_checks`, `incidents`, `incident_vital_readings`, `hospital_referrals`, `parent_notification_attempts`, `emergency_contact_verifications`, `incident_report_approvals`, `follow_ups`, `pe_referrals`, `treatment_item_lines`, `inventory_transactions`, `inventory_transaction_batches`, `sports_reports`, `sports_report_students`, `backup_logs`, `backup_locations`, `backup_location_results`, `holidays`, `holiday_sync_runs`, `calendar_events`, `issue_reports`, `audit_logs`. `visits` and `incidents` point at each other (ADR-036), so `fk_visits_escalated_incident` is added after both.
+- **Migration order** (matches `Reference-Schema.sql`): `users`, `password_histories`, `recovery_codes`, `system_settings`, `reference_settings`, `number_sequences`, `school_years`, `grade_levels`, `complaint_types`, `triage_steps`, `student_import_batches`, `students`, `student_health_entries`, `emergency_contacts`, `student_record_reviews`, `personnel`, `personnel_health_entries`, `personnel_emergency_contacts`, `staff_record_reviews`, `inventory_items`, `inventory_batches`, `inventory_item_allergy_words`, `inventory_item_symptom_tags`, `visits`, `visit_extra_complaints`, `excuse_letters`, `triage_checks`, `incidents`, `incident_vital_readings`, `hospital_referrals`, `parent_notification_attempts`, `incident_report_approvals`, `follow_ups`, `pe_referrals`, `treatment_item_lines`, `inventory_transactions`, `inventory_transaction_batches`, `sports_reports`, `sports_report_students`, `backup_logs`, `backup_locations`, `backup_location_results`, `holidays`, `holiday_sync_runs`, `calendar_events`, `issue_reports`, `audit_logs`. `visits` and `incidents` point at each other (ADR-036), so `fk_visits_escalated_incident` is added after both.
 - **One migration per module**, in that module's folder, loaded with `loadMigrationsFrom`, so the modular structure of ADR-009 reaches the database layer.
 - **CHECK constraints** have no fluent builder: add them with `DB::statement('ALTER TABLE ... ADD CONSTRAINT ... CHECK (...)')` in the same migration, copying from `Reference-Schema.sql`.
 - **Generated columns:** `->storedAs('...')`. **Composite foreign keys:** `$table->foreign(['visit_id','student_id'])->references(['id','student_id'])->on('visits')`.

@@ -65,7 +65,7 @@ final class PatientFields
         return $out;
     }
 
-    /** @return list<array{name: string, relationship: string, phone: string, verified: bool}> */
+    /** @return list<array{name: string, relationship: string, phone: string}> */
     public static function contacts(mixed $values): array
     {
         $out = [];
@@ -73,7 +73,7 @@ final class PatientFields
             $c = is_array($c) ? $c : [];
             $out[] = [
                 'name' => PersonName::clean(self::text($c, 'name')), 'relationship' => trim(self::text($c, 'relationship')),
-                'phone' => trim(self::text($c, 'phone')), 'verified' => ($c['verified'] ?? false) === true,
+                'phone' => trim(self::text($c, 'phone')),
             ];
         }
 
@@ -104,7 +104,6 @@ final class PatientFields
         'emergencyContacts.*.name' => ['nullable', 'string', 'max:120'],
         'emergencyContacts.*.relationship' => ['nullable', 'string', 'max:40'],
         'emergencyContacts.*.phone' => ['nullable', 'string', 'max:30'],
-        'emergencyContacts.*.verified' => ['boolean'],
     ];
 
     /**

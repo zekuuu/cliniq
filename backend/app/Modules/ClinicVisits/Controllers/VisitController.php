@@ -108,6 +108,11 @@ final class VisitController
         return response()->json(['data' => $this->visits->markEnteredInError($id, $request->string('reason')->value(), AuthController::user($request)->id)]);
     }
 
+    public function undoEnteredInError(Request $request, int $id): JsonResponse
+    {
+        return response()->json(['data' => $this->visits->undoEnteredInError($id, AuthController::user($request)->id)]);
+    }
+
     public function letter(int $id): JsonResponse
     {
         abort_unless(DB::table('visits')->where('id', $id)->exists(), 404);

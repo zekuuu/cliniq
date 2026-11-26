@@ -14,7 +14,7 @@ import { SHOW_SHORTCUTS_EVENT } from '../lib/shortcuts'
 import { renderWithRouter } from '../test/renderWithRouter'
 import { openAccountMenu } from '../test/accountMenu'
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
 const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Principal', role: 'admin' }
 
 function shell(viewer: SessionUser = STAFF, onLogout = vi.fn()) {
@@ -49,7 +49,7 @@ describe('Account menu', () => {
   it('is one button with the avatar, name and role, and the old header icons are gone', async () => {
     shell()
     expect(
-      await screen.findByRole('button', { name: 'Account menu, Demo Clinician' }),
+      await screen.findByRole('button', { name: 'Account menu, Jennesse Baas' }),
     ).toHaveAttribute('aria-haspopup', 'menu')
     expect(button()).toHaveAttribute('aria-expanded', 'false')
     expect(button()).toHaveTextContent('School Clinician')
@@ -230,7 +230,7 @@ describe('Edit profile dialog', () => {
     expect(window.location.pathname).not.toContain('/account/profile')
     expect(dialog).toHaveTextContent('demo.nurse')
     expect(dialog).toHaveTextContent('School Clinician')
-    expect(within(dialog).getByRole('textbox', { name: /Full name/ })).toHaveValue('Demo Clinician')
+    expect(within(dialog).getByRole('textbox', { name: /Full name/ })).toHaveValue('Jennesse Baas')
     expect(within(dialog).getByRole('textbox', { name: /Full name/ })).toHaveFocus()
     expect(within(dialog).getByRole('button', { name: 'Change picture' })).toBeInTheDocument()
     expect(dialog).toHaveTextContent('To change your password, use Change password in the menu.')
@@ -285,7 +285,7 @@ describe('Edit profile dialog', () => {
       within(screen.getByRole('dialog', { name: 'Edit profile' })).getByRole('textbox', {
         name: /Full name/,
       }),
-    ).toHaveValue('Demo Clinician Jr.')
+    ).toHaveValue('Jennesse Baas Jr.')
     await user.keyboard('{Escape}')
     await user.click(
       within(await screen.findByRole('dialog', { name: 'Discard unsaved changes?' })).getByRole(

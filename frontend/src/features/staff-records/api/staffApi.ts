@@ -1,7 +1,6 @@
 import {
   archivePersonnel,
   restorePersonnel,
-  verifyPersonnelContact,
   getPersonnel,
   getPersonnelDepartments,
   getPersonnelHistory,
@@ -65,16 +64,6 @@ export function restoreStaffRecord(personnelId: string, actor: SessionUser): Pro
   return restorePersonnel(personnelId, actor)
 }
 
-/** Marks one emergency contact verified or unverified (`index` 0 is the primary); audited. */
-export function verifyStaffContact(
-  personnelId: string,
-  index: number,
-  verified: boolean,
-  actor: SessionUser,
-): Promise<Personnel> {
-  return verifyPersonnelContact(personnelId, index, verified, actor)
-}
-
 export interface StaffFormValues {
   /** The name parts, as on a student (ADR-064); the middle name may be left blank. */
   firstName: string
@@ -84,7 +73,7 @@ export interface StaffFormValues {
   type: string
   department: string
   contactInfo: string
-  emergencyContacts: Array<Pick<EmergencyContact, 'name' | 'relationship' | 'phone' | 'verified'>>
+  emergencyContacts: Array<Pick<EmergencyContact, 'name' | 'relationship' | 'phone'>>
   /** Comma-separated, like the student form; blank or "None recorded" stores nothing (D5, ADR-051). */
   allergies: string
   medicalConditions: string
@@ -138,7 +127,6 @@ export function submitStaffForm(
           name: contact.name.trim(),
           relationship: contact.relationship.trim(),
           phone: contact.phone.trim(),
-          verified: contact.verified,
         })),
     },
     options,

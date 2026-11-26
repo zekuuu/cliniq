@@ -21,7 +21,7 @@ import SAMPLE from '../../../sample-data/staff-list-sample.csv?raw'
 import { StaffImportPage } from './StaffImportPage'
 
 /** Staff list import (ADR-069). */
-const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' } as const
+const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
 
 const CSV = [
   'Staff No.,Last Name,First Name,Middle Name,Sex,Type,Department,Contact Number,Emergency Contact Name,Relationship,Emergency Contact Phone',
@@ -70,7 +70,7 @@ describe('Staff list import (ADR-069)', () => {
     expect(result).toEqual({ created: 1, updated: 2, flagged: 4 })
     const liza = await getPersonnel('personnel-0005')
     expect(liza.emergencyContacts).toEqual([
-      { name: 'Ana Pangilinan', relationship: 'Sister', phone: '0917-111-2222', verified: false },
+      { name: 'Ana Pangilinan', relationship: 'Sister', phone: '0917-111-2222' },
     ])
     expect(
       (await getStaffIncompleteQueue()).find((row) => row.person.id === 'personnel-0005')?.status,

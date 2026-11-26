@@ -10,7 +10,7 @@ import { todayISO } from '../lib/dates'
 
 vi.mock('react-chartjs-2', () => ({ Bar: () => null, Line: () => null, Doughnut: () => null }))
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
 
 /** About 1,000 students and 6,000 fake visits, built here and never in the seed. */
 function fill(students = 1000, visits = 6000) {

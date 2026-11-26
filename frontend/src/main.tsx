@@ -4,8 +4,12 @@ import './index.css'
 import App from './App.tsx'
 import { apiMode, logModes } from './lib/api/mode'
 import { bootstrapApiSession } from './lib/api/http/auth'
+import { preventLabelActivation } from './lib/labelActivation'
 
 logModes()
+
+// Visible labels still name their fields, but only the field itself responds to a click.
+document.addEventListener('click', preventLabelActivation, true)
 
 // Chrome leaves a keyboard-focused element where it is when it is already partly visible (a table
 // cell past a horizontal scroller's edge, a tall textarea at the fold), so its focus ring is cut

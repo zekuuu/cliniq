@@ -10,6 +10,7 @@ use App\Shared\Http\Paging;
 use App\Shared\Support\Row;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 /** Inventory (API-Contract Module 8). Every endpoint is Staff only. */
 final class InventoryController
@@ -90,6 +91,18 @@ final class InventoryController
         $request->validate(['batchId' => ['nullable'], 'change' => ['nullable'], 'countedQuantity' => ['nullable'], 'reason' => ['nullable', 'string'], 'note' => ['nullable', 'string', 'max:255']]);
 
         return response()->json(['data' => $this->inventory->adjust($id, self::input($request, ['batchId', 'change', 'countedQuantity', 'reason', 'note']), AuthController::user($request)->id)]);
+    }
+
+    public function undoMovement(Request $request, int $id, int $transactionId): JsonResponse
+    {
+        return response()->json(['data' => $this->inventory->undoMovement($id, $transactionId, AuthController::user($request)->id)]);
+    }
+
+    public function archiveNewItem(Request $request, int $id): Response
+    {
+        $this->inventory->archiveNewItem($id, AuthController::user($request)->id);
+
+        return response()->noContent();
     }
 
     /** @return array<string, list<string>> */

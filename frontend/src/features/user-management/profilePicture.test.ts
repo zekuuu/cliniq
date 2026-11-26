@@ -38,7 +38,7 @@ describe('mock user profile pictures', () => {
       },
       {
         userId: 'user-staff-01',
-        actor: { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' },
+        actor: { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' },
       },
     )
 

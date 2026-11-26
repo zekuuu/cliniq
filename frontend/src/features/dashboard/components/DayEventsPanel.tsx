@@ -13,6 +13,8 @@ import {
   CalendarEventValidationError,
   createCalendarEvent,
   deleteCalendarEvent,
+  fetchPeriodEvents,
+  restoreCalendarEvent,
   updateCalendarEvent,
   validateCalendarEvent,
   type CalendarEventErrors,
@@ -53,10 +55,38 @@ function EventForm({
     if (Object.keys(found).length) return notify.checkFields()
     setSaving(true)
     try {
-      if (event) await updateCalendarEvent(event.id, input)
-      else await createCalendarEvent(input)
+      const saved = event
+        ? await updateCalendarEvent(event.id, input)
+        : await createCalendarEvent(input)
       // The dialog goes back to the day's list; the toast shows above it (ADR-083).
-      notify.success(event ? 'Event updated' : 'Event added', { id: 'calendar-event' })
+      notify.undoable(
+        event ? 'Event updated' : 'Event added',
+        () =>
+          event
+            ? updateCalendarEvent(event.id, {
+                title: event.title,
+                startDate: event.startDate,
+                endDate: event.endDate ?? '',
+              })
+            : deleteCalendarEvent(saved.id),
+        {
+          undone: event ? 'Undone: event restored' : 'Undone: event removed',
+          checkCurrent: async () => {
+            const { events } = await fetchPeriodEvents(
+              saved.startDate,
+              saved.endDate || saved.startDate,
+            )
+            const current = events.find((candidate) => candidate.id === saved.id)
+            return Boolean(
+              current &&
+              current.title === saved.title &&
+              current.startDate === saved.startDate &&
+              (current.endDate ?? '') === (saved.endDate ?? ''),
+            )
+          },
+          onUndone: onSaved,
+        },
+      )
       onSaved()
     } catch (error) {
       if (error instanceof CalendarEventValidationError) {
@@ -126,7 +156,11 @@ function ConfirmDelete({
     setDeleting(true)
     try {
       await deleteCalendarEvent(event.id)
-      notify.success('Event deleted', { id: 'calendar-event' })
+      notify.undoable('Event deleted', () => restoreCalendarEvent(event), {
+        undone: 'Undone: event restored',
+        onUndone: onDeleted,
+        onFailed: onDeleted,
+      })
       onDeleted()
     } catch (cause) {
       notify.apiError(cause, 'The event could not be deleted. Please try again.')
@@ -139,7 +173,7 @@ function ConfirmDelete({
       <p className="text-sm text-text-secondary">
         “{event.title}”
         {event.endDate ? ` (${formatDateRange(event.startDate, event.endDate)})` : ''} will be
-        removed from every day it covers. This can&apos;t be undone.
+        removed from every day it covers. You can undo this from the result message.
       </p>
       <div className="flex flex-wrap justify-end gap-2">
         <Button variant="neutral" onClick={onCancel} disabled={deleting} data-autofocus>

@@ -117,6 +117,18 @@ describe('notify', () => {
     ;(await screen.findByRole('button', { name: 'Undo' })).click()
     expect(await screen.findByText('The last Admin stays.')).toBeInTheDocument()
   })
+
+  it('refuses stale Undo without sending a reverse request', async () => {
+    const undo = vi.fn().mockResolvedValue(undefined)
+    const checkCurrent = vi.fn().mockResolvedValue(false)
+    notify.undoable('Settings saved', undo, { undone: 'Undone', checkCurrent })
+    ;(await screen.findByRole('button', { name: 'Undo' })).click()
+    expect(
+      await screen.findByText('Someone else changed this record. Reload and try again.'),
+    ).toBeInTheDocument()
+    expect(checkCurrent).toHaveBeenCalledOnce()
+    expect(undo).not.toHaveBeenCalled()
+  })
 })
 
 describe('scrollToTop', () => {

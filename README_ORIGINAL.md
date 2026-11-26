@@ -1,8 +1,10 @@
-This is the longer overview of CLINIQ. The root [README.md](./README.md) is the short, current one, with the full status list (built, decided, not started). Last checked against the code on Monday, November 23, 2026 — 18:07 PHT for the docs-only sync of `main` at `0a178b0` (9 documentation commits committed; no product behavior, ADR, route, or number changes); on Sunday, November 22, 2026 — 14:29 PHT for the docs-only sync of `main` at `9da38fa` (the generated Project Plan and SRS copies now live in their section folders; no product behavior or Facts-sheet number changed); on Sunday, November 22, 2026 — 02:22 PHT for the docs sync of `main` at `1c41f73` (ADR-085 to ADR-087: Undo and restore, the top-bar search, the LRN last-4 search); on Sunday, November 22, 2026 — 00:52 PHT for the docs sync of `main` at `b9fd646` (ADR-084, the realistic five-year demo school to February 28, 2027); on Friday, November 20, 2026 — 01:54 PHT for the docs sync of `main` at `533df61` (ADR-082, ADR-083, the emergency-contact check, the demo seeder) and the Overview's frequent-visitor pager; on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in). Numbers come from the [Facts sheet](./CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
+This is the longer overview of CLINIQ. The root [README.md](./README.md) is the short, current one, with the full status list (built, decided, not started). Earlier checked against the code on Monday, November 23, 2026 — 18:07 PHT for the docs-only sync of `main` at `0a178b0` (9 documentation commits committed; no product behavior, ADR, route, or number changes); on Sunday, November 22, 2026 — 14:29 PHT for the docs-only sync of `main` at `9da38fa` (the generated Project Plan and SRS copies now live in their section folders; no product behavior or Facts-sheet number changed); on Sunday, November 22, 2026 — 02:22 PHT for the docs sync of `main` at `1c41f73` (ADR-085 to ADR-087: Undo and restore, the top-bar search, the LRN last-4 search); on Sunday, November 22, 2026 — 00:52 PHT for the docs sync of `main` at `b9fd646` (ADR-084, the realistic five-year demo school to February 28, 2027); on Friday, November 20, 2026 — 01:54 PHT for the docs sync of `main` at `533df61` (ADR-082, ADR-083, the emergency-contact check, the demo seeder) and the Overview's frequent-visitor pager; on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`, which has `main` merged in). Numbers come from the [Facts sheet](./CLINIQ-Knowledge-Base/00-Project-Core/Facts-Sheet.md).
 
 <div align="center">
 
 # CLINIQ
+
+Last checked against the code on Thursday, November 26, 2026 — 08:41 PHT (ADR-088 through ADR-093, performance and streamed Audit Log print).
 
 ### Intelligent Clinic Tracking and Monitoring System
 
@@ -76,7 +78,7 @@ Every feature in this project — down to individual UI decisions like *which sc
 </tr>
 </table>
 
-> Every feature above is built in the frontend and runs on sample (mock) data by default. The backend behind it is built too (phases B0 to B10, 133 routes, 257 tests passing on Sunday, November 22, 2026) and saves to MariaDB, and the screens can run on it behind a mock/API switch (ADR-080). That code is on `main` since Wednesday, November 18, 2026 (ADR-081, [where the code lives](./README.md#where-things-live)). What is decided but not built is listed in [README.md](./README.md#decided-not-built).
+> Every feature above is built in the frontend and runs on sample (mock) data by default. The backend behind it is built too (phases B0 to B10, 139 routes, 261 tests passing on Thursday, November 26, 2026) and saves to MariaDB, and the screens can run on it behind a mock/API switch (ADR-080). That code is on `main` since Wednesday, November 18, 2026 (ADR-081, [where the code lives](./README.md#where-things-live)). What is decided but not built is listed in [README.md](./README.md#decided-not-built).
 
 <br/>
 
@@ -101,7 +103,7 @@ Taken from the running app on sample data (no real names). More, and both roles:
 | 💅 Styling | Tailwind CSS | Utility-first, fast to build a consistent design system on |
 | ⚙️ Backend | Laravel 13 (PHP), every module built and tested, connected behind a switch (ADR-080) | Batteries-included framework, small-team-friendly |
 | 🔐 Auth | Laravel Sanctum, SPA cookie mode (ADR-056) | Cookie sessions for the browser app; no API tokens |
-| 🗄️ Database | MariaDB (XAMPP), MySQL-compatible; 48 tables approved, migrated and checked against the reference schema | XAMPP ships MariaDB; Laravel reaches it through its MySQL driver |
+| 🗄️ Database | MariaDB (XAMPP), MySQL-compatible; 47 tables approved, migrated and checked against the reference schema | XAMPP ships MariaDB; Laravel reaches it through its MySQL driver |
 | 🔄 Data fetching | TanStack Query, for the seven server-paged lists (ADR-082) | Caches each page and keeps the previous page on screen while the next loads |
 | 🔔 Toasts | Sonner (ADR-083, ADR-084) | One bottom-right toast per action, with a timer |
 | 📈 Charts | Chart.js + `react-chartjs-2` | Smaller bundle, Canvas rendering — matters on a 4GB RAM workstation |
@@ -192,7 +194,7 @@ Frontend and backend are built as two coordinated tracks — frontend leads (per
 | Track | Phases |
 |---|---|
 | 🎨 **Frontend** | `F0` Setup & design tokens → `F1` 5 reference screens → `F2` every remaining screen, module by module → `F3` polish & accessibility *(screens built on mock data; the F3 demo-ready exit check is still open)* |
-| ⚙️ **Backend** | `B0` Scaffold → `B1` Database schema *(48 migrations from the [approved ERD](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md), run on MariaDB)* → `B2` Auth/RBAC → `B3` Audit trail → `B4`–`B10` one phase per module *(all built and audited; connecting the frontend is the next, separate step)* |
+| ⚙️ **Backend** | `B0` Scaffold → `B1` Database schema *(migrations from the [approved ERD](./CLINIQ-Knowledge-Base/02-Architecture/Database/ERD.md), run on MariaDB)* → `B2` Auth/RBAC → `B3` Audit trail → `B4`–`B10` one phase per module *(all built and audited; connecting the frontend is the next, separate step)* |
 
 Full phase-by-phase detail, dependencies, and the two Phase F0 decisions (now resolved in ADR-012 and ADR-013): [`CLINIQ-Knowledge-Base/04-Development/Development-Phases.md`](./CLINIQ-Knowledge-Base/04-Development/Development-Phases.md)
 

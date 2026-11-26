@@ -30,7 +30,7 @@ describe('App Shell / Navigation', () => {
   it('shows Staff navigation groups across modules', () => {
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -73,16 +73,16 @@ describe('App Shell / Navigation', () => {
     expect(screen.getByText('v0.1.0')).toBeInTheDocument()
     expect(screen.getByText('Powered by HealWare™')).toBeInTheDocument()
     expect(screen.getByText(/all rights reserved/i)).toBeInTheDocument()
-    expect(screen.getByAltText('HealWare logo')).toHaveAttribute('src', '/Healware_Logo.png')
+    expect(screen.getByAltText('HealWare logo')).toHaveAttribute('src', '/brand/healware-logo.webp')
     screen
       .getAllByAltText('Mendez Christian Academy logo')
-      .forEach((logo) => expect(logo).toHaveAttribute('src', '/MCA_Logo.png'))
+      .forEach((logo) => expect(logo).toHaveAttribute('src', '/brand/mca-logo.webp'))
   })
 
   it('puts a red Sign out action in the account menu (ADR-066)', async () => {
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -97,7 +97,7 @@ describe('App Shell / Navigation', () => {
   it('marks the Archive item when ending the school year is due today, and not before (Zean, November 8, 2026)', async () => {
     const shell = () => (
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -123,7 +123,7 @@ describe('App Shell / Navigation', () => {
   it('marks the Backup navigation item when it needs attention', async () => {
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -150,7 +150,7 @@ describe('App Shell / Navigation', () => {
   it('clears the Backup warning once the latest backup is verified', async () => {
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="backup"
         onLogout={() => {}}
       >
@@ -159,7 +159,7 @@ describe('App Shell / Navigation', () => {
     )
 
     await screen.findByRole('img', { name: 'Backup needs attention' })
-    await verifyBackup({ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' })
+    await verifyBackup({ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' })
     await waitFor(() =>
       expect(screen.queryByRole('img', { name: 'Backup needs attention' })).not.toBeInTheDocument(),
     )
@@ -168,7 +168,7 @@ describe('App Shell / Navigation', () => {
   it('keeps the Backup warning distinct while Backup is selected', async () => {
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="backup"
         onLogout={() => {}}
       >
@@ -185,7 +185,7 @@ describe('App Shell / Navigation', () => {
   it('shows a Keyboard shortcuts item with its ? tip in the account menu', async () => {
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -209,7 +209,7 @@ describe('App Shell / Navigation', () => {
     vi.stubGlobal('scrollTo', scrollTo)
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -231,7 +231,7 @@ describe('App Shell / Navigation', () => {
   it('uses a readable monospaced treatment for the live workstation clock', () => {
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -248,7 +248,7 @@ describe('App Shell / Navigation', () => {
     const user = userEvent.setup()
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -265,7 +265,7 @@ describe('App Shell / Navigation', () => {
     const user = userEvent.setup()
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -289,7 +289,7 @@ describe('App Shell / Navigation', () => {
     const user = userEvent.setup()
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -315,7 +315,7 @@ describe('App Shell / Navigation', () => {
     const user = userEvent.setup()
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="dashboard"
         onLogout={onLogout}
       >
@@ -341,7 +341,7 @@ describe('App Shell / Navigation', () => {
     const user = userEvent.setup()
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -401,7 +401,7 @@ describe('App Shell / Mobile navigation', () => {
     const user = userEvent.setup()
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="dashboard"
         onLogout={() => {}}
       >
@@ -424,7 +424,7 @@ describe('App Shell / Mobile navigation', () => {
     const user = userEvent.setup()
     renderWithRouter(
       <AppShell
-        user={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        user={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
         active="auditLog"
         onLogout={() => {}}
       >

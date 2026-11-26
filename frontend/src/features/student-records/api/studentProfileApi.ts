@@ -1,7 +1,6 @@
 import {
   archiveStudent,
   restoreStudent,
-  verifyStudentContact,
   getDemoStudent,
   getStudent,
   getStudentExcuseLetters,
@@ -28,7 +27,6 @@ export interface StudentProfileData {
   /** Staff only (Module 3 is Staff-only); always empty for other roles. */
   excuseLetters: StudentExcuseLetter[]
 }
-
 /** `studentId` comes from the `/students/:studentId` route; omitted, a demo student is used. */
 export async function fetchStudentProfile(
   studentId?: string,
@@ -57,14 +55,4 @@ export function archiveStudentRecord(
 /** Undo of an archive (ADR-085): the student is active again; audited. */
 export function restoreStudentRecord(studentId: string, actor: SessionUser): Promise<Student> {
   return restoreStudent(studentId, actor)
-}
-
-/** Marks one emergency contact verified or unverified (`index` 0 is the primary); audited. */
-export function verifyStudentContactRecord(
-  studentId: string,
-  index: number,
-  verified: boolean,
-  actor: SessionUser,
-): Promise<Student> {
-  return verifyStudentContact(studentId, index, verified, actor)
 }

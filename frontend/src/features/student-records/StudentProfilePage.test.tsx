@@ -1,5 +1,5 @@
 import { renderWithRouter } from '../../test/renderWithRouter'
-import { screen, waitFor } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { addDays, formatDateRange } from '../../lib/dates'
 import { getMockToday } from '../../lib/mock-db'
@@ -33,26 +33,12 @@ describe('Student Profile', () => {
     expect(screen.getByRole('button', { name: 'Archive' })).toBeInTheDocument()
   })
 
-  it('lists every emergency contact with primary and verification states', async () => {
+  it('lists every emergency contact with its primary state', async () => {
     renderWithRouter(<StudentProfilePage studentId="student-0012" />)
 
     expect(await screen.findByText('Arnel Cabrera')).toBeInTheDocument()
     expect(screen.getByText('Beatriz Cabrera')).toBeInTheDocument()
     expect(screen.getByText('Primary')).toBeInTheDocument()
-    expect(screen.getByText('Needs verification')).toBeInTheDocument()
-  })
-
-  it('lets Staff mark an unverified contact verified in one click', async () => {
-    renderWithRouter(<StudentProfilePage studentId="student-0012" />)
-
-    const button = await screen.findByRole('button', { name: /^Mark verified: / })
-    button.click()
-    await waitFor(() => expect(screen.queryByText('Needs verification')).not.toBeInTheDocument())
-    expect(screen.getAllByText('Verified')).toHaveLength(2)
-    expect(screen.queryByRole('button', { name: /^Mark verified/ })).not.toBeInTheDocument()
-
-    screen.getAllByRole('button', { name: /^Mark unverified: / })[0].click()
-    expect(await screen.findByText('Needs verification')).toBeInTheDocument()
   })
 
   it("lists Staff the student's excused periods with a link to each visit", async () => {
@@ -75,7 +61,7 @@ describe('Student Profile', () => {
     renderWithRouter(
       <StudentProfilePage
         studentId="student-0022"
-        viewer={{ id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }}
+        viewer={{ id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }}
       />,
     )
 

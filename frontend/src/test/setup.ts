@@ -1,5 +1,8 @@
 import '@testing-library/jest-dom/vitest'
 import { afterEach, beforeEach, vi } from 'vitest'
+import { preventLabelActivation } from '../lib/labelActivation'
+
+document.addEventListener('click', preventLabelActivation, true)
 
 // The pickers' typing pause (useDebouncedValue) is skipped so tests can pick right after typing;
 // useDebouncedValue.test.ts checks the pause itself.

@@ -53,7 +53,6 @@ describe('Button done state (Zean, November 8, 2026)', () => {
   it('names the past form of known actions only', () => {
     expect(doneLabel('Save Password')).toBe('Saved')
     expect(doneLabel('Back up now')).toBe('Backed up')
-    expect(doneLabel('Mark as Verified')).toBe('Marked')
     expect(doneLabel('Continue')).toBeNull()
   })
 })

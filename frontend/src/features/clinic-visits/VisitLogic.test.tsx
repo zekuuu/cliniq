@@ -193,7 +193,6 @@ describe('escalate to incident (VS-7, ADR-036, D3)', () => {
     const incident = await saveIncidentStageOne({
       studentId: base.studentId,
       complaint: 'Fainting',
-      vitals: {},
       time: visit.dateTime,
       sourceVisitId: visit.id,
     })
@@ -212,7 +211,6 @@ describe('escalate to incident (VS-7, ADR-036, D3)', () => {
       saveIncidentStageOne({
         studentId: base.studentId,
         complaint: 'Fainting',
-        vitals: {},
         sourceVisitId: visit.id,
       }),
     ).rejects.toThrow(/already escalated/)
@@ -234,12 +232,14 @@ describe('escalate to incident (VS-7, ADR-036, D3)', () => {
       </MemoryRouter>,
     )
     expect(await screen.findByText(/Escalated from a saved visit/)).toBeInTheDocument()
-    expect(screen.getByLabelText(/temperature/i)).toHaveValue(37.8)
+    expect(screen.queryByLabelText(/^temperature \(/i)).not.toBeInTheDocument()
     expect(screen.getByLabelText(/emergency symptom/i)).toHaveTextContent('Fainting')
     await user.click(screen.getByRole('button', { name: 'Save Stage 1' }))
     await screen.findByRole('heading', { name: 'Stage 2 completion' })
     const [incident] = (await listIncidents()).filter((i) => i.sourceVisitId === visit.id)
     expect(incident.time).toBe(visit.dateTime)
+    expect(incident.vitals.temperatureC).toBe(37.8)
+    expect(screen.getByLabelText('Temperature taken at')).toHaveValue(visit.dateTime.slice(11, 16))
     expect(screen.getByRole('heading', { name: 'From visit' })).toBeInTheDocument()
   })
 

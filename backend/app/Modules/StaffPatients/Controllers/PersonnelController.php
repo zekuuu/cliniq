@@ -95,13 +95,6 @@ final class PersonnelController
         return response()->json(['data' => $this->personnel->restore($id, AuthController::user($request)->id)]);
     }
 
-    public function verifyContact(Request $request, int $id, int $index): JsonResponse
-    {
-        $request->validate(['verified' => ['boolean']]);
-
-        return response()->json(['data' => $this->personnel->verifyContact($id, $index, $request->boolean('verified', true), AuthController::user($request)->id)]);
-    }
-
     /** `POST /api/patients/search`: students and staff, labelled by kind, by last name, capped (ADR-043 item 5). */
     public function searchPatients(Request $request, StudentService $students): JsonResponse
     {

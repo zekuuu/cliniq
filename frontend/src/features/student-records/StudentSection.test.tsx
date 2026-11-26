@@ -19,7 +19,7 @@ import { StudentListPage } from './StudentListPage'
 import { StudentProfilePage } from './StudentProfilePage'
 import { submitStudentForm, type StudentFormValues } from './api/studentFormApi'
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
 const STUDENT = 'student-0001'
 const SECTION = 'Sampaguita'
 
@@ -65,9 +65,7 @@ const newStudent = (lrn: string, fullName: string, section: string): StudentForm
   section,
   sex: 'female',
   birthDate: '',
-  emergencyContacts: [
-    { name: 'A Parent', relationship: 'Mother', phone: '0900-000-0000', verified: false },
-  ],
+  emergencyContacts: [{ name: 'A Parent', relationship: 'Mother', phone: '0900-000-0000' }],
   allergies: '',
   medicalConditions: '',
 })
@@ -143,7 +141,7 @@ describe('Optional student section (ADR-047)', () => {
     await setSection(SECTION)
     const { visit } = await recordVisit(visitInput(STUDENT), STAFF)
     const incident = await saveIncidentStageOne(
-      { studentId: STUDENT, complaint: 'Fainting', vitals: {} },
+      { studentId: STUDENT, complaint: 'Fainting' },
       STAFF,
     )
     await setSection('Rosal')
@@ -162,7 +160,7 @@ describe('Optional student section (ADR-047)', () => {
     )
     expect('sectionAtTime' in staffVisit).toBe(false)
     const staffIncident = await saveIncidentStageOne(
-      { personnelId: 'personnel-0002', complaint: 'Fainting', vitals: {} },
+      { personnelId: 'personnel-0002', complaint: 'Fainting' },
       STAFF,
     )
     expect('sectionAtTime' in staffIncident).toBe(false)
@@ -172,7 +170,7 @@ describe('Optional student section (ADR-047)', () => {
     await setSection(SECTION)
     const { gradeLevel } = await getStudent(STUDENT)
     await recordVisit(visitInput(STUDENT), STAFF)
-    await saveIncidentStageOne({ studentId: STUDENT, complaint: 'Fainting', vitals: {} }, STAFF)
+    await saveIncidentStageOne({ studentId: STUDENT, complaint: 'Fainting' }, STAFF)
     await setSection('Rosal')
     renderWithRouter(<StudentProfilePage viewer={STAFF} studentId={STUDENT} />)
     await screen.findByRole('heading', { name: 'Visit History' })

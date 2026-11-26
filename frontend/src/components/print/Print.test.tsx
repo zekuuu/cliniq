@@ -31,7 +31,7 @@ describe('PrintDocument', () => {
       <PrintDocument
         title="Student profile"
         scope="Scope"
-        viewer={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        viewer={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
       >
         Body
       </PrintDocument>,
@@ -59,7 +59,7 @@ describe('PrintDocument', () => {
       <PrintDocument
         title="Student profile"
         scope="Scope"
-        viewer={{ id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }}
+        viewer={{ id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }}
       >
         Body
       </PrintDocument>,

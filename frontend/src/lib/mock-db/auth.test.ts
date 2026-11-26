@@ -18,7 +18,7 @@ describe('frontend-first authentication boundary', () => {
     const result = await authenticateMockUser('demo.nurse', 'demo-nurse')
 
     expect(result).toEqual({
-      user: { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' },
+      user: { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' },
       mustChangePassword: false,
     })
     expect(getRecordedAuditEntries()).toEqual([

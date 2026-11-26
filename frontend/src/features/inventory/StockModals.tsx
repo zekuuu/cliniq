@@ -178,7 +178,7 @@ export function AdjustStockModal({
 }: {
   item: InventoryItemView
   onClose: () => void
-  onSaved: (message: string) => void
+  onSaved: (message: string, transactionId?: string) => void
 }) {
   const [mode, setMode] = useState<AdjustMode>('remove')
   const [batchId, setBatchId] = useState(
@@ -241,6 +241,7 @@ export function AdjustStockModal({
       })
       onSaved(
         `${item.name} adjusted (${ADJUSTMENT_REASON_LABELS[reason]}). Usable stock is now ${updated.currentStock} ${item.unit}.`,
+        updated.transactionId,
       )
     } catch (caught) {
       // The dialog stays open with what was typed; the toast shows above it (ADR-083).
@@ -360,7 +361,7 @@ export function RestockModal({
 }: {
   item: InventoryItemView
   onClose: () => void
-  onSaved: (message: string) => void
+  onSaved: (message: string, transactionId?: string) => void
 }) {
   const [quantity, setQuantity] = useState('')
   const [expirationDate, setExpirationDate] = useState('')
@@ -395,6 +396,7 @@ export function RestockModal({
       const updated = await restockItem(item.id, amount, { expirationDate, noExpirationConfirmed })
       onSaved(
         `${item.name} restocked with ${amount} ${item.unit}. Stock is now ${updated.currentStock} ${item.unit}.`,
+        updated.transactionId,
       )
     } catch (caught) {
       // The dialog stays open with what was typed; the toast shows above it (ADR-083).
@@ -457,7 +459,7 @@ export function RestockModal({
             setErrors((current) => ({ ...current, expirationDate: undefined, save: undefined }))
           }}
         />
-        <label className="flex cursor-pointer items-start gap-2 rounded-md border border-border bg-surface px-3 py-2.5 text-sm text-text-primary transition-colors hover:bg-background motion-reduce:transition-none">
+        <label className="flex items-start gap-2 rounded-md border border-border bg-surface px-3 py-2.5 text-sm text-text-primary transition-colors motion-reduce:transition-none">
           <input
             type="checkbox"
             checked={noExpirationConfirmed}

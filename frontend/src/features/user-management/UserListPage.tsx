@@ -23,7 +23,7 @@ import { sortTableRows, toggleTableSort, type TableSortState } from '../../lib/t
 import { getMockSessionUser, ROLE_LABELS, type SessionUser } from '../../lib/data'
 import { paths } from '../../routes/paths'
 import type { User } from '../../types/entities'
-import { changeUserStatus, fetchUsers, resetPassword } from './api/userApi'
+import { changeUserStatus, fetchUser, fetchUsers, resetPassword } from './api/userApi'
 import { UserAvatar } from './UserAvatar'
 
 type UserSortKey = 'name' | 'username' | 'role' | 'status' | 'lastLogin'
@@ -110,7 +110,9 @@ export function UserListPage({ viewer = getMockSessionUser() }: { viewer?: Sessi
         () => changeUserStatus(user.id, !enable, viewer),
         {
           undone: `Undone: ${user.name}'s account ${enable ? 'disabled' : 'enabled'} again`,
+          checkCurrent: async () => Boolean((await fetchUser(user.id)).deactivatedAt) !== enable,
           onUndone: reload,
+          onFailed: reload,
         },
       )
       reload()

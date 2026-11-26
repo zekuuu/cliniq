@@ -146,6 +146,24 @@ final class InventoryService
         return $this->find($savedId);
     }
 
+    /** Undo a newly added item by archiving it before another edit or stock movement uses it. */
+    public function archiveNewItem(int $id, int $userId): void
+    {
+        DB::transaction(function () use ($id, $userId): void {
+            $item = DB::table('inventory_items')->where('id', $id)->lockForUpdate()->first();
+            abort_if($item === null, 404);
+            abort_if(Row::str($item, 'archived_at') !== null, 409, 'This item is already archived.');
+            $movements = DB::table('inventory_transactions')->where('item_id', $id)->get(['type']);
+            $opening = $movements->first();
+            abort_if($movements->count() !== 1 || $opening === null || Row::str($opening, 'type') !== 'opening' || DB::table('treatment_item_lines')->where('item_id', $id)->exists(), 409, 'This item changed after it was added.');
+            $latestAudit = DB::table('audit_logs')->where('target_type', 'inventory')->where('target_id', (string) $id)->orderByDesc('id')->value('action_type');
+            abort_if($latestAudit !== 'create', 409, 'This item changed after it was added.');
+            DB::table('inventory_items')->where('id', $id)->update(['archived_at' => CarbonImmutable::now()]);
+            $this->audit->record(new AuditEvent(actorId: (string) $userId, actorRole: 'staff', action: AuditAction::Update,
+                targetType: AuditTarget::Inventory, targetId: (string) $id, targetLabel: null, at: CarbonImmutable::now(), summary: 'Archived new item after Undo'));
+        });
+    }
+
     /**
      * @param  array{studentId: int|null, personnelId: int|null, visitId: int|null}  $link
      * @return array{item: array<string, mixed>, remainingStock: int, belowZero: bool}
@@ -172,10 +190,10 @@ final class InventoryService
             $link['studentId'] ??= Row::int($visit, 'student_id');
             $link['personnelId'] ??= Row::int($visit, 'personnel_id');
         }
-        DB::transaction(fn () => $this->stock->dispense($id, $quantity, $link, $userId));
+        $transactionId = DB::transaction(fn () => $this->stock->dispense($id, $quantity, $link, $userId));
         $view = $this->find($id);
 
-        return ['item' => $view, 'remainingStock' => (int) Row::toInt($view['currentStock']), 'belowZero' => $view['belowZero'] === true];
+        return ['item' => $view, 'remainingStock' => (int) Row::toInt($view['currentStock']), 'belowZero' => $view['belowZero'] === true, 'transactionId' => (string) $transactionId];
     }
 
     /**
@@ -188,9 +206,9 @@ final class InventoryService
         $quantity = is_int($in['quantity'] ?? null) ? $in['quantity'] : 0;
         self::quantity($quantity);
         $expiry = $this->expiry($in, 'batch');
-        DB::transaction(fn () => $this->stock->restock($id, $quantity, $expiry, $userId));
+        $transactionId = DB::transaction(fn () => $this->stock->restock($id, $quantity, $expiry, $userId));
 
-        return $this->find($id);
+        return $this->find($id) + ['transactionId' => (string) $transactionId];
     }
 
     /**
@@ -208,7 +226,7 @@ final class InventoryService
             throw new BusinessRuleViolation('stock_rule', 'Choose a reason for the adjustment.');
         }
         $note = mb_substr(trim(Row::text($in['note'] ?? '')), 0, 255) ?: null;
-        DB::transaction(function () use ($id, $in, $reason, $note, $userId): void {
+        $transactionId = DB::transaction(function () use ($id, $in, $reason, $note, $userId): int {
             $batches = DB::table('inventory_batches')->where('item_id', $id)->orderBy('id')->lockForUpdate()->get();
             $wanted = Row::toInt($in['batchId'] ?? null);
             $batch = $batches->first(fn (object $b): bool => Row::int($b, 'id') === $wanted) ?? $batches->first();
@@ -234,10 +252,11 @@ final class InventoryService
             }
             $onHand = (int) $batches->sum(fn (object $b): int => (int) Row::int($b, 'quantity'));
             $large = $change < 0 && ($onHand + $change <= 0 || -$change * 100 >= $onHand * $this->settings->int('large_write_off_percent'));
-            $this->stock->adjust($id, (int) Row::int($batch, 'id'), $change, $reason, $note, self::ADJUSTMENT_LABELS[$reason].($large ? ' · Large write-off' : ''), $userId);
+
+            return $this->stock->adjust($id, (int) Row::int($batch, 'id'), $change, $reason, $note, self::ADJUSTMENT_LABELS[$reason].($large ? ' · Large write-off' : ''), $userId);
         });
 
-        return $this->find($id);
+        return $this->find($id) + ['transactionId' => (string) $transactionId];
     }
 
     /** @return list<array<string, mixed>> `InventoryHistoryRow[]`, newest first */
@@ -253,6 +272,32 @@ final class InventoryService
                 'reason' => Row::str($t, 'reason'), 'note' => Row::str($t, 'note'),
                 'batchAllocations' => array_map(fn (array $a): array => ['batchId' => $a['batchId'], 'quantity' => $a['quantity']], $allocations[(int) Row::int($t, 'id')] ?? []),
             ])->all());
+    }
+
+    /** Reverse the latest standalone stock movement with compensating adjustment entries.
+     * @return array<string, mixed>
+     */
+    public function undoMovement(int $itemId, int $transactionId, int $userId): array
+    {
+        DB::transaction(function () use ($itemId, $transactionId, $userId): void {
+            $item = DB::table('inventory_items')->where('id', $itemId)->lockForUpdate()->first();
+            abort_if($item === null, 404);
+            $latest = DB::table('inventory_transactions')->where('item_id', $itemId)->orderByDesc('id')->first();
+            abort_if($latest === null || (int) Row::int($latest, 'id') !== $transactionId, 409, 'Stock changed after this action. Reload and try again.');
+            abort_if(Row::str($latest, 'type') === 'opening', 409, 'Opening stock cannot be undone.');
+            $moves = DB::table('inventory_transaction_batches')->where('transaction_id', $transactionId)->orderBy('batch_id')->get();
+            abort_if($moves->isEmpty(), 409, 'This movement has no batches to reverse.');
+            foreach ($moves as $move) {
+                $batchId = (int) Row::int($move, 'batch_id');
+                $batch = DB::table('inventory_batches')->where('id', $batchId)->lockForUpdate()->first();
+                abort_if($batch === null || (int) Row::int($batch, 'item_id') !== $itemId, 409, 'A batch changed after this action.');
+                $reverse = -(int) Row::int($move, 'quantity');
+                abort_if((int) Row::int($batch, 'quantity') + $reverse < 0, 409, 'Stock was used after this action. Recount and adjust it instead.');
+                $this->stock->adjust($itemId, $batchId, $reverse, 'other', 'Undo transaction '.$transactionId, 'Undid transaction '.$transactionId, $userId);
+            }
+        });
+
+        return $this->find($itemId);
     }
 
     /** @return list<array<string, mixed>> `InventoryMovementRow[]`, newest first; the patient is a masked number */

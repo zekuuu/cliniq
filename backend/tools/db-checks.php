@@ -10,7 +10,7 @@ declare(strict_types=1);
  * scratch databases, cliniq_check_ref and cliniq_check_mig, and drops both at the end:
  *   1. Loads Reference-Schema.sql into cliniq_check_ref.
  *   2. Runs this app's migrations into cliniq_check_mig.
- *   3. Compares tables, columns, indexes and CHECKs (information_schema). Expects 48 and 462.
+ *   3. Compares tables, columns, indexes and CHECKs (information_schema). Expects 47 and 453.
  *   4. Runs Checks/constraint-tests.sql against cliniq_check_mig. Expects 0 failed.
  * The password goes to mysql.exe through a temporary options file, never the command line.
  * Exit code 0 = all pass.
@@ -83,8 +83,8 @@ try {
     $b = shape($mig);
     printf("reference: %d tables, %d columns | migrated: %d tables, %d columns\n",
         count($a['tables']), count($a['columns']), count($b['tables']), count($b['columns']));
-    if (count($b['tables']) !== 48 || count($b['columns']) !== 462) {
-        echo "FAIL counts: expected 48 tables and 462 columns\n";
+    if (count($b['tables']) !== 47 || count($b['columns']) !== 453) {
+        echo "FAIL counts: expected 47 tables and 453 columns\n";
         $fail++;
     }
     foreach ($a as $part => $rows) {

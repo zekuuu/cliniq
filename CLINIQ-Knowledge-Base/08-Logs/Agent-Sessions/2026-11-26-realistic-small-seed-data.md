@@ -1,0 +1,11 @@
+Date/Day/Time: Thursday, November 26, 2026 — 09:27 PHT
+Agent: Codex
+Task: Make the default small seed's visible records realistic
+Status: Completed
+Prompt/Request: “Please make all seed data realistic, not like Simulation etc.” The preceding request was to continue locally and save questions until the end.
+Files Modified: `backend/app/Shared/Database/SimulationSeeder.php`, `backend/tests/Feature/SimulationSeederTest.php`, `frontend/src/lib/mock-db/mock-db.json` and account-name expectations in frontend tests; ADR-092, Environment Setup, Test Strategy, backend README, and backend/frontend changelogs.
+Changes Made: The default seed now uses five varied fictional students from Kinder through Grade 12 with reserved synthetic LRNs and plausible contact details; five staff patients, mixed medicine and supplies, named school events, distinct clinic visits, incidents with varied outcomes and one referral, linked follow-ups and excuse-letter drafts, sports summaries, and specific issue reports. Removed visible “Simulation issue” labels and role-placeholder account display names. The three development usernames, passwords and roles are unchanged. The larger demo-school generator remains as designed under ADR-084.
+Reason: Five identical or visibly generated records made the local seeded school hard to assess as realistic clinic data.
+Testing Performed: Fresh `php artisan migrate:fresh --seed --force` on verified disposable `cliniq_check_realistic_seed_20261126` passed. The focused Simulation and demo-school Pest tests passed; full backend Pest passed 261 tests and 1,762 assertions before the final contact-format adjustment, which passed the focused seed test afterward. Frontend typecheck and lint passed (three existing Fast Refresh warnings). Full frontend tests, docs and final diff checks are recorded in the next steps until complete.
+Known Issues: Existing databases keep their previous seed rows because the seeder deliberately skips a populated database. `cliniq_testing` still has the earlier synthetic rows and one login audit; it was left untouched. Its next destructive refresh needs an explicit target check and a decision to discard those rows.
+Next Steps: Finish the full frontend test run and docs checks, then report the fresh-seed behavior and the existing testing database's retained rows.

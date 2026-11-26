@@ -19,7 +19,7 @@ export function StayHomeField({
   const descriptionId = useId()
   return (
     <div className="flex flex-col gap-2">
-      <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface motion-reduce:transition-none has-disabled:cursor-not-allowed">
+      <label className="flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors motion-reduce:transition-none ">
         <input
           type="checkbox"
           checked={checked}

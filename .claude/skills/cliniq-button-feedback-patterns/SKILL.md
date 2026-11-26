@@ -20,5 +20,5 @@ Use this with `cliniq-interactive-states`, which covers cursor, hover and focus.
 - It shows each time `done` turns true. Reset the signal before the next run, so a second success shows it again. For example, Back up now sets `backedUp` to false first.
 - The past forms come from `doneLabel` in `buttonClassName.ts`. Add a verb there instead of hard-coding a label, and pass `doneText` only when the default doesn't fit.
 - A failure never shows the done state. The failure is a toast (`cliniq-toast-patterns`, ADR-083) or the field error.
-- The done state is extra. The message itself is the success toast (`notify.success`, ADR-083), which screen readers announce; `useSaveFeedback().run` sends it.
+- The done state is extra. The message itself is the success toast (`notify.success` or `notify.undoable` for safely reversible saves, ADR-089), which screen readers announce; `useSaveFeedback().run` sends it.
 - Skip it when success closes a dialog or leaves the page. The button is gone, so there is nothing to show.

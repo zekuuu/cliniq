@@ -128,20 +128,6 @@ export function restoreStudent(studentId: string): Promise<Student> {
   return http.post(`/students/${encodeURIComponent(studentId)}/restore`, {})
 }
 
-/** `index` is the contact's place in the list, 0 being the primary. */
-export function verifyStudentContact(
-  studentId: string,
-  index: number,
-  verified: boolean,
-): Promise<Student> {
-  return http.post(
-    `/students/${encodeURIComponent(studentId)}/emergency-contacts/${index}/verify`,
-    {
-      verified,
-    },
-  )
-}
-
 export function previewStudentImport(rows: ImportRow[]): Promise<StudentImportPreview> {
   return http.post('/students/import/preview', { rows })
 }
@@ -221,19 +207,6 @@ export function archivePersonnel(
 /** Undo of an archive (ADR-085). */
 export function restorePersonnel(personnelId: string): Promise<Personnel> {
   return mapped(http.post(`/personnel/${encodeURIComponent(personnelId)}/restore`, {}), STAFF_ONLY)
-}
-
-export function verifyPersonnelContact(
-  personnelId: string,
-  index: number,
-  verified: boolean,
-): Promise<Personnel> {
-  return mapped(
-    http.post(`/personnel/${encodeURIComponent(personnelId)}/emergency-contacts/${index}/verify`, {
-      verified,
-    }),
-    STAFF_ONLY,
-  )
 }
 
 export function previewStaffImport(rows: StaffImportRow[]): Promise<StaffImportPreview> {

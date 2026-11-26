@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 final class IncidentController
 {
     private const STAGE_RULES = [
-        'complaint' => ['present', 'nullable', 'string', 'max:500'], 'vitals' => ['nullable', 'array'], 'generalNotes' => ['nullable', 'string', 'max:5000'],
+        'complaint' => ['present', 'nullable', 'string', 'max:500'], 'generalNotes' => ['nullable', 'string', 'max:5000'],
         'studentId' => ['nullable'], 'personnelId' => ['nullable'], 'time' => ['nullable', 'string', 'max:40'], 'sourceVisitId' => ['nullable'],
         'hospitalReferral' => ['nullable', 'array'], 'newParentNotifications' => ['nullable', 'array', 'max:50'], 'followUp' => ['nullable', 'array'],
         'itemsGiven' => ['nullable', 'array', 'max:50'], 'bodyPart' => ['nullable', 'string', 'max:60'], 'noFurtherActionReason' => ['nullable', 'string', 'max:200'],
@@ -59,9 +59,9 @@ final class IncidentController
 
     public function store(Request $request): JsonResponse
     {
-        $request->validate(self::STAGE_RULES);
+        $request->validate(self::STAGE_RULES + ['vitals' => ['prohibited'], 'carriedTemperatureC' => ['nullable', 'numeric', 'min:0', 'max:999']]);
 
-        return response()->json(['data' => $this->incidents->stageOne(self::input($request), AuthController::user($request)->id)], 201);
+        return response()->json(['data' => $this->incidents->stageOne(self::input($request, [...array_keys(self::STAGE_RULES), 'carriedTemperatureC']), AuthController::user($request)->id)], 201);
     }
 
     /** A staff patient's incident answers 404 to the Admin, as in the mock (ADR-038). */
@@ -72,9 +72,12 @@ final class IncidentController
 
     public function stageTwo(Request $request, int $id): JsonResponse
     {
-        $request->validate(self::STAGE_RULES);
+        $request->validate(self::STAGE_RULES + [
+            'vitals' => ['nullable', 'array'], 'readingTimes' => ['nullable', 'array'],
+            'readingTimes.*' => ['nullable', 'string', 'max:40'], 'arrivedAtClinic' => ['nullable', 'string', 'max:40'],
+        ]);
 
-        return response()->json(['data' => $this->incidents->stageTwo($id, self::input($request), AuthController::user($request)->id)]);
+        return response()->json(['data' => $this->incidents->stageTwo($id, self::input($request, [...array_keys(self::STAGE_RULES), 'vitals', 'readingTimes', 'arrivedAtClinic']), AuthController::user($request)->id)]);
     }
 
     public function notify(Request $request, int $id): JsonResponse

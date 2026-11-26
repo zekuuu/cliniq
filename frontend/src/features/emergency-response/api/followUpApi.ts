@@ -2,6 +2,7 @@ import {
   listFollowUps,
   rescheduleFollowUp,
   setFollowUpStatus,
+  undoFollowUpReschedule,
   type FollowUpView,
   type SessionUser,
 } from '../../../lib/data'
@@ -83,6 +84,10 @@ export async function setNewFollowUpDate(
   id: string,
   followUpDate: string,
   actor?: SessionUser,
-): Promise<void> {
-  await rescheduleFollowUp(id, followUpDate, actor)
+): ReturnType<typeof rescheduleFollowUp> {
+  return rescheduleFollowUp(id, followUpDate, actor)
+}
+
+export function undoNewFollowUpDate(id: string, actor?: SessionUser) {
+  return undoFollowUpReschedule(id, actor)
 }

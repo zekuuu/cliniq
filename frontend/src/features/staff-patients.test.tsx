@@ -19,8 +19,8 @@ import { fetchVisitLog } from './clinic-visits/api/visitLogApi'
 
 /** Staff patients in the clinical flows (ADR-043 part 3). */
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
-const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
+const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' }
 const STAFF_NAMES = () => db().personnel.map(formatPersonName)
 
 function renderAt(route: string, user: SessionUser = STAFF) {
@@ -131,7 +131,7 @@ describe('single-person screens for a staff patient', () => {
       STAFF,
     )
     const incident = await saveIncidentStageOne(
-      { personnelId: 'personnel-0006', complaint: 'Fainting', vitals: {}, sourceVisitId: visit.id },
+      { personnelId: 'personnel-0006', complaint: 'Fainting', sourceVisitId: visit.id },
       STAFF,
     )
     expect(incident).toMatchObject({
@@ -142,7 +142,7 @@ describe('single-person screens for a staff patient', () => {
     expect((await getVisit(visit.id)).escalatedIncidentId).toBe(incident.id)
     await expect(
       saveIncidentStageOne(
-        { studentId: 'student-0001', complaint: 'Fainting', vitals: {}, sourceVisitId: visit.id },
+        { studentId: 'student-0001', complaint: 'Fainting', sourceVisitId: visit.id },
         STAFF,
       ),
     ).rejects.toThrow(/another patient/)

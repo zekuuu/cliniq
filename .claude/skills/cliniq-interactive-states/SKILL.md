@@ -56,7 +56,7 @@ shows Back (`cliniq-back-navigation-patterns`).
 
 ## When to apply this
 
-- **A checkbox that stands for a whole row** (the row is its `label`) takes a hover colour on the whole row: `hover:bg-surface` on a white row, `hover:bg-background` on a `bg-surface` row. Never a hover to the colour the row already has (Zean, Tuesday, November 03, 2026 — 23:44 PHT).
+- **A checkbox inside a labelled row** keeps the row's native accessible name. The row label is inert on click (Zean, Thursday, November 26, 2026); the checkbox itself is the target and receives the hover colour and pointer cursor. The older whole-row hover and click rule no longer applies.
 
 Every time you build or touch a button, link, dropdown, icon action, or navigable row — check this before considering it done, as part of the Audit step in `04-Development/Frontend-Loop-Engineering.md`. Don't wait for a visual review to catch a missing hover state; it should never ship without one in the first place.
 

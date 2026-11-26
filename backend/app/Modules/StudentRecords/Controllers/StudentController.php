@@ -121,14 +121,6 @@ final class StudentController
         return response()->json(['data' => $this->students->restore($id, $user->id, $user->role)]);
     }
 
-    public function verifyContact(Request $request, int $id, int $index): JsonResponse
-    {
-        $request->validate(['verified' => ['boolean']]);
-        $user = AuthController::user($request);
-
-        return response()->json(['data' => $this->students->verifyContact($id, $index, $request->boolean('verified', true), $user->id, $user->role)]);
-    }
-
     private const IMPORT_KEYS = ['lrn', 'firstName', 'lastName', 'middleName', 'gradeLevel', 'section', 'sex', 'birthDate'];
 
     public function importPreview(Request $request, StudentImportService $import): JsonResponse

@@ -17,9 +17,7 @@ const base = {
   birthDate: '2018-06-01',
   allergies: [],
   medicalConditions: [],
-  emergencyContacts: [
-    { name: 'Maria Pupil', relationship: 'Mother', phone: '0917-000-0000', verified: true },
-  ],
+  emergencyContacts: [{ name: 'Maria Pupil', relationship: 'Mother', phone: '0917-000-0000' }],
   archived: false,
 }
 

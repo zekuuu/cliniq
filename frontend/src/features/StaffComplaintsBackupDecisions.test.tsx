@@ -28,7 +28,7 @@ import { BackupStatusPage } from './backup/BackupStatusPage'
 import { PeSportsReferralPage } from './clinic-visits/PeSportsReferralPage'
 import { VisitDetailPage } from './clinic-visits/VisitDetailPage'
 
-const STAFF: SessionUser = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' }
+const STAFF: SessionUser = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' }
 const ADMIN: SessionUser = { id: 'user-admin-01', name: 'Principal', role: 'admin' }
 
 /** Decisions sheet, Part 6: staff wording, extra complaints and backup locations (ADR-052, ADR-053). */
@@ -169,7 +169,7 @@ describe('Staff wording, extra complaints and backup locations', () => {
   })
 
   it("matches the Admin's incident total to the Admin's Incident Log, while the clinician's counts staff too", async () => {
-    await saveIncidentStageOne({ personnelId: 'personnel-0001', complaint: 'Fainting', vitals: {} })
+    await saveIncidentStageOne({ personnelId: 'personnel-0001', complaint: 'Fainting' })
     const range = { preset: 'all' as const, from: '2000-01-01', to: todayISO() }
     const admin = await getDashboardSummary({ range }, ADMIN)
     const staff = await getDashboardSummary({ range }, STAFF)

@@ -145,7 +145,6 @@ describe('Student and incident records', () => {
     const incident = await saveIncidentStageOne({
       studentId: student.id,
       complaint: 'Fainting',
-      vitals: {},
     })
     expect(visit.gradeLevelAtTime).toBe(student.gradeLevel)
     await saveStudent({ ...student, gradeLevel: 'Grade 1' }, { studentId: student.id })
@@ -171,7 +170,6 @@ describe('Student and incident records', () => {
     const incident = await saveIncidentStageOne({
       studentId: 'student-0001',
       complaint: 'Fainting',
-      vitals: {},
       generalNotes: 'First note',
     })
     const stageTwo = {
@@ -199,7 +197,6 @@ describe('Student and incident records', () => {
     const incident = await saveIncidentStageOne({
       studentId: 'student-0001',
       complaint: 'Fainting',
-      vitals: {},
       generalNotes: 'First note',
     })
     renderWithRouter(<IncidentEntryPage incidentId={incident.id} />)

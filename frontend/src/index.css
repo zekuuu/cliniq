@@ -3,6 +3,11 @@
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/cinzel/wght.css';
 
+/* Labels name controls but are not click targets. Direct clicks on inputs keep their own cursor. */
+label {
+  cursor: default;
+}
+
 /*
  * CLINIQ design tokens: the single source of truth for every color, radius, and type size.
  * Values are copied verbatim from CLINIQ-Knowledge-Base/03-Design/Design-System.md (sampled brand
@@ -371,6 +376,27 @@
 }
 :root [data-sonner-toast][data-expanded='true'] {
   animation-play-state: paused;
+}
+:root [data-sonner-toast][data-styled='true'] [data-button] {
+  color: var(--color-brand-green-dark);
+  background: transparent;
+  border-radius: 4px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 150ms,
+    color 150ms;
+}
+:root [data-sonner-toast][data-styled='true'] [data-button]:hover {
+  background: var(--color-brand-green-fill);
+}
+:root [data-sonner-toast][data-styled='true'] [data-button]:active {
+  background: var(--color-brand-green-light);
+}
+:root [data-sonner-toast][data-styled='true'] [data-button]:focus-visible {
+  outline: 2px solid var(--color-brand-green-dark);
+  outline-offset: 2px;
+  box-shadow: none;
 }
 @keyframes toast-countdown {
   to {

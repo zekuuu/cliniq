@@ -12,7 +12,7 @@ The two-stage (fast-capture then complete-later) incident flow, hospital referra
 ## Rules that matter
 
 - Visits and incidents stay separate; an incident can be escalated from a visit (`?fromVisit=`, ADR-036).
-- Readings are taken as the case needs ("don't force all 4"): temperature, pulse, blood pressure and oximeter (`oxygenSaturationPct`, whole percent 0 to 100) are all optional at both stages, in that order; only the complaint is required at Stage 1. Only the readings taken are stored and shown; with none, views say "No readings taken". Temperature and pulse keep the non-blocking unusual-value warning (`lib/vitals.ts`); the oximeter has none until the clinician gives a range (`config.vitalsWarningRanges.oxygenSaturationPct`, `null` for now).
+- Stage 1 identifies a patient and complaint, with editable “When it happened” defaulting to now and optional Additional notes. Typed readings begin in Stage 2; an escalated visit carries its temperature without typing it again (ADR-094). Temperature, pulse, blood pressure and oximeter (`oxygenSaturationPct`, whole percent 0 to 100) are all optional, each with its own taken time. Only readings taken are stored and shown; with none, views say "No readings taken". Temperature and pulse keep the non-blocking unusual-value warning (`lib/vitals.ts`); the oximeter has none until the clinician gives a range (`config.vitalsWarningRanges.oxygenSaturationPct`, `null` for now).
 - An incident can be about a student or a staff patient (ADR-043), and keeps the grade it had when saved (`gradeLevelAtTime`, and `sectionAtTime` when there is one, ADR-047).
 - A pending follow-up is Overdue after 3 days and closes as Missed after 7 (ADR-051).
 

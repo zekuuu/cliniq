@@ -254,14 +254,116 @@ final class VisitService
         }
         DB::transaction(function () use ($id, $visit, $why, $userId): void {
             $now = CarbonImmutable::now();
+            $letter = DB::table('excuse_letters')->where('visit_id', $id)->whereIn('status', ['draft', 'approved'])->first();
+            $followUps = DB::table('follow_ups')->where('visit_id', $id)->where('status', 'pending')->get(['id', 'status_reason', 'status_updated_at', 'status_updated_by_user_id']);
             $this->stock->apply(['studentId' => Row::toInt($visit['studentId']), 'personnelId' => Row::toInt($visit['personnelId']), 'visitId' => $id, 'incidentId' => null], [], 'adjust', $userId, 'staff');
-            DB::table('visits')->where('id', $id)->update(['entered_in_error_at' => $now, 'entered_in_error_by_user_id' => $userId, 'entered_in_error_reason' => mb_substr($why, 0, 300)]);
+            $given = $visit['itemsGiven'];
+            if (! is_array($given)) {
+                abort(409, 'This visit has invalid medicine lines.');
+            }
+            $itemIds = [];
+            foreach ($given as $line) {
+                if (is_array($line)) {
+                    $itemIds[] = (int) Row::toInt($line['itemId'] ?? null);
+                }
+            }
+            $lastStock = DB::table('inventory_transactions')->whereIn('item_id', $itemIds === [] ? [0] : $itemIds)->selectRaw('item_id, MAX(id) AS last_id')->groupBy('item_id')->pluck('last_id', 'item_id')->all();
+            $snapshot = ['items' => $given, 'letter' => $letter === null ? null : ['id' => Row::int($letter, 'id'), 'status' => Row::str($letter, 'status')], 'followUps' => $followUps->all(), 'lastStock' => $lastStock];
+            DB::table('visits')->where('id', $id)->update(['entered_in_error_at' => $now, 'entered_in_error_by_user_id' => $userId, 'entered_in_error_reason' => mb_substr($why, 0, 300), 'entered_error_undo_snapshot' => json_encode($snapshot, JSON_THROW_ON_ERROR)]);
             $this->log($userId, AuditAction::Update, $id, 'Marked entered in error', $now);
             $this->letters->void($id, $why, $userId, $now);
             $this->followUps->cancelForVisit($id, $why, $userId, $now);
         });
 
         return $this->find($id);
+    }
+
+    /** Reinstate the visit only while all dependent records still match the correction (ADR-089).
+     * @return array<string, mixed>
+     */
+    public function undoEnteredInError(int $id, int $userId): array
+    {
+        DB::transaction(function () use ($id, $userId): void {
+            $row = DB::table('visits')->where('id', $id)->lockForUpdate()->first();
+            abort_if($row === null, 404);
+            $raw = Row::str($row, 'entered_error_undo_snapshot');
+            abort_if(Row::str($row, 'entered_in_error_at') === null || $raw === null, 409, 'This visit cannot be reinstated.');
+            $snapshot = self::decodeUndoSnapshot($raw);
+            foreach ($snapshot['lastStock'] as $itemId => $lastId) {
+                $current = DB::table('inventory_transactions')->where('item_id', $itemId)->max('id');
+                abort_if((is_numeric($current) ? (int) $current : null) !== $lastId, 409, 'Stock changed after this visit was marked. Recount it before reinstating.');
+            }
+            $letter = $snapshot['letter'] ?? null;
+            if (is_array($letter)) {
+                $current = DB::table('excuse_letters')->where('id', $letter['id'])->first();
+                abort_if($current === null || Row::str($current, 'status') !== 'voided' || Row::str($current, 'voided_at') !== Row::str($row, 'entered_in_error_at'), 409, 'The excuse letter changed after this visit was marked.');
+            }
+            foreach ($snapshot['followUps'] as $old) {
+                $current = DB::table('follow_ups')->where('id', $old['id'])->first();
+                abort_if($current === null || Row::str($current, 'status') !== 'cancelled' || Row::str($current, 'status_updated_at') !== Row::str($row, 'entered_in_error_at'), 409, 'A follow-up changed after this visit was marked.');
+            }
+            $this->stock->apply(['studentId' => Row::int($row, 'student_id'), 'personnelId' => Row::int($row, 'personnel_id'), 'visitId' => $id, 'incidentId' => null], $snapshot['items'], 'adjust', $userId, 'staff');
+            DB::table('visits')->where('id', $id)->update(['entered_in_error_at' => null, 'entered_in_error_by_user_id' => null, 'entered_in_error_reason' => null, 'entered_error_undo_snapshot' => null]);
+            $now = CarbonImmutable::now();
+            $this->log($userId, AuditAction::Update, $id, 'Reinstated visit entered in error', $now);
+            if (is_array($letter)) {
+                DB::table('excuse_letters')->where('id', $letter['id'])->update(['status' => $letter['status'], 'voided_at' => null, 'voided_by_user_id' => null, 'voided_reason' => null]);
+                $this->audit->record(new AuditEvent(actorId: (string) $userId, actorRole: 'staff', action: AuditAction::Update, targetType: AuditTarget::ExcuseLetter, targetId: (string) $letter['id'], targetLabel: null, at: $now, summary: 'Restored after visit reinstatement'));
+            }
+            foreach ($snapshot['followUps'] as $old) {
+                DB::table('follow_ups')->where('id', $old['id'])->update(['status' => 'pending', 'status_reason' => $old['status_reason'], 'status_updated_at' => $old['status_updated_at'], 'status_updated_by_user_id' => $old['status_updated_by_user_id']]);
+                $this->audit->record(new AuditEvent(actorId: (string) $userId, actorRole: 'staff', action: AuditAction::Update, targetType: AuditTarget::FollowUp, targetId: (string) $old['id'], targetLabel: null, at: $now, summary: 'Restored after visit reinstatement'));
+            }
+        });
+
+        return $this->find($id);
+    }
+
+    /**
+     * @return array{items: list<array{itemId: int, quantity: int, instructions: string|null}>, letter: array{id: int, status: string}|null, followUps: list<array{id: int, status_reason: string|null, status_updated_at: string|null, status_updated_by_user_id: int|null}>, lastStock: array<int, int>}
+     */
+    private static function decodeUndoSnapshot(string $raw): array
+    {
+        $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        if (! is_array($decoded) || ! is_array($decoded['items'] ?? null) || ! is_array($decoded['followUps'] ?? null) || ! is_array($decoded['lastStock'] ?? null)) {
+            abort(409, 'This visit cannot be reinstated.');
+        }
+        $items = [];
+        foreach ($decoded['items'] as $line) {
+            if (! is_array($line) || ! is_numeric($line['itemId'] ?? null) || ! is_numeric($line['quantity'] ?? null)) {
+                abort(409, 'This visit cannot be reinstated.');
+            }
+            $items[] = ['itemId' => (int) $line['itemId'], 'quantity' => (int) $line['quantity'], 'instructions' => is_string($line['instructions'] ?? null) ? $line['instructions'] : null];
+        }
+        $letter = null;
+        if (($decoded['letter'] ?? null) !== null) {
+            $saved = $decoded['letter'];
+            if (! is_array($saved) || ! is_numeric($saved['id'] ?? null) || ! is_string($saved['status'] ?? null)) {
+                abort(409, 'This visit cannot be reinstated.');
+            }
+            $letter = ['id' => (int) $saved['id'], 'status' => $saved['status']];
+        }
+        $followUps = [];
+        foreach ($decoded['followUps'] as $old) {
+            if (! is_array($old) || ! is_numeric($old['id'] ?? null)) {
+                abort(409, 'This visit cannot be reinstated.');
+            }
+            $followUps[] = [
+                'id' => (int) $old['id'],
+                'status_reason' => is_string($old['status_reason'] ?? null) ? $old['status_reason'] : null,
+                'status_updated_at' => is_string($old['status_updated_at'] ?? null) ? $old['status_updated_at'] : null,
+                'status_updated_by_user_id' => is_numeric($old['status_updated_by_user_id'] ?? null) ? (int) $old['status_updated_by_user_id'] : null,
+            ];
+        }
+        $lastStock = [];
+        foreach ($decoded['lastStock'] as $itemId => $lastId) {
+            if (! is_numeric($itemId) || ! is_numeric($lastId)) {
+                abort(409, 'This visit cannot be reinstated.');
+            }
+            $lastStock[(int) $itemId] = (int) $lastId;
+        }
+
+        return ['items' => $items, 'letter' => $letter, 'followUps' => $followUps, 'lastStock' => $lastStock];
     }
 
     // ---- input ---------------------------------------------------------------------------

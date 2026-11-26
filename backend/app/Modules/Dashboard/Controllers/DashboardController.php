@@ -82,6 +82,13 @@ final class DashboardController
         return response()->noContent();
     }
 
+    public function restoreEvent(Request $request, int $id): JsonResponse
+    {
+        $user = AuthController::user($request);
+
+        return response()->json(['data' => $this->calendar->restore($id, $user->id, $user->role)]);
+    }
+
     /** @return array{0: string, 1: string} at most about two years of days */
     private static function period(Request $request): array
     {

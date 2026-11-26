@@ -1,6 +1,6 @@
 ---
 name: cliniq-print-patterns
-description: Apply when adding or changing any CLINIQ Print / Save as PDF, or any screen whose output is meant for paper (reports, letters, record sheets, logs). Keeps every printout a purpose-built A4 document with a letterhead, a scope line, and a page-number footer, built on the shared print components, never the screen with its buttons hidden.
+description: Apply when adding or changing any CLINIQ Print / Save as PDF, or any screen whose output is meant for paper (reports, letters, record sheets, logs). Keeps every printout a purpose-built A4 document with a letterhead, a scope line, and a page-number footer; the API-mode Audit Log streams its large document from the server (ADR-093).
 ---
 
 # CLINIQ Print Patterns
@@ -16,7 +16,7 @@ its own structure. A person who has never seen the app must be able to read it.
 
 Every printout has:
 
-1. **A letterhead:** the school logo (`/MCA_Logo.png`, no other brand asset), "Mendez Christian
+1. **A letterhead:** the school logo (`/brand/mca-logo.webp` on screen, or the inlined small logo on paper), "Mendez Christian
    Academy — School Clinic", and the document title.
 2. **A "what is this" line:** the scope in plain words (the date range, the report month, the applied
    filters, or the student and visit it is about). Never a placeholder date such as All's 1900 start.
@@ -51,9 +51,11 @@ Every printout has:
   the bottom of a page.
 - Correct in **black and white**: status in words, no large dark fills, charts labeled directly
   (`PrintBars`), never color alone.
-- Use only data the screen already loaded: **printing never fetches**. Every figure equals the
-  screen's figure because it comes from the same data function. If a figure isn't in the data, it
-  doesn't print; log it as `LATER`.
+- Ordinary printouts use the data the screen already loaded. The API-mode Audit Log is the deliberate
+  exception (ADR-082, ADR-093): its Print button opens a Staff-only server stream for **every** matching
+  entry, with full LRNs on paper, one print audit event, and bounded server memory. Ctrl+P on the Audit
+  Log screen still prints only the visible page and says so. The mock Audit Log keeps its small in-app
+  print tree. No other printout should fetch without a matching decision.
 - Never print an internal record id (`visit-0001`) and never invent a reference number (backend
   `LATER`). A printout that lists several students shows masked LRNs only, except the Dashboard's Clinic
   Overview Report and the Monthly Report printouts (incident table, Incident register), which print
@@ -80,6 +82,9 @@ Every printout has:
   `PrintTable`, `PrintBars`, `PrintFields`, `PrintSignatures`, `PrintNote`). The letterhead logo is
   `print/mca-logo-print.png`, inlined as a data URL, because the document mounts during `beforeprint`
   and a fetched image is not ready in time.
+- The API-mode Audit Log's `backend/app/Shared/AuditLog/AuditPrintHtml.php` writes equivalent A4
+  letterhead, scope, table and page-number markup to the streamed response. It escapes every data
+  field and includes the small school logo from `backend/resources/print/mca-logo.png` inline.
 - **Signature lines carry the name when CLINIQ knows it** (`PrintSignatures` `name`; Zean, Monday,
   October 26, 2026): never leave a bare "Prepared by" for a known person. The person printing for
   Prepared by, the active Admin/Principal account (`getPrincipalName`) for a Principal line, and the

@@ -29,8 +29,8 @@ import { StudentFormPage } from './StudentFormPage'
 import { StudentProfilePage } from './StudentProfilePage'
 
 const SLOW = 20_000
-const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' } as const
-const ADMIN = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' } as const
+const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' } as const
+const ADMIN = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' } as const
 
 /** Sets a birthdate on the store directly, for states the form itself refuses. */
 function storeBirthDate(studentId: string, birthDate: string | null) {

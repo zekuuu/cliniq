@@ -79,6 +79,24 @@ it('summarises the dashboard: counted visits, in clinic now, splits, clusters, a
     $this->getJson('/api/dashboard/cluster-alerts')->assertExactJson(['data' => []]);
 });
 
+it('keeps previous-month weekdays and all-time Stage 1 counts while limiting period reads', function () {
+    DB::table('visits')->insert([
+        'student_id' => $this->ana, 'visited_at' => '2026-10-02 08:00:00', 'complaint' => 'Headache',
+        'disposition' => 'returned_to_class', 'logged_by_user_id' => $this->staff->id,
+    ]);
+    DB::table('incidents')->insert([
+        'student_id' => $this->ana, 'occurred_at' => '2025-08-01 10:00:00', 'complaint' => 'Old fall',
+        'stage' => 1, 'created_by_user_id' => $this->staff->id,
+    ]);
+    signIn($this->staff);
+    $summary = $this->getJson('/api/dashboard/summary?preset=thisMonth')->assertOk()->json('data');
+    expect($summary['counts']['visits'])->toBe(4)
+        ->and($summary['counts']['incidents'])->toBe(2)
+        ->and($summary['counts']['incidentsAwaitingStage2'])->toBe(3)
+        ->and($summary['previousCounts']['visits'])->toBe(0)
+        ->and(array_sum(array_column($summary['complaintTrends']['weekdayComparison']['rows'], 'previous')))->toBe(1);
+});
+
 it('flags a possible cluster for Staff: three students, one complaint, one grade, in the window', function () {
     $cal = DB::table('students')->insertGetId(['lrn' => '100000000003', 'first_name' => 'Cy', 'last_name' => 'Dela']);
     foreach ([$this->ana, $this->ben, $cal] as $id) {
@@ -99,7 +117,11 @@ it('lays out calendar days with counts, events and tags; events are added, edite
     expect($days['2026-11-02']['visits'])->toBe(1)->and($days['2026-11-06']['incidents'])->toBe(1)->and($days['2026-11-07']['events'][0]['title'])->toBe('Sports Festival')
         ->and($days->count())->toBe(7);
     $this->deleteJson("/api/calendar/events/{$id}")->assertNoContent();
-    expect(DB::table('audit_logs')->where('target_type', 'calendar-event')->orderBy('id')->pluck('action_type')->all())->toBe(['create', 'update', 'delete']);
+    $this->getJson('/api/calendar/events?from=2026-11-06&to=2026-11-07')->assertOk()->assertJsonCount(0, 'data');
+    $this->postJson("/api/calendar/events/{$id}/restore")->assertOk()->assertJsonPath('data.id', $id);
+    $this->getJson('/api/calendar/events?from=2026-11-06&to=2026-11-07')->assertOk()->assertJsonPath('data.0.id', $id);
+    $this->postJson("/api/calendar/events/{$id}/restore")->assertStatus(409);
+    expect(DB::table('audit_logs')->where('target_type', 'calendar-event')->orderBy('id')->pluck('action_type')->all())->toBe(['create', 'update', 'delete', 'update']);
 });
 
 it('syncs holidays monthly when online, keeps the last good list when offline, and serves the feed', function () {

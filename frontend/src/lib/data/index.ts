@@ -95,6 +95,16 @@ export const saveIdleSignoutSettings = routed(
   mock.saveIdleSignoutSettings,
   auth.saveIdleSignoutSettings,
 )
+export const getOperationalSettings = routed(
+  'SETTINGS',
+  mock.getOperationalSettings,
+  auth.getOperationalSettings,
+)
+export const saveOperationalSettings = routed(
+  'SETTINGS',
+  mock.saveOperationalSettings,
+  auth.saveOperationalSettings,
+)
 
 import * as records from '../api/http/records'
 
@@ -116,11 +126,6 @@ export const checkStudentDuplicates = routed(
 export const saveStudent = routed('STUDENTS', mock.saveStudent, records.saveStudent)
 export const archiveStudent = routed('STUDENTS', mock.archiveStudent, records.archiveStudent)
 export const restoreStudent = routed('STUDENTS', mock.restoreStudent, records.restoreStudent)
-export const verifyStudentContact = routed(
-  'STUDENTS',
-  mock.verifyStudentContact,
-  records.verifyStudentContact,
-)
 export const previewStudentImport = routed(
   'STUDENTS',
   mock.previewStudentImport,
@@ -160,11 +165,6 @@ export const restorePersonnel = routed(
   'STAFF_PATIENTS',
   mock.restorePersonnel,
   records.restorePersonnel,
-)
-export const verifyPersonnelContact = routed(
-  'STAFF_PATIENTS',
-  mock.verifyPersonnelContact,
-  records.verifyPersonnelContact,
 )
 export const previewStaffImport = routed(
   'STAFF_PATIENTS',
@@ -371,6 +371,33 @@ export const deleteCalendarEvent = routed(
   'DASHBOARD',
   mock.deleteCalendarEvent,
   dashboard.deleteCalendarEvent,
+)
+export const restoreCalendarEvent = routed(
+  'DASHBOARD',
+  mock.restoreCalendarEvent,
+  dashboard.restoreCalendarEvent,
+)
+
+export const undoInventoryMovement = routed(
+  'INVENTORY',
+  mock.undoInventoryMovement,
+  inventory.undoInventoryMovement,
+)
+export const archiveNewInventoryItem = routed(
+  'INVENTORY',
+  mock.archiveNewInventoryItem,
+  inventory.archiveNewInventoryItem,
+)
+
+export const undoVisitEnteredInError = routed(
+  'VISITS',
+  mock.undoVisitEnteredInError,
+  visits.undoVisitEnteredInError,
+)
+export const undoFollowUpReschedule = routed(
+  'VISITS',
+  mock.undoFollowUpReschedule,
+  visits.undoFollowUpReschedule,
 )
 
 // REPORTS (S6), with Sports Reports.

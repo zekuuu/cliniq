@@ -29,7 +29,7 @@ import { useGoBack } from '../../hooks/useGoBack'
 import { isPhilippinePhone, PHONE_ERROR } from '../../lib/phone'
 import { paths } from '../../routes/paths'
 import type { SessionUser } from '../../lib/data'
-import { getMockSessionUser } from '../../lib/data'
+import { archiveStudent, getMockSessionUser, getStudent } from '../../lib/data'
 import type { ISODate, Student } from '../../types/entities'
 import {
   checkStudentDuplicates,
@@ -63,7 +63,7 @@ const EMPTY_VALUES: StudentFormValues = {
   section: '',
   sex: '',
   birthDate: '',
-  emergencyContacts: [{ name: '', relationship: '', phone: '', verified: false }],
+  emergencyContacts: [{ name: '', relationship: '', phone: '' }],
   allergies: '',
   medicalConditions: '',
 }
@@ -81,13 +81,12 @@ function valuesFromStudent(student: Student | null): StudentFormValues {
     sex: student.sex ?? '',
     birthDate: student.birthDate ?? '',
     emergencyContacts: student.emergencyContacts.length
-      ? student.emergencyContacts.map(({ name, relationship, phone, verified }) => ({
+      ? student.emergencyContacts.map(({ name, relationship, phone }) => ({
           name,
           relationship,
           phone,
-          verified,
         }))
-      : [{ name: '', relationship: '', phone: '', verified: false }],
+      : [{ name: '', relationship: '', phone: '' }],
     allergies: student.allergies.length ? student.allergies.join(', ') : NONE_RECORDED,
     medicalConditions: student.medicalConditions.length
       ? student.medicalConditions.join(', ')
@@ -316,9 +315,7 @@ function StudentFormEditor({
       ...current,
       emergencyContacts: current.emergencyContacts.map((contact, contactIndex) =>
         // A changed number needs verifying again.
-        contactIndex === index
-          ? { ...contact, [field]: value, ...(field === 'phone' && { verified: false }) }
-          : contact,
+        contactIndex === index ? { ...contact, [field]: value } : contact,
       ),
     }))
     setErrors((current) => ({ ...current, [contactErrorKey(index, field)]: undefined }))
@@ -328,10 +325,7 @@ function StudentFormEditor({
   function addEmergencyContact() {
     setValues((current) => ({
       ...current,
-      emergencyContacts: [
-        ...current.emergencyContacts,
-        { name: '', relationship: '', phone: '', verified: false },
-      ],
+      emergencyContacts: [...current.emergencyContacts, { name: '', relationship: '', phone: '' }],
     }))
     setSuccessMessage('')
   }
@@ -367,6 +361,7 @@ function StudentFormEditor({
     invalid.report(Object.keys(nextErrors).length)
     if (Object.keys(nextErrors).length > 0) return
 
+    const previous = data.student
     setSuccessMessage('')
     setIsSaving(true)
     try {
@@ -392,9 +387,38 @@ function StudentFormEditor({
         return
       }
       setDuplicateMatches([])
+      const savedStudent = result.student
+      const showUndo = (message: string) =>
+        notify.undoable(
+          message,
+          async () => {
+            if (result.action === 'create')
+              return archiveStudent(savedStudent.id, getMockSessionUser(), 'Undo creation')
+            if (!previous) throw new Error('The earlier student record is unavailable.')
+            return submitStudentForm(valuesFromStudent(previous), {
+              mode: 'edit',
+              studentId: savedStudent.id,
+              confirmDuplicate: true,
+              nameCorrectionReason: 'Undo previous change',
+            })
+          },
+          {
+            undone:
+              result.action === 'create'
+                ? 'Undone: student record archived'
+                : 'Undone: student record restored',
+            checkCurrent: async () => {
+              const current = await getStudent(savedStudent.id)
+              return (
+                JSON.stringify(valuesFromStudent(current)) ===
+                  JSON.stringify(valuesFromStudent(savedStudent)) && !current.archived
+              )
+            },
+          },
+        )
       if (result.action === 'update' && returnTo) {
         // Back through history, not a new entry, so Back on the queue doesn't show the queue again.
-        notify.success('Student record updated', { id: 'student-save' })
+        showUndo('Student record updated')
         allowLeave()
         goBackToReturn()
         return
@@ -402,7 +426,7 @@ function StudentFormEditor({
       if (result.action === 'update') {
         // An edit ends on the record it changed, like Visit Details; the toast stays across the move.
         // Back through history, so the next Back leaves the profile instead of showing it again.
-        notify.success('Student record updated', { id: 'student-save' })
+        showUndo('Student record updated')
         allowLeave()
         if (location.key === 'default')
           void navigate(paths.studentProfile(result.student.id), { replace: true })
@@ -410,16 +434,12 @@ function StudentFormEditor({
         return
       }
       // A create clears the form for the next student and goes back to the top (ADR-083).
-      const created = result.student.id
       setValues(EMPTY_VALUES)
       setBaseline(EMPTY_VALUES)
       setErrors({})
       setNameReason('')
       setSuccessMessage('created')
-      notify.success('Student record created', {
-        id: 'student-save',
-        action: { label: 'Open record', onClick: () => navigate(paths.studentProfile(created)) },
-      })
+      showUndo('Student record created')
       scrollToTop()
     } finally {
       setIsSaving(false)

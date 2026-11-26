@@ -13,7 +13,6 @@ beforeEach(function () {
     $this->staff = User::factory()->create();
     $this->admin = User::factory()->admin()->create();
 });
-
 /** A complete `StudentInput` with fake data. */
 function studentInput(array $over = []): array
 {
@@ -21,7 +20,7 @@ function studentInput(array $over = []): array
         'lrn' => '100000000001', 'firstName' => 'Ana', 'lastName' => 'Cruz', 'middleName' => null,
         'gradeLevel' => 'Grade 7', 'section' => null, 'sex' => 'female', 'birthDate' => '2013-05-01',
         'allergies' => ['Peanuts'], 'medicalConditions' => [],
-        'emergencyContacts' => [['name' => 'Maria Cruz', 'relationship' => 'Mother', 'phone' => '0917 000 0000', 'verified' => true]],
+        'emergencyContacts' => [['name' => 'Maria Cruz', 'relationship' => 'Mother', 'phone' => '0917 000 0000']],
     ];
 }
 
@@ -169,53 +168,4 @@ it('answers 409 duplicate_lrn when another save takes the LRN between the check 
     $this->postJson('/api/students', studentInput())->assertConflict()
         ->assertJsonPath('rule', 'duplicate_lrn')->assertJsonPath('message', 'This LRN is already used by another student record.');
     expect($raced)->toBeTrue(); // the injected row rolls back with the refused save's transaction
-});
-
-it('marks one emergency contact verified, records the verification, and audits it', function () {
-    signIn($this->staff);
-    $id = createStudent(['emergencyContacts' => [
-        ['name' => 'Maria Cruz', 'relationship' => 'Mother', 'phone' => '0917 000 0000', 'verified' => true],
-        ['name' => 'Jose Cruz', 'relationship' => 'Father', 'phone' => '0917 000 0001', 'verified' => false],
-    ]]);
-
-    $this->postJson("/api/students/{$id}/emergency-contacts/1/verify")->assertOk()
-        ->assertJsonPath('data.emergencyContacts.1.verified', true)->assertJsonPath('data.emergencyContacts.0.verified', true);
-    $contact = DB::table('emergency_contacts')->where('student_id', $id)->where('sort_order', 1)->first();
-    expect($contact->verified_by_user_id)->toBe($this->staff->id)->and($contact->verified_at)->not->toBeNull()
-        ->and(DB::table('emergency_contact_verifications')->where('contact_id', $contact->id)->where('result', 'verified')->count())->toBe(1)
-        ->and(DB::table('audit_logs')->where('action_type', 'update')->where('summary', 'Marked an emergency contact verified.')->count())->toBe(1);
-
-    $this->postJson("/api/students/{$id}/emergency-contacts/5/verify")->assertNotFound();
-    signIn($this->admin);
-    $this->postJson("/api/students/{$id}/emergency-contacts/1/verify")->assertForbidden();
-});
-
-it('marks a contact unverified again and keeps its history through an edit', function () {
-    signIn($this->staff);
-    $id = createStudent();
-    $contactId = DB::table('emergency_contacts')->where('student_id', $id)->value('id');
-    expect(DB::table('emergency_contact_verifications')->where('contact_id', $contactId)->count())->toBe(1); // the create
-
-    $this->postJson("/api/students/{$id}/emergency-contacts/0/verify", ['verified' => false])->assertOk()
-        ->assertJsonPath('data.emergencyContacts.0.verified', false);
-    expect(DB::table('emergency_contacts')->where('id', $contactId)->value('verified_at'))->toBeNull()
-        ->and(DB::table('emergency_contact_verifications')->where('contact_id', $contactId)->where('result', 'unverified')->count())->toBe(1);
-    $this->postJson("/api/students/{$id}/emergency-contacts/0/verify")->assertOk()->assertJsonPath('data.emergencyContacts.0.verified', true);
-
-    // Same number, new relationship and a second contact first: the row, its state and its history stay.
-    $this->putJson("/api/students/{$id}", studentInput(['emergencyContacts' => [
-        ['name' => 'Jose Cruz', 'relationship' => 'Father', 'phone' => '0917 000 0001', 'verified' => true],
-        ['name' => 'Maria Cruz', 'relationship' => 'Guardian', 'phone' => '09170000000', 'verified' => false],
-    ]]))->assertOk()
-        ->assertJsonPath('data.student.emergencyContacts.0.verified', false) // a new number starts unverified
-        ->assertJsonPath('data.student.emergencyContacts.1.verified', true)
-        ->assertJsonPath('data.student.emergencyContacts.1.relationship', 'Guardian');
-    expect(DB::table('emergency_contacts')->where('student_id', $id)->where('sort_order', 1)->value('id'))->toBe($contactId)
-        ->and(DB::table('emergency_contact_verifications')->where('contact_id', $contactId)->count())->toBe(3);
-
-    // A changed number is a new contact: unverified, and the old row goes.
-    $this->putJson("/api/students/{$id}", studentInput(['emergencyContacts' => [
-        ['name' => 'Maria Cruz', 'relationship' => 'Mother', 'phone' => '0917 999 9999', 'verified' => true],
-    ]]))->assertOk()->assertJsonPath('data.student.emergencyContacts.0.verified', false);
-    expect(DB::table('emergency_contacts')->where('id', $contactId)->exists())->toBeFalse();
 });

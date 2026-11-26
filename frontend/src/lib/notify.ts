@@ -140,21 +140,38 @@ export const notify = {
   /**
    * A result the user can take back while the toast shows (ADR-085): an Undo button for the toast's
    * 8 seconds (ACTION_MS; hover pauses it). Undo sends the reverse request, so the audit log keeps
-   * both entries. Only for actions that have a reverse; one-way actions (approve, entered in error,
-   * school year, stock) never get it.
+   * both entries. A current-state check prevents a stale Undo from replacing a newer edit.
    */
   undoable(
     message: string,
     undo: () => Promise<unknown>,
-    options: { undone: string; onUndone?: () => void; failed?: string },
+    options: {
+      undone: string
+      description?: string
+      onUndone?: () => void
+      onFailed?: () => void
+      failed?: string
+      /** Refuse stale changes before sending the reverse mutation. */
+      checkCurrent?: () => Promise<boolean>
+    },
   ) {
-    return show('success', message, {
+    let started = false
+    const toastId = show('success', message, {
+      description: options.description,
       action: {
         label: 'Undo',
         onClick: () => {
+          if (started) return
+          started = true
+          toast.dismiss(toastId)
           const id = `undo-${++undoCount}`
           notify.loading('Undoing…', { id })
-          undo().then(
+          const reverse = async () => {
+            if (options.checkCurrent && !(await options.checkCurrent()))
+              throw new Error('Someone else changed this record. Reload and try again.')
+            return undo()
+          }
+          reverse().then(
             () => {
               show('success', options.undone, { id })
               options.onUndone?.()
@@ -167,12 +184,13 @@ export const notify = {
                   id,
                 },
               )
-              options.onUndone?.()
+              options.onFailed?.()
             },
           )
         },
       },
     })
+    return toastId
   },
   dismiss: (id?: string) => {
     if (id === undefined) pending.clear()

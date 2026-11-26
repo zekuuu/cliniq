@@ -22,8 +22,8 @@ vi.mock('react-chartjs-2', () => {
   return { Bar: Stub, Line: Stub, Doughnut: Stub }
 })
 
-const STAFF = { id: 'user-staff-01', name: 'Demo Clinician', role: 'staff' as const }
-const ADMIN = { id: 'user-admin-01', name: 'Demo Admin', role: 'admin' as const }
+const STAFF = { id: 'user-staff-01', name: 'Jennesse Baas', role: 'staff' as const }
+const ADMIN = { id: 'user-admin-01', name: 'Gilan Avelida', role: 'admin' as const }
 
 async function fill(
   current: string,

@@ -49,7 +49,6 @@ import {
   fetchStudentProfile,
   restoreStudentRecord,
   type StudentProfileData,
-  verifyStudentContactRecord,
 } from './api/studentProfileApi'
 
 const incidentStageMap = {
@@ -143,7 +142,10 @@ function ProfileHeader({
       setConfirmingArchive(false)
       notify.undoable('Student record archived', () => restoreStudentRecord(student.id, viewer), {
         undone: 'Undone: student record restored',
+        checkCurrent: async () =>
+          Boolean((await fetchStudentProfile(student.id)).student.archivedAt),
         onUndone: onArchived,
+        onFailed: onArchived,
       })
       onArchived()
     } catch (cause) {
@@ -270,13 +272,7 @@ function AllergyBanner({ student }: { student: Student }) {
   )
 }
 
-function OverviewCard({
-  student,
-  onVerifyContact,
-}: {
-  student: Student
-  onVerifyContact?: (index: number, verified: boolean) => Promise<unknown>
-}) {
+function OverviewCard({ student }: { student: Student }) {
   return (
     <Card aria-labelledby="profile-overview">
       <CardHeader titleId="profile-overview" title="Overview" icon={<Icon name="users" />} />
@@ -317,7 +313,7 @@ function OverviewCard({
         </div>
         <div className="sm:col-span-2">
           <p className="text-xs font-semibold text-text-secondary">Emergency contacts</p>
-          <EmergencyContactList contacts={student.emergencyContacts} onVerify={onVerifyContact} />
+          <EmergencyContactList contacts={student.emergencyContacts} />
         </div>
       </CardBody>
     </Card>
@@ -517,7 +513,7 @@ function StudentRecordPrint({ data, viewer }: { data: StudentProfileData; viewer
   const contact = student.emergencyContacts
     .map(
       (item, index) =>
-        `${index === 0 ? 'Primary: ' : ''}${item.name} (${item.relationship}) · ${item.phone} · ${item.verified ? 'verified' : 'needs verification'}`,
+        `${index === 0 ? 'Primary: ' : ''}${item.name} (${item.relationship}) · ${item.phone}`,
     )
     .join('\n')
   return (
@@ -689,17 +685,7 @@ export function StudentProfilePage({
       <AllergyBanner student={data.student} />
       <div className="grid grid-cols-1 gap-4">
         <div className="flex flex-col gap-4">
-          <OverviewCard
-            student={data.student}
-            onVerifyContact={
-              viewer.role === 'staff' && !data.student.archived
-                ? (index, verified) =>
-                    verifyStudentContactRecord(data.student.id, index, verified, viewer).then(
-                      reload,
-                    )
-                : undefined
-            }
-          />
+          <OverviewCard student={data.student} />
           <MedicalHistoryCard student={data.student} />
         </div>
         <div className="flex flex-col gap-4">

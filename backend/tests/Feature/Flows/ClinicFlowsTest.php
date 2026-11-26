@@ -58,7 +58,7 @@ it('records a visit with a medicine: stock lowers, the trail has it, the Dashboa
 
 it('takes an incident through Stage 1 and Stage 2 to an approved report, with its trail', function () {
     signInAs('nurse', 'nurse-pass-1');
-    $id = asSpa()->postJson('/api/incidents', ['studentId' => (string) $this->ana, 'complaint' => 'Fall in the gym', 'vitals' => ['pulseBpm' => 110]])->assertCreated()->json('data.id');
+    $id = asSpa()->postJson('/api/incidents', ['studentId' => (string) $this->ana, 'complaint' => 'Fall in the gym'])->assertCreated()->json('data.id');
     $this->travel(20)->minutes();
     asSpa()->putJson("/api/incidents/{$id}/stage-two", ['complaint' => 'Fall in the gym', 'vitals' => ['pulseBpm' => 92, 'treatmentNotes' => 'Cold compress'], 'hospitalReferral' => null,
         'newParentNotifications' => [['outcome' => 'reached']], 'followUp' => ['followUpDate' => '2026-11-11', 'reason' => 'Check the knee', 'notes' => null],

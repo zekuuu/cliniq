@@ -109,7 +109,7 @@ export function LoginPage({
           {/* Phones only: from md the lockup sits centered on the photo instead (PhotoLockup). */}
           <div className="flex items-center justify-center gap-3 md:hidden">
             <img
-              src="/MCA_Logo.png"
+              src="/brand/mca-logo.webp"
               alt="Mendez Christian Academy logo"
               className="size-20 shrink-0 object-contain"
             />
@@ -193,7 +193,7 @@ export function LoginPage({
           </div>
           <p className="flex flex-wrap items-center justify-center gap-x-2 text-xs text-text-secondary">
             <span className="flex items-center gap-1">
-              <img src="/Healware_Logo.png" alt="" className="size-5 shrink-0 object-contain" />
+              <img src="/brand/healware-logo.webp" alt="" className="size-5 shrink-0 object-contain" />
               Powered by HealWare™
             </span>
             <span aria-hidden="true">·</span>
@@ -237,7 +237,7 @@ function PhotoLockup() {
     <div className="absolute inset-0 hidden items-center justify-center p-8 md:flex md:pr-20 print:hidden">
       <div className="flex flex-col items-center gap-5 bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--color-brand-green-dark)_65%,transparent),transparent)] px-16 py-12 text-center">
         <img
-          src="/MCA_Logo.png"
+          src="/brand/mca-logo.webp"
           alt="Mendez Christian Academy logo"
           className="size-40 object-contain drop-shadow-lg lg:size-48"
         />

@@ -16,6 +16,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -74,6 +75,40 @@ final class AuditLogController
 
     public function index(Request $request): JsonResponse
     {
+        $this->validateFilters($request);
+        $user = $this->clinicUser($request);
+        $fullLrn = $request->boolean('fullLrn');
+        if ($fullLrn && $user->clinicRole() !== ClinicUser::STAFF) {
+            throw new AccessDeniedHttpException;
+        }
+
+        $query = $this->filteredQuery($request);
+        if (Paging::wanted($request)) {
+            [$sort, $direction] = Paging::sort($request, ['timestamp', 'user', 'action', 'module', 'record'], '-timestamp');
+            match ($sort) {
+                'user' => $query->orderByRaw("COALESCE(u.name, 'Unknown user') {$direction}"),
+                'action' => $query->orderByRaw(self::ACTION_SQL." {$direction}"),
+                'module' => $query->orderByRaw(self::KIND_SQL." {$direction}"),
+                'record' => $query->orderByRaw(self::LABEL_SQL." {$direction}"),
+                default => $query->orderBy('a.occurred_at', $direction)->orderBy('a.id', $direction),
+            };
+            [$rows, $meta] = Paging::sql($request, $query->orderByDesc('a.occurred_at')->orderByDesc('a.id'), fn (\stdClass $r): array => $this->row($r, false));
+
+            return response()->json(['data' => ['rows' => $rows, 'users' => $this->users()], 'meta' => $meta]);
+        }
+
+        // The whole list: the printout (with `fullLrn`) and the mock's contract (Q19).
+        $rows = $query->orderByDesc('a.occurred_at')->orderByDesc('a.id')->get()->map(fn (\stdClass $r): array => $this->row($r, $fullLrn))->values();
+        if ($fullLrn) {
+            $this->audit->record($this->event($request, AuditAction::Print, AuditTarget::PrintDocument, null, self::PRINTS['audit-log']));
+        }
+
+        // `{ data: AuditLogList }` like every other success (contract "Format"; fixed for the frontend switch-over, ADR-080).
+        return response()->json(['data' => ['rows' => $rows, 'users' => $this->users()]]);
+    }
+
+    private function validateFilters(Request $request): void
+    {
         $request->validate([
             'from' => ['required', 'date_format:Y-m-d'],
             'to' => ['required', 'date_format:Y-m-d', 'after_or_equal:from'],
@@ -83,14 +118,12 @@ final class AuditLogController
             'targetTypes' => ['array'],
             'targetTypes.*' => [Rule::in(self::BUCKETS)],
             'fullLrn' => ['sometimes', 'boolean'],
+            'search' => ['nullable', 'string', 'max:120'],
         ]);
-        $user = $this->clinicUser($request);
-        $fullLrn = $request->boolean('fullLrn');
-        if ($fullLrn && $user->clinicRole() !== ClinicUser::STAFF) {
-            throw new AccessDeniedHttpException;
-        }
+    }
 
-        $request->validate(['search' => ['nullable', 'string', 'max:120']]);
+    private function filteredQuery(Request $request): Builder
+    {
         $buckets = self::strings($request->array('targetTypes'));
         $actions = self::strings($request->array('actionTypes'));
         $query = DB::table('audit_logs as a')
@@ -116,28 +149,75 @@ final class AuditLogController
             });
         }
 
-        if (Paging::wanted($request)) {
-            [$sort, $direction] = Paging::sort($request, ['timestamp', 'user', 'action', 'module', 'record'], '-timestamp');
-            match ($sort) {
-                'user' => $query->orderByRaw("COALESCE(u.name, 'Unknown user') {$direction}"),
-                'action' => $query->orderByRaw(self::ACTION_SQL." {$direction}"),
-                'module' => $query->orderByRaw(self::KIND_SQL." {$direction}"),
-                'record' => $query->orderByRaw(self::LABEL_SQL." {$direction}"),
-                default => $query->orderBy('a.occurred_at', $direction)->orderBy('a.id', $direction),
-            };
-            [$rows, $meta] = Paging::sql($request, $query->orderByDesc('a.occurred_at')->orderByDesc('a.id'), fn (\stdClass $r): array => $this->row($r, false));
+        return $query;
+    }
 
-            return response()->json(['data' => ['rows' => $rows, 'users' => $this->users()], 'meta' => $meta]);
+    /** A single Staff-only, bounded-memory A4 print document for every matching entry. */
+    public function printDocument(Request $request): StreamedResponse
+    {
+        $this->validateFilters($request);
+        if ($this->clinicUser($request)->clinicRole() !== ClinicUser::STAFF) {
+            throw new AccessDeniedHttpException;
+        }
+        $query = $this->filteredQuery($request);
+        // Freeze the result before writing its own audit entry, so the new print does not appear
+        // halfway through the document or change the count while chunks are being read.
+        $lastId = (int) DB::table('audit_logs')->max('id');
+        $query->where('a.id', '<=', $lastId);
+        $total = (clone $query)->count();
+        [$sort, $direction] = Paging::sort($request, ['timestamp', 'user', 'action', 'module', 'record'], '-timestamp');
+        match ($sort) {
+            'user' => $query->orderByRaw("COALESCE(u.name, 'Unknown user') {$direction}"),
+            'action' => $query->orderByRaw(self::ACTION_SQL." {$direction}"),
+            'module' => $query->orderByRaw(self::KIND_SQL." {$direction}"),
+            'record' => $query->orderByRaw(self::LABEL_SQL." {$direction}"),
+            default => null,
+        };
+        $query->orderBy('a.occurred_at', $sort === 'timestamp' ? $direction : 'desc')
+            ->orderBy('a.id', $sort === 'timestamp' ? $direction : 'desc');
+        $scope = $this->printScope($request);
+        $nonce = base64_encode(random_bytes(16));
+        $this->audit->record($this->event($request, AuditAction::Print, AuditTarget::PrintDocument, null, self::PRINTS['audit-log']));
+
+        return response()->stream(function () use ($query, $total, $scope, $nonce): void {
+            echo AuditPrintHtml::start($total, $scope);
+            $printed = 0;
+            foreach ($query->lazy(1000) as $raw) {
+                echo AuditPrintHtml::row($this->row($raw, true));
+                $printed++;
+                if ($printed % 1000 === 0) {
+                    if (ob_get_level() > 0) {
+                        ob_flush();
+                    }
+                    flush();
+                }
+            }
+            echo AuditPrintHtml::end($nonce);
+        }, 200, [
+            'Content-Type' => 'text/html; charset=UTF-8',
+            'Cache-Control' => 'no-store, private',
+            'Content-Security-Policy' => "default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'nonce-{$nonce}'; base-uri 'none'; frame-ancestors 'none'",
+            'X-Content-Type-Options' => 'nosniff',
+            'Referrer-Policy' => 'no-referrer',
+            'X-Accel-Buffering' => 'no',
+        ]);
+    }
+
+    private function printScope(Request $request): string
+    {
+        $parts = [
+            'Dates '.$request->string('from')->value().' to '.$request->string('to')->value(),
+            $request->filled('userId')
+                ? 'user '.(string) (DB::table('users')->where('id', $request->integer('userId'))->value('name') ?? 'Unknown user')
+                : 'all users',
+            $request->array('actionTypes') === [] ? 'all actions' : 'actions '.implode(', ', self::strings($request->array('actionTypes'))),
+            $request->array('targetTypes') === [] ? 'all targets' : 'targets '.implode(', ', self::strings($request->array('targetTypes'))),
+        ];
+        if ($request->filled('search')) {
+            $parts[] = 'search "'.trim($request->string('search')->value()).'"';
         }
 
-        // The whole list: the printout (with `fullLrn`) and the mock's contract (Q19).
-        $rows = $query->orderByDesc('a.occurred_at')->orderByDesc('a.id')->get()->map(fn (\stdClass $r): array => $this->row($r, $fullLrn))->values();
-        if ($fullLrn) {
-            $this->audit->record($this->event($request, AuditAction::Print, AuditTarget::PrintDocument, null, self::PRINTS['audit-log']));
-        }
-
-        // `{ data: AuditLogList }` like every other success (contract "Format"; fixed for the frontend switch-over, ADR-080).
-        return response()->json(['data' => ['rows' => $rows, 'users' => $this->users()]]);
+        return implode('; ', $parts);
     }
 
     /** @return Collection<int, array{id: ?string, name: ?string}> */

@@ -103,7 +103,7 @@ const FIELDS = {
     'emergencyContacts',
     'archived',
   ],
-  emergencyContact: ['name', 'relationship', 'phone', 'verified'],
+  emergencyContact: ['name', 'relationship', 'phone'],
   visits: [
     'id',
     'studentId',

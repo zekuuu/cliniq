@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { cn } from '../../lib/cn'
 
 /**
- * TEMPORARY / PLACEHOLDER: `frontend/public/brand/login-backdrop.jpg` currently holds a frame from a
+ * TEMPORARY / PLACEHOLDER: `frontend/public/brand/login-backdrop.webp` currently holds a frame from a
  * campus drone video, standing in until an official photo of Mendez Christian Academy is available.
  * Swap the file, not this constant; the blur is applied here, so a new photo needs no editing. If
  * the file is ever missing, the brand-green fallback below shows.
  */
-export const LOGIN_BACKDROP_SRC = '/brand/login-backdrop.jpg'
+export const LOGIN_BACKDROP_SRC = '/brand/login-backdrop.webp'
 
 /**
  * Full-bleed Login backdrop. The brand-green gradient is always underneath, so it is what shows while

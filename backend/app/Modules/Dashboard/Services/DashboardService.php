@@ -75,14 +75,6 @@ final class DashboardService
     {
         $today = ClinicTime::today();
         ['from' => $from, 'to' => $to] = $range;
-        $visits = $this->visits();
-        $incidents = $this->incidents($admin);
-        $inRange = fn (array $e): bool => $e['date'] >= $from && $e['date'] <= $to;
-        $visitsInRange = array_values(array_filter($visits, $inRange));
-        $incidentsInRange = array_values(array_filter($incidents, $inRange));
-        $students = array_values(array_filter([...$visits, ...$incidents], fn (array $e): bool => ! $e['staff']));
-        $trend = array_values(array_filter($students, fn (array $e): bool => ($sex === null || $e['sex'] === $sex) && ($gradeLevel === null || $e['gradeLevel'] === $gradeLevel)));
-
         $firstRecord = DB::query()->fromSub(
             DB::table('visits')->whereNull('entered_in_error_at')->selectRaw('MIN(DATE(visited_at)) AS d')->union(DB::table('incidents')->selectRaw('MIN(DATE(occurred_at)) AS d')),
             'x',
@@ -92,6 +84,23 @@ final class DashboardService
         $prevFrom = CarbonImmutable::parse($from)->subDays((int) $length)->format('Y-m-d');
         $prevTo = CarbonImmutable::parse($from)->subDay()->format('Y-m-d');
         $comparable = $range['preset'] !== 'all' && $firstRecord !== null && $prevFrom >= $firstRecord;
+        // A month view also compares weekdays with the preceding calendar month, which can begin
+        // before the equal-length previous period (for example October 1 versus October 6).
+        $monthComparison = $from === CarbonImmutable::parse($from)->startOfMonth()->format('Y-m-d')
+            && ($range['preset'] === 'thisMonth' || $to === CarbonImmutable::parse($to)->endOfMonth()->format('Y-m-d'));
+        $fetchFrom = $range['preset'] === 'all' ? $from : min(
+            $from,
+            $comparable ? $prevFrom : $from,
+            $monthComparison ? CarbonImmutable::parse($from)->subDay()->startOfMonth()->format('Y-m-d') : $from,
+        );
+        $visits = $this->visits($fetchFrom, $to);
+        $incidents = $this->incidents($admin, $fetchFrom, $to);
+        $inRange = fn (array $e): bool => $e['date'] >= $from && $e['date'] <= $to;
+        $visitsInRange = array_values(array_filter($visits, $inRange));
+        $incidentsInRange = array_values(array_filter($incidents, $inRange));
+        $students = array_values(array_filter([...$visits, ...$incidents], fn (array $e): bool => ! $e['staff']));
+        $trend = array_values(array_filter($students, fn (array $e): bool => ($sex === null || $e['sex'] === $sex) && ($gradeLevel === null || $e['gradeLevel'] === $gradeLevel)));
+
         $inPrev = fn (array $e): bool => $e['date'] >= $prevFrom && $e['date'] <= $prevTo;
         $inClinic = DB::table('visits')->whereNull('entered_in_error_at')->where('disposition', 'resting_in_clinic')->whereNull('time_out')
             ->whereBetween('visited_at', ["{$today} 00:00:00", "{$today} 23:59:59"])->get(['student_id', 'personnel_id']);
@@ -110,7 +119,7 @@ final class DashboardService
                 'lowStockItems' => count(array_filter($inventory, fn (array $i): bool => in_array('low_stock', (array) $i['flags'], true))),
                 'activeStudents' => DB::table('students')->whereNull('archived_at')->count(),
                 'inClinicNow' => $inClinic->count(),
-                'incidentsAwaitingStage2' => count(array_filter($incidents, fn (array $e): bool => $e['stage'] === 1)),
+                'incidentsAwaitingStage2' => DB::table('incidents')->where('stage', 1)->when($admin, fn ($q) => $q->whereNull('personnel_id'))->count(),
                 'split' => [
                     'visits' => self::split($visitsInRange), 'incidents' => self::split($incidentsInRange),
                     'inClinicNow' => ['students' => $inClinic->whereNotNull('student_id')->count(), 'staff' => $inClinic->whereNotNull('personnel_id')->count()],
@@ -179,7 +188,7 @@ final class DashboardService
     {
         $counts = [];
         $tags = [];
-        foreach ([...$this->visits(), ...$this->incidents(false)] as $e) {
+        foreach ([...$this->visits($from, $to), ...$this->incidents(false, $from, $to)] as $e) {
             $counts[$e['date']][$e['kind']] = ($counts[$e['date']][$e['kind']] ?? 0) + 1;
             if ($e['eventTag'] !== null) {
                 $tags[$e['date']][$e['eventTag']] = true;
@@ -204,19 +213,21 @@ final class DashboardService
     // ---- helpers -------------------------------------------------------------------------
 
     /** @return list<Event> counted visits (ADR-036) */
-    private function visits(): array
+    private function visits(string $from, string $to): array
     {
         return array_values(MonthlyReportService::counted()->leftJoin('students as s', 's.id', '=', 'visits.student_id')->leftJoin('personnel as p', 'p.id', '=', 'visits.personnel_id')
             ->leftJoin('grade_levels as g', 'g.id', '=', 's.grade_level_id')
+            ->whereBetween('visits.visited_at', ["{$from} 00:00:00", "{$to} 23:59:59"])
             ->get(['visits.visited_at as at', 'visits.complaint', 'visits.event_tag', 'visits.personnel_id', 'visits.grade_level_at_time', 'g.name as grade', 's.sex as ssex', 'p.sex as psex'])
             ->map(fn (object $r): array => self::event($r, 'visit'))->all());
     }
 
     /** @return list<Event> the Admin's leave staff incidents out (ADR-053) */
-    private function incidents(bool $admin): array
+    private function incidents(bool $admin, string $from, string $to): array
     {
         return array_values(DB::table('incidents as i')->when($admin, fn ($q) => $q->whereNull('i.personnel_id'))
             ->leftJoin('students as s', 's.id', '=', 'i.student_id')->leftJoin('personnel as p', 'p.id', '=', 'i.personnel_id')->leftJoin('grade_levels as g', 'g.id', '=', 's.grade_level_id')
+            ->whereBetween('i.occurred_at', ["{$from} 00:00:00", "{$to} 23:59:59"])
             ->get(['i.occurred_at as at', 'i.complaint', 'i.event_tag', 'i.personnel_id', 'i.grade_level_at_time', 'i.stage', 'g.name as grade', 's.sex as ssex', 'p.sex as psex'])
             ->map(fn (object $r): array => ['stage' => (int) Row::int($r, 'stage')] + self::event($r, 'incident'))->all());
     }

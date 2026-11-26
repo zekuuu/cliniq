@@ -13,7 +13,6 @@ describe('Parent Notification Log', () => {
     ).toBeInTheDocument()
     expect(screen.getByLabelText('Emergency contact details')).toBeInTheDocument()
     expect(screen.getByText('Guardian')).toBeInTheDocument()
-    expect(screen.getByText('Verified')).toBeInTheDocument()
   })
 
   it('shows every emergency contact, primary first, and does not write a print audit entry', async () => {
@@ -22,7 +21,6 @@ describe('Parent Notification Log', () => {
     expect(await screen.findByText('Arnel Cabrera')).toBeInTheDocument()
     expect(screen.getByText('Beatriz Cabrera')).toBeInTheDocument()
     expect(screen.getByText('Primary')).toBeInTheDocument()
-    expect(screen.getByText('Needs verification')).toBeInTheDocument()
     expect(recordedWrites()).toEqual([])
   })
 })

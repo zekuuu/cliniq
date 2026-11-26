@@ -63,6 +63,10 @@ export function markVisitEnteredInError(id: string, reason: string): Promise<Vis
   return http.post(`/visits/${encodeURIComponent(id)}/entered-in-error`, { reason })
 }
 
+export function undoVisitEnteredInError(id: string): Promise<Visit> {
+  return http.post(`/visits/${encodeURIComponent(id)}/entered-in-error/undo`, {})
+}
+
 export function getExcuseLetterApproval(visitId: string): Promise<ExcuseLetterApproval | null> {
   return http.get(`/visits/${encodeURIComponent(visitId)}/excuse-letter`)
 }
@@ -115,4 +119,8 @@ export function setFollowUpStatus(
 
 export function rescheduleFollowUp(id: string, followUpDate: ISODate): Promise<FollowUp> {
   return http.post(`/follow-ups/${encodeURIComponent(id)}/reschedule`, { followUpDate })
+}
+
+export function undoFollowUpReschedule(id: string): Promise<FollowUp> {
+  return http.post(`/follow-ups/${encodeURIComponent(id)}/undo-reschedule`, {})
 }

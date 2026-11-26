@@ -1,4 +1,5 @@
 import {
+  archiveNewInventoryItem as archiveNewItemInLayer,
   adjustInventoryStock as adjustInLayer,
   dispenseInventoryItem as dispenseInLayer,
   getInventoryItem,
@@ -12,6 +13,7 @@ import {
   restockInventoryItem as restockInLayer,
   saveInventoryItem as saveInLayer,
   searchPatients,
+  undoInventoryMovement as undoMovementInLayer,
   type DispenseResult,
   type InventoryItemView,
   type InventoryHistoryRow,
@@ -115,6 +117,21 @@ export function fetchInventory(filters: InventoryFilters): Promise<InventoryItem
 
 export function fetchInventoryHistory(itemId: string): Promise<InventoryHistoryRow[]> {
   return listInventoryHistory(itemId)
+}
+
+export function fetchInventoryItem(itemId: string): Promise<InventoryItemView> {
+  return getInventoryItem(itemId)
+}
+
+export function archiveNewInventoryItem(itemId: string): Promise<void> {
+  return archiveNewItemInLayer(itemId)
+}
+
+export function undoInventoryMovement(
+  itemId: string,
+  transactionId: string,
+): Promise<InventoryItemView> {
+  return undoMovementInLayer(itemId, transactionId)
 }
 
 export async function fetchInventoryForm(itemId?: string): Promise<InventoryFormContext> {

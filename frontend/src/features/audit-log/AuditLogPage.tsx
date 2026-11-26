@@ -26,6 +26,7 @@ import {
 } from '../../components'
 import { usePagedList } from '../../hooks/usePagedList'
 import { apiMode } from '../../lib/api/mode'
+import { notify } from '../../lib/notify'
 import { describeRange, rangeForPreset, type DateRange } from '../../lib/dateRange'
 import { formatDateRange, formatDateTime, todayISO } from '../../lib/dates'
 import type { ISODate } from '../../types/entities'
@@ -41,8 +42,8 @@ import type { AuditActionType } from '../../types/entities'
 import { paths } from '../../routes/paths'
 import {
   AUDIT_SORT_KEYS,
+  auditLogPrintUrl,
   fetchAuditLog,
-  fetchAuditLogForPrint,
   fetchAuditLogPage,
   filterAndSortAudit,
   type AuditSortKey,
@@ -317,13 +318,19 @@ export function AuditLogPage({
   })
   const { page: data, status, isRefetching, reload, sort } = list
   const filters: AuditLogFilters = { ...selected, search: list.search }
-  // The Print button prints every matching entry, not the page on screen. On the API it loads the
-  // full-LRN copy, which is the print's audit entry (ADR-044, ADR-080); in mock mode the mock's own.
+  // The Print button prints every matching entry, not the page on screen. In API mode the Staff-only
+  // server stream writes the complete A4 document in chunks and logs one print (ADR-044, ADR-093).
+  // Mock mode keeps the existing in-app print document.
   const [printRows, setPrintRows] = useState<AuditLogRow[] | null>(null)
   async function printAll() {
+    if (apiMode('AUDIT') === 'api') {
+      const popup = window.open(auditLogPrintUrl(query, list.search, sort), '_blank')
+      if (popup) popup.opener = null
+      else notify.error('Allow the print window, then try again.')
+      return
+    }
     try {
-      const all =
-        apiMode('AUDIT') === 'api' ? await fetchAuditLogForPrint(query) : await fetchAuditLog(query)
+      const all = await fetchAuditLog(query)
       flushSync(() => setPrintRows(filterAndSortAudit(all.rows, list.search, sort)))
       window.addEventListener('afterprint', () => setPrintRows(null), { once: true })
     } catch {
