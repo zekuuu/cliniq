@@ -5,6 +5,8 @@ description: Apply when building or changing a CLINIQ data table, especially one
 
 # CLINIQ Table Patterns
 
+**Row actions (ADR-095):** a row with several actions keeps its direct primary action or clickable record title and puts the other actions in the shared `ActionMenu`. The kebab trigger is at the right end. Keep emergency actions visible. Measure the action column and the open menu on desktop and phone; see `cliniq-action-menu-patterns`.
+
 Use this alongside `cliniq-interactive-states`, `cliniq-pagination-patterns`,
 `cliniq-sorting-patterns`, and `cliniq-display-privacy` when a table is added or changed.
 

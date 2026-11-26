@@ -5,6 +5,8 @@ description: Apply when building or changing a CLINIQ screen's top-of-page headi
 
 # CLINIQ Page Header Patterns
 
+**Crowded actions (ADR-095):** keep the primary action plus at most one ordinary secondary action visible; from three actions, put the remaining secondary actions in the shared `ActionMenu`. Print / Save as PDF, Back, and emergency actions stay visible. On the Student and Staff List headers, Add and Incomplete records stay direct; Import and Archive use the menu. See `cliniq-action-menu-patterns`.
+
 Use this with `cliniq-interactive-states` for actions and `cliniq-back-navigation-patterns` when the screen needs a Back control.
 
 ## Context, filters, and badges
