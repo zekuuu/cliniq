@@ -21,7 +21,7 @@ final readonly class StudentRecord
     /**
      * @param  list<string>  $allergies
      * @param  list<string>  $medicalConditions
-     * @param  list<array{name: string, relationship: string, phone: string, verified: bool}>  $contacts
+     * @param  list<array{name: string, relationship: string, phone: string}>  $contacts
      */
     public function __construct(
         public int $id,
@@ -47,7 +47,7 @@ final readonly class StudentRecord
     /**
      * @param  list<string>  $allergies
      * @param  list<string>  $conditions
-     * @param  list<array{name: string, relationship: string, phone: string, verified: bool}>  $contacts
+     * @param  list<array{name: string, relationship: string, phone: string}>  $contacts
      */
     public static function fromRow(object $s, array $allergies, array $conditions, array $contacts): self
     {
@@ -118,7 +118,7 @@ final readonly class StudentRecord
     }
 
     /**
-     * @param  list<array{name: string, relationship: string, phone: string, verified: bool}>  $contacts
+     * @param  list<array{name: string, relationship: string, phone: string}>  $contacts
      * @return list<string>
      */
     private static function missing(string $grade, ?string $sex, ?string $birthDate, array $contacts): array
