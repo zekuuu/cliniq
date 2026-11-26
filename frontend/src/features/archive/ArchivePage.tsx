@@ -628,11 +628,29 @@ function SchoolYearDatesDialog({
       notify.checkFields(problem)
       return setError(problem)
     }
-    const result = await feedback.run(() => saveSchoolYearSettings(values, viewer), {
-      saved:
-        'School year dates saved. Archived records keep the school year they were filed under.',
-      failed: (cause) => (cause instanceof SchoolYearSettingsError ? cause.message : undefined),
-    })
+    const result = await feedback.run(
+      async () => {
+        const before = (await getArchive(viewer)).settings
+        const saved = await saveSchoolYearSettings(values, viewer)
+        return { before, saved }
+      },
+      {
+        saved:
+          'School year dates saved. Archived records keep the school year they were filed under.',
+        undo: ({ before, saved }) => ({
+          run: () => saveSchoolYearSettings(before, viewer),
+          undone: 'Undone: school year dates restored',
+          checkCurrent: async () =>
+            JSON.stringify((await getArchive(viewer)).settings) === JSON.stringify(saved),
+          onUndone: () => {
+            onSaved()
+            window.dispatchEvent(new Event(SCHOOL_YEAR_CHANGED_EVENT))
+          },
+          onFailed: onSaved,
+        }),
+        failed: (cause) => (cause instanceof SchoolYearSettingsError ? cause.message : undefined),
+      },
+    )
     if (result.ok) {
       onClose()
       onSaved()
