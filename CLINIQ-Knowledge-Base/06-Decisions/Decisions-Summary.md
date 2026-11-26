@@ -334,7 +334,31 @@ A visit, an incident or the Dispense page can no longer give more than the usabl
 
 ### ADR-085: An Undo on the toast for reversible actions, and archived records can be restored
 
-A reversible action's success toast carries an Undo button for its 8 seconds: account and backup-location enable/disable, Sports Report archive, emergency contact verify/unverify, follow-up status, and student and staff archive. Undo sends the reverse request, so the audit log keeps both entries. New Staff-only routes restore an archived student or staff record ("Restored from the archive"). A follow-up set back to Pending or Completed loses its old reason. One-way actions (approvals, entered in error, school year, stock, backups) get no Undo.
+A reversible action's success toast carries an Undo button for its 8 seconds: account and backup-location enable/disable, Sports Report archive, follow-up status, and student and staff archive. Undo sends the reverse request, so the audit log keeps both entries. New Staff-only routes restore an archived student or staff record ("Restored from the archive"). A follow-up set back to Pending or Completed loses its old reason. Emergency-contact verification was later removed by ADR-088. ADR-089 widens Undo to safe edits, creates, calendar deletion, stock changes, entered-in-error visits, and follow-up rescheduling. Approvals, completed incident Stage 2, backup runs, password resets, and school-year transitions remain one-way.
+
+### ADR-089: Undo for reversible mutations
+
+Successful reversible mutations offer an eight-second Undo. An edit restores its earlier values through the normal update path; newly created records use the module's safe archive or reversal. Calendar deletion keeps and restores the same event; stock changes append compensating ledger entries; an entered-in-error visit can be reinstated if related records have not changed; follow-up rescheduling can cancel the newly created row. A stale Undo refuses with an error, and the audit log keeps both actions. The white toast uses a green Undo text button with a visible focus ring. Wednesday, November 25, 2026 — 17:39 PHT. [ADR-089](ADR-089-Undo-For-Reversible-Mutations.md)
+
+### ADR-090: Field labels do not activate controls
+
+Clicking a label leaves every field alone, including checkbox, radio and toggle controls; direct field clicks still work and the label remains its accessible name. Upload zones use an explicit Browse files button. Thursday, November 26, 2026 — 03:31 PHT. [ADR-090](ADR-090-Field-Labels-Do-Not-Activate-Controls.md)
+
+### ADR-091: Staff may edit two operational warning periods
+
+Settings exposes the already stored upcoming follow-up and supply expiry warning horizons. Staff edit 1–30 and 1–180 whole days; Admin reads. Changes are audited and offer stale-safe Undo. Thursday, November 26, 2026 — 03:31 PHT. [ADR-091](ADR-091-Editable-Operational-Warning-Periods.md)
+
+### ADR-092: The default seed command runs a small Simulation
+
+`migrate:fresh --seed` seeds five linked fictional records per daily-use list and three existing fictional development accounts on a disposable test or scratch database. The seeder skips a populated database and refuses production. Laravel's table drop happens before the seeder guard, so the operator must verify the selected database. Thursday, November 26, 2026 — 03:31 PHT. [ADR-092](ADR-092-Default-Simulation-Seeder.md)
+
+### ADR-093: Stream the complete Audit Log print document
+
+In API mode, the Staff Audit Log Print button opens a private, streamed A4 document containing every matching entry. The server reads 1,000 rows at a time, includes full LRNs only in this printout, and records one print action. Ctrl+P on the screen still prints its visible page. This keeps a five-year, 100,000-entry history printable under PHP's 128 MB memory limit, although browser printing can still take time. Thursday, November 26, 2026 — 08:31 PHT. [ADR-093](ADR-093-Stream-Full-Audit-Print.md)
+
+### ADR-094: Separate incident event, reading, arrival and entry times
+
+Stage 1 saves the patient, complaint, editable actual event time and optional notes; typed readings move to Stage 2, each with its own time. An escalated visit may carry temperature. `created_at` remains immutable, and optional clinic arrival awaits nurse confirmation. Lists and reports group by event time. Thursday, November 26, 2026 — 14:18 PHT. [ADR-094](ADR-094-Incident-Event-And-Entry-Times.md)
 
 ### ADR-086: A search box in the top bar finds a student or staff member and opens the profile
 
