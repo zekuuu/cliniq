@@ -1,8 +1,10 @@
 # Start Here for the SRS and Project Plan
 
-Last checked against the staging code on Thursday, November 26, 2026 — 22:20 PHT for the documentation sync at `9400024d` and the current working tree.
+Last checked against the current `main` working tree on Friday, November 27, 2026 — 07:22 PHT for the Visit and Incident list changes and current Facts sheet.
 
-Last checked against the code on Thursday, November 26, 2026 — 14:40 PHT (ADR-088 through ADR-094, including incident event timing).
+Earlier checked against the staging code on Thursday, November 26, 2026 — 22:20 PHT for the documentation sync at `9400024d` and the current working tree.
+
+Earlier checked against the code on Thursday, November 26, 2026 — 14:40 PHT (ADR-088 through ADR-094, including incident event timing).
 
 Earlier checked against the code on Monday, November 23, 2026 — 18:07 PHT for the docs-only sync of `main` at `0a178b0` (9 documentation commits committed; no product behavior, ADR, route, or number changes); on Sunday, November 22, 2026 — 14:29 PHT for the docs-only sync of `main` at `9da38fa` (the generated Project Plan and SRS copies now live in their section folders; no product behavior or Facts-sheet number changed); on Sunday, November 22, 2026 — 02:22 PHT for the docs sync of `main` at `1c41f73` (ADR-085, ADR-086, ADR-087: Undo and restore, the top-bar search, the LRN last-4 search); on Sunday, November 22, 2026 — 00:52 PHT for the docs sync of `main` at `b9fd646` (ADR-084, the realistic five-year demo school to February 28, 2027); on Friday, November 20, 2026 — 01:54 PHT for the docs sync of `main` at `533df61` (ADR-082, ADR-083, the emergency-contact check, the demo seeder) and the Overview's frequent-visitor pager; on Thursday, November 19, 2026 for the paged lists and the speed run only (ADR-082); on Wednesday, November 18, 2026 for where the code lives only (the merge into `main`, ADR-081); on Tuesday, November 17, 2026 for the changes of the follow-ups and load run (`feat/connect-frontend` at `759781e`, committed Tuesday, November 17, 2026 — 05:27 PHT; see `08-Logs/Load-Test-Nov16/NOTES.md`); otherwise as on Sunday, November 15, 2026 (the `backend` branch at `397e000`). All of that code is on `main` since Wednesday, November 18, 2026 (ADR-081). For a groupmate writing the Software Requirements Specification (SRS) or the final Project Plan who has not followed the project day to day. Every link works on GitHub.
 
