@@ -162,7 +162,10 @@ describe('Archive page', () => {
         </MemoryRouter>,
       )
       // The button counts what the Archive opens to: the newest year with that list's records.
-      const link = await screen.findByRole('link', { name })
+      await user.click(
+        await screen.findByRole('button', { name: /More actions for (Student|Staff) List/ }),
+      )
+      const link = screen.getByRole('menuitem', { name })
       const count = link.textContent!.match(/\((\d+)\)/)![1]
       await user.click(link)
       expect(await screen.findByRole('tab', { name: tab, selected: true })).toHaveTextContent(
