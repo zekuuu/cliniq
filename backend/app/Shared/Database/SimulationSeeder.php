@@ -192,10 +192,10 @@ final class SimulationSeeder extends Seeder
                             'expiration_date' => $now->subDays(3)->format('Y-m-d'),
                         ]);
                 }
-                $day = $now->addWeekdays([-8, -2, 1, 4, 8][$i]);
+                $day = $now->startOfDay();
                 app(CalendarService::class)->save([
                     'title' => self::EVENTS[$i], 'startDate' => $day->format('Y-m-d'),
-                    'endDate' => $i === 2 ? $day->addDay()->format('Y-m-d') : $day->format('Y-m-d'),
+                    'endDate' => $day->format('Y-m-d'),
                 ], null, $nurse, 'staff');
             }
 
@@ -206,10 +206,10 @@ final class SimulationSeeder extends Seeder
 
             foreach (self::VISITS as $i => $case) {
                 $studentId = $students[$i];
-                $visitAt = $now->subWeekdays(9 - $i * 2)->setTimeFromTimeString($case['time']);
+                $visitAt = $now->subSeconds(10 + $i);
                 $visitDate = $visitAt->format('Y-m-d');
                 $contact = $contacts[$i];
-                $collectedAt = $visitAt->addMinutes(65)->format('H:i');
+                $collectedAt = $visitAt->format('H:i');
                 $visit = app(VisitService::class)->record([
                     'studentId' => (string) $studentId, 'personnelId' => null, 'dateTime' => $visitAt->format('Y-m-d\TH:i'),
                     'lateEntryReason' => 'Entered from the clinic paper logbook',
@@ -224,9 +224,7 @@ final class SimulationSeeder extends Seeder
                 ], $nurse);
                 $visitId = self::savedId($visit, 'visit');
                 $followUp = app(FollowUpService::class)->create(['studentId' => $studentId, 'personnelId' => null], 'visit', $visitId, [
-                    'followUpDate' => in_array($i, [1, 2], true)
-                        ? $now->subWeekdays($i === 1 ? 3 : 2)->format('Y-m-d')
-                        : $now->addWeekdays($i + 1)->format('Y-m-d'),
+                    'followUpDate' => $now->format('Y-m-d'),
                     'reason' => $case['followUp'], 'notes' => 'Confirm the student is ready to return to class.',
                     'stayHomeUntilCleared' => false, 'stayHomeNote' => null,
                 ], $nurse, $now);
@@ -249,7 +247,7 @@ final class SimulationSeeder extends Seeder
 
             foreach (self::INCIDENTS as $i => $case) {
                 $studentId = $students[$i];
-                $occurredAt = $now->subWeekdays(14 - $i * 3)->setTimeFromTimeString($case['time']);
+                $occurredAt = $now->subSeconds(20 + $i);
                 $incident = app(IncidentService::class)->stageOne([
                     'studentId' => (string) $studentId, 'personnelId' => null,
                     'time' => $occurredAt->toIso8601String(), 'complaint' => $case['complaint'],
@@ -267,7 +265,7 @@ final class SimulationSeeder extends Seeder
                     if ($i === 2) {
                         $stageTwo['hospitalReferral'] = [
                             'destination' => 'Riverside District Hospital', 'transportMode' => 'Private vehicle',
-                            'departureTime' => $occurredAt->addMinutes(45)->toIso8601String(),
+                            'departureTime' => $occurredAt->addSecond()->toIso8601String(),
                         ];
                     }
                     app(IncidentService::class)->stageTwo($incidentId, $stageTwo, $nurse);
