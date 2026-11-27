@@ -7,6 +7,25 @@ import packageJson from './package.json' with { type: 'json' }
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    rolldownOptions: {
+      output: {
+        // Keep dependencies that are shared by lazy screens independent of application chunks.
+        codeSplitting: {
+          groups: [
+            { name: 'react', test: /node_modules[\\/](react|react-dom)[\\/]/, priority: 3 },
+            { name: 'router', test: /node_modules[\\/]react-router[\\/]/, priority: 2 },
+            {
+              name: 'charts',
+              test: /node_modules[\\/](chart\.js|react-chartjs-2)[\\/]/,
+              priority: 2,
+            },
+            { name: 'query', test: /node_modules[\\/]@tanstack[\\/]react-query[\\/]/, priority: 2 },
+          ],
+        },
+      },
+    },
+  },
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
   },
