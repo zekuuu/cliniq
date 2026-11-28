@@ -52,7 +52,9 @@ export function useIdleSignOut(
     const onApi = apiMode('AUTH') === 'api'
     const personActivity = onApi
       ? () => {
-          if (!warningRef.current) void keepAlive().catch(() => undefined)
+          if (warningRef.current) return
+          activity()
+          void keepAlive().catch(() => undefined)
         }
       : activity
     const apiActivity = (event: Event) => {
